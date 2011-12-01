@@ -131,6 +131,7 @@ String      process_handle ();
 #define PASSERT            RAPICORN_PASSERT            // (condition)
 #define DEBUG              RAPICORN_DEBUG
 #define PDEBUG             RAPICORN_PDEBUG
+#define warn_if_fail       RAPICORN_CHECK              // (condition)
 #define throw_if_fail      RAPICORN_THROW_IF_FAIL      // (condition)
 #define return_if_fail     RAPICORN_RETURN_IF_FAIL     // (condition)
 #define return_val_if_fail RAPICORN_RETURN_VAL_IF_FAIL // (condition, value)

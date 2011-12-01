@@ -2,27 +2,26 @@
 #ifndef __RAPICORN_WINDOW_HH__
 #define __RAPICORN_WINDOW_HH__
 
-#include <ui/container.hh>
-#include <ui/viewp0rt.hh>
+#include <ui/viewport.hh>
+#include <ui/screenwindow.hh>
 
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual SingleContainerImpl, public virtual WindowIface,
-                   public virtual EventLoop::Source, public virtual Viewp0rt::EventReceiver {
+class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
+                   public virtual EventLoop::Source, public virtual ScreenWindow::EventReceiver {
   friend class  ItemImpl;
   EventLoop            &m_loop;
   EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
-  Region                m_expose_region;
-  Viewp0rt             *m_viewp0rt;
-  uint                  m_tunable_requisition_counter : 24;
+  ScreenWindow         *m_screen_window;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
+  uint                  m_pending_win_size : 1;
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
-  Viewp0rt::Config      m_config;
+  ScreenWindow::Config  m_config;
   uint                  m_notify_displayed_id;
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
@@ -70,26 +69,17 @@ private:
   vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
                                                                  const vector<ItemImpl*>    &cminus);
   /* sizing */
-  virtual void          size_request                            (Requisition            &requisition);
-  using                 ItemImpl::size_request;
-  virtual void          size_allocate                           (Allocation              area, bool changed);
-  virtual bool          tunable_requisitions                    ();
-  void                  resize_all                              (Allocation             *new_area);
+  void                  resize_screen_window                    ();
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  virtual void          render                                  (Display                &display);
-  using                 ItemImpl::render;
-  void                  collapse_expose_region                  ();
-  virtual void          expose_window_region                    (const Region           &region);   // window item coords
-  virtual void          copy_area                               (const Rect             &src,
-                                                                 const Point            &dest);
   void                  expose_now                              ();
   virtual void          draw_now                                ();
-  /* viewp0rt ops */
-  virtual void          create_viewp0rt                         ();
-  virtual bool          has_viewp0rt                            ();
-  virtual void          destroy_viewp0rt                        ();
+  virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
+  /* screen_window ops */
+  virtual void          create_screen_window                    ();
+  virtual bool          has_screen_window                       ();
+  virtual void          destroy_screen_window                   ();
   void                  idle_show                               ();
   /* main loop */
   virtual bool          prepare                                 (const EventLoop::State &state,
@@ -177,7 +167,7 @@ private:
       RAPICORN_ASSERT (rapicorn_thread_entered());
       RAPICORN_ASSERT (window.m_source == this);
       window.m_source = NULL;
-      window.destroy_viewp0rt();
+      window.destroy_screen_window();
     }
   };
 };

@@ -28,17 +28,18 @@ X11TEST_FIND  = \
     X11TEST_PID=$${F/:*/} ; X11TEST_DISPLAY=$${F/*:/} ; \
     xset -display :$$X11TEST_DISPLAY q >/dev/null 2>&1 && break ; done
 x11test-find:
-	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11start" ; exit 1 ; } \
-	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
+	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11test-start" ; exit 1 ; } \
+	&& echo "DISPLAY=:$$X11TEST_DISPLAY # x11test: Xephyr: pid=$$X11TEST_PID"
 x11test-start:
 	@$(X11TEST_FIND) || { \
 	  Xephyr -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xephyr"; exit 1 ; } \
 	  && for idoffs in `seq 1001 1500` ; do X11TEST_DISPLAY=$$(($$idoffs + $$RANDOM % 500)) \
 	  && test ! -e /tmp/.X$$X11TEST_DISPLAY-lock && break ; done \
 	  || { echo "$(MAKECMDGOALS): out of available X11 Display IDs"; exit 1 ; }; \
-	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp \
-	         -auth /dev/null -noreset -retro >$(x11test_log) 2>&1 & X11TEST_PID="$$!" ; } \
-	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
+	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp -keybd ephyr \
+	         -auth /dev/null -noreset -retro -host-cursor >$(x11test_log) 2>&1 & X11TEST_PID="$$!" \
+	  && { [ -z "$$DISPLAY" ] || { sleep 1; setxkbmap -print | xkbcomp - :$$X11TEST_DISPLAY 2>/dev/null ; }; }; } \
+	&& echo "DISPLAY=:$$X11TEST_DISPLAY # x11test: Xephyr: pid=$$X11TEST_PID"
 x11test-stop:
 	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no x11test running" ; exit 0 ; } \
 	&& kill -SIGTERM $$X11TEST_PID \

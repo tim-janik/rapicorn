@@ -63,7 +63,7 @@ protected:
   virtual void  draw_rect       (const PixelRectImpl &pixrect);
   virtual void  size_request    (Requisition &requisition);
   virtual void  size_allocate   (Allocation area, bool changed);
-  virtual void  render          (Display &display);
+  virtual void  render          (RenderContext &rcontext, const Rect &rect);
 public:
   explicit      DrawableImpl    ();
 };

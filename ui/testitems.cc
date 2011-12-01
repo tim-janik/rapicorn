@@ -147,19 +147,16 @@ protected:
       }
   }
   virtual void
-  render (Display &display)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     assert (rapicorn_thread_entered());
-
-    SingleContainerImpl::render (display);
 
     if (m_paint_allocation)
       {
         IRect ia = allocation();
-        cairo_t *cairo = display.create_cairo();
-        CPainter painter (cairo);
+        cairo_t *cr = cairo_context (rcontext, rect);
+        CPainter painter (cr);
         painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, heritage()->black());
-        cairo_destroy (cairo);
       }
 
     Allocation rarea = get_window()->allocation();
@@ -235,10 +232,9 @@ protected:
 public:
   explicit TestBoxImpl()
   {}
-  void
-  render (Display &display)
+  virtual void
+  render (RenderContext &rcontext, const Rect &rect)
   {
-    SingleContainerImpl::render (display);
     if (!m_handler_id)
       {
         WindowImpl *witem = get_window();
@@ -270,11 +266,11 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          record_prop (const Requisition &r)      { m_rec = r; }
   virtual StringList    sequence_prop () const                  { return m_seq; }
   virtual void          sequence_prop (const StringList &s)     { m_seq = s; }
-  virtual IdlTestItemIface* self_prop () const                      { return m_self; }
-  virtual void          self_prop (IdlTestItemIface *s)              { m_self = s; }
+  virtual IdlTestItemIface* self_prop () const                  { return m_self; }
+  virtual void          self_prop (IdlTestItemIface *s)         { m_self = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
-  virtual void          size_allocate (Allocation area, bool changed)   {}
-  virtual void          render (Display &display)               {}
+  virtual void          size_allocate (Allocation area, bool changed) {}
+  virtual void          render (RenderContext &rcontext, const Rect &rect) {}
 };
 static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
 

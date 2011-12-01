@@ -601,36 +601,35 @@ ContainerImpl::point_children (Point               p, /* window coordinates rela
 }
 
 void
-ContainerImpl::viewp0rt_point_children (Point                   p, /* viewp0rt coordinates relative */
-                                        std::vector<ItemImpl*> &stack)
+ContainerImpl::screen_window_point_children (Point                   p, /* screen_window coordinates relative */
+                                             std::vector<ItemImpl*> &stack)
 {
-  point_children (point_from_viewp0rt (p), stack);
+  point_children (point_from_screen_window (p), stack);
 }
 
 void
-ContainerImpl::render (Display &display)
+ContainerImpl::render_item (RenderContext &rcontext)
 {
+  ItemImpl::render_item (rcontext);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->drawable())
-        continue;
-      const IRect ia = cw->allocation();
-      display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
-      if (cw->test_flags (INVALID_REQUISITION))
-        critical ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &*cw);
-      if (cw->test_flags (INVALID_ALLOCATION))
-        critical ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &*cw);
-      if (!display.empty())
-        cw->render (display);
-      display.pop_clip_rect();
+      ItemImpl &child = *cw;
+      if (child.drawable() && rendering_region (rcontext).contains (child.allocation()) != Region::OUTSIDE)
+        {
+          if (child.test_flags (INVALID_REQUISITION))
+            critical ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
+          if (child.test_flags (INVALID_ALLOCATION))
+            critical ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
+          child.render_item (rcontext);
+        }
     }
 }
 
 void
 ContainerImpl::debug_tree (String indent)
 {
-  printf ("%s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), this->name().c_str(), this,
-          allocation().width, allocation().height, allocation().x, allocation().y);
+  printerr ("%s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), this->name().c_str(), this,
+            allocation().width, allocation().height, allocation().x, allocation().y);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       ItemImpl &child = *cw;
@@ -638,8 +637,8 @@ ContainerImpl::debug_tree (String indent)
       if (c)
         c->debug_tree (indent + "  ");
       else
-        printf ("  %s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), child.name().c_str(), &child,
-                child.allocation().width, child.allocation().height, child.allocation().x, child.allocation().y);
+        printerr ("  %s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), child.name().c_str(), &child,
+                  child.allocation().width, child.allocation().height, child.allocation().x, child.allocation().y);
     }
 }
 

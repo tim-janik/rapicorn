@@ -130,28 +130,25 @@ cairo_surface_t*
 WindowImpl::create_snapshot (const Rect &subarea)
 {
   const Allocation area = allocation();
-  Display display;
-  display.push_clip_rect (area.x, area.y, area.width, area.height);
-  display.push_clip_rect (subarea.x, subarea.y, subarea.width, subarea.height);
-  /* render display */
-  if (!display.empty())
-    render (display);
-  cairo_surface_t *isurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
-  /* comose area */
-  cairo_t *cairo = cairo_create (isurface);
-  cairo_translate (cairo, -subarea.x, -subarea.y);
-  display.render_backing (cairo);
-  _cairo_image_surface_vflip (isurface);
-  cairo_destroy (cairo);
-  return isurface;
+  Region region = area;
+  region.intersect (subarea);
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
+  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -subarea.x, -subarea.y);
+  cairo_t *cr = cairo_create (surface);
+  warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+  render_into (cr, region);
+  cairo_destroy (cr);
+  // cairo_surface_destroy (surface);
+  _cairo_image_surface_vflip (surface);
+  return surface;
 }
 
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_source (NULL),
-  m_viewp0rt (NULL),
-  m_tunable_requisition_counter (0),
-  m_entered (false), m_auto_close (false),
+  m_screen_window (NULL),
+  m_entered (false), m_auto_close (false), m_pending_win_size (false),
   m_notify_displayed_id (0)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
@@ -160,7 +157,7 @@ WindowImpl::WindowImpl() :
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
-  /* adjust default Viewp0rt config */
+  /* adjust default ScreenWindow config */
   m_config.min_width = 13;
   m_config.min_height = 7;
   /* create event loop (auto-starts) */
@@ -186,10 +183,10 @@ WindowImpl::~WindowImpl()
       m_loop.try_remove (m_notify_displayed_id);
       m_notify_displayed_id = 0;
     }
-  if (m_viewp0rt)
+  if (m_screen_window)
     {
-      delete m_viewp0rt;
-      m_viewp0rt = NULL;
+      delete m_screen_window;
+      m_screen_window = NULL;
     }
   /* make sure all children are removed while this is still of type WindowImpl.
    * necessary because C++ alters the object type during constructors and destructors
@@ -210,102 +207,37 @@ WindowImpl::self_visible () const
 }
 
 void
-WindowImpl::size_request (Requisition &requisition)
+WindowImpl::resize_screen_window()
 {
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      requisition = child.requisition();
-    }
-}
+  return_if_fail (requisitions_tunable() == false);
 
-void
-WindowImpl::size_allocate (Allocation area, bool changed)
-{
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      Requisition rq = child.requisition();
-      child.set_allocation (area);
-    }
-}
+  // negotiate size requisition
+  negotiate_size();
 
-bool
-WindowImpl::tunable_requisitions ()
-{
-  return m_tunable_requisition_counter > 0;
-}
-
-void
-WindowImpl::resize_all (Allocation *new_area)
-{
-  assert (m_tunable_requisition_counter == 0);
-  bool have_allocation = false;
-  Allocation area;
-  if (new_area)
-    {
-      area.width = new_area->width;
-      area.height = new_area->height;
-      have_allocation = true;
-      change_flags_silently (INVALID_ALLOCATION, true);
-    }
-  else if (!new_area && m_viewp0rt)
-    {
-      Viewp0rt::State state = m_viewp0rt->get_state();
-      if (state.width > 0 && state.height > 0)
-        {
-          area.width = state.width;
-          area.height = state.height;
-          have_allocation = true;
-        }
-    }
-  if (!test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  // grow screen window if needed
+  if (!m_screen_window)
     return;
-  /* this is the rcore of the resizing loop. via Item.tune_requisition(), we
-   * allow items to adjust the requisition from within size_allocate().
-   * whether the tuned requisition is honored at all, depends on
-   * m_tunable_requisition_counter.
-   * currently, we simply freeze the allocation after 3 iterations. for the
-   * future it's possible to honor the tuned requisition only partially or
-   * proportionally as m_tunable_requisition_counter decreases, so to mimick
-   * a simulated annealing process yielding the final layout.
-   */
-  m_tunable_requisition_counter = 3;
-  Requisition req;
-  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  const Allocation asize = allocation();
+  ScreenWindow::State state = m_screen_window->get_state();
+  if (state.width <= 0 || state.height <= 0 || asize.width > state.width || asize.height > state.height)
     {
-      req = requisition(); /* unsets INVALID_REQUISITION */
-      if (!have_allocation)
-        {
-          /* fake initial allocation */
-          area.width = req.width;
-          area.height = req.height;
-        }
-      set_allocation (area); /* unsets INVALID_ALLOCATION, may re-::invalidate_size() */
-      if (m_tunable_requisition_counter)
-        m_tunable_requisition_counter--;
+      m_config.request_width = asize.width;
+      m_config.request_height = asize.height;
+      m_pending_win_size = true;
+      m_screen_window->enqueue_win_draws();
+      discard_expose_region(); // we'll get a new WIN_DRAW event
+      m_screen_window->set_config (m_config, true);
+      return;
     }
-  m_tunable_requisition_counter = 0;
-  if (!have_allocation ||
-      (!new_area &&
-       (req.width > allocation().width || req.height > allocation().height)))
-    {
-      m_config.request_width = req.width;
-      m_config.request_height = req.height;
-      if (m_viewp0rt)
-        {
-          /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
-          m_viewp0rt->enqueue_win_draws();
-          m_expose_region.clear();
-          m_viewp0rt->set_config (m_config, true);
-        }
-    }
+  // screen window size is good, allocate it
+  if (asize.width != state.width || asize.height != state.height)
+    allocate_size (Allocation (0, 0, state.width, state.height));
 }
 
 void
 WindowImpl::do_invalidate ()
 {
-  SingleContainerImpl::do_invalidate();
+  ViewportImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
   m_loop.wakeup();
 }
@@ -313,8 +245,8 @@ WindowImpl::do_invalidate ()
 void
 WindowImpl::beep()
 {
-  if (m_viewp0rt)
-    m_viewp0rt->beep();
+  if (m_screen_window)
+    m_screen_window->beep();
 }
 
 vector<ItemImpl*>
@@ -341,19 +273,19 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   ItemImpl *grab_item = get_grab (&unconfined);
   if (grab_item)
     {
-      if (unconfined or grab_item->viewp0rt_point (Point (event.x, event.y)))
+      if (unconfined or grab_item->screen_window_point (Point (event.x, event.y)))
         {
           pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
           ContainerImpl *container = grab_item->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-item children as well */
-            container->viewp0rt_point_children (Point (event.x, event.y), pierced);
+            container->screen_window_point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* window receives all mouse events */
       if (m_entered)
-        viewp0rt_point_children (Point (event.x, event.y), pierced);
+        screen_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<ItemImpl*> left_children = item_difference (m_last_entered_children, pierced);
@@ -392,7 +324,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* window receives all events */
-      viewp0rt_point_children (Point (event.x, event.y), pierced);
+      screen_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -591,7 +523,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   ItemImpl *item = get_focus();
-  if (item && item->process_viewp0rt_event (event))
+  if (item && item->process_screen_window_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS)
@@ -632,34 +564,14 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      Allocation allocation (0, 0, wevent->width, wevent->height);
-      resize_all (&allocation);
-      /* discard all expose requests, we'll get a new WIN_DRAW event */
-      m_expose_region.clear();
+      m_pending_win_size = false;
+      allocate_size (Allocation (0, 0, wevent->width, wevent->height));
+      discard_expose_region(); // we'll get a new WIN_DRAW event
       if (0)
         DEBUG ("win-size: %f %f", wevent->width, wevent->height);
       handled = true;
     }
   return handled;
-}
-
-void
-WindowImpl::collapse_expose_region ()
-{
-  /* check for excess expose fragment scenarios */
-  uint n_erects = m_expose_region.count_rects();
-  if (n_erects > 999)           /* workable limit, considering O(n^2) collision complexity */
-    {
-      /* aparently the expose fragments we're combining are too small,
-       * so we can end up with spending too much time on expose rectangle
-       * compression (much more than needed for rendering).
-       * as a workaround, we simply force everything into a single expose
-       * rectangle which is good enough to avoid worst case explosion.
-       * note that this is only triggered in seldom pathological cases.
-       */
-      m_expose_region.add (m_expose_region.extents());
-      // printerr ("collapsing due to too many expose rectangles: %u -> %u\n", n_erects, m_expose_region.count_rects());
-    }
 }
 
 bool
@@ -669,16 +581,10 @@ WindowImpl::dispatch_win_draw_event (const Event &event)
   const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
   if (devent)
     {
+      Region r;
       for (uint i = 0; i < devent->rectangles.size(); i++)
-        {
-          m_expose_region.add (devent->rectangles[i]);
-          if (0)
-            DEBUG ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
-                   devent->rectangles[i].x, devent->rectangles[i].y);
-          /* check for excess expose fragment scenarios */
-          if (i % 11 == 0)              /* infrequent checks are good enough */
-            collapse_expose_region();   /* collapse pathological expose regions */
-        }
+        r.add (devent->rectangles[i]);
+      expose (r);
       handled = true;
     }
   return handled;
@@ -691,7 +597,7 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
     {
-      destroy_viewp0rt();
+      destroy_screen_window();
       dispose();
       handled = true;
     }
@@ -699,47 +605,12 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 }
 
 void
-WindowImpl::expose_window_region (const Region &region)
-{
-  /* this function is expected to *queue* exposes, and not render immediately */
-  if (m_viewp0rt && !region.empty())
-    {
-      m_expose_region.add (region);
-      collapse_expose_region();
-    }
-}
-
-void
-WindowImpl::copy_area (const Rect  &src,
-                       const Point &dest)
-{
-  /* need to copy pixel regions and expose regions */
-  if (m_viewp0rt && src.width && src.height)
-    {
-      /* force delivery of any pending exposes */
-      expose_now();
-      /* intersect copied expose region */
-      Region exr = m_expose_region;
-      exr.intersect (Region (src));
-      /* pixel-copy area */
-      m_viewp0rt->copy_area (src.x, src.y, // may queue new exposes
-                             src.width, src.height,
-                             dest.x, dest.y);
-      /* shift expose region */
-      exr.affine (AffineTranslate (Point (dest.x - src.x, dest.y - src.y)));
-      /* expose copied area */
-      expose_window_region (exr);
-      // FIXME: synthesize 0-dist pointer movement from idle handler
-    }
-}
-
-void
 WindowImpl::expose_now ()
 {
-  if (m_viewp0rt)
+  if (m_screen_window)
     {
       /* force delivery of any pending update events */
-      m_viewp0rt->enqueue_win_draws();
+      m_screen_window->enqueue_win_draws();
       /* collect all WIN_DRAW events */
       m_async_mutex.lock();
       std::list<Event*> events;
@@ -766,7 +637,7 @@ WindowImpl::expose_now ()
         }
     }
   else
-    m_expose_region.clear(); // nuke stale exposes
+    discard_expose_region(); // nuke stale exposes
 }
 
 void
@@ -779,53 +650,46 @@ WindowImpl::notify_displayed()
 void
 WindowImpl::draw_now ()
 {
-  if (m_viewp0rt)
+  Rect area = allocation();
+  return_if_fail (area.x == 0 && area.y == 0);
+  if (m_screen_window)
     {
-      /* force delivery of any pending exposes */
+      // force delivery of any pending exposes
       expose_now();
-      /* render invalidated contents */
-      m_expose_region.intersect (Region (allocation()));
-      std::vector<Rect> rects;
-      m_expose_region.list_rects (rects);
-      m_expose_region.clear();
-      Viewp0rt::State state = m_viewp0rt->get_state();
-      for (uint i = 0; i < rects.size(); i++)
-        {
-          const IRect &ir = rects[i];
-          Display display;
-          display.push_clip_rect (ir.x, ir.y, ir.width, ir.height);
-          /* render display */
-          if (!display.empty())
-            render (display);
-          /* avoid unnecessary plane transfers for slow remote
-           * displays, for local displays it'd cause resizing lags.
-           */
-          if (!state.local_blitting && has_pending_win_size())
-            {
-              break;
-            }
-          /* blit to screen */
-          m_viewp0rt->blit_display (display);
-          display.pop_clip_rect();
-        }
+      // render invalidated contents
+      Region region = area;
+      region.intersect (peek_expose_region());
+      discard_expose_region();
+
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (area.width), iceil (area.height));
+      warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+      cairo_t *cr = cairo_create (surface);
+      warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+      render_into (cr, region);
+      m_screen_window->blit_surface (surface, region);
+      cairo_destroy (cr);
+      cairo_surface_destroy (surface);
       if (!has_pending_win_size() && !m_notify_displayed_id)
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
-    m_expose_region.clear(); // nuke stale exposes
+    discard_expose_region(); // nuke stale exposes
 }
 
 void
-WindowImpl::render (Display &display)
+WindowImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  const IRect ia = allocation();
-  display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
   // paint background
-  cairo_t *cr = display.create_cairo (background());
-  cairo_destroy (cr);
-  // paint children
-  SingleContainerImpl::render (display);
-  display.pop_clip_rect();
+  Color col = background();
+  cairo_t *cr = cairo_context (rcontext, rect);
+  cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
+  vector<Rect> rects;
+  rendering_region (rcontext).list_rects (rects);
+  for (size_t i = 0; i < rects.size(); i++)
+    cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+  cairo_clip (cr);
+  cairo_paint (cr);
+  ViewportImpl::render (rcontext, rect);
 }
 
 void
@@ -914,7 +778,7 @@ WindowImpl::dispose_item (ItemImpl &item)
 {
   remove_grab_item (item);
   cancel_item_events (item);
-  SingleContainerImpl::dispose_item (item);
+  ViewportImpl::dispose_item (item);
 }
 
 bool
@@ -937,8 +801,8 @@ WindowImpl::has_pending_win_size ()
 bool
 WindowImpl::dispatch_event (const Event &event)
 {
-  if (!m_viewp0rt)
-    return false;       // we can only handle events on viewp0rts
+  if (!m_screen_window)
+    return false;       // we can only handle events on a screen_window
   if (0)
     DEBUG ("Window: event: %s", string_from_event_type (event.type));
   switch (event.type)
@@ -988,14 +852,16 @@ WindowImpl::prepare (const EventLoop::State &state,
                      int64                  *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
 }
 
 bool
 WindowImpl::check (const EventLoop::State &state)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
 }
 
 void
@@ -1022,9 +888,9 @@ WindowImpl::dispatch (const EventLoop::State &state)
         dispatch_event (*event);
         delete event;
       }
-    else if (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-      resize_all (NULL);
-    else if (!m_expose_region.empty())
+    else if (!m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+      resize_screen_window();
+    else if (exposes_pending())
       {
         draw_now();
         if (m_auto_close)
@@ -1032,7 +898,7 @@ WindowImpl::dispatch (const EventLoop::State &state)
             EventLoop *loop = get_loop();
             if (loop)
               {
-                loop->exec_timer (0, slot (*this, &WindowImpl::destroy_viewp0rt), INT_MAX);
+                loop->exec_timer (0, slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
                 m_auto_close = false;
               }
           }
@@ -1060,33 +926,33 @@ WindowImpl::enqueue_async (Event *event)
 bool
 WindowImpl::viewable ()
 {
-  return visible() && m_viewp0rt && m_viewp0rt->visible();
+  return visible() && m_screen_window && m_screen_window->visible();
 }
 
 void
 WindowImpl::idle_show()
 {
-  if (m_viewp0rt)
+  if (m_screen_window)
     {
       /* request size, WIN_SIZE and WIN_DRAW */
-      if (!m_viewp0rt->visible())
-        resize_all (NULL);
+      if (!m_screen_window->visible())
+        resize_screen_window();
       /* size requested, show up */
-      m_viewp0rt->show();
+      m_screen_window->show();
     }
 }
 
 void
-WindowImpl::create_viewp0rt ()
+WindowImpl::create_screen_window ()
 {
   if (m_source)
     {
-      if (!m_viewp0rt)
+      if (!m_screen_window)
         {
-          m_viewp0rt = Viewp0rt::create_viewp0rt ("auto", WINDOW_TYPE_NORMAL, *this);
-          resize_all (NULL);
+          m_screen_window = ScreenWindow::create_screen_window ("auto", WINDOW_TYPE_NORMAL, *this);
+          resize_screen_window();
         }
-      RAPICORN_ASSERT (m_viewp0rt != NULL);
+      RAPICORN_ASSERT (m_screen_window != NULL);
       m_source->primary (true); // FIXME: depends on WM-managable
       VoidSlot sl = slot (*this, &WindowImpl::idle_show);
       m_loop.exec_now (sl);
@@ -1094,20 +960,20 @@ WindowImpl::create_viewp0rt ()
 }
 
 bool
-WindowImpl::has_viewp0rt ()
+WindowImpl::has_screen_window ()
 {
-  return m_source && m_viewp0rt && m_viewp0rt->visible();
+  return m_source && m_screen_window && m_screen_window->visible();
 }
 
 void
-WindowImpl::destroy_viewp0rt ()
+WindowImpl::destroy_screen_window ()
 {
-  if (!m_viewp0rt)
+  if (!m_screen_window)
     return; // during destruction, ref_count == 0
   ref (this);
-  m_viewp0rt->hide();
-  delete m_viewp0rt;
-  m_viewp0rt = NULL;
+  m_screen_window->hide();
+  delete m_screen_window;
+  m_screen_window = NULL;
   if (m_source)
     {
       m_loop.kill_sources(); // calls m_source methods
@@ -1125,19 +991,19 @@ WindowImpl::destroy_viewp0rt ()
 void
 WindowImpl::show ()
 {
-  create_viewp0rt();
+  create_screen_window();
 }
 
 bool
 WindowImpl::closed ()
 {
-  return !has_viewp0rt();
+  return !has_screen_window();
 }
 
 void
 WindowImpl::close ()
 {
-  destroy_viewp0rt();
+  destroy_screen_window();
 }
 
 bool
@@ -1155,12 +1021,12 @@ bool
 WindowImpl::synthesize_enter (double xalign,
                               double yalign)
 {
-  if (!has_viewp0rt())
+  if (!has_screen_window())
     return false;
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_viewp0rt (p);
+  p = point_to_screen_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1171,7 +1037,7 @@ WindowImpl::synthesize_enter (double xalign,
 bool
 WindowImpl::synthesize_leave ()
 {
-  if (!has_viewp0rt())
+  if (!has_screen_window())
     return false;
   EventContext ec;
   enqueue_async (create_event_mouse (MOUSE_LEAVE, ec));
@@ -1185,12 +1051,12 @@ WindowImpl::synthesize_click (ItemIface &itemi,
                               double     yalign)
 {
   ItemImpl &item = *dynamic_cast<ItemImpl*> (&itemi);
-  if (!has_viewp0rt() || !&item)
+  if (!has_screen_window() || !&item)
     return false;
   const Allocation &area = item.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = item.point_to_viewp0rt (p);
+  p = item.point_to_screen_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1202,7 +1068,7 @@ WindowImpl::synthesize_click (ItemIface &itemi,
 bool
 WindowImpl::synthesize_delete ()
 {
-  if (!has_viewp0rt())
+  if (!has_screen_window())
     return false;
   EventContext ec;
   enqueue_async (create_event_win_delete (ec));

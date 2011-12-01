@@ -178,8 +178,7 @@ Region::list_rects (std::vector<Rect> &rects) const
 uint
 Region::count_rects () const
 {
-  uint n = _rapicorn_region_get_rects (REGION (this), 0, NULL);
-  return n;
+  return _rapicorn_region_get_rect_count (REGION (this));
 }
 
 void
@@ -211,6 +210,16 @@ void
 Region::exor (const Region &other)
 {
   _rapicorn_region_xor (REGION (this), REGION (&other));
+}
+
+void
+Region::translate (double deltax, double deltay)
+{
+  std::vector<Rect> rects;
+  list_rects (rects);
+  clear();
+  for (uint i = 0; i < rects.size(); i++)
+    add (Rect (rects[i].x + deltax, rects[i].y + deltay, rects[i].width, rects[i].height));
 }
 
 void

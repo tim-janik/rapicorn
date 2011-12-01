@@ -21,7 +21,7 @@ protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          do_invalidate   ();
-  virtual void          render          (Display &display);
+  virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
   explicit              CofferImpl      ();
   virtual              ~CofferImpl      ();
@@ -101,11 +101,11 @@ CofferImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-CofferImpl::render (Display &display)
+CofferImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  Allocation area = allocation();
   if (m_sel)
     {
+      const Allocation &area = allocation();
       const int aw = area.width, ah = area.height;
       uint8 *pixels = new uint8[int (aw * ah * 4)];
       memset (pixels, 0, aw * ah * 4);
@@ -114,7 +114,7 @@ CofferImpl::render (Display &display)
       bool rendered = m_sel.render (surface, Svg::Allocation (0, 0, aw, ah));
       if (rendered)
         {
-          cairo_t *cr = display.create_cairo ();
+          cairo_t *cr = cairo_context (rcontext, rect);
           cairo_set_source_surface (cr, surface, 0, 0); // (x,y) are set in the matrix below
           cairo_matrix_t matrix;
           cairo_matrix_init_identity (&matrix);
@@ -128,7 +128,6 @@ CofferImpl::render (Display &display)
       cairo_surface_destroy (surface);
       delete[] pixels;
     }
-  SingleContainerImpl::render (display);
 }
 
 static const ItemFactory<CofferImpl> coffer_factory ("Rapicorn::Factory::Coffer");

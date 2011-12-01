@@ -14,22 +14,23 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_VIEWP0RT_HH__
-#define __RAPICORN_VIEWP0RT_HH__
+#ifndef __RAPICORN_SCREEN_WINDOW_HH__
+#define __RAPICORN_SCREEN_WINDOW_HH__
 
 #include <ui/events.hh>
+#include <ui/region.hh>
 
 namespace Rapicorn {
 
-class Viewp0rt : public virtual Deletable, protected NonCopyable {
+class ScreenWindow : public virtual Deletable, protected NonCopyable {
 protected:
-  explicit              Viewp0rt                () {}
+  explicit              ScreenWindow () {}
 public:
-  /* viewp0rt info (constant during runtime) */
+  /* screen_window info (constant during runtime) */
   struct Info {
     WindowType  window_type;
   };
-  /* viewp0rt state */
+  /* screen_window state */
   typedef enum {
     STATE_STICKY        = 0x0004,
     STATE_WITHDRAWN     = 0x0008,
@@ -47,7 +48,7 @@ public:
     WindowState window_state;
     double      width, height;
   };
-  /* viewp0rt configuration */
+  /* screen_window configuration */
   typedef enum {
     HINT_DECORATED      = 0x0001,
     HINT_URGENT         = 0x0002,
@@ -105,11 +106,11 @@ public:
                                                  bool            force_resize_draw = false) = 0;
   virtual void          beep                    (void) = 0;
   /* creation */
-  static Viewp0rt*      create_viewp0rt         (const String   &backend_name,
-                                                 WindowType      viewp0rt_type,
+  static ScreenWindow*  create_screen_window    (const String   &backend_name,
+                                                 WindowType      screen_window_type,
                                                  EventReceiver  &receiver);
   /* actions */
-  virtual void          present_viewp0rt        () = 0;
+  virtual void          present_screen_window        () = 0;
   virtual void          trigger_hint_action     (WindowHint     hint) = 0;
   virtual void          start_user_move         (uint           button,
                                                  double         root_x,
@@ -124,31 +125,24 @@ public:
   virtual void          hide                    (void) = 0;
   virtual uint          last_draw_stamp         () = 0;
   virtual void          enqueue_win_draws       (void) = 0;
-  virtual void          blit_display            (Display        &plane) = 0;
-  virtual void          create_display_backing  (Rapicorn::Display &display) = 0;
-  virtual void          copy_area               (double          src_x,
-                                                 double          src_y,
-                                                 double          width,
-                                                 double          height,
-                                                 double          dest_x,
-                                                 double          dest_y) = 0;
+  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region) = 0;
   /* --- backend API --- */
   class FactoryBase : protected NonCopyable {
-    friend class Viewp0rt;
+    friend class ScreenWindow;
   protected:
-    virtual          ~FactoryBase      ();
-    const String      m_name;
-    explicit          FactoryBase      (const String  &name) : m_name (name) {}
-    static void       register_backend (FactoryBase   &factory);
-    virtual Viewp0rt* create_viewp0rt  (WindowType     viewp0rt_type,
-                                        EventReceiver &receiver) = 0;
+    virtual              ~FactoryBase          ();
+    const String          m_name;
+    explicit              FactoryBase          (const String  &name) : m_name (name) {}
+    static void           register_backend     (FactoryBase   &factory);
+    virtual ScreenWindow* create_screen_window (WindowType     screen_window_type,
+                                                EventReceiver &receiver) = 0;
   };
   template<class Backend>
   class Factory : public virtual FactoryBase {
   public:
-    explicit          Factory          (const String  &name) : FactoryBase (name) { register_backend (*this); }
-    virtual Viewp0rt* create_viewp0rt  (WindowType     viewp0rt_type,
-                                        EventReceiver &receiver)                  { return new Backend (m_name, viewp0rt_type, receiver); }
+    explicit              Factory              (const String  &name) : FactoryBase (name) { register_backend (*this); }
+    virtual ScreenWindow* create_screen_window (WindowType     screen_window_type,
+                                                EventReceiver &receiver) { return new Backend (m_name, screen_window_type, receiver); }
   };
 };
 
@@ -158,4 +152,4 @@ void rapicorn_gtk_threads_leave         ();
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_VIEWP0RT_HH__ */
+#endif  /* __RAPICORN_SCREEN_WINDOW_HH__ */

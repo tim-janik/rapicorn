@@ -100,8 +100,7 @@ ItemImpl::propagate_state (bool notify_changed)
 }
 
 void
-ItemImpl::set_flag (uint32 flag,
-                bool   on)
+ItemImpl::set_flag (uint32 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
@@ -769,21 +768,21 @@ ItemImpl::translate_to (const uint    n_rects,
 }
 
 Point
-ItemImpl::point_from_viewp0rt (Point window_point) /* window coordinates relative */
+ItemImpl::point_from_screen_window (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
   ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
-      p = pc->point_from_viewp0rt (p);  // to viewp0rt coords
+      p = pc->point_from_screen_window (p);  // to screen_window coords
       p = caffine * p;
     }
   return p;
 }
 
 Point
-ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
+ItemImpl::point_to_screen_window (Point item_point) /* item coordinates relative */
 {
   Point p = item_point;
   ContainerImpl *pc = parent();
@@ -791,19 +790,19 @@ ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
     {
       const Affine &caffine = pc->child_affine (*this);
       p = caffine.ipoint (p);           // to parent coords
-      p = pc->point_to_viewp0rt (p);
+      p = pc->point_to_screen_window (p);
     }
   return p;
 }
 
 Affine
-ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
+ItemImpl::affine_from_screen_window () /* screen_window => item affine */
 {
   Affine iaffine;
   ContainerImpl *pc = parent();
   if (pc)
     {
-      const Affine &paffine = pc->affine_from_viewp0rt();
+      const Affine &paffine = pc->affine_from_screen_window();
       const Affine &caffine = pc->child_affine (*this);
       if (paffine.is_identity())
         iaffine = caffine;
@@ -816,9 +815,9 @@ ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
 }
 
 Affine
-ItemImpl::affine_to_viewp0rt () /* item => viewp0rt affine */
+ItemImpl::affine_to_screen_window () /* item => screen_window affine */
 {
-  Affine iaffine = affine_from_viewp0rt();
+  Affine iaffine = affine_from_screen_window();
   if (!iaffine.is_identity())
     iaffine = iaffine.invert();
   return iaffine;
@@ -835,13 +834,13 @@ ItemImpl::process_event (const Event &event) /* item coordinates relative */
 }
 
 bool
-ItemImpl::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relative */
+ItemImpl::process_screen_window_event (const Event &event) /* screen_window coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     {
-      const Affine &affine = affine_from_viewp0rt();
+      const Affine &affine = affine_from_screen_window();
       if (affine.is_identity ())
         handled = controller->sig_event.emit (event);
       else
@@ -855,9 +854,9 @@ ItemImpl::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates re
 }
 
 bool
-ItemImpl::viewp0rt_point (Point p) /* window coordinates relative */
+ItemImpl::screen_window_point (Point p) /* window coordinates relative */
 {
-  return point (point_from_viewp0rt (p));
+  return point (point_from_screen_window (p));
 }
 
 bool
@@ -941,6 +940,20 @@ ItemImpl::common_ancestor (const ItemImpl &other) const
       item1 = item1->parent();
     }
   while (item1);
+  return NULL;
+}
+
+ViewportImpl*
+ItemImpl::get_viewport () const
+{
+  ItemImpl *parent = const_cast<ItemImpl*> (this);
+  while (parent)
+    {
+      ViewportImpl *vp = dynamic_cast<ViewportImpl*> (parent);
+      if (vp)
+        return vp;
+      parent = parent->parent();
+    }
   return NULL;
 }
 
@@ -1046,51 +1059,25 @@ ItemImpl::tune_requisition (double new_width,
 }
 
 void
-ItemImpl::copy_area (const Rect  &rect,
-                 const Point &dest)
+ItemImpl::expose_internal (const Region &region)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  if (!region.empty())
     {
-      Allocation a = allocation();
-      Rect srect (Point (a.x, a.y), a.width, a.height);
-      Rect drect (Point (a.x, a.y), a.width, a.height);
-      /* clip src and dest rectangles to allocation */
-      srect.intersect (rect);
-      drect.intersect (Rect (dest, rect.width, rect.height));
-      /* offset src rectangle by the amount the dest rectangle was clipped */
-      Rect src (Point (srect.x + drect.x - dest.x, srect.y + drect.y - dest.y),
-                min (srect.width, drect.width),
-                min (srect.height, drect.height));
-      /* the actual copy */
-      if (!src.empty())
-        ritem->copy_area (src, drect.lower_left());
+      // queue expose region on nextmost viewport
+      ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
+      if (vp)
+        vp->expose_child_region (region);
     }
 }
 
 void
-ItemImpl::expose ()
+ItemImpl::expose (const Region &region) // item relative
 {
-  expose (allocation());
-}
-
-void
-ItemImpl::expose (const Rect &rect) /* item coordinates relative */
-{
-  expose (Region (rect));
-}
-
-void
-ItemImpl::expose (const Region &region) /* item coordinates relative */
-{
-  Region r (allocation());
-  r.intersect (region);
-  WindowImpl *rt = get_window();
-  if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
+  if (drawable() && !test_flags (INVALID_CONTENT))
     {
-      const Affine &affine = affine_to_viewp0rt();
-      r.affine (affine);
-      rt->expose_window_region (r);
+      Region r (allocation());
+      r.intersect (region);
+      expose_internal (r);
     }
 }
 
@@ -1384,8 +1371,8 @@ ItemImpl::tune_requisition (Requisition requisition)
   ItemImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      WindowImpl *r = p->get_window();
-      if (r && r->tunable_requisitions())
+      ViewportImpl *vp = p->get_viewport();
+      if (vp && vp->requisitions_tunable())
         {
           Requisition ovr (width(), height());
           requisition.width = ovr.width >= 0 ? ovr.width : MAX (requisition.width, 0);
@@ -1393,7 +1380,7 @@ ItemImpl::tune_requisition (Requisition requisition)
           if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
             {
               m_requisition = requisition;
-              invalidate_parent(); /* need new size-request on parent */
+              invalidate_parent(); // need new size-request on parent
               return true;
             }
         }
@@ -1411,7 +1398,7 @@ ItemImpl::set_allocation (const Allocation &area)
   sarea.width  = CLAMP (sarea.width,  0, smax);
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
-  Allocation oa = allocation();
+  const Allocation oa = allocation();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   if (!allocatable())
@@ -1421,24 +1408,109 @@ ItemImpl::set_allocation (const Allocation &area)
   size_allocate (m_allocation, changed);
   Allocation a = allocation();
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);
-  change_flags_silently (INVALID_CONTENT, false); /* skip notification */
-  /* expose old area */
+  change_flags_silently (INVALID_CONTENT, false); // skip notification
+  // expose old area
   if (need_expose)
     {
-      /* expose unclipped */
-      Region r (oa);
-      WindowImpl *rt = get_window();
-      if (!r.empty() && rt)
-        {
-          const Affine &affine = affine_to_viewp0rt();
-          r.affine (affine);
-          Rect rc = r.extents();
-          rt->expose (rc);
-        }
+      // expose unclipped
+      Region region (oa);
+      expose_internal (region);
     }
   /* expose new area */
   if (need_expose)
     expose();
+}
+
+// == rendering ==
+class ItemImpl::RenderContext {
+  friend class ItemImpl;
+  vector<cairo_surface_t*> surfaces;
+  Region                   render_area;
+  vector<cairo_t*>         cairos;
+public:
+  /*dtor*/     ~RenderContext();
+  const Region& region() const { return render_area; }
+};
+
+void
+ItemImpl::render_into (cairo_t *cr, const Region &region)
+{
+  RenderContext rcontext;
+  rcontext.render_area = allocation();
+  rcontext.render_area.intersect (region);
+  if (!rcontext.render_area.empty())
+    {
+      render_item (rcontext);
+      cairo_save (cr);
+      vector<Rect> rects;
+      rcontext.render_area.list_rects (rects);
+      for (size_t i = 0; i < rects.size(); i++)
+        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      cairo_clip (cr);
+      for (size_t i = 0; i < rcontext.surfaces.size(); i++)
+        {
+          cairo_set_source_surface (cr, rcontext.surfaces[i], 0, 0);
+          cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+          cairo_paint_with_alpha (cr, 1.0);
+        }
+      cairo_restore (cr);
+    }
+}
+
+void
+ItemImpl::render_item (RenderContext &rcontext)
+{
+  size_t n_cairos = rcontext.cairos.size();
+  Rect area = allocation();
+  area.intersect (rendering_region (rcontext).extents());
+  render (rcontext, area);
+  while (rcontext.cairos.size() > n_cairos)
+    {
+      cairo_destroy (rcontext.cairos.back());
+      rcontext.cairos.pop_back();
+    }
+}
+
+void
+ItemImpl::render (RenderContext &rcontext, const Rect &rect)
+{}
+
+const Region&
+ItemImpl::rendering_region (RenderContext &rcontext) const
+{
+  return rcontext.render_area;
+}
+
+cairo_t*
+ItemImpl::cairo_context (RenderContext  &rcontext,
+                         const Allocation &area)
+{
+  Rect rect = area;
+  if (area == Allocation (-1, -1, 0, 0))
+    rect = allocation();
+  return_val_if_fail (rect.width > 0 && rect.height > 0, NULL);
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
+  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
+  rcontext.surfaces.push_back (surface);
+  cairo_t *cr = cairo_create (surface);
+  rcontext.cairos.push_back (cr);
+  return cr;
+}
+
+ItemImpl::RenderContext::~RenderContext()
+{
+  warn_if_fail (cairos.size() == 0);
+  while (!cairos.empty())
+    {
+      cairo_destroy (cairos.back());
+      cairos.pop_back();
+    }
+  while (!surfaces.empty())
+    {
+      cairo_surface_destroy (surfaces.back());
+      surfaces.pop_back();
+    }
 }
 
 } // Rapicorn

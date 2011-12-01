@@ -19,6 +19,7 @@ class SizeGroup;
 class Adjustment;
 class ContainerImpl;
 class WindowImpl;
+class ViewportImpl;
 
 /* --- event handler --- */
 class EventHandler : public virtual BaseObject {
@@ -51,6 +52,7 @@ class ItemImpl : public virtual ItemIface {
   ContainerImpl**             _parent_loc        () { return &m_parent; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
+  void                        expose_internal    (const Region &region);
 protected:
   virtual void                constructed             ();
   /* flag handling */
@@ -179,6 +181,7 @@ public:
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
+  ViewportImpl*               get_viewport      () const;
   WindowImpl*                 get_window        () const;
   /* cross links */
   void                        cross_link        (ItemImpl       &link,
@@ -190,10 +193,9 @@ public:
   void                        invalidate        ();
   void                        invalidate_size   ();
   void                        changed           ();
-  void                        expose            ();                             /* item allocation */
-  void                        expose            (const Rect       &rect);       /* item coordinates relative */
-  void                        expose            (const Region     &region);     /* item coordinates relative */
-  void                        copy_area         (const Rect &rect, const Point &dest);
+  void                        expose            ()                      { expose (allocation()); }
+  void                        expose            (const Rect &rect)      { expose (Region (rect)); }
+  void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
@@ -202,16 +204,24 @@ public:
   Signal<ItemImpl, void ()>               sig_invalidate;
   Signal<ItemImpl, void (ItemImpl *oldt)> sig_hierarchy_changed;
   /* event handling */
-  bool                       process_event          (const Event &event);       /* item coordinates relative */
-  bool                       process_viewp0rt_event (const Event &event);       /* viewp0rt coordinates relative */
+  bool                       process_event               (const Event &event);  // item coordinates relative
+  bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
   /* coordinate handling */
 protected:
-  Affine                     affine_to_viewp0rt     ();                         /* item => viewp0rt affine */
-  Affine                     affine_from_viewp0rt   ();                         /* viewp0rt => item affine */
+  Affine                     affine_to_screen_window   ();                    // item => screen_window affine
+  Affine                     affine_from_screen_window ();                    // screen_window => item affine
+  // rendering
+  class RenderContext;
+  virtual void               render_item               (RenderContext    &rcontext);
+  virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
+  const Region&              rendering_region          (RenderContext    &rcontext) const;
+  virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
+                                                        const Allocation &area = Allocation (-1, -1, 0, 0));
 public:
-  virtual bool               point                  (Point        p);           /* item coordinates relative */
-  Point                      point_to_viewp0rt      (Point        item_point);  /* item coordinates relative */
-  Point                      point_from_viewp0rt    (Point        window_point);/* viewp0rt coordinates relative */
+  void                       render_into               (cairo_t *cr, const Region &region);
+  virtual bool               point                     (Point        p);            // item coordinates relative
+  Point                      point_to_screen_window    (Point        item_point);   // item coordinates relative
+  Point                      point_from_screen_window  (Point        window_point); // screen_window coordinates relative
   virtual bool               translate_from         (const ItemImpl   &src_item,
                                                      const uint    n_points,
                                                      Point        *points) const;
@@ -224,13 +234,11 @@ public:
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
                                                      const ItemImpl   &target_item) const;
-  bool                       viewp0rt_point         (Point        p);           /* viewp0rt coordinates relative */
+  bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area);       // assign new allocation
   const Allocation&          allocation         () const { return m_allocation; } // current allocation
-  /* display */
-  virtual void               render             (Display        &display) = 0;
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return m_heritage; }

@@ -20,7 +20,7 @@
 #include <pango/pangocairo.h>
 #include "factory.hh"
 #include "painter.hh"
-#include "viewp0rt.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
+#include "screenwindow.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
 #include <algorithm>
 
@@ -1222,34 +1222,33 @@ protected:
       area.width = area.height = 0;
     return area;
   }
-  void
-  render (Display &display)
+  virtual void
+  render (RenderContext &rcontext, const Rect &rect)
   {
     uint vdot_size = 0;
-    Rect area = layout_area (&vdot_size);
-    if (area.width < 1) // allowed: area.height < 1
+    Rect larea = layout_area (&vdot_size);
+    if (larea.width < 1) // allowed: larea.height < 1
       return;
     /* render text */
-    cairo_t *cairo = display.create_cairo();
-    default_pango_cairo_font_options (NULL, cairo);
+    cairo_t *cr = cairo_context (rcontext, rect);
+    default_pango_cairo_font_options (NULL, cr);
     rapicorn_gtk_threads_enter();
     if (insensitive())
       {
-        const double ax = area.x, ay = area.y;
+        const double ax = larea.x, ay = larea.y;
         Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
-        area.x = ax, area.y = ay - 1;
-        render_text_gL (cairo, area, vdot_size, insensitive_glint);
-        area.x = ax - 1, area.y = ay;
-        render_text_gL (cairo, area, vdot_size, insensitive_ink);
+        larea.x = ax, larea.y = ay - 1;
+        render_text_gL (cr, larea, vdot_size, insensitive_glint);
+        larea.x = ax - 1, larea.y = ay;
+        render_text_gL (cr, larea, vdot_size, insensitive_ink);
       }
     else
       {
         /* render normal text */
-        render_text_gL (cairo, area, vdot_size, foreground());
+        render_text_gL (cr, larea, vdot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
-    cairo_destroy (cairo);
   }
   virtual const PropertyList&
   list_properties() // escape check-list_properties ';'

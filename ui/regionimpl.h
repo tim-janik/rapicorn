@@ -62,6 +62,7 @@ RapicornRegionCType	_rapicorn_region_region_in 	(const RapicornRegion      *regi
 int			_rapicorn_region_get_rects 	(const RapicornRegion 	   *region,
 							 int                  	    n_rects,
 							 RapicornRegionBox    	   *rects);
+int			_rapicorn_region_get_rect_count	(const RapicornRegion 	   *region);
 void			_rapicorn_region_union_rect	(RapicornRegion            *region,
 							 const RapicornRegionBox   *rect);
 void			_rapicorn_region_union 		(RapicornRegion       	   *region,
