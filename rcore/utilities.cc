@@ -139,12 +139,20 @@ timestamp_benchmark ()
 SourceLocation::SourceLocation (const char *file, int line, const char *func,
                                 const char *pretty_func, const char *component) :
   m_file (file), m_line (line > 0 ? string_from_int (line) : ""), m_func (func),
-  m_pretty (pretty_func), m_component (component)
-{}
+  m_pretty (pretty_func), m_component (component), m_location_bits (0)
+{
+  m_location_bits |= m_file.empty() ? 0 : LOCATION;
+  m_location_bits |= m_func.empty() ? 0 : FUNCTION;
+  m_location_bits |= m_component.empty() ? 0 : COMPONENT;
+}
 
-SourceLocation::SourceLocation (const char *component) :
-  m_file (""), m_line (""), m_func (""), m_pretty (""), m_component (component)
-{}
+SourceLocation:: SourceLocation (const char *file, const char *component, const char *key) :
+  m_file (file), m_line (""), m_func (key), m_pretty (""), m_component (component), m_location_bits (0)
+{
+  m_location_bits |= m_file.empty() ? 0 : LOCATION;
+  m_location_bits |= m_func.empty() ? 0 : KEY;
+  m_location_bits |= m_component.empty() ? 0 : COMPONENT;
+}
 
 String
 SourceLocation::where () const
@@ -162,7 +170,7 @@ SourceLocation::where (int bits) const
     if (!m_line.empty())
       s += ":" + m_line;
     }
-  if (bits & FUNCTION && !m_func.empty())
+  if (bits & m_location_bits & FUNCTION && !m_func.empty())
     {
       s += s.empty() ? "" : ": ";
       s += m_func + "()";
@@ -192,8 +200,27 @@ file_stem (const String &fname)
 String
 SourceLocation::debug_prefix () const
 {
-  String f = file_stem (m_file);
-  return f.empty() ? "" : f + ": ";
+  String key = debug_key (false);
+  return key.empty() ? "" : key + ": ";
+}
+
+String
+SourceLocation::debug_key (bool explicit_key) const
+{
+  if (m_location_bits & KEY)
+    return m_func;
+  if (explicit_key)
+    return "";
+  // fallbacks
+  if (m_location_bits & LOCATION)
+    {
+      String fstem = file_stem (m_file);
+      if (!fstem.empty())
+        return fstem;
+    }
+  if (m_location_bits & COMPONENT)
+    return m_component;
+  return m_file;
 }
 
 // == KeyConfig ==
@@ -244,11 +271,14 @@ KeyConfig::configure (const String &colon_options)
           val = string_from_int (!string_to_int (val));
         }
       m_map[key] = val;
+      // printerr ("KEY: %s = %s\n", key.c_str(), val.c_str());
     }
 }
 
 // === Logging ===
 bool               Logging::m_debugging = true; // bootup default before _init()
+static bool                 conftest_any_debugging = false;
+static bool                 conftest_key_debugging = false;
 static KeyConfig * volatile conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
 static const char   * const conftest_aliases[] = {
@@ -294,7 +324,7 @@ conftest_slookup (const String &key, const String &dfl = "")
 }
 
 static int
-conftest_lookup (const char *option, int vdefault = 0)
+conftest_lookup (const String &option, int vdefault = 0)
 {
   return string_to_int (conftest_slookup (option, string_from_int (vdefault)));
 }
@@ -316,15 +346,46 @@ Logging::configure (const char *option)
           s = s.substr (0, pos) + ":" + r + ":" + s.substr (pos + m.size());
         }
     }
+  const bool seen_debug_key = strstr (s.c_str(), ":debug-") != NULL;
+  if (seen_debug_key)
+    Atomic::value_set (&conftest_key_debugging, true);
   conftest_procure().configure (s);
-  Atomic::value_set (&m_debugging, (bool) conftest_lookup ("verbose")); // update "cached" configuration
+  Atomic::value_set (&conftest_any_debugging, bool (conftest_lookup ("verbose") || conftest_lookup ("debug-all")));
+  Atomic::value_set (&m_debugging, bool (conftest_key_debugging | conftest_any_debugging)); // update "cached" configuration
+  static bool first_help = false;
+  if (strstr (s.c_str(), ":help:") && once_enter (&first_help))
+    {
+      printerr ("%s", help().c_str());
+      once_leave (&first_help, true);
+    }
+}
+
+String
+Logging::help ()
+{
+  String s;
+  s += "$RAPICORN - Environment variable for debugging and configuration.\n";
+  s += "Colon seperated options can be listed here, listing an option enables it,\n";
+  s += "prefixing it with 'no-' disables it. Option assignments are supported with\n";
+  s += "the syntax 'option=VALUE'. The supported options are:\n";
+  s += "  :help:            Provide a brief description for this environment variable.\n";
+  s += "  :debug:           Enable general debugging messages, similar to :verbose:.\n";
+  s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
+  s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
+  s += "  :verbose:         Enable general information and diagnostic messages.\n";
+  s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
+  s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
+  s += "  :fatal-warnings:  Cast all warning messages into fatal conditions.\n";
+  return s;
 }
 
 int
 Logging::conftest (const char *option,
                    int         vdefault)
 {
-  return conftest_lookup (option, vdefault);
+  String key = option;
+  std::transform (key.begin(), key.end(), key.begin(), ::tolower);
+  return conftest_lookup (key, vdefault);
 }
 
 static String
@@ -413,18 +474,25 @@ Logging::message (const char *kind, const SourceLocation &sloc, const char *form
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_DEBUG)
     {
-      static bool first_debug = false;
-      if (once_enter (&first_debug))
+      String dkey = sloc.debug_key (true); // non-empty for KEY_DEBUG
+      std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
+      if ((conftest_any_debugging && dkey.empty()) ||
+          (conftest_key_debugging && !dkey.empty() &&
+           (conftest_lookup (String ("debug-" + dkey).c_str()) || conftest_lookup ("debug-all"))))
         {
-          printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
+          static bool first_debug = false;
+          if (once_enter (&first_debug))
+            {
+              printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
+                        delta / 1000000, delta % 1000000,
+                        program_name().c_str(), thread_pid(),
+                        start / 1000000, start % 1000000);
+              once_leave (&first_debug, true);
+            }
+          printerr ("[%llu.%06llu] %s%s%s",
                     delta / 1000000, delta % 1000000,
-                    program_name().c_str(), thread_pid(),
-                    start / 1000000, start % 1000000);
-          once_leave (&first_debug, true);
+                    sloc.debug_prefix().c_str(), msg.c_str(), emsg.c_str());
         }
-      printerr ("[%llu.%06llu] %s%s%s",
-                delta / 1000000, delta % 1000000,
-                sloc.debug_prefix().c_str(), msg.c_str(), emsg.c_str());
     }
   if (f & DO_STDERR)
     {

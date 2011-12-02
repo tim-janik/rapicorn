@@ -131,6 +131,8 @@ String      process_handle ();
 #define PASSERT            RAPICORN_PASSERT            // (condition)
 #define DEBUG              RAPICORN_DEBUG
 #define PDEBUG             RAPICORN_PDEBUG
+#define KEY_DEBUG          RAPICORN_KEY_DEBUG
+#define KEY_PDEBUG         RAPICORN_KEY_PDEBUG
 #define warn_if_fail       RAPICORN_CHECK              // (condition)
 #define throw_if_fail      RAPICORN_THROW_IF_FAIL      // (condition)
 #define return_if_fail     RAPICORN_RETURN_IF_FAIL     // (condition)
@@ -162,16 +164,19 @@ inline void breakpoint() { __builtin_trap(); }
 // == Source Location ==
 class SourceLocation {
   String m_file, m_line, m_func, m_pretty, m_component;
+  uint   m_location_bits;
 public:
-  enum Bits { NONE = 0, LOCATION = 1, FUNCTION = 2, COMPONENT = 4 };
+  enum Bits { NONE = 0, LOCATION = 1, FUNCTION = 2, COMPONENT = 4, KEY = 8 };
   SourceLocation (const char *file, int line, const char *func, const char *pretty_func, const char *component);
-  SourceLocation (const char *source_component);
+  SourceLocation (const char *file, const char *component, const char *key);
   String where () const;
   String where (int bits) const;
+  String debug_key (bool explicit_key = false) const;
   String debug_prefix () const;
 };
 #define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN__SOURCE_COMPONENT__)
-#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation (RAPICORN__SOURCE_COMPONENT__)
+#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, "")
+#define RAPICORN_SOURCE_KEY(key)        Rapicorn::SourceLocation::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, key)
 
 // == Logging and Assertions ==
 class Logging {
@@ -184,6 +189,7 @@ public:
                                  const char *format, ...) RAPICORN_PRINTF (3, 4);
   static void   messagev        (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs);
   static void   abort           () RAPICORN_NORETURN;
+  static String help            ();
 };
 
 static inline void fatal (const char *format, ...)     RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
@@ -206,6 +212,8 @@ static inline void pcritical (const char *format, ...) { va_list a; va_start (a,
 #define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
 #define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
 #define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(k,...)  do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_KEY (k), __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_PDEBUG(k,...) do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN_SOURCE_KEY (k), __VA_ARGS__); } while (0)
 
 // == AssertionError ==
 class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
