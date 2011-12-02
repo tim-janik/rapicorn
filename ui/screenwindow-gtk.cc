@@ -25,10 +25,12 @@
 
 #include <cstring>
 
+#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
   if (___s != CAIRO_STATUS_SUCCESS)             \
-    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+    EDEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 namespace { // Anon
@@ -1050,7 +1052,7 @@ debug_dump_event (GtkWidget          *widget,
     }
   dmsg += string_printf (" (wwin=%p %d,%d %dx%d)%s", widget->window, wx, wy, ww, wh,
                          econtext.synthesized ? " (synth)" : "");
-  DEBUG ("%s", dmsg.c_str());
+  EDEBUG ("%s", dmsg.c_str());
   g_type_class_unref (eclass);
 }
 
@@ -1090,7 +1092,7 @@ rapicorn_screen_window_event (GtkWidget *widget,
             {
               econtext = rapicorn_screen_window_event_context (self, event, NULL, tcoords[i]);
               self->last_motion_time = self->last_time;
-              DEBUG ("MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
+              EDEBUG ("MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
               screen_window->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
             }
           gdk_device_free_history (tcoords, n);
