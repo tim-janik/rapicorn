@@ -152,8 +152,7 @@ public:
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
         cairo_matrix_init_identity (&matrix);
-        cairo_matrix_translate (&matrix, -ix, iy + m_pixmap->height());
-        cairo_matrix_scale (&matrix, 1, -1);
+        cairo_matrix_translate (&matrix, -ix, -iy);
         cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
         cairo_paint (cr);
         cairo_surface_destroy (isurface);
