@@ -221,11 +221,9 @@ class Color {
   typedef uint32 (Color::*_unspecified_bool_type) () const; // non-numeric operator bool() result
   static inline _unspecified_bool_type _unspecified_bool_true () { return &Color::argb; }
 public:
-  static inline uint8 IMUL    (uint8 v, uint8 alpha)            { return (v * (uint32) 0x010102 * alpha) >> 24; }
-  static inline uint8 IDIV    (uint8 v, uint8 alpha)            { return (v * (uint32) 0xff) / alpha; }
-  static inline uint8 IDIV0   (uint8 v, uint8 alpha)            { if (!alpha) return 0xff; return IDIV (v, alpha); }
-  static inline uint8 IMULDIV (uint8 v, uint8 amul, uint8 adiv) // IMUL (IDIV (v, amul), adiv)
-  { return (((v * (uint32) 0x010102 * amul / adiv) >> 8) * 0xff) >> 16; }
+  static inline uint8 IMUL    (uint8 v, uint8 alpha)            { return (v * alpha * 0x0101 + 0x8080) >> 16; }
+  static inline uint8 IDIV    (uint8 v, uint8 alpha)            { return (0xff * v + (alpha >> 1)) / alpha; }
+  static inline uint8 IDIV0   (uint8 v, uint8 alpha)            { if (!alpha) return 0; return IDIV (v, alpha); }
   Color (uint32 c = 0) :
     argb_pixel (c)
   {}
