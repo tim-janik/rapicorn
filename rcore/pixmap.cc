@@ -255,6 +255,19 @@ pixmap_border (Pixmap *pixmap,
     }
 }
 
+static inline uint8 IMUL (uint8 v, uint8 alpha) { return (v * alpha * 0x0101 + 0x8080) >> 16; }
+
+static inline uint32
+premultiply (uint32 pixel)
+{
+  const uint8 alpha = pixel >> 24;
+  uint32 p = alpha << 24;
+  p |= IMUL (0xff & (pixel >> 16), alpha) << 16;     // red
+  p |= IMUL (0xff & (pixel >> 8),  alpha) << 8;      // green
+  p |= IMUL (0xff & pixel,         alpha);           // blue
+  return p;
+}
+
 static int /* errno */
 fill_pixmap_from_pixstream (Pixmap      &pixmap,
                             bool         has_alpha,
@@ -289,10 +302,10 @@ fill_pixmap_from_pixstream (Pixmap      &pixmap,
                 length = image_limit - image_buffer;
               if (bpp < 4)
                 while (length--)
-                  *image_buffer++ = (0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                  *image_buffer++ = premultiply ((0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2]);
               else
                 while (length--)
-                  *image_buffer++ = (rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                  *image_buffer++ = premultiply ((rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2]);
               rle_buffer += bpp;
             }
           else
@@ -303,13 +316,13 @@ fill_pixmap_from_pixstream (Pixmap      &pixmap,
               if (bpp < 4)
                 while (length--)
                   {
-                    *image_buffer++ = (0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                    *image_buffer++ = premultiply ((0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2]);
                     rle_buffer += 3;
                   }
               else
                 while (length--)
                   {
-                    *image_buffer++ = (rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                    *image_buffer++ = premultiply ((rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2]);
                     rle_buffer += 4;
                   }
             }
@@ -325,13 +338,13 @@ fill_pixmap_from_pixstream (Pixmap      &pixmap,
         if (bpp < 4)
           while (length--)
             {
-              *row++ = (0xff << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2];
+              *row++ = premultiply ((0xff << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2]);
               encoded_pixdata += 3;
             }
         else
           while (length--)
             {
-              *row++ = (encoded_pixdata[3] << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2];
+              *row++ = premultiply ((encoded_pixdata[3] << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2]);
               encoded_pixdata += 4;
             }
       }
@@ -424,6 +437,41 @@ Pixmap::stock (const String &stock_name)
 
 namespace {
 
+static void
+rgba_2_argb_pre (png_structp png, png_row_infop row_info, png_bytep data)
+{
+  for (uint i = 0; i < row_info->rowbytes; i += 4)
+    {
+      const uint8 alpha = data[i + 3];          // RGBA bytes
+      uint32 p = alpha << 24;
+      p |= IMUL (data[i + 0], alpha) << 16;     // red
+      p |= IMUL (data[i + 1], alpha) << 8;      // green
+      p |= IMUL (data[i + 2], alpha);           // blue
+      *(uint32*) &data[i] = p;                  // store ARGB in native endianess
+    }
+}
+
+static inline uint8 IDIV (uint8 v, uint8 alpha) { return (0xff * v + (alpha >> 1)) / alpha; }
+
+static void
+argb_pre_2_rgba (png_structp png, png_row_infop row_info, png_bytep data)
+{
+  for (uint i = 0; i < row_info->rowbytes; i += 4)
+    {
+      const uint32 p = *(uint32*) &data[i];     // ARGB in native endianess
+      const uint8 alpha = p >> 24;
+      data[i + 3] = alpha;                      // store RGBA bytes
+      if (alpha == 0)
+        data[i + 0] = data[i + 1] = data[i + 2] = 0;
+      else
+        {
+          data[i + 0] = IDIV (p >> 16, alpha);  // red
+          data[i + 1] = IDIV (p >> 8, alpha);   // green
+          data[i + 2] = IDIV (p, alpha);        // blue
+        }
+    }
+}
+
 struct PngContext {
   Pixmap    *pixmap;
   int        error;
@@ -439,44 +487,32 @@ pngcontext_configure_4argb (png_structp  png_ptr,
                             uint        *heightp)
 {
   int bit_depth = png_get_bit_depth (png_ptr, info_ptr);
-  /* check bit-depth to be only 1, 2, 4, 8, 16 to prevent libpng errors */
+  // check bit-depth to be only 1, 2, 4, 8, 16 to prevent libpng errors
   if (bit_depth < 1 || bit_depth > 16 || (bit_depth & (bit_depth - 1)))
     return EINVAL;
   int color_type = png_get_color_type (png_ptr, info_ptr);
   int interlace_type = png_get_interlace_type (png_ptr, info_ptr);
-  /* beware, ordering of the following transformation requests matters */
+  // beware, ordering of the following transformation requests matters
   if (color_type == PNG_COLOR_TYPE_PALETTE)
-    png_set_palette_to_rgb (png_ptr);                           /* request RGB format */
+    png_set_palette_to_rgb (png_ptr);                           // request RGB format
   if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-    png_set_gray_1_2_4_to_8 (png_ptr);                          /* request 8bit per sample */
+    png_set_gray_1_2_4_to_8 (png_ptr);                          // request 8bit per sample
   if (png_get_valid (png_ptr, info_ptr, PNG_INFO_tRNS))
-    png_set_tRNS_to_alpha (png_ptr);                            /* request transparency as alpha channel */
+    png_set_tRNS_to_alpha (png_ptr);                            // request transparency as alpha channel
   if (bit_depth == 16)
-    png_set_strip_16 (png_ptr);                                 /* request 8bit per sample */
+    png_set_strip_16 (png_ptr);                                 // request 8bit per sample
   if (bit_depth < 8)
-    png_set_packing (png_ptr);                                  /* request 8bit per sample */
+    png_set_packing (png_ptr);                                  // request 8bit per sample
   if (color_type == PNG_COLOR_TYPE_GRAY ||
       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    png_set_gray_to_rgb (png_ptr);                              /* request RGB format */
-#if     __BYTE_ORDER == __LITTLE_ENDIAN
-  if (color_type == PNG_COLOR_TYPE_RGB ||
-      color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    png_set_bgr (png_ptr);                                      /* request ARGB as little-endian: BGRA */
+    png_set_gray_to_rgb (png_ptr);                              // request RGB format
   if (color_type == PNG_COLOR_TYPE_RGB ||
       color_type == PNG_COLOR_TYPE_GRAY)
-    png_set_add_alpha (png_ptr, 0xff, PNG_FILLER_AFTER);        /* request ARGB as little-endian: BGRA */
-#elif   __BYTE_ORDER == __BIG_ENDIAN
-  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    png_set_swap_alpha (png_ptr);                               /* request big-endian ARGB */
-  if (color_type == PNG_COLOR_TYPE_RGB ||
-      color_type == PNG_COLOR_TYPE_GRAY)
-    png_set_add_alpha (png_ptr, 0xff, PNG_FILLER_BEFORE);       /* request big-endian ARGB */
-#else
-#error  Unknown endianess type
-#endif
+    png_set_add_alpha (png_ptr, 0xff, PNG_FILLER_AFTER);        // request RGB as RGBA
   if (interlace_type != PNG_INTERLACE_NONE)
-    png_set_interlace_handling (png_ptr);                       /* request non-interlaced image */
-  /* reflect the transformations */
+    png_set_interlace_handling (png_ptr);                       // request non-interlaced image
+  png_set_read_user_transform_fn (png_ptr, rgba_2_argb_pre);    // premultiplies RGBA bytes to native endian ARGB
+  // reflect the transformations
   png_read_update_info (png_ptr, info_ptr);
   png_uint_32 pwidth = 0, pheight = 0;
   int compression_type = 0, filter_type = 0;
@@ -485,7 +521,7 @@ pngcontext_configure_4argb (png_structp  png_ptr,
                 &compression_type, &filter_type);
   *widthp = pwidth;
   *heightp = pheight;
-  /* sanity checks */
+  // sanity checks
   if (pwidth < 1 || pheight < 1 || pwidth > MAXDIM || pheight > MAXDIM)
     return ENOMEM;
   if (bit_depth != 8 ||
@@ -681,16 +717,10 @@ Pixbuf::save_png (const String &filename, /* assigns errno */
       png_set_sBIT (png_ptr, info_ptr, &sig_bit);
       png_set_shift (png_ptr, &sig_bit);
       png_set_packing (png_ptr);
-#if     __BYTE_ORDER == __LITTLE_ENDIAN
-      png_set_bgr (png_ptr);                            /* request ARGB as little-endian: BGRA */
-#elif   __BYTE_ORDER == __BIG_ENDIAN
-      png_set_swap_alpha (png_ptr);                     /* request big-endian ARGB */
-#else
-#error  Unknown endianess type
-#endif
       /* perform image IO */
       png_init_io (png_ptr, pcontext.fp);
       png_write_info (png_ptr, info_ptr);
+      png_set_write_user_transform_fn (png_ptr, argb_pre_2_rgba);
       for (int y = 0; y < h; y++)
         {
           png_bytep row_ptr = (png_bytep) pixbuf.row (y);
