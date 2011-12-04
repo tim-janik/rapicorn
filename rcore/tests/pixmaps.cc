@@ -46,18 +46,19 @@ REGISTER_TEST ("Pixmaps/compare", test_pixmap_compare);
 static Pixmap*
 create_sample_pixmap (void)
 {
+  // create sample, ensure it's properly premultiplied, i.e. alpha=max(ARGB)
   Pixmap *pixmap = new Pixmap (4, 4);
   ref_sink (pixmap);
   uint32 *row = pixmap->row (0);
   row[1] = 0xff667788;
   row = pixmap->row (1);
-  row[0] = Test::rand_int();
-  row[1] = Test::rand_int();
+  row[0] = Test::rand_int() | 0xff000000;
+  row[1] = Test::rand_int() | 0xff000000;
   row = pixmap->row (2);
   memset (row, 0x80, pixmap->width() * sizeof (row[0]));
   row = pixmap->row (3);
   row[0] = 0xffffffff;
-  row[1] = 0x8000ff00;
+  row[1] = 0xff008000;
   row[2] = 0xaa773311;
   row[3] = 0xff000000;
   pixmap->comment ("Created by Rapicorn test");
@@ -127,6 +128,7 @@ test_pixstreams (void)
   pixall->copy (*pixmap2, 0, 0, -1, -1, 0, 32);
   pixall->copy (*pixmap3, 0, 0, -1, -1, 0, 64);
   pixall->copy (*pixmap4, 0, 0, -1, -1, 0, 96);
+
   /* load reference */
   String reference = "testpixs.png";
   Pixmap *pixref = Pixmap::load_png (Path::vpath_find (reference).c_str());
