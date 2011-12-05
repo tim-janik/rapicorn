@@ -51,17 +51,13 @@ cairo_surface_from_pixmap (Pixmap &pixmap)
 
 class ImageImpl : public virtual ItemImpl, public virtual Image {
   Pixmap           *m_pixmap;
-  int               m_xoffset, m_yoffset;
 public:
   explicit ImageImpl() :
-    m_pixmap (NULL),
-    m_xoffset (0),
-    m_yoffset (0)
+    m_pixmap (NULL)
   {}
   void
   reset ()
   {
-    m_xoffset = m_yoffset = 0;
     if (m_pixmap)
       {
         Pixmap *op = m_pixmap;
@@ -128,13 +124,31 @@ protected:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    if (m_pixmap)
-      {
-        m_xoffset = iround (0.5 * (area.width - m_pixmap->width()));
-        m_yoffset = iround (0.5 * (area.height - m_pixmap->height()));
-      }
-    else
-      m_xoffset = m_yoffset = 0;
+    // nothing special...
+  }
+  struct PixView {
+    int xoffset, yoffset, pwidth, pheight;
+    double xscale, yscale, scale;
+  };
+  PixView
+  adjust_view()
+  {
+    const bool grow = true;
+    PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
+    const Allocation &area = allocation();
+    if (area.width < 1 || area.height < 1 || !m_pixmap)
+      return view;
+    view.xscale = m_pixmap->width() / area.width;
+    view.yscale = m_pixmap->height() / area.height;
+    view.scale = max (view.xscale, view.yscale);
+    if (!grow)
+      view.scale = max (view.scale, 1.0);
+    view.pwidth = m_pixmap->width() / view.scale + 0.5;
+    view.pheight = m_pixmap->height() / view.scale + 0.5;
+    const PackInfo &pi = pack_info();
+    view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
+    view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
+    return view;
   }
 public:
   virtual void
@@ -143,17 +157,20 @@ public:
     if (m_pixmap)
       {
         const Allocation &area = allocation();
-        int ix = iround (area.x + m_xoffset), iy = iround (area.y + m_yoffset);
-        int ih = m_pixmap->height();
-        Rect erect = Rect (ix, iy, m_pixmap->width(), ih);
+        PixView view = adjust_view();
+        int ix = area.x + view.xoffset, iy = area.y + view.yoffset;
+        Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
         erect.intersect (rect);
         cairo_t *cr = cairo_context (rcontext, erect);
         cairo_surface_t *isurface = cairo_surface_from_pixmap (*m_pixmap);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
         cairo_matrix_init_identity (&matrix);
+        cairo_matrix_scale (&matrix, view.scale, view.scale);
         cairo_matrix_translate (&matrix, -ix, -iy);
         cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+        if (view.scale != 1.0)
+          cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
         cairo_paint (cr);
         cairo_surface_destroy (isurface);
       }
