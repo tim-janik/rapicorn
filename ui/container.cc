@@ -447,11 +447,11 @@ struct LesserItemByDirection {
       case FOCUS_RIGHT:
         return a.x - middle.x;
       case FOCUS_UP:
-        return a.y - middle.y;
+        return middle.y - (a.y + a.height);
       case FOCUS_LEFT:
         return middle.x - (a.x + a.width);
       case FOCUS_DOWN:
-        return middle.y - (a.y + a.height);
+        return a.y - middle.y;
       default:
         return -1;      /* unused */
       }
