@@ -352,8 +352,6 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
                                                              GDK_VISUAL_XVISUAL (gvisual),
                                                              gwidth, gheight);
       cairo_t *xcr = cairo_create (xsurface);
-      cairo_scale (xcr, 1, -1);
-      cairo_translate (xcr, 0, -gheight);
       vector<Rect> rects;
       region.list_rects (rects);
       for (size_t i = 0; i < rects.size(); i++)
@@ -381,8 +379,6 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   cairo_t *xcr = cairo_create (xsurface);
   return_if_fail (xcr);
   return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-  cairo_scale (xcr, 1, -1);
-  cairo_translate (xcr, 0, -gheight);
 
   cairo_save (xcr);
   vector<Rect> rects;
@@ -794,7 +790,7 @@ rapicorn_screen_window_event_context (RapicornScreenWindow *self,
       self->last_time = core_coords->time;
       self->last_x = core_coords->axes[0];
       /* vertical Rapicorn axis extends upwards */
-      self->last_y = wh - core_coords->axes[1];;
+      self->last_y = core_coords->axes[1];
       econtext.synthesized = true;
     }
   else if (event)
@@ -808,7 +804,7 @@ rapicorn_screen_window_event_context (RapicornScreenWindow *self,
           translate_along_ancestry (event->any.window, gdkwindow, &dx, &dy))
         {
           self->last_x = doublex - dx;
-          self->last_y = wh - (doubley - dy); // vertical Rapicorn axis extends upwards
+          self->last_y = doubley - dy;
         }
       if (event->type != GDK_PROPERTY_NOTIFY && // some X servers send 0-state on PropertyNotify
           gdk_event_get_state (event, &modifier_type))
@@ -1180,17 +1176,13 @@ rapicorn_screen_window_event (GtkWidget *widget,
             gint n_areas;
             gdk_region_get_rectangles (event->expose.region, &areas, &n_areas);
             for (int i = 0; i < n_areas; i++)
-              {
-                gint realy = window_height - (areas[i].y + areas[i].height);
-                rectangles.push_back (Rect (Point (areas[i].x, realy), areas[i].width, areas[i].height));
-              }
+              rectangles.push_back (Rect (Point (areas[i].x, areas[i].y), areas[i].width, areas[i].height));
             g_free (areas);
           }
         else
           {
             GdkRectangle &area = event->expose.area;
-            gint realy = window_height - (area.y + area.height);
-            rectangles.push_back (Rect (Point (area.x, realy), area.width, area.height));
+            rectangles.push_back (Rect (Point (area.x, area.y), area.width, area.height));
           }
         if (!screen_window->m_ignore_exposes)
           screen_window->enqueue_locked (create_event_win_draw (econtext, 0, rectangles));

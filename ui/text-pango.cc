@@ -958,8 +958,6 @@ protected:
         y -= area.y;
         /* offset by scroll position */
         x += m_scoffset;
-        /* adapt y direction */
-        y = area.height - y;
         /* scale to pango */
         x = PIXELS2UNITS (x);
         y = PIXELS2UNITS (y);
@@ -1086,20 +1084,20 @@ protected:
     double x = layout_rect.x + layout_x + UNITS2PIXELS (crect1.x);
     // double width = MIN (layout_rect.width, MAX (1, UNITS2PIXELS (crect1.width))); // FIXME: cursor width
     // double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
-    double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - crect1.y - crect1.height);
+    double y = layout_rect.y + layout_y + UNITS2PIXELS (crect1.y);
     double height = UNITS2PIXELS (crect1.height);
     Color fg (col.premultiplied());
     int xpos = iround (x);
     int ymin = iround (y), ymax = iround (y + height - 1);
     const double cw = 2, ch = 2;
     cairo_set_source_rgba (cairo, col.red1(), col.green1(), col.blue1(), col.alpha1());
-    // upper triangle
+    // lower triangle
     cairo_move_to (cairo, xpos,          ymax - ch);
     cairo_line_to (cairo, xpos - cw,     ymax);
     cairo_line_to (cairo, xpos + 1 + cw, ymax);
     cairo_line_to (cairo, xpos + 1,      ymax - ch);
     cairo_close_path (cairo);
-    // lower triangle
+    // upper triangle
     cairo_move_to (cairo, xpos,          ymin + ch);
     cairo_line_to (cairo, xpos - cw,     ymin);
     cairo_line_to (cairo, xpos + 1 + cw, ymin);
@@ -1155,8 +1153,7 @@ protected:
     cairo_save (cairo);
     cairo_set_source_rgba (cairo, fg.red1(), fg.green1(), fg.blue1(), fg.alpha1());
     // translate cairo surface so current_point=(0,0) becomes layout origin
-    cairo_translate (cairo, layout_rect.x - m_scoffset, layout_rect.height + layout_rect.y);
-    cairo_scale (cairo, 1, -1);
+    cairo_translate (cairo, layout_rect.x - m_scoffset, layout_rect.y);
     // clip to layout_rect, which has been shrunken to clip partial lines
     cairo_rectangle (cairo, m_scoffset, 0, layout_rect.width, layout_rect.height);
     cairo_clip (cairo);

@@ -262,7 +262,7 @@ protected:
             double cheight = round (adj.abs_length() * area.height);
             rq.height = MAX (cheight, rq.height);
           }
-        area.y += round ((1.0 - nvalue()) * (area.height - rq.height));
+        area.y += round (nvalue() * (area.height - rq.height));
         area.height = round (rq.height);
       }
     child.set_allocation (area);
@@ -311,7 +311,7 @@ class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventH
   flipped()
   {
     SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
-    return trough.flipped() ^ m_vertical_skid;
+    return trough.flipped();
   }
   bool
   vertical_skid () const
@@ -401,16 +401,16 @@ protected:
             else
               {
                 m_coffset = 0.5;
-                /* confine offset to not slip the skip off trough boundaries */
+                // confine offset to not slip the skid off trough boundaries
                 cp = ep - clength * m_coffset;
                 const Allocation &ta = trough.allocation();
                 double start_slip = (vertical_skid() ? ta.y : ta.x) - cp;
                 double tlength = vertical_skid() ? ta.y + ta.height : ta.x + ta.width;
                 double end_slip = cp + clength - tlength;
-                /* adjust skid position */
+                // adjust skid position
                 cp += MAX (0, start_slip);
                 cp -= MAX (0, end_slip);
-                /* recalculate offset */
+                // recalculate offset
                 m_coffset = (ep - cp) / clength;
               }
           }

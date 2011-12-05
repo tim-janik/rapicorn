@@ -139,7 +139,7 @@
   <def:ScrollArea inherit="Alignment" child-container="scroll-container">
     <RapicornScrollArea>
       <Table>
-	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="1" vspan="1" width="0" height="0"
+	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="0" vspan="1" width="0" height="0"
 	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	  <Frame frame-type="in" hscale="0" vscale="0">
 	    <RapicornScrollPort id="scroll-container">
@@ -147,8 +147,8 @@
 	    </RapicornScrollPort>
 	  </Frame>
 	</Alignment>
-	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
-	<VSlider vexpand="0" adjustment-source="ancestry-vertical"   vposition="1" hposition="1" />
+	<VSlider vexpand="0" adjustment-source="ancestry-vertical"   vposition="0" hposition="1" />
+	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" vposition="1" />
       </Table>
     </RapicornScrollArea>
   </def:ScrollArea>
