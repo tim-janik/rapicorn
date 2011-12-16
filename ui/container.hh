@@ -33,6 +33,8 @@ protected:
   void                expose_enclosure  (); /* expose without children */
   virtual void        set_focus_child   (ItemImpl           *item);
   virtual void        dump_test_data    (TestStream     &tstream);
+  static Allocation   layout_child      (ItemImpl         &child,
+                                         const Allocation &carea);
 public:
   ItemImpl*               get_focus_child   () const;
   typedef Walker<ItemImpl>  ChildWalker;
@@ -76,8 +78,6 @@ protected:
   bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
   virtual void          add_child               (ItemImpl   &item);
   virtual void          remove_child            (ItemImpl   &item);
-  Allocation            layout_child            (ItemImpl         &child,
-                                                 const Allocation &carea);
   explicit              SingleContainerImpl     ();
 };
 

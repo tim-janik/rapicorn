@@ -717,8 +717,8 @@ SingleContainerImpl::size_request (Requisition &requisition)
 }
 
 Allocation
-SingleContainerImpl::layout_child (ItemImpl         &child,
-                                   const Allocation &carea)
+ContainerImpl::layout_child (ItemImpl         &child,
+                             const Allocation &carea)
 {
   Requisition rq = child.requisition();
   const PackInfo &pi = child.pack_info();
