@@ -1036,21 +1036,34 @@ operator< (const TypeHash &a, const TypeHash &b)
   return PLIC_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
 }
 typedef std::map<TypeHash, DispatchFunc> DispatcherMap;
-static DispatcherMap                     dispatcher_map;
+static DispatcherMap                    *dispatcher_map = NULL;
 static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
-static bool                              dispatcher_map_locked = false;
+static bool                              dispatcher_map_frozen = false;
+
+static inline void
+ensure_dispatcher_map()
+{
+  if (PLIC_UNLIKELY (dispatcher_map == NULL))
+    {
+      pthread_mutex_lock (&dispatcher_mutex);
+      if (!dispatcher_map)
+        dispatcher_map = new DispatcherMap();
+      pthread_mutex_unlock (&dispatcher_mutex);
+    }
+}
 
 DispatchFunc
 ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
+  ensure_dispatcher_map();
 #if 1 // avoid costly mutex locking
-  if (PLIC_UNLIKELY (dispatcher_map_locked == false))
-    dispatcher_map_locked = true;
-  return dispatcher_map[typehash];
+  if (PLIC_UNLIKELY (dispatcher_map_frozen == false))
+    dispatcher_map_frozen = true;
+  return (*dispatcher_map)[typehash];
 #else
   pthread_mutex_lock (&dispatcher_mutex);
-  DispatchFunc dispatcher_func = dispatcher_map[typehash];
+  DispatchFunc dispatcher_func = (*dispatcher_map)[typehash];
   pthread_mutex_unlock (&dispatcher_mutex);
   return dispatcher_func;
 #endif
@@ -1059,12 +1072,13 @@ ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
 void
 ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
-  PLIC_THROW_IF_FAIL (dispatcher_map_locked == false);
+  ensure_dispatcher_map();
+  PLIC_THROW_IF_FAIL (dispatcher_map_frozen == false);
   pthread_mutex_lock (&dispatcher_mutex);
-  DispatcherMap::size_type size_before = dispatcher_map.size();
+  DispatcherMap::size_type size_before = dispatcher_map->size();
   TypeHash typehash (mentry.hashhi, mentry.hashlo);
-  dispatcher_map[typehash] = mentry.dispatcher;
-  DispatcherMap::size_type size_after = dispatcher_map.size();
+  (*dispatcher_map)[typehash] = mentry.dispatcher;
+  DispatcherMap::size_type size_after = dispatcher_map->size();
   pthread_mutex_unlock (&dispatcher_mutex);
   // simple hash collision check (sanity check, see below)
   if (PLIC_UNLIKELY (size_before == size_after))
