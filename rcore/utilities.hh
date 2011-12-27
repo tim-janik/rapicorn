@@ -129,6 +129,7 @@ String      process_handle ();
 #define PCHECK             RAPICORN_PCHECK             // (condition)
 #define ASSERT             RAPICORN_ASSERT             // (condition)
 #define PASSERT            RAPICORN_PASSERT            // (condition)
+#define STARTUP_ASSERT     RAPICORN_STARTUP_ASSERT     // (condition)
 #define DEBUG              RAPICORN_DEBUG
 #define PDEBUG             RAPICORN_PDEBUG
 #define KEY_DEBUG          RAPICORN_KEY_DEBUG
@@ -174,9 +175,9 @@ public:
   String debug_key (bool explicit_key = false) const;
   String debug_prefix () const;
 };
-#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN__SOURCE_COMPONENT__)
-#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, "")
-#define RAPICORN_SOURCE_KEY(key)        Rapicorn::SourceLocation::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, key)
+#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN__SOURCE_COMPONENT__)
+#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, "")
+#define RAPICORN_SOURCE_KEY(key)        Rapicorn::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, key)
 
 // == Logging and Assertions ==
 class Logging {
@@ -214,6 +215,8 @@ static inline void pcritical (const char *format, ...) { va_list a; va_start (a,
 #define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
 #define RAPICORN_KEY_DEBUG(k,...)  do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_KEY (k), __VA_ARGS__); } while (0)
 #define RAPICORN_KEY_PDEBUG(k,...) do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN_SOURCE_KEY (k), __VA_ARGS__); } while (0)
+#define RAPICORN_STARTUP_ASSERTi(e, N) namespace { static struct N { inline N() { RAPICORN_ASSERT (e); } } N; }
+#define RAPICORN_STARTUP_ASSERT(expr)  RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 
 // == AssertionError ==
 class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
