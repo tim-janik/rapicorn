@@ -80,10 +80,10 @@ installcheck-local:
 	&& echo 'Application app = init_app (".AMtest", &argc, argv);'	>> tmpx.cc \
 	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 	; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
-	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
-		tmpx.cc -c ; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
-	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` \
-		tmpx.o -o tmpx ; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
+	$(Q) $(CXX) tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
+		; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
+	$(Q) $(CXX) tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` \
+		; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
 	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx ; eval "$$TSTDIAGNOSE" "'Execute rapicorn sample program'"
 	$(Q) rm -f tmpx.o tmpx.cc tmpx
 
