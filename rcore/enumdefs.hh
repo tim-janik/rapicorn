@@ -48,6 +48,7 @@ struct EnumType : public virtual EnumClass {
   virtual const char* enum_name         () const { return ename; }
   virtual bool        flag_combinable   () const { return false; }
   virtual int64       constrain         (int64 value) const { return enum_type_constrain<EType> (EType (value)); }
+  inline              EnumType          () {}
 private:
   static const uint         n_values;
   static const Value *const values;
@@ -60,6 +61,7 @@ struct FlagsType : public virtual EnumClass {
   virtual const char* enum_name         () const { return ename; }
   virtual bool        flag_combinable   () const { return true; }
   virtual int64       constrain         (int64 value) const { return enum_type_constrain<EType> (EType (value)); }
+  inline              FlagsType         () {}
 private:
   static const uint         n_values;
   static const Value *const values;
