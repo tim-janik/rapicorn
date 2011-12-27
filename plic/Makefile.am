@@ -95,7 +95,7 @@ check-local: check-plic-intern-list-formats
 
 # == Post-Installation Test ==
 test-plic-installation:
-	$(Q) ${PLICV} --list-formats | fgrep -q CxxStub ; eval "$$TSTDIAGNOSE"
+	$(Q) PATH="$(bindir):$$PATH" ${PLICV} --list-formats | fgrep -q CxxStub ; eval "$$TSTDIAGNOSE"
 installcheck-local: test-plic-installation
 
 # == 'plic' executable link ==

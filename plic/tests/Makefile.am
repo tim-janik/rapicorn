@@ -2,6 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 PLICINT = ../plic-intern $(DEBUG:%=--plic-debug)
+PLICEXT = PATH="$(bindir):$$PATH" plic-@PLIC_VERSION@
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
@@ -25,13 +26,13 @@ TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test aux
 
 ### PLIC installcheck
 bin-plic-cc-type-package-parser:
-	$(Q) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+	$(Q) ${PLICEXT} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
 installcheck-local: #bin-plic-cc-type-package-parser
 bin-plic-list-formats:
-	$(Q) plic-@PLIC_VERSION@ --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${PLICEXT} --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
 installcheck-local: bin-plic-list-formats
 bin-plic-testpass: $(srcdir)/testpass.idl
-	$(Q) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${PLICEXT} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 installcheck-local: bin-plic-testpass
 
 # == IDL Parsing Tests ==
