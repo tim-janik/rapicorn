@@ -210,13 +210,14 @@ AC_DEFUN([MC_PROG_CC_WITH_CFLAGS], [
 
 	dnl Further setup CFLAGS for GCC.
 	MC_IF_VAR_EQ(GCC, yes,
-		dnl Debugging
+		dnl # Sane Behaviour
+		MC_EVAR_ADD(CFLAGS, -fno-cond-mismatch, -fno-cond-mismatch)
+		MC_PROG_CC_SUPPORTS_OPTION(-mcx16, MC_EVAR_ADD(CFLAGS, -mcx16, -mcx16))
+
+		dnl # Debugging
 		MC_EVAR_SUPPLEMENT(CFLAGS, -g, -ggdb3)
 
-		dnl Sane Behaviour
-		MC_EVAR_ADD(CFLAGS, -fno-cond-mismatch, -fno-cond-mismatch)
-
-		dnl Warnings.
+		dnl # Warnings.
 		MC_EVAR_ADD(CFLAGS, -Wall, -Wall)
 		MC_EVAR_ADD(CFLAGS, -Wmissing-prototypes, -Wmissing-prototypes)
 		MC_EVAR_ADD(CFLAGS, -Wmissing-declarations, -Wmissing-declarations)
@@ -226,7 +227,7 @@ AC_DEFUN([MC_PROG_CC_WITH_CFLAGS], [
 		    MC_EVAR_ADD(CFLAGS, -ansi, -ansi)
 		    MC_EVAR_ADD(CFLAGS, -pedantic, -pedantic)
 		)
-		dnl avoid lots of bogus warnings with string pointers
+		dnl # avoid lots of bogus warnings with string pointers
 		MC_PROG_CC_SUPPORTS_OPTION(-Wno-pointer-sign,
 		  MC_EVAR_ADD(CFLAGS, -Wno-pointer-sign, -Wno-pointer-sign))
 		dnl problematic, triggers warnings in glibc headers
@@ -242,7 +243,7 @@ AC_DEFUN([MC_PROG_CC_WITH_CFLAGS], [
   		MC_PROG_CC_SUPPORTS_OPTION($mc_opt_warn_no_return,
 		      MC_EVAR_ADD(CFLAGS, $mc_opt_warn_no_return, $mc_opt_warn_no_return))
 
-		dnl Optimizations
+		dnl # Optimizations
 		MC_EVAR_ADD(CFLAGS, -pipe, -pipe)
 		MC_EVAR_ADD(CFLAGS, -O, -O2)
 		MC_PROG_CC_SUPPORTS_OPTION(-ftracer,
@@ -252,7 +253,7 @@ AC_DEFUN([MC_PROG_CC_WITH_CFLAGS], [
 		    MC_EVAR_ADD(CFLAGS, -fno-keep-static-consts, -fno-keep-static-consts))
 		dnl MC_EVAR_ADD(CFLAGS, -freg-struct-return, -freg-struct-return) dnl buggy with gcc-3.2
 
-		dnl Fun options
+		dnl # Fun options
 		dnl MC_EVAR_ADD(CFLAGS, -Q, -Q)	dnl report each compiled function
 		dnl MC_EVAR_ADD(CFLAGS, -ftime-report, -ftime-report)
 		dnl MC_EVAR_ADD(CFLAGS, -fmem-report, -fmem-report)
@@ -284,7 +285,7 @@ AC_DEFUN([MC_PROG_CXX_WITH_CXXFLAGS], [
 	MC_STR_CONTAINS($CXXFLAGS, -O, CXXFLAGS_include_O=yes)
 	CXXFLAGS="$CXXFLAGS_saved"
 
-	dnl Setup CXXFLAGS for debugging.
+	dnl # Setup CXXFLAGS for debugging.
 	MC_IF_VAR_EQ(enable_debug, yes,
 		MC_IF_VAR_EQ(CXXFLAGS_include_g, yes,
 			MC_EVAR_ADD(CXXFLAGS, -g, -g)
@@ -296,8 +297,11 @@ AC_DEFUN([MC_PROG_CXX_WITH_CXXFLAGS], [
 		)
 	)
 
-	dnl Further setup CXXFLAGS for GXX.
+	dnl # Further setup CXXFLAGS for GXX.
 	MC_IF_VAR_EQ(GXX, yes,
+		dnl # Sane Behaviour
+                MC_PROG_CC_SUPPORTS_OPTION(-mcx16, MC_EVAR_ADD(CXXFLAGS, -mcx16, -mcx16))
+
 		dnl # enable many useful warnings
 		MC_EVAR_ADD(CXXFLAGS, -Wall, -Wall)
 		MC_EVAR_ADD(CXXFLAGS, -Wdeprecated, -Wdeprecated)
