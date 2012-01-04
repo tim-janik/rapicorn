@@ -103,9 +103,10 @@ protected:
   uint                        exec_slow_repeater   (const BoolSlot &sl);
   uint                        exec_key_repeater    (const BoolSlot &sl);
   bool                        remove_exec          (uint            exec_id);
+  bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~ItemImpl             ();
+  virtual                     ~ItemImpl            ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);

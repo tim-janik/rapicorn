@@ -371,6 +371,17 @@ ItemImpl::remove_exec (uint exec_id)
   return false;
 }
 
+bool
+ItemImpl::clear_exec (uint *exec_id)
+{
+  return_val_if_fail (exec_id != NULL, false);
+  bool removed = false;
+  if (*exec_id)
+    removed = remove_exec (*exec_id);
+  *exec_id = 0;
+  return removed;
+}
+
 static DataKey<uint> visual_update_key;
 
 void
