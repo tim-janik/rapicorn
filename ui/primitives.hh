@@ -187,6 +187,7 @@ public:
   Rect&         add             (const Point &p);
   Rect&         add_border      (double b);
   Rect&         intersect       (const Rect &r);
+  bool          intersecting    (const Rect &r) const;
   bool          empty           () const;
   Point         anchor_point    (AnchorType anchor);
   Rect&         translate       (double deltax,
@@ -816,6 +817,15 @@ Rect::intersect (const Rect &r)
   else
     *this = Rect();
   return *this;
+}
+
+inline bool
+Rect::intersecting (const Rect &r) const
+{
+  return (((r.x >= x && r.x < x + width) ||
+           (x >= r.x && x < r.x + r.width)) &&
+          ((r.y >= y && r.y < y + height) ||
+           (y >= r.y && y < r.y + r.height)));
 }
 
 inline bool
