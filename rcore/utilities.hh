@@ -539,6 +539,18 @@ binary_lookup (RandIter  begin,
   return binary_lookup_fuzzy<RandIter,Cmp,Arg,0> (begin, end, cmp_elements, arg).first;
 }
 
+template<typename Value> static inline int ///< sort lesser items first
+compare_lesser (const Value &v1, const Value &v2)
+{
+  return -(v1 < v2) | (v2 < v1);
+}
+
+template<typename Value> static inline int ///< sort greater items first
+compare_greater (const Value &v1, const Value &v2)
+{
+  return (v1 < v2) | -(v2 < v1);
+}
+
 /* --- generic named data --- */
 template<typename Type>
 class DataKey {

@@ -468,6 +468,18 @@ test_ifloor()
 }
 REGISTER_TEST ("Math/ifloor", test_ifloor);
 
+static void
+comparison_tests()
+{
+  assert (compare_lesser (1., 2.) == -1);
+  assert (compare_lesser (2., 1.) == +1);
+  assert (compare_lesser (2., 2.) == 0);
+  assert (compare_greater (2., 1.) == -1);
+  assert (compare_greater (1., 2.) == +1);
+  assert (compare_greater (2., 2.) == 0);
+}
+REGISTER_TEST ("Math/compare", comparison_tests);
+
 static int
 compare_floats (float f1,
                 float f2)
