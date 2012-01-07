@@ -1074,8 +1074,6 @@ rapicorn_screen_window_event (GtkWidget *widget,
       screen_window->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_ENTER, econtext));
       break;
     case GDK_MOTION_NOTIFY:
-      screen_window->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
-      self->last_motion_time = self->last_time;
       /* retrieve and enqueue intermediate moves */
       if (true)
         {
@@ -1083,22 +1081,32 @@ rapicorn_screen_window_event (GtkWidget *widget,
           assert (device->num_axes >= 2);
           GdkTimeCoord **tcoords = NULL;
           gint           n = 0;
-          gdk_device_get_history  (device, widget->window, self->last_motion_time, GDK_CURRENT_TIME, &tcoords, &n);
+          gdk_device_get_history (device, widget->window, self->last_motion_time + 1, gdk_event_get_time (event) - 1, &tcoords, &n);
           for (int i = 0; i < n; i++)
             {
+              const bool discarding = tcoords[i]->axes[0] == 0; // likely buggy motion history, see below
+              EDEBUG (".MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f%s", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1],
+                      discarding ? " (discarding)" : "");
+              if (discarding)
+                continue;
               econtext = rapicorn_screen_window_event_context (self, event, NULL, tcoords[i]);
-              self->last_motion_time = self->last_time;
-              EDEBUG ("MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
               screen_window->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
             }
           gdk_device_free_history (tcoords, n);
+          econtext = rapicorn_screen_window_event_context (self, event, &window_height);
+          screen_window->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
+          /* xserver-xorg-1:7.6+7ubuntu7 with libx11-6:amd64-2:1.4.4-2ubuntu1 may generate buggy motion
+           * history events with x=0 for X220t trackpoints. We simply discard those events above.
+           */
         }
       else /* only rough motion tracking */
         {
+          screen_window->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
           /* request more motion events */
           if (event->any.window == widget->window && event->motion.is_hint)
             gdk_window_get_pointer (event->any.window, NULL, NULL, NULL);
         }
+      self->last_motion_time = self->last_time;
       break;
     case GDK_LEAVE_NOTIFY:
       screen_window->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
