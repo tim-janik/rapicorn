@@ -28,13 +28,14 @@
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
-#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b)
+#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
+#define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
 #define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
 #define TOK()                   do {} while (0) // printerr (".")
-#define TCMP_op(a,cmp,b,sa,sb)  do { if (a cmp b) TOK(); else {     \
-  String __tassert_va = Rapicorn::Test::stringify_arg (a, #a);  \
-  String __tassert_vb = Rapicorn::Test::stringify_arg (b, #b);  \
-  Rapicorn::debug_emsg ('F', RAPICORN_STRLOC_STRING(),          \
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) TOK(); else {    \
+  String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
+  String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
+  Rapicorn::debug_emsg ('F', RAPICORN_STRLOC_STRING(), \
                               "assertion failed: %s %s %s: %s %s %s", \
                               sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
     } } while (0)
@@ -114,7 +115,7 @@ void    add             (const String &testname,
 }
 
 /// == Stringify Args ==
-inline String                   stringify_arg  (const char   *a, const char *str_a) { return string_to_cquote (a); }
+inline String                   stringify_arg  (const char   *a, const char *str_a) { return a ? string_to_cquote (a) : "(__null)"; }
 template<class V> inline String stringify_arg  (V            *a, const char *str_a) { return string_printf ("%p", a); }
 template<class A> inline String stringify_arg  (const A      &a, const char *str_a) { return str_a; }
 template<> inline String stringify_arg<float>  (const float  &a, const char *str_a) { return string_printf ("%.8g", a); }
@@ -129,6 +130,7 @@ template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str
 template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_printf ("0x%08x", a); }
 template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_printf ("0x%08Lx", a); }
 template<> inline String stringify_arg<String> (const String &a, const char *str_a) { return string_to_cquote (a); }
+inline const char* _as_strptr (const char *s) { return s; } // implementation detail
 
 class RegisterTest {
   static void add_test (char kind, const String &testname, void (*test_func) (void*), void *data);
