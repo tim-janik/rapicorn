@@ -86,12 +86,12 @@ random_utf8_and_unichar_test (ptrdiff_t count)
       TCMP (pp, ==, cur);
       /* last with bounds */
       pn = utf8_find_next (cur, cur + strlen (cur));
-      TCMP (pn, ==, NULL);
+      TCMPS (pn, ==, NULL);
       gn = g_utf8_find_next_char (cur, cur + strlen (cur));
       TCMP (pn, ==, gn);
       /* first with bounds */
       pp = utf8_find_prev (cbuffer, cbuffer);
-      TCMP (pp, ==, NULL);
+      TCMPS (pp, ==, NULL);
 
       /* validate valid UTF-8 */
       bool bb = utf8_validate (cbuffer);

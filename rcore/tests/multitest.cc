@@ -42,7 +42,7 @@ static void
 test_cpu_info (void)
 {
   const RapicornCPUInfo cpi = cpu_info ();
-  TCMP (cpi.machine, !=, NULL);
+  TCMPS (cpi.machine, !=, NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);
   if (Test::verbose())
@@ -186,8 +186,8 @@ test_virtual_typeid()
   TypeA a;
   TypeB b;
   TCMP (a.typeid_name(), !=, b.typeid_name());
-  TCMP (strstr (a.typeid_pretty_name().c_str(), "TypeA"), !=, NULL);
-  TCMP (strstr (b.typeid_pretty_name().c_str(), "TypeB"), !=, NULL);
+  TCMPS (strstr (a.typeid_pretty_name().c_str(), "TypeA"), !=, NULL);
+  TCMPS (strstr (b.typeid_pretty_name().c_str(), "TypeB"), !=, NULL);
 }
 REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
 
