@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <poll.h>
 #include <sys/eventfd.h>        // defines EFD_SEMAPHORE
+#include <stddef.h>             // ptrdiff_t
 #include <stdexcept>
 #include <deque>
 #include <map>
