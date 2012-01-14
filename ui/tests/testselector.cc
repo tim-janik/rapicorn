@@ -149,6 +149,30 @@ test_selector_primitives()
   TASSERT ((s =  "9223372036854775808") && (o = s) && !parse_signed_integer (&s, &i) && s == o); // overflow
   TASSERT ((s =  "9223372036854775809") && (o = s) && !parse_signed_integer (&s, &i) && s == o); // overflow
   TASSERT ((s = "10000000000000000000") && (o = s) && !parse_signed_integer (&s, &i) && s == o); // overflow
+  // strings & unicode
+  String string;
+  TASSERT ((s =                            "x") && (o = s) && !parse_string (&s, string) && s == o && string == "");
+  TASSERT ((s =                            "''") && (o = s) && parse_string (&s, string) && s == o + 2 && string == "");
+  TASSERT ((s =                         "'\\''") && (o = s) && parse_string (&s, string) && s == o + 4 && string == "'");
+  TASSERT ((s =                          "\"\"") && (o = s) && parse_string (&s, string) && s == o + 2 && string == "");
+  TASSERT ((s =                           "'a'") && (o = s) && parse_string (&s, string) && s == o + 3 && string == "a");
+  TASSERT ((s =                         "\"a\"") && (o = s) && parse_string (&s, string) && s == o + 3 && string == "a");
+  TASSERT ((s = "'_abcdefghijklmnopqrstuvwxyz_'") && (o = s) && parse_string (&s, string) && s == o + 30 && string == "_abcdefghijklmnopqrstuvwxyz_");
+  TASSERT ((s = "'_ABCDEFGHIJKLMNOPQRSTUVWXYZ_'") && (o = s) && parse_string (&s, string) && s == o + 30 && string == "_ABCDEFGHIJKLMNOPQRSTUVWXYZ_");
+  TASSERT ((s =               "\"-0123456789-\"") && (o = s) && parse_string (&s, string) && s == o + 14 && string == "-0123456789-");
+  TASSERT ((s =    "'_\\\n_\\*\\:\\ \\\\_\\2a_'") && (o = s) && parse_string (&s, string) && s == o + 19 && string == "_\n_*: \\_*_");
+  TASSERT ((s =          "\"* \\2a  * \\2A  *\"") && (o = s) && parse_string (&s, string) && s == o + 17 && string == "* * * * *");
+  TASSERT ((s =               "\"abc\\\r\ndef\"") && (o = s) && parse_string (&s, string) && s == o + 11 && string == "abc\r\ndef");
+  // { s = "\"* \\2a  * \\2A  *\""; o = s; bool r = parse_string (&s, string); printerr ("\"%s\": d=%ld r=%d sc=%s\n", o, s - o, r, string.c_str()); }
+  // identifier & unicode
+  String ident;
+  TASSERT ((s = "a") && (o = s) && parse_identifier (&s, ident) && s == o + 1 && ident == "a");
+  TASSERT ((s = "\\2a \\2A") && (o = s) && parse_identifier (&s, ident) && s == o + 7 && ident == "**");
+  TASSERT ((s = "\\02A_\\00007E0 ") && (o = s) && parse_identifier (&s, ident) && s == o + 13 && ident == "*_~0");
+  TASSERT ((s = "_abcdefghijklmnopqrstuvwxyz_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
+  TASSERT ((s = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
+  TASSERT ((s = "-_0123456789-XYZ") && (o = s) && parse_identifier (&s, ident) && s == o + 16 && ident == o);
+  TASSERT ((s = "__\\*\\:\\ \\\\_\\2a_") && (o = s) && parse_identifier (&s, ident) && s == o + 15 && ident == "__*: \\_*_");
   int64 a, b;
   TASSERT ((s =         "OdD") && (o = s) && parse_css_nth (&s, &a, &b) && a ==   2 && b ==   1 && s == o + 3);
   TASSERT ((s =      " eVeN ") && (o = s) && parse_css_nth (&s, &a, &b) && a ==   2 && b ==   0 && s == o + 6);
@@ -223,8 +247,7 @@ test_selector_primitives()
 }
 REGISTER_UITHREAD_TEST ("Selector/Basic Parsing Primitives", test_selector_primitives);
 
-#define SN(k,i)         ({ SelectorNode n; n.kind = SelectorNode::k; n.ident = i; n; })
-#define SNA(k,i,a)      ({ SelectorNode n; n.kind = SelectorNode::k; n.ident = i; n.arg = a; n; })
+#define SN(...)       ({ SelectorNode n (SelectorNode:: __VA_ARGS__); n; })
 static const Parser::SelectorNode __csr0 (Parser::SelectorNode::NONE);
 typedef const Parser::SelectorNode &Csr;
 
@@ -254,16 +277,7 @@ static void
 test_selector_parser()
 {
   using namespace Parser;
-  String ident;
   const char *s, *o;
-  // identifier & unicode
-  TASSERT ((s = "a") && (o = s) && parse_identifier (&s, ident) && s == o + 1 && ident == "a");
-  TASSERT ((s = "\\2a \\2A") && (o = s) && parse_identifier (&s, ident) && s == o + 7 && ident == "**");
-  TASSERT ((s = "\\02A_\\00007E0 ") && (o = s) && parse_identifier (&s, ident) && s == o + 13 && ident == "*_~0");
-  TASSERT ((s = "_abcdefghijklmnopqrstuvwxyz_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
-  TASSERT ((s = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
-  TASSERT ((s = "-_0123456789-XYZ") && (o = s) && parse_identifier (&s, ident) && s == o + 16 && ident == o);
-  TASSERT ((s = "__\\*\\:\\ \\\\_\\2a_") && (o = s) && parse_identifier (&s, ident) && s == o + 15 && ident == "__*: \\_*_");
   // selectors
   Parser::SelectorChain sc;
   TASSERT ((s = "*") && (o = s) && parse_selector_chain (&s, sc) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*")));
@@ -281,6 +295,18 @@ test_selector_parser()
   TASSERT ((s = "A B > * + D ~ E") && (o = s) && parse_selector_chain (&s, sc) && s == o + 15 &&
            sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (UNIVERSAL, "*"),
                          SN (NEIGHBOUR, ""), SN (TYPE, "D"), SN (FOLLOWING, ""), SN (TYPE, "E")));
-  // { s = "A + B"; o = s; bool r = parse_selector_chain (&s, sc); printerr ("\"%s\": d=%ld r=%d sc=%ld\n", o, s - o, r, sc.size()); }
+  TASSERT ((s =            "A#id") && (o = s) && parse_selector_chain (&s, sc) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ID, "id")));
+  TASSERT ((s =             "A.C") && (o = s) && parse_selector_chain (&s, sc) && s == o +  3 && sc == schain (SN (TYPE, "A"), SN (CLASS, "C")));
+  TASSERT ((s =            "A[b]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS, "b")));
+  TASSERT ((s =          "A[b=c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =     "A[b = 'c' ]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =       "A[b |=c ]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART, "b", "c")));
+  TASSERT ((s =      "A[b^= 'c']") && (o = s) && parse_selector_chain (&s, sc) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX, "b", "c")));
+  TASSERT ((s =       "A[b $= c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c")));
+  TASSERT ((s =      "A[b *='c']") && (o = s) && parse_selector_chain (&s, sc) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUBSTRING, "b", "c")));
+  TASSERT ((s =       "A[b ~= c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c")));
+  TASSERT ((s = "A[b~=c][d1*=e2]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 15 &&
+           sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c"), SN (ATTRIBUTE_SUBSTRING, "d1", "e2")));
 }
 REGISTER_TEST ("Selector/Combinator Parsing", test_selector_parser);

@@ -16,14 +16,16 @@ bool    parse_css_nth           (const char **stringp, int64 *ap, int64 *bp);
 bool    match_css_nth           (int64 pos, int64 a, int64 b);
 
 bool    parse_identifier        (const char **stringp, String &ident);
+bool    parse_string            (const char **stringp, String &ident);
 
 struct SelectorNode {
-  enum Kind { NONE, TYPE, UNIVERSAL, ATTRIBUTE, CLASS, ID, PSEUDO,
+  enum Kind { NONE, TYPE, UNIVERSAL, CLASS, ID, PSEUDO, ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,
+              ATTRIBUTE_INCLUDES, ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_SUBSTRING, ATTRIBUTE_DASHSTART,
               DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING, };
   Kind  kind;
   String ident;
   String arg;
-  SelectorNode (Kind k = NONE) : kind (k) {}
+  SelectorNode (Kind k = NONE, const String &i = "", const String &a = "") : kind (k), ident (i), arg (a) {}
   bool operator== (const SelectorNode &o) const { return kind == o.kind && ident == o.ident && arg == o.arg; }
   bool operator!= (const SelectorNode &o) const { return !operator== (o); }
 };

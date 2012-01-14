@@ -217,19 +217,10 @@ parse_unicode_hexdigits (const char **stringp, String &ident)
   return true;
 }
 
-static inline bool
-parse_identifier_char (const char **stringp, String &ident, bool numchar)
-{ // char : [_a-z] | nonascii | unicode | escape | numchar
+template<bool NEWLINES> static inline bool
+parse_escapes (const char **stringp, String &ident)
+{ // escapes : unicode | escaped_char | newlines
   const char *p = *stringp;
-  if (ISALPHA (*p) || *p == '_' ||                      // [a-z] | '_'
-      *p > '\177' ||                                    // nonascii : [^\0-\177]
-      (numchar && (*p == '-' || ISDIGIT (*p))))         // numchar : [0-9-]
-    {
-      ident.append (p, 1);
-      p++;
-      *stringp = p;
-      return true;
-    }
   if (UNLIKELY (p[0] == '\\'))
     {
       p++;
@@ -239,14 +230,43 @@ parse_identifier_char (const char **stringp, String &ident, bool numchar)
           *stringp = p;
           return true;
         }
-      // escape : '\\' [^\n\r\f0-9a-f]
-      if (*p != '\n' && *p != '\r' && *p != '\f') // unicode catches ISHEXDIGIT (p[1])
+      // newlines : \\ [ \n | \r\n | \r | \f ]
+      if (NEWLINES && p[0] == '\r' && p[1] == '\n')
+        {
+          ident.append (p, 2);
+          p += 2;
+          *stringp = p;
+          return true;
+        }
+      // escaped_char : '\\' [^\n\r\f0-9a-f]
+      if (NEWLINES || !(p[0] == '\n' || p[0] == '\f' || p[0] == '\r'))
         {
           ident.append (p, 1);
           p++;
           *stringp = p;
           return true;
         }
+    }
+  return false;
+}
+
+template<bool NUMCHAR> static inline bool
+parse_identifier_char (const char **stringp, String &ident)
+{ // char : [_a-z] | nonascii | unicode | escape | numchar
+  const char *p = *stringp;
+  if (ISALPHA (*p) || *p == '_' ||                      // [a-z] | '_'
+      *p > '\177' ||                                    // nonascii : [^\0-\177]
+      (NUMCHAR && (*p == '-' || ISDIGIT (*p))))         // numchar : [0-9-]
+    {
+      ident.append (p, 1);
+      p++;
+      *stringp = p;
+      return true;
+    }
+  if (parse_escapes<0> (&p, ident))
+    {
+      *stringp = p;
+      return true;
     }
   return false;
 }
@@ -262,19 +282,166 @@ parse_identifier (const char **stringp, String &ident)
       p++;
       s = "-";
     }
-  if (!parse_identifier_char (&p, s, false))
+  if (!parse_identifier_char<0> (&p, s))
     return false;
-  while (parse_identifier_char (&p, s, true))
+  while (parse_identifier_char<1> (&p, s))
     ;
   ident.swap (s);
   *stringp = p;
   return true;
 }
 
+template<int QUOTE> static inline bool
+parse_string_char (const char **stringp, String &ident)
+{ // string_char : [^\n\r\f] | nonascii | \\ [ \n | \r\n | \r | \f ] | escape
+  const char *p = *stringp;
+  if (parse_escapes<1> (&p, ident))                     // escape | \\ [ \n | \r\n | \r | \f ]
+    {
+      *stringp = p;
+      return true;
+    }
+  if (*p != QUOTE &&                                    // nonascii
+      *p != '\n' && *p != '\r' && *p != '\f')           // [^\n\r\f]
+    {
+      ident.append (p, 1);
+      p++;
+      *stringp = p;
+      return true;
+    }
+  return false;
+}
+
+bool
+parse_string (const char **stringp, String &ident)
+{ // string : string_dq | string_sq
+  return_val_if_fail (stringp != NULL, false);
+  const char *p = *stringp;
+  String s;
+  if (*p == '"')
+    { // string_dq : \" ( [^\n\r\f\\"] | \\ [ \n | \r\n | \r | \f ] | nonascii | escape )* \"
+      p++;
+      while (parse_string_char<'"'> (&p, s))
+        ;
+      if (*p != '"')
+        return false;
+    }
+  else if (*p == '\'')
+    { // string_sq : \' ( [^\n\r\f\\'] | \\ [ \n | \r\n | \r | \f ] | nonascii | escape )* \'
+      p++;
+      while (parse_string_char<'\''> (&p, s))
+        ;
+      if (*p != '\'')
+        return false;
+    }
+  else
+    return false;
+  p++;
+  ident.swap (s);
+  *stringp = p;
+  return true;
+}
+
+static bool
+parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_colons)
+{ // pseudo : ':' [ 'not' '(' S* negation_arg S* ')' | ':'? identifier [ '(' S* expression ')' ] ]
+  const char *p = *stringp;
+  while (*p == ':' && parsed_colons < 2)
+    parsed_colons++, p++;
+  if (UNLIKELY (parsed_colons < 1))
+    return false;
+  // FIXME
+  return false;
+}
+
+static bool
+parse_attribute (const char **stringp, SelectorChain &chain)
+{ // attrib : '[' S* [ namespace_prefix ]? IDENT S* [ [ matchop ] S* [ IDENT | STRING ] S* ]? ']'
+  const char *p = *stringp;
+  if (*p != '[')
+    return false;
+  p++;
+  skip_spaces (&p);
+  String s;
+  if (!parse_identifier (&p, s))
+    return false;
+  skip_spaces (&p);
+  // matchop : [ "^=" | "$=" | "*=" | '=' | "~=" | "|=" ]
+  SelectorNode::Kind kind;
+  switch ((p[0] << 8) + (p[0] != '=' ? p[1] : 0))
+    {
+    case ('^' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_PREFIX;      break;
+    case ('$' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_SUFFIX;      break;
+    case ('*' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_SUBSTRING;   break;
+    case ('~' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_INCLUDES;    break;
+    case ('|' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_DASHSTART;   break;
+    case ('=' << 8) + 0:    p += 1; kind = SelectorNode::ATTRIBUTE_EQUALS;      break;
+    default:                        kind = SelectorNode::NONE;                  break;
+    }
+  if (kind == SelectorNode::NONE && *p == ']') // no matchop
+    {
+      p++;
+      SelectorNode node (SelectorNode::ATTRIBUTE_EXISTS, s);
+      chain.push_back (node);
+      *stringp = p;
+      return true;
+    }
+  // S* [ IDENT | STRING ] S*
+  skip_spaces (&p);
+  String a;
+  if (parse_string (&p, a) ||
+      parse_identifier (&p, a))
+    {
+      skip_spaces (&p);
+      if (*p == ']')
+        {
+          p++;
+          SelectorNode node (kind, s, a);
+          chain.push_back (node);
+          *stringp = p;
+          return true;
+        }
+    }
+  return false;
+}
+
 static bool
 parse_special_selector (const char **stringp, SelectorChain &chain)
 { // special_selector : HASH | class | attrib | pseudo | negation
-  // FIXME
+  const char *p = *stringp;
+  String s;
+  switch (*p)
+    {
+    case '#': // HASH : '#' identifier
+      p++;
+      if (parse_identifier (&p, s))
+        {
+          SelectorNode node (SelectorNode::ID, s);
+          chain.push_back (node);
+          *stringp = p;
+          return true;
+        }
+      return false;
+    case '.': // class : '.' identifier
+      p++;
+      if (parse_identifier (&p, s))
+        {
+          SelectorNode node (SelectorNode::CLASS, s);
+          chain.push_back (node);
+          *stringp = p;
+          return true;
+        }
+      return false;
+    case '[': // attrib : '[' S* [ namespace_prefix ]? IDENT S* [ [ matchvariants... ] S* [ IDENT | STRING ] S*]? ']'
+      return parse_attribute (stringp, chain);
+    case ':': // pseudo : ':' ':'? [ IDENT | functional_pseudo ] | functional_negation
+      p++;
+      if (parse_pseudo_selector (&p, chain, 1))
+        {
+          *stringp = p;
+          return true;
+        }
+      return false;
+    }
   return false;
 }
 
