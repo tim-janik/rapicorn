@@ -9,6 +9,7 @@ namespace Parser {
 
 bool    parse_spaces            (const char **stringp, int min_spaces = 1);
 bool    skip_spaces             (const char **stringp);
+bool    scan_nested             (const char **stringp, const char *pairflags, const char term);
 bool    parse_case_word         (const char **stringp, const char *word);
 bool    parse_unsigned_integer  (const char **stringp, uint64 *up);
 bool    parse_signed_integer    (const char **stringp, int64 *ip);
@@ -19,17 +20,24 @@ bool    parse_identifier        (const char **stringp, String &ident);
 bool    parse_string            (const char **stringp, String &ident);
 
 struct SelectorNode {
-  enum Kind { NONE, TYPE, UNIVERSAL, CLASS, ID, PSEUDO, ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,
-              ATTRIBUTE_INCLUDES, ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_SUBSTRING, ATTRIBUTE_DASHSTART,
-              DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING, };
-  Kind  kind;
+  enum Kind {
+    NONE,
+    TYPE, UNIVERSAL,                            // element selectors
+    CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,    // class, id, pseudo selectors
+    ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,         // attributes with match types
+    ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_DASHSTART, ATTRIBUTE_SUBSTRING, ATTRIBUTE_INCLUDES,
+    DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,    // selector combinators
+  };
+  Kind   kind;
   String ident;
   String arg;
   SelectorNode (Kind k = NONE, const String &i = "", const String &a = "") : kind (k), ident (i), arg (a) {}
   bool operator== (const SelectorNode &o) const { return kind == o.kind && ident == o.ident && arg == o.arg; }
   bool operator!= (const SelectorNode &o) const { return !operator== (o); }
 };
-typedef vector<SelectorNode> SelectorChain;
+struct SelectorChain : public vector<SelectorNode> {
+  String        string  ();
+};
 
 bool    parse_selector_chain    (const char **stringp, SelectorChain &schain);
 

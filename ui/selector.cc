@@ -93,6 +93,184 @@ parse_signed_integer (const char **stringp, int64 *ip)
   return false;
 }
 
+static inline bool
+scan_escaped (const char **stringp, const char term)
+{
+  const char *p = *stringp;
+  while (*p)
+    if (*p == term)
+      {
+        p++;
+        *stringp = p;
+        return true;
+      }
+    else if (p[0] == '\\' && p[1])
+      p += 2;
+    else // *p != 0
+      p++;
+  return false;
+}
+
+struct ScanNestedConfig {
+  bool angle, bracket, parenthesis, curly, ccomment, cppcomment, doublequote, singlequote;
+};
+
+static inline bool
+scan_nested (const char **stringp, const ScanNestedConfig &scan, const char term)
+{
+  const char *p = *stringp;
+  while (1)
+    switch (*p)
+      {
+      case 0:
+        return false;
+      case '\'':
+        if (!scan.singlequote)
+          goto default_char;
+        p++;
+        if (!scan_escaped (&p, '\''))
+          return false;
+        break;
+      case '"':
+        if (!scan.doublequote)
+          goto default_char;
+        p++;
+        if (!scan_escaped (&p, '"'))
+          return false;
+        break;
+      case '[':
+        if (!scan.bracket)
+          goto default_char;
+        p++;
+        if (!scan_nested (&p, scan, ']'))
+          return false;
+        assert (*p == ']');
+        p++;
+        break;
+      case ']':
+        if (*p == term)
+          {
+            *stringp = p;
+            return true;
+          }
+        if (scan.bracket)
+          return false; // unpaired
+        else
+          goto default_char;
+      case '(':
+        if (!scan.parenthesis)
+          goto default_char;
+        p++;
+        if (!scan_nested (&p, scan, ')'))
+          return false;
+        assert (*p == ')');
+        p++;
+        break;
+      case ')':
+        if (*p == term)
+          {
+            *stringp = p;
+            return true;
+          }
+        if (scan.parenthesis)
+          return false; // unpaired
+        else
+          goto default_char;
+      case '{':
+        if (!scan.curly)
+          goto default_char;
+        p++;
+        if (!scan_nested (&p, scan, '}'))
+          return false;
+        assert (*p == '}');
+        p++;
+        break;
+      case '}':
+        if (*p == term)
+          {
+            *stringp = p;
+            return true;
+          }
+        if (scan.curly)
+          return false; // unpaired
+        else
+          goto default_char;
+      case '<':
+        if (!scan.angle)
+          goto default_char;
+        p++;
+        if (!scan_nested (&p, scan, '>'))
+          return false;
+        assert (*p == '>');
+        p++;
+        break;
+      case '>':
+        if (*p == term)
+          {
+            *stringp = p;
+            return true;
+          }
+        if (scan.angle)
+          return false; // unpaired
+        else
+          goto default_char;
+      case '/':
+        if (p[1] == '/' && scan.cppcomment)
+          {
+            assert (strncmp (p, "//", 2) == 0);
+            p = strchr (p + 2, '\n');
+            if (!p)
+              return false;
+            assert (strncmp (p, "\n", 1) == 0);
+            p++; // skip "\n"
+          }
+        else if (p[1] == '*' && scan.ccomment)
+          {
+            assert (strncmp (p, "/*", 2) == 0);
+            p++;
+            do
+              p = strchr (p + 1, '*');
+            while (p && p[1] != '/');
+            if (!p)
+              return false;
+            assert (strncmp (p, "*/", 2) == 0);
+            p += 2; // skip "*/"
+          }
+        else
+          goto default_char;
+        break;
+      default: default_char:
+        if (term == *p)
+          {
+            *stringp = p;
+            return true;
+          }
+        p++;
+        break;
+      }
+}
+
+bool
+scan_nested (const char **stringp, const char *pairflags, const char term)
+{
+  ScanNestedConfig scan = { 0, };
+  const char *p = pairflags;
+  while (*p)
+    switch (*p) // parse configuration flags
+      {
+      case '<': scan.angle = true;        p++; continue;        // '<': <...>
+      case '[': scan.bracket = true;      p++; continue;        // '[': [...]
+      case '(': scan.parenthesis = true;  p++; continue;        // '(': (...)
+      case '{': scan.curly = true;        p++; continue;        // '{': {...}
+      case '*': scan.ccomment = true;     p++; continue;        // '*': /*...*/
+      case '/': scan.cppcomment = true;   p++; continue;        // '/': //...\n
+      case '"': scan.doublequote = true;  p++; continue;        // '"': "..."
+      case '\'': scan.singlequote = true; p++; continue;        //  \': '...'
+      default:                            p++; continue;
+      }
+  return scan_nested (stringp, scan, term);
+}
+
 static bool
 parse_plus_b (const char **stringp, int64 *b)
 { // [ S* ['-'|'+'] S* INTEGER ]?
@@ -291,6 +469,30 @@ parse_identifier (const char **stringp, String &ident)
   return true;
 }
 
+static String
+maybe_quote_identifier (const String &src)
+{
+  bool need_quotes = false;
+  String d;
+  for (String::const_iterator it = src.begin(); it != src.end(); it++)
+    {
+      const uint8 c = *it;
+      if (ISALPHA (c) || ISDIGIT (c) || c == '_' || c > '\177')
+        d += c;
+      else
+        {
+          need_quotes = true;
+          if (c == '\'')
+            d += "\\'";
+          else if (c < 32)
+            d += string_printf ("\\0%x ", c);
+          else
+            d += c;
+        }
+    }
+  return need_quotes ? "'" + d + "'" : d;
+}
+
 template<int QUOTE> static inline bool
 parse_string_char (const char **stringp, String &ident)
 { // string_char : [^\n\r\f] | nonascii | \\ [ \n | \r\n | \r | \f ] | escape
@@ -349,8 +551,68 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
     parsed_colons++, p++;
   if (UNLIKELY (parsed_colons < 1))
     return false;
-  // FIXME
-  return false;
+  SelectorNode node;
+  if (!parse_identifier (&p, node.ident))
+    return false;
+  const bool is_pseudo_element = parsed_colons == 2;
+  const bool is_pseudo_class = parsed_colons == 1;
+  const char *const elements[] = {
+    "first-line", "first-letter", "before", "after", // syntactically, these 4 are supported as legacy classes
+    "selection",
+  };
+  const char *const classes[] = {
+    // CSS3:
+    "not", "root", "nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type",
+    "link", "visited", "hover", "active", "focus", "target", "lang", "enabled", "disabled", "checked", "indeterminate",
+    "first-child", "last-child", "first-of-type", "last-of-type", "only-child", "only-of-type", "empty",
+    // CSS4:
+    "scope", "any-link", "local-link", "past", "current", "future", "matches", "dir",
+    "default", "valid", "invalid", "in-range", "out-of-range", "required", "optional", "read-only", "read-write",
+    "nth-match", "nth-last-match", "nth-column", "nth-last-column", "column",
+  };
+  if (is_pseudo_element)
+    {
+      for (uint i = 0; i < ARRAY_SIZE (elements); i++)
+        if (strcasecmp (node.ident.c_str(), elements[i]) == 0)
+          {
+            node.kind = SelectorNode::PSEUDO_ELEMENT;
+            chain.push_back (node);
+            *stringp = p;
+            return true;
+          }
+      return false;
+    }
+  bool pseudo_match = false;
+  if (is_pseudo_class)
+    for (uint i = 0; i < ARRAY_SIZE (classes); i++)
+      if (strcasecmp (node.ident.c_str(), classes[i]) == 0)
+        {
+          pseudo_match = true;
+          break;
+        }
+  if (!pseudo_match)
+    return false;
+  // '(' S* expression S* ')'
+  if (*p == '(')
+    {
+      p++;
+      skip_spaces (&p);
+      const char *e = p;
+      if (!scan_nested (&p, "([{*'\"", ')'))
+        return false;
+      assert (*p == ')');
+      const char *t = p - 1;
+      while (t > e && ISASCIISPACE (*t))
+        t--;
+      if (t <= e)
+        return false;   // pseudo_class expression should be non-empty
+      node.arg = String (e, t - e + 1);
+      p++;
+    }
+  node.kind = SelectorNode::PSEUDO_CLASS;
+  chain.push_back (node);
+  *stringp = p;
+  return true;
 }
 
 static bool
@@ -542,6 +804,76 @@ parse_selector_chain (const char **stringp, SelectorChain &chain)
       return true;
     }
   return false;
+}
+
+String
+SelectorChain::string ()
+{
+  String s;
+  for (size_t i = 0; i < size(); i++)
+    {
+      const SelectorNode &node = operator[] (i);
+      switch (node.kind)
+        {
+        case SelectorNode::NONE:
+          s += "<NONE>";
+          break;
+        case SelectorNode::TYPE:
+          s += node.ident;
+          break;
+        case SelectorNode::UNIVERSAL:
+          s += node.ident;
+          break;
+        case SelectorNode::CLASS:
+          s += "." + node.ident;
+          break;
+        case SelectorNode::ID:
+          s += "#" + node.ident;
+          break;
+        case SelectorNode::PSEUDO_ELEMENT:
+          s += "::" + node.ident;
+          break;
+        case SelectorNode::PSEUDO_CLASS:
+          s += ":" + node.ident;
+          if (!node.arg.empty())
+            s += "(" + node.arg + ")";
+          break;
+        case SelectorNode::ATTRIBUTE_EXISTS:
+          s += "[" + node.ident + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_EQUALS:
+          s += "[" + node.ident + "=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_PREFIX:
+          s += "[" + node.ident + "^=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_SUFFIX:
+          s += "[" + node.ident + "$=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_DASHSTART:
+          s += "[" + node.ident + "|=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_SUBSTRING:
+          s += "[" + node.ident + "*=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::ATTRIBUTE_INCLUDES:
+          s += "[" + node.ident + "~=" + maybe_quote_identifier (node.arg) + "]";
+          break;
+        case SelectorNode::DESCENDANT:
+          s += " ";
+          break;
+        case SelectorNode::CHILD:
+          s += " > ";
+          break;
+        case SelectorNode::NEIGHBOUR:
+          s += " + ";
+          break;
+        case SelectorNode::FOLLOWING:
+          s += " ~ ";
+          break;
+        }
+    }
+  return s;
 }
 
 } // Parser
