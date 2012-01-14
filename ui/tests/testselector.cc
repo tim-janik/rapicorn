@@ -222,3 +222,21 @@ test_selector_primitives()
   TASSERT (test_css_nthset ("3n+2", ivec (2, 5, 8, 11, 14), ivec (1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 16)));
 }
 REGISTER_UITHREAD_TEST ("Selector/Basic Parsing Primitives", test_selector_primitives);
+
+static void
+test_selector_parser()
+{
+  using namespace Parser;
+  String ident;
+  const char *s, *o;
+  // unicode:
+  TASSERT ((s = "a") && (o = s) && parse_identifier (&s, ident) && s == o + 1 && ident == "a");
+  TASSERT ((s = "\\2a \\2A") && (o = s) && parse_identifier (&s, ident) && s == o + 7 && ident == "**");
+  TASSERT ((s = "\\02A_\\00007E0 ") && (o = s) && parse_identifier (&s, ident) && s == o + 13 && ident == "*_~0");
+  TASSERT ((s = "_abcdefghijklmnopqrstuvwxyz_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
+  TASSERT ((s = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
+  TASSERT ((s = "-_0123456789-XYZ") && (o = s) && parse_identifier (&s, ident) && s == o + 16 && ident == o);
+  TASSERT ((s = "__\\*\\:\\ \\\\_\\2a_") && (o = s) && parse_identifier (&s, ident) && s == o + 15 && ident == "__*: \\_*_");
+  // { s = "XYZ"; o = s; bool r = parse_identifier (&s, ident); printerr ("\"%s\": d=%d r=%d id=%s\n", o, s - o, r, ident.c_str()); }
+}
+REGISTER_UITHREAD_TEST ("Parser/Selector Parsing", test_selector_parser);

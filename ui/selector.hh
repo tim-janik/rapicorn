@@ -15,6 +15,8 @@ bool    parse_signed_integer    (const char **stringp, int64 *ip);
 bool    parse_css_nth           (const char **stringp, int64 *ap, int64 *bp);
 bool    match_css_nth           (int64 pos, int64 a, int64 b);
 
+bool    parse_identifier        (const char **stringp, String &ident);
+
 } // Parser
 } // Rapicorn
 

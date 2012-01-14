@@ -2,6 +2,12 @@
 #include "selector.hh"
 #include <string.h>
 
+#define ISDIGIT(c)      (c >= '0' && c <= '9')
+#define ISHEXDIGIT(c)   (ISDIGIT (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+#define ISALPHA(c)      ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+#define HEXVALUE(c)     (c <= '9' ? c - '0' : 10 + c - (c >= 'a' ? 'a' : 'A'))
+#define ISASCIISPACE(c) (c == ' ' || (c >= 9 && c <= 13)) // ' \t\n\v\f\r'
+
 namespace Rapicorn {
 namespace Parser {
 
@@ -9,7 +15,7 @@ bool
 parse_spaces (const char **stringp, int min_spaces)
 {
   const char *p = *stringp;
-  while (*p == ' ' || (*p >= 9 && *p <= 13)) // '\t\n\v\f\r '
+  while (ISASCIISPACE (*p))
     p++;
   if (p - *stringp >= min_spaces)
     {
@@ -187,6 +193,82 @@ match_css_nth (int64 pos, int64 a, int64 b)
   // for matches, find unsigned integer n, so that a * n + b == pos
   const int64 n = (pos - b) / a;
   return n >= 0 && n * a == pos - b; // check int truncation
+}
+
+static inline bool
+parse_unicode_hexdigits (const char **stringp, String &ident)
+{ // unicode : '\\' [0-9a-f]{1,6} (\r\n|[ \n\r\t\f])?
+  const char *p = *stringp;
+  if (!ISHEXDIGIT (*p))
+    return false;
+  uint unicodechar = HEXVALUE (*p); // careful, multi-evaluation
+  p++;
+  for (const char *const b = p + 5; p < b && ISHEXDIGIT (*p); p++)
+    unicodechar = (unicodechar << 4) + HEXVALUE (*p);
+  char utf8[8];
+  uint l = utf8_from_unichar (unicodechar, utf8);
+  ident.append (utf8, l);
+  // (\r\n | [ \n\r\t\f])?
+  if (p[0] == '\r' && p[1] == '\n')
+    p += 2;
+  else if (ISASCIISPACE (*p))
+    p++;
+  *stringp = p;
+  return true;
+}
+
+static inline bool
+parse_identifier_char (const char **stringp, String &ident, bool numchar)
+{ // char : [_a-z] | nonascii | unicode | escape | numchar
+  const char *p = *stringp;
+  if (ISALPHA (*p) || *p == '_' ||                      // [a-z] | '_'
+      *p > '\177' ||                                    // nonascii : [^\0-\177]
+      (numchar && (*p == '-' || ISDIGIT (*p))))         // numchar : [0-9-]
+    {
+      ident.append (p, 1);
+      p++;
+      *stringp = p;
+      return true;
+    }
+  if (UNLIKELY (p[0] == '\\'))
+    {
+      p++;
+      // unicode : '\\' [0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
+      if (parse_unicode_hexdigits (&p, ident))
+        {
+          *stringp = p;
+          return true;
+        }
+      // escape : '\\' [^\n\r\f0-9a-f]
+      if (*p != '\n' && *p != '\r' && *p != '\f') // unicode catches ISHEXDIGIT (p[1])
+        {
+          ident.append (p, 1);
+          p++;
+          *stringp = p;
+          return true;
+        }
+    }
+  return false;
+}
+
+bool
+parse_identifier (const char **stringp, String &ident)
+{ // [-]?{nmstart}{nmchar}*
+  return_val_if_fail (stringp != NULL, false);
+  const char *p = *stringp;
+  String s;
+  if (UNLIKELY (*p == '-'))
+    {
+      p++;
+      s = "-";
+    }
+  if (!parse_identifier_char (&p, s, false))
+    return false;
+  while (parse_identifier_char (&p, s, true))
+    ;
+  ident.swap (s);
+  *stringp = p;
+  return true;
 }
 
 } // Parser
