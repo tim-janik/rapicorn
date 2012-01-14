@@ -2,10 +2,19 @@
 #ifndef __RAPICORN_SELECTOR_HH__
 #define __RAPICORN_SELECTOR_HH__
 
-#include <ui/primitives.hh>
+#include <ui/item.hh>
 
 namespace Rapicorn {
-namespace Parser {
+namespace Selector {
+
+enum Kind {
+  NONE,
+  SUBJECT, TYPE, UNIVERSAL,                   // element selectors
+  CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,    // class, id, pseudo selectors
+  ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,         // attributes with match types
+  ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_DASHSTART, ATTRIBUTE_SUBSTRING, ATTRIBUTE_INCLUDES,
+  DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,    // selector combinators
+};
 
 bool    parse_spaces            (const char **stringp, int min_spaces = 1);
 bool    skip_spaces             (const char **stringp);
@@ -20,14 +29,6 @@ bool    parse_identifier        (const char **stringp, String &ident);
 bool    parse_string            (const char **stringp, String &ident);
 
 struct SelectorNode {
-  enum Kind {
-    NONE,
-    SUBJECT, TYPE, UNIVERSAL,                   // element selectors
-    CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,    // class, id, pseudo selectors
-    ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,         // attributes with match types
-    ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_DASHSTART, ATTRIBUTE_SUBSTRING, ATTRIBUTE_INCLUDES,
-    DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,    // selector combinators
-  };
   Kind   kind;
   String ident;
   String arg;
@@ -36,12 +37,11 @@ struct SelectorNode {
   bool operator!= (const SelectorNode &o) const { return !operator== (o); }
 };
 struct SelectorChain : public vector<SelectorNode> {
+  bool          parse   (const char **stringp);
   String        string  ();
 };
 
-bool    parse_selector_chain    (const char **stringp, SelectorChain &schain);
-
-} // Parser
+} // Selector
 } // Rapicorn
 
 #endif /* __RAPICORN_SELECTOR_HH__ */

@@ -9,7 +9,7 @@
 #define ISASCIISPACE(c) (c == ' ' || (c >= 9 && c <= 13)) // ' \t\n\v\f\r'
 
 namespace Rapicorn {
-namespace Parser {
+namespace Selector {
 
 bool
 parse_spaces (const char **stringp, int min_spaces)
@@ -575,7 +575,7 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
       for (uint i = 0; i < ARRAY_SIZE (elements); i++)
         if (strcasecmp (node.ident.c_str(), elements[i]) == 0)
           {
-            node.kind = SelectorNode::PSEUDO_ELEMENT;
+            node.kind = PSEUDO_ELEMENT;
             chain.push_back (node);
             *stringp = p;
             return true;
@@ -609,7 +609,7 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
       node.arg = String (e, t - e + 1);
       p++;
     }
-  node.kind = SelectorNode::PSEUDO_CLASS;
+  node.kind = PSEUDO_CLASS;
   chain.push_back (node);
   *stringp = p;
   return true;
@@ -628,21 +628,21 @@ parse_attribute (const char **stringp, SelectorChain &chain)
     return false;
   skip_spaces (&p);
   // matchop : [ "^=" | "$=" | "*=" | '=' | "~=" | "|=" ]
-  SelectorNode::Kind kind;
+  Kind kind;
   switch ((p[0] << 8) + (p[0] != '=' ? p[1] : 0))
     {
-    case ('^' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_PREFIX;      break;
-    case ('$' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_SUFFIX;      break;
-    case ('*' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_SUBSTRING;   break;
-    case ('~' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_INCLUDES;    break;
-    case ('|' << 8) + '=':  p += 2; kind = SelectorNode::ATTRIBUTE_DASHSTART;   break;
-    case ('=' << 8) + 0:    p += 1; kind = SelectorNode::ATTRIBUTE_EQUALS;      break;
-    default:                        kind = SelectorNode::NONE;                  break;
+    case ('^' << 8) + '=':  p += 2; kind = ATTRIBUTE_PREFIX;      break;
+    case ('$' << 8) + '=':  p += 2; kind = ATTRIBUTE_SUFFIX;      break;
+    case ('*' << 8) + '=':  p += 2; kind = ATTRIBUTE_SUBSTRING;   break;
+    case ('~' << 8) + '=':  p += 2; kind = ATTRIBUTE_INCLUDES;    break;
+    case ('|' << 8) + '=':  p += 2; kind = ATTRIBUTE_DASHSTART;   break;
+    case ('=' << 8) + 0:    p += 1; kind = ATTRIBUTE_EQUALS;      break;
+    default:                        kind = NONE;                  break;
     }
-  if (kind == SelectorNode::NONE && *p == ']') // no matchop
+  if (kind == NONE && *p == ']') // no matchop
     {
       p++;
-      SelectorNode node (SelectorNode::ATTRIBUTE_EXISTS, s);
+      SelectorNode node (ATTRIBUTE_EXISTS, s);
       chain.push_back (node);
       *stringp = p;
       return true;
@@ -677,7 +677,7 @@ parse_special_selector (const char **stringp, SelectorChain &chain)
       p++;
       if (parse_identifier (&p, s))
         {
-          SelectorNode node (SelectorNode::ID, s);
+          SelectorNode node (ID, s);
           chain.push_back (node);
           *stringp = p;
           return true;
@@ -687,7 +687,7 @@ parse_special_selector (const char **stringp, SelectorChain &chain)
       p++;
       if (parse_identifier (&p, s))
         {
-          SelectorNode node (SelectorNode::CLASS, s);
+          SelectorNode node (CLASS, s);
           chain.push_back (node);
           *stringp = p;
           return true;
@@ -714,7 +714,7 @@ parse_universal_selector (const char **stringp, SelectorChain &chain)
   if (*p == '*')
     {
       SelectorNode node;
-      node.kind = SelectorNode::UNIVERSAL;
+      node.kind = UNIVERSAL;
       node.ident = String (p, 1);
       chain.push_back (node);
       p++;
@@ -730,7 +730,7 @@ parse_type_selector (const char **stringp, SelectorChain &chain)
   SelectorNode node;
   if (parse_identifier (stringp, node.ident))
     {
-      node.kind = SelectorNode::TYPE;
+      node.kind = TYPE;
       chain.push_back (node);
       return true;
     }
@@ -752,7 +752,7 @@ parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
       if (selector_subject)
         {
           SelectorNode node;
-          node.kind = SelectorNode::SUBJECT;
+          node.kind = SUBJECT;
           chain.push_back (node);
         }
       chain.insert (chain.end(), tmpchain.begin(), tmpchain.end());
@@ -763,20 +763,20 @@ parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
 }
 
 static bool
-parse_selector_combinator (const char **stringp, SelectorNode::Kind *kind)
+parse_selector_combinator (const char **stringp, Kind *kind)
 {
   const char *p = *stringp;
   /* combinator : S* '+' S* | S* '>' S* | S* '~' S* | S+ */
   const bool seen_spaces = parse_spaces (&p, 1);
   switch (*p)
     {
-    case '+':   p++; *kind = SelectorNode::NEIGHBOUR;   break;
-    case '>':   p++; *kind = SelectorNode::CHILD;       break;
-    case '~':   p++; *kind = SelectorNode::FOLLOWING;   break;
+    case '+':   p++; *kind = NEIGHBOUR;   break;
+    case '>':   p++; *kind = CHILD;       break;
+    case '~':   p++; *kind = FOLLOWING;   break;
     default:
       if (seen_spaces)
         {
-          *kind = SelectorNode::DESCENDANT;
+          *kind = DESCENDANT;
           *stringp = p;
           return true;
         }
@@ -788,7 +788,7 @@ parse_selector_combinator (const char **stringp, SelectorNode::Kind *kind)
 }
 
 bool
-parse_selector_chain (const char **stringp, SelectorChain &chain)
+SelectorChain::parse (const char **stringp)
 {
   return_val_if_fail (stringp != NULL, false);
   const char *p = *stringp;
@@ -809,7 +809,7 @@ parse_selector_chain (const char **stringp, SelectorChain &chain)
               p = q;
             }
         }
-      chain.swap (tmpchain);
+      this->swap (tmpchain);
       *stringp = p;
       return true;
     }
@@ -825,63 +825,63 @@ SelectorChain::string ()
       const SelectorNode &node = operator[] (i);
       switch (node.kind)
         {
-        case SelectorNode::NONE:
+        case NONE:
           s += "<NONE>";
           break;
-        case SelectorNode::SUBJECT:
+        case SUBJECT:
           s += "$";
           break;
-        case SelectorNode::TYPE:
+        case TYPE:
           s += node.ident;
           break;
-        case SelectorNode::UNIVERSAL:
+        case UNIVERSAL:
           s += node.ident;
           break;
-        case SelectorNode::CLASS:
+        case CLASS:
           s += "." + node.ident;
           break;
-        case SelectorNode::ID:
+        case ID:
           s += "#" + node.ident;
           break;
-        case SelectorNode::PSEUDO_ELEMENT:
+        case PSEUDO_ELEMENT:
           s += "::" + node.ident;
           break;
-        case SelectorNode::PSEUDO_CLASS:
+        case PSEUDO_CLASS:
           s += ":" + node.ident;
           if (!node.arg.empty())
             s += "(" + node.arg + ")";
           break;
-        case SelectorNode::ATTRIBUTE_EXISTS:
+        case ATTRIBUTE_EXISTS:
           s += "[" + node.ident + "]";
           break;
-        case SelectorNode::ATTRIBUTE_EQUALS:
+        case ATTRIBUTE_EQUALS:
           s += "[" + node.ident + "=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::ATTRIBUTE_PREFIX:
+        case ATTRIBUTE_PREFIX:
           s += "[" + node.ident + "^=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::ATTRIBUTE_SUFFIX:
+        case ATTRIBUTE_SUFFIX:
           s += "[" + node.ident + "$=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::ATTRIBUTE_DASHSTART:
+        case ATTRIBUTE_DASHSTART:
           s += "[" + node.ident + "|=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::ATTRIBUTE_SUBSTRING:
+        case ATTRIBUTE_SUBSTRING:
           s += "[" + node.ident + "*=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::ATTRIBUTE_INCLUDES:
+        case ATTRIBUTE_INCLUDES:
           s += "[" + node.ident + "~=" + maybe_quote_identifier (node.arg) + "]";
           break;
-        case SelectorNode::DESCENDANT:
+        case DESCENDANT:
           s += " ";
           break;
-        case SelectorNode::CHILD:
+        case CHILD:
           s += " > ";
           break;
-        case SelectorNode::NEIGHBOUR:
+        case NEIGHBOUR:
           s += " + ";
           break;
-        case SelectorNode::FOLLOWING:
+        case FOLLOWING:
           s += " ~ ";
           break;
         }
@@ -889,5 +889,5 @@ SelectorChain::string ()
   return s;
 }
 
-} // Parser
+} // Selector
 } // Rapicorn

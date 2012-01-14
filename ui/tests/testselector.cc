@@ -46,9 +46,9 @@ static bool
 parse_match_css_nth (const char *formula, int64 pos)
 {
   int64 a, b;
-  if (!Parser::parse_css_nth (&formula, &a, &b) || *formula != 0)
+  if (!Selector::parse_css_nth (&formula, &a, &b) || *formula != 0)
     return false;
-  return Parser::match_css_nth (pos, a, b);
+  return Selector::match_css_nth (pos, a, b);
 }
 
 static bool
@@ -56,7 +56,7 @@ test_css_nthset (const char *formula, const vector<int64> &matchset, const vecto
 {
   int64 a, b;
   const char *p = formula;
-  if (!Parser::parse_css_nth (&p, &a, &b) || *p != 0)
+  if (!Selector::parse_css_nth (&p, &a, &b) || *p != 0)
     {
       printerr ("FAILURE:%s: failed to parse css-nth formula: %s\n", __func__, formula);
       return false;
@@ -85,7 +85,7 @@ test_css_nthset (const char *formula, const vector<int64> &matchset, const vecto
 static void
 test_selector_primitives()
 {
-  using namespace Parser;
+  using namespace Selector;
   const char *s, *o;
   TASSERT ((s = " \t\n\v\f\r") && (o = s) && parse_spaces (&s, 6) && s == o + 6);
   TASSERT ((s = " ])}>") && (o = s) && scan_nested (&s, "([{<*'/\">}])", ']') && s == o + 1);
@@ -256,15 +256,15 @@ test_selector_primitives()
 }
 REGISTER_UITHREAD_TEST ("Selector/Basic Parsing Primitives", test_selector_primitives);
 
-#define SN(...)       ({ SelectorNode n (SelectorNode:: __VA_ARGS__); n; })
-static const Parser::SelectorNode __csr0 (Parser::SelectorNode::NONE);
-typedef const Parser::SelectorNode &Csr;
+#define SN(...)       ({ SelectorNode n (__VA_ARGS__); n; })
+static const Selector::SelectorNode __csr0 (Selector::NONE);
+typedef const Selector::SelectorNode &Csr;
 
-static Parser::SelectorChain
+static Selector::SelectorChain
 schain (Csr a = __csr0, Csr b = __csr0, Csr c = __csr0, Csr d = __csr0, Csr e = __csr0, Csr f = __csr0, Csr g = __csr0,
         Csr h = __csr0, Csr i = __csr0, Csr j = __csr0, Csr k = __csr0, Csr l = __csr0, Csr m = __csr0, Csr n = __csr0)
 {
-  Parser::SelectorChain sc;
+  Selector::SelectorChain sc;
   if (a != __csr0) sc.push_back (a);
   if (b != __csr0) sc.push_back (b);
   if (c != __csr0) sc.push_back (c);
@@ -285,60 +285,60 @@ schain (Csr a = __csr0, Csr b = __csr0, Csr c = __csr0, Csr d = __csr0, Csr e = 
 static void
 test_selector_parser()
 {
-  using namespace Parser;
+  using namespace Selector;
   const char *s, *o;
   // element selectors
-  Parser::SelectorChain sc;
-  TASSERT ((s = "*") && (o = s) && parse_selector_chain (&s, sc) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*")));
-  TASSERT ((s = "ABC") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 && sc == schain (SN (TYPE, "ABC")));
-  TASSERT ((s = "A B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 &&
+  Selector::SelectorChain sc;
+  TASSERT ((s = "*") && (o = s) && sc.parse (&s) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*")));
+  TASSERT ((s = "ABC") && (o = s) && sc.parse (&s) && s == o + 3 && sc == schain (SN (TYPE, "ABC")));
+  TASSERT ((s = "A B") && (o = s) && sc.parse (&s) && s == o + 3 &&
            sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B")));
-  TASSERT ((s = "A>B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 &&
+  TASSERT ((s = "A>B") && (o = s) && sc.parse (&s) && s == o + 3 &&
            sc == schain (SN (TYPE, "A"), SN (CHILD, ""), SN (TYPE, "B")));
-  TASSERT ((s = "A ~ B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 5 &&
+  TASSERT ((s = "A ~ B") && (o = s) && sc.parse (&s) && s == o + 5 &&
            sc == schain (SN (TYPE, "A"), SN (FOLLOWING, ""), SN (TYPE, "B")));
-  TASSERT ((s = "A+ B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 4 &&
+  TASSERT ((s = "A+ B") && (o = s) && sc.parse (&s) && s == o + 4 &&
            sc == schain (SN (TYPE, "A"), SN (NEIGHBOUR, ""), SN (TYPE, "B")));
-  TASSERT ((s = "A +B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 4 &&
+  TASSERT ((s = "A +B") && (o = s) && sc.parse (&s) && s == o + 4 &&
            sc == schain (SN (TYPE, "A"), SN (NEIGHBOUR, ""), SN (TYPE, "B")));
-  TASSERT ((s = "A B > * + D ~ E") && (o = s) && parse_selector_chain (&s, sc) && s == o + 15 &&
+  TASSERT ((s = "A B > * + D ~ E") && (o = s) && sc.parse (&s) && s == o + 15 &&
            sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (UNIVERSAL, "*"),
                          SN (NEIGHBOUR, ""), SN (TYPE, "D"), SN (FOLLOWING, ""), SN (TYPE, "E")));
-  TASSERT ((s = "A B > $C + D ~ E") && (o = s) && parse_selector_chain (&s, sc) && s == o + 16 &&
+  TASSERT ((s = "A B > $C + D ~ E") && (o = s) && sc.parse (&s) && s == o + 16 &&
            sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (SUBJECT), SN (TYPE, "C"),
                          SN (NEIGHBOUR, ""), SN (TYPE, "D"), SN (FOLLOWING, ""), SN (TYPE, "E")));
   // attribute and id selectors
-  TASSERT ((s =            "A#id") && (o = s) && parse_selector_chain (&s, sc) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ID, "id")));
-  TASSERT ((s =             "A.C") && (o = s) && parse_selector_chain (&s, sc) && s == o +  3 && sc == schain (SN (TYPE, "A"), SN (CLASS, "C")));
-  TASSERT ((s =            "A[b]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS, "b")));
-  TASSERT ((s =          "A[b=c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
-  TASSERT ((s =           "[b=c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  5 && sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c")));
-  TASSERT ((s =   "$[b=c] > #fun") && (o = s) && parse_selector_chain (&s, sc) && s == o + 13 &&
+  TASSERT ((s =            "A#id") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ID, "id")));
+  TASSERT ((s =             "A.C") && (o = s) && sc.parse (&s) && s == o +  3 && sc == schain (SN (TYPE, "A"), SN (CLASS, "C")));
+  TASSERT ((s =            "A[b]") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS, "b")));
+  TASSERT ((s =          "A[b=c]") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =           "[b=c]") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =   "$[b=c] > #fun") && (o = s) && sc.parse (&s) && s == o + 13 &&
            sc == schain (SN (SUBJECT), SN (ATTRIBUTE_EQUALS, "b", "c"), SN (CHILD), SN (ID, "fun")));
-  TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
-  TASSERT ((s =     "A[b = 'c' ]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
-  TASSERT ((s =       "A[b |=c ]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART, "b", "c")));
-  TASSERT ((s =      "A[b^= 'c']") && (o = s) && parse_selector_chain (&s, sc) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX, "b", "c")));
-  TASSERT ((s =       "A[b $= c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c")));
-  TASSERT ((s =      "A[b *='c']") && (o = s) && parse_selector_chain (&s, sc) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUBSTRING, "b", "c")));
-  TASSERT ((s =       "A[b ~= c]") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c")));
-  TASSERT ((s = "A[b~=c][d1*=e2]") && (o = s) && parse_selector_chain (&s, sc) && s == o + 15 &&
+  TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =     "A[b = 'c' ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =       "A[b |=c ]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART, "b", "c")));
+  TASSERT ((s =      "A[b^= 'c']") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX, "b", "c")));
+  TASSERT ((s =       "A[b $= c]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c")));
+  TASSERT ((s =      "A[b *='c']") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUBSTRING, "b", "c")));
+  TASSERT ((s =       "A[b ~= c]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c")));
+  TASSERT ((s = "A[b~=c][d1*=e2]") && (o = s) && sc.parse (&s) && s == o + 15 &&
            sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c"), SN (ATTRIBUTE_SUBSTRING, "d1", "e2")));
   // pseudo selectors
-  TASSERT ((s =  "*::before") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_ELEMENT, "before")));
-  TASSERT ((s =      ":root") && (o = s) && parse_selector_chain (&s, sc) && s == o +  5 && sc == schain (SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s =  ":root ~ C") && (o = s) && parse_selector_chain (&s, sc) && s == o +  9 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (TYPE, "C")));
-  TASSERT ((s =     "$:root") && (o = s) && parse_selector_chain (&s, sc) && s == o +  6 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s = ":root ~ $C") && (o = s) && parse_selector_chain (&s, sc) && s == o + 10 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (SUBJECT), SN (TYPE, "C")));
-  TASSERT ((s =     "A:root") && (o = s) && parse_selector_chain (&s, sc) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s =     "A:root") && (o = s) && parse_selector_chain (&s, sc) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s =  "A:root( )") && (o = s) && parse_selector_chain (&s, sc) && s == o +  1 && sc == schain (SN (TYPE, "A"))); // invalid empty expression
-  TASSERT ((s =      ":root ~ $::after") && (o = s) && parse_selector_chain (&s, sc) && s == o + 16 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (SUBJECT), SN (PSEUDO_ELEMENT, "after")));
-  TASSERT ((s = "$:root ~ :first-child") && (o = s) && parse_selector_chain (&s, sc) && s == o + 21 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (PSEUDO_CLASS, "first-child")));
-  TASSERT ((s =     "*:nth-child(2n+1)") && (o = s) && parse_selector_chain (&s, sc) && s == o + 17 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n+1")));
-  TASSERT ((s = "*:nth-last-of-type( -3n-1 )::after") && (o = s) && parse_selector_chain (&s, sc) && s == o + 34 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-last-of-type", "-3n-1"), SN (PSEUDO_ELEMENT, "after")));
-  TASSERT ((s = "A[b$='c\\\nc']:lang('foo')::first-letter > D") && (o = s) && parse_selector_chain (&s, sc) && s == o + 42 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c\nc"), SN (PSEUDO_CLASS, "lang", "'foo'"), SN (PSEUDO_ELEMENT, "first-letter"), SN (CHILD), SN (TYPE, "D")));
-  TASSERT ((s = "A[b$='c\\0a c']:lang('foo[]')::first-letter > $D + E") && (o = s) && parse_selector_chain (&s, sc) && o == sc.string());
-  //{ s = ":root ~ $::after"; o = s; bool r = parse_selector_chain (&s, sc); printerr ("\"%s\": d=%ld r=%d : %s\n", o, s - o, r, sc.string().c_str()); }
+  TASSERT ((s =  "*::before") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_ELEMENT, "before")));
+  TASSERT ((s =      ":root") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (PSEUDO_CLASS, "root")));
+  TASSERT ((s =  ":root ~ C") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (TYPE, "C")));
+  TASSERT ((s =     "$:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root")));
+  TASSERT ((s = ":root ~ $C") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (SUBJECT), SN (TYPE, "C")));
+  TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
+  TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
+  TASSERT ((s =  "A:root( )") && (o = s) && sc.parse (&s) && s == o +  1 && sc == schain (SN (TYPE, "A"))); // invalid empty expression
+  TASSERT ((s =      ":root ~ $::after") && (o = s) && sc.parse (&s) && s == o + 16 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (SUBJECT), SN (PSEUDO_ELEMENT, "after")));
+  TASSERT ((s = "$:root ~ :first-child") && (o = s) && sc.parse (&s) && s == o + 21 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root"), SN (FOLLOWING), SN (PSEUDO_CLASS, "first-child")));
+  TASSERT ((s =     "*:nth-child(2n+1)") && (o = s) && sc.parse (&s) && s == o + 17 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n+1")));
+  TASSERT ((s = "*:nth-last-of-type( -3n-1 )::after") && (o = s) && sc.parse (&s) && s == o + 34 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-last-of-type", "-3n-1"), SN (PSEUDO_ELEMENT, "after")));
+  TASSERT ((s = "A[b$='c\\\nc']:lang('foo')::first-letter > D") && (o = s) && sc.parse (&s) && s == o + 42 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c\nc"), SN (PSEUDO_CLASS, "lang", "'foo'"), SN (PSEUDO_ELEMENT, "first-letter"), SN (CHILD), SN (TYPE, "D")));
+  TASSERT ((s = "A[b$='c\\0a c']:lang('foo[]')::first-letter > $D + E") && (o = s) && sc.parse (&s) && o == sc.string());
+  //{ s = ":root ~ $::after"; o = s; bool r = sc.parse (&s); printerr ("\"%s\": d=%ld r=%d : %s\n", o, s - o, r, sc.string().c_str()); }
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
