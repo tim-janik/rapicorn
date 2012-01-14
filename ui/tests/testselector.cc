@@ -223,13 +223,40 @@ test_selector_primitives()
 }
 REGISTER_UITHREAD_TEST ("Selector/Basic Parsing Primitives", test_selector_primitives);
 
+#define SN(k,i)         ({ SelectorNode n; n.kind = SelectorNode::k; n.ident = i; n; })
+#define SNA(k,i,a)      ({ SelectorNode n; n.kind = SelectorNode::k; n.ident = i; n.arg = a; n; })
+static const Parser::SelectorNode __csr0 (Parser::SelectorNode::NONE);
+typedef const Parser::SelectorNode &Csr;
+
+static Parser::SelectorChain
+schain (Csr a = __csr0, Csr b = __csr0, Csr c = __csr0, Csr d = __csr0, Csr e = __csr0, Csr f = __csr0, Csr g = __csr0,
+        Csr h = __csr0, Csr i = __csr0, Csr j = __csr0, Csr k = __csr0, Csr l = __csr0, Csr m = __csr0, Csr n = __csr0)
+{
+  Parser::SelectorChain sc;
+  if (a != __csr0) sc.push_back (a);
+  if (b != __csr0) sc.push_back (b);
+  if (c != __csr0) sc.push_back (c);
+  if (d != __csr0) sc.push_back (d);
+  if (e != __csr0) sc.push_back (e);
+  if (f != __csr0) sc.push_back (f);
+  if (g != __csr0) sc.push_back (g);
+  if (h != __csr0) sc.push_back (h);
+  if (i != __csr0) sc.push_back (i);
+  if (j != __csr0) sc.push_back (j);
+  if (k != __csr0) sc.push_back (k);
+  if (l != __csr0) sc.push_back (l);
+  if (m != __csr0) sc.push_back (m);
+  if (n != __csr0) sc.push_back (n);
+  return sc;
+}
+
 static void
 test_selector_parser()
 {
   using namespace Parser;
   String ident;
   const char *s, *o;
-  // unicode:
+  // identifier & unicode
   TASSERT ((s = "a") && (o = s) && parse_identifier (&s, ident) && s == o + 1 && ident == "a");
   TASSERT ((s = "\\2a \\2A") && (o = s) && parse_identifier (&s, ident) && s == o + 7 && ident == "**");
   TASSERT ((s = "\\02A_\\00007E0 ") && (o = s) && parse_identifier (&s, ident) && s == o + 13 && ident == "*_~0");
@@ -237,6 +264,23 @@ test_selector_parser()
   TASSERT ((s = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ_") && (o = s) && parse_identifier (&s, ident) && s == o + 28 && ident == o);
   TASSERT ((s = "-_0123456789-XYZ") && (o = s) && parse_identifier (&s, ident) && s == o + 16 && ident == o);
   TASSERT ((s = "__\\*\\:\\ \\\\_\\2a_") && (o = s) && parse_identifier (&s, ident) && s == o + 15 && ident == "__*: \\_*_");
-  // { s = "XYZ"; o = s; bool r = parse_identifier (&s, ident); printerr ("\"%s\": d=%d r=%d id=%s\n", o, s - o, r, ident.c_str()); }
+  // selectors
+  Parser::SelectorChain sc;
+  TASSERT ((s = "*") && (o = s) && parse_selector_chain (&s, sc) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*")));
+  TASSERT ((s = "ABC") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 && sc == schain (SN (TYPE, "ABC")));
+  TASSERT ((s = "A B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 &&
+           sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B")));
+  TASSERT ((s = "A>B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 3 &&
+           sc == schain (SN (TYPE, "A"), SN (CHILD, ""), SN (TYPE, "B")));
+  TASSERT ((s = "A ~ B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 5 &&
+           sc == schain (SN (TYPE, "A"), SN (FOLLOWING, ""), SN (TYPE, "B")));
+  TASSERT ((s = "A+ B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 4 &&
+           sc == schain (SN (TYPE, "A"), SN (NEIGHBOUR, ""), SN (TYPE, "B")));
+  TASSERT ((s = "A +B") && (o = s) && parse_selector_chain (&s, sc) && s == o + 4 &&
+           sc == schain (SN (TYPE, "A"), SN (NEIGHBOUR, ""), SN (TYPE, "B")));
+  TASSERT ((s = "A B > * + D ~ E") && (o = s) && parse_selector_chain (&s, sc) && s == o + 15 &&
+           sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (UNIVERSAL, "*"),
+                         SN (NEIGHBOUR, ""), SN (TYPE, "D"), SN (FOLLOWING, ""), SN (TYPE, "E")));
+  // { s = "A + B"; o = s; bool r = parse_selector_chain (&s, sc); printerr ("\"%s\": d=%ld r=%d sc=%ld\n", o, s - o, r, sc.size()); }
 }
-REGISTER_UITHREAD_TEST ("Parser/Selector Parsing", test_selector_parser);
+REGISTER_TEST ("Selector/Combinator Parsing", test_selector_parser);

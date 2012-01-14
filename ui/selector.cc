@@ -271,5 +271,111 @@ parse_identifier (const char **stringp, String &ident)
   return true;
 }
 
+static bool
+parse_special_selector (const char **stringp, SelectorChain &chain)
+{ // special_selector : HASH | class | attrib | pseudo | negation
+  // FIXME
+  return false;
+}
+
+static bool
+parse_universal_selector (const char **stringp, SelectorChain &chain)
+{ // universal : [ namespace_prefix ]? '*'
+  const char *p = *stringp;
+  if (*p == '*')
+    {
+      SelectorNode node;
+      node.kind = SelectorNode::UNIVERSAL;
+      node.ident = String (p, 1);
+      chain.push_back (node);
+      p++;
+      *stringp = p;
+      return true;
+    }
+  return false;
+}
+
+static bool
+parse_type_selector (const char **stringp, SelectorChain &chain)
+{ // type_selector : [ namespace_prefix ]? identifier
+  SelectorNode node;
+  if (parse_identifier (stringp, node.ident))
+    {
+      node.kind = SelectorNode::TYPE;
+      chain.push_back (node);
+      return true;
+    }
+  return false;
+}
+
+static bool
+parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
+{ // simple_selector_sequence : [ type_selector | universal ] [ special_selector ]* | [ special_selector ]+
+  const char *p = *stringp;
+  bool seen_selector = parse_type_selector (&p, chain) || parse_universal_selector (&p, chain);
+  while (parse_special_selector (&p, chain))
+    seen_selector = true;
+  if (seen_selector)
+    {
+      *stringp = p;
+      return true;
+    }
+  return false;
+}
+
+static bool
+parse_selector_combinator (const char **stringp, SelectorNode::Kind *kind)
+{
+  const char *p = *stringp;
+  /* combinator : S* '+' S* | S* '>' S* | S* '~' S* | S+ */
+  const bool seen_spaces = parse_spaces (&p, 1);
+  switch (*p)
+    {
+    case '+':   p++; *kind = SelectorNode::NEIGHBOUR;   break;
+    case '>':   p++; *kind = SelectorNode::CHILD;       break;
+    case '~':   p++; *kind = SelectorNode::FOLLOWING;   break;
+    default:
+      if (seen_spaces)
+        {
+          *kind = SelectorNode::DESCENDANT;
+          *stringp = p;
+          return true;
+        }
+      return false;
+    }
+  skip_spaces (&p);
+  *stringp = p;
+  return true;
+}
+
+bool
+parse_selector_chain (const char **stringp, SelectorChain &chain)
+{
+  return_val_if_fail (stringp != NULL, false);
+  const char *p = *stringp;
+  /* selector : simple_selector_sequence [ combinator simple_selector_sequence ]* */
+  SelectorChain tmpchain;
+  if (parse_simple_selector_sequence (&p, tmpchain))
+    {
+      SelectorChain nextchain;
+      const char *q = p;
+      SelectorNode cnode;
+      while (parse_selector_combinator (&q, &cnode.kind))
+        {
+          if (parse_simple_selector_sequence (&q, nextchain))
+            {
+              tmpchain.push_back (cnode);
+              tmpchain.insert (tmpchain.end(), nextchain.begin(), nextchain.end());
+              nextchain.clear();
+              p = q;
+            }
+        }
+      chain.swap (tmpchain);
+      *stringp = p;
+      return true;
+    }
+  return false;
+}
+
 } // Parser
 } // Rapicorn
