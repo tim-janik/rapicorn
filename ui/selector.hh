@@ -22,7 +22,7 @@ bool    parse_string            (const char **stringp, String &ident);
 struct SelectorNode {
   enum Kind {
     NONE,
-    TYPE, UNIVERSAL,                            // element selectors
+    SUBJECT, TYPE, UNIVERSAL,                   // element selectors
     CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,    // class, id, pseudo selectors
     ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS,         // attributes with match types
     ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_DASHSTART, ATTRIBUTE_SUBSTRING, ATTRIBUTE_INCLUDES,

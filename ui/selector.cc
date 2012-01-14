@@ -739,13 +739,23 @@ parse_type_selector (const char **stringp, SelectorChain &chain)
 
 static bool
 parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
-{ // simple_selector_sequence : [ type_selector | universal ] [ special_selector ]* | [ special_selector ]+
+{ // simple_selector_sequence : '$'? [ [ type_selector | universal ] [ special_selector ]* | [ special_selector ]+ ]
   const char *p = *stringp;
-  bool seen_selector = parse_type_selector (&p, chain) || parse_universal_selector (&p, chain);
-  while (parse_special_selector (&p, chain))
+  const bool selector_subject = *p == '$';
+  p += selector_subject ? 1 : 0;
+  SelectorChain tmpchain;
+  bool seen_selector = parse_type_selector (&p, tmpchain) || parse_universal_selector (&p, tmpchain);
+  while (parse_special_selector (&p, tmpchain))
     seen_selector = true;
   if (seen_selector)
     {
+      if (selector_subject)
+        {
+          SelectorNode node;
+          node.kind = SelectorNode::SUBJECT;
+          chain.push_back (node);
+        }
+      chain.insert (chain.end(), tmpchain.begin(), tmpchain.end());
       *stringp = p;
       return true;
     }
@@ -817,6 +827,9 @@ SelectorChain::string ()
         {
         case SelectorNode::NONE:
           s += "<NONE>";
+          break;
+        case SelectorNode::SUBJECT:
+          s += "$";
           break;
         case SelectorNode::TYPE:
           s += node.ident;
