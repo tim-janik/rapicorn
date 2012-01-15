@@ -1,5 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "selector.hh"
+#include "container.hh"
+#include "factory.hh"
 #include <string.h>
 
 #define ISDIGIT(c)      (c >= '0' && c <= '9')
@@ -887,6 +889,238 @@ SelectorChain::string ()
         }
     }
   return s;
+}
+
+bool
+Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
+{
+  return false; // FIXME
+}
+
+bool
+Matcher::match_pseudo_selector (ItemImpl &item, const SelectorNode &snode)
+{
+  return false; // FIXME
+}
+
+bool
+Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
+{
+  switch (snode.kind)
+    {
+    case UNIVERSAL:     return true;
+    case CLASS:         return snode.ident == Factory::factory_context_name (item.factory_context());
+    case ID:            return snode.ident == item.name();
+    default:            return false;   // unreached
+    case TYPE:          break;
+    }
+  // TYPE:
+  StringList tags = Factory::factory_context_tags (item.factory_context());
+  bool result = false;
+  for (StringList::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
+    {
+      const String &tag = *it;
+      size_t i = tag.rfind (snode.ident);
+      if (i == String::npos)
+        continue;                                     // no match
+      if (i + snode.ident.size() == tag.size() and    // tail match
+          (i == 0 ||                                  // full match
+           tag.data()[i - 1] == ':'))                 // match at namespace boundary
+        result = true;
+    }
+  if (Rapicorn::Logging::debugging())
+    DEBUG ("MATCH: %s in (%s): %u", snode.ident.c_str(), string_join (" ", tags).c_str(), result);
+  return result;
+}
+
+template<int CDIR> bool
+Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
+{
+  return_val_if_fail (chain_index < chain.size(), false);
+  RAPICORN_STATIC_ASSERT (CDIR);
+  const SelectorNode &snode = chain[chain_index];
+  switch (snode.kind)
+    {
+    default:
+    case NONE:
+    case SUBJECT:
+      break; // automatic match
+    case TYPE: case UNIVERSAL: case CLASS: case ID:
+      if (match_element_selector (item, snode))
+        break;
+      return false;
+    case PSEUDO_ELEMENT: case PSEUDO_CLASS:    // class, id, pseudo selectors
+      if (match_pseudo_selector (item, snode))
+        break;
+      return false;
+    case ATTRIBUTE_EXISTS: case ATTRIBUTE_EQUALS:
+    case ATTRIBUTE_PREFIX: case ATTRIBUTE_SUFFIX: case ATTRIBUTE_DASHSTART: case ATTRIBUTE_SUBSTRING: case ATTRIBUTE_INCLUDES:
+      if (match_attribute_selector (item, snode))
+        break;
+      return false;
+    case CHILD:
+      if (CDIR < 0)
+        {
+          ContainerImpl *p = item.parent();
+          if (p && chain_index > 0 && match_selector_stepwise<CDIR> (*p, chain_index - 1))
+            return true;
+          return false;
+        }
+      else // CDIR > 0
+        {
+          ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
+          if (c && chain_index + 1 < chain.size())
+            for (ContainerImpl::ChildWalker cw = c->local_children(); cw.has_next(); cw++)
+              {
+                if (match_selector_stepwise<CDIR> (*cw, chain_index + 1))
+                  return true;
+              }
+          return false;
+        }
+    case DESCENDANT:
+      if (CDIR < 0)
+        {
+          if (chain_index < 1)
+            return false; // bogus chaining
+          ContainerImpl *p = item.parent();
+          while (p)
+            {
+              if (match_selector_stepwise<CDIR> (*p, chain_index - 1))
+                return true;
+              p = p->parent();
+            }
+          return false;
+        }
+      else // CDIR > 0
+        {
+          ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
+          if (c && chain_index + 1 < chain.size() &&
+              match_selector_children (*c, chain_index + 1))
+            return true;
+          return false;
+        }
+    case NEIGHBOUR:
+      return false; // FIXME
+    case FOLLOWING:
+      return false; // FIXME
+    }
+  if (CDIR < 0 && chain_index > 0)
+    return match_selector_stepwise<CDIR> (item, chain_index - 1);
+  if (CDIR > 0 && chain_index + 1 < chain.size())
+    return match_selector_stepwise<CDIR> (item, chain_index + 1);
+  return true;
+}
+
+bool
+Matcher::match_selector_children (ContainerImpl &container, const size_t chain_index)
+{
+  for (ContainerImpl::ChildWalker cw = container.local_children(); cw.has_next(); cw++)
+    {
+      if (match_selector_stepwise<+1> (*cw, chain_index))
+        return true;
+      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&*cw);
+      if (c && match_selector_children (*c, chain_index))
+        return true;
+    }
+  return false;
+}
+
+bool
+Matcher::parse_selector (const String &selector,
+                         String *errorp)
+{
+  return_val_if_fail (chain.empty(), false);
+  const char *s = selector.c_str();
+  String error;
+  // parse selector string
+  if (!chain.parse (&s) || chain.empty())
+    error = string_printf ("%s: invalid selector syntax: %s\n", __func__, string_to_cquote (selector).c_str());
+  else if (*s)
+    error = string_printf ("%s: unexpected junk in selector (%s): %s\n", __func__,
+                           string_to_cquote (String (selector.c_str(), s - selector.c_str())).c_str(),
+                           string_to_cquote (s).c_str());
+  // report errors
+  if (!error.empty())
+    {
+      if (errorp)
+        *errorp = error;
+      else
+        DEBUG ("SELECTOR-PARSE: %s", error.c_str());
+      return false;
+    }
+  // find subject element
+  subject_index = chain.size() - 1;
+  for (size_t i = 0; i < chain.size(); i++)
+    if (chain[i].kind == SUBJECT)
+      {
+        subject_index = i;
+        break;
+      }
+  return true;
+}
+
+bool
+Matcher::match_selector (ItemImpl &item)
+{
+  if (subject_index < chain.size() && !match_selector_stepwise<+1> (item, subject_index))
+    return false;
+  if (subject_index > 0 && !match_selector_stepwise<-1> (item, subject_index - 1))
+    return false;
+  return true;
+}
+
+template<size_t COUNT> vector<ItemImpl*>
+Matcher::recurse_selector (ItemImpl &item)
+{
+  vector<ItemImpl*> result;
+  if (match_selector (item))
+    {
+      result.push_back (&item);
+      if (COUNT == 1)
+        return result;
+    }
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item);
+  if (!container)
+    return result;
+  for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+    {
+      vector<ItemImpl*> subs;
+      if (COUNT == 2 && result.size() == 1)
+        subs = recurse_selector<1> (*cw);
+      else // COUNT==0 || result.empty())
+        subs = recurse_selector<COUNT> (*cw);
+      if (!subs.empty())
+        {
+          if (result.empty())
+            result.swap (subs);
+          else
+            result.insert (result.end(), subs.begin(), subs.end());
+          if (COUNT && result.size() >= COUNT)
+            break;
+        }
+    }
+  return result;
+}
+
+bool
+Matcher::match_selector (const String &selector, ItemImpl &item)
+{
+  Matcher matcher;
+  if (!matcher.parse_selector (selector))
+    return false;
+  if (!matcher.match_selector (item))
+    return false;
+  return true;
+}
+
+vector<ItemImpl*>
+Matcher::query_selector_all (const String &selector, ItemImpl &item)
+{
+  Matcher matcher;
+  vector<ItemImpl*> result;
+  if (matcher.parse_selector (selector))
+    result = matcher.recurse_selector<0> (item);
+  return result;
 }
 
 } // Selector

@@ -342,3 +342,104 @@ test_selector_parser()
   //{ s = ":root ~ $::after"; o = s; bool r = sc.parse (&s); printerr ("\"%s\": d=%ld r=%d : %s\n", o, s - o, r, sc.string().c_str()); }
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
+
+static const char test_dialog_xml[] =
+  "<?xml version='1.0' encoding='UTF-8'?>\n"
+  "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
+  // test-dialog
+  "<def:test-dialog inherit='Window'>\n"
+  "  <Ambience normal-lighting='upper-left'>\n"
+  "    <Alignment padding='5'>\n"
+  "      <VBox spacing='3' hexpand='1'>\n"
+  "        <VBox hexpand='1'>\n"
+  "          <Frame>\n"
+  "            <VBox spacing='5'>\n"
+  "              <Label markup-text='Test Buttons:'/>\n"
+  "              <Button on-click='Item::print(\"click on first button\")'>\n"
+  "                <Label markup-text='First Button'/>\n"
+  "              </Button>\n"
+  "              <HBox hexpand='1' spacing='3'>\n"
+  "                <Button on-click='Item::print(\"Normal Button\")'>\n"
+  "                  <Label id='label1' vexpand='0' markup-text='Normal Button' />\n"
+  "                </Button>\n"
+  "              </HBox>\n"
+  "            </VBox>\n"
+  "          </Frame>\n"
+  "        </VBox>\n"
+  "        <Frame>\n"
+  "          <Arrow id='special-arrow' arrow-dir='right' />\n"
+  "        </Frame>\n"
+  "        <HBox spacing='5' homogeneous='0' >\n"
+  "          <Button hexpand='1' on-click='Item::print (\"ok\")' > <Label markup-text='Ok'/> </Button>\n"
+  "          <Button hexpand='1' on-click='Window::close()' > <Label markup-text='Close'/> </Button>\n"
+  "        </HBox>\n"
+  "      </VBox>\n"
+  "    </Alignment>\n"
+  "  </Ambience>\n"
+  "</def:test-dialog>\n"
+  ""
+  "</rapicorn-definitions>\n"
+  "";
+
+static void
+load_ui_defs()
+{
+  static bool initialized = false;
+  if (once_enter (&initialized))
+    {
+      int err = Factory::parse_string (test_dialog_xml, "RapicornSelectorTest");
+      if (err)
+        fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, string_from_errno (err).c_str());
+      once_leave (&initialized, true);
+    }
+}
+
+static bool
+test_query_all (const String &selector, size_t n, const String &type = "")
+{
+  ItemImpl *root = dynamic_cast<ItemImpl*> (ApplicationImpl::the().unique_component ("/#test-dialog"));
+  TASSERT (root != NULL);
+
+  const int VERBOSE = 1;
+
+  vector<ItemImpl*> items = Selector::Matcher::query_selector_all (selector, *root);
+  if (VERBOSE && items.empty())
+    printerr ("MATCH: %s: %s\n", string_to_cquote (selector).c_str(), "none...");
+  else if (VERBOSE)
+    for (size_t i = 0; i < items.size(); i++)
+      printerr ("MATCH: %s: %s\n", string_to_cquote (selector).c_str(), items[i]->name().c_str());
+
+  if (items.size() != n)
+    return false;
+
+  if (!type.empty())
+    for (size_t i = 0; i < items.size(); i++)
+      if (!Selector::Matcher::match_selector (type, *items[i]))
+        return false;
+
+  return true;
+}
+
+static void
+test_component_matches ()
+{
+  load_ui_defs();
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  WindowIface &window = *app.create_window ("test-dialog");
+  ItemIface *item = dynamic_cast<ItemImpl*> (ApplicationImpl::the().unique_component ("/#test-dialog"));
+  TASSERT (item != NULL);
+
+  TASSERT (test_query_all ("/#", 0)); // invalid path
+  TASSERT (test_query_all ("X/#test-dialog", 0)); // invalid syntax (junk)
+  TASSERT (test_query_all ("* VBox  Button > Frame Label", 4, "Label"));
+  TASSERT (test_query_all ("* VBox $Button > Frame Label", 4, "Button"));
+  TASSERT (test_query_all ("* VBox $Button > Frame #label1", 1, "Button"));
+  TASSERT (test_query_all ("* VBox Frame > #special-arrow", 1, "Arrow"));
+  TASSERT (test_query_all ("* #special-arrow", 1));
+  TASSERT (test_query_all ("* Label #special-arrow", 0));
+
+  app.remove_window (window);
+  item = app.unique_component ("/#test-dialog"); // non-existing window
+  TASSERT (item == NULL);
+}
+REGISTER_UITHREAD_TEST ("Selector/Test Component Matches", test_component_matches);
