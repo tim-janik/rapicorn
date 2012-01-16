@@ -638,6 +638,7 @@ parse_attribute (const char **stringp, SelectorChain &chain)
     case ('*' << 8) + '=':  p += 2; kind = ATTRIBUTE_SUBSTRING;   break;
     case ('~' << 8) + '=':  p += 2; kind = ATTRIBUTE_INCLUDES;    break;
     case ('|' << 8) + '=':  p += 2; kind = ATTRIBUTE_DASHSTART;   break;
+    case ('!' << 8) + '=':  p += 2; kind = ATTRIBUTE_UNEQUALS;    break;
     case ('=' << 8) + 0:    p += 1; kind = ATTRIBUTE_EQUALS;      break;
     default:                        kind = NONE;                  break;
     }
@@ -859,6 +860,9 @@ SelectorChain::string ()
         case ATTRIBUTE_EQUALS:
           s += "[" + node.ident + "=" + maybe_quote_identifier (node.arg) + "]";
           break;
+        case ATTRIBUTE_UNEQUALS:
+          s += "[" + node.ident + "!=" + maybe_quote_identifier (node.arg) + "]";
+          break;
         case ATTRIBUTE_PREFIX:
           s += "[" + node.ident + "^=" + maybe_quote_identifier (node.arg) + "]";
           break;
@@ -953,7 +957,7 @@ Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
       if (match_pseudo_selector (item, snode))
         break;
       return false;
-    case ATTRIBUTE_EXISTS: case ATTRIBUTE_EQUALS:
+    case ATTRIBUTE_EXISTS: case ATTRIBUTE_EQUALS: case ATTRIBUTE_UNEQUALS:
     case ATTRIBUTE_PREFIX: case ATTRIBUTE_SUFFIX: case ATTRIBUTE_DASHSTART: case ATTRIBUTE_SUBSTRING: case ATTRIBUTE_INCLUDES:
       if (match_attribute_selector (item, snode))
         break;

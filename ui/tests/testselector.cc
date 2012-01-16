@@ -312,11 +312,13 @@ test_selector_parser()
   TASSERT ((s =             "A.C") && (o = s) && sc.parse (&s) && s == o +  3 && sc == schain (SN (TYPE, "A"), SN (CLASS, "C")));
   TASSERT ((s =            "A[b]") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS, "b")));
   TASSERT ((s =          "A[b=c]") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =         "A[b!=c]") && (o = s) && sc.parse (&s) && s == o +  7 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS, "b", "c")));
   TASSERT ((s =           "[b=c]") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =   "$[b=c] > #fun") && (o = s) && sc.parse (&s) && s == o + 13 &&
            sc == schain (SN (SUBJECT), SN (ATTRIBUTE_EQUALS, "b", "c"), SN (CHILD), SN (ID, "fun")));
   TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =     "A[b = 'c' ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =    "A[b != 'c' ]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS, "b", "c")));
   TASSERT ((s =       "A[b |=c ]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART, "b", "c")));
   TASSERT ((s =      "A[b^= 'c']") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX, "b", "c")));
   TASSERT ((s =       "A[b $= c]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c")));
