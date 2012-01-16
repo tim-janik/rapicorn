@@ -7,6 +7,7 @@
 #include "cmdlib.hh"
 #include "sizegroup.hh"
 #include "factory.hh"
+#include "selector.hh"
 
 namespace Rapicorn {
 
@@ -294,6 +295,34 @@ ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMat
             return true;
     }
   return false;
+}
+
+bool
+ItemImpl::match_selector (const String &selector)
+{
+  return Selector::Matcher::match_selector (selector, *this);
+}
+
+ItemIface*
+ItemImpl::query_selector (const String &selector)
+{
+  return Selector::Matcher::query_selector_first (selector, *this);
+}
+
+ItemSeq
+ItemImpl::query_selector_all (const String &selector)
+{
+  vector<ItemImpl*> result = Selector::Matcher::query_selector_all (selector, *this);
+  ItemSeq items;
+  for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
+    items.push_back (*it);
+  return items;
+}
+
+ItemIface*
+ItemImpl::query_selector_unique (const String &selector)
+{
+  return Selector::Matcher::query_selector_unique (selector, *this);
 }
 
 ItemIface*

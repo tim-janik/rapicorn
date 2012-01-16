@@ -77,6 +77,10 @@ sequence ItemSeq {
  * Item is the base type for all UI elements.
  */
 interface Item {
+  bool          match_selector          (string selector) = 0; //< Check if selector matches this item.
+  Item          query_selector          (string selector) = 0; //< Returns first selector match.
+  ItemSeq       query_selector_all      (string selector) = 0; //< Returns all selector matches.
+  Item          query_selector_unique   (string selector) = 0; //< Returns single selector match if unique.
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
   string	test_dump               () = 0;
@@ -177,6 +181,8 @@ interface Application {
   bool          finishable      ();
   signal void   missing_primary ();
   void          close           ();
+  Window        query_window    (string         selector) = 0;
+  WindowList    query_windows   (string         selector) = 0;
   WindowList    list_windows            () = 0;
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;

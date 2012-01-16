@@ -309,6 +309,10 @@ private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
 public:
+  virtual bool       match_selector        (const String &selector);
+  virtual ItemIface* query_selector        (const String &selector);
+  virtual ItemSeq    query_selector_all    (const String &selector);
+  virtual ItemIface* query_selector_unique (const String &selector);
   virtual ItemIface* unique_component   (const String &path);
   virtual ItemSeq    collect_components (const String &path);
   template<class C> typename

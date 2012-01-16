@@ -55,9 +55,29 @@ class Matcher {
   vector<ItemImpl*>       recurse_selector         (ItemImpl &item);
   bool                    parse_selector           (const String &selector, String *errorp = NULL);
 public:
+  template<class Iter> vector<ItemImpl*>
+  static                   match_selector        (const String &selector, Iter first, Iter last, String *errorp = NULL);
   static bool              match_selector        (const String &selector, ItemImpl &item);
   static vector<ItemImpl*> query_selector_all    (const String &selector, ItemImpl &item);
+  static ItemImpl*         query_selector_first  (const String &selector, ItemImpl &item);
+  static ItemImpl*         query_selector_unique (const String &selector, ItemImpl &item);
 };
+
+// Implementations
+template<class Iter> vector<ItemImpl*>
+Matcher::match_selector (const String &selector, Iter first, Iter last, String *errorp)
+{
+  Matcher matcher;
+  vector<ItemImpl*> result;
+  if (matcher.parse_selector (selector, errorp))
+    for (Iter it = first; it != last; it++)
+      {
+        ItemImpl *item = *it;
+        if (item && matcher.match_selector (*item))
+          result.push_back (item);
+      }
+  return result;
+}
 
 } // Selector
 } // Rapicorn

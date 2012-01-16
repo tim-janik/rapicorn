@@ -343,6 +343,96 @@ test_selector_parser()
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
 
+enum QueryType { UNIQUE = 0, FIRST = 1, ALL = 2 };
+
+template<QueryType QUERY> static bool
+test_query (ItemIface *iroot, const String &selector, size_t n, const String &type = "")
+{
+  ItemImpl *root = dynamic_cast<ItemImpl*> (iroot);
+  TASSERT (root != NULL);
+
+  const char *l;
+  vector<ItemIface*> items;
+  ItemIface *qitem = NULL;
+  switch (QUERY)
+    {
+    case UNIQUE: l = "UNIQUE"; qitem = root->query_selector_unique (selector); break;
+    case FIRST:  l = "FIRST";  qitem = root->query_selector (selector); break;
+    case ALL:    l = "ALL";    items = root->query_selector_all (selector); break;
+    }
+  if (qitem)
+    items.push_back (qitem);
+
+  if (Test::verbose() && items.empty())
+    printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), "none...");
+  else if (Test::verbose())
+    for (size_t i = 0; i < items.size(); i++)
+      printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), items[i]->name().c_str());
+
+  if (items.size() != n)
+    return false;
+
+  if (!type.empty())
+    for (size_t i = 0; i < items.size(); i++)
+      if (!items[i]->match_selector (type))
+        return false;
+
+  return true;
+}
+
+static void     load_ui_defs    ();
+
+static void
+test_selector_matching ()
+{
+  load_ui_defs();
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+
+  WindowList wl = app.query_windows ("*");
+  size_t prev_window_count = wl.size();
+
+  WindowIface *window = app.create_window ("test-dialog");
+  TASSERT (window != NULL);
+  WindowIface *w = app.query_window ("#test-dialog");
+  TASSERT (window == w);
+
+  wl = app.query_windows ("*");
+  TASSERT (wl.size() == prev_window_count + 1);
+
+  TASSERT (test_query<ALL>    (w, "/#", 0)); // invalid path
+  TASSERT (test_query<ALL>    (w, "X/#test-dialog", 0)); // invalid syntax (junk)
+  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label", 4, "Label")); // 4 from n
+  TASSERT (test_query<FIRST>  (w, "* VBox  Button > Frame Label", 1, "Label")); // 4 >= 1
+  TASSERT (test_query<UNIQUE> (w, "* VBox  Button > Frame Label", 0));          // 4 != 1
+  TASSERT (test_query<ALL>    (w, "* VBox $Button > Frame Label", 4, "Button"));
+  TASSERT (test_query<FIRST>  (w, "* VBox $Button > Frame Label", 1, "Button"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox $Button > Frame Label", 0));
+  TASSERT (test_query<ALL>    (w, "* VBox $Button > Frame #label1", 1, "Button"));
+  TASSERT (test_query<FIRST>  (w, "* VBox $Button > Frame #label1", 1, "Button"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox $Button > Frame #label1", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame #label1", 1, "Label"));
+  TASSERT (test_query<FIRST>  (w, "* VBox Button > Frame #label1", 1, "Label"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox Button > Frame #label1", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
+  TASSERT (test_query<FIRST>  (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
+  TASSERT (test_query<ALL>    (w, "* #special-arrow", 1));
+  TASSERT (test_query<FIRST>  (w, "* #special-arrow", 1));
+  TASSERT (test_query<UNIQUE> (w, "* #special-arrow", 1));
+  TASSERT (test_query<ALL>    (w, "* Label #special-arrow", 0));
+  TASSERT (test_query<FIRST>  (w, "* Label #special-arrow", 0));
+  TASSERT (test_query<UNIQUE> (w, "* Label #special-arrow", 0));
+
+  ItemIface *i1 = w->query_selector ("#special-arrow");
+  TASSERT (i1);
+  TASSERT (i1->query_selector_all ("*").size() == 1);
+
+  app.remove_window (*window);
+  w = app.query_window ("#test-dialog");
+  TASSERT (w == NULL);
+}
+REGISTER_UITHREAD_TEST ("Selector/Selector Matching", test_selector_matching);
+
 static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
   "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
@@ -393,53 +483,3 @@ load_ui_defs()
       once_leave (&initialized, true);
     }
 }
-
-static bool
-test_query_all (const String &selector, size_t n, const String &type = "")
-{
-  ItemImpl *root = dynamic_cast<ItemImpl*> (ApplicationImpl::the().unique_component ("/#test-dialog"));
-  TASSERT (root != NULL);
-
-  const int VERBOSE = 1;
-
-  vector<ItemImpl*> items = Selector::Matcher::query_selector_all (selector, *root);
-  if (VERBOSE && items.empty())
-    printerr ("MATCH: %s: %s\n", string_to_cquote (selector).c_str(), "none...");
-  else if (VERBOSE)
-    for (size_t i = 0; i < items.size(); i++)
-      printerr ("MATCH: %s: %s\n", string_to_cquote (selector).c_str(), items[i]->name().c_str());
-
-  if (items.size() != n)
-    return false;
-
-  if (!type.empty())
-    for (size_t i = 0; i < items.size(); i++)
-      if (!Selector::Matcher::match_selector (type, *items[i]))
-        return false;
-
-  return true;
-}
-
-static void
-test_component_matches ()
-{
-  load_ui_defs();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window = *app.create_window ("test-dialog");
-  ItemIface *item = dynamic_cast<ItemImpl*> (ApplicationImpl::the().unique_component ("/#test-dialog"));
-  TASSERT (item != NULL);
-
-  TASSERT (test_query_all ("/#", 0)); // invalid path
-  TASSERT (test_query_all ("X/#test-dialog", 0)); // invalid syntax (junk)
-  TASSERT (test_query_all ("* VBox  Button > Frame Label", 4, "Label"));
-  TASSERT (test_query_all ("* VBox $Button > Frame Label", 4, "Button"));
-  TASSERT (test_query_all ("* VBox $Button > Frame #label1", 1, "Button"));
-  TASSERT (test_query_all ("* VBox Frame > #special-arrow", 1, "Arrow"));
-  TASSERT (test_query_all ("* #special-arrow", 1));
-  TASSERT (test_query_all ("* Label #special-arrow", 0));
-
-  app.remove_window (window);
-  item = app.unique_component ("/#test-dialog"); // non-existing window
-  TASSERT (item == NULL);
-}
-REGISTER_UITHREAD_TEST ("Selector/Test Component Matches", test_component_matches);

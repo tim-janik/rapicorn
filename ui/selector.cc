@@ -1123,5 +1123,25 @@ Matcher::query_selector_all (const String &selector, ItemImpl &item)
   return result;
 }
 
+ItemImpl*
+Matcher::query_selector_first (const String &selector, ItemImpl &item)
+{
+  Matcher matcher;
+  vector<ItemImpl*> result;
+  if (matcher.parse_selector (selector))
+    result = matcher.recurse_selector<1> (item);
+  return result.empty() ? NULL : result[0];
+}
+
+ItemImpl*
+Matcher::query_selector_unique (const String &selector, ItemImpl &item)
+{
+  Matcher matcher;
+  vector<ItemImpl*> result;
+  if (matcher.parse_selector (selector))
+    result = matcher.recurse_selector<2> (item);
+  return result.size() != 1 ? NULL : result[0];
+}
+
 } // Selector
 } // Rapicorn
