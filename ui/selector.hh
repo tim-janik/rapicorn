@@ -9,11 +9,14 @@ namespace Selector {
 
 enum Kind {
   NONE,
-  SUBJECT, TYPE, UNIVERSAL,                   // element selectors
-  CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,    // class, id, pseudo selectors
-  ATTRIBUTE_EXISTS, ATTRIBUTE_EQUALS, ATTRIBUTE_UNEQUALS,       // attributes with match types
-  ATTRIBUTE_PREFIX, ATTRIBUTE_SUFFIX, ATTRIBUTE_DASHSTART, ATTRIBUTE_SUBSTRING, ATTRIBUTE_INCLUDES,
-  DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,    // selector combinators
+  SUBJECT, TYPE, UNIVERSAL,                     // element selectors
+  CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,      // class, id, pseudo selectors
+  DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,      // selector combinators
+  ATTRIBUTE_EXISTS, ATTRIBUTE_EXISTS_I,         // attributes with match types
+  ATTRIBUTE_EQUALS, ATTRIBUTE_EQUALS_I, ATTRIBUTE_UNEQUALS, ATTRIBUTE_UNEQUALS_I,
+  ATTRIBUTE_PREFIX, ATTRIBUTE_PREFIX_I, ATTRIBUTE_SUFFIX, ATTRIBUTE_SUFFIX_I,
+  ATTRIBUTE_DASHSTART, ATTRIBUTE_DASHSTART_I, ATTRIBUTE_SUBSTRING, ATTRIBUTE_SUBSTRING_I,
+  ATTRIBUTE_INCLUDES, ATTRIBUTE_INCLUDES_I,
 };
 
 bool    parse_spaces            (const char **stringp, int min_spaces = 1);

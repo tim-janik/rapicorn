@@ -311,6 +311,7 @@ test_selector_parser()
   TASSERT ((s =            "A#id") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ID, "id")));
   TASSERT ((s =             "A.C") && (o = s) && sc.parse (&s) && s == o +  3 && sc == schain (SN (TYPE, "A"), SN (CLASS, "C")));
   TASSERT ((s =            "A[b]") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS, "b")));
+  TASSERT ((s =          "A[b i]") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EXISTS_I, "b")));
   TASSERT ((s =          "A[b=c]") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =         "A[b!=c]") && (o = s) && sc.parse (&s) && s == o +  7 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS, "b", "c")));
   TASSERT ((s =           "[b=c]") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c")));
@@ -318,12 +319,21 @@ test_selector_parser()
            sc == schain (SN (SUBJECT), SN (ATTRIBUTE_EQUALS, "b", "c"), SN (CHILD), SN (ID, "fun")));
   TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =     "A[b = 'c' ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =    "A[b = 'c' i]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS_I, "b", "c")));
+  TASSERT ((s =    "A[b == 'c' ]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
+  TASSERT ((s =   "A[b == 'c' i]") && (o = s) && sc.parse (&s) && s == o + 13 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS_I, "b", "c")));
   TASSERT ((s =    "A[b != 'c' ]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS, "b", "c")));
+  TASSERT ((s =   "A[b != 'c' i]") && (o = s) && sc.parse (&s) && s == o + 13 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS_I, "b", "c")));
   TASSERT ((s =       "A[b |=c ]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART, "b", "c")));
+  TASSERT ((s =      "A[b |=c i]") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_DASHSTART_I, "b", "c")));
   TASSERT ((s =      "A[b^= 'c']") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX, "b", "c")));
+  TASSERT ((s =    "A[b^= 'c' i]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_PREFIX_I, "b", "c")));
   TASSERT ((s =       "A[b $= c]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c")));
+  TASSERT ((s =     "A[b $= c i]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX_I, "b", "c")));
   TASSERT ((s =      "A[b *='c']") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUBSTRING, "b", "c")));
+  TASSERT ((s =    "A[b *='c' i]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUBSTRING_I, "b", "c")));
   TASSERT ((s =       "A[b ~= c]") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c")));
+  TASSERT ((s =     "A[b ~= c i]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES_I, "b", "c")));
   TASSERT ((s = "A[b~=c][d1*=e2]") && (o = s) && sc.parse (&s) && s == o + 15 &&
            sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_INCLUDES, "b", "c"), SN (ATTRIBUTE_SUBSTRING, "d1", "e2")));
   // pseudo selectors
@@ -340,7 +350,10 @@ test_selector_parser()
   TASSERT ((s =     "*:nth-child(2n+1)") && (o = s) && sc.parse (&s) && s == o + 17 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n+1")));
   TASSERT ((s = "*:nth-last-of-type( -3n-1 )::after") && (o = s) && sc.parse (&s) && s == o + 34 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-last-of-type", "-3n-1"), SN (PSEUDO_ELEMENT, "after")));
   TASSERT ((s = "A[b$='c\\\nc']:lang('foo')::first-letter > D") && (o = s) && sc.parse (&s) && s == o + 42 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c\nc"), SN (PSEUDO_CLASS, "lang", "'foo'"), SN (PSEUDO_ELEMENT, "first-letter"), SN (CHILD), SN (TYPE, "D")));
+  // stringify selector expression
+  TASSERT ((s = "A B > * + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
   TASSERT ((s = "A[b$='c\\0a c']:lang('foo[]')::first-letter > $D + E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "*[a^=b][a^=b i][c$=d][c$=d i][e*=f][e*=f i][g~=h][g~=h i][i|=j][i|=j i][k!=l][k!=l i][m=n][m=n i][o][p i]") && (o = s) && sc.parse (&s) && o == sc.string());
   //{ s = ":root ~ $::after"; o = s; bool r = sc.parse (&s); printerr ("\"%s\": d=%ld r=%d : %s\n", o, s - o, r, sc.string().c_str()); }
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
@@ -424,6 +437,37 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* Label #special-arrow", 0));
   TASSERT (test_query<FIRST>  (w, "* Label #special-arrow", 0));
   TASSERT (test_query<UNIQUE> (w, "* Label #special-arrow", 0));
+  TASSERT (test_query<ALL>    (w, "* #label123[frotz-xxxz]", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text=FAIL]", 0));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text=one-two-three]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text!=one-tWo-three]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text!=one-two-three]", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=one]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=oNe i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=FAIL]", 0));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=three]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=thREE i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=FAIL]", 0));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=one]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=OnE]", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=oNe i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=FAIL]", 0));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-two-t]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-TWO-t i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-TwO-t]", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='Label One']", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='label ONE' i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='FAIL']", 0));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='Label One']", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='LABEL one' i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='FAIL']", 0));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=Label]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=laBEL i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=One]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=OnE i]", 1, "Label"));
+  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=oNe]", 0)); // FAIL
 
   ItemIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
@@ -448,11 +492,11 @@ static const char test_dialog_xml[] =
   "            <VBox spacing='5'>\n"
   "              <Label markup-text='Test Buttons:'/>\n"
   "              <Button on-click='Item::print(\"click on first button\")'>\n"
-  "                <Label markup-text='First Button'/>\n"
+  "                <Label id='label1' markup-text='Label One'/>\n"
   "              </Button>\n"
   "              <HBox hexpand='1' spacing='3'>\n"
   "                <Button on-click='Item::print(\"Normal Button\")'>\n"
-  "                  <Label id='label1' vexpand='0' markup-text='Normal Button' />\n"
+  "                  <Label id='label123' markup-text='one-two-three' />\n"
   "                </Button>\n"
   "              </HBox>\n"
   "            </VBox>\n"

@@ -619,7 +619,7 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
 
 static bool
 parse_attribute (const char **stringp, SelectorChain &chain)
-{ // attrib : '[' S* [ namespace_prefix ]? IDENT S* [ [ matchop ] S* [ IDENT | STRING ] S* ]? ']'
+{ // attrib : '[' S* [ namespace_prefix ]? IDENT S* [ [ matchop ] S* [ IDENT | STRING ] S* 'i'? ]? ']'
   const char *p = *stringp;
   if (*p != '[')
     return false;
@@ -631,32 +631,41 @@ parse_attribute (const char **stringp, SelectorChain &chain)
   skip_spaces (&p);
   // matchop : [ "^=" | "$=" | "*=" | '=' | "~=" | "|=" ]
   Kind kind;
-  switch ((p[0] << 8) + (p[0] != '=' ? p[1] : 0))
+  switch ((p[0] << 8) + (p[0] && p[1] == '=' ? p[1] : 0))
     {
     case ('^' << 8) + '=':  p += 2; kind = ATTRIBUTE_PREFIX;      break;
     case ('$' << 8) + '=':  p += 2; kind = ATTRIBUTE_SUFFIX;      break;
     case ('*' << 8) + '=':  p += 2; kind = ATTRIBUTE_SUBSTRING;   break;
     case ('~' << 8) + '=':  p += 2; kind = ATTRIBUTE_INCLUDES;    break;
     case ('|' << 8) + '=':  p += 2; kind = ATTRIBUTE_DASHSTART;   break;
-    case ('!' << 8) + '=':  p += 2; kind = ATTRIBUTE_UNEQUALS;    break;
+    case ('!' << 8) + '=':  p += 2; kind = ATTRIBUTE_UNEQUALS;    break; // non-standard
+    case ('=' << 8) + '=':  p += 2; kind = ATTRIBUTE_EQUALS;      break; // non-standard
     case ('=' << 8) + 0:    p += 1; kind = ATTRIBUTE_EQUALS;      break;
     default:                        kind = NONE;                  break;
     }
-  if (kind == NONE && *p == ']') // no matchop
+  if (kind == NONE && (p[0] == ']' || (p[0] == 'i' && p[1] == ']'))) // no matchop
     {
+      kind = p[0] == 'i' ? ATTRIBUTE_EXISTS_I : ATTRIBUTE_EXISTS;
+      if (p[0] == 'i')
+        p++;
       p++;
-      SelectorNode node (ATTRIBUTE_EXISTS, s);
+      SelectorNode node (kind, s);
       chain.push_back (node);
       *stringp = p;
       return true;
     }
-  // S* [ IDENT | STRING ] S*
+  // S* [ IDENT | STRING ] S* 'i'?
   skip_spaces (&p);
   String a;
   if (parse_string (&p, a) ||
       parse_identifier (&p, a))
     {
       skip_spaces (&p);
+      if (*p == 'i') // case insensitivity flag
+        {
+          p++;
+          kind = Kind (kind + 1);       // ATTRIBUTE_* -> ATTRIBUTE_*_I
+        }
       if (*p == ']')
         {
           p++;
@@ -826,6 +835,7 @@ SelectorChain::string ()
   for (size_t i = 0; i < size(); i++)
     {
       const SelectorNode &node = operator[] (i);
+      const char *flag = "";
       switch (node.kind)
         {
         case NONE:
@@ -854,29 +864,45 @@ SelectorChain::string ()
           if (!node.arg.empty())
             s += "(" + node.arg + ")";
           break;
+        case ATTRIBUTE_EXISTS_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_EXISTS:
-          s += "[" + node.ident + "]";
+          s += "[" + node.ident + flag + "]";
           break;
+        case ATTRIBUTE_EQUALS_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_EQUALS:
-          s += "[" + node.ident + "=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_UNEQUALS_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_UNEQUALS:
-          s += "[" + node.ident + "!=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "!=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_PREFIX_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_PREFIX:
-          s += "[" + node.ident + "^=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "^=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_SUFFIX_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_SUFFIX:
-          s += "[" + node.ident + "$=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "$=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_DASHSTART_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_DASHSTART:
-          s += "[" + node.ident + "|=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "|=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_SUBSTRING_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_SUBSTRING:
-          s += "[" + node.ident + "*=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "*=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
+        case ATTRIBUTE_INCLUDES_I:
+          flag = " i"; // pass through
         case ATTRIBUTE_INCLUDES:
-          s += "[" + node.ident + "~=" + maybe_quote_identifier (node.arg) + "]";
+          s += "[" + node.ident + "~=" + maybe_quote_identifier (node.arg) + flag + "]";
           break;
         case DESCENDANT:
           s += " ";
@@ -898,7 +924,42 @@ SelectorChain::string ()
 bool
 Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
 {
-  return false; // FIXME
+  const Kind kind = snode.kind;
+  const bool existing = item.lookup_property (snode.ident);
+  if (kind == ATTRIBUTE_EXISTS || kind == ATTRIBUTE_EXISTS_I)
+    return existing;
+  const String value = existing ? item.get_property (snode.ident) : "";
+  const size_t vs = value.size(), as = snode.arg.size(), ms = min (vs, as);
+  const char *vd = value.data(), *ad = snode.arg.data();
+  switch (kind)
+    {
+      const char *p;
+    case ATTRIBUTE_EQUALS:      return value == snode.arg;
+    case ATTRIBUTE_EQUALS_I:    return vs == as && strncasecmp (vd, ad, ms) == 0;
+    case ATTRIBUTE_UNEQUALS:    return value != snode.arg;
+    case ATTRIBUTE_UNEQUALS_I:  return vs != as || strncasecmp (vd, ad, ms) != 0;
+    case ATTRIBUTE_PREFIX:      return value.compare (0, as, snode.arg) == 0;
+    case ATTRIBUTE_PREFIX_I:    return strncasecmp (vd, ad, ms) == 0;
+    case ATTRIBUTE_SUFFIX:      return (vs >= as && value.compare (vs - as, as, snode.arg) == 0);
+    case ATTRIBUTE_SUFFIX_I:    return (vs >= as && strncasecmp (vd + vs - as, ad, ms) == 0);
+    case ATTRIBUTE_DASHSTART:   return value.compare (0, as, snode.arg) == 0 && (vs == as || value[as] == '-');
+    case ATTRIBUTE_DASHSTART_I: return strncasecmp (vd, ad, ms) == 0 && (vs == as || value[as] == '-');
+    case ATTRIBUTE_SUBSTRING:   return value.find (snode.arg) != value.npos;
+    case ATTRIBUTE_SUBSTRING_I: return strcasestr (vd, ad) != NULL;
+    case ATTRIBUTE_INCLUDES:
+    case ATTRIBUTE_INCLUDES_I:
+      p = kind == ATTRIBUTE_INCLUDES_I ? strcasestr (vd, ad) : strstr (vd, ad);
+      if (!p)
+        return false;
+      if (p > vd && !(p[-1] == ' ' || p[-1] == '\t'))
+        return false;
+      p += as;
+      if (p < vd + vs && !(*p == ' ' || *p == '\t'))
+        return false;
+      return true;
+    default: ;
+    }
+  return false;
 }
 
 bool
@@ -957,8 +1018,10 @@ Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
       if (match_pseudo_selector (item, snode))
         break;
       return false;
-    case ATTRIBUTE_EXISTS: case ATTRIBUTE_EQUALS: case ATTRIBUTE_UNEQUALS:
-    case ATTRIBUTE_PREFIX: case ATTRIBUTE_SUFFIX: case ATTRIBUTE_DASHSTART: case ATTRIBUTE_SUBSTRING: case ATTRIBUTE_INCLUDES:
+    case ATTRIBUTE_EXISTS:    case ATTRIBUTE_EXISTS_I:    case ATTRIBUTE_EQUALS:    case ATTRIBUTE_EQUALS_I:
+    case ATTRIBUTE_UNEQUALS:  case ATTRIBUTE_UNEQUALS_I:  case ATTRIBUTE_PREFIX:    case ATTRIBUTE_PREFIX_I:
+    case ATTRIBUTE_SUFFIX:    case ATTRIBUTE_SUFFIX_I:    case ATTRIBUTE_DASHSTART: case ATTRIBUTE_DASHSTART_I:
+    case ATTRIBUTE_SUBSTRING: case ATTRIBUTE_SUBSTRING_I: case ATTRIBUTE_INCLUDES:  case ATTRIBUTE_INCLUDES_I:
       if (match_attribute_selector (item, snode))
         break;
       return false;
