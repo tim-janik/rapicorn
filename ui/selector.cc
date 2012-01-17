@@ -782,9 +782,9 @@ parse_selector_combinator (const char **stringp, Kind *kind)
   const bool seen_spaces = parse_spaces (&p, 1);
   switch (*p)
     {
-    case '+':   p++; *kind = NEIGHBOUR;   break;
+    case '+':   p++; *kind = ADJACENT;    break;
     case '>':   p++; *kind = CHILD;       break;
-    case '~':   p++; *kind = FOLLOWING;   break;
+    case '~':   p++; *kind = NEIGHBORING; break;
     default:
       if (seen_spaces)
         {
@@ -910,10 +910,10 @@ SelectorChain::string ()
         case CHILD:
           s += " > ";
           break;
-        case NEIGHBOUR:
+        case ADJACENT:
           s += " + ";
           break;
-        case FOLLOWING:
+        case NEIGHBORING:
           s += " ~ ";
           break;
         }
@@ -930,7 +930,7 @@ Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
     return existing;
   const String value = existing ? item.get_property (snode.ident) : "";
   const size_t vs = value.size(), as = snode.arg.size(), ms = min (vs, as);
-  const char *vd = value.data(), *ad = snode.arg.data();
+  const char *const vd = value.data(), *const ad = snode.arg.data();
   switch (kind)
     {
       const char *p;
@@ -1066,10 +1066,65 @@ Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
             return true;
           return false;
         }
-    case NEIGHBOUR:
-      return false; // FIXME
-    case FOLLOWING:
-      return false; // FIXME
+    case ADJACENT:
+      if (CDIR < 0)
+        {
+          ContainerImpl *p = item.parent();
+          if (p && chain_index > 0)
+            {
+              ItemImpl *last = NULL;
+              for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); last = &*cw, cw++)
+                if (&item == &*cw)
+                  {
+                    if (!last)
+                      break;
+                    return match_selector_stepwise<CDIR> (*last, chain_index - 1);
+                  }
+            }
+        }
+      else // CDIR > 0
+        {
+          ContainerImpl *p = item.parent();
+          if (p && chain_index + 1 < chain.size())
+            for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
+              if (&item == &*cw)
+                {
+                  cw++;
+                  if (!cw.has_next())
+                    break;
+                  return match_selector_stepwise<CDIR> (*cw, chain_index + 1);
+                }
+        }
+      return false; // no adjacent sibling present
+    case NEIGHBORING:
+      if (CDIR < 0)
+        {
+          ContainerImpl *p = item.parent();
+          if (p && chain_index > 0)
+            for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
+              if (&item == &*cw)
+                break;
+              else if (match_selector_stepwise<CDIR> (*cw, chain_index - 1))
+                return true;
+        }
+      else // CDIR > 0
+        {
+          ContainerImpl *p = item.parent();
+          if (p && chain_index + 1 < chain.size())
+            {
+              ContainerImpl::ChildWalker cw;
+              for (cw = p->local_children(); cw.has_next(); cw++)
+                if (&item == &*cw)
+                  {
+                    cw++;
+                    break;
+                  }
+              for (; cw.has_next(); cw++)
+                if (match_selector_stepwise<CDIR> (*cw, chain_index + 1))
+                  return true;
+            }
+        }
+      return false; // no matching sibling
     }
   if (CDIR < 0 && chain_index > 0)
     return match_selector_stepwise<CDIR> (item, chain_index - 1);

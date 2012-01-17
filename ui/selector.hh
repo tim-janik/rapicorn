@@ -11,7 +11,7 @@ enum Kind {
   NONE,
   SUBJECT, TYPE, UNIVERSAL,                     // element selectors
   CLASS, ID, PSEUDO_ELEMENT, PSEUDO_CLASS,      // class, id, pseudo selectors
-  DESCENDANT, CHILD, NEIGHBOUR, FOLLOWING,      // selector combinators
+  DESCENDANT, CHILD, ADJACENT, NEIGHBORING,     // selector combinators
   ATTRIBUTE_EXISTS, ATTRIBUTE_EXISTS_I,         // attributes with match types
   ATTRIBUTE_EQUALS, ATTRIBUTE_EQUALS_I, ATTRIBUTE_UNEQUALS, ATTRIBUTE_UNEQUALS_I,
   ATTRIBUTE_PREFIX, ATTRIBUTE_PREFIX_I, ATTRIBUTE_SUFFIX, ATTRIBUTE_SUFFIX_I,
