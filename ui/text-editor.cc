@@ -57,11 +57,44 @@ Editor::Client::markup_text (const String &markup)
   load_markup (markup);
 }
 
+static String
+escape_xml (const String &input)
+{
+  String d;
+  for (String::const_iterator it = input.begin(); it != input.end(); it++)
+    switch (*it)
+      {
+      case '"':         d += "&quot;";  break;
+      case '&':         d += "&amp;";   break;
+      case '\'':        d += "&apos;";  break;
+      case '<':         d += "&lt;";    break;
+      case '>':         d += "&gt;";    break;
+      default:          d += *it;       break;
+      }
+  return d;
+}
+
+
+void
+Editor::Client::plain_text (const String &markup)
+{
+  load_markup (escape_xml (markup));
+}
+
+String
+Editor::Client::plain_text () const
+{
+  int byte_length = 0;
+  const char *t = const_cast<Client*> (this)->peek_text (&byte_length);
+  return String (t, byte_length);
+}
+
 const PropertyList&
 Editor::Client::client_list_properties()
 {
   static Property *properties[] = {
     MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (Client, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
     MakeProperty (Client, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
   };
   static const PropertyList property_list (properties);
@@ -75,6 +108,7 @@ Editor::list_properties()
   static Property *properties[] = {
     MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
     MakeProperty (Editor, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (Editor, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
     MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
     MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
@@ -296,6 +330,8 @@ private:
   }
   virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->markup_text() : ""; }
   virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
+  virtual String   plain_text     () const                      { Client *client = get_client(); return client ? client->plain_text() : ""; }
+  virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
   virtual uint     request_chars  () const                      { return m_request_chars; }
   virtual void     request_chars  (uint nc)                     { m_request_chars = nc; invalidate_size(); }
   virtual uint     request_digits () const                      { return m_request_digits; }
