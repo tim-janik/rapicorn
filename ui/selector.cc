@@ -13,6 +13,26 @@
 namespace Rapicorn {
 namespace Selector {
 
+#ifdef  UNOPTIMIZE // work around valgrind reporting uninitialized reads due to sse4.2 registers exceeding string bounds
+#pragma GCC optimize "no-inline", "O0"
+#define ASCIILOWER(c)   (UNLIKELY (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c)
+static inline const char*
+strcasestr (const char *haystack, const char *needle)
+{
+  for (const char *h = haystack; *h; h++)
+    if (UNLIKELY (ASCIILOWER (*h) == ASCIILOWER (*needle)))
+      {
+        for (const char *p = h + 1, *c = needle + 1; *c; p++, c++)
+          if (ASCIILOWER (*p) != ASCIILOWER (*c))
+            goto mismatch;
+        return h; // full needle match
+      mismatch:
+        continue;
+      }
+  return NULL; // unmatched
+}
+#endif // UNOPTIMIZE
+
 bool
 parse_spaces (const char **stringp, int min_spaces)
 {
