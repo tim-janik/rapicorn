@@ -997,7 +997,7 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
     case CLASS:         return snode.ident == Factory::factory_context_name (item.factory_context());
     case ID:            return snode.ident == item.name();
     default:            return false;   // unreached
-    case TYPE:          break;
+    case TYPE:          ; // pass through
     }
   // TYPE:
   StringList tags = Factory::factory_context_tags (item.factory_context());
@@ -1013,8 +1013,6 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  if (Rapicorn::Logging::debugging())
-    DEBUG ("MATCH: %s in (%s): %u", snode.ident.c_str(), string_join (" ", tags).c_str(), result);
   return result;
 }
 
