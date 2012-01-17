@@ -146,7 +146,7 @@ ScreenWindowGtk::ScreenWindowGtk (const String  &backend_name,
                                   WindowType     screen_window_type,
                                   EventReceiver &receiver) :
   m_screen_window (NULL),
-  m_receiver (receiver), m_ignore_exposes (false),
+  m_receiver (receiver), m_ignore_exposes (false), m_splash_screen (false),
   m_root_x (NAN), m_root_y (NAN),
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
