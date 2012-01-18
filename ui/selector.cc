@@ -771,22 +771,14 @@ parse_type_selector (const char **stringp, SelectorChain &chain)
 
 static bool
 parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
-{ // simple_selector_sequence : '$'? [ [ type_selector | universal ] [ special_selector ]* | [ special_selector ]+ ]
+{ // simple_selector_sequence : [ [ type_selector | universal ] [ special_selector ]* | [ special_selector ]+ ]
   const char *p = *stringp;
-  const bool selector_subject = *p == '$';
-  p += selector_subject ? 1 : 0;
   SelectorChain tmpchain;
   bool seen_selector = parse_type_selector (&p, tmpchain) || parse_universal_selector (&p, tmpchain);
   while (parse_special_selector (&p, tmpchain))
     seen_selector = true;
   if (seen_selector)
     {
-      if (selector_subject)
-        {
-          SelectorNode node;
-          node.kind = SUBJECT;
-          chain.push_back (node);
-        }
       chain.insert (chain.end(), tmpchain.begin(), tmpchain.end());
       *stringp = p;
       return true;
@@ -795,10 +787,11 @@ parse_simple_selector_sequence (const char **stringp, SelectorChain &chain)
 }
 
 static bool
-parse_selector_combinator (const char **stringp, Kind *kind)
-{
+parse_selector_combinator (const char **stringp, Kind *kind, bool *subjectp)
+{ // combinator : '!'? [ S* '+' S* | S* '>' S* | S* '~' S* | S+ ]
   const char *p = *stringp;
-  /* combinator : S* '+' S* | S* '>' S* | S* '~' S* | S+ */
+  const bool subject = *p == '!';
+  p += subject ? 1 : 0;
   const bool seen_spaces = parse_spaces (&p, 1);
   switch (*p)
     {
@@ -809,12 +802,14 @@ parse_selector_combinator (const char **stringp, Kind *kind)
       if (seen_spaces)
         {
           *kind = DESCENDANT;
+          *subjectp = subject;
           *stringp = p;
           return true;
         }
       return false;
     }
   skip_spaces (&p);
+  *subjectp = subject;
   *stringp = p;
   return true;
 }
@@ -830,12 +825,15 @@ SelectorChain::parse (const char **stringp, const bool with_combinators)
     {
       SelectorChain nextchain;
       const char *q = p;
-      SelectorNode cnode;
-      while (with_combinators && parse_selector_combinator (&q, &cnode.kind))
+      SelectorNode combinator_node;
+      bool subject;
+      while (with_combinators && parse_selector_combinator (&q, &combinator_node.kind, &subject))
         {
           if (parse_simple_selector_sequence (&q, nextchain))
             {
-              tmpchain.push_back (cnode);
+              if (subject)
+                tmpchain.push_back (SelectorNode (SUBJECT));
+              tmpchain.push_back (combinator_node);
               tmpchain.insert (tmpchain.end(), nextchain.begin(), nextchain.end());
               nextchain.clear();
               p = q;
@@ -862,7 +860,7 @@ SelectorChain::string ()
           s += "<NONE>";
           break;
         case SUBJECT:
-          s += "$";
+          s += "!";
           break;
         case TYPE:
           s += node.ident;
@@ -1220,9 +1218,9 @@ Matcher::parse_selector (const String &selector,
 bool
 Matcher::match_selector (ItemImpl &item)
 {
-  if (subject_index < chain.size() && !match_selector_stepwise<+1> (item, subject_index))
+  if (subject_index < chain.size() && !match_selector_stepwise<-1> (item, subject_index))
     return false;
-  if (subject_index > 0 && !match_selector_stepwise<-1> (item, subject_index - 1))
+  if (subject_index + 1 < chain.size() && !match_selector_stepwise<+1> (item, subject_index + 1))
     return false;
   return true;
 }

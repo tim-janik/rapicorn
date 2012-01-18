@@ -304,8 +304,8 @@ test_selector_parser()
   TASSERT ((s = "A B > * + D ~ E") && (o = s) && sc.parse (&s) && s == o + 15 &&
            sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (UNIVERSAL, "*"),
                          SN (ADJACENT, ""), SN (TYPE, "D"), SN (NEIGHBORING, ""), SN (TYPE, "E")));
-  TASSERT ((s = "A B > $C + D ~ E") && (o = s) && sc.parse (&s) && s == o + 16 &&
-           sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (SUBJECT), SN (TYPE, "C"),
+  TASSERT ((s = "A B > C! + D ~ E") && (o = s) && sc.parse (&s) && s == o + 16 &&
+           sc == schain (SN (TYPE, "A"), SN (DESCENDANT, ""), SN (TYPE, "B"), SN (CHILD, ""), SN (TYPE, "C"), SN (SUBJECT),
                          SN (ADJACENT, ""), SN (TYPE, "D"), SN (NEIGHBORING, ""), SN (TYPE, "E")));
   // attribute and id selectors
   TASSERT ((s =            "A#id") && (o = s) && sc.parse (&s) && s == o +  4 && sc == schain (SN (TYPE, "A"), SN (ID, "id")));
@@ -315,8 +315,8 @@ test_selector_parser()
   TASSERT ((s =          "A[b=c]") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =         "A[b!=c]") && (o = s) && sc.parse (&s) && s == o +  7 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_UNEQUALS, "b", "c")));
   TASSERT ((s =           "[b=c]") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c")));
-  TASSERT ((s =   "$[b=c] > #fun") && (o = s) && sc.parse (&s) && s == o + 13 &&
-           sc == schain (SN (SUBJECT), SN (ATTRIBUTE_EQUALS, "b", "c"), SN (CHILD), SN (ID, "fun")));
+  TASSERT ((s =   "[b=c]! > #fun") && (o = s) && sc.parse (&s) && s == o + 13 &&
+           sc == schain (SN (ATTRIBUTE_EQUALS, "b", "c"), SN (SUBJECT), SN (CHILD), SN (ID, "fun")));
   TASSERT ((s =   "A[b = \"c\" ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =     "A[b = 'c' ]") && (o = s) && sc.parse (&s) && s == o + 11 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS, "b", "c")));
   TASSERT ((s =    "A[b = 'c' i]") && (o = s) && sc.parse (&s) && s == o + 12 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_EQUALS_I, "b", "c")));
@@ -340,21 +340,24 @@ test_selector_parser()
   TASSERT ((s =  "*::before") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_ELEMENT, "before")));
   TASSERT ((s =      ":root") && (o = s) && sc.parse (&s) && s == o +  5 && sc == schain (SN (PSEUDO_CLASS, "root")));
   TASSERT ((s =  ":root ~ C") && (o = s) && sc.parse (&s) && s == o +  9 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (NEIGHBORING), SN (TYPE, "C")));
-  TASSERT ((s =     "$:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s = ":root ~ $C") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (NEIGHBORING), SN (SUBJECT), SN (TYPE, "C")));
+  TASSERT ((s = ":root! ~ C") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (TYPE, "C")));
   TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
   TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
   TASSERT ((s =  "A:root( )") && (o = s) && sc.parse (&s) && s == o +  1 && sc == schain (SN (TYPE, "A"))); // invalid empty expression
-  TASSERT ((s =      ":root ~ $::after") && (o = s) && sc.parse (&s) && s == o + 16 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (NEIGHBORING), SN (SUBJECT), SN (PSEUDO_ELEMENT, "after")));
-  TASSERT ((s = "$:root ~ :first-child") && (o = s) && sc.parse (&s) && s == o + 21 && sc == schain (SN (SUBJECT), SN (PSEUDO_CLASS, "root"), SN (NEIGHBORING), SN (PSEUDO_CLASS, "first-child")));
+  TASSERT ((s =      ":root! ~ ::after") && (o = s) && sc.parse (&s) && s == o + 16 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (PSEUDO_ELEMENT, "after")));
+  TASSERT ((s = ":root! ~ :first-child") && (o = s) && sc.parse (&s) && s == o + 21 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (PSEUDO_CLASS, "first-child")));
   TASSERT ((s =     "*:nth-child(2n+1)") && (o = s) && sc.parse (&s) && s == o + 17 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n+1")));
   TASSERT ((s = "*:nth-last-of-type( -3n-1 )::after") && (o = s) && sc.parse (&s) && s == o + 34 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-last-of-type", "-3n-1"), SN (PSEUDO_ELEMENT, "after")));
   TASSERT ((s = "A[b$='c\\\nc']:lang('foo')::first-letter > D") && (o = s) && sc.parse (&s) && s == o + 42 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c\nc"), SN (PSEUDO_CLASS, "lang", "'foo'"), SN (PSEUDO_ELEMENT, "first-letter"), SN (CHILD), SN (TYPE, "D")));
   // stringify selector expression
   TASSERT ((s = "A B > * + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
-  TASSERT ((s = "A[b$='c\\0a c']:lang('foo[]')::first-letter > $D + E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "A[b$='c\\0a c']:lang('foo[]')::first-letter > D! + E") && (o = s) && sc.parse (&s) && o == sc.string());
   TASSERT ((s = "*[a^=b][a^=b i][c$=d][c$=d i][e*=f][e*=f i][g~=h][g~=h i][i|=j][i|=j i][k!=l][k!=l i][m=n][m=n i][o][p i]") && (o = s) && sc.parse (&s) && o == sc.string());
-  //{ s = ":root ~ $::after"; o = s; bool r = sc.parse (&s); printerr ("\"%s\": d=%ld r=%d : %s\n", o, s - o, r, sc.string().c_str()); }
+  TASSERT ((s = "A B > C + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "A! B > C + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "A B! > C + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "A B > C! + D ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
+  TASSERT ((s = "A B > C + D! ~ E") && (o = s) && sc.parse (&s) && o == sc.string());
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
 
@@ -420,12 +423,12 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label", 4, "Label")); // 4 from n
   TASSERT (test_query<FIRST>  (w, "* VBox  Button > Frame Label", 1, "Label")); // 4 >= 1
   TASSERT (test_query<UNIQUE> (w, "* VBox  Button > Frame Label", 0));          // 4 != 1
-  TASSERT (test_query<ALL>    (w, "* VBox $Button > Frame Label", 4, "Button"));
-  TASSERT (test_query<FIRST>  (w, "* VBox $Button > Frame Label", 1, "Button"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox $Button > Frame Label", 0));
-  TASSERT (test_query<ALL>    (w, "* VBox $Button > Frame #label1", 1, "Button"));
-  TASSERT (test_query<FIRST>  (w, "* VBox $Button > Frame #label1", 1, "Button"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox $Button > Frame #label1", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* VBox Button! > Frame Label", 4, "Button"));
+  TASSERT (test_query<FIRST>  (w, "* VBox Button! > Frame Label", 1, "Button"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox Button! > Frame Label", 0));
+  TASSERT (test_query<ALL>    (w, "* VBox Button! > Frame #label1", 1, "Button"));
+  TASSERT (test_query<FIRST>  (w, "* VBox Button! > Frame #label1", 1, "Button"));
+  TASSERT (test_query<UNIQUE> (w, "* VBox Button! > Frame #label1", 1, "Button"));
   TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame #label1", 1, "Label"));
   TASSERT (test_query<FIRST>  (w, "* VBox Button > Frame #label1", 1, "Label"));
   TASSERT (test_query<UNIQUE> (w, "* VBox Button > Frame #label1", 1, "Label"));
@@ -472,18 +475,17 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=OnE i]", 1, "Label"));
   TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=oNe]", 0)); // FAIL
   // siblings
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA + Label +  Frame + Label + Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA + Label + $Frame + Label + Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA ~ Label ~  Frame ~ Label ~ Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA ~ Label ~ $Frame ~ Label ~ Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA     ~      Frame     ~     Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA     ~     $Frame     ~     Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA              ~            $Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* $Button#ChildA              ~             Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* $Label                      ~             Button#ChildE", 2, "Label"));
-  TASSERT (test_query<ALL>    (w, "*  Button#ChildA     ~     $Label     ~     Button#ChildE", 2, "Label"));
-  TASSERT (test_query<ALL>    (w, "*  Label             ~     $Label     ~     Label", 0)); // FAIL
-  TASSERT (test_query<ALL>    (w, "*  Label             ~     $Label     ~     Label", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA + Label + Frame  + Label + Button#ChildE", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA + Label + Frame! + Label + Button#ChildE", 1, "Frame"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA ~ Label ~ Frame  ~ Label ~ Button#ChildE", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA ~ Label ~ Frame! ~ Label ~ Button#ChildE", 1, "Frame"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Frame      ~     Button#ChildE", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Frame!     ~     Button#ChildE", 1, "Frame"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button"));
+  TASSERT (test_query<ALL>    (w, "* Label!                      ~            Button#ChildE", 2, "Label"));
+  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Label!     ~     Button#ChildE", 2, "Label"));
+  TASSERT (test_query<ALL>    (w, "* Label             ~     Label      ~     Label", 0)); // FAIL
   // not pseudo class
   TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(#ChildB)", 1, "Label#ChildD"));
   TASSERT (test_query<ALL>    (w, ":not(*)", 0));
