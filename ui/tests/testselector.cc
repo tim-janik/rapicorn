@@ -361,7 +361,7 @@ REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
 enum QueryType { UNIQUE = 0, FIRST = 1, ALL = 2 };
 
 template<QueryType QUERY> static bool
-test_query (ItemIface *iroot, const String &selector, size_t n, const String &type = "")
+test_query (ItemIface *iroot, const String &selector, ssize_t n, const String &type = "")
 {
   ItemImpl *root = dynamic_cast<ItemImpl*> (iroot);
   TASSERT (root != NULL);
@@ -384,7 +384,7 @@ test_query (ItemIface *iroot, const String &selector, size_t n, const String &ty
     for (size_t i = 0; i < items.size(); i++)
       printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), items[i]->name().c_str());
 
-  if (items.size() != n)
+  if (n >= 0 && items.size() != size_t (n))
     return false;
 
   if (!type.empty())
@@ -416,6 +416,7 @@ test_selector_matching ()
 
   TASSERT (test_query<ALL>    (w, "/#", 0)); // invalid path
   TASSERT (test_query<ALL>    (w, "X/#test-dialog", 0)); // invalid syntax (junk)
+  // combinators
   TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label", 4, "Label")); // 4 from n
   TASSERT (test_query<FIRST>  (w, "* VBox  Button > Frame Label", 1, "Label")); // 4 >= 1
   TASSERT (test_query<UNIQUE> (w, "* VBox  Button > Frame Label", 0));          // 4 != 1
@@ -431,12 +432,14 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
   TASSERT (test_query<FIRST>  (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
   TASSERT (test_query<UNIQUE> (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
+  // identifiers
   TASSERT (test_query<ALL>    (w, "* #special-arrow", 1));
   TASSERT (test_query<FIRST>  (w, "* #special-arrow", 1));
   TASSERT (test_query<UNIQUE> (w, "* #special-arrow", 1));
   TASSERT (test_query<ALL>    (w, "* Label #special-arrow", 0));
   TASSERT (test_query<FIRST>  (w, "* Label #special-arrow", 0));
   TASSERT (test_query<UNIQUE> (w, "* Label #special-arrow", 0));
+  // attributes
   TASSERT (test_query<ALL>    (w, "* #label123[frotz-xxxz]", 0)); // FAIL
   TASSERT (test_query<ALL>    (w, "* #label123[plain-text]", 1, "Label"));
   TASSERT (test_query<ALL>    (w, "* #label123[plain-text i]", 1, "Label"));
@@ -468,6 +471,7 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=One]", 1, "Label"));
   TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=OnE i]", 1, "Label"));
   TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=oNe]", 0)); // FAIL
+  // siblings
   TASSERT (test_query<ALL>    (w, "*  Button#ChildA + Label +  Frame + Label + Button#ChildE", 1, "Button"));
   TASSERT (test_query<ALL>    (w, "*  Button#ChildA + Label + $Frame + Label + Button#ChildE", 1, "Frame"));
   TASSERT (test_query<ALL>    (w, "*  Button#ChildA ~ Label ~  Frame ~ Label ~ Button#ChildE", 1, "Button"));
@@ -479,6 +483,16 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* $Label                      ~             Button#ChildE", 2, "Label"));
   TASSERT (test_query<ALL>    (w, "*  Button#ChildA     ~     $Label     ~     Button#ChildE", 2, "Label"));
   TASSERT (test_query<ALL>    (w, "*  Label             ~     $Label     ~     Label", 0)); // FAIL
+  TASSERT (test_query<ALL>    (w, "*  Label             ~     $Label     ~     Label", 0)); // FAIL
+  // not pseudo class
+  TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(#ChildB)", 1, "Label#ChildD"));
+  TASSERT (test_query<ALL>    (w, ":not(*)", 0));
+  TASSERT (test_query<ALL>    (w, "#ChildA Frame:not(Label)", 1, "Frame"));
+  TASSERT (test_query<ALL>    (w, "VBox  Button > Frame Label:not(Button)", 4, "Label")); // 4 from n
+  TASSERT (test_query<ALL>    (w, "Button:not(Label# > Label)", 0)); // invalid combinator inside not()
+  TASSERT (test_query<ALL>    (w, ":not(Label > Label)", 0)); // invalid combinator inside not()
+  TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(:not(#ChildB))", 1, "Label#ChildB")); // non-standard
+  TASSERT (test_query<ALL>    (w, "* > *", -1, ":not(Window)"));
 
   ItemIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);

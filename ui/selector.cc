@@ -820,7 +820,7 @@ parse_selector_combinator (const char **stringp, Kind *kind)
 }
 
 bool
-SelectorChain::parse (const char **stringp)
+SelectorChain::parse (const char **stringp, const bool with_combinators)
 {
   return_val_if_fail (stringp != NULL, false);
   const char *p = *stringp;
@@ -831,7 +831,7 @@ SelectorChain::parse (const char **stringp)
       SelectorChain nextchain;
       const char *q = p;
       SelectorNode cnode;
-      while (parse_selector_combinator (&q, &cnode.kind))
+      while (with_combinators && parse_selector_combinator (&q, &cnode.kind))
         {
           if (parse_simple_selector_sequence (&q, nextchain))
             {
@@ -983,9 +983,22 @@ Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
 }
 
 bool
-Matcher::match_pseudo_selector (ItemImpl &item, const SelectorNode &snode)
+Matcher::match_pseudo_element (ItemImpl &item, const SelectorNode &snode)
 {
   return false; // FIXME
+}
+
+bool
+Matcher::match_pseudo_class (ItemImpl &item, const SelectorNode &snode)
+{
+  if (snode.ident == "not")
+    {
+      Matcher matcher;
+      if (!matcher.parse_selector (snode.arg, false))
+        return false;
+      return !matcher.match_selector (item);
+    }
+  return false; // unknown pseudo class
 }
 
 bool
@@ -1032,8 +1045,12 @@ Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
       if (match_element_selector (item, snode))
         break;
       return false;
-    case PSEUDO_ELEMENT: case PSEUDO_CLASS:    // class, id, pseudo selectors
-      if (match_pseudo_selector (item, snode))
+    case PSEUDO_ELEMENT:
+      if (match_pseudo_element (item, snode))
+        break;
+      return false;
+    case PSEUDO_CLASS:
+      if (match_pseudo_class (item, snode))
         break;
       return false;
     case ATTRIBUTE_EXISTS:    case ATTRIBUTE_EXISTS_I:    case ATTRIBUTE_EQUALS:    case ATTRIBUTE_EQUALS_I:
@@ -1167,13 +1184,14 @@ Matcher::match_selector_children (ContainerImpl &container, const size_t chain_i
 
 bool
 Matcher::parse_selector (const String &selector,
-                         String *errorp)
+                         bool with_combinators,
+                         String       *errorp)
 {
   return_val_if_fail (chain.empty(), false);
   const char *s = selector.c_str();
   String error;
   // parse selector string
-  if (!chain.parse (&s) || chain.empty())
+  if (!chain.parse (&s, with_combinators) || chain.empty())
     error = string_printf ("%s: invalid selector syntax: %s\n", __func__, string_to_cquote (selector).c_str());
   else if (*s)
     error = string_printf ("%s: unexpected junk in selector (%s): %s\n", __func__,
@@ -1246,7 +1264,7 @@ bool
 Matcher::match_selector (const String &selector, ItemImpl &item)
 {
   Matcher matcher;
-  if (!matcher.parse_selector (selector))
+  if (!matcher.parse_selector (selector, true))
     return false;
   if (!matcher.match_selector (item))
     return false;
@@ -1258,7 +1276,7 @@ Matcher::query_selector_all (const String &selector, ItemImpl &item)
 {
   Matcher matcher;
   vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector))
+  if (matcher.parse_selector (selector, true))
     result = matcher.recurse_selector<0> (item);
   return result;
 }
@@ -1268,7 +1286,7 @@ Matcher::query_selector_first (const String &selector, ItemImpl &item)
 {
   Matcher matcher;
   vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector))
+  if (matcher.parse_selector (selector, true))
     result = matcher.recurse_selector<1> (item);
   return result.empty() ? NULL : result[0];
 }
@@ -1278,7 +1296,7 @@ Matcher::query_selector_unique (const String &selector, ItemImpl &item)
 {
   Matcher matcher;
   vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector))
+  if (matcher.parse_selector (selector, true))
     result = matcher.recurse_selector<2> (item);
   return result.size() != 1 ? NULL : result[0];
 }

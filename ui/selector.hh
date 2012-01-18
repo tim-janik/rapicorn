@@ -40,7 +40,7 @@ struct SelectorNode {
   bool operator!= (const SelectorNode &o) const { return !operator== (o); }
 };
 struct SelectorChain : public vector<SelectorNode> {
-  bool          parse   (const char **stringp);
+  bool          parse   (const char **stringp, bool with_combinators = true);
   String        string  ();
 };
 
@@ -49,14 +49,15 @@ class Matcher {
   size_t                  subject_index;
   /*ctor*/                Matcher() : subject_index (-1) {}
   bool                    match_attribute_selector (ItemImpl &item, const SelectorNode &snode);
-  bool                    match_pseudo_selector    (ItemImpl &item, const SelectorNode &snode);
+  bool                    match_pseudo_element     (ItemImpl &item, const SelectorNode &snode);
+  bool                    match_pseudo_class       (ItemImpl &item, const SelectorNode &snode);
   bool                    match_element_selector   (ItemImpl &item, const SelectorNode &snode);
   template<int CDIR> bool match_selector_stepwise  (ItemImpl &item, const size_t chain_index);
   bool                    match_selector_children  (ContainerImpl &container, const size_t chain_index);
   bool                    match_selector           (ItemImpl &item);
   template<size_t COUNT>
   vector<ItemImpl*>       recurse_selector         (ItemImpl &item);
-  bool                    parse_selector           (const String &selector, String *errorp = NULL);
+  bool                    parse_selector           (const String &selector, bool with_combinators, String *errorp = NULL);
 public:
   template<class Iter> vector<ItemImpl*>
   static                   match_selector        (const String &selector, Iter first, Iter last, String *errorp = NULL);
