@@ -46,6 +46,7 @@ WindowIface&    create_window    (const String           &window_identifier,
                                   const ArgumentList     &env_variables = ArgumentList());
 
 String     factory_context_name    (FactoryContext *fc);
+String     factory_context_type    (FactoryContext *fc);
 StringList factory_context_tags    (FactoryContext *fc);
 bool       item_definition_is_window (const String   &item_identifier);
 
