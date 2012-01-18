@@ -495,13 +495,22 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "Button:not(Label# > Label)", 0)); // invalid combinator inside not()
   TASSERT (test_query<ALL>    (w, ":not(Label > Label)", 0)); // invalid combinator inside not()
   TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(:not(#ChildB))", 1, "Label#ChildB")); // non-standard
-  TASSERT (test_query<ALL>    (w, "* > *", -2, ":not(Window)"));
-  TASSERT (test_query<ALL>    (w, "*:root > *:not(:root)", 1, "Ambience"));
+  TASSERT (test_query<ALL>    (w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience"));
+  // classes
+  TASSERT (test_query<ALL>    (w, "*.Window", 1, "#test-dialog"));
+  TASSERT (test_query<ALL>    (w, "*", -10, ".Item"));
+  TASSERT (test_query<ALL>    (w, "*:not(:empty)", -10, ".Container"));
+  TASSERT (test_query<ALL>    (w, ".Item:not(.Container)", -5, ":empty"));
+  TASSERT (test_query<ALL>    (w, ".Label", -5, ".Item"));
+  TASSERT (test_query<ALL>    (w, ".VBox", -1, ".Container"));
+  TASSERT (test_query<ALL>    (w, ".Container", -10, ".Item"));
+  TASSERT (test_query<ALL>    (w, "*.Window.Container.Item", 1, ":root"));
+  TASSERT (test_query<ALL>    (w, "* > *", -20, ":not(.Window)"));
   // pseudo classes :empty :only-child :root :first-child :last-child
   TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:empty", 4, "Label"));
   TASSERT (test_query<ALL>    (w, "*:empty *", 0));
   TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:only-child", 4, "Label"));
-  TASSERT (test_query<ALL>    (w, "*:root", 1, "Window"));
+  TASSERT (test_query<ALL>    (w, "*:root", 1, ".Window"));
   TASSERT (test_query<ALL>    (w, "*:root > *:only-child", 1, "Ambience"));
   TASSERT (test_query<ALL>    (w, "*:root > *:last-child:first-child", 1, "Ambience"));
   TASSERT (test_query<ALL>    (w, "*:root *:only-child", -5));

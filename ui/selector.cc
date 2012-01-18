@@ -1038,12 +1038,12 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
   switch (snode.kind)
     {
     case UNIVERSAL:     return true;
-    case CLASS:         return snode.ident == Factory::factory_context_name (item.factory_context());
     case ID:            return snode.ident == item.name();
+    case TYPE:          return snode.ident == Factory::factory_context_type (item.factory_context());
     default:            return false;   // unreached
-    case TYPE:          ; // pass through
+    case CLASS:         ; // pass through
     }
-  // TYPE:
+  // CLASS:
   StringList tags = Factory::factory_context_tags (item.factory_context());
   bool result = false;
   for (StringList::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
@@ -1057,6 +1057,7 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
+  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", tags).c_str(), result);
   return result;
 }
 
