@@ -387,7 +387,8 @@ test_query (ItemIface *iroot, const String &selector, ssize_t n, const String &t
     for (size_t i = 0; i < items.size(); i++)
       printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), items[i]->name().c_str());
 
-  if (n >= 0 && items.size() != size_t (n))
+  if ((n >= 0 && items.size() != size_t (n)) ||
+      (n < 0 && items.size() < size_t (-n)))
     return false;
 
   if (!type.empty())
@@ -486,7 +487,7 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "* Label!                      ~            Button#ChildE", 2, "Label"));
   TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Label!     ~     Button#ChildE", 2, "Label"));
   TASSERT (test_query<ALL>    (w, "* Label             ~     Label      ~     Label", 0)); // FAIL
-  // not pseudo class
+  // :not pseudo class
   TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(#ChildB)", 1, "Label#ChildD"));
   TASSERT (test_query<ALL>    (w, ":not(*)", 0));
   TASSERT (test_query<ALL>    (w, "#ChildA Frame:not(Label)", 1, "Frame"));
@@ -494,7 +495,19 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "Button:not(Label# > Label)", 0)); // invalid combinator inside not()
   TASSERT (test_query<ALL>    (w, ":not(Label > Label)", 0)); // invalid combinator inside not()
   TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(:not(#ChildB))", 1, "Label#ChildB")); // non-standard
-  TASSERT (test_query<ALL>    (w, "* > *", -1, ":not(Window)"));
+  TASSERT (test_query<ALL>    (w, "* > *", -2, ":not(Window)"));
+  TASSERT (test_query<ALL>    (w, "*:root > *:not(:root)", 1, "Ambience"));
+  // pseudo classes :empty :only-child :root :first-child :last-child
+  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:empty", 4, "Label"));
+  TASSERT (test_query<ALL>    (w, "*:empty *", 0));
+  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:only-child", 4, "Label"));
+  TASSERT (test_query<ALL>    (w, "*:root", 1, "Window"));
+  TASSERT (test_query<ALL>    (w, "*:root > *:only-child", 1, "Ambience"));
+  TASSERT (test_query<ALL>    (w, "*:root > *:last-child:first-child", 1, "Ambience"));
+  TASSERT (test_query<ALL>    (w, "*:root *:only-child", -5));
+  TASSERT (test_query<ALL>    (w, "*:root *:first-child:last-child", -5));
+  TASSERT (test_query<ALL>    (w, "HBox#testbox > :first-child", 1, "Button#ChildA"));
+  TASSERT (test_query<ALL>    (w, "HBox#testbox > *:last-child", 1, "Button#ChildE"));
 
   ItemIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);

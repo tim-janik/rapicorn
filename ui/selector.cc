@@ -996,6 +996,39 @@ Matcher::match_pseudo_class (ItemImpl &item, const SelectorNode &snode)
         return false;
       return !matcher.match_selector (item);
     }
+  else if (snode.ident == "empty")
+    {
+      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
+      return !c || !c->has_children();
+    }
+  else if (snode.ident == "only-child")
+    {
+      ContainerImpl *p = item.parent();
+      return p && p->n_children() == 1;
+    }
+  else if (snode.ident == "root")
+    {
+      ContainerImpl *p = item.parent();
+      return !p;
+    }
+  else if (snode.ident == "first-child")
+    {
+      ContainerImpl *p = item.parent();
+      if (!p)
+        return false;
+      ContainerImpl::ChildWalker cw = p->local_children();
+      return cw.has_next() && &item == &*cw;
+    }
+  else if (snode.ident == "last-child")
+    {
+      ContainerImpl *p = item.parent();
+      if (!p)
+        return false;
+      ItemImpl *last = NULL;
+      for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
+        last = &*cw;
+      return &item == last;
+    }
   return false; // unknown pseudo class
 }
 
