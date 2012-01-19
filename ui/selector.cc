@@ -624,9 +624,9 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
         return false;
       assert (*p == ')');
       const char *t = p - 1;
-      while (t > e && ISASCIISPACE (*t))
+      while (t >= e && ISASCIISPACE (*t))
         t--;
-      if (t <= e)
+      if (t < e)
         return false;   // pseudo_class expression should be non-empty
       node.arg = String (e, t - e + 1);
       p++;
