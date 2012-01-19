@@ -19,6 +19,7 @@
 #include "painter.hh"
 #include "window.hh"
 #include "factory.hh"
+#include "selector.hh"
 #include <errno.h>
 
 namespace Rapicorn {
@@ -61,6 +62,8 @@ TestContainer::seen_test_items ()
   assert (rapicorn_thread_entered());
   return test_containers_rendered;
 }
+
+static const Selector::CustomPseudoRegistry _test_pass ("test-pass", "The TestContainer:test-pass(arg) pseudo selector matches if 'arg' is a true boolean value.");
 
 class TestContainerImpl : public virtual SingleContainerImpl, public virtual TestContainer {
   String m_value, m_assert_value;
@@ -183,6 +186,11 @@ protected:
         m_test_container_counted = true;
         test_containers_rendered++;
       }
+  }
+  virtual bool
+  pseudo_selector (const String &ident, const String &arg, String &error)
+  {
+    return ident == _test_pass.ident() ? string_to_bool (arg) : false;
   }
 };
 static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");

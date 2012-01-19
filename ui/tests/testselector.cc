@@ -343,10 +343,14 @@ test_selector_parser()
   TASSERT ((s = ":root! ~ C") && (o = s) && sc.parse (&s) && s == o + 10 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (TYPE, "C")));
   TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
   TASSERT ((s =     "A:root") && (o = s) && sc.parse (&s) && s == o +  6 && sc == schain (SN (TYPE, "A"), SN (PSEUDO_CLASS, "root")));
-  TASSERT ((s =  "A:root( )") && (o = s) && sc.parse (&s) && s == o +  1 && sc == schain (SN (TYPE, "A"))); // invalid empty expression
   TASSERT ((s =      ":root! ~ ::after") && (o = s) && sc.parse (&s) && s == o + 16 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (PSEUDO_ELEMENT, "after")));
   TASSERT ((s = ":root! ~ :first-child") && (o = s) && sc.parse (&s) && s == o + 21 && sc == schain (SN (PSEUDO_CLASS, "root"), SN (SUBJECT), SN (NEIGHBORING), SN (PSEUDO_CLASS, "first-child")));
   TASSERT ((s =     "*:nth-child(2n+1)") && (o = s) && sc.parse (&s) && s == o + 17 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n+1")));
+  TASSERT ((s =   "*:nth-child()") && (o = s) && sc.parse (&s) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*"))); // invalid empty espression
+  TASSERT ((s =  "*:nth-child( )") && (o = s) && sc.parse (&s) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*"))); // invalid empty espression
+  TASSERT ((s =  "*:nth-child(2)") && (o = s) && sc.parse (&s) && s == o + 14 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2"))); // valid 1char expression
+  TASSERT ((s = "*:nth-child(  )") && (o = s) && sc.parse (&s) && s == o + 1 && sc == schain (SN (UNIVERSAL, "*"))); // invalid empty espression
+  TASSERT ((s = "*:nth-child(2n)") && (o = s) && sc.parse (&s) && s == o + 15 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-child", "2n"))); // valid 2char expression
   TASSERT ((s = "*:nth-last-of-type( -3n-1 )::after") && (o = s) && sc.parse (&s) && s == o + 34 && sc == schain (SN (UNIVERSAL, "*"), SN (PSEUDO_CLASS, "nth-last-of-type", "-3n-1"), SN (PSEUDO_ELEMENT, "after")));
   TASSERT ((s = "A[b$='c\\\nc']:lang('foo')::first-letter > D") && (o = s) && sc.parse (&s) && s == o + 42 && sc == schain (SN (TYPE, "A"), SN (ATTRIBUTE_SUFFIX, "b", "c\nc"), SN (PSEUDO_CLASS, "lang", "'foo'"), SN (PSEUDO_ELEMENT, "first-letter"), SN (CHILD), SN (TYPE, "D")));
   // stringify selector expression
@@ -517,6 +521,11 @@ test_selector_matching ()
   TASSERT (test_query<ALL>    (w, "*:root *:first-child:last-child", -5));
   TASSERT (test_query<ALL>    (w, "HBox#testbox > :first-child", 1, "Button#ChildA"));
   TASSERT (test_query<ALL>    (w, "HBox#testbox > *:last-child", 1, "Button#ChildE"));
+  // custom pseudo selectors
+  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(1)", 1, "TestItem"));
+  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(0)", 0));
+  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(2)", 1, "TestItem"));
+  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(yes)", 1, "TestItem"));
 
   ItemIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
@@ -547,6 +556,7 @@ static const char test_dialog_xml[] =
   "                <Button on-click='Item::print(\"Normal Button\")'>\n"
   "                  <Label id='label123' markup-text='one-two-three' />\n"
   "                </Button>\n"
+  "                <TestItem id='test-item'/>\n"
   "              </HBox>\n"
   "            </VBox>\n"
   "          </Frame>\n"
