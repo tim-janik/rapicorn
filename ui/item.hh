@@ -88,6 +88,7 @@ protected:
   bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
+  virtual bool                pseudo_selector   (const String &ident, const String &arg, String &error) { return false; }
   /* size requisition and allocation */
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
