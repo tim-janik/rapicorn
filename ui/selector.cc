@@ -11,6 +11,12 @@
 #define ISASCIISPACE(c) (c == ' ' || (c >= 9 && c <= 13)) // ' \t\n\v\f\r'
 
 namespace Rapicorn {
+
+struct ClassDoctor {
+  static inline bool item_pseudo_selector (ItemImpl &item, const String &ident, const String &arg, String &error)
+  { return item.pseudo_selector (ident, arg, error); }
+};
+
 namespace Selector {
 
 #ifdef  UNOPTIMIZE // work around valgrind reporting uninitialized reads due to sse4.2 registers exceeding string bounds
@@ -32,6 +38,17 @@ strcasestr (const char *haystack, const char *needle)
   return NULL; // unmatched
 }
 #endif // UNOPTIMIZE
+
+CustomPseudoRegistry *volatile CustomPseudoRegistry::stack_head = NULL;
+
+static bool
+find_custom_pseudo (const String &ident)
+{
+  for (CustomPseudoRegistry *node = CustomPseudoRegistry::head(); node; node = node->next())
+    if (strcasecmp (node->ident().c_str(), ident.c_str()) == 0)
+      return true;
+  return false;
+}
 
 bool
 parse_spaces (const char **stringp, int min_spaces)
@@ -606,12 +623,15 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
     }
   bool pseudo_match = false;
   if (is_pseudo_class)
-    for (uint i = 0; i < ARRAY_SIZE (classes); i++)
-      if (strcasecmp (node.ident.c_str(), classes[i]) == 0)
-        {
-          pseudo_match = true;
-          break;
-        }
+    {
+      for (uint i = 0; i < ARRAY_SIZE (classes); i++)
+        if (strcasecmp (node.ident.c_str(), classes[i]) == 0)
+          {
+            pseudo_match = true;
+            break;
+          }
+      pseudo_match = pseudo_match || find_custom_pseudo (node.ident);
+    }
   if (!pseudo_match)
     return false;
   // '(' S* expression S* ')'
@@ -1028,6 +1048,17 @@ Matcher::match_pseudo_class (ItemImpl &item, const SelectorNode &snode)
       for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
         last = &*cw;
       return &item == last;
+    }
+  else if (find_custom_pseudo (snode.ident)) // custom pseudo class
+    {
+      String error;
+      const bool item_match = ClassDoctor::item_pseudo_selector (item, string_tolower (snode.ident), snode.arg, error);
+      if (!error.empty())
+        {
+          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          return false;
+        }
+      return item_match;
     }
   return false; // unknown pseudo class
 }

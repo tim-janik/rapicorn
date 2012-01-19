@@ -19,6 +19,20 @@ enum Kind {
   ATTRIBUTE_INCLUDES, ATTRIBUTE_INCLUDES_I,
 };
 
+class CustomPseudoRegistry : protected NonCopyable {
+  CustomPseudoRegistry                 *m_next;
+  String                                m_ident, m_blurb;
+  static CustomPseudoRegistry *volatile stack_head;
+public:
+  const String& ident                () const { return m_ident; }
+  const String& blurb                () const { return m_blurb; }
+  explicit      CustomPseudoRegistry (const String &id, const String &b = "") :
+    m_next (NULL), m_ident (string_tolower (id)), m_blurb (b)
+  { Atomic::stack_push (stack_head, m_next, this); }
+  CustomPseudoRegistry*         next () const { return m_next; }
+  static CustomPseudoRegistry*  head ()       { return stack_head; }
+};
+
 bool    parse_spaces            (const char **stringp, int min_spaces = 1);
 bool    skip_spaces             (const char **stringp);
 bool    scan_nested             (const char **stringp, const char *pairflags, const char term);
