@@ -1003,7 +1003,7 @@ Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
 bool
 Matcher::match_pseudo_element (ItemImpl &item, const SelectorNode &snode)
 {
-  return false; // FIXME
+  return false; // unknown pseudo element
 }
 
 bool
