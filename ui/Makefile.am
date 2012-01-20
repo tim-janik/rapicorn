@@ -10,7 +10,7 @@ DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RE
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
-	cmdlib.hh	coffer.hh	commands.hh	compath.hh	container.hh	\
+	cmdlib.hh	coffer.hh	commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
 	image.hh	item.hh	keycodes.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
@@ -25,7 +25,7 @@ rapicorn_public_headers = $(strip	\
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
-	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
+	cmdlib.cc	coffer.cc	commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
 	image.cc	item.cc		\
 	layoutcontainers.cc	listarea.cc	models.cc	\

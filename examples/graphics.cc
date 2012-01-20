@@ -58,7 +58,7 @@ main (int   argc,
   Window window = app.create_window ("graphics-dialog");
 
   // hook up drawable test
-  Drawable drawable = window.component<Drawable> ("/Drawable#drawable1");
+  Drawable drawable = window.component<Drawable> ("Drawable#drawable1");
   RAPICORN_ASSERT (drawable._is_null() == false);
   drawable.sig_redraw() += slot (&drawable_redraw);
 

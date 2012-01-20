@@ -29,7 +29,7 @@ add_button_row (Container area,
     {
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
       child = brow.create_child ("test-button", args);
-      ButtonArea button = child.component<ButtonArea> ("/Button");
+      ButtonArea button = child.component<ButtonArea> (".Button");
       button.on_click (string_printf ("Item::print('Button-Click: (%d,%d)')", row, i));
     }
 }

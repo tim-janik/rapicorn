@@ -1,7 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "item.hh"
 #include "container.hh"
-#include "compath.hh"
 #include "adjustment.hh"
 #include "window.hh"
 #include "cmdlib.hh"
@@ -323,29 +322,6 @@ ItemIface*
 ItemImpl::query_selector_unique (const String &selector)
 {
   return Selector::Matcher::query_selector_unique (selector, *this);
-}
-
-ItemIface*
-ItemImpl::unique_component (const String &path)
-{
-  ItemSeq items = collect_components (path);
-  if (items.size() == 1)
-    return &*items[0];
-  return NULL;
-}
-
-ItemSeq
-ItemImpl::collect_components (const String &path)
-{
-  ComponentMatcher *cmatcher = ComponentMatcher::parse_path (path);
-  ItemSeq result;
-  if (cmatcher) // valid path
-    {
-      vector<ItemImpl*> more = collect_items (*this, *cmatcher);
-      result.insert (result.end(), more.begin(), more.end());
-      delete cmatcher;
-    }
-  return result;
 }
 
 uint

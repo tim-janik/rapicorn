@@ -201,10 +201,11 @@ test_complex_dialog ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  ItemIface *item = app.unique_component ("/#"); // invalid path
-  TASSERT (item == NULL);
-  item = app.unique_component ("/#complex-dialog"); // non-existing window
-  TASSERT (item == NULL);
+  WindowIface *windowp = app.query_window ("/#"); // invalid path
+  TASSERT (windowp == NULL);
+
+  windowp = app.query_window ("#complex-dialog"); // not yet existing window
+  TASSERT (windowp == NULL);
   WindowIface &window = *app.create_window ("complex-dialog");
   TOK();
   if (ServerTests::server_test_run_dialogs)
@@ -213,34 +214,35 @@ test_complex_dialog ()
       run_main_loop_recursive();
     }
   TOK();
-  item = app.unique_component ("/#complex-dialog");
+  windowp = app.query_window ("#complex-dialog"); // now existing window
+  TASSERT (windowp != NULL);
+
+  ItemIface *item = window.query_selector_unique ("#complex-dialog");
+  size_t count;
   TASSERT (item != NULL);
-  item = app.unique_component ("/Item#complex-dialog");
+  item = window.query_selector_unique (".Item#complex-dialog");
   TASSERT (item != NULL);
-  item = app.unique_component ("/#complex-dialog/VBox/ScrollArea/Item");
+  count = window.query_selector_all ("#complex-dialog .VBox .ScrollArea .Item").size();
+  TASSERT (count > 0);
+  count = window.query_selector_all (":root .VBox .Item").size();
+  TASSERT (count > 0);
+  item = window.query_selector (":root .Alignment");
   TASSERT (item != NULL);
-  item = app.unique_component ("/#complex-dialog/VBox/Item");
+  item = window.query_selector (":root .Alignment .VBox");
+  TASSERT (item != NULL);
+  item = window.query_selector_unique (":root .Alignment .VBox #scroll-text");
+  TASSERT (item != NULL);
+  item = window.query_selector_unique (":root .Frame");
   TASSERT (item == NULL); // not unique
-  item = app.unique_component ("/#complex-dialog/Alignment");
-  TASSERT (item != NULL);
-  item = app.unique_component (" / #complex-dialog / Alignment / VBox ");
-  TASSERT (item != NULL);
-  item = app.unique_component ("/#complex-dialog/Alignment/VBox/#scroll-text");
-  TASSERT (item != NULL);
-  item = app.unique_component ("/#complex-dialog/Frame");
+  item = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
+  TASSERT (item != NULL && dynamic_cast<Frame*> (item) != NULL);
+  item = window.query_selector_unique (":root .Button .Label");
   TASSERT (item == NULL); // not unique
-  item = app.unique_component ("/#complex-dialog/Frame[/Arrow#special-arrow]");
-  TASSERT (item != NULL);
-  item = app.unique_component ("/#complex-dialog/Button / Label");
-  TASSERT (item == NULL); // not unique
-  item = app.unique_component ("/#complex-dialog/Button / Label [ @markup-text =~ '\\bOk' ]");
-  TASSERT (item != NULL);
-  TASSERT (dynamic_cast<Text::Editor::Client*> (item) != NULL);
-  item = app.unique_component ("/#complex-dialog/Button [ /Label [ @markup-text=~'\\bOk\\b' ] ]");
-  TASSERT (item != NULL);
-  TASSERT (dynamic_cast<ButtonAreaImpl*> (item) != NULL);
-  TASSERT (dynamic_cast<Text::Editor::Client*> (item) == NULL);
-  item = app.unique_component ("/#"); // invalid path
+  item = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
+  TASSERT (item != NULL && dynamic_cast<Text::Editor::Client*> (item) != NULL);
+  item = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
+  TASSERT (item != NULL && dynamic_cast<ButtonAreaImpl*> (item) != NULL && dynamic_cast<Text::Editor::Client*> (item) == NULL);
+  item = window.query_selector_unique ("/#"); // invalid path
   TASSERT (item == NULL);
 }
 REGISTER_UITHREAD_TEST ("TestItem/Test Comples Dialog (complex-dialog)", test_complex_dialog);

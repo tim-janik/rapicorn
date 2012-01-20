@@ -81,8 +81,6 @@ interface Item {
   Item          query_selector          (string selector) = 0; //< Returns first selector match.
   ItemSeq       query_selector_all      (string selector) = 0; //< Returns all selector matches.
   Item          query_selector_unique   (string selector) = 0; //< Returns single selector match if unique.
-  Item          unique_component        (string path) = 0;
-  ItemSeq       collect_components      (string path) = 0;
   string	test_dump               () = 0;
   string        name = String (_("Name"), _("Identification name of the item"), "rw");
 };
@@ -184,8 +182,6 @@ interface Application {
   Window        query_window    (string         selector) = 0;
   WindowList    query_windows   (string         selector) = 0;
   WindowList    list_windows            () = 0;
-  Item          unique_component        (string path) = 0;
-  ItemSeq       collect_components      (string path) = 0;
   // helpers
   ListModelRelay create_list_model_relay (int n_columns,
                                           string name = "") = 0; ///< Create a ListModel & ListModelRelay bundle.

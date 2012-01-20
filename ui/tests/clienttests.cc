@@ -35,11 +35,12 @@ test_item_usage()
   TASSERT (name == testname);
   window.name ("Test-Name");
   TASSERT ("Test-Name" == item.name());
-  TASSERT (c.component<Window> ("/Window")._is_null() == false);
-  TASSERT (window.component<Container> ("/Window")._is_null() == false);
-  TASSERT (item.component<ButtonArea> ("/Window")._is_null() == true);
-  TASSERT (item.component<Item> ("/Window")._is_null() == false);
-  TASSERT (item.component<Item> ("/FrobodoNotHere")._is_null() == true);
+  TASSERT (c.component<Window> (".Window")._is_null() == false);
+  TASSERT (c.component<Window> (":root")._is_null() == false);
+  TASSERT (window.component<Container> (".Window")._is_null() == false);
+  TASSERT (item.component<ButtonArea> (".Window")._is_null() == true);
+  TASSERT (item.component<Item> (".Window")._is_null() == false);
+  TASSERT (item.component<Item> ("FrobodoNotHere")._is_null() == true);
 }
 REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
 
