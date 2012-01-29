@@ -26,9 +26,10 @@ class XmlNode : public virtual BaseObject {
   XmlNode              *m_parent;
   StringVector          m_attribute_names;
   StringVector          m_attribute_values;
+  String                m_file;
   uint                  m_line, m_char;
 protected:
-  explicit              XmlNode         (const String &, uint, uint);
+  explicit              XmlNode         (const String&, uint, uint, const String&);
   virtual uint64        flags           (uint64*) = 0;
   virtual              ~XmlNode         ();
   static void           set_parent      (XmlNode *c, XmlNode *p);
@@ -37,7 +38,8 @@ public:
   typedef ConstNodes::const_iterator ConstChildIter;
   String                name            () const                { return m_name; }
   XmlNode*              parent          () const                { return m_parent; }
-  const StringVector    list_attributes () const                { return m_attribute_names; }
+  const StringVector&   list_attributes () const                { return m_attribute_names; }
+  const StringVector&   list_values     () const                { return m_attribute_values; }
   bool                  set_attribute   (const String   &name,
                                          const String   &value,
                                          bool            replace = true);
@@ -46,6 +48,7 @@ public:
   bool                  has_attribute   (const String   &name,
                                          bool            case_insensitive = false) const;
   bool                  del_attribute   (const String   &name);
+  String                parsed_file     () const                { return m_file; }
   uint                  parsed_line     () const                { return m_line; }
   uint                  parsed_char     () const                { return m_char; }
   /* text node */
@@ -66,11 +69,13 @@ public:
   bool                  break_within    () const;
   /* nodes */
   static XmlNode*       create_text     (const String   &utf8text,
-                                         uint            line = 0,
-                                         uint            _char = 0);
+                                         uint            line,
+                                         uint            _char,
+                                         const String   &file);
   static XmlNode*       create_parent   (const String   &element_name,
-                                         uint            line = 0,
-                                         uint            _char = 0);
+                                         uint            line,
+                                         uint            _char,
+                                         const String   &file);
   /* IO */
   static XmlNode*       parse_xml       (const String   &input_name,
                                          const char     *utf8data,

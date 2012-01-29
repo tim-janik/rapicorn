@@ -23,9 +23,10 @@ namespace Rapicorn {
 
 XmlNode::XmlNode (const String &element_name,
                   uint          line,
-                  uint          _char) :
+                  uint          _char,
+                  const String &file) :
   m_name (element_name),
-  m_parent (NULL),
+  m_parent (NULL), m_file (file),
   m_line (line), m_char (_char)
 {}
 
@@ -179,17 +180,18 @@ class XmlNodeText : public virtual XmlNode {
   String                m_text;
   uint64                m_flags;
   virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
-  /* XmlNodeText */
+  // XmlNodeText
   virtual String        text            () const         { return m_text; }
-  /* XmlNodeParent */
+  // XmlNodeParent
   virtual ConstNodes&   children        () const         { return *(ConstNodes*) NULL; }
   virtual bool          add_child       (XmlNode &child) { return false; }
   virtual bool          del_child       (XmlNode &child) { return false; }
 public:
   XmlNodeText (const String &utf8text,
                uint          line,
-               uint          _char) :
-    XmlNode ("", line, _char), m_text (utf8text), m_flags (0)
+               uint          _char,
+               const String &file) :
+    XmlNode ("", line, _char, file), m_text (utf8text), m_flags (0)
   {}
 };
 
@@ -197,7 +199,7 @@ class XmlNodeParent : public virtual XmlNode {
   vector<XmlNode*>      m_children;
   uint64                m_flags;
   virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
-  /* XmlNodeText */
+  // XmlNodeText
   virtual String
   text () const
   {
@@ -240,8 +242,9 @@ class XmlNodeParent : public virtual XmlNode {
 public:
   XmlNodeParent (const String &element_name,
                  uint          line,
-                 uint          _char) :
-    XmlNode (element_name, line, _char), m_flags (0)
+                 uint          _char,
+                 const String &file) :
+    XmlNode (element_name, line, _char, file), m_flags (0)
   {}
 };
 
@@ -265,7 +268,7 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
       error.set (INVALID_ELEMENT, String() + "invalid element name: <" + escape_text (element_name) + "/>");
     int xline, xchar;
     get_position (&xline, &xchar);
-    XmlNode *xnode = XmlNode::create_parent (element_name, xline, xchar);
+    XmlNode *xnode = XmlNode::create_parent (element_name, xline, xchar, input_name());
     for (uint i = 0; i < attribute_names.size(); i++)
       xnode->set_attribute (attribute_names[i], attribute_values[i]);
     if (current)
@@ -287,7 +290,7 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
     XmlNode *current = m_node_stack.size() ? m_node_stack[m_node_stack.size() - 1] : NULL;
     int xline, xchar;
     get_position (&xline, &xchar);
-    XmlNode *xnode = XmlNode::create_text (text, xline, xchar);
+    XmlNode *xnode = XmlNode::create_text (text, xline, xchar, input_name());
     if (current)
       current->add_child (*xnode);
     else
@@ -324,17 +327,19 @@ namespace Rapicorn {
 XmlNode*
 XmlNode::create_text (const String &utf8text,
                       uint          line,
-                      uint          _char)
+                      uint          _char,
+                      const String &file)
 {
-  return new XmlNodeText (utf8text, line, _char);
+  return new XmlNodeText (utf8text, line, _char, file);
 }
 
 XmlNode*
 XmlNode::create_parent (const String &element_name,
                         uint          line,
-                        uint          _char)
+                        uint          _char,
+                        const String &file)
 {
-  return new XmlNodeParent (element_name, line, _char);
+  return new XmlNodeParent (element_name, line, _char, file);
 }
 
 XmlNode*
