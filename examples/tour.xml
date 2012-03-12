@@ -49,9 +49,10 @@
 
   <!-- Arrangement test -->
   <def:arrangement-test inherit="Frame" frame-type="etched-out">
+    <arg:label-variable default="Middle Label (sinfex test)"/>
     <Arrangement origin="0 0" >
       <Label markup-text="First?"  hanchor="1" position="-70 30"/>
-      <Label markup-text="Middle Label" />
+      <Label markup-text="`label_variable`" />
       <Label markup-text="Third Label" hanchor="0" position="75 30" />
     </Arrangement>
   </def:arrangement-test>
