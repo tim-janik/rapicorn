@@ -61,7 +61,7 @@ test_factory ()
   if (0)
     {
       printout ("\n");
-      printout ("TestContainer::accu:%s\n", titem->accu().c_str());
+      printout ("TestContainer::accu: %s\n", titem->accu().c_str());
       printout ("TestContainer::accu_history: %s\n", titem->accu_history().c_str());
     }
   TASSERT (titem->accu_history() == "L0L1L2Instance");
