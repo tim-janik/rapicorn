@@ -16,6 +16,6 @@ rapidrun_LDADD   = $(LDADDS)
 
 # check some options
 check-rapidrun-basics:
-	$(Q) ./rapidrun --list $(top_srcdir)/ui/foundation.xml | grep -q VSlider \
-	; eval "$$TSTDIAGNOSE" "'Check factory definition for VSlider'"
+	$(Q) ./rapidrun --list $(srcdir)/minitest.xml | grep -q "RapicornTest::MiniButton" \
+	; eval "$$TSTDIAGNOSE" "'Check sample definition for MiniButton'"
 check-am: check-rapidrun-basics

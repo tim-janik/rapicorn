@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
+<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+
+  <!-- test dialog -->
+  <def:MiniButton inherit="DefaultButton" width="400" >
+    <Label plain-text="Mini Button" />
+  </def:MiniButton>
+
+</rapicorn-definitions>
