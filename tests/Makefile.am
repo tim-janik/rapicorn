@@ -29,7 +29,7 @@ XML_FILES  += alignment.xml
 EXTRA_DIST += alignment.png
 alignment-png-test: $(srcdir)/alignment.xml $(srcdir)/alignment.png
 	$(Q) rm -f xtmp-alignment.png
-	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml $(QSTDERR)
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml
 	$(Q) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f xtmp-alignment.png
 check: alignment-png-test
