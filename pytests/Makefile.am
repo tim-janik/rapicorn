@@ -30,7 +30,7 @@ python-call-info:
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
 check-TEST_PYPROGS:
-	@$(X11TEST_SERVER) && \
+	$(Q) $(X11TEST_SERVER) && \
 	  for tst in $(TEST_PYPROGS) ; do \
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   \
 	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ; 		 \
