@@ -356,22 +356,46 @@ XmlNode::parse_xml (const String        &input_name,
   return xnode;
 }
 
+enum { SQ = 1, DQ = 2, AP = 4, BS = 8, LT = 16, GT = 32, ALL = SQ + DQ + AP + BS + LT + GT };
+
+template<int WHAT> static inline String
+escape_xml (const String &input)
+{
+  String d;
+  d.reserve (input.size());
+  for (String::const_iterator it = input.begin(); it != input.end(); it++)
+    switch (*it)
+      {
+      default:   _default:                              d += *it;       break;
+      case '"':  if (!(WHAT & DQ)) goto _default;       d += "&quot;";  break;
+      case '&':  if (!(WHAT & AP)) goto _default;       d += "&amp;";   break;
+      case '\'': if (!(WHAT & SQ)) goto _default;       d += "&apos;";  break;
+      case '<':  if (!(WHAT & LT)) goto _default;       d += "&lt;";    break;
+      case '>':  if (!(WHAT & GT)) goto _default;       d += "&gt;";    break;
+      }
+  return d;
+}
+
+String
+XmlNode::xml_escape (const String &input)
+{
+  return escape_xml<ALL> (input);
+}
+
 String
 XmlNode::xml_string (uint64 indent, bool include_outer) const
 {
   if (istext())
-    return text();
-#warning FIXME: XML-escape text
-  String istr = string_multiply (" ", indent);
+    return xml_escape (text());
+  const String istr = string_multiply (" ", indent);
   String s;
   if (include_outer)
     {
-      s += "<" + name();
+      s += "<" + xml_escape (name());
       const StringVector keys = list_attributes();
       for (uint i = 0; i < keys.size(); i++)
-        s += " " + keys[i] + "=\"" + get_attribute (keys[i]) + "\"";
+        s += " " + xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (get_attribute (keys[i])) + "\"";
     }
-#warning FIXME: XML-escape and quote attribute values
   ConstNodes &cl = children();
   if (cl.size())
     {
@@ -388,7 +412,7 @@ XmlNode::xml_string (uint64 indent, bool include_outer) const
       if (include_outer && break_within())
         s += "\n" + istr;
       if (include_outer)
-        s += "</" + name() + ">";
+        s += "</" + xml_escape (name()) + ">";
     }
   else if (include_outer)
     s += "/>";

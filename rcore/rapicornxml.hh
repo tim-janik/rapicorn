@@ -67,6 +67,7 @@ public:
   bool                  break_after     () const;
   void                  break_within    (bool            newlines_around_chidlren);
   bool                  break_within    () const;
+  String                xml_string      (uint64          indent = 0, bool include_outer = true) const;
   /* nodes */
   static XmlNode*       create_text     (const String   &utf8text,
                                          uint            line,
@@ -82,7 +83,7 @@ public:
                                          ssize_t         utf8data_len,
                                          MarkupParser::Error *error,
                                          const String   &roottag = "");
-  String                xml_string      (uint64          indent = 0, bool include_outer = true) const;
+  static String         xml_escape      (const String   &input);
 };
 
 } // Rapicorn
