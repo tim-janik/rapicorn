@@ -27,6 +27,7 @@ StringVector 			string_split             (const String       &string,
 String  			string_join              (const String       &junctor,
                                                           const StringVector &strvec);
 bool    			string_to_bool           (const String &string);
+bool    			string_to_bool1          (const String &string);
 String  			string_from_bool         (bool value);
 uint64  			string_to_uint           (const String &string, uint base = 10);
 String  			string_from_uint         (uint64 value);

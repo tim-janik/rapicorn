@@ -161,6 +161,12 @@ string_join (const String       &junctor,
 }
 
 bool
+string_to_bool1 (const String &string)
+{
+  return string.empty() ? true : string_to_bool (string);
+}
+
+bool
 string_to_bool (const String &string)
 {
   static const char *spaces = " \t\n\r";
