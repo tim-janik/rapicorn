@@ -357,35 +357,40 @@ XmlNode::parse_xml (const String        &input_name,
 }
 
 String
-XmlNode::xml_string (uint64 indent)
+XmlNode::xml_string (uint64 indent, bool include_outer) const
 {
   if (istext())
     return text();
 #warning FIXME: XML-escape text
   String istr = string_multiply (" ", indent);
   String s;
-  s += "<" + name();
-  const StringVector keys = list_attributes();
-  for (uint i = 0; i < keys.size(); i++)
-    s += " " + keys[i] + "=\"" + get_attribute (keys[i]) + "\"";
+  if (include_outer)
+    {
+      s += "<" + name();
+      const StringVector keys = list_attributes();
+      for (uint i = 0; i < keys.size(); i++)
+        s += " " + keys[i] + "=\"" + get_attribute (keys[i]) + "\"";
+    }
 #warning FIXME: XML-escape and quote attribute values
   ConstNodes &cl = children();
   if (cl.size())
     {
-      s += ">";
-      bool need_break = break_within();
-      for (uint i = 0; i < cl.size(); i++)
+      if (include_outer)
+        s += ">";
+      bool need_break = include_outer && break_within();
+      for (size_t i = 0; i < cl.size(); i++)
         {
           if (need_break)
             s += "\n" + istr + "  ";
           s += cl[i]->xml_string (indent + 2);
           need_break = cl[i]->break_after();
         }
-      if (break_within())
+      if (include_outer && break_within())
         s += "\n" + istr;
-      s += "</" + name() + ">";
+      if (include_outer)
+        s += "</" + name() + ">";
     }
-  else
+  else if (include_outer)
     s += "/>";
   return s;
 }

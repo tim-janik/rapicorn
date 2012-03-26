@@ -82,7 +82,7 @@ public:
                                          ssize_t         utf8data_len,
                                          MarkupParser::Error *error,
                                          const String   &roottag = "");
-  String                xml_string      (uint64          indent = 0);
+  String                xml_string      (uint64          indent = 0, bool include_outer = true) const;
 };
 
 } // Rapicorn
