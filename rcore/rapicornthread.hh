@@ -26,6 +26,9 @@ class Thread;
 template<class Value> inline bool once_enter (volatile Value *value_location);
 template<class Value> inline void once_leave (volatile Value *value_location,
                                               Value           initialization_value);
+#define RAPICORN_ONCE_CONSTRUCT(pointer_variable)       \
+  ({ typeof (pointer_variable) *___vp = &pointer_variable;      \
+    while (once_enter (___vp)) { once_leave (___vp, new typeof (**___vp)); } *___vp; })
 
 class Mutex : protected NonCopyable {
   RapicornMutex mutex;
@@ -346,6 +349,10 @@ OwnedMutex::mine ()
 {
   return Atomic::ptr_get (&m_owner) == &Thread::self();
 }
+
+#ifdef RAPICORN_CONVENIENCE
+#define ONCE_CONSTRUCT  RAPICORN_ONCE_CONSTRUCT
+#endif // RAPICORN_CONVENIENCE
 
 void once_list_enter  ();
 bool once_list_bounce (volatile void *ptr);
