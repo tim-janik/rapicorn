@@ -30,7 +30,8 @@ class XmlNode : public virtual BaseObject {
   uint                  m_line, m_char;
 protected:
   explicit              XmlNode         (const String&, uint, uint, const String&);
-  virtual uint64        flags           (uint64*) = 0;
+  uint64                flags           () const;
+  void                  flags           (uint64 flags);
   virtual              ~XmlNode         ();
   static void           set_parent      (XmlNode *c, XmlNode *p);
 public:

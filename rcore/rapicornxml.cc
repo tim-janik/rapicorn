@@ -116,6 +116,21 @@ XmlNode::set_parent (XmlNode *c,
     unref (c);
 }
 
+static DataKey<uint64> xml_node_flags_key;
+
+uint64
+XmlNode::flags () const
+{
+  const uint64 flagvalues = get_data (&xml_node_flags_key);
+  return flagvalues;
+}
+
+void
+XmlNode::flags (uint64 flagvalues)
+{
+  set_data (&xml_node_flags_key, flagvalues);
+}
+
 const XmlNode*
 XmlNode::first_child (const String &element_name) const
 {
@@ -144,31 +159,25 @@ XmlNode::steal_children (XmlNode &parent)
 void
 XmlNode::break_after (bool newline_after_tag)
 {
-  uint64 f = flags (NULL);
-  f |= 4;
-  flags (&f);
+  flags (4 | flags());
 }
 
 bool
 XmlNode::break_after () const
 {
-  uint64 f = const_cast<XmlNode*> (this)->flags (NULL);
-  return !!(f & 4);
+  return !!(4 & flags());
 }
 
 void
 XmlNode::break_within (bool newlines_around_chidlren)
 {
-  uint64 f = flags (NULL);
-  f |= 8;
-  flags (&f);
+  flags (8 | flags());
 }
 
 bool
 XmlNode::break_within () const
 {
-  uint64 f = const_cast<XmlNode*> (this)->flags (NULL);
-  return !!(f & 8);
+  return !!(8 & flags());
 }
 
 } // Rapicorn
@@ -178,8 +187,6 @@ using namespace Rapicorn;
 
 class XmlNodeText : public virtual XmlNode {
   String                m_text;
-  uint64                m_flags;
-  virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
   // XmlNodeText
   virtual String        text            () const         { return m_text; }
   // XmlNodeParent
@@ -191,14 +198,12 @@ public:
                uint          line,
                uint          _char,
                const String &file) :
-    XmlNode ("", line, _char, file), m_text (utf8text), m_flags (0)
+    XmlNode ("", line, _char, file), m_text (utf8text)
   {}
 };
 
 class XmlNodeParent : public virtual XmlNode {
   vector<XmlNode*>      m_children;
-  uint64                m_flags;
-  virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
   // XmlNodeText
   virtual String
   text () const
@@ -244,7 +249,7 @@ public:
                  uint          line,
                  uint          _char,
                  const String &file) :
-    XmlNode (element_name, line, _char, file), m_flags (0)
+    XmlNode (element_name, line, _char, file)
   {}
 };
 
