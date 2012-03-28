@@ -535,48 +535,64 @@ OwnedMutex::~OwnedMutex()
   RAPICORN_ASSERT (m_count == 0);
 }
 
-static Mutex                       once_mutex;
-static Cond                        once_cond;
-static std::list<volatile void *> *once_list = NULL;
+struct OnceData {
+  Mutex                      mutex;
+  Cond                       cond;
+  std::list<volatile void *> list;
+};
+static OnceData *static_once_data = NULL;
+
+static inline OnceData&
+atomic_once_data ()
+{
+  OnceData *od = Atomic::value_get (&static_once_data);
+  if (LIKELY (od != NULL))
+    return *od;
+  od = new OnceData;
+  if (!Atomic::value_cas (&static_once_data, (OnceData*) NULL, od))
+    delete od;
+  return *Atomic::value_get (&static_once_data);
+}
 
 void
 once_list_enter()
 {
-  once_mutex.lock();
-  if (!once_list)
-    once_list = new std::list<volatile void *>();
+  OnceData &once_data = atomic_once_data();
+  once_data.mutex.lock();
 }
 
 bool
 once_list_bounce (volatile void *ptr)
 {
+  OnceData &once_data = atomic_once_data();
   bool ptr_listed = false;
   if (ptr)
     {
-      if (find (once_list->begin(), once_list->end(), ptr) == once_list->end())
+      if (find (once_data.list.begin(), once_data.list.end(), ptr) == once_data.list.end())
         {
           ptr_listed = true;
-          once_list->push_front (ptr);
+          once_data.list.push_front (ptr);
         }
       else
         do
-          once_cond.wait (once_mutex);
-        while (find (once_list->begin(), once_list->end(), ptr) != once_list->end());
+          once_data.cond.wait (once_data.mutex);
+        while (find (once_data.list.begin(), once_data.list.end(), ptr) != once_data.list.end());
     }
-  once_mutex.unlock();
+  once_data.mutex.unlock();
   return ptr_listed;
 }
 
 bool
 once_list_leave (volatile void *ptr)
 {
-  once_mutex.lock();
-  std::list<volatile void *>::iterator it = find (once_list->begin(), once_list->end(), ptr);
-  bool found_removed = it != once_list->end();
+  OnceData &once_data = atomic_once_data();
+  once_data.mutex.lock();
+  std::list<volatile void *>::iterator it = find (once_data.list.begin(), once_data.list.end(), ptr);
+  bool found_removed = it != once_data.list.end();
   if (found_removed)
-    once_list->erase (it);
-  once_cond.broadcast();
-  once_mutex.unlock();
+    once_data.list.erase (it);
+  once_data.cond.broadcast();
+  once_data.mutex.unlock();
   return found_removed;
 }
 
