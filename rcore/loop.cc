@@ -169,6 +169,41 @@ release_id (uint id)
   // FIXME: ned proper ID allocator
 }
 
+// === QuickPfdArray ===
+class EventLoop::QuickPfdArray {
+  typedef PollFD Data;
+  Data  *m_data;
+  uint   m_n_elements;
+  uint   m_n_reserved;
+  Data  *m_reserved;
+public:
+  QuickPfdArray (uint n_reserved, Data *reserved) : m_data (reserved), m_n_elements (0), m_n_reserved (n_reserved), m_reserved (reserved) {}
+  ~QuickPfdArray()                      { if (LIKELY (m_data) && UNLIKELY (m_data != m_reserved)) free (m_data); }
+  uint        size       () const       { return m_n_elements; }
+  Data*       data       () const       { return m_data; }
+  Data&       operator[] (uint n)       { return m_data[n]; }
+  const Data& operator[] (uint n) const { return m_data[n]; }
+  void        push       (const Data &d)
+  {
+    const uint idx = m_n_elements++;
+    if (UNLIKELY (m_n_elements > m_n_reserved))                 // reserved memory exceeded
+      {
+        const size_t sz = m_n_elements * sizeof (Data);
+        const bool migrate = UNLIKELY (m_data == m_reserved);   // migrate from reserved to malloced
+        Data *mem = (Data*) (migrate ? malloc (sz) : realloc (m_data, sz));
+        if (UNLIKELY (!mem))
+          fatal ("OOM");
+        if (migrate)
+          {
+            memcpy (mem, m_data, sz - 1 * sizeof (Data));
+            m_reserved = NULL;
+          }
+        m_data = mem;
+      }
+    m_data[idx] = d;
+  }
+};
+
 // === EventLoop ===
 EventLoop::EventLoop (MainLoop &main) :
   m_main_loop (main), m_dispatch_priority (0)
@@ -519,7 +554,7 @@ EventLoop::collect_sources_Lm (State &state)
 bool
 EventLoop::prepare_sources_Lm (State          &state,
                                int64          *timeout_usecs,
-                               vector<PollFD> &pfds)
+                               QuickPfdArray  &pfda)
 {
   Mutex &main_mutex = m_main_loop.mutex();
   // prepare sources, up to NEEDS_DISPATCH priority
@@ -547,10 +582,10 @@ EventLoop::prepare_sources_Lm (State          &state,
       for (uint i = 0; i < npfds; i++)
         if (source.m_pfds[i].pfd->fd >= 0)
           {
-            uint idx = pfds.size();
+            uint idx = pfda.size();
             source.m_pfds[i].idx = idx;
-            pfds.push_back (*source.m_pfds[i].pfd);
-            pfds[idx].revents = 0;
+            pfda.push (*source.m_pfds[i].pfd);
+            pfda[idx].revents = 0;
           }
         else
           source.m_pfds[i].idx = UINT_MAX;
@@ -559,8 +594,8 @@ EventLoop::prepare_sources_Lm (State          &state,
 }
 
 bool
-EventLoop::check_sources_Lm (State                &state,
-                             const vector<PollFD> &pfds)
+EventLoop::check_sources_Lm (State               &state,
+                             const QuickPfdArray &pfda)
 {
   Mutex &main_mutex = m_main_loop.mutex();
   // check polled sources
@@ -574,9 +609,9 @@ EventLoop::check_sources_Lm (State                &state,
       for (uint i = 0; i < npfds; i++)
         {
           uint idx = source.m_pfds[i].idx;
-          if (idx < pfds.size() &&
-              source.m_pfds[i].pfd->fd == pfds[idx].fd)
-            source.m_pfds[i].pfd->revents = pfds[idx].revents;
+          if (idx < pfda.size() &&
+              source.m_pfds[i].pfd->fd == pfda[idx].fd)
+            source.m_pfds[i].pfd->revents = pfda[idx].revents;
           else
             source.m_pfds[i].idx = UINT_MAX;
         }
@@ -639,8 +674,12 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   Mutex &main_mutex = m_main_loop.mutex();
   int64 timeout_usecs = INT64_MAX;
   bool any_dispatchable = false;
-  vector<PollFD> pfds;
-  pfds.reserve (7); // profiled optimization
+  PollFD reserved_pfd_mem[7];   // store PollFD array in stack memory, to reduce malloc overhead
+  QuickPfdArray pfda (ARRAY_SIZE (reserved_pfd_mem), reserved_pfd_mem); // pfda.size() == 0
+  // allow poll wakeups
+  const PollFD wakeup = { m_eventfd.inputfd(), PollFD::IN, 0 };
+  const uint wakeup_idx = 0; // wakeup_idx = pfda.size();
+  pfda.push (wakeup);
   // create referenced loop list
   const uint nloops = m_loops.size();
   EventLoop* loops[nloops];
@@ -649,19 +688,15 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     loops[i] = ref (m_loops[i]);
   // collect
   state.seen_primary = false;
-  for (uint i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nloops; i++)
     loops[i]->collect_sources_Lm (state);
   // prepare
   state.current_time_usecs = timestamp_realtime();
-  for (uint i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nloops; i++)
     {
-      dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfds);
+      dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
       any_dispatchable |= dispatchable[i];
     }
-  // allow poll wakeups
-  PollFD wakeup = { m_eventfd.inputfd(), PollFD::IN, 0 };
-  uint wakeup_idx = pfds.size();
-  pfds.push_back (wakeup);
   // poll file descriptors
   int64 timeout_msecs = timeout_usecs / 1000;
   if (timeout_usecs > 0 && timeout_msecs <= 0)
@@ -675,27 +710,27 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   if (needs_locking)
     hooks.unlock();
   do
-    presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
+    presult = poll ((struct pollfd*) &pfda[0], pfda.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
   if (needs_locking)
     hooks.lock();
   main_mutex.lock();
   if (presult < 0)
     pcritical ("MainLoop: poll() failed");
-  else if (pfds[wakeup_idx].revents)
+  else if (pfda[wakeup_idx].revents)
     m_eventfd.flush(); // restart queueing wakeups, possibly triggered by dispatching
   // check
   state.current_time_usecs = timestamp_realtime();
-  for (uint i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nloops; i++)
     {
-      dispatchable[i] |= loops[i]->check_sources_Lm (state, pfds);
+      dispatchable[i] |= loops[i]->check_sources_Lm (state, pfda);
       any_dispatchable |= dispatchable[i];
     }
   // dispatch
   Source *unref_source = NULL;
   if (may_dispatch && any_dispatchable)
     {
-      uint index, i = nloops;
+      size_t index, i = nloops;
       do        // find next dispatchable loop in round-robin fashion
         index = m_rr_index++ % nloops;
       while (!dispatchable[index] && i--);
@@ -705,7 +740,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   main_mutex.unlock();
   if (unref_source)
     unref (unref_source); // unlocked
-  for (uint i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked
       unref (loops[i]); // unlocked

@@ -52,7 +52,8 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
 {
   class TimedSource;
   class PollFDSource;
-  friend           class MainLoop;
+  class QuickPfdArray;          // pseudo vector<PollFD>
+  friend class MainLoop;
 public:
   class Source;
   class State;
@@ -71,8 +72,8 @@ protected:
   void          kill_sources_Lm  (void);
   void          unpoll_sources_U    ();
   void          collect_sources_Lm  (State&);
-  bool          prepare_sources_Lm  (State&, int64*, vector<PollFD>&);
-  bool          check_sources_Lm    (State&, const vector<PollFD>&);
+  bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
+  bool          check_sources_Lm    (State&, const QuickPfdArray&);
   Source*       dispatch_source_Lm  (State&);
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
