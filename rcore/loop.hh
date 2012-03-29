@@ -53,6 +53,7 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
   class TimedSource;
   class PollFDSource;
   class QuickPfdArray;          // pseudo vector<PollFD>
+  class QuickSourceArray;       // pseudo vector<Source*>
   friend class MainLoop;
 public:
   class Source;
@@ -62,7 +63,9 @@ protected:
   MainLoop     &m_main_loop;
   SourceList    m_sources;
   int64         m_dispatch_priority;
-  SourceList    m_poll_sources;
+  QuickSourceArray &m_poll_sources;
+  uint64        pollmem1[3];
+  Source*       pollmem2[7];
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
   Source*       find_first_L     ();

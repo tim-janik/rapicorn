@@ -169,20 +169,33 @@ release_id (uint id)
   // FIXME: ned proper ID allocator
 }
 
-// === QuickPfdArray ===
-class EventLoop::QuickPfdArray {
-  typedef PollFD Data;
+// === QuickArray ===
+template<class Data>
+class QuickArray {
   Data  *m_data;
   uint   m_n_elements;
   uint   m_n_reserved;
   Data  *m_reserved;
+  template<class D> void swap (D &a, D &b) { D t = a; a = b; b = t; }
 public:
-  QuickPfdArray (uint n_reserved, Data *reserved) : m_data (reserved), m_n_elements (0), m_n_reserved (n_reserved), m_reserved (reserved) {}
-  ~QuickPfdArray()                      { if (LIKELY (m_data) && UNLIKELY (m_data != m_reserved)) free (m_data); }
+  typedef Data* iterator;
+  QuickArray (uint n_reserved, Data *reserved) : m_data (reserved), m_n_elements (0), m_n_reserved (n_reserved), m_reserved (reserved) {}
+  ~QuickArray()                         { if (LIKELY (m_data) && UNLIKELY (m_data != m_reserved)) free (m_data); }
   uint        size       () const       { return m_n_elements; }
+  bool        empty      () const       { return m_n_elements == 0; }
   Data*       data       () const       { return m_data; }
   Data&       operator[] (uint n)       { return m_data[n]; }
   const Data& operator[] (uint n) const { return m_data[n]; }
+  iterator    begin      ()             { return &m_data[0]; }
+  iterator    end        ()             { return &m_data[m_n_elements]; }
+  void        shrink     (uint n)       { m_n_elements = MIN (m_n_elements, n); }
+  void        swap       (QuickArray &o)
+  {
+    swap (m_data,       o.m_data);
+    swap (m_n_elements, o.m_n_elements);
+    swap (m_n_reserved, o.m_n_reserved);
+    swap (m_reserved,   o.m_reserved);
+  }
   void        push       (const Data &d)
   {
     const uint idx = m_n_elements++;
@@ -197,23 +210,32 @@ public:
           {
             memcpy (mem, m_data, sz - 1 * sizeof (Data));
             m_reserved = NULL;
+            m_n_reserved = 0;
           }
         m_data = mem;
       }
     m_data[idx] = d;
   }
 };
+struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
+  QuickPfdArray (uint n_reserved, PollFD *reserved) : QuickArray (n_reserved, reserved) {}
+};
+struct EventLoop::QuickSourceArray : public QuickArray<Source*> {
+  QuickSourceArray (uint n_reserved, Source **reserved) : QuickArray (n_reserved, reserved) {}
+};
 
 // === EventLoop ===
 EventLoop::EventLoop (MainLoop &main) :
-  m_main_loop (main), m_dispatch_priority (0)
+  m_main_loop (main), m_dispatch_priority (0), m_poll_sources (*new (pollmem1) QuickSourceArray (0, NULL))
 {
+  RAPICORN_STATIC_ASSERT (sizeof (QuickSourceArray) <= sizeof (EventLoop::pollmem1));
   // we cannot *use* m_main_loop yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
 }
 
 EventLoop::~EventLoop ()
 {
   unpoll_sources_U();
+  m_poll_sources.~QuickSourceArray();
   // we cannot *use* m_main_loop anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
 }
 
@@ -499,10 +521,10 @@ MainLoop::iterate_pending()
 void
 EventLoop::unpoll_sources_U() // must be unlocked!
 {
-  SourceList sources;
+  QuickSourceArray sources (0, NULL);
   // clear poll sources
   sources.swap (m_poll_sources);
-  for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = sources.begin(); lit != sources.end(); lit++)
     unref (*lit); // unlocked
 }
 
@@ -518,11 +540,12 @@ EventLoop::collect_sources_Lm (State &state)
       main_mutex.unlock();
       unpoll_sources_U(); // unlocked
       main_mutex.lock();
+      assert (m_poll_sources.empty());
     }
+  // since m_poll_sources is empty, poll_candidates can reuse pollmem2
+  QuickSourceArray poll_candidates (ARRAY_SIZE (pollmem2), pollmem2);
   // determine dispatch priority & collect sources for preparing
   m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
-  vector<Source*> poll_candidates;
-  poll_candidates.reserve (7);
   for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
     {
       Source &source = **lit;
@@ -537,7 +560,7 @@ EventLoop::collect_sources_Lm (State &state)
       if (source.m_priority < m_dispatch_priority ||            // prepare preempting sources
           (source.m_priority == m_dispatch_priority &&
            source.m_loop_state == NEEDS_DISPATCH))              // re-poll sources that need dispatching
-        poll_candidates.push_back (&source);            // collect only, adding ref() next
+        poll_candidates.push (&source);                         // collect only, adding ref() next
     }
   // ensure ref counts on all prepare sources
   uint j = 0;
@@ -546,7 +569,7 @@ EventLoop::collect_sources_Lm (State &state)
         (poll_candidates[i]->m_priority == m_dispatch_priority &&
          poll_candidates[i]->m_loop_state == NEEDS_DISPATCH))   // re-poll sources that need dispatching
       poll_candidates[j++] = ref (poll_candidates[i]);
-  poll_candidates.resize (j);
+  poll_candidates.shrink (j);
   m_poll_sources.swap (poll_candidates);                // ref()ed sources <= dispatch priority
   assert (poll_candidates.empty());
 }
@@ -558,7 +581,7 @@ EventLoop::prepare_sources_Lm (State          &state,
 {
   Mutex &main_mutex = m_main_loop.mutex();
   // prepare sources, up to NEEDS_DISPATCH priority
-  for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
       if (source.m_loop != this) // test undestroyed
@@ -599,7 +622,7 @@ EventLoop::check_sources_Lm (State               &state,
 {
   Mutex &main_mutex = m_main_loop.mutex();
   // check polled sources
-  for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
       if (source.m_loop != this && // test undestroyed
@@ -637,7 +660,7 @@ EventLoop::dispatch_source_Lm (State &state)
   Mutex &main_mutex = m_main_loop.mutex();
   // find a source to dispatch at m_dispatch_priority
   Source *dispatch_source = NULL;
-  for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
       if (source.m_loop == this &&                    // test undestroyed
