@@ -88,6 +88,7 @@ protected:
   bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
+  virtual bool                pseudo_selector   (const String &ident, const String &arg, String &error) { return false; }
   /* size requisition and allocation */
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
@@ -309,8 +310,10 @@ private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
 public:
-  virtual ItemIface* unique_component   (const String &path);
-  virtual ItemSeq    collect_components (const String &path);
+  virtual bool       match_selector        (const String &selector);
+  virtual ItemIface* query_selector        (const String &selector);
+  virtual ItemSeq    query_selector_all    (const String &selector);
+  virtual ItemIface* query_selector_unique (const String &selector);
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;

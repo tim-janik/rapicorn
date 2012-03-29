@@ -23,9 +23,9 @@ public:
                                               const StringList &env_variables = StringList());
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
+  virtual WindowIface*query_window           (const String &selector);
+  virtual WindowList  query_windows          (const String &selector);
   virtual WindowList  list_windows           ();
-  virtual ItemIface*  unique_component       (const String &path);
-  virtual ItemSeq     collect_components     (const String &path);
   virtual ListModelRelayIface* create_list_model_relay (int                n_columns,
                                                         const std::string &name = "");
   virtual void        test_counter_set       (int val);

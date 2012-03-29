@@ -4,7 +4,6 @@
 #include "factory.hh"
 #include "screenwindow.hh"
 #include "image.hh"
-#include "compath.hh"
 #include "uithread.hh"
 #include <algorithm>
 #include <stdlib.h>
@@ -127,6 +126,39 @@ ApplicationIface::close ()
 {
 }
 
+WindowIface*
+ApplicationImpl::query_window (const String &selector)
+{
+  vector<ItemImpl*> input;
+  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+    {
+      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
+      if (item)
+        input.push_back (item);
+    }
+  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  if (result.size() == 1) // unique
+    return dynamic_cast<WindowIface*> (result[0]);
+  return NULL;
+}
+
+WindowList
+ApplicationImpl::query_windows (const String &selector)
+{
+  vector<ItemImpl*> input;
+  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+    {
+      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
+      if (item)
+        input.push_back (item);
+    }
+  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  WindowList wlist;
+  for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
+    wlist.push_back (dynamic_cast<WindowIface*> (*it));
+  return wlist;
+}
+
 WindowList
 ApplicationImpl::list_windows ()
 {
@@ -134,36 +166,6 @@ ApplicationImpl::list_windows ()
   for (uint i = 0; i < m_windows.size(); i++)
     wl.push_back (m_windows[i]);
   return wl;
-}
-
-ItemIface*
-ApplicationImpl::unique_component (const String &path)
-{
-  ItemSeq items = collect_components (path);
-  if (items.size() == 1)
-    return &*items[0];
-  return NULL;
-}
-
-ItemSeq
-ApplicationImpl::collect_components (const String &path)
-{
-  ComponentMatcher *cmatcher = ComponentMatcher::parse_path (path);
-  ItemSeq result;
-  if (cmatcher) // valid path
-    {
-      for (uint i = 0; i < m_windows.size(); i++)
-        {
-          ItemImpl *witem = dynamic_cast<ItemImpl*> (m_windows[i]);
-          if (witem)
-            {
-              vector<ItemImpl*> more = collect_items (*witem, *cmatcher);
-              result.insert (result.end(), more.begin(), more.end());
-            }
-        }
-      delete cmatcher;
-    }
-  return result;
 }
 
 void

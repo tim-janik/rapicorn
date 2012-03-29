@@ -50,7 +50,7 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   # process pending events
   while app.iterate (False, True): pass
   # find button
-  button = window.unique_component ('/Button')
+  button = window.query_selector_unique ('.Button')
   assert button
   # click button
   assert seen_click_command == False

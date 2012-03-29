@@ -65,6 +65,8 @@ public:
     /* properties */
     virtual String      markup_text  () const;
     virtual void        markup_text  (const String &markup);
+    virtual String      plain_text   () const;
+    virtual void        plain_text   (const String &ptext);
     virtual TextMode    text_mode    () const = 0;
     virtual void        text_mode    (TextMode      text_mode) = 0;
     /* size negotiation */
@@ -90,6 +92,8 @@ public:
   virtual void          text_mode      (TextMode      text_mode) = 0;
   virtual String        markup_text    () const = 0;
   virtual void          markup_text    (const String &markup) = 0;
+  virtual String        plain_text     () const = 0;
+  virtual void          plain_text     (const String &ptext) = 0;
   virtual uint          request_chars  () const = 0;
   virtual void          request_chars  (uint nc) = 0;
   virtual uint          request_digits () const = 0;

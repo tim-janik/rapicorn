@@ -96,6 +96,9 @@ template<class V> inline void ptr_set (V* volatile *ptr_addr, V *n)      { while
 template<class V> inline V*   ptr_get (V* volatile *ptr_addr)            { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V> inline V*   ptr_get (V* volatile const *ptr_addr)      { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V> inline bool ptr_cas (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
+// atomic stack, push-only
+template<typename V> inline void stack_push        (V volatile &head, V &next, V newv) { stack_push<void*> ((void* volatile&) head, (void*&) next, (void*) newv); }
+template<>           inline void stack_push<void*> (void* volatile &head, void* &next, void* vv) { do { next = head; } while (!Atomic::ptr_cas (&head, next, vv)); }
 } // Atomic
 
 class OwnedMutex : protected NonCopyable {

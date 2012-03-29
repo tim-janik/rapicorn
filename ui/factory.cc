@@ -885,6 +885,32 @@ Factory::factory_context_name (FactoryContext *fc)
   // hand out gadget->ident directly, ident never contains the '\177' factory mark
 }
 
+String
+Factory::factory_context_type (FactoryContext *fc)
+{
+  return_val_if_fail (fc != NULL, "");
+  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
+  if (!gadget)
+    return "";
+  ChildGadget *childgadget = dynamic_cast<ChildGadget*> (gadget);
+  if (!childgadget)
+    return gadget->ident;       // ident never contains the '\177' factory mark
+  String ancestor = gadget->ancestor;
+  if (ancestor[0] == '\177')    // item factory type
+    {
+      const ItemTypeFactory *itfactory = FactorySingleton::singleton->lookup_item_factory (ancestor.substr (1));
+      if (itfactory)
+        return itfactory->type_name();
+    }
+  else
+    {
+      gadget = FactorySingleton::singleton->lookup_gadget (ancestor);
+      if (gadget)
+        return gadget->ident;   // ident never contains the '\177' factory mark
+    }
+  return "";
+}
+
 StringList
 Factory::factory_context_tags (FactoryContext *fc)
 {

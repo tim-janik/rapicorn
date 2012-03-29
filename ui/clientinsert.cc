@@ -20,8 +20,8 @@ class_scope:StringList:
   /*Con*/  StringList_Handle (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:Item:
-  /// Carry out Item::unique_component() and Target::downcast() in one step, for type safe access to a descendant.
-  template<class Target> Target component (const std::string &path) { return Target::downcast (unique_component (path)); }
+  /// Carry out Item::query_selector_unique() and Target::downcast() in one step, for type safe access to a descendant.
+  template<class Target> Target component (const std::string &selector) { return Target::downcast (query_selector_unique (selector)); }
 
 class_scope:Application:
   static int                      run            ();
