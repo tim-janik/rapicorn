@@ -41,7 +41,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   // create window, handle commands
-  Window window = app.create_window ("tour-dialog");
+  Window window = app.create_window ("RapicornTest:tour-dialog");
   window.sig_commands() += custom_commands;
 
   // display window and enter main event loop

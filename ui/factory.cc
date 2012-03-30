@@ -1,1016 +1,717 @@
-/* Rapicorn
- * Copyright (C) 2002-2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "factory.hh"
 #include "evaluator.hh"
 #include "window.hh"
-#include <errno.h>
 #include <stdio.h>
 #include <stack>
 #include <cstring>
+#include <algorithm>
+
+#define FDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory", __VA_ARGS__)
+#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory-Eval", __VA_ARGS__)
 
 namespace Rapicorn {
-struct ClassDoctor {
-  static void item_constructed (ItemImpl &item) { item.constructed(); }
-};
 
-struct FactoryContext {}; // see primitives.hh
+struct FactoryContext {}; // prototyped in primitives.hh
 
-} // Rapicorn
+static void initialize_factory_lazily (void);
 
-namespace { // Anon
-using namespace Rapicorn;
-using namespace Rapicorn::Factory;
-
-static void initialize_standard_gadgets_lazily (void);
+namespace Factory {
 
 
-/* --- Gadget definition --- */
-struct ChildGadget;
+static std::list<const ItemTypeFactory*> *item_type_factories_p = NULL;
 
-struct BaseGadget : public FactoryContext {
-  const String         ident, ancestor, m_input_name;
-  int                  m_line_number;
-  VariableMap          ancestor_arguments;
-  vector<ChildGadget*> children;
-  String          location   () const { return m_input_name + String (m_line_number > INT_MIN ? ":" + string_from_int (m_line_number) : ""); }
-  String          definition () const { return location() + ":<def:" + ident + "/>"; }
-  void            add_child  (ChildGadget *child_gadget) { children.push_back (child_gadget); }
-  explicit        BaseGadget (const String      &cident,
-                              const String      &cancestor,
-                              const String      &input_name,
-                              int                line_number,
-                              const VariableMap &cancestor_arguments) :
-    ident (cident),
-    ancestor (cancestor),
-    m_input_name (input_name), m_line_number (line_number),
-    ancestor_arguments (cancestor_arguments)
-  {}
-  virtual        ~BaseGadget() {}
-};
-
-struct ChildGadget : public BaseGadget {
-  explicit        ChildGadget (const String      &cident,
-                               const String      &cancestor,
-                               const String      &input_name,
-                               int                line_number,
-                               const VariableMap &cancestor_arguments = VariableMap()) :
-    BaseGadget (cident, cancestor, input_name, line_number, cancestor_arguments)
-  {}
-};
-
-struct GadgetDef : public BaseGadget {
-  const ChildGadget   *child_container;
-  VariableMap          custom_arguments;
-  explicit        GadgetDef  (const String      &cident,
-                              const String      &cancestor,
-                              const String      &input_name,
-                              int                line_number,
-                              const VariableMap &cancestor_arguments = VariableMap()) :
-    BaseGadget (cident, cancestor, input_name, line_number, cancestor_arguments),
-    child_container (NULL)
-  {}
-};
-
-/* --- FactoryDomain --- */
-struct FactoryDomain {
-  const String                domain_name;
-  const String                i18n_domain;
-  std::map<String,GadgetDef*> definitions;
-  explicit                    FactoryDomain (const String &cdomain_name,
-                                             const String &ci18n_domain) :
-    domain_name (cdomain_name),
-    i18n_domain (ci18n_domain)
-  {}
-  explicit                    FactoryDomain ()
-  {
-    std::map<String,GadgetDef*>::iterator it;
-    for (it = definitions.begin(); it != definitions.end(); it++)
-      {
-        delete it->second;
-        it->second = NULL;
-      }
-  }
-};
-
-/* --- FactorySingleton --- */
-class FactorySingleton {
-  typedef std::pair<String,String>      ArgumentPair;
-  typedef vector<ArgumentPair>          ArgumentVector;
-  typedef VariableMap::const_iterator   ConstVariableIter;
-  /* ChildContainerSlot - return value slot for the current gadget's "child_container" */
-  struct ChildContainerSlot {
-    const ChildGadget *cgadget;
-    ItemImpl          *item;
-    explicit           ChildContainerSlot (const ChildGadget *gadget) :
-      cgadget (gadget), item (NULL)
-    {}
-  };
-  /* domains */
-  std::list<FactoryDomain*>     factory_domains;
-  FactoryDomain*                lookup_domain           (const String       &domain_name);
-  FactoryDomain*                add_domain              (const String       &domain_name,
-                                                         const String       &i18n_domain);
-  /* gadgets */
-  ItemImpl*                     inherit_gadget          (const String       &ancestor_name,
-                                                         const VariableMap  &call_arguments,
-                                                         Evaluator          &env,
-                                                         FactoryContext     *fc);
-  ItemImpl&                     call_gadget             (const BaseGadget   *bgadget,
-                                                         const VariableMap  &const_ancestor_arguments,
-                                                         const VariableMap  &const_call_arguments,
-                                                         Evaluator          &env,
-                                                         ChildContainerSlot *ccslot,
-                                                         ContainerImpl      *parent,
-                                                         FactoryContext     *fc);
-  void                          call_gadget_children    (const BaseGadget   *bgadget,
-                                                         ItemImpl           &item,
-                                                         Evaluator          &env,
-                                                         ChildContainerSlot *ccslot);
-  /* type registration */
-  std::list<const ItemTypeFactory*> types;
-  ItemImpl&                     create_from_item_type   (const String          &ident,
-                                                         FactoryContext        *fc);
-public:
-  const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
-  GadgetDef*                    lookup_gadget           (const String          &gadget_identifier);
-  void                          register_item_factory   (const ItemTypeFactory &itfactory);
-  MarkupParser::Error           parse_gadget_from_xml   (FILE                  *xml_file,
-                                                         const String          &xml_string,
-                                                         const String          &i18n_domain,
-                                                         const String          &file_name,
-                                                         const String          &domain,
-                                                         vector<String>        *definitions);
-  void                          parse_gadget_data       (const char            *input_name,
-                                                         const uint             data_length,
-                                                         const char            *data,
-                                                         const String          &i18n_domain,
-                                                         const String          &domain,
-                                                         const std::nothrow_t  &nt = dothrow);
-  ItemImpl&                     construct_gadget        (const String          &gadget_identifier,
-                                                         const ArgumentList    &arguments,
-                                                         const ArgumentList    &env_variables,
-                                                         String                *gadget_definition = NULL);
-  bool                          check_item_factory_type (const String       &gadget_identifier,
-                                                         const String       &item_factory_type);
-  /* singleton definition & initialization */
-  static FactorySingleton      *singleton;
-  explicit                      FactorySingleton        ()
-  {
-    if (singleton)
-      fatal ("%s: non-singleton initialization", STRFUNC);
-    else
-      singleton = this;
-    /* register backlog */
-    ItemTypeFactory::initialize_factories();
-  }
-};
-FactorySingleton *FactorySingleton::singleton = NULL;
-static FactorySingleton static_factory_singleton;
-
-/* --- GadgetParser --- */
-struct GadgetParser : public MarkupParser {
-  FactoryDomain             &fdomain;
-  std::stack<BaseGadget*>    gadget_stack;
-  vector<const BaseGadget*> *gadget_defs;
-  const ChildGadget        **child_container_loc;
-  String                     child_container_name;
-public:
-  GadgetParser (const String              &input_name,
-                FactoryDomain             &cfdomain,
-                vector<const BaseGadget*> *newdefs) :
-    MarkupParser (input_name), fdomain (cfdomain),
-    gadget_defs (newdefs), child_container_loc (NULL)
-  {}
-  static String
-  canonify_element (const String &key)
-  {
-    /* chars => [A-Za-z0-9_-] */
-    String s = key;
-    for (uint i = 0; i < s.size(); i++)
-      if (!((key[i] >= 'A' && key[i] <= 'Z') ||
-            (key[i] >= 'a' && key[i] <= 'z') ||
-            (key[i] >= '0' && key[i] <= '9') ||
-            key[i] == '_' || key[i] == '-'))
-        s[i] = '_'; // unshares string
-    return s;
-  }
-  virtual void
-  start_element (const String  &element_name,
-                 ConstStrings  &attribute_names,
-                 ConstStrings  &attribute_values,
-                 Error         &error)
-  {
-    // GadgetDef *top_gadget = !gadget_stack.empty() ? gadget_stack.top() : NULL;
-    if (element_name == "rapicorn-definitions")
-      ; // outer element
-    else if (element_name.compare (0, 4, "def:") == 0 && gadget_stack.empty())
-      {
-        String ident = element_name.substr (4);
-        String qualified_ident = fdomain.domain_name + "::" + ident;
-        GadgetDef *dgadget = fdomain.definitions[ident];
-        if (dgadget)
-          error.set (INVALID_CONTENT, String() + "widget \"" + qualified_ident + "\" already defined (at " + dgadget->location() + ")");
-        else
-          {
-            VariableMap vmap;
-            String inherit;
-            child_container_name = "";
-            for (uint i = 0; i < attribute_names.size(); i++)
-              {
-                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
-                if (canonified_attribute == "name")
-                  error.set (INVALID_CONTENT,
-                             String() + "invalid attribute for inherited widget: " +
-                             attribute_names[i] + "=\"" + attribute_values[i] + "\"");
-                else if (canonified_attribute == "child_container")
-                  child_container_name = attribute_values[i];
-                else if (canonified_attribute == "inherit")
-                  inherit = attribute_values[i];
-                else
-                  vmap[canonified_attribute] = attribute_values[i];
-              }
-            if (error.set())
-              ;
-            else if (inherit.empty())
-              error.set (INVALID_CONTENT, String ("missing ancestor in widget definition: ") + qualified_ident);
-            else
-              {
-                int line_number, char_number;
-                const char *input_name;
-                get_position (&line_number, &char_number, &input_name);
-                dgadget = new GadgetDef (ident, inherit, input_name, line_number, vmap);
-                if (!child_container_name.empty())
-                  child_container_loc = &dgadget->child_container;
-                fdomain.definitions[ident] = dgadget;
-                gadget_stack.push (dgadget);
-                if (gadget_defs)
-                  gadget_defs->push_back (dgadget);
-              }
-          }
-      }
-    else if (element_name.compare (0, 4, "arg:") == 0 && gadget_stack.size() == 1)
-      {
-        GadgetDef *dgadget = dynamic_cast<GadgetDef*> (gadget_stack.top());
-        assert (dgadget != NULL); // must succeed for gadget_stack.top()
-        String ident = Evaluator::canonify_name (element_name.substr (4));
-        if (dgadget->custom_arguments.find (ident) != dgadget->custom_arguments.end())
-          error.set (INVALID_CONTENT, String() + "redeclaration of argument: " + element_name);
-        else
-          {
-            String default_value = "";
-            for (uint i = 0; i < attribute_names.size(); i++)
-              {
-                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
-                if (canonified_attribute == "default")
-                  default_value = attribute_values[i];
-                else
-                  error.set (INVALID_CONTENT,
-                             String() + "invalid attribute for " + element_name + ": " +
-                             attribute_names[i] + "=\"" + attribute_values[i] + "\"");
-              }
-            if (!error.set())
-              {
-                dgadget->custom_arguments[ident] = default_value;
-              }
-          }
-      }
-    else if (element_name.compare (0, 5, "prop:") == 0 && gadget_stack.size())
-      {
-        if (attribute_names.size())
-          error.set (INVALID_CONTENT,
-                     String() + "invalid attribute for property element: " +
-                     attribute_names[0] + "=\"" + attribute_values[0] + "\"");
-        recap_element (element_name, attribute_names, attribute_values, error, false);
-      }
-    else if (!gadget_stack.empty() && canonify_element (element_name) == element_name)
-      {
-        BaseGadget *bparent = gadget_stack.top();
-        String gadget_name = element_name;
-        VariableMap vmap;
-        for (uint i = 0; i < attribute_names.size(); i++)
-          {
-            String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
-            if (canonified_attribute == "name")
-              gadget_name = attribute_values[i];
-            else if (canonified_attribute == "child_container" ||
-                     canonified_attribute == "inherit")
-              error.set (INVALID_CONTENT,
-                         String() + "invalid attribute for widget construction: " +
-                         attribute_names[i] + "=\"" + attribute_values[i] + "\"");
-            else
-              vmap[canonified_attribute] = attribute_values[i];
-          }
-        int line_number, char_number;
-        const char *input_name;
-        get_position (&line_number, &char_number, &input_name);
-        ChildGadget *cgadget = new ChildGadget (gadget_name, element_name, input_name, line_number, vmap);
-        bparent->add_child (cgadget);
-        gadget_stack.push (cgadget);
-        if (child_container_loc && child_container_name == gadget_name)
-          *child_container_loc = cgadget;
-      }
-    else
-      error.set (INVALID_CONTENT, String() + "invalid element: " + element_name);
-  }
-  virtual void
-  end_element (const String  &element_name,
-               Error         &error)
-  {
-    BaseGadget *bgadget = !gadget_stack.empty() ? gadget_stack.top() : NULL;
-    GadgetDef *dgadget = dynamic_cast<GadgetDef*> (bgadget);
-    if (element_name.compare (0, 4, "def:") == 0 &&
-        dgadget && dgadget->ident.compare (&element_name[4]) == 0)
-      {
-        if (child_container_loc && !*child_container_loc)
-          error.set (INVALID_CONTENT, element_name + ": missing child container: " + child_container_name);
-        child_container_loc = NULL;
-        child_container_name = "";
-        gadget_stack.pop();
-      }
-    else if (element_name.compare (0, 4, "arg:") == 0 && dgadget)
-      {}
-    else if (element_name.compare (0, 5, "prop:") == 0 && bgadget)
-      {
-        String canonified_attribute = Evaluator::canonify_key (element_name.substr (5));
-        if (!canonified_attribute.size() ||
-            canonified_attribute == "name" ||
-            canonified_attribute == "child_container" ||
-            canonified_attribute == "inherit")
-          error.set (INVALID_CONTENT, "invalid property element: " + element_name);
-        else
-          bgadget->ancestor_arguments[canonified_attribute] = recap_string();
-      }
-    else if (bgadget && bgadget->ancestor.compare (&element_name[0]) == 0)
-      gadget_stack.pop();
-  }
-  virtual void
-  text (const String  &text,
-        Error         &error)
-  {
-    String t (text);
-    while (t[0] == ' ' || t[0] == '\t' || t[0] == '\r' || t[0] == '\n')
-      t.erase (0, 1);
-    if (t.size())
-      {
-        error.code = INVALID_CONTENT;
-        error.message = "unsolicited text: \"" + text + "\"";
-      }
-  }
-  virtual void
-  pass_through (const String   &text,
-                Error          &error)
-  {
-    if (text.compare (0, 4, "<!--") == 0 && text.compare (text.size() - 3, 3, "-->") == 0)
-      {
-        String comment = text.substr (4, text.size() - 4 - 3).c_str();
-        if (0)
-          printf ("COMMENT: %s\n", comment.c_str());
-      }
-  }
-}; // GadgetParser
-
-/* --- FactorySingleton methods --- */
-FactoryDomain*
-FactorySingleton::lookup_domain (const String &domain_name)
+static const ItemTypeFactory*
+lookup_item_factory (String namespaced_ident)
 {
-  ValueIterator<std::list<FactoryDomain*>::iterator> it;
-  for (it = value_iterator (factory_domains.begin()); it != factory_domains.end(); it++)
-    if (domain_name == it->domain_name)
-      return &*it;
+  std::list<const ItemTypeFactory*> &item_type_factories = *ONCE_CONSTRUCT (item_type_factories_p);
+  namespaced_ident = namespaced_ident;
+  std::list<const ItemTypeFactory*>::iterator it;
+  for (it = item_type_factories.begin(); it != item_type_factories.end(); it++)
+    if ((*it)->qualified_type == namespaced_ident)
+      return *it;
   return NULL;
 }
 
-FactoryDomain*
-FactorySingleton::add_domain (const String   &domain_name,
-                              const String   &i18n_domain)
-{
-  FactoryDomain *fdomain = new FactoryDomain (domain_name, i18n_domain);
-  factory_domains.push_front (fdomain);
-  return fdomain;
-}
-
-
-MarkupParser::Error
-FactorySingleton::parse_gadget_from_xml (FILE           *xml_file,
-                                         const String   &xml_string,
-                                         const String   &i18n_domain,
-                                         const String   &file_name,
-                                         const String   &domain,
-                                         vector<String> *definitions)
-{
-  FactoryDomain *fdomain = lookup_domain (domain);
-  if (!fdomain)
-    fdomain = add_domain (domain, i18n_domain);
-  vector<const BaseGadget*> *newgadgets = NULL;
-  if (definitions)
-    newgadgets = new vector<const BaseGadget*>;
-  GadgetParser gp (file_name, *fdomain, newgadgets);
-  MarkupParser::Error merror;
-  if (xml_file)
-    {
-      char buffer[1024];
-      int n = fread (buffer, 1, 1024, xml_file);
-      while (n > 0)
-        {
-          if (!gp.parse (buffer, n, &merror))
-            break;
-          n = fread (buffer, 1, 1024, xml_file);
-        }
-    }
-  else
-    {
-      int n = xml_string.size();
-      if (n > 0)
-        gp.parse (xml_string.data(), n, &merror);
-    }
-  if (!merror.code)
-    gp.end_parse (&merror);
-  if (!merror.code && newgadgets)
-    for (uint i = 0; i < newgadgets->size(); i++)
-      definitions->push_back (domain + "::" + (*newgadgets)[i]->ident);
-  if (newgadgets)
-    delete newgadgets;
-  return merror;
-}
-
 void
-FactorySingleton::parse_gadget_data (const char            *input_name,
-                                     const uint             data_length,
-                                     const char            *data,
-                                     const String          &i18n_domain,
-                                     const String          &domain,
-                                     const std::nothrow_t  &nt)
+ItemTypeFactory::register_item_factory (const ItemTypeFactory &itfactory)
 {
-  String file_name = input_name;
-  FactoryDomain *fdomain = lookup_domain (domain);
-  if (!fdomain)
-    fdomain = add_domain (domain, i18n_domain);
-  GadgetParser gp (file_name, *fdomain, NULL);
-  MarkupParser::Error error;
-  gp.parse (data, data_length, &error);
-  if (!error.code)
-    gp.end_parse (&error);
-  if (error.code)
-    {
-      // ("error(%d):", error.code)
-      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), error.line_number, error.char_number, error.message.c_str());
-      if (&nt == &dothrow)
-        throw Exception (ers);
-      else
-        fatal ("%s", ers.c_str());
-    }
-}
-
-GadgetDef*
-FactorySingleton::lookup_gadget (const String &gadget_identifier)
-{
-  const char *tident = gadget_identifier.c_str();
-  const char *sep = strrchr (tident, ':');
-  String domain, ident;
-  if (sep && sep > tident && sep[-1] == ':') /* detected "::" */
-    {
-      ident = sep + 1;
-      domain.assign (tident, sep - tident - 1);
-      if (domain[0] == ':' && domain[1] == ':')
-        domain.assign (domain.substr (2));
-    }
-  else
-    ident = tident;
-  ValueIterator<std::list<FactoryDomain*>::iterator> it;
-  for (it = value_iterator (factory_domains.begin()); it != factory_domains.end(); it++)
-    if (!domain[0] || domain == it->domain_name)
-      {
-        GadgetDef *dgadget = it->definitions[ident];
-        if (dgadget)
-          return dgadget;
-      }
-#if 0
-  diag ("gadgetlookup: %s :: %s (\"%s\")", domain.c_str(), ident.c_str(), gadget_identifier.c_str());
-  for (it = value_iterator (factory_domains.begin()); it != factory_domains.end(); it++)
-    if (!domain[0] || domain == it->domain_name)
-      diag ("unmatched: %s::%s", it->domain_name.c_str(), ident.c_str());
-    else
-      diag ("unused: %s::", it->domain_name.c_str());
-#endif
-  return NULL;
-}
-
-ItemImpl&
-FactorySingleton::construct_gadget (const String          &gadget_identifier,
-                                    const ArgumentList    &arguments,
-                                    const ArgumentList    &env_variables,
-                                    String                *gadget_definition)
-{
-  GadgetDef *dgadget = lookup_gadget (gadget_identifier);
-  if (!dgadget)
-    fatal ("%s: unknown widget type: %s", STRFUNC, gadget_identifier.c_str());
-  VariableMap evars, args;
-  Evaluator::populate_map (args, arguments);
-  Evaluator::populate_map (evars, env_variables);
-  Evaluator env;
-  env.push_map (evars);
-  ItemImpl &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL, dgadget);
-  env.pop_map (evars);
-  if (gadget_definition)
-    *gadget_definition = dgadget->definition();
-  return item;
-}
-
-static String
-variable_map_filter (VariableMap  &vmap,
-                     const String &key,
-                     const String &value = "")
-{
-  String result;
-  VariableMap::iterator it = vmap.find (key);
-  if (it != vmap.end())
-    {
-      result = it->second;
-      vmap.erase (it);
-    }
-  else
-    result = value;
-  return result;
-}
-
-bool
-FactorySingleton::check_item_factory_type (const String &gadget_identifier,
-                                           const String &item_factory_type)
-{
-  GadgetDef *gadget = lookup_gadget (gadget_identifier);
-  while (gadget && gadget->ancestor[0] != '\177')
-    gadget = FactorySingleton::singleton->lookup_gadget (gadget->ancestor);
-  if (gadget && gadget->ancestor.find ("\177Rapicorn::Factory::") == 0)
-    return item_factory_type == gadget->ancestor.substr (18);
-  return false;
-}
-
-ItemImpl*
-FactorySingleton::inherit_gadget (const String      &ancestor_name,
-                                  const VariableMap &call_arguments,
-                                  Evaluator         &env,
-                                  FactoryContext    *fc)
-{
-  return_val_if_fail (fc != NULL, NULL);
-  if (ancestor_name[0] == '\177')      /* item factory type */
-    {
-      ItemImpl *item = &create_from_item_type (&ancestor_name[1], fc);
-      assert (call_arguments.size() == 0); // see FactorySingleton::register_item_factory()
-      return item;
-    }
-  else
-    {
-      GadgetDef *dgadget = lookup_gadget (ancestor_name);
-      ItemImpl *item = NULL;
-      if (dgadget)
-        item = &call_gadget (dgadget, dgadget->ancestor_arguments, call_arguments, env, NULL, NULL, fc);
-      return item;
-    }
-}
-
-ItemImpl&
-FactorySingleton::call_gadget (const BaseGadget   *bgadget,
-                               const VariableMap  &const_ancestor_arguments,
-                               const VariableMap  &const_call_arguments,
-                               Evaluator          &env,
-                               ChildContainerSlot *ccslot,
-                               ContainerImpl      *parent,
-                               FactoryContext     *fc)
-{
-  return_val_if_fail (fc != NULL, *(ItemImpl*)NULL);
-  const GadgetDef *dgadget = dynamic_cast<const GadgetDef*> (bgadget);
-  const GadgetDef *real_dgadget = dgadget;
-  if (!real_dgadget)
-    {
-      real_dgadget = lookup_gadget (bgadget->ancestor);
-      if (!real_dgadget)
-        fatal ("%s: invalid or unknown widget type: %s",
-               bgadget->location().c_str(), bgadget->ancestor.c_str());
-    }
-  VariableMap call_args (const_call_arguments);
-  /* filter special arguments */
-  String name = bgadget->ident;
-  name = variable_map_filter (call_args, "name", name);
-  /* ignore special arguments (FIXME) */
-  variable_map_filter (call_args, "child_container");
-  variable_map_filter (call_args, "inherit");
-  /* setup custom arguments (from <arg/> statements) */
-  VariableMap custom_args;
-  for (VariableMap::const_iterator it = real_dgadget->custom_arguments.begin(); it != real_dgadget->custom_arguments.end(); it++)
-    {
-      VariableMap::iterator ga = call_args.find (it->first);
-      if (ga != call_args.end())
-        {
-          custom_args[ga->first] = env.parse_eval (ga->second);
-          call_args.erase (ga);
-        }
-      else
-        custom_args[it->first] = env.parse_eval (it->second);
-    }
-  env.push_map (custom_args);
-  /* construct gadget from ancestor */
-  ItemImpl *itemp;
-  String reason;
-  try {
-    itemp = inherit_gadget (bgadget->ancestor, const_ancestor_arguments, env, fc);
-  } catch (std::exception &exc) {
-    itemp = NULL;
-    reason = exc.what();
-  } catch (...) {
-    itemp = NULL;
-  }
-  if (!itemp)
-    fatal ("%s: failed to inherit: %s", bgadget->definition().c_str(),
-           reason.size() ? reason.c_str() : String ("unknown widget type: " + bgadget->ancestor).c_str());
-  ItemImpl &item = *itemp;
-  /* apply arguments */
-  try {
-    VariableMap unused_args;
-    for (ConstVariableIter it = call_args.begin(); it != call_args.end(); it++)
-      if (!item.try_set_property (it->first, env.parse_eval (it->second)))
-        unused_args[it->first] = it->second;
-    call_args = unused_args;
-  } catch (...) {
-    fatal ("%s: failed to assign properties", bgadget->definition().c_str());
-    unref (ref_sink (item));
-    env.pop_map (custom_args);
-    throw;
-  }
-  /* notify of completed object construction */
-  ClassDoctor::item_constructed (item);
-  /* construct gadget children */
-  try {
-    ChildContainerSlot outer_ccslot (dgadget ? dgadget->child_container : NULL);
-    call_gadget_children (bgadget, item, env, ccslot ? ccslot : &outer_ccslot);
-    /* assign specials */
-    // already set by create_item: item.name (name);
-    /* setup child container */
-    if (!ccslot) /* outer call */
-      {
-        ContainerImpl *container = dynamic_cast<ContainerImpl*> (outer_ccslot.item);
-        ContainerImpl *item_container = dynamic_cast<ContainerImpl*> (&item);
-        if (item_container && !outer_ccslot.cgadget)
-          item_container->child_container (item_container);
-        else if (item_container && container)
-          item_container->child_container (container);
-        else if (outer_ccslot.cgadget)
-          fatal ("%s: failed to find child container: %s", bgadget->definition().c_str(), outer_ccslot.cgadget->ident.c_str());
-      }
-  } catch (std::exception &exc) {
-    fatal ("%s: construction failed: %s", bgadget->definition().c_str(), exc.what());
-    unref (ref_sink (item));
-    env.pop_map (custom_args);
-    throw;
-  } catch (...) {
-    unref (ref_sink (item));
-    env.pop_map (custom_args);
-    throw;
-  }
-  /* add to parent */
-  try {
-    if (parent)
-      parent->add (item); /* pack into parent */
-  } catch (std::exception &exc) {
-    fatal ("%s: adding to parent (%s) failed: %s", bgadget->definition().c_str(), parent->name().c_str(), exc.what());
-    unref (ref_sink (item));
-    env.pop_map (custom_args);
-    throw;
-  } catch (...) {
-    unref (ref_sink (item));
-    env.pop_map (custom_args);
-    throw;
-  }
-  /* cleanups */
-  env.pop_map (custom_args);
-  for (VariableMap::const_iterator it = call_args.begin(); it != call_args.end(); it++)
-    fatal ("%s: unknown property: %s", bgadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
-  return item;
-}
-
-void
-FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
-                                        ItemImpl           &item,
-                                        Evaluator          &env,
-                                        ChildContainerSlot *ccslot)
-{
-  /* guard against leafs */
-  if (!bgadget->children.size())
-    return;
-  /* retrieve container */
-  ContainerImpl *container = item.interface<ContainerImpl*>();
-#if 0
-  diag ("children of %s:", gadget->ident.c_str());
-  uint nth = 0;
-  for (Walker<ChildGadget*const> cw = walker (gadget->children); cw.has_next(); cw++)
-    diag ("%d) %s", nth++, (*cw)->ident.c_str());
-#endif
-  if (!container)
-    fatal ("parent widget lacks Container interface: %s", bgadget->ident.c_str());
-  /* create children */
-  for (Walker<ChildGadget*const> cw = walker (bgadget->children); cw.has_next(); cw++)
-    {
-      /* create child gadget */
-      const ChildGadget *child_gadget = *cw;
-      const FactoryContext *cfc = child_gadget;
-      FactoryContext *fc = const_cast<FactoryContext*> (cfc);
-      /* the real call arguments are stored as ancestor arguments of the child */
-      ItemImpl &child = call_gadget (child_gadget, VariableMap(),
-                                 child_gadget->ancestor_arguments, env, ccslot, container, fc);
-      /* find child container */
-      if (ccslot->cgadget == child_gadget)
-        ccslot->item = &child;
-    }
-}
-
-void
-FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
-{
+  std::list<const ItemTypeFactory*> &item_type_factories = *ONCE_CONSTRUCT (item_type_factories_p);
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')
     fatal ("%s: invalid/missing domain name in item type: %s", STRFUNC, ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
-  FactoryDomain *fdomain = lookup_domain (domain_name);
-  if (!fdomain)
-    fdomain = add_domain (domain_name, domain_name);
-  GadgetDef *dgadget = new GadgetDef (base + 1, String ("\177") + itfactory.qualified_type, "<builtin>", INT_MIN);
-  assert (dgadget->ancestor_arguments.size() == 0); // assumed by FactorySingleton::inherit_gadget()
-  fdomain->definitions[dgadget->ident] = dgadget;
-  types.push_back (&itfactory);
+  item_type_factories.push_back (&itfactory);
 }
 
-const ItemTypeFactory*
-FactorySingleton::lookup_item_factory (String namespaced_ident)
-{
-  namespaced_ident = namespaced_ident;
-  std::list<const ItemTypeFactory*>::iterator it;
-  for (it = types.begin(); it != types.end(); it++)
-    if ((*it)->qualified_type == namespaced_ident)
-      return *it;
-  return NULL;
-}
+typedef map<String, const XmlNode*> GadgetDefinitionMap;
+static GadgetDefinitionMap gadget_definition_map;
+static vector<String>      gadget_namespace_list;
+static DataKey<String>     xml_node_domain_key;
 
-ItemImpl&
-FactorySingleton::create_from_item_type (const String   &ident,
-                                         FactoryContext *fc)
+static const XmlNode*
+gadget_definition_lookup (const String &item_identifier, const XmlNode *context_node)
 {
-  const ItemTypeFactory *itfactory = lookup_item_factory (ident);
-  if (itfactory)
-    return *itfactory->create_item (fc);
-  else
+  GadgetDefinitionMap::iterator it = gadget_definition_map.find (item_identifier);
+  if (it != gadget_definition_map.end())
+    return it->second; // non-namespace lookup succeeded
+  if (context_node)
     {
-      fatal ("unknown item type: %s", ident.c_str());
-      return *(ItemImpl*) NULL;
+      String context_domain = context_node->get_data (&xml_node_domain_key);
+      if (!context_domain.empty())
+        it = gadget_definition_map.find (context_domain + ":" + item_identifier);
+      if (it != gadget_definition_map.end())
+        return it->second; // lookup in context namespace succeeded
     }
-}
-
-} // Anon
-
-
-namespace Rapicorn {
-
-int
-Factory::parse_file (const String           &i18n_domain,
-                     const String           &file_name,
-                     const String           &domain,
-                     vector<String>         *definitions)
-{
-  initialize_standard_gadgets_lazily();
-  String fdomain = domain == "" ? i18n_domain : domain;
-  FILE *file = fopen (file_name.c_str(), "r");
-  if (!file)
-    return -errno;
-  MarkupParser::Error merror =
-    FactorySingleton::singleton->parse_gadget_from_xml (file, "", i18n_domain, file_name, fdomain, definitions);
-  if (merror.code)
+  for (ssize_t i = gadget_namespace_list.size() - 1; i >= 0; i--)
     {
-      // ("error(%d):", merror.code)
-      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
-      fatal ("%s", ers.c_str());
+      it = gadget_definition_map.find (gadget_namespace_list[i] + ":" + item_identifier);
+      if (it != gadget_definition_map.end())
+        return it->second; // namespace searchpath lookup succeeded
     }
-  fclose (file);
-  return 0;
-}
-
-int
-Factory::parse_string (const String           &xml_string,
-                       const String           &i18n_domain,
-                       const String           &domain,
-                       vector<String>         *definitions)
-{
-  initialize_standard_gadgets_lazily();
-  String fdomain = domain == "" ? i18n_domain : domain;
-  const String file_name = "#<String>";
-  MarkupParser::Error merror =
-    FactorySingleton::singleton->parse_gadget_from_xml (NULL, xml_string, i18n_domain, file_name, fdomain, definitions);
-  if (merror.code)
+#if 0
+  printerr ("%s: FAIL, no '%s' in namespaces:", __func__, item_identifier.c_str());
+  if (context_node)
     {
-      // ("error(%d):", merror.code)
-      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
-      fatal ("%s", ers.c_str());
+      String context_domain = context_node->get_data (&xml_node_domain_key);
+      printerr (" %s", context_domain.c_str());
     }
-  return 0;
-}
-
-ItemImpl&
-Factory::create_item (const String       &gadget_identifier,
-                      const ArgumentList &arguments,
-                      const ArgumentList &env_variables)
-{
-  initialize_standard_gadgets_lazily();
-  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, env_variables);
-  return item; // floating
-}
-
-ContainerImpl&
-Factory::create_container (const String       &gadget_identifier,
-                           const ArgumentList &arguments,
-                           const ArgumentList &env_variables)
-{
-  initialize_standard_gadgets_lazily();
-  String gadget_definition;
-  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
-                                                                  arguments, env_variables,
-                                                                  &gadget_definition);
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item);
-  if (!container)
-    fatal ("%s: constructed widget lacks container interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  return *container; // floating
-}
-
-WindowIface&
-Factory::create_window (const String       &gadget_identifier,
-                        const ArgumentList &arguments,
-                        const ArgumentList &env_variables)
-{
-  initialize_standard_gadgets_lazily();
-  String gadget_definition;
-  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
-                                                              arguments, env_variables,
-                                                              &gadget_definition);
-  WindowImpl *window = dynamic_cast<WindowImpl*> (&item);
-  if (!window)
-    fatal ("%s: constructed widget lacks window interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  /* win does ref_sink(); */
-  return *window;
-}
-
-bool
-Factory::item_definition_is_window (const String &item_identifier)
-{
-  return FactorySingleton::singleton->check_item_factory_type (item_identifier, "::Window");
-}
-
-String
-Factory::factory_context_name (FactoryContext *fc)
-{
-  return_val_if_fail (fc != NULL, "");
-  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
-  return gadget ? gadget->ident : "";
-  // hand out gadget->ident directly, ident never contains the '\177' factory mark
-}
-
-String
-Factory::factory_context_type (FactoryContext *fc)
-{
-  return_val_if_fail (fc != NULL, "");
-  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
-  if (!gadget)
-    return "";
-  ChildGadget *childgadget = dynamic_cast<ChildGadget*> (gadget);
-  if (!childgadget)
-    return gadget->ident;       // ident never contains the '\177' factory mark
-  String ancestor = gadget->ancestor;
-  if (ancestor[0] == '\177')    // item factory type
-    {
-      const ItemTypeFactory *itfactory = FactorySingleton::singleton->lookup_item_factory (ancestor.substr (1));
-      if (itfactory)
-        return itfactory->type_name();
-    }
-  else
-    {
-      gadget = FactorySingleton::singleton->lookup_gadget (ancestor);
-      if (gadget)
-        return gadget->ident;   // ident never contains the '\177' factory mark
-    }
-  return "";
-}
-
-StringList
-Factory::factory_context_tags (FactoryContext *fc)
-{
-  StringList strings;
-  return_val_if_fail (fc != NULL, strings);
-  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
-  while (gadget)
-    {
-      if (strings.empty() || strings.back() != gadget->ident)
-        strings.push_back (gadget->ident);
-      String ancestor = gadget->ancestor;
-      if (ancestor[0] == '\177')      /* item factory type */
-        {
-          const ItemTypeFactory *itfactory = FactorySingleton::singleton->lookup_item_factory (ancestor.substr (1));
-          if (itfactory)
-            {
-              strings.push_back (itfactory->type_name());
-              if (itfactory->iseventhandler)
-                strings.push_back ("Rapicorn::Factory::EventHandler");
-              if (itfactory->iscontainer)
-                strings.push_back ("Rapicorn::Factory::Container");
-              strings.push_back ("Rapicorn::Factory::Item");
-            }
-          break;
-        }
-      gadget = FactorySingleton::singleton->lookup_gadget (ancestor);
-    }
-  return strings;
+  for (size_t i = 0; i < gadget_namespace_list.size(); i++)
+    printerr (" %s", gadget_namespace_list[i].c_str());
+  printerr ("\n");
+#endif
+  return NULL; // unmatched
 }
 
 void
-Factory::ItemTypeFactory::register_item_factory (const ItemTypeFactory *itfactory)
+use_ui_namespace (const String &uinamespace)
 {
-  struct QueuedEntry { const ItemTypeFactory *itfactory; QueuedEntry *next; };
-  static QueuedEntry *queued_entries = NULL;
-  if (!FactorySingleton::singleton)
-    {
-      assert (itfactory);
-      QueuedEntry *e = new QueuedEntry;
-      e->itfactory = itfactory;
-      e->next = queued_entries;
-      queued_entries = e;
-    }
-  else if (itfactory)
-    FactorySingleton::singleton->register_item_factory (*itfactory);
-  else /* singleton && !itfactory */
-    {
-      while (queued_entries)
-        {
-          QueuedEntry *e = queued_entries;
-          queued_entries = e->next;
-          FactorySingleton::singleton->register_item_factory (*e->itfactory);
-          delete e;
-        }
-    }
+  initialize_factory_lazily();
+  vector<String>::iterator it = find (gadget_namespace_list.begin(), gadget_namespace_list.end(), uinamespace);
+  if (it != gadget_namespace_list.end())
+    gadget_namespace_list.erase (it);
+  gadget_namespace_list.push_back (uinamespace);
 }
 
-void
-Factory::ItemTypeFactory::initialize_factories ()
+static void
+force_ui_namespace_use (const String &uinamespace)
 {
-  register_item_factory (NULL);
+  vector<String>::const_iterator it = find (gadget_namespace_list.begin(), gadget_namespace_list.end(), uinamespace);
+  if (it == gadget_namespace_list.end())
+    gadget_namespace_list.push_back (uinamespace);
 }
 
-Factory::ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident,
-                                           bool _isevh, bool _iscontainer, bool) :
+ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident,
+                                  bool _isevh, bool _iscontainer, bool) :
   qualified_type (namespaced_ident),
   iseventhandler (_isevh), iscontainer (_iscontainer)
 {}
 
 void
-Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
+ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
   if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
     fatal ("item type lacks \"Rapicorn::Factory::\" qualification: %s", namespaced_ident);
 }
 
-} // Rapicorn
-
-namespace { // Anon
-#include "gen-zintern.c" // compressed foundation.xml & standard.xml
-
-static void
-initialize_standard_gadgets_lazily (void)
+String
+factory_context_name (FactoryContext *fc)
 {
-  assert (rapicorn_thread_entered());
-  static bool initialized = false;
-  if (!initialized)
+  return_val_if_fail (fc != NULL, "");
+  const XmlNode *xnode = (XmlNode*) fc;
+  String s = xnode->name();
+  if (strncmp (s.c_str(), "def:", 4) == 0)
+    return s.substr (4);
+  else
+    return s;
+}
+
+String
+factory_context_type (FactoryContext *fc)
+{
+  return_val_if_fail (fc != NULL, "");
+  const XmlNode *xnode = (XmlNode*) fc;
+  String ident = xnode->name();
+  if (strncmp (ident.c_str(), "def:", 4) != 0) // lookup definition node from child node
     {
-      initialized = true;
-      uint8 *data;
-      const char *domain = "Rapicorn";
-      data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
-                                 sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
-      FactorySingleton::singleton->parse_gadget_data (FOUNDATION_XML_NAME, FOUNDATION_XML_SIZE, (const char*) data, domain, domain);
-      zintern_free (data);
-      data = zintern_decompress (STANDARD_XML_SIZE, STANDARD_XML_DATA,
-                                 sizeof (STANDARD_XML_DATA) / sizeof (STANDARD_XML_DATA[0]));
-      FactorySingleton::singleton->parse_gadget_data (STANDARD_XML_NAME, STANDARD_XML_SIZE, (const char*) data, domain, domain);
-      zintern_free (data);
+      xnode = gadget_definition_lookup (ident, xnode);
+      assert (xnode != NULL);
+      ident = xnode->name();
+    }
+  assert (strncmp (ident.c_str(), "def:", 4) == 0);
+  return ident.substr (4);
+}
+
+StringList
+factory_context_tags (FactoryContext *fc)
+{
+  StringList types;
+  return_val_if_fail (fc != NULL, types);
+  const XmlNode *xnode = (XmlNode*) fc;
+  if (strncmp (xnode->name().c_str(), "def:", 4) != 0) // lookup definition node from child node
+    {
+      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      return_val_if_fail (xnode != NULL, types);
+    }
+  while (xnode)
+    {
+      assert (strncmp (xnode->name().c_str(), "def:", 4) == 0); // FIXME: remove?
+      types.push_back (xnode->name().substr (4));
+      const StringVector &attributes_names = xnode->list_attributes(), &attributes_values = xnode->list_values();
+      const XmlNode *cnode = xnode;
+      xnode = NULL;
+      for (size_t i = 0; i < attributes_names.size(); i++)
+        if (attributes_names[i] == "inherit")
+          {
+            xnode = gadget_definition_lookup (attributes_values[i], cnode);
+            if (!xnode)
+              {
+                const ItemTypeFactory *itfactory = lookup_item_factory (attributes_values[i]);
+                return_val_if_fail (itfactory != NULL, types);
+                types.push_back (itfactory->type_name());
+                if (itfactory->iseventhandler)
+                  types.push_back ("Rapicorn::Factory::EventHandler");
+                if (itfactory->iscontainer)
+                  types.push_back ("Rapicorn::Factory::Container");
+                types.push_back ("Rapicorn::Factory::Item");
+              }
+            break;
+          }
+    }
+  return types;
+}
+
+static String
+node_location (const XmlNode *xnode)
+{
+  return string_printf ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
+}
+
+class Builder {
+  enum Flags { NONE = 0, INHERITED = 1, CHILD = 2 };
+  const XmlNode   *const m_dnode;               // definition of gadget to be created
+  String           m_child_container_name;
+  ContainerImpl   *m_child_container;           // captured m_child_container item during build phase
+  VariableMap      m_locals;
+  void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
+                             String *node_name, String *child_container_name, String *inherit_identifier);
+  void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
+  void      apply_args      (ItemImpl &item, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller);
+  void      apply_props     (const XmlNode *pnode, ItemImpl &item);
+  void      call_children   (const XmlNode *pnode, ItemImpl *item);
+  ItemImpl* call_item       (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const XmlNode *caller, const XmlNode *outmost_caller);
+  ItemImpl* call_child      (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const String &name, const XmlNode *caller);
+public:
+  explicit  Builder       (const String &item_identifier, const XmlNode *context_node);
+  static ItemImpl* build_item   (const String &item_identifier, const StringVector &call_names, const StringVector &call_values);
+  static ItemImpl* inherit_item (const String &item_identifier, const StringVector &call_names, const StringVector &call_values,
+                                 const XmlNode *caller, const XmlNode *derived);
+  static bool item_has_ancestor (const String &item_identifier, const String &ancestor_identifier);
+};
+
+Builder::Builder (const String &item_identifier, const XmlNode *context_node) :
+  m_dnode (gadget_definition_lookup (item_identifier, context_node)), m_child_container (NULL)
+{
+  if (!m_dnode)
+    return;
+}
+
+ItemImpl*
+Builder::build_item (const String &item_identifier, const StringVector &call_names, const StringVector &call_values)
+{
+  initialize_factory_lazily();
+  Builder builder (item_identifier, NULL);
+  if (builder.m_dnode)
+    return builder.call_item (builder.m_dnode, call_names, call_values, NULL, NULL);
+  else
+    {
+      FDEBUG ("%s: unknown type identifier: %s", "Builder::build_item", item_identifier.c_str());
+      return NULL;
     }
 }
 
+ItemImpl*
+Builder::inherit_item (const String &item_identifier, const StringVector &call_names, const StringVector &call_values,
+                       const XmlNode *caller, const XmlNode *derived)
+{
+  return_val_if_fail (derived != NULL, NULL);
+  return_val_if_fail (caller != NULL, NULL);
+  Builder builder (item_identifier, caller);
+  if (builder.m_dnode)
+    return builder.call_item (builder.m_dnode, call_names, call_values, caller, derived);
+  else
+    {
+      const ItemTypeFactory *itfactory = lookup_item_factory (item_identifier);
+      if (!itfactory)
+        {
+          FDEBUG ("%s: unknown type identifier: %s", node_location (caller).c_str(), item_identifier.c_str());
+          return NULL;
+        }
+      ItemImpl *item = itfactory->create_item ((FactoryContext*) derived);
+      builder.apply_args (*item, call_names, call_values, caller);
+      return item;
+    }
+}
+
+static String
+canonify_dashes (const String &key) // FIXME: there should be an XmlNode post-processing phase that does this
+{
+  String s = key;
+  for (uint i = 0; i < s.size(); i++)
+    if (key[i] == '-')
+      s[i] = '_'; // unshares string
+  return s;
+}
+
+void
+Builder::parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller)
+{
+  StringVector local_names, local_values;
+  // setup definition args
+  Evaluator env;
+  XmlNode::ConstNodes &children = m_dnode->children();
+  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
+    {
+      const XmlNode *cnode = *it;
+      if (strncmp (cnode->name().c_str(), "arg:", 4) == 0)
+        {
+          const String aname = canonify_dashes (cnode->name().substr (4)); // canonify and strip "arg:"
+          local_names.push_back (aname);
+          String rvalue = cnode->get_attribute ("default");
+          if (rvalue.find ('`') != String::npos)
+            rvalue = env.parse_eval (rvalue);
+          local_values.push_back (rvalue);
+        }
+    }
+  // seperate definition from call args
+  rest_names.reserve (call_names.size());
+  rest_values.reserve (call_values.size());
+  for (size_t i = 0; i < call_names.size(); i++)
+    {
+      const String cname = canonify_dashes (call_names[i]);
+      if (cname == "name" || cname == "id")
+        {
+          name = call_values[i];
+          continue;
+        }
+      vector<String>::const_iterator it = find (local_names.begin(), local_names.end(), cname);
+      if (it != local_names.end())
+        local_values[it - local_names.begin()] = call_values[i]; // local argument overriden by call argument
+      else if (cname == "name" || cname == "id")
+        ; // dname = arg_values[i];
+      else
+        {
+          rest_names.push_back (cname);
+          rest_values.push_back (call_values[i]);
+        }
+    }
+  // prepare variable map for evaluator
+  Evaluator::populate_map (m_locals, local_names, local_values);
+}
+
+void
+Builder::eval_args (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
+                    String *node_name, String *child_container_name, String *inherit_identifier)
+{
+  Evaluator env;
+  env.push_map (m_locals);
+  out_names.reserve (in_names.size());
+  out_values.reserve (in_values.size());
+  for (size_t i = 0; i < in_names.size(); i++)
+    {
+      const String cname = canonify_dashes (in_names[i]);
+      const String &ivalue = in_values[i];
+      String rvalue;
+      if (ivalue.find ('`') != String::npos)
+        {
+          rvalue = env.parse_eval (ivalue);
+          EDEBUG ("%s: eval %s=\"%s\": %s", String (caller ? node_location (caller).c_str() : "Rapicorn:Factory").c_str(),
+                  in_names[i].c_str(), ivalue.c_str(), rvalue.c_str());
+        }
+      else
+        rvalue = ivalue;
+      if (inherit_identifier && cname == "inherit")
+        *inherit_identifier = rvalue;
+      else if (child_container_name && cname == "child_container")
+        *child_container_name = rvalue;
+      else if (node_name && (cname == "name" || cname == "id"))
+        *node_name = rvalue;
+      else
+        {
+          out_names.push_back (cname);
+          out_values.push_back (rvalue);
+        }
+    }
+  env.pop_map (m_locals);
+}
+
+void
+Builder::apply_args (ItemImpl &item,
+                     const StringVector &prop_names, const StringVector &prop_values, // evaluated args
+                     const XmlNode *caller)
+{
+  for (size_t i = 0; i < prop_names.size(); i++)
+    {
+      const String aname = canonify_dashes (prop_names[i]);
+      if (aname == "name" || aname == "id")
+        fatal ("%s: invalid property: %s", node_location (caller).c_str(), prop_names[i].c_str());
+      else if (item.try_set_property (aname, prop_values[i]))
+        {}
+      else
+        fatal ("%s: item %s: unknown property: %s", node_location (caller).c_str(), item.name().c_str(), prop_names[i].c_str());
+    }
+}
+
+void
+Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
+{
+  XmlNode::ConstNodes &children = pnode->children();
+  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
+    {
+      const XmlNode *cnode = *it;
+      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") != 0)
+        continue;
+      const String aname = canonify_dashes (cnode->name().substr (5));
+      String value = cnode->xml_string (0, false);
+      if (value.find ('`') != String::npos && string_to_bool1 (cnode->get_attribute ("prop:evaluate")))
+        {
+          Evaluator env;
+          env.push_map (m_locals);
+          value = env.parse_eval (value);
+          env.push_map (m_locals);
+        }
+      if (aname == "name" || aname == "id")
+        fatal ("%s: invalid property: %s", node_location (cnode).c_str(), cnode->name().c_str());
+      else if (item.try_set_property (aname, value))
+        {}
+      else
+        fatal ("%s: item %s: unknown property: %s", node_location (pnode).c_str(), item.name().c_str(), aname.c_str());
+    }
+}
+
+#if 0
+static void
+dump_call (const String &kind, const String &obj, const StringVector &anames, const StringVector &avalues)
+{
+  printerr ("%s(%s):", kind.c_str(), obj.c_str());
+  for (size_t i = 0; i < anames.size(); i++)
+    printerr (" %s=%s", anames[i].c_str(), avalues[i].c_str());
+  printerr ("\n");
+}
+#endif
+
+ItemImpl*
+Builder::call_item (const XmlNode *anode,
+                    const StringVector &call_names, const StringVector &call_values, // evaluated args
+                    const XmlNode *caller, const XmlNode *outmost_caller)
+{
+  return_val_if_fail (m_dnode != NULL, NULL);
+  String name;
+  StringVector prop_names, prop_values;
+  parse_call_args (call_names, call_values, prop_names, prop_values, name, caller); // FIXME: catch:inherit+child-container
+  // extract factory attributes and eval attributes
+  StringVector parent_names, parent_values;
+  String inherit;
+  assert (m_child_container_name.empty() == true);
+  eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &m_child_container_name, &inherit);
+  // create item
+  ItemImpl *item = Builder::inherit_item (inherit, parent_names, parent_values, anode,
+                                          outmost_caller ? outmost_caller : (caller ? caller : anode));
+  if (!item)
+    return NULL;
+  // apply item arguments
+  if (!name.empty())
+    item->name (name);
+  apply_args (*item, prop_names, prop_values, anode);
+  FDEBUG ("new-item: %s (%zd children) id=%s", anode->name().c_str(), anode->children().size(), item->name().c_str());
+  // apply properties and create children
+  if (!anode->children().empty())
+    {
+      apply_props (anode, *item);
+      call_children (anode, item);
+    }
+  // assign child container
+  if (m_child_container)
+    item->as_container()->child_container (m_child_container);
+  else if (!m_child_container_name.empty())
+    fatal ("%s: failed to find child container: %s", node_location (m_dnode).c_str(), m_child_container_name.c_str());
+  return item;
+}
+
+ItemImpl*
+Builder::call_child (const XmlNode *anode,
+                     const StringVector &call_names, const StringVector &call_values, // evaluated args
+                     const String &name, const XmlNode *caller)
+{
+  return_val_if_fail (m_dnode != NULL, NULL);
+  // create item
+  ItemImpl *item = Builder::inherit_item (anode->name(), call_names, call_values, anode, caller ? caller : anode);
+  if (!item)
+    return NULL;
+  // apply item arguments
+  if (!name.empty())
+    item->name (name);
+  FDEBUG ("new-item: %s (%zd children) id=%s", anode->name().c_str(), anode->children().size(), item->name().c_str());
+  // apply properties and create children
+  if (!anode->children().empty())
+    {
+      apply_props (anode, *item);
+      call_children (anode, item);
+    }
+  // find child container
+  if (!m_child_container_name.empty() && m_child_container_name == item->name())
+    {
+      ContainerImpl *cc = item->as_container();
+      if (cc)
+        {
+          if (m_child_container)
+            fatal ("%s: duplicate child containers: %s", node_location (m_dnode).c_str(), node_location (anode).c_str());
+          m_child_container = cc;
+          FDEBUG ("assign child-container for %s: %s", m_dnode->name().c_str(), m_child_container_name.c_str());
+          // FIXME: mismatches occour, because chidl caller args are not passed as call_names/values
+        }
+    }
+  return item;
+}
+
+void
+Builder::call_children (const XmlNode *pnode, ItemImpl *item)
+{
+  // add children
+  XmlNode::ConstNodes &children = pnode->children();
+  ContainerImpl *container = NULL;
+  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
+    {
+      const XmlNode *cnode = *it;
+      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") == 0)
+        continue;
+      else if (cnode->name().compare (0, 4, "arg:") == 0)
+        {
+          if (pnode->name().compare (0, 4, "def:") == 0)
+            continue;
+          fatal ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
+        }
+      if (!container)
+        {
+          container = item->as_container();
+          if (!container)
+            fatal ("%s: parent type is not a container: %s:%s", node_location (cnode).c_str(),
+                   node_location (pnode).c_str(), pnode->name().c_str());
+        }
+      // create child
+      StringVector call_names, call_values, arg_names, arg_values;
+      String child_name;
+      eval_args (cnode->list_attributes(), cnode->list_values(), call_names, call_values, pnode, &child_name, NULL, NULL);
+      ItemImpl *child = call_child (cnode, call_names, call_values, child_name, cnode);
+      if (!child)
+        fatal ("%s: unknown item type: %s", node_location (cnode).c_str(), cnode->name().c_str());
+      // add to parent
+      try {
+        container->add (child);
+      } catch (std::exception &exc) {
+        fatal ("%s: adding %s to parent failed: %s", node_location (cnode).c_str(), cnode->name().c_str(), exc.what());
+        unref (ref_sink (child));
+        throw; // FIXME: unref parent?
+      } catch (...) {
+        unref (ref_sink (child));
+        throw; // FIXME: unref parent?
+      }
+    }
+}
+
+bool
+Builder::item_has_ancestor (const String &item_identifier, const String &ancestor_identifier)
+{
+  initialize_factory_lazily();
+  const XmlNode *const anode = gadget_definition_lookup (ancestor_identifier, NULL); // maybe NULL
+  const ItemTypeFactory *const ancestor_itfactory = anode ? NULL : lookup_item_factory (ancestor_identifier);
+  if (item_identifier == ancestor_identifier && (anode || ancestor_itfactory))
+    return true; // potential fast path
+  else if (!anode && !ancestor_itfactory)
+    return false; // ancestor_identifier is non-existent
+  String identifier = item_identifier;
+  const XmlNode *node = gadget_definition_lookup (identifier, NULL);
+  while (node)
+    {
+      if (node == anode)
+        return true; // item ancestor matches
+      identifier = node->get_attribute ("inherit", true);
+      node = gadget_definition_lookup (identifier, node);
+    }
+  if (anode)
+    return false; // no node match possible
+  const ItemTypeFactory *item_itfactory = lookup_item_factory (identifier);
+  return ancestor_itfactory && item_itfactory == ancestor_itfactory;
+}
+
+bool
+check_ui_window (const String &item_identifier)
+{
+  return Builder::item_has_ancestor (item_identifier, "Rapicorn::Factory::Window");
+}
+
+ItemImpl&
+create_ui_item (const String       &item_identifier,
+                const ArgumentList &arguments)
+{
+  StringVector anames, avalues;
+  for (size_t i = 0; i < arguments.size(); i++)
+    {
+      const String &arg = arguments[i];
+      const size_t pos = arg.find ('=');
+      if (pos != String::npos)
+        anames.push_back (arg.substr (0, pos)), avalues.push_back (arg.substr (pos + 1));
+      else
+        FDEBUG ("%s: argument without value: %s", item_identifier.c_str(), arg.c_str());
+    }
+  ItemImpl *item = Builder::build_item (item_identifier, anames, avalues);
+  if (!item)
+    fatal ("%s: unknown item type: %s", "Rapicorn:Factory", item_identifier.c_str());
+  return *item;
+}
+
+static void
+assign_xml_node_domain_recursive (XmlNode *xnode, const String &domain)
+{
+  xnode->set_data (&xml_node_domain_key, domain);
+  XmlNode::ConstNodes &children = xnode->children();
+  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
+    {
+      const XmlNode *cnode = *it;
+      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") == 0 || cnode->name().compare (0, 4, "arg:") == 0)
+        continue;
+      assign_xml_node_domain_recursive (const_cast<XmlNode*> (cnode), domain);
+    }
+}
+
+static String
+register_ui_node (const String   &domain,
+                  XmlNode        *xnode,
+                  vector<String> *definitions)
+{
+  if (xnode->name().compare (0, 4, "def:") == 0)
+    {
+      const char *nname = xnode->name().c_str() + 4;
+      String ident = domain.empty () ? nname : domain + ":" + nname; // FIXME
+      GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
+      if (it != gadget_definition_map.end())
+        return string_printf ("%s: redefinition of: %s (previously at %s)",
+                              node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
+      assign_xml_node_domain_recursive (xnode, domain);
+      gadget_definition_map[ident] = ref_sink (xnode);
+      if (definitions)
+        definitions->push_back (ident);
+      FDEBUG ("register: %s", ident.c_str());
+    }
+  else
+    return string_printf ("%s: invalid element tag: %s", node_location (xnode).c_str(), xnode->name().c_str());
+  return ""; // success;
+}
+
+static String
+register_ui_nodes (const String   &domain,
+                   XmlNode        *xnode,
+                   vector<String> *definitions)
+{
+  return_val_if_fail (domain.empty() == false, "missing namespace for ui definitions");
+  // allow toplevel def:...
+  if (xnode->name().compare (0, 4, "def:") == 0)
+    return register_ui_node (domain, xnode, definitions);
+  // enforce sane toplevel node
+  if (xnode->name() != "rapicorn-definitions")
+    return string_printf ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
+  // register def:... children
+  XmlNode::ConstNodes children = xnode->children();
+  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
+    {
+      const XmlNode *cnode = *it;
+      if (cnode->istext())
+        continue; // ignore top level text
+      if (cnode->name().compare (0, 4, "def:") != 0)
+        fatal ("%s: invalid tag: %s", node_location (cnode).c_str(), cnode->name().c_str());
+      const String cerr = register_ui_node (domain, const_cast<XmlNode*> (cnode), definitions);
+      if (!cerr.empty())
+        return cerr;
+    }
+  return ""; // success;
+}
+
+static String
+parse_ui_data_internal (const String   &domain,
+                        const String   &data_name,
+                        size_t          data_length,
+                        const char     *data,
+                        const String   &i18n_domain,
+                        vector<String> *definitions)
+{
+  if (domain.empty())
+    return "missing namespace for ui definitions";
+  MarkupParser::Error perror;
+  XmlNode *xnode = XmlNode::parse_xml (data_name, data, data_length, &perror);
+  if (xnode)
+    ref_sink (xnode);
+  String errstr;
+  if (perror.code)
+    errstr = string_printf ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
+  else
+    errstr = register_ui_nodes (domain, xnode, definitions);
+  if (xnode)
+    unref (xnode);
+  return errstr;
+}
+
+String
+parse_ui_data (const String   &uinamespace,
+               const String   &data_name,
+               size_t          data_length,
+               const char     *data,
+               const String   &i18n_domain,
+               vector<String> *definitions)
+{
+  initialize_factory_lazily();
+  return parse_ui_data_internal (uinamespace, data_name, data_length, data, "", definitions);
+}
+
+String
+parse_ui_file (const String   &uinamespace,
+               const String   &file_name,
+               const String   &i18n_domain,
+               vector<String> *definitions)
+{
+  size_t flen = 0;
+  char *fdata = Path::memread (file_name, &flen);
+  String result = parse_ui_data (uinamespace, file_name, flen, fdata, i18n_domain, definitions);
+  Path::memfree (fdata);
+  return result;
+}
+
+} // Factory
+
+namespace { // Anon
+#include "gen-zintern.c" // compressed foundation.xml & standard.xml
 } // Anon
+
+static void
+initialize_factory_lazily (void)
+{
+  static bool initialized = false;
+  if (once_enter (&initialized))
+    {
+      uint8 *data;
+      const char *domain = "Rapicorn";
+      Factory::force_ui_namespace_use (domain);
+      data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
+                                 sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
+      Factory::parse_ui_data_internal (domain, FOUNDATION_XML_NAME, FOUNDATION_XML_SIZE, (const char*) data, "", NULL);
+      zintern_free (data);
+      data = zintern_decompress (STANDARD_XML_SIZE, STANDARD_XML_DATA,
+                                 sizeof (STANDARD_XML_DATA) / sizeof (STANDARD_XML_DATA[0]));
+      Factory::parse_ui_data_internal (domain, STANDARD_XML_NAME, STANDARD_XML_SIZE, (const char*) data, "", NULL);
+      zintern_free (data);
+      once_leave (&initialized, true);
+    }
+}
+
+} // Rapicorn

@@ -49,7 +49,7 @@ test_factory ()
   TOK();
   ItemImpl *item;
   TestContainer *titem;
-  WindowIface &testwin = *app.create_window ("test-TestItemL2");
+  WindowIface &testwin = *app.create_window ("RapicornTest:test-TestItemL2");
   testwin.show();
   run_main_loop_recursive (false);
   TOK();
@@ -87,7 +87,7 @@ test_cxx_server_gui ()
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
-  ItemImpl &titem = Factory::create_item ("TestItem");
+  ItemImpl &titem = Factory::create_ui_item ("TestItem");
   TOK();
   window.impl().add (titem);
   TOK();
@@ -123,7 +123,7 @@ static void
 test_test_item ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("alignment-test");
+  WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
   TestContainer *titem = window.interface<TestContainer*>();
@@ -163,7 +163,7 @@ test_idl_test_item ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("test-item-window");
+  WindowIface &window_iface = *app.create_window ("RapicornTest:test-item-window");
   TOK();
   WindowImpl &window = window_iface.impl();
   IdlTestItemIface *titemp = window.interface<IdlTestItemIface*>();
@@ -206,7 +206,7 @@ test_complex_dialog ()
 
   windowp = app.query_window ("#complex-dialog"); // not yet existing window
   TASSERT (windowp == NULL);
-  WindowIface &window = *app.create_window ("complex-dialog");
+  WindowIface &window = *app.create_window ("RapicornTest:complex-dialog");
   TOK();
   if (ServerTests::server_test_run_dialogs)
     {

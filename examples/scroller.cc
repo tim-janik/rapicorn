@@ -23,12 +23,12 @@ static void
 add_button_row (Container area,
                 uint      row)
 {
-  Item child = area.create_child ("button-row", Strings ("id=row#" + string_from_uint (row)));
+  Item child = area.create_child ("RapicornExamples:button-row", Strings ("id=row#" + string_from_uint (row)));
   Container brow = Container::downcast (child);
   for (uint i = 0; i < 50; i++)
     {
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
-      child = brow.create_child ("test-button", args);
+      child = brow.create_child ("RapicornExamples:test-button", args);
       ButtonArea button = child.component<ButtonArea> (".Button");
       button.on_click (string_printf ("Item::print('Button-Click: (%d,%d)')", row, i));
     }
@@ -45,7 +45,7 @@ main (int   argc,
   app.auto_load ("RapicornExamples", "scroller.xml", argv[0]);
 
   // create main window
-  Window window = app.create_window ("main-shell");
+  Window window = app.create_window ("RapicornExamples:main-shell");
 
   // create button rows
   Container mshell = window;

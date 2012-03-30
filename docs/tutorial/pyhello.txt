@@ -39,8 +39,8 @@ Once initialized, we need to load the widget tree definition for later use:
 	import Rapicorn1002 as Rapicorn
 	# Initialize Rapicorn application with unique name
 	app = Rapicorn.app_init ("Hello-World")
-	# Load widget tree into Rapicorn
-	app.load_string (hello_window_widgets)
+	# Load widget tree into "HelloTest" namespace
+	app.load_string ("HelloTest", hello_window_widgets)
 
 We've got Rapicorn up and running at this point. To display our window,
 we need to create it and show it on screen. To draw the window contents
@@ -48,7 +48,7 @@ and generally handle window events like resizing, we'll enter the main
 loop, that'll by default last as long as the window exists.
 
 	# Create and show hello-window
-	window = app.create_window ("hello-window")
+	window = app.create_window ("HelloTest:hello-window")
 	window.show()
 	# Run main loop to process window events
 	app.main_loop()

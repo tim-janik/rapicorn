@@ -55,7 +55,7 @@ main (int   argc,
   app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
 
   // create main window
-  Window window = app.create_window ("graphics-dialog");
+  Window window = app.create_window ("RapicornExamples:graphics-dialog");
 
   // hook up drawable test
   Drawable drawable = window.component<Drawable> ("Drawable#drawable1");

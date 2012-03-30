@@ -154,6 +154,16 @@ Evaluator::populate_map (VariableMap        &vmap,
     }
 }
 
+void
+Evaluator::populate_map (VariableMap        &vmap,
+                         const ArgumentList &variable_names,
+                         const ArgumentList &variable_values)
+{
+  const size_t cmax = min (variable_names.size(), variable_values.size());
+  for (size_t i = 0; i < cmax; i++)
+    vmap[variable_names[i]] = variable_values[i];
+}
+
 static String
 expand_eval_expressions (const char           *warning_entity,
                          VariableMapListScope &scope,

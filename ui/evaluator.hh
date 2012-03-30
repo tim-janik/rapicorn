@@ -33,6 +33,9 @@ struct Evaluator {
                                      String             &value);
   static void       populate_map    (VariableMap        &vmap,
                                      const ArgumentList &args);
+  static void       populate_map    (VariableMap        &vmap,
+                                     const ArgumentList &variable_names,
+                                     const ArgumentList &variable_values);
   void              push_map        (const VariableMap  &vmap);
   void              pop_map         (const VariableMap  &vmap);
   String            parse_eval      (const String       &expression);

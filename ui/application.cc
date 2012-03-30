@@ -22,7 +22,7 @@ ApplicationIface::pixstream (const String  &pix_name,
 bool
 ApplicationIface::factory_window (const std::string &factory_definition)
 {
-  return Factory::item_definition_is_window (factory_definition);
+  return Factory::check_ui_window (factory_definition);
 }
 
 static ApplicationImpl *the_app = NULL;
@@ -45,12 +45,17 @@ ApplicationImpl::the ()
 
 WindowIface*
 ApplicationImpl::create_window (const std::string    &window_identifier,
-                                const StringList     &arguments,
-                                const StringList     &env_variables)
+                                const StringList     &arguments)
 {
-  return &Factory::create_window (window_identifier,
-                                  arguments,
-                                  env_variables);
+  ItemImpl &item = Factory::create_ui_item (window_identifier, arguments);
+  WindowIface *window = dynamic_cast<WindowIface*> (&item);
+  if (!window)
+    {
+      ref_sink (item);
+      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), item.typeid_pretty_name().c_str());
+      unref (item);
+    }
+  return window;
 }
 
 String
@@ -100,19 +105,20 @@ ApplicationImpl::auto_load (const String  &defs_domain,
 {
   String fullname = auto_path (file_name, binary_path, true);
   vector<String> definitions;
-  int err = Factory::parse_file (i18n_domain, fullname, defs_domain, &definitions);
-  if (err)
-    fatal ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
+  String errs = Factory::parse_ui_file (defs_domain, fullname, i18n_domain, &definitions);
+  if (!errs.empty())
+    fatal ("%s: %s", fullname.c_str(), errs.c_str());
   return definitions;
 }
 
 void
-ApplicationImpl::load_string (const std::string &xml_string,
+ApplicationImpl::load_string (const std::string &defs_domain,
+                              const std::string &xml_string,
                               const std::string &i18n_domain)
 {
-  int err = Factory::parse_string (xml_string, i18n_domain);
-  if (err)
-    fatal ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
+  String errs = Factory::parse_ui_data (defs_domain, "<ApplicationImpl::load_string>", xml_string.size(), xml_string.data(), i18n_domain);
+  if (!errs.empty())
+    fatal ("failed to parse string: %s\n%s", errs.c_str(), xml_string.c_str());
 }
 
 bool

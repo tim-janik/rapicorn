@@ -15,7 +15,7 @@ main (int   argc,
   app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);
 
   // create and show main window
-  Window window = app.create_window ("main-shell");
+  Window window = app.create_window ("RapicornExamples:main-shell");
   window.show();
 
   // run event loops while windows are on screen

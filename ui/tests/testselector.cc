@@ -414,7 +414,7 @@ test_selector_matching ()
   WindowList wl = app.query_windows ("*");
   size_t prev_window_count = wl.size();
 
-  WindowIface *window = app.create_window ("test-dialog");
+  WindowIface *window = app.create_window ("RapicornSelectorTest:test-dialog");
   TASSERT (window != NULL);
   WindowIface *w = app.query_window ("#test-dialog");
   TASSERT (window == w);
@@ -585,9 +585,9 @@ load_ui_defs()
   static bool initialized = false;
   if (once_enter (&initialized))
     {
-      int err = Factory::parse_string (test_dialog_xml, "RapicornSelectorTest");
-      if (err)
-        fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, string_from_errno (err).c_str());
+      String errs = Factory::parse_ui_data ("RapicornSelectorTest", RAPICORN_CODELOC_STRING(), sizeof (test_dialog_xml)-1, test_dialog_xml);
+      if (!errs.empty())
+        fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
       once_leave (&initialized, true);
     }
 }

@@ -99,6 +99,13 @@ protected:
   explicit              MultiContainerImpl      ();
 };
 
+// == misc impl bits ==
+ContainerImpl*
+ItemImpl::as_container () // see item.hh
+{
+  return dynamic_cast<ContainerImpl*> (this);
+}
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_CONTAINER_HH__ */

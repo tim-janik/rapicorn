@@ -653,7 +653,7 @@ ItemIface*
 ContainerImpl::create_child (const std::string    &item_identifier,
                              const StringListImpl &args)
 {
-  ItemImpl &item = Factory::create_item (item_identifier, args);
+  ItemImpl &item = Factory::create_ui_item (item_identifier, args);
   ref_sink (item);
   try {
     add (item);

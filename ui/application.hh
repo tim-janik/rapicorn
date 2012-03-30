@@ -16,11 +16,11 @@ public:
                                               const std::string &file_name,
                                               const std::string &binary_path,
                                               const std::string &i18n_domain = "");
-  virtual void        load_string            (const std::string &xml_string,
+  virtual void        load_string            (const std::string &defs_domain,
+                                              const std::string &xml_string,
                                               const std::string &i18n_domain = "");
   virtual WindowIface* create_window         (const std::string &window_identifier,
-                                              const StringList &arguments = StringList(),
-                                              const StringList &env_variables = StringList());
+                                              const StringList &arguments = StringList());
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
   virtual WindowIface*query_window           (const String &selector);

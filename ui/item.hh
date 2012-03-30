@@ -314,6 +314,7 @@ public:
   virtual ItemIface* query_selector        (const String &selector);
   virtual ItemSeq    query_selector_all    (const String &selector);
   virtual ItemIface* query_selector_unique (const String &selector);
+  inline ContainerImpl* as_container       (); // see container.hh
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;

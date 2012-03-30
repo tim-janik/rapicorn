@@ -642,11 +642,11 @@ ItemListImpl::create_row (uint64 nthrow,
   ListRow *lr = new ListRow();
   for (uint i = 0; i < row.size(); i++)
     {
-      ItemImpl *item = ref_sink (&Factory::create_item ("Label"));
+      ItemImpl *item = ref_sink (&Factory::create_ui_item ("Label"));
       lr->cols.push_back (item);
     }
   IFDEBUG (dbg_created++);
-  lr->rowbox = &ref_sink (&Factory::create_item ("ListRow"))->interface<ContainerImpl>();
+  lr->rowbox = &ref_sink (&Factory::create_ui_item ("ListRow"))->interface<ContainerImpl>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
 
   while (m_size_groups.size() < lr->cols.size())

@@ -57,7 +57,7 @@ main (int   argc,
 
   // create main window
   // FIXME: Store1 *s1 = create_store();
-  Window window = app.create_window ("main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
+  Window window = app.create_window ("RapicornFileView:main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
   window.show();
 
   // run event loops while windows are on screen

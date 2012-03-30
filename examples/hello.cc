@@ -28,7 +28,7 @@ main (int   argc,
                  argv[0]);
 
   /* create main window */
-  Window window = app.create_window ("main-window");
+  Window window = app.create_window ("RapicornTest:main-window");
 
   /* connect custom callback to handle UI commands */
   window.sig_commands() += handle_commands;

@@ -454,7 +454,9 @@ class MarkupDumper {
     const uint length = text.size();
     output += "<TEXT>";
     std::list<PangoAttribute*> alist;
-    pango_attr_list_filter (pango_layout_get_attributes (playout), pattribute_filter, &alist);
+    PangoAttrList *palist = pango_layout_get_attributes (playout);
+    if (palist)
+      pango_attr_list_filter (palist, pattribute_filter, &alist);
     std::list<PangoAttribute*>::iterator ait = alist.begin();
     std::list<PangoAttribute*> astack;
     for (uint i = 0; i < length; i++)
