@@ -98,7 +98,7 @@ RapicornThreadTable ThreadTable = { NULL }; /* private, provided by rapicornthre
 static RapicornThread*
 common_thread_new (const gchar *name)
 {
-  g_return_val_if_fail (name && name[0], NULL);
+  assert_return (name && name[0], NULL);
   RapicornThread *thread;
 #if HAVE_GSLICE
   thread = g_slice_new0 (RapicornThread);
@@ -125,7 +125,7 @@ common_thread_new (const gchar *name)
 static RapicornThread*
 common_thread_ref (RapicornThread *thread)
 {
-  g_return_val_if_fail (thread != NULL, NULL);
+  assert_return (thread != NULL, NULL);
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
   do {
@@ -139,7 +139,7 @@ common_thread_ref (RapicornThread *thread)
 static RapicornThread*
 common_thread_ref_sink (RapicornThread *thread)
 {
-  g_return_val_if_fail (thread != NULL, NULL);
+  assert_return (thread != NULL, NULL);
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   ThreadTable.thread_ref (thread);
   uint32 old_ref, new_ref;
@@ -281,9 +281,9 @@ common_thread_start (RapicornThread    *thread,
   GThread *gthread = NULL;
   GError *gerror = NULL;
   
-  g_return_val_if_fail (thread != NULL, FALSE);
-  g_return_val_if_fail (thread->tid == -1, FALSE);
-  g_return_val_if_fail (func != NULL, FALSE);
+  assert_return (thread != NULL, FALSE);
+  assert_return (thread->tid == -1, FALSE);
+  assert_return (func != NULL, FALSE);
   
   ThreadTable.thread_ref (thread);
 

@@ -45,7 +45,7 @@ cairo_surface_from_pixmap (Pixmap &pixmap)
                                          pixmap.width(),
                                          pixmap.height(),
                                          stride);
-  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
   return isurface;
 }
 

@@ -29,7 +29,7 @@ init_app (const String       &app_ident,
           char              **argv,
           const StringVector &args)
 {
-  return_val_if_fail (Application_SmartHandle::the()._is_null() == true, app_cached);
+  assert_return (Application_SmartHandle::the()._is_null() == true, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
@@ -186,8 +186,8 @@ Application_SmartHandle::ipc_connection()
 MainLoop*
 Application_SmartHandle::main_loop()
 {
-  return_val_if_fail (the()._is_null() == false, NULL);
-  return_val_if_fail (_clientglue_connection.is_null() == false, NULL);
+  assert_return (the()._is_null() == false, NULL);
+  assert_return (_clientglue_connection.is_null() == false, NULL);
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;
@@ -223,7 +223,7 @@ init_test_app (const String       &app_ident,
 static void
 clientglue_setup (Plic::ClientConnection connection)
 {
-  return_if_fail (_clientglue_connection.is_null() == true);
+  assert_return (_clientglue_connection.is_null() == true);
   _clientglue_connection = connection;
 }
 

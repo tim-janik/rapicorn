@@ -96,7 +96,7 @@ public:
   ChannelE ()
   {
     if (open() < 0)
-      pfatal ("failed to open pipe for thread communication");
+      fatal ("failed to open pipe for thread communication: %s", strerror());
   }
 };
 
@@ -216,7 +216,7 @@ private:
   void
   initialize ()
   {
-    return_if_fail (m_idata != NULL);
+    assert_return (m_idata != NULL);
     // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
     assert (rapicorn_thread_entered() == true);
     MainLoop::LockHooks lock_hooks = { rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave };
@@ -234,7 +234,7 @@ private:
     InitHookCaller::invoke ("ui-core/", m_idata->argcp, m_idata->argv, *m_idata->args);
     // Application Singleton
     InitHookCaller::invoke ("ui-thread/", m_idata->argcp, m_idata->argv, *m_idata->args);
-    return_if_fail (NULL != &ApplicationImpl::the());
+    assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", m_idata->argcp, m_idata->argv, *m_idata->args);
     // initialize uithread connection handling
@@ -253,7 +253,7 @@ private:
     rapicorn_thread_enter();
     Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups (unused)
     initialize();
-    return_if_fail (m_idata == NULL);
+    assert_return (m_idata == NULL);
     m_main_loop.run();
     Self::set_wakeup (NULL, NULL, NULL);        // main loop canot be woken up further
     m_main_loop.kill_loops();
@@ -298,7 +298,7 @@ uithread_connection (void)
 uint64
 uithread_bootup (int *argcp, char **argv, const StringVector &args)
 {
-  return_val_if_fail (UIThread::uithread() == NULL, 0);
+  assert_return (UIThread::uithread() == NULL, 0);
   // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
   // setup client/server connection pair
@@ -415,8 +415,8 @@ public:
 void
 uithread_test_trigger (void (*test_func) ())
 {
-  return_if_fail (test_func != NULL);
-  return_if_fail (UIThread::uithread() != NULL);
+  assert_return (test_func != NULL);
+  assert_return (UIThread::uithread() != NULL);
   // run tests from ui-thread
   ui_thread_syscall (new SyscallTestTrigger (test_func));
   // ensure ui-thread shutdown

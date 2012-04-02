@@ -33,7 +33,7 @@ public:
 };
 
 class DotGrid : public virtual ItemImpl {
-  FrameType             dot_type        () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  FrameType             dot_type        () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
   virtual
   const PropertyList&   list_properties     ();

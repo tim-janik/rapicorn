@@ -365,7 +365,7 @@ Pixmap*
 Pixmap::pixstream (const uint8 *pixstream)
 {
   errno = EINVAL;
-  return_val_if_fail (pixstream != NULL, NULL);
+  assert_return (pixstream != NULL, NULL);
 
   errno = ENODATA;
   const uint8 *s = pixstream;

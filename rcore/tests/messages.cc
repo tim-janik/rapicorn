@@ -21,6 +21,8 @@
 #include <errno.h>
 using namespace Rapicorn;
 
+#define throw_if_fail(expr)     do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
+
 static void
 test_dialog_messages ()
 {
@@ -57,13 +59,13 @@ REGISTER_LOGTEST ("Message/Dialog Message Types", test_dialog_messages);
 static void
 bogus_func ()
 {
-  RAPICORN_RETURN_IF_FAIL (0 == "test-return-if-fail");
+  assert_return (0 == "test-return-if-fail");
 }
 
 static int
 value_func (int)
 {
-  RAPICORN_RETURN_VAL_IF_FAIL (0 == "test-return-val-if-fail", 0);
+  assert_return (0 == "test-return-val-if-fail", 0);
   return 1;
 }
 
@@ -73,31 +75,23 @@ test_logging (const char *logarg)
   errno = EINVAL;       // used by P* checks
   if (String ("--test-assert") == logarg)
     RAPICORN_ASSERT (0 == "test-assert");
-  if (String ("--test-passert") == logarg)
-    RAPICORN_PASSERT (0 == "test-passert");
   if (String ("--test-unreached") == logarg)
     RAPICORN_ASSERT_UNREACHED();
   if (String ("--test-fatal") == logarg)
     fatal ("execution has reached a fatal condition (\"test-fatal\")");
-  if (String ("--test-pfatal") == logarg)
-    pfatal ("execution has reached a fatal condition (\"test-pfatal\")");
   if (String ("--test-logging") == logarg)
     {
-      Logging::configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
+      debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
       RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
+      RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
-      RAPICORN_PDEBUG ("a random error occoured (\"test-pdebug\")");
-      RAPICORN_CHECK (0 > 1);
-      errno = EINVAL;
-      RAPICORN_PCHECK (errno == 0);
+      RAPICORN_CRITICAL_UNLESS (errno == 0);
       try {
         throw_if_fail (0 == "throw-if-fail");
       } catch (Rapicorn::AssertionError ar) {
         printerr ("Caught exception: %s\n", ar.what());
       }
       critical ("execution has reached a critical condition (\"test-critical\")");
-      errno = EINVAL;
-      pcritical ("execution has reached a critical condition (\"test-pcritical\")");
       bogus_func();
       value_func (0);
       exit (0);
@@ -113,7 +107,7 @@ main (int   argc,
   if (argc >= 2 || Test::logging())
     {
       // set testing switch 'testpid0' to enforce deterministic ouput
-      Logging::configure ("testpid0");
+      debug_configure ("testpid0");
     }
 
   if (argc >= 2)

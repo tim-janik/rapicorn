@@ -80,8 +80,8 @@ name_match_detailed (const char *value_name1,
 bool
 EnumClass::match_partial (const char *value_name1, const char *partial_value_name) const
 {
-  return_val_if_fail (value_name1 != NULL, false);
-  return_val_if_fail (partial_value_name != NULL, false);
+  assert_return (value_name1 != NULL, false);
+  assert_return (partial_value_name != NULL, false);
   uint length1 = strlen (value_name1);
   uint length2 = strlen (partial_value_name);
   if (length1 < length2)        /* length1 must be >= length2 for partial matches */
@@ -92,8 +92,8 @@ EnumClass::match_partial (const char *value_name1, const char *partial_value_nam
 bool
 EnumClass::match (const char *value_name1, const char *value_name2) const
 {
-  return_val_if_fail (value_name1 != NULL, false);
-  return_val_if_fail (value_name2 != NULL, false);
+  assert_return (value_name1 != NULL, false);
+  assert_return (value_name2 != NULL, false);
   return name_match_detailed (value_name1, strlen (value_name1), value_name2, strlen (value_name2));
 }
 

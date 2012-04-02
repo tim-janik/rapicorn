@@ -792,7 +792,7 @@ MultiContainerImpl::remove_child (ItemImpl &item)
         item.unref();
         return;
       }
-  assert_not_reached();
+  assert_unreached();
 }
 
 void

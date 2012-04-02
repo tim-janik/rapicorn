@@ -376,12 +376,12 @@ template<class Value> inline void
 once_leave (volatile Value *value_location,
             Value           initialization_value)
 {
-  RAPICORN_RETURN_IF_FAIL (Atomic::value_get (value_location) == 0);
-  RAPICORN_RETURN_IF_FAIL (initialization_value != 0);
+  RAPICORN_RETURN_UNLESS (Atomic::value_get (value_location) == 0);
+  RAPICORN_RETURN_UNLESS (initialization_value != 0);
 
   Atomic::value_set (value_location, initialization_value);
   const bool found_and_removed = once_list_leave (value_location);
-  RAPICORN_RETURN_IF_FAIL (found_and_removed == true);
+  RAPICORN_RETURN_UNLESS (found_and_removed == true);
 }
 
 } // Rapicorn

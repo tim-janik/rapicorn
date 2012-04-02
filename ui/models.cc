@@ -38,10 +38,10 @@ ListModelRelayImpl::resize (int _size)
 void
 ListModelRelayImpl::inserted (int first, int last)
 {
-  return_if_fail (first >= 0);
-  return_if_fail (first <= m_size);
+  assert_return (first >= 0);
+  assert_return (first <= m_size);
   if (last)
-    return_if_fail (last >= first);
+    assert_return (last >= first);
   else
     last = first;
   m_size += last - first + 1;
@@ -52,12 +52,12 @@ ListModelRelayImpl::inserted (int first, int last)
 void
 ListModelRelayImpl::changed (int first, int last)
 {
-  return_if_fail (first >= 0);
-  return_if_fail (first < m_size);
+  assert_return (first >= 0);
+  assert_return (first < m_size);
   if (last)
     {
-      return_if_fail (last >= first);
-      return_if_fail (last < m_size);
+      assert_return (last >= first);
+      assert_return (last < m_size);
     }
   else
     last = first;
@@ -68,12 +68,12 @@ ListModelRelayImpl::changed (int first, int last)
 void
 ListModelRelayImpl::removed (int first, int last)
 {
-  return_if_fail (first >= 0);
-  return_if_fail (first < m_size);
+  assert_return (first >= 0);
+  assert_return (first < m_size);
   if (last)
     {
-      return_if_fail (last >= first);
-      return_if_fail (last < m_size);
+      assert_return (last >= first);
+      assert_return (last < m_size);
     }
   else
     last = first;
@@ -85,7 +85,7 @@ ListModelRelayImpl::removed (int first, int last)
 void
 ListModelRelayImpl::fill (int first, const AnySeqSeqImpl &ss)
 {
-  return_if_fail (first >= 0);
+  assert_return (first >= 0);
   if (first >= m_size)
     return;
   size_t i = first;
@@ -98,9 +98,9 @@ ListModelRelayImpl::fill (int first, const AnySeqSeqImpl &ss)
 void
 ListModelRelayImpl::refill (int first, int last)
 {
-  return_if_fail (first >= 0);
+  assert_return (first >= 0);
   if (last)
-    return_if_fail (last >= first);
+    assert_return (last >= first);
   else
     last = first;
   if (first < m_size)
@@ -128,25 +128,25 @@ ApplicationImpl::create_list_model_relay (int                n_columns,
 MemoryListStore::MemoryListStore (int n_columns) :
   m_columns (n_columns)
 {
-  return_if_fail (n_columns > 0);
+  assert_return (n_columns > 0);
 }
 
 AnySeqImpl
 MemoryListStore::row (int n)
 {
-  return_val_if_fail (n >= -1, AnySeqImpl());
+  assert_return (n >= -1, AnySeqImpl());
   if (n < 0)
     n = m_rows.size() - 1;
-  return_val_if_fail (size_t (n) < m_rows.size(), AnySeqImpl());
+  assert_return (size_t (n) < m_rows.size(), AnySeqImpl());
   return m_rows[n];
 }
 
 void
 MemoryListStore::insert (int n, const AnySeqImpl &aseq)
 {
-  return_if_fail (aseq.size() == m_columns);
-  return_if_fail (n >= -1);
-  return_if_fail (n <= signed (m_rows.size()));
+  assert_return (aseq.size() == m_columns);
+  assert_return (n >= -1);
+  assert_return (n <= signed (m_rows.size()));
   if (n < 0)
     n = m_rows.size(); // append
   m_rows.insert (m_rows.begin() + n, aseq);
@@ -156,8 +156,8 @@ MemoryListStore::insert (int n, const AnySeqImpl &aseq)
 void
 MemoryListStore::update (uint n, const AnySeqImpl &aseq)
 {
-  return_if_fail (aseq.size() == m_columns);
-  return_if_fail (n < m_rows.size());
+  assert_return (aseq.size() == m_columns);
+  assert_return (n < m_rows.size());
   m_rows[n] = aseq;
   sig_changed.emit (n, n);
 }
@@ -165,7 +165,7 @@ MemoryListStore::update (uint n, const AnySeqImpl &aseq)
 void
 MemoryListStore::remove (uint first, uint last)
 {
-  return_if_fail (first < m_rows.size());
+  assert_return (first < m_rows.size());
   if (last < first)
     last = first;
   m_rows.erase (m_rows.begin() + first, m_rows.begin() + last + 1);

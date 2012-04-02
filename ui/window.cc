@@ -111,10 +111,10 @@ WindowImpl::create_snapshot (const Rect &subarea)
   Region region = area;
   region.intersect (subarea);
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
-  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
   cairo_surface_set_device_offset (surface, -subarea.x, -subarea.y);
   cairo_t *cr = cairo_create (surface);
-  warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+  critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
   render_into (cr, region);
   cairo_destroy (cr);
   return surface;
@@ -185,7 +185,7 @@ WindowImpl::self_visible () const
 void
 WindowImpl::resize_screen_window()
 {
-  return_if_fail (requisitions_tunable() == false);
+  assert_return (requisitions_tunable() == false);
 
   // negotiate size requisition
   negotiate_size();
@@ -627,7 +627,7 @@ void
 WindowImpl::draw_now ()
 {
   Rect area = allocation();
-  return_if_fail (area.x == 0 && area.y == 0);
+  assert_return (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
       // force delivery of any pending exposes
@@ -638,9 +638,9 @@ WindowImpl::draw_now ()
       discard_expose_region();
 
       cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (area.width), iceil (area.height));
-      warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+      critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
       cairo_t *cr = cairo_create (surface);
-      warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+      critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
       render_into (cr, region);
       m_screen_window->blit_surface (surface, region);
       cairo_destroy (cr);
@@ -698,7 +698,7 @@ void
 WindowImpl::add_grab (ItemImpl *child,
                       bool      unconfined)
 {
-  RAPICORN_CHECK (child != NULL);
+  assert_return (child != NULL);
   add_grab (*child, unconfined);
 }
 
@@ -719,7 +719,7 @@ WindowImpl::add_grab (ItemImpl &child,
 void
 WindowImpl::remove_grab (ItemImpl *child)
 {
-  RAPICORN_CHECK (child != NULL);
+  assert_return (child != NULL);
   remove_grab (*child);
 }
 

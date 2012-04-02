@@ -163,7 +163,7 @@ bool
 Element::render (cairo_surface_t  *surface,
                  const Allocation &area)
 {
-  return_val_if_fail (surface != NULL, false);
+  assert_return (surface != NULL, false);
   if (!impl) return false;
   cairo_t *cr = cairo_create (surface);
   cairo_translate (cr, -impl->x, -impl->y); // shift sub into top_left
@@ -178,7 +178,7 @@ Element::render (cairo_surface_t  *surface,
     printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
               impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by,
               impl->x,impl->y,impl->width,impl->height);
-  svg_tweak_debugging = Logging::debugging();
+  svg_tweak_debugging = debug_enabled();
   tw.thread_set (&tw);
   bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, cid);
   tw.thread_set (NULL);
@@ -212,7 +212,7 @@ static vector<String>      library_search_dirs;
 void
 Library::add_search_dir (const String &absdir)
 {
-  return_if_fail (Path::isabs (absdir));
+  assert_return (Path::isabs (absdir));
   library_search_dirs.push_back (absdir);
 }
 
@@ -257,7 +257,7 @@ Library::add_library (const String &filename)
       else
         g_object_unref (handle);
     }
-  PDEBUG ("loading uilib");
+  DEBUG ("loading uilib: %s", strerror());
 }
 
 static void
@@ -338,7 +338,7 @@ void
 Tweaker::thread_set (Tweaker *tweaker)
 {
   if (tweaker)
-    return_if_fail (thread_tweaker == NULL);
+    assert_return (thread_tweaker == NULL);
   thread_tweaker = tweaker;
 }
 

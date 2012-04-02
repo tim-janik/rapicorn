@@ -54,7 +54,7 @@ shutdown_rapicorn_atexit (void)
 static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
-  return_val_if_fail (pyrope_connection.is_null(), NULL);
+  assert_return (pyrope_connection.is_null(), NULL);
   // parse args: application_name, cmdline_args
   const char *ns = NULL;
   unsigned int nl = 0;

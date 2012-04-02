@@ -40,18 +40,14 @@ check-logging-output: testrcore2
 	       for arg in --test-assert --test-passert --test-unreached --test-fatal --test-pfatal --test-logging ; do \
 	         ./testrcore2 $$arg 2>>$(TSTOUT) ; done ; true ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
 	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-assert'"
-	$(Q) grep -q 'failed.*"test-passert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-passert'"
-	$(Q) grep -q 'FATAL:.*unreach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-unreached'"
+	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-unreached'"
 	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-fatal'"
-	$(Q) grep -q 'FATAL:.*"test-pfatal"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-pfatal'"
 	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
-	$(Q) grep -q ':.*random.*"test-pdebug"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-pdebug'"
-	$(Q) grep -q 'check failed (errno == 0)' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
+	$(Q) grep -q 'condition failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
 	$(Q) grep -q 'exception.*"throw-if-fail"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) throw-if-fail'"
 	$(Q) grep -q 'failed.*"test-return-if-fail"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) return-if-fail'"
 	$(Q) grep -q 'failed.*"test-return-val-if-' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) return-val-if-fail'"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-critical'"
-	$(Q) grep -q 'CRITICAL:.*"test-pcritical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-pcritical'"
 	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) aborting'"
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output

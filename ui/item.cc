@@ -379,7 +379,7 @@ ItemImpl::remove_exec (uint exec_id)
 bool
 ItemImpl::clear_exec (uint *exec_id)
 {
-  return_val_if_fail (exec_id != NULL, false);
+  assert_return (exec_id != NULL, false);
   bool removed = false;
   if (*exec_id)
     removed = remove_exec (*exec_id);
@@ -1356,7 +1356,7 @@ void
 ItemImpl::factory_context (FactoryContext *fc)
 {
   if (fc)
-    return_if_fail (m_factory_context == NULL);
+    assert_return (m_factory_context == NULL);
   m_factory_context = fc;
 }
 
@@ -1504,9 +1504,9 @@ ItemImpl::cairo_context (RenderContext  &rcontext,
   Rect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = allocation();
-  return_val_if_fail (rect.width > 0 && rect.height > 0, NULL);
+  assert_return (rect.width > 0 && rect.height > 0, NULL);
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
-  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
   cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
   rcontext.surfaces.push_back (surface);
   cairo_t *cr = cairo_create (surface);
@@ -1516,7 +1516,7 @@ ItemImpl::cairo_context (RenderContext  &rcontext,
 
 ItemImpl::RenderContext::~RenderContext()
 {
-  warn_if_fail (cairos.size() == 0);
+  critical_unless (cairos.size() == 0);
   while (!cairos.empty())
     {
       cairo_destroy (cairos.back());

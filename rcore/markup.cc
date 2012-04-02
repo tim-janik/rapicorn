@@ -142,7 +142,7 @@ MarkupParser::create_parser (const String &input_name)
 
 MarkupParser::~MarkupParser ()
 {
-  return_if_fail (context != NULL);
+  assert_return (context != NULL);
   delete context;
   context = NULL;
 }
@@ -616,7 +616,7 @@ unescape_text (MarkupParserContext *context,
           break;
           
         default:
-          assert_not_reached ();
+          assert_unreached ();
           break;
         }
     }
@@ -789,10 +789,10 @@ MarkupParser::parse (const char          *text,
 {
   Error dummy, &error = errorp ? *errorp : dummy;
   
-  return_val_if_fail (context != NULL, false);
-  return_val_if_fail (text != NULL, false);
-  return_val_if_fail (context->state != STATE_ERROR, false);
-  return_val_if_fail (!context->parsing, false);
+  assert_return (context != NULL, false);
+  assert_return (text != NULL, false);
+  assert_return (context->state != STATE_ERROR, false);
+  assert_return (!context->parsing, false);
   
   if (text_len < 0)
     text_len = strlen (text);
@@ -1463,7 +1463,7 @@ MarkupParser::parse (const char          *text,
           break;
           
         default:
-          assert_not_reached ();
+          assert_unreached ();
           break;
         }
     }
@@ -1478,9 +1478,9 @@ bool
 MarkupParser::end_parse (Error *errorp)
 {
   Error dummy, &error = errorp ? *errorp : dummy;
-  return_val_if_fail (context != NULL, false);
-  return_val_if_fail (!context->parsing, false);
-  return_val_if_fail (context->state != STATE_ERROR, false);
+  assert_return (context != NULL, false);
+  assert_return (!context->parsing, false);
+  assert_return (context->state != STATE_ERROR, false);
   
   context->partial_chunk = "";
   
@@ -1570,7 +1570,7 @@ MarkupParser::end_parse (Error *errorp)
       
     case STATE_ERROR:
     default:
-      assert_not_reached ();
+      assert_unreached ();
       break;
     }
   
@@ -1582,7 +1582,7 @@ MarkupParser::end_parse (Error *errorp)
 String
 MarkupParser::get_element()
 {
-  return_val_if_fail (context != NULL, NULL);
+  assert_return (context != NULL, NULL);
   if (context->tag_stack.empty())
     return NULL;
   else
@@ -1601,7 +1601,7 @@ MarkupParser::get_position (int            *line_number,
                             const char    **input_name_p)
 {
   /* For user-constructed error messages, has no precise semantics */
-  return_if_fail (context != NULL);
+  assert_return (context != NULL);
   if (line_number)
     *line_number = context->line_number - context->line_number_after_newline;
   if (char_number)
@@ -1735,7 +1735,7 @@ String
 MarkupParser::escape_text (const char  *text,
                            ssize_t       length)  
 {
-  return_val_if_fail (text != NULL, NULL);
+  assert_return (text != NULL, NULL);
   
   if (length < 0)
     length = strlen (text);

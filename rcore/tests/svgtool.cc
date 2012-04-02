@@ -35,11 +35,11 @@ surface_check_row_alpha (cairo_surface_t *surface,
                          const int        alpha,
                          const int        cmp = 0) // -1: alpha <= px ; +1: alpha >= px ; else alpha == px
 {
-  return_val_if_fail (surface != NULL, false);
+  assert_return (surface != NULL, false);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-  return_val_if_fail (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
   const int height = cairo_image_surface_get_height (surface);
-  return_val_if_fail (row >= 0 && row < height, false);
+  assert_return (row >= 0 && row < height, false);
   const int width = cairo_image_surface_get_width (surface);
   const int stride = cairo_image_surface_get_stride (surface);
   const uint32 *pixels = (const uint32*) cairo_image_surface_get_data (surface);
@@ -61,12 +61,12 @@ surface_check_col_alpha (cairo_surface_t *surface,
                          const int        alpha,
                          const int        cmp = 0) // -1: alpha <= px ; +1: alpha >= px ; else alpha == px
 {
-  return_val_if_fail (surface != NULL, false);
+  assert_return (surface != NULL, false);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-  return_val_if_fail (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
   const int height = cairo_image_surface_get_height (surface);
   const int width = cairo_image_surface_get_width (surface);
-  return_val_if_fail (col >= 0 && col < width, false);
+  assert_return (col >= 0 && col < width, false);
   const int stride = cairo_image_surface_get_stride (surface);
   const uint32 *pixels = (const uint32*) cairo_image_surface_get_data (surface);
   for (int i = 0; i < height; i++)
@@ -115,9 +115,9 @@ surface_to_ascii (cairo_surface_t *surface,
     /* 'Q' */ 0x294, /* '@' */ 0x2bc, /* 'W' */ 0x2dc, /* 'N' */ 0x2ec, /* 'M' */ 0x2f4, /* MAX: 0x2fd */
   };
   assert (sizeof (chars) == NC + 1 && sizeof (weights) / sizeof (weights[0]) == NC);
-  return_val_if_fail (surface != NULL, false);
+  assert_return (surface != NULL, false);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-  return_val_if_fail (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, false);
   const uint swidth = cairo_image_surface_get_width (surface);
   const uint sheight = cairo_image_surface_get_height (surface);
   const uint sstride = cairo_image_surface_get_stride (surface);

@@ -44,7 +44,7 @@ test_cpu_info (void)
   const RapicornCPUInfo cpi = cpu_info ();
   TCMP (cpi.machine, !=, NULL);
   String cps = cpu_info_string (cpi);
-  ASSERT (cps.size() != 0);
+  TASSERT (cps.size() != 0);
   if (Test::verbose())
     printout ("\n#####\n%s#####\n", cps.c_str());
 }
@@ -98,8 +98,8 @@ test_paths()
   TCMP (b, ==, true);
   s = Path::skip_root (s);
   TCMP (s, ==, p);
-  ASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
-  ASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
+  TASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
+  TASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
   TCMP (Path::basename ("simple"), ==, "simple");
   TCMP (Path::basename ("skipthis" RAPICORN_DIR_SEPARATOR_S "file"), ==, "file");
   TCMP (Path::basename (RAPICORN_DIR_SEPARATOR_S "skipthis" RAPICORN_DIR_SEPARATOR_S "file"), ==, "file");
@@ -548,7 +548,7 @@ binary_lookup_tests()
       double target = (sv[i - 1] + sv[i]) / 2.0;
       fit = binary_lookup_sibling (sv.begin(), sv.end(), compare_floats, target);
       TCMP (fit, !=, sv.end());
-      ASSERT (sv[i] == *fit || sv[i - 1] == *fit);
+      TASSERT (sv[i] == *fit || sv[i - 1] == *fit);
       if (i % 10000 == 9999)
         TOK();
     }
@@ -576,7 +576,7 @@ binary_lookup_tests()
       fit = pit.first;
       seen_inexact |= pit.second == false;
       TCMP (fit, !=, sv.end());
-      ASSERT (sv[i] == *fit || sv[i - 1] == *fit);
+      TASSERT (sv[i] == *fit || sv[i - 1] == *fit);
       if (i % 10000 == 9999)
         TOK();
     }

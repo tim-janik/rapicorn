@@ -276,7 +276,7 @@ KeyConfig::configure (const String &colon_options)
 }
 
 // === Logging ===
-bool               Logging::m_debugging = true; // bootup default before _init()
+bool                        _debug_flag = true; // bootup default before _init()
 static bool                 conftest_any_debugging = false;
 static bool                 conftest_key_debugging = false;
 static KeyConfig * volatile conftest_map = NULL;
@@ -299,7 +299,7 @@ conftest_procure ()
         {
           const char *env_rapicorn = getenv ("RAPICORN");
           // configure with support for aliases, caches, etc
-          Logging::configure (env_rapicorn ? env_rapicorn : "");
+          debug_configure (env_rapicorn ? env_rapicorn : "");
         }
       else
         {
@@ -330,9 +330,9 @@ conftest_lookup (const String &option, int vdefault = 0)
 }
 
 void
-Logging::configure (const char *option)
+debug_configure (const String &options)
 {
-  String s = ":" + String (option ? option : "") + ":";
+  String s = ":" + options + ":";
   std::transform (s.begin(), s.end(), s.begin(), ::tolower);
   String tmp = s;
   for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
@@ -351,17 +351,17 @@ Logging::configure (const char *option)
     Atomic::value_set (&conftest_key_debugging, true);
   conftest_procure().configure (s);
   Atomic::value_set (&conftest_any_debugging, bool (conftest_lookup ("verbose") || conftest_lookup ("debug-all")));
-  Atomic::value_set (&m_debugging, bool (conftest_key_debugging | conftest_any_debugging)); // update "cached" configuration
+  Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_any_debugging)); // update "cached" configuration
   static bool first_help = false;
   if (strstr (s.c_str(), ":help:") && once_enter (&first_help))
     {
-      printerr ("%s", help().c_str());
+      printerr ("%s", debug_help().c_str());
       once_leave (&first_help, true);
     }
 }
 
 String
-Logging::help ()
+debug_help ()
 {
   String s;
   s += "$RAPICORN - Environment variable for debugging and configuration.\n";
@@ -379,9 +379,8 @@ Logging::help ()
   return s;
 }
 
-int
-Logging::conftest (const char *option,
-                   int         vdefault)
+int64
+debug_check (const String &option, int64 vdefault)
 {
   String key = option;
   std::transform (key.begin(), key.end(), key.begin(), ::tolower);
@@ -434,47 +433,55 @@ logtest (const char **kindp, const char *mode, int advance, int flags)
 }
 
 void
-Logging::message (const char *kind, const SourceLocation &sloc, const char *format, ...)
+debug_kmsg (const char dkind, const char *key, const String &where, const char *format, ...)
 {
   /* The logging system must work before Rapicorn is initialized, and possibly even during
    * global_ctor phase. So any initialization needed here needs to be handled on demand.
    */
   int saved_errno = errno;
-  if (!kind)
-    kind = "DIAG";
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  const char kind = toupper (dkind);
   enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, };
   static int conftest_logfd = 0;
   const String conftest_logfile = conftest_logfd == 0 ? conftest_slookup ("logfile") : "";
   const int FATAL_SYSLOG = conftest_lookup ("fatal-syslog") ? DO_SYSLOG : 0;
   const int MAY_SYSLOG = conftest_lookup ("syslog") ? DO_SYSLOG : 0;
   const int MAY_ABORT  = conftest_lookup ("fatal-warnings") ? DO_ABORT  : 0;
-  int f = 0;
+  int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
+  f |= kind != 'F' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // fatal
+  f |= kind != 'A' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // assertion failed
+  f |= kind != 'U' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // unreachable is fatal
+  f |= kind != 'C' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // critical
+  f |= kind != 'I' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // condition failed
+  f |= kind != 'D' ? 0 : DO_DEBUG | DO_STAMP;                   // debug
+  f |= kind != 'X' ? 0 : DO_DEBUG;                              // fixing needed
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
-  f |= logtest (&kind, "FATAL",     0, DO_STDERR | FATAL_SYSLOG | DO_ABORT);
-  f |= logtest (&kind, "PFATAL",    1, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
-  f |= logtest (&kind, "CRITICAL",  0, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
-  f |= logtest (&kind, "PCRITICAL", 1, DO_STDERR | MAY_SYSLOG | MAY_ABORT | DO_ERRNO);
-  f |= logtest (&kind, "ABORT",     5, DO_STDERR | FATAL_SYSLOG | DO_ABORT);
-  f |= logtest (&kind, "PABORT",    6, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
-  f |= logtest (&kind, "CHECK",     5, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
-  f |= logtest (&kind, "PCHECK",    6, DO_STDERR | MAY_SYSLOG | MAY_ABORT | DO_ERRNO);
-  f |= logtest (&kind, "FIXIT",     0, DO_DEBUG | DO_STAMP);
-  f |= logtest (&kind, "DEBUG",     0, DO_DEBUG | DO_STAMP);
-  f |= logtest (&kind, "PDEBUG",    1, DO_DEBUG | DO_ERRNO | DO_STAMP);
-  const String where = sloc.where();
-  const String what = kind && kind[0] ? String() + kind + ": " : "";
-  const String wherewhat = where.empty() ? String (" ") + what : where + what;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
+  const char *w = NULL;
+  w = kind == 'F' ? "FATAL" : w;
+  w = kind == 'A' ? "FATAL" : w;
+  w = kind == 'U' ? "FATAL" : w;
+  w = kind == 'C' ? "CRITICAL" : w;
+  w = kind == 'I' ? "CRITICAL" : w;
+  w = kind == 'D' ? "DEBUG" : w;
+  w = kind == 'X' ? "FIX""ME" : w;
+  const String what = w ? String (w) + ": " : "";
+  const String wherewhat = where.empty() ? what + String (what.empty() ? "" : " ") : where + ": " + what;
   String emsg = f & DO_ERRNO ? ": " + string_from_errno (saved_errno) + "\n" : "\n";
+  if (kind == 'A')
+    msg = "assertion failed: " + msg;
+  else if (kind == 'I')
+    msg = "condition failed: " + msg;
+  else if (kind == 'U')
+    msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
   if (f & DO_STAMP)
     ;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_DEBUG)
     {
-      String dkey = sloc.debug_key (true); // non-empty for KEY_DEBUG
+      String dkey = key ? key : "";
       std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
       if ((conftest_any_debugging && dkey.empty()) ||
           (conftest_key_debugging && !dkey.empty() &&
@@ -489,9 +496,12 @@ Logging::message (const char *kind, const SourceLocation &sloc, const char *form
                         start / 1000000, start % 1000000);
               once_leave (&first_debug, true);
             }
+          String prefix = key ? key : where;
+          if (!prefix.empty())
+            prefix = prefix + ": ";
           printerr ("[%llu.%06llu] %s%s%s",
                     delta / 1000000, delta % 1000000,
-                    sloc.debug_prefix().c_str(), msg.c_str(), emsg.c_str());
+                    prefix.c_str(), msg.c_str(), emsg.c_str());
         }
     }
   if (f & DO_STDERR)
@@ -547,15 +557,36 @@ Logging::message (const char *kind, const SourceLocation &sloc, const char *form
 }
 
 void
-Logging::abort()
+debug_cmsg (const char dkind, const String &location, const char *format, ...)
 {
-  ::abort();
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_kmsg (dkind, NULL, location, "%s", msg.c_str());
 }
 
 void
-Logging::messagev (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs)
+debug_emsg (const char dkind, const String &location, const char *format, ...)
 {
-  message (kind, sloc, "%s", string_vprintf (format, vargs).c_str());
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_kmsg (dkind, NULL, location, "%s", msg.c_str());
+  ::abort();
+}
+
+const char*
+strerror (void)
+{
+  return strerror (errno);
+}
+
+const char*
+strerror (int errnum)
+{
+  return ::strerror (errnum);
 }
 
 // == AssertionError ==
@@ -592,47 +623,122 @@ AssertionError::what () const throw()
   return m_msg.c_str();
 }
 
-// == Assertion Macros ==
+// == Development Helpers ==
+/**
+ * @def RAPICORN_STRLOC()
+ * Returns a string describing the current source code location, such as FILE and LINE number.
+ */
+/**
+ * @def STRLOC()
+ * Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_RETURN_IF(expr [, rvalue])
+ * Silently return @a rvalue if expression @a expr evaluates to true. Returns void if @a rvalue was not specified.
+ */
+/**
+ * @def return_if(expr [, rvalue])
+ * Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_RETURN_UNLESS(expr [, rvalue])
+ * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
+ */
+/**
+ * @def return_unless(expr [, rvalue])
+ * Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_FATAL(format,...)
+ * Issues an error message, and aborts the program. The error message @a format uses printf-like syntax.
+ */
+/**
+ * @def fatal(format,...)
+ * Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_ASSERT(cond)
+ * Issue an error and abort the program if expression @a cond evaluates to false.
+ */
+/**
+ * @def assert(cond)
+ * Shorthand for RAPICORN_ASSERT() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_ASSERT_RETURN(cond [, rvalue])
+ * Issue an error and return @a rvalue if expression @a cond evaluates to false. Returns void if @a rvalue was not specified.
+ * This is normally used as function entry condition.
+ */
+/**
+ * @def assert_return(cond [, rvalue])
+ * Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_ASSERT_UNREACHED()
+ * Issues an error message, and aborts the program if it is reached at runtime.
+ * This is normally used to label code conditions intended to be unreachable.
+ */
+/**
+ * @def assert_unreached
+ * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_CRITICAL(format,...)
+ * Issues an error message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * The error message @a format uses printf-like syntax.
+ */
+/**
+ * @def critical(format,...)
+ * Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_CRITICAL_UNLESS(cond)
+ * Behaves like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
+ * This is normally used as a non-fatal assertion.
+ */
+/**
+ * @def critical_unless(cond)
+ * Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_DEBUG(format,...)
+ * Issues an debugging message if the program was started with RAPICORN=debug.
+ * The message @a format uses printf-like syntax.
+ */
+/**
+ * @def DEBUG(format,...)
+ * Shorthand for RAPICORN_DEBUG() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_KEY_DEBUG(key, format,...)
+ * Issues an debugging message if the program was started with RAPICORN=debug-<KEY>, where <KEY> is given as @a key.
+ * The message @a format uses printf-like syntax.
+ */
+/**
+ * @def KEY_DEBUG(format,...)
+ * Shorthand for RAPICORN_KEY_DEBUG() if RAPICORN_CONVENIENCE is defined.
+ */
+
 /**
  * @def RAPICORN_THROW_IF_FAIL(expr)
- * This macro takes an expression @a expr as argument and throws an AssertionError exception
- * if the expression does not evaulate true at runtime. This is normally used as function entry
- * condition.
+ * Throws an AssertionError exception with error message if expression @a expr evaluates to false.
+ * This is normally used as function entry condition.
  */
 /**
  * @def throw_if_fail
  * Shorthand for RAPICORN_THROW_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
  */
 
-/**
- * @def return_if_fail
- * This macro takes an expression @a expr as argument and returns from the current function
- * if the expression does not evaulate true at runtime. This is normally used as function entry
- * condition.
- * Shorthand for RAPICORN_RETURN_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def return_val_if_fail
- * This macro takes an expression @a expr as argument and return @a rv from the current function
- * if the expression does not evaulate true at runtime. This is normally used as function entry
- * condition.
- * Shorthand for RAPICORN_RETURN_VAL_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_ASSERT_UNREACHED()
- * This macro issues an error if it is reached at runtime. This is normally used to label
- * code conditions intended to be unreachable.
- */
-/**
- * @def assert_unreached
- * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
- */
-/**
- * @def assert_not_reached
- * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
- */
 
 // == utilities ==
 void
@@ -1384,7 +1490,7 @@ IdAllocatorImpl::IdAllocatorImpl (uint startval, uint wbuffercap) :
 void
 IdAllocatorImpl::release_id (uint unique_id)
 {
-  return_if_fail (unique_id >= counterstart && unique_id < counter);
+  assert_return (unique_id >= counterstart && unique_id < counter);
   /* protect */
   mutex.lock();
   /* release oldest withheld id */
@@ -1444,7 +1550,7 @@ Locatable::~Locatable ()
   if (UNLIKELY (m_locatable_index))
     {
       ScopedLock<SpinLock> locker (locatable_mutex);
-      return_if_fail (m_locatable_index <= locatable_objs.size());
+      assert_return (m_locatable_index <= locatable_objs.size());
       const uint index = m_locatable_index - 1;
       locatable_objs[index] = NULL;
       locator_ids.release_id (m_locatable_index);
@@ -1476,7 +1582,7 @@ Locatable::from_locatable_id (uint64 locatable_id)
     return NULL; // id from wrong process
   const uint index = locatable_id - locatable_process_hash64  - 1;
   ScopedLock<SpinLock> locker (locatable_mutex);
-  return_val_if_fail (index < locatable_objs.size(), NULL);
+  assert_return (index < locatable_objs.size(), NULL);
   Locatable *_this = locatable_objs[index];
   return _this;
 }
@@ -1918,7 +2024,7 @@ BaseObject::plor_name () const
 void
 BaseObject::plor_name (const String &_plor_name)
 {
-  return_if_fail (plor_name() == "");
+  assert_return (plor_name() == "");
   if (plor_add (*this, _plor_name))
     set_data (&plor_name_key, _plor_name);
   else

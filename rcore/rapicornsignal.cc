@@ -23,7 +23,7 @@ namespace Signals {
 void
 TrampolineLink::owner_ref ()
 {
-  return_if_fail (m_linking_owner == false);
+  assert_return (m_linking_owner == false);
   ref_sink();
   m_linking_owner = true;
 }
@@ -44,7 +44,7 @@ TrampolineLink::unlink()
 
 TrampolineLink::~TrampolineLink()
 {
-  return_if_fail (m_linking_owner == false);
+  assert_return (m_linking_owner == false);
   if (next || prev)
     {
       // unlink() might have left leave next and prev
@@ -63,7 +63,7 @@ ConId
 SignalBase::connect_link (TrampolineLink *link,
                           bool            with_emitter)
 {
-  return_val_if_fail (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
+  assert_return (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
   const bool connected_before = has_connections();
   link->owner_ref();
   link->prev = start.prev;
@@ -83,7 +83,7 @@ SignalBase::disconnect_equal_link (const TrampolineLink &link,
   for (TrampolineLink *walk = start.next; walk != &start; walk = walk->next)
     if (walk->with_emitter() == with_emitter and *walk == link)
       {
-        return_val_if_fail (walk->m_linking_owner == true, 0);
+        assert_return (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
         if (!has_connections())
           connections_changed (false);
@@ -98,7 +98,7 @@ SignalBase::disconnect_link_id (ConId con_id)
   for (TrampolineLink *walk = start.next; walk != &start; walk = walk->next)
     if (con_id == walk->con_id())
       {
-        return_val_if_fail (walk->m_linking_owner == true, 0);
+        assert_return (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
         if (!has_connections())
           connections_changed (false);
@@ -112,7 +112,7 @@ SignalBase::~SignalBase()
   const bool connected_before = has_connections();
   while (start.next != &start)
     {
-      return_if_fail (start.next->m_linking_owner == true);
+      assert_return (start.next->m_linking_owner == true);
       start.next->unlink();
     }
   RAPICORN_ASSERT (start.next == &start);
@@ -149,7 +149,7 @@ SignalProxyBase::SignalProxyBase (const SignalProxyBase &other) :
 SignalProxyBase::SignalProxyBase (SignalBase &signal) :
   m_signal (&signal)
 {
-  // FIXME: return_if_fail (NULL != &signal);
+  // FIXME: assert_return (NULL != &signal);
 }
 
 ConId

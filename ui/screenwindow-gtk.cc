@@ -341,7 +341,7 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (!m_screen_window || !GTK_WIDGET_DRAWABLE (m_widget))
     return;
-  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
   GdkVisual *gvisual = gdk_drawable_get_visual (m_widget->window);
   int gwidth, gheight;
   gdk_drawable_get_size (m_widget->window, &gwidth, &gheight);
@@ -370,15 +370,15 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
                                                          GDK_WINDOW_XID (m_widget->window),
                                                          GDK_VISUAL_XVISUAL (gvisual),
                                                          gwidth, gheight);
-  return_if_fail (xsurface);
+  assert_return (xsurface);
   CHECK_CAIRO_STATUS (cairo_surface_status (xsurface));
-  return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+  assert_return (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
   cairo_xlib_surface_set_size (xsurface, gwidth, gheight);
-  return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+  assert_return (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
 
   cairo_t *xcr = cairo_create (xsurface);
-  return_if_fail (xcr);
-  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  assert_return (xcr);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
 
   cairo_save (xcr);
   vector<Rect> rects;
@@ -1063,7 +1063,7 @@ rapicorn_screen_window_event (GtkWidget *widget,
   bool handled = false;
   int window_height = 0;
   EventContext econtext = rapicorn_screen_window_event_context (self, event, &window_height);
-  if (Rapicorn::Logging::debugging()) /* debug events */
+  if (debug_enabled()) /* debug events */
     debug_dump_event (widget, ".", event, econtext);
   if (!screen_window)
     return false;
@@ -1220,7 +1220,7 @@ rapicorn_screen_window_ancestor_event (GtkWidget *ancestor,
   EventContext econtext = rapicorn_screen_window_event_context (self, event);
   if (!screen_window)
     return false;
-  if (Rapicorn::Logging::debugging()) /* debug events */
+  if (debug_enabled()) /* debug events */
     debug_dump_event (widget, "+", event, econtext);
   bool handled = false;
   switch (event->type)

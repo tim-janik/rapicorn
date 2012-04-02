@@ -371,14 +371,14 @@ init_core_test (const String       &app_ident,
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
   init_core (app_ident, argcp, argv, targs);
-  Logging::configure ("fatal-criticals:fatal-warnings");
+  debug_configure ("fatal-criticals:fatal-warnings");
   const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
   g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   CPUInfo ci = cpu_info();
-  Test::flag_test_log = (InitSettings::test_codes() & 0x2) || Logging::conftest ("test-log", Test::flag_test_log);
-  Test::flag_test_verbose = (InitSettings::test_codes() & 0x1) || Logging::conftest ("test-verbose", Test::flag_test_verbose |
-                                                                                   Test::flag_test_log);
-  Test::flag_test_slow = (InitSettings::test_codes() & 0x4) || Logging::conftest ("test-slow", Test::flag_test_slow);
+  Test::flag_test_log = (InitSettings::test_codes() & 0x2) || debug_check ("test-log", Test::flag_test_log);
+  Test::flag_test_verbose = (InitSettings::test_codes() & 0x1) || debug_check ("test-verbose", Test::flag_test_verbose |
+                                                                               Test::flag_test_log);
+  Test::flag_test_slow = (InitSettings::test_codes() & 0x4) || debug_check ("test-slow", Test::flag_test_slow);
   TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
 

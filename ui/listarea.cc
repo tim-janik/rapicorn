@@ -519,7 +519,7 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
     rowheight = requisition.height;
   }
 
-  return_val_if_fail (rowheight > 0, scroll_item);
+  assert_return (rowheight > 0, scroll_item);
   const int64 rowlower = rowheight * (1 - scroll_fraction);       // fractional lower row pixels
   const int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
   *scrollrowy = listlower - rowlower;
@@ -723,14 +723,14 @@ ItemListImpl::measure_row (ListRow *lr,
       Allocation carea = lr->rowbox->allocation();
       *allocation_offset = carea.y;
       if (carea.height < 0)
-        assert_not_reached(); // FIXME
+        assert_unreached(); // FIXME
       return carea.height;
     }
   else
     {
       Requisition requisition = lr->rowbox->requisition();
       if (requisition.height < 0)
-        assert_not_reached(); // FIXME
+        assert_unreached(); // FIXME
       return requisition.height;
     }
 }

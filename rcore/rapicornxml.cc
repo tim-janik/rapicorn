@@ -218,7 +218,7 @@ class XmlNodeParent : public virtual XmlNode {
   virtual bool
   add_child (XmlNode &child)
   {
-    return_val_if_fail (child.parent() == NULL, false);
+    assert_return (child.parent() == NULL, false);
     m_children.push_back (&child);
     set_parent (&child, this);
     return true;

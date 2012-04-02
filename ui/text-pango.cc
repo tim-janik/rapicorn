@@ -103,12 +103,12 @@ default_pango_cairo_font_options (PangoContext *pcontext,
                                   cairo_t      *cairo)
 {
   cairo_font_options_t *fopt = cairo_font_options_create();
-  return_if_fail (fopt != NULL);
+  assert_return (fopt != NULL);
   cairo_font_options_set_hint_metrics (fopt, CAIRO_HINT_METRICS_ON); // ON, OFF
   cairo_font_options_set_hint_style (fopt, CAIRO_HINT_STYLE_FULL); // NONE, SLIGHT, MEDIUM, FULL
   cairo_font_options_set_antialias (fopt, CAIRO_ANTIALIAS_SUBPIXEL); // NONE, GRAY, SUBPIXEL
   cairo_font_options_set_subpixel_order (fopt, CAIRO_SUBPIXEL_ORDER_DEFAULT); // RGB, BGR, VRGB, VBGR
-  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_font_options_status (fopt));
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_font_options_status (fopt));
   if (cairo)
     cairo_set_font_options (cairo, fopt);
   if (pcontext)

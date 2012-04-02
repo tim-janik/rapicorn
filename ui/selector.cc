@@ -362,7 +362,7 @@ parse_a_n_plus_b (const char **stringp, int64 *ap, int64 *bp)
 bool
 parse_css_nth (const char **stringp, int64 *ap, int64 *bp)
 {
-  return_val_if_fail (stringp != NULL && ap != NULL && bp != NULL, false);
+  assert_return (stringp != NULL && ap != NULL && bp != NULL, false);
   /* nth : S* [ ['-'|'+']? INTEGER? {N} [ S* ['-'|'+'] S* INTEGER ]? |
    *            ['-'|'+']? INTEGER | {O}{D}{D} | {E}{V}{E}{N}          ] S*
    */
@@ -491,7 +491,7 @@ parse_identifier_char (const char **stringp, String &ident)
 bool
 parse_identifier (const char **stringp, String &ident)
 { // [-]?{nmstart}{nmchar}*
-  return_val_if_fail (stringp != NULL, false);
+  assert_return (stringp != NULL, false);
   const char *p = *stringp;
   String s;
   if (UNLIKELY (*p == '-'))
@@ -555,7 +555,7 @@ parse_string_char (const char **stringp, String &ident)
 bool
 parse_string (const char **stringp, String &ident)
 { // string : string_dq | string_sq
-  return_val_if_fail (stringp != NULL, false);
+  assert_return (stringp != NULL, false);
   const char *p = *stringp;
   String s;
   if (*p == '"')
@@ -837,7 +837,7 @@ parse_selector_combinator (const char **stringp, Kind *kind, bool *subjectp)
 bool
 SelectorChain::parse (const char **stringp, const bool with_combinators)
 {
-  return_val_if_fail (stringp != NULL, false);
+  assert_return (stringp != NULL, false);
   const char *p = *stringp;
   /* selector : simple_selector_sequence [ combinator simple_selector_sequence ]* */
   SelectorChain tmpchain;
@@ -1095,7 +1095,7 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
 template<int CDIR> bool
 Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
 {
-  return_val_if_fail (chain_index < chain.size(), false);
+  assert_return (chain_index < chain.size(), false);
   RAPICORN_STATIC_ASSERT (CDIR);
   const SelectorNode &snode = chain[chain_index];
   switch (snode.kind)
@@ -1250,7 +1250,7 @@ Matcher::parse_selector (const String &selector,
                          bool with_combinators,
                          String       *errorp)
 {
-  return_val_if_fail (chain.empty(), false);
+  assert_return (chain.empty(), false);
   const char *s = selector.c_str();
   String error;
   // parse selector string

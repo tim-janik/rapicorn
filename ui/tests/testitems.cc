@@ -25,7 +25,7 @@ static void
 run_main_loop_recursive (bool blocking_while_primary = true)
 {
   MainLoop *main_loop = uithread_main_loop();
-  return_if_fail (main_loop != NULL);
+  assert_return (main_loop != NULL);
   ref (main_loop);
   if (!blocking_while_primary)
     main_loop->iterate_pending();

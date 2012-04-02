@@ -54,13 +54,13 @@ public:
   void                          lighting                (LightingType sh);
   void                          shade                   (LightingType sh);
 private:
-  String                        background              () const { RAPICORN_ASSERT_NOT_REACHED(); }
-  LightingType                  lighting                () const { RAPICORN_ASSERT_NOT_REACHED(); }
-  LightingType                  shade                   () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  String                        background              () const { RAPICORN_ASSERT_UNREACHED(); }
+  LightingType                  lighting                () const { RAPICORN_ASSERT_UNREACHED(); }
+  LightingType                  shade                   () const { RAPICORN_ASSERT_UNREACHED(); }
 };
 
 class Frame : public virtual ContainerImpl {
-  FrameType                     frame_type      () const        { RAPICORN_ASSERT_NOT_REACHED(); }
+  FrameType                     frame_type      () const        { RAPICORN_ASSERT_UNREACHED(); }
 protected:
   virtual const PropertyList&   list_properties ();
 public:

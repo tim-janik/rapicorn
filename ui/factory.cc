@@ -119,7 +119,7 @@ ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 String
 factory_context_name (FactoryContext *fc)
 {
-  return_val_if_fail (fc != NULL, "");
+  assert_return (fc != NULL, "");
   const XmlNode *xnode = (XmlNode*) fc;
   String s = xnode->name();
   if (strncmp (s.c_str(), "def:", 4) == 0)
@@ -131,7 +131,7 @@ factory_context_name (FactoryContext *fc)
 String
 factory_context_type (FactoryContext *fc)
 {
-  return_val_if_fail (fc != NULL, "");
+  assert_return (fc != NULL, "");
   const XmlNode *xnode = (XmlNode*) fc;
   String ident = xnode->name();
   if (strncmp (ident.c_str(), "def:", 4) != 0) // lookup definition node from child node
@@ -148,12 +148,12 @@ StringList
 factory_context_tags (FactoryContext *fc)
 {
   StringList types;
-  return_val_if_fail (fc != NULL, types);
+  assert_return (fc != NULL, types);
   const XmlNode *xnode = (XmlNode*) fc;
   if (strncmp (xnode->name().c_str(), "def:", 4) != 0) // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
-      return_val_if_fail (xnode != NULL, types);
+      assert_return (xnode != NULL, types);
     }
   while (xnode)
     {
@@ -169,7 +169,7 @@ factory_context_tags (FactoryContext *fc)
             if (!xnode)
               {
                 const ItemTypeFactory *itfactory = lookup_item_factory (attributes_values[i]);
-                return_val_if_fail (itfactory != NULL, types);
+                assert_return (itfactory != NULL, types);
                 types.push_back (itfactory->type_name());
                 if (itfactory->iseventhandler)
                   types.push_back ("Rapicorn::Factory::EventHandler");
@@ -236,8 +236,8 @@ ItemImpl*
 Builder::inherit_item (const String &item_identifier, const StringVector &call_names, const StringVector &call_values,
                        const XmlNode *caller, const XmlNode *derived)
 {
-  return_val_if_fail (derived != NULL, NULL);
-  return_val_if_fail (caller != NULL, NULL);
+  assert_return (derived != NULL, NULL);
+  assert_return (caller != NULL, NULL);
   Builder builder (item_identifier, caller);
   if (builder.m_dnode)
     return builder.call_item (builder.m_dnode, call_names, call_values, caller, derived);
@@ -407,7 +407,7 @@ Builder::call_item (const XmlNode *anode,
                     const StringVector &call_names, const StringVector &call_values, // evaluated args
                     const XmlNode *caller, const XmlNode *outmost_caller)
 {
-  return_val_if_fail (m_dnode != NULL, NULL);
+  assert_return (m_dnode != NULL, NULL);
   String name;
   StringVector prop_names, prop_values;
   parse_call_args (call_names, call_values, prop_names, prop_values, name, caller); // FIXME: catch:inherit+child-container
@@ -445,7 +445,7 @@ Builder::call_child (const XmlNode *anode,
                      const StringVector &call_names, const StringVector &call_values, // evaluated args
                      const String &name, const XmlNode *caller)
 {
-  return_val_if_fail (m_dnode != NULL, NULL);
+  assert_return (m_dnode != NULL, NULL);
   // create item
   ItemImpl *item = Builder::inherit_item (anode->name(), call_names, call_values, anode, caller ? caller : anode);
   if (!item)
@@ -615,7 +615,7 @@ register_ui_nodes (const String   &domain,
                    XmlNode        *xnode,
                    vector<String> *definitions)
 {
-  return_val_if_fail (domain.empty() == false, "missing namespace for ui definitions");
+  assert_return (domain.empty() == false, "missing namespace for ui definitions");
   // allow toplevel def:...
   if (xnode->name().compare (0, 4, "def:") == 0)
     return register_ui_node (domain, xnode, definitions);

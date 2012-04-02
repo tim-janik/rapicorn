@@ -414,7 +414,7 @@ log_prefix (const String &prg_name,
             const String &ident)
 {
   String str = prg_name;
-  with_testpid0 = with_testpid0 && Logging::conftest ("testpid0");
+  with_testpid0 = with_testpid0 && debug_check ("testpid0");
   if (pid || with_testpid0)
     str += string_printf ("[%u]", with_testpid0 ? 0 : pid);
   if (str.size() && *str.rbegin() != ':')

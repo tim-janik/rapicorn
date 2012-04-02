@@ -165,7 +165,7 @@ alloc_id ()
 static void
 release_id (uint id)
 {
-  return_if_fail (id != 0);
+  assert_return (id != 0);
   // FIXME: ned proper ID allocator
 }
 
@@ -275,7 +275,7 @@ EventLoop::add (Source *source,
                 int     priority)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
-  return_val_if_fail (source->m_loop == NULL, 0);
+  assert_return (source->m_loop == NULL, 0);
   source->m_loop = this;
   ref_sink (source);
   source->m_id = alloc_id();
@@ -291,7 +291,7 @@ void
 EventLoop::remove_source_Lm (Source *source)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
-  return_if_fail (source->m_loop == this);
+  assert_return (source->m_loop == this);
   source->m_loop = NULL;
   source->m_loop_state = WAITING;
   m_sources.erase (find (m_sources.begin(), m_sources.end(), source));
@@ -382,7 +382,7 @@ MainLoop::~MainLoop()
   kill_loops(); // this->kill_sources_Lm()
   ScopedLock<Mutex> locker (m_mutex);
   remove_loop_L (*this);
-  return_if_fail (m_loops.empty() == true);
+  assert_return (m_loops.empty() == true);
 }
 
 void
@@ -391,7 +391,7 @@ MainLoop::set_lock_hooks (const LockHooks &hooks)
   ScopedLock<Mutex> locker (m_mutex);
   if (hooks.sense)
     {
-      return_if_fail (hooks.lock != NULL && hooks.unlock != NULL);
+      assert_return (hooks.lock != NULL && hooks.unlock != NULL);
       m_lock_hooks = hooks;
     }
   else
@@ -408,7 +408,7 @@ MainLoop::wakeup_poll()
 void
 MainLoop::add_loop_L (EventLoop &loop)
 {
-  return_if_fail (this == &loop.m_main_loop);
+  assert_return (this == &loop.m_main_loop);
   m_loops.push_back (&loop);
   wakeup_poll();
 }
@@ -416,9 +416,9 @@ MainLoop::add_loop_L (EventLoop &loop)
 void
 MainLoop::remove_loop_L (EventLoop &loop)
 {
-  return_if_fail (this == &loop.m_main_loop);
+  assert_return (this == &loop.m_main_loop);
   vector<EventLoop*>::iterator it = std::find (m_loops.begin(), m_loops.end(), &loop);
-  return_if_fail (it != m_loops.end());
+  assert_return (it != m_loops.end());
   m_loops.erase (it);
   wakeup_poll();
 }
@@ -739,7 +739,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     hooks.lock();
   main_mutex.lock();
   if (presult < 0)
-    pcritical ("MainLoop: poll() failed");
+    critical ("MainLoop: poll() failed: %s", strerror());
   else if (pfda[wakeup_idx].revents)
     m_eventfd.flush(); // restart queueing wakeups, possibly triggered by dispatching
   // check

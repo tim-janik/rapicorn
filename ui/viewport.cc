@@ -14,7 +14,7 @@ ViewportImpl::~ViewportImpl ()
 void
 ViewportImpl::negotiate_size (const Allocation *carea)
 {
-  return_if_fail (requisitions_tunable() == false);
+  assert_return (requisitions_tunable() == false);
   const bool have_allocation = carea != NULL;
   Allocation area;
   if (have_allocation)
@@ -53,7 +53,7 @@ ViewportImpl::negotiate_size (const Allocation *carea)
 void
 ViewportImpl::allocate_size (const Allocation &area)
 {
-  return_if_fail (area.width >= 0 && area.height >= 0);
+  assert_return (area.width >= 0 && area.height >= 0);
   negotiate_size (&area);
 }
 

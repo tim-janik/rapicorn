@@ -134,15 +134,15 @@ public:
   /* range */
   virtual bool                  frozen          () const                { return m_freeze_count > 0; }
   virtual double                lower	        () const                { return m_lower; }
-  virtual void                  lower           (double newval)         { return_if_fail (m_freeze_count); m_lower = newval; }
+  virtual void                  lower           (double newval)         { assert_return (m_freeze_count); m_lower = newval; }
   virtual double                upper	        () const                { return m_upper; }
-  virtual void		        upper	        (double newval)         { return_if_fail (m_freeze_count); m_upper = newval; }
+  virtual void		        upper	        (double newval)         { assert_return (m_freeze_count); m_upper = newval; }
   virtual double	        step_increment	() const                { return m_step_increment; }
-  virtual void		        step_increment	(double newval)         { return_if_fail (m_freeze_count); m_step_increment = newval; }
+  virtual void		        step_increment	(double newval)         { assert_return (m_freeze_count); m_step_increment = newval; }
   virtual double	        page_increment	() const                { return m_page_increment; }
-  virtual void		        page_increment	(double newval)         { return_if_fail (m_freeze_count); m_page_increment = newval; }
+  virtual void		        page_increment	(double newval)         { assert_return (m_freeze_count); m_page_increment = newval; }
   virtual double	        page	        () const                { return m_page; }
-  virtual void		        page	        (double newval)         { return_if_fail (m_freeze_count); m_page = newval; }
+  virtual void		        page	        (double newval)         { assert_return (m_freeze_count); m_page = newval; }
   virtual void
   freeze ()
   {
@@ -162,7 +162,7 @@ public:
   virtual void
   constrain ()
   {
-    return_if_fail (m_freeze_count);
+    assert_return (m_freeze_count);
     if (m_lower > m_upper)
       m_lower = m_upper = (m_lower + m_upper) / 2;
     m_page = CLAMP (m_page, 0, m_upper - m_lower);
@@ -179,7 +179,7 @@ public:
   virtual void
   thaw ()
   {
-    return_if_fail (m_freeze_count);
+    assert_return (m_freeze_count);
     if (m_freeze_count == 1)
       constrain();
     m_freeze_count--;

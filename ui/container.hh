@@ -44,7 +44,7 @@ public:
   virtual size_t        n_children      () = 0;
   bool                  has_children    ()                          { return 0 != n_children(); }
   void                  remove          (ItemImpl           &item);
-  void                  remove          (ItemImpl           *item)  { RAPICORN_CHECK (item != NULL); remove (*item); }
+  void                  remove          (ItemImpl           *item)  { assert_return (item != NULL); remove (*item); }
   void                  add             (ItemImpl                   &item);
   void                  add             (ItemImpl                   *item);
   virtual Affine        child_affine    (const ItemImpl             &item); /* container => item affine */
@@ -69,7 +69,7 @@ protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}
-  ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
+  ItemImpl&             get_child               () { critical_unless (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;

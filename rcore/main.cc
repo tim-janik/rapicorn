@@ -293,7 +293,7 @@ init_core (const String       &app_ident,
            char              **argv,
            const StringVector &args)
 {
-  return_if_fail (app_ident.empty() == false);
+  assert_return (app_ident.empty() == false);
   // assert global_ctors work
   if (__staticctortest.v != 0x12affe17)
     fatal ("librapicorncore: link error: C++ constructors have not been executed");
@@ -318,7 +318,7 @@ init_core (const String       &app_ident,
     g_set_application_name (program_app_ident.c_str());
 
   // ensure logging is fully initialized
-  Logging::configure ("");
+  debug_configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
   RAPICORN_DEBUG ("startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 

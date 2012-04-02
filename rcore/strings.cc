@@ -588,7 +588,7 @@ string_option_find_value (const String   &option_string,
 {
   const char *p, *match = NULL;
   int l = strlen (option.c_str());
-  return_val_if_fail (l > 0, NULL);
+  assert_return (l > 0, NULL);
   if (option_string == "")
     return NULL;        /* option not found */
 

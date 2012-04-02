@@ -126,10 +126,10 @@ cpu_affinity (int cpu)
       CPU_ZERO (&cpuset);
       CPU_SET (cpu, &cpuset);
       if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-        PDEBUG ("pthread_setaffinity_np");
+        DEBUG ("pthread_setaffinity_np: %s", strerror());
     }
   if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-    PDEBUG ("pthread_getaffinity_np");
+    DEBUG ("pthread_getaffinity_np: %s", strerror());
   for (int j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET (j, &cpuset))
       return j;

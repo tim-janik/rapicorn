@@ -80,13 +80,13 @@ class TestStreamImpl : public TestStream {
     switch (kind)
       {
       case TEXT:
-        return_if_fail (name == "");
+        assert_return (name == "");
         close_node();
         if (!ignore_count || nodematch)
           dat += value_escape (val) + "\n";
         break;
       case NODE:
-        return_if_fail (val == "");
+        assert_return (val == "");
         close_node();
         node_stack.push_back (name);
         if (!ignore_count)
