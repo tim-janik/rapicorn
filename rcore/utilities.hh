@@ -195,23 +195,6 @@ inline void breakpoint ();
 String      process_handle ();
 
 
-// == Source Location ==
-class SourceLocation {
-  String m_file, m_line, m_func, m_pretty, m_component;
-  uint   m_location_bits;
-public:
-  enum Bits { NONE = 0, LOCATION = 1, FUNCTION = 2, COMPONENT = 4, KEY = 8 };
-  SourceLocation (const char *file, int line, const char *func, const char *pretty_func, const char *component);
-  SourceLocation (const char *file, const char *component, const char *key);
-  String where () const;
-  String where (int bits) const;
-  String debug_key (bool explicit_key = false) const;
-  String debug_prefix () const;
-};
-#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN__SOURCE_COMPONENT__)
-#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, "")
-#define RAPICORN_SOURCE_KEY(key)        Rapicorn::SourceLocation (__FILE__, RAPICORN__SOURCE_COMPONENT__, key)
-
 // == AssertionError ==
 class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
 {

@@ -135,94 +135,6 @@ timestamp_benchmark ()
   return stamp;
 }
 
-// == Source Location ==
-SourceLocation::SourceLocation (const char *file, int line, const char *func,
-                                const char *pretty_func, const char *component) :
-  m_file (file), m_line (line > 0 ? string_from_int (line) : ""), m_func (func),
-  m_pretty (pretty_func), m_component (component), m_location_bits (0)
-{
-  m_location_bits |= m_file.empty() ? 0 : LOCATION;
-  m_location_bits |= m_func.empty() ? 0 : FUNCTION;
-  m_location_bits |= m_component.empty() ? 0 : COMPONENT;
-}
-
-SourceLocation:: SourceLocation (const char *file, const char *component, const char *key) :
-  m_file (file), m_line (""), m_func (key), m_pretty (""), m_component (component), m_location_bits (0)
-{
-  m_location_bits |= m_file.empty() ? 0 : LOCATION;
-  m_location_bits |= m_func.empty() ? 0 : KEY;
-  m_location_bits |= m_component.empty() ? 0 : COMPONENT;
-}
-
-String
-SourceLocation::where () const
-{
-  return where (LOCATION | FUNCTION);
-}
-
-String
-SourceLocation::where (int bits) const
-{
-  String s;
-  if (bits & LOCATION && !m_file.empty())
-    {
-    s += m_file;
-    if (!m_line.empty())
-      s += ":" + m_line;
-    }
-  if (bits & m_location_bits & FUNCTION && !m_func.empty())
-    {
-      s += s.empty() ? "" : ": ";
-      s += m_func + "()";
-    }
-  if (bits & COMPONENT && !m_component.empty())
-    {
-      s += s.empty() ? "" : ": ";
-      s += m_component;
-    }
-  if (!s.empty())
-    s += ": ";
-  return s;
-}
-
-static String
-file_stem (const String &fname)
-{
-  const char *file = strrchr (fname.c_str(), DIR_SEPARATOR); // strip directories
-  if (file)
-    file += 1; // skip directory separator
-  else
-    file = fname.c_str();
-  const char *dot = strrchr (file, '.');
-  return !dot || dot == file ? file : String (file, dot - file);
-}
-
-String
-SourceLocation::debug_prefix () const
-{
-  String key = debug_key (false);
-  return key.empty() ? "" : key + ": ";
-}
-
-String
-SourceLocation::debug_key (bool explicit_key) const
-{
-  if (m_location_bits & KEY)
-    return m_func;
-  if (explicit_key)
-    return "";
-  // fallbacks
-  if (m_location_bits & LOCATION)
-    {
-      String fstem = file_stem (m_file);
-      if (!fstem.empty())
-        return fstem;
-    }
-  if (m_location_bits & COMPONENT)
-    return m_component;
-  return m_file;
-}
-
 // == KeyConfig ==
 struct KeyConfig {
   typedef std::map<String, String> StringMap;
@@ -432,6 +344,25 @@ logtest (const char **kindp, const char *mode, int advance, int flags)
   return 0;
 }
 
+static String
+dbg_prefix (const String &fileline)
+{
+  // reduce "foo/bar.c:77" to "bar"
+  String cxxstring = fileline;
+  char *string = &cxxstring[0];
+  char *d = strrchr (string, '.');
+  if (d)
+    {
+      char *s = strrchr (string, DIR_SEPARATOR);
+      if (d > s) // strip ".c:77"
+        {
+          *d = 0;
+          return s ? s + 1 : string;
+        }
+    }
+  return fileline;
+}
+
 void
 debug_kmsg (const char dkind, const char *key, const String &where, const char *format, ...)
 {
@@ -496,7 +427,7 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
                         start / 1000000, start % 1000000);
               once_leave (&first_debug, true);
             }
-          String prefix = key ? key : where;
+          String prefix = key ? key : dbg_prefix (where);
           if (!prefix.empty())
             prefix = prefix + ": ";
           printerr ("[%llu.%06llu] %s%s%s",
