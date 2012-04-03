@@ -21,9 +21,9 @@ For a start, we'll store the widget tree as a Python string:
 	"""
 	# Define hello-window Widget Tree
 	hello_window_widgets = """
-	<def:hello-window inherit="Root">
+	<tmpl:define id="hello-window" inherit="Root">
 	  <Label markup-text="Hello World!" />
-	</def:hello-window>
+	</tmpl:define>
 	"""
 
 Rapicorn is provided as a versioned Python module that's best imported

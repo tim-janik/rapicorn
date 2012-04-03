@@ -541,7 +541,7 @@ static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
   "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
   // test-dialog
-  "<def:test-dialog inherit='Window'>\n"
+  "<tmpl:define id='test-dialog' inherit='Window'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
   "    <Alignment padding='5'>\n"
   "      <VBox spacing='3' hexpand='1'>\n"
@@ -574,7 +574,7 @@ static const char test_dialog_xml[] =
   "      </VBox>\n"
   "    </Alignment>\n"
   "  </Ambience>\n"
-  "</def:test-dialog>\n"
+  "</tmpl:define>\n"
   ""
   "</rapicorn-definitions>\n"
   "";

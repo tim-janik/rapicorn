@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- test dialog -->
-  <def:main-shell inherit="Window">
+  <tmpl:define id="main-shell" inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <VBox sensitive="1" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />
@@ -17,5 +17,5 @@
 	</Frame>
       </VBox>
     </Ambience>
-  </def:main-shell>
+  </tmpl:define>
 </rapicorn-definitions>

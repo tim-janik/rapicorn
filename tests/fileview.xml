@@ -15,21 +15,21 @@
  ! A copy of the GNU Lesser General Public License should ship along
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- list construction -->
-  <def:ListArea inherit="Rapicorn::Factory::ItemList"/>
-  <def:ListAreaTable inherit="Table" />
-  <def:ListRow inherit="Ambience" child-container="ListRowCavity" hexpand="1"
+  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::ItemList"/>
+  <tmpl:define id="ListAreaTable" inherit="Table" />
+  <tmpl:define id="ListRow" inherit="Ambience" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
     <Frame hexpand="1" frame-type="none" tight-focus="true">
       <HBox id="ListRowCavity"/>
     </Frame>
-  </def:ListRow>
+  </tmpl:define>
 
   <!-- list area -->
-  <def:item-list inherit="Alignment" >
-    <arg:model default=""/>
+  <tmpl:define id="item-list" inherit="Alignment" >
+    <tmpl:argument id="model" default=""/>
     <Table>
       <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
@@ -40,10 +40,10 @@
       <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
       <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
     </Table>
-  </def:item-list>
+  </tmpl:define>
 
   <!-- main dialog -->
-  <def:main-dialog inherit="Window">
+  <tmpl:define id="main-dialog" inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" >
@@ -61,6 +61,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </def:main-dialog>
+  </tmpl:define>
 
 </rapicorn-definitions>

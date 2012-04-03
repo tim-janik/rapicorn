@@ -19,14 +19,14 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- arrow sizing test -->
-  <def:arrow-frame inherit="Frame" child-container="child-area" >
-    <arg:center-child default="1" />
+  <tmpl:define id="arrow-frame" inherit="Frame" child-container="child-area" >
+    <tmpl:argument id="center-child" default="1" />
     <Alignment id="child-area" vscale="`not 1*center_child`" hscale="`not 1*center_child`"
 	       left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
-  </def:arrow-frame>
+  </tmpl:define>
   <!-- This test reconstructs auto-expanding arrows like they are used in
        scrollbars. Using center-child="0" is crucial here so the "child-area"
        alignment surrounding the arrow properly expands its child. Also
@@ -35,7 +35,7 @@
        The TestContainer then asserts that the arrow really is allocated with
        a width based on its height.
     -->
-  <def:test-dialog inherit="Window">
+  <tmpl:define id="test-dialog" inherit="Window">
     <VBox>
       <Label markup-text="Square Arrow:"/>
       <HBox>
@@ -47,6 +47,6 @@
 	</TestContainer>
       </HBox>
     </VBox>
-  </def:test-dialog>
+  </tmpl:define>
 
 </rapicorn-definitions>

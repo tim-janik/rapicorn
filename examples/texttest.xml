@@ -15,12 +15,12 @@
  ! A copy of the GNU Lesser General Public License should ship along
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- scroll area test -->
-  <def:scroll-area-test inherit="ScrollArea" vspread="1">
+  <tmpl:define id="scroll-area-test" inherit="ScrollArea" vspread="1">
     <Label>
-      <prop:markup-text>HUHU
+      <tmpl:property id="markup-text">HUHU
 	<br/>This is a really long text which lasts longer and longer and longer and some more, etc, etc, etc.
 	<br/>A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>B 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
@@ -49,13 +49,13 @@
 	<br/>Y 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>Z 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>_ 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789
-      </prop:markup-text>
+      </tmpl:property>
     </Label>
-  </def:scroll-area-test>
+  </tmpl:define>
   
   <!-- Markup test -->
-  <def:ascii-art-label inherit="Label">
-    <prop:markup-text>
+  <tmpl:define id="ascii-art-label" inherit="Label">
+    <tmpl:property id="markup-text">
       <pre><tt>
 +----------------------------------------+
 |         (__)                           |
@@ -66,12 +66,12 @@
 |    ~~   ~~                             |
 +----------------------------------------+
 	</tt></pre>
-    </prop:markup-text>
-  </def:ascii-art-label>
+    </tmpl:property>
+  </tmpl:define>
 
   <!-- Markup test -->
-  <def:markup-test inherit="Label">
-    <prop:markup-text>
+  <tmpl:define id="markup-test" inherit="Label">
+    <tmpl:property id="markup-text">
       Text styles: <b>bold</b> <u>underline</u> <i>italic</i> <s>strike</s> <br/>
       Teletype + pre: <tt><pre>** *  *   * teletype + pre *   *  * **</pre></tt> <br/>
       Large: normal <larger>larger1 <larger>larger2 <larger>larger3 <larger>larger4 <larger>larger5 </larger></larger></larger></larger></larger> <br/>
@@ -82,33 +82,33 @@
       Colors:
       foregrounds: <fg color='red'>red</fg> <fg color='green'>green</fg> <fg color='blue'>blue</fg>
       backgrounds: <fg color='white'> <bg color='red'>red</bg> <bg color='green'>green</bg> <bg color='blue'>blue</bg> </fg>
-    </prop:markup-text>
-  </def:markup-test>
+    </tmpl:property>
+  </tmpl:define>
 
   <!-- text editor test -->
-  <def:text-editor-test inherit="Frame" frame-type="in">
+  <tmpl:define id="text-editor-test" inherit="Frame" frame-type="in">
     <FocusFrame frame-type="none">
       <TextEditor>
 	<Label>
-	  <prop:markup-text>
+	  <tmpl:property id="markup-text">
 	    editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
-	  </prop:markup-text>
+	  </tmpl:property>
 	</Label>
       </TextEditor>
     </FocusFrame>
-  </def:text-editor-test>
+  </tmpl:define>
 
   <!-- wrap text test -->
-  <def:wrap-text-test inherit="Frame">
+  <tmpl:define id="wrap-text-test" inherit="Frame">
     <Label
       text-mode="wrapped"
       markup-text="Wrappable test text with multiple words so words and spaces are available to allow wrapping"
       />
     <!-- request-digits="3" request-chars="3" -->
-  </def:wrap-text-test>
+  </tmpl:define>
 
   <!-- test dialog -->
-  <def:main-shell inherit="Window">
+  <tmpl:define id="main-shell" inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">
@@ -136,5 +136,5 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </def:main-shell>
+  </tmpl:define>
 </rapicorn-definitions>

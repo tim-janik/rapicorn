@@ -19,9 +19,9 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
-  <def:test-dialog inherit="Window">
+  <tmpl:define id="test-dialog" inherit="Window">
     <VBox>
 
       <Label markup-text="Horizontal Alignment, Horizontal Scale,"/>
@@ -62,6 +62,6 @@
       </HBox>
 
     </VBox>
-  </def:test-dialog>
+  </tmpl:define>
 
 </rapicorn-definitions>

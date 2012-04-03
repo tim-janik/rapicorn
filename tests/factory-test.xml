@@ -19,10 +19,10 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
-  <def:main-test inherit="Window">
-    <arg:defaultvalue17 default="`10 + 7`"/>
+  <tmpl:define id="main-test" inherit="Window">
+    <tmpl:argument id="defaultvalue17" default="`10 + 7`"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->
@@ -31,6 +31,6 @@
 	<TestItem value="`defaultvalue17`" assert-value="17" />
       </VBox>
     </Alignment>
-  </def:main-test>
+  </tmpl:define>
 
 </rapicorn-definitions>

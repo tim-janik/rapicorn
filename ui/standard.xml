@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
-  <def:OuterShell inherit="Ambience" child-container="OuterShellCavity"
+  <tmpl:define id="OuterShell" inherit="Ambience" child-container="OuterShellCavity"
     normal-lighting="upper-left">
     <Alignment right-padding="3" top-padding="3" left-padding="3" bottom-padding="3" hscale="0" vscale="0" >
       <VBox id="OuterShellCavity" />
     </Alignment>
-  </def:OuterShell>
+  </tmpl:define>
 
 </rapicorn-definitions>

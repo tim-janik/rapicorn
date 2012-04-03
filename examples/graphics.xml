@@ -15,10 +15,10 @@
  ! A copy of the GNU Lesser General Public License should ship along
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- Frames -->
-  <def:frame-test inherit="HBox" spacing="10">
+  <tmpl:define id="frame-test" inherit="HBox" spacing="10">
     <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 	    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 		    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
@@ -73,10 +73,10 @@
 			  </Frame></Frame></Frame></Frame>
 		  </Frame></Frame></Frame></Frame>
 	  </Frame></Frame></Frame></Frame>
-  </def:frame-test>
+  </tmpl:define>
 
   <!-- test dialog -->
-  <def:graphics-dialog inherit="Window">
+  <tmpl:define id="graphics-dialog" inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" >
@@ -92,6 +92,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </def:graphics-dialog>
+  </tmpl:define>
 
 </rapicorn-definitions>

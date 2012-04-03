@@ -122,8 +122,8 @@ factory_context_name (FactoryContext *fc)
   assert_return (fc != NULL, "");
   const XmlNode *xnode = (XmlNode*) fc;
   String s = xnode->name();
-  if (strncmp (s.c_str(), "def:", 4) == 0)
-    return s.substr (4);
+  if (s == "tmpl:define")
+    return xnode->get_attribute ("id");
   else
     return s;
 }
@@ -133,15 +133,13 @@ factory_context_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
   const XmlNode *xnode = (XmlNode*) fc;
-  String ident = xnode->name();
-  if (strncmp (ident.c_str(), "def:", 4) != 0) // lookup definition node from child node
+  if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
-      xnode = gadget_definition_lookup (ident, xnode);
-      assert (xnode != NULL);
-      ident = xnode->name();
+      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      assert_return (xnode != NULL, "");
     }
-  assert (strncmp (ident.c_str(), "def:", 4) == 0);
-  return ident.substr (4);
+  assert_return (xnode->name() == "tmpl:define", "");
+  return xnode->get_attribute ("id");
 }
 
 StringList
@@ -150,15 +148,15 @@ factory_context_tags (FactoryContext *fc)
   StringList types;
   assert_return (fc != NULL, types);
   const XmlNode *xnode = (XmlNode*) fc;
-  if (strncmp (xnode->name().c_str(), "def:", 4) != 0) // lookup definition node from child node
+  if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
       assert_return (xnode != NULL, types);
     }
   while (xnode)
     {
-      assert (strncmp (xnode->name().c_str(), "def:", 4) == 0); // FIXME: remove?
-      types.push_back (xnode->name().substr (4));
+      assert_return (xnode->name() == "tmpl:define", types);
+      types.push_back (xnode->get_attribute ("id"));
       const StringVector &attributes_names = xnode->list_attributes(), &attributes_values = xnode->list_values();
       const XmlNode *cnode = xnode;
       xnode = NULL;
@@ -183,6 +181,17 @@ factory_context_tags (FactoryContext *fc)
   return types;
 }
 
+#if 0
+static void
+dump_args (const String &what, const StringVector &anames, const StringVector &avalues)
+{
+  printerr ("%s:", what.c_str());
+  for (size_t i = 0; i < anames.size(); i++)
+    printerr (" %s=%s", anames[i].c_str(), avalues[i].c_str());
+  printerr ("\n");
+}
+#endif
+
 static String
 node_location (const XmlNode *xnode)
 {
@@ -198,7 +207,7 @@ class Builder {
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
                              String *node_name, String *child_container_name, String *inherit_identifier);
   void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
-  void      apply_args      (ItemImpl &item, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller);
+  void      apply_args      (ItemImpl &item, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
   void      apply_props     (const XmlNode *pnode, ItemImpl &item);
   void      call_children   (const XmlNode *pnode, ItemImpl *item);
   ItemImpl* call_item       (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const XmlNode *caller, const XmlNode *outmost_caller);
@@ -250,7 +259,7 @@ Builder::inherit_item (const String &item_identifier, const StringVector &call_n
           return NULL;
         }
       ItemImpl *item = itfactory->create_item ((FactoryContext*) derived);
-      builder.apply_args (*item, call_names, call_values, caller);
+      builder.apply_args (*item, call_names, call_values, caller, true);
       return item;
     }
 }
@@ -275,9 +284,9 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (strncmp (cnode->name().c_str(), "arg:", 4) == 0)
+      if (cnode->name() == "tmpl:argument")
         {
-          const String aname = canonify_dashes (cnode->name().substr (4)); // canonify and strip "arg:"
+          const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
           local_names.push_back (aname);
           String rvalue = cnode->get_attribute ("default");
           if (rvalue.find ('`') != String::npos)
@@ -350,13 +359,16 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
 void
 Builder::apply_args (ItemImpl &item,
                      const StringVector &prop_names, const StringVector &prop_values, // evaluated args
-                     const XmlNode *caller)
+                     const XmlNode *caller, bool idignore)
 {
   for (size_t i = 0; i < prop_names.size(); i++)
     {
       const String aname = canonify_dashes (prop_names[i]);
       if (aname == "name" || aname == "id")
-        fatal ("%s: invalid property: %s", node_location (caller).c_str(), prop_names[i].c_str());
+        {
+          if (!idignore)
+            fatal ("%s: invalid property: %s", node_location (caller).c_str(), prop_names[i].c_str());
+        }
       else if (item.try_set_property (aname, prop_values[i]))
         {}
       else
@@ -371,11 +383,11 @@ Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") != 0)
+      if (cnode->istext() || cnode->name() != "tmpl:property")
         continue;
-      const String aname = canonify_dashes (cnode->name().substr (5));
+      const String aname = canonify_dashes (cnode->get_attribute ("id"));
       String value = cnode->xml_string (0, false);
-      if (value.find ('`') != String::npos && string_to_bool1 (cnode->get_attribute ("prop:evaluate")))
+      if (value.find ('`') != String::npos && string_to_bool1 (cnode->get_attribute ("evaluate")))
         {
           Evaluator env;
           env.push_map (m_locals);
@@ -390,17 +402,6 @@ Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
         fatal ("%s: item %s: unknown property: %s", node_location (pnode).c_str(), item.name().c_str(), aname.c_str());
     }
 }
-
-#if 0
-static void
-dump_call (const String &kind, const String &obj, const StringVector &anames, const StringVector &avalues)
-{
-  printerr ("%s(%s):", kind.c_str(), obj.c_str());
-  for (size_t i = 0; i < anames.size(); i++)
-    printerr (" %s=%s", anames[i].c_str(), avalues[i].c_str());
-  printerr ("\n");
-}
-#endif
 
 ItemImpl*
 Builder::call_item (const XmlNode *anode,
@@ -424,7 +425,7 @@ Builder::call_item (const XmlNode *anode,
   // apply item arguments
   if (!name.empty())
     item->name (name);
-  apply_args (*item, prop_names, prop_values, anode);
+  apply_args (*item, prop_names, prop_values, anode, false);
   FDEBUG ("new-item: %s (%zd children) id=%s", anode->name().c_str(), anode->children().size(), item->name().c_str());
   // apply properties and create children
   if (!anode->children().empty())
@@ -485,11 +486,11 @@ Builder::call_children (const XmlNode *pnode, ItemImpl *item)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") == 0)
+      if (cnode->istext() || cnode->name() == "tmpl:property")
         continue;
-      else if (cnode->name().compare (0, 4, "arg:") == 0)
+      else if (cnode->name() == "tmpl:argument")
         {
-          if (pnode->name().compare (0, 4, "def:") == 0)
+          if (pnode->name() == "tmpl:define")
             continue;
           fatal ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
         }
@@ -580,7 +581,7 @@ assign_xml_node_domain_recursive (XmlNode *xnode, const String &domain)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name().compare (0, 5, "prop:") == 0 || cnode->name().compare (0, 4, "arg:") == 0)
+      if (cnode->istext() || cnode->name() == "tmpl:property" || cnode->name() == "tmpl:argument")
         continue;
       assign_xml_node_domain_recursive (const_cast<XmlNode*> (cnode), domain);
     }
@@ -591,9 +592,9 @@ register_ui_node (const String   &domain,
                   XmlNode        *xnode,
                   vector<String> *definitions)
 {
-  if (xnode->name().compare (0, 4, "def:") == 0)
+  if (xnode->name() == "tmpl:define")
     {
-      const char *nname = xnode->name().c_str() + 4;
+      const String &nname = xnode->get_attribute ("id");
       String ident = domain.empty () ? nname : domain + ":" + nname; // FIXME
       GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
       if (it != gadget_definition_map.end())
@@ -616,20 +617,20 @@ register_ui_nodes (const String   &domain,
                    vector<String> *definitions)
 {
   assert_return (domain.empty() == false, "missing namespace for ui definitions");
-  // allow toplevel def:...
-  if (xnode->name().compare (0, 4, "def:") == 0)
+  // allow toplevel templates
+  if (xnode->name() == "tmpl:define")
     return register_ui_node (domain, xnode, definitions);
   // enforce sane toplevel node
   if (xnode->name() != "rapicorn-definitions")
     return string_printf ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
-  // register def:... children
+  // register template children
   XmlNode::ConstNodes children = xnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
       if (cnode->istext())
         continue; // ignore top level text
-      if (cnode->name().compare (0, 4, "def:") != 0)
+      if (cnode->name() != "tmpl:define")
         fatal ("%s: invalid tag: %s", node_location (cnode).c_str(), cnode->name().c_str());
       const String cerr = register_ui_node (domain, const_cast<XmlNode*> (cnode), definitions);
       if (!cerr.empty())

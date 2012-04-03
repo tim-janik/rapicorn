@@ -15,12 +15,12 @@
  ! A copy of the GNU Lesser General Public License should ship along
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- main dialog -->
-  <def:main-shell inherit="Window" child-container="scroll-box" width="800" height="600" >
-    <arg:test-value1 default="2"/>
-    <arg:test-value2/>
+  <tmpl:define id="main-shell" inherit="Window" child-container="scroll-box" width="800" height="600" >
+    <tmpl:argument id="test-value1" default="2"/>
+    <tmpl:argument id="test-value2"/>
     <Ambience normal-lighting="upper-left">
       <VBox>
 	<ScrollArea hspread="1" vspread="1">
@@ -28,20 +28,20 @@
 	</ScrollArea>
       </VBox>
     </Ambience>
-  </def:main-shell>
+  </tmpl:define>
 
   <!-- Button definition -->
-  <def:test-button inherit="Button" on-click="dummy">
-    <arg:test-button-text default="ClickMe" />
+  <tmpl:define id="test-button" inherit="Button" on-click="dummy">
+    <tmpl:argument id="test-button-text" default="ClickMe" />
     <Label>
-      <prop:markup-text>
+      <tmpl:property id="markup-text">
 	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
-      </prop:markup-text>
+      </tmpl:property>
     </Label>
-  </def:test-button>
+  </tmpl:define>
 
   <!-- Button row -->
-  <def:button-row inherit="HBox" spacing="5" >
-  </def:button-row>
+  <tmpl:define id="button-row" inherit="HBox" spacing="5" >
+  </tmpl:define>
 
 </rapicorn-definitions>

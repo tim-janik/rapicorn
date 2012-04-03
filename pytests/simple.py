@@ -10,11 +10,11 @@ import Rapicorn1008 as Rapicorn # Rapicorn modules are versioned
 
 # Define main window Widget Tree
 simple_window_widgets = """
-  <def:simple-window inherit="Window">
+  <tmpl:define id="simple-window" inherit="Window">
     <Button on-click="CLICK">
       <Label markup-text="Hello Simple World!" />
     </Button>
-  </def:simple-window>
+  </tmpl:define>
 """
 
 # setup application

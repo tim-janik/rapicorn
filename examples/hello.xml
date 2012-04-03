@@ -19,20 +19,20 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- main window -->
-  <def:main-window inherit="Window">
+  <tmpl:define id="main-window" inherit="Window">
     <OuterShell>
       <Label>
-	<prop:markup-text>
+	<tmpl:property id="markup-text">
 	  <larger>Hello World!</larger>
-	</prop:markup-text>
+	</tmpl:property>
       </Label>
       <Button on-click="close"  >
 	<Label markup-text="Close"/>
       </Button>
     </OuterShell>
-  </def:main-window>
+  </tmpl:define>
 
 </rapicorn-definitions>
