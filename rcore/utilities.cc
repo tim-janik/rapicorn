@@ -143,7 +143,7 @@ struct KeyConfig {
 public:
   void          assign    (const String &key, const String &val);
   String        slookup   (const String &key, const String &dfl = "");
-  void          configure (const String &colon_options);
+  void          configure (const String &colon_options, bool &seen_debug_key);
 };
 void
 KeyConfig::assign (const String &key, const String &val)
@@ -152,14 +152,16 @@ KeyConfig::assign (const String &key, const String &val)
   m_map[key] = val;
 }
 String
-KeyConfig::slookup (const String &key, const String &dfl)
+KeyConfig::slookup (const String &ckey, const String &dfl)
 {
+  // alias: "verbose" -> "debug"
+  String key = ckey == "verbose" ? "debug" : ckey;
   ScopedLock<Mutex> locker (m_mutex);
   StringMap::iterator it = m_map.find (key);
   return it == m_map.end() ? dfl : it->second;
 }
 void
-KeyConfig::configure (const String &colon_options)
+KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 {
   ScopedLock<Mutex> locker (m_mutex);
   vector<String> onames, ovalues;
@@ -167,14 +169,19 @@ KeyConfig::configure (const String &colon_options)
   for (size_t i = 0; i < onames.size(); i++)
     {
       String key = onames[i], val = ovalues[i];
-      std::transform (onames[i].begin(), onames[i].end(), key.begin(), ::tolower);
+      std::transform (key.begin(), key.end(), key.begin(), ::tolower);
       if (key.compare (0, 3, "no-") == 0)
         {
           key = key.substr (3);
-          val = string_from_int (!string_to_int (val));
+          val = string_from_int (!string_to_bool (val));
         }
+      if (key.compare (0, 6, "debug-") == 0 && key.size() > 6)
+        seen_debug_key = seen_debug_key || string_to_bool (val);
+      // alias: "verbose" -> "debug", "V=1" -> "debug", "V=0" -> "no-debug"
+      if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
+        key = "debug";
       m_map[key] = val;
-      // printerr ("KEY: %s = %s\n", key.c_str(), val.c_str());
+      // printerr ("DEBUG-CONFIG: %s = %s\n", key.c_str(), val.c_str());
     }
 }
 
@@ -184,11 +191,6 @@ static bool                 conftest_any_debugging = false;
 static bool                 conftest_key_debugging = false;
 static KeyConfig * volatile conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
-static const char   * const conftest_aliases[] = {
-  "debug",      "verbose",
-  "v=1",        "verbose",
-  "v=0",        "no-verbose",
-};
 
 static inline KeyConfig&
 conftest_procure ()
@@ -197,7 +199,8 @@ conftest_procure ()
   if (UNLIKELY (kconfig == NULL))
     {
       kconfig = new KeyConfig();
-      kconfig->configure (conftest_defaults);
+      bool dummy = 0;
+      kconfig->configure (conftest_defaults, dummy);
       if (Atomic::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
         {
           const char *env_rapicorn = getenv ("RAPICORN");
@@ -213,50 +216,17 @@ conftest_procure ()
   return *kconfig;
 }
 
-static String
-conftest_slookup (const String &key, const String &dfl = "")
-{
-  const char *const none = "\xff";
-  String val = conftest_procure().slookup (key, none);
-  if (val != none)
-    return val;
-  for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
-    if (key == conftest_aliases[i])
-      return conftest_procure().slookup (conftest_aliases[i+1], dfl);
-  return dfl;
-}
-
-static int
-conftest_lookup (const String &option, int vdefault = 0)
-{
-  return string_to_int (conftest_slookup (option, string_from_int (vdefault)));
-}
-
 void
 debug_configure (const String &options)
 {
-  String s = ":" + options + ":";
-  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
-  String tmp = s;
-  for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
-    {
-      String m = String (":") + conftest_aliases[i] + ":";
-      const char *p = strstr (s.c_str(), m.c_str());
-      if (p)
-        {
-          String r = conftest_aliases[i + 1];
-          size_t pos = p - s.c_str();
-          s = s.substr (0, pos) + ":" + r + ":" + s.substr (pos + m.size());
-        }
-    }
-  const bool seen_debug_key = strstr (s.c_str(), ":debug-") != NULL;
+  bool seen_debug_key = false;
+  conftest_procure().configure (options, seen_debug_key);
   if (seen_debug_key)
     Atomic::value_set (&conftest_key_debugging, true);
-  conftest_procure().configure (s);
-  Atomic::value_set (&conftest_any_debugging, bool (conftest_lookup ("verbose") || conftest_lookup ("debug-all")));
+  Atomic::value_set (&conftest_any_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
   Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_any_debugging)); // update "cached" configuration
   static bool first_help = false;
-  if (strstr (s.c_str(), ":help:") && once_enter (&first_help))
+  if (debug_confbool ("help") && once_enter (&first_help))
     {
       printerr ("%s", debug_help().c_str());
       once_leave (&first_help, true);
@@ -282,12 +252,24 @@ debug_help ()
   return s;
 }
 
-int64
-debug_check (const String &option, int64 vdefault)
+String
+debug_confstring (const String &option, const String &vdefault)
 {
   String key = option;
   std::transform (key.begin(), key.end(), key.begin(), ::tolower);
-  return conftest_lookup (key, vdefault);
+  return conftest_procure().slookup (key, vdefault);
+}
+
+bool
+debug_confbool (const String &option, bool vdefault)
+{
+  return string_to_bool (debug_confstring (option, string_from_int (vdefault)));
+}
+
+int64
+debug_confnum (const String &option, int64 vdefault)
+{
+  return string_to_int (debug_confstring (option, string_from_int (vdefault)));
 }
 
 static String
@@ -368,10 +350,10 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
   const char kind = toupper (dkind);
   enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, };
   static int conftest_logfd = 0;
-  const String conftest_logfile = conftest_logfd == 0 ? conftest_slookup ("logfile") : "";
-  const int FATAL_SYSLOG = conftest_lookup ("fatal-syslog") ? DO_SYSLOG : 0;
-  const int MAY_SYSLOG = conftest_lookup ("syslog") ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = conftest_lookup ("fatal-warnings") ? DO_ABORT  : 0;
+  const String conftest_logfile = conftest_logfd == 0 ? conftest_procure().slookup ("logfile") : "";
+  const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
+  const int MAY_SYSLOG = debug_confbool ("syslog") ? DO_SYSLOG : 0;
+  const int MAY_ABORT  = debug_confbool ("fatal-warnings") ? DO_ABORT  : 0;
   int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
   f |= kind != 'F' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // fatal
   f |= kind != 'A' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // assertion failed
@@ -407,7 +389,7 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
       std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
       if ((conftest_any_debugging && dkey.empty()) ||
           (conftest_key_debugging && !dkey.empty() &&
-           (conftest_lookup (String ("debug-" + dkey).c_str()) || conftest_lookup ("debug-all"))))
+           (debug_confbool ("debug-" + dkey) || debug_confbool ("debug-all"))))
         {
           static bool first_debug = false;
           if (once_enter (&first_debug))

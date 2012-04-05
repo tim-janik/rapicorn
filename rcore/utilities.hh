@@ -132,8 +132,10 @@ void        debug_cmsg  (const char dkind, const String &location, const char *f
 void        debug_emsg  (const char dkind, const String &location, const char *format, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
 void        debug_kmsg  (const char dkind, const char *key, const String &location, const char *format, ...) RAPICORN_PRINTF (4, 5);
 String      debug_help  ();
-int64       debug_check (const String &option, int64 vdefault = 0);
-void        debug_configure (const String &options);
+void        debug_configure  (const String &options);
+String      debug_confstring (const String &option, const String &vdefault = "");
+bool        debug_confbool   (const String &option, bool vdefault = false);
+int64       debug_confnum    (const String &option, int64 vdefault = 0);
 const char* strerror    (void);         // simple wrapper for strerror (errno)
 const char* strerror    (int errnum);   // wrapper for ::strerror
 
