@@ -162,22 +162,13 @@ void
 KeyConfig::configure (const String &colon_options)
 {
   ScopedLock<Mutex> locker (m_mutex);
-  String s = ":" + colon_options + ":";
-  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
-  const char *tail, *current;
-  for (tail = s.c_str(), current = strchr (tail, ':'); current; current = strchr (tail, ':'))
+  vector<String> onames, ovalues;
+  string_options_split (colon_options, onames, ovalues, "1");
+  for (size_t i = 0; i < onames.size(); i++)
     {
-      String val, key = String (tail, current - tail);
-      tail = current + 1;
-      const char *eq = strchr (key.c_str(), '=');
-      if (eq)
-        {
-          val = eq + 1;
-          key = String (key.c_str(), eq - key.c_str());
-        }
-      else
-        val = "1";
-      if (strncmp (key.c_str(), "no-", 3) == 0)
+      String key = onames[i], val = ovalues[i];
+      std::transform (onames[i].begin(), onames[i].end(), key.begin(), ::tolower);
+      if (key.compare (0, 3, "no-") == 0)
         {
           key = key.substr (3);
           val = string_from_int (!string_to_int (val));

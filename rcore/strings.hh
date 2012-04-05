@@ -26,8 +26,8 @@ StringVector 			string_split             (const String       &string,
                                                           const String       &splitter = "");
 String  			string_join              (const String       &junctor,
                                                           const StringVector &strvec);
-bool    			string_to_bool           (const String &string);
-bool    			string_to_bool1          (const String &string);
+bool    			string_to_bool           (const String &string,
+                                                          bool          empty_default = false);
 String  			string_from_bool         (bool value);
 uint64  			string_to_uint           (const String &string, uint base = 10);
 String  			string_from_uint         (uint64 value);
@@ -93,6 +93,10 @@ bool    string_option_check     (const String   &option_string,
                                  const String   &option);
 String  string_option_get       (const String   &option_string,
                                  const String   &option);
+void    string_options_split    (const String   &option_string,
+                                 vector<String> &option_names,
+                                 vector<String> &option_values,
+                                 const String   &empty_default = "");
 
 // == Strings ==
 class Strings : public std::vector<std::string> ///< Convenience Constructor for StringList or std::vector<std::string>

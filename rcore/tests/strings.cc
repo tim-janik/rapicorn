@@ -108,8 +108,8 @@ random_utf8_and_unichar_test (ptrdiff_t count)
         TCMP (cbuffer + indx, ==, gp);
     }
 }
-REGISTER_TEST ("/Strings/random UTF8", random_utf8_and_unichar_test, 30000);
-REGISTER_SLOWTEST ("/Strings/random UTF8 (slow)", random_utf8_and_unichar_test, 1000000);
+REGISTER_TEST ("Strings/random UTF8", random_utf8_and_unichar_test, 30000);
+REGISTER_SLOWTEST ("Strings/random UTF8 (slow)", random_utf8_and_unichar_test, 1000000);
 
 static void
 random_unichar_test (ptrdiff_t count)
@@ -203,8 +203,8 @@ random_unichar_test (ptrdiff_t count)
       TCMP (Unichar::get_break (uc), ==, (int) g_unichar_break_type (uc));
     }
 }
-REGISTER_TEST ("/Strings/random unichar", random_unichar_test, 30000);
-REGISTER_SLOWTEST ("/Strings/random unichar (slow)", random_unichar_test, 1000000);
+REGISTER_TEST ("Strings/random unichar", random_unichar_test, 30000);
+REGISTER_SLOWTEST ("Strings/random unichar (slow)", random_unichar_test, 1000000);
 
 static void
 uuid_tests (void)
@@ -245,7 +245,7 @@ uuid_tests (void)
   TCMP (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6BA7B812-9DAD-11D1-80B4-00C04FD430C8"), >, 0);
   TCMP (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8"), >, 0);
 }
-REGISTER_TEST ("/Strings/UUID", uuid_tests);
+REGISTER_TEST ("Strings/UUID", uuid_tests);
 
 static void
 string_conversions (void)
@@ -279,7 +279,7 @@ string_conversions (void)
   TCMP (string_substitute_char ("foo", '3', '4'), ==, "foo");
   TCMP (string_substitute_char ("foobar", 'o', '_'), ==, "f__bar");
 }
-REGISTER_TEST ("/Strings/conversions", string_conversions);
+REGISTER_TEST ("Strings/conversions", string_conversions);
 
 static void
 split_string_tests (void)
@@ -318,7 +318,7 @@ split_string_tests (void)
   TCMP (string_multiply ("x", 99990).size(), ==, 99990);
   TCMP (string_multiply ("x", 9999999).size(), ==, 9999999); // needs 10MB, should finish within 1 second
 }
-REGISTER_TEST ("/Strings/split strings", split_string_tests);
+REGISTER_TEST ("Strings/split strings", split_string_tests);
 
 static void
 test_string_charsets (void)
@@ -353,7 +353,7 @@ test_string_charsets (void)
   assert (res);
   TCMP (output, ==, "non-ascii [?] char");
 }
-REGISTER_TEST ("/Strings/charsets", test_string_charsets);
+REGISTER_TEST ("Strings/charsets", test_string_charsets);
 
 static void
 test_string_stripping (void)
@@ -371,7 +371,47 @@ test_string_stripping (void)
   TCMP (string_lstrip (" \t\v\f\n\rX \t\v\f\n\r"), ==, "X \t\v\f\n\r");
   TCMP (string_rstrip (" \t\v\f\n\rX \t\v\f\n\r"), ==, " \t\v\f\n\rX");
 }
-REGISTER_TEST ("/Strings/stripping", test_string_stripping);
+REGISTER_TEST ("Strings/stripping", test_string_stripping);
+
+static void
+test_string_options (void)
+{
+  TASSERT (string_option_get ("foo", "foo") == "1");
+  TASSERT (string_option_get ("foo", "BAR") == "0");
+  TASSERT (string_option_get (" foo ", "foo") == "1");
+  TASSERT (string_option_get (" foo =7", "foo") == "7");
+  TASSERT (string_option_get (" foo = 7 ", "foo") == " 7 ");
+  TASSERT (string_option_get (" foo =7:bar ", "foo") == "7");
+  TASSERT (string_option_get (" foo =7:bar ", "bar") == "1");
+  TASSERT (string_option_get (":foo;;;;bar:::zonk:", "foo") == "1");
+  TASSERT (string_option_get (":foo;;;;bar:::zonk:", "bar") == "1");
+  TASSERT (string_option_get (":foo;;;;bar:::zonk:", "zonk") == "1");
+  TASSERT (string_option_check (" foo ", "foo") == true);
+  TASSERT (string_option_check (" foo9 ", "foo9") == true);
+  TASSERT (string_option_check (" foo7 ", "foo9") == false);
+  TASSERT (string_option_check (" bar ", "bar") == true);
+  TASSERT (string_option_check (" bar= ", "bar") == true);
+  TASSERT (string_option_check (" bar=0 ", "bar") == false);
+  TASSERT (string_option_check (" bar=no ", "bar") == false);
+  TASSERT (string_option_check (" bar=false ", "bar") == false);
+  TASSERT (string_option_check (" bar=off ", "bar") == false);
+  TASSERT (string_option_check (" bar=1 ", "bar") == true);
+  TASSERT (string_option_check (" bar=2 ", "bar") == true);
+  TASSERT (string_option_check (" bar=3 ", "bar") == true);
+  TASSERT (string_option_check (" bar=4 ", "bar") == true);
+  TASSERT (string_option_check (" bar=5 ", "bar") == true);
+  TASSERT (string_option_check (" bar=6 ", "bar") == true);
+  TASSERT (string_option_check (" bar=7 ", "bar") == true);
+  TASSERT (string_option_check (" bar=8 ", "bar") == true);
+  TASSERT (string_option_check (" bar=9 ", "bar") == true);
+  TASSERT (string_option_check (" bar=09 ", "bar") == true);
+  TASSERT (string_option_check (" bar=yes ", "bar") == true);
+  TASSERT (string_option_check (" bar=true ", "bar") == true);
+  TASSERT (string_option_check (" bar=on ", "bar") == true);
+  TASSERT (string_option_check (" bar=1false ", "bar") == true);
+  TASSERT (string_option_check (" bar=0true ", "bar") == false);
+}
+REGISTER_TEST ("Strings/String Options", test_string_options);
 
 } // Anon
 

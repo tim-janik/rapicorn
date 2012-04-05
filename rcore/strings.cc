@@ -163,26 +163,29 @@ string_join (const String       &junctor,
 bool
 string_to_bool1 (const String &string)
 {
+  const char *p = string.c_str();
+  while (*p && isspace (*p))
+    p++;
+  if (!*p)
+    return true;        // option was present, but empty
+
   return string.empty() ? true : string_to_bool (string);
 }
 
 bool
-string_to_bool (const String &string)
+string_to_bool (const String &string,
+                bool          empty_default)
 {
-  static const char *spaces = " \t\n\r";
   const char *p = string.c_str();
-  // special case empty string
-  if (!p[0])
-    return false;
   // skip spaces
-  while (*p && strchr (spaces, *p))
+  while (*p && isspace (*p))
     p++;
   // ignore signs
   if (p[0] == '-' || p[0] == '+')
     {
       p++;
       // skip spaces
-      while (*p && strchr (spaces, *p))
+      while (*p && isspace (*p))
         p++;
     }
   // handle numbers
@@ -193,10 +196,11 @@ string_to_bool (const String &string)
     return 1;
   if (strncasecmp (p, "OFF", 3) == 0)
     return 0;
-  // handle non-numbers
-  return !(p[0] == 0 ||
-           p[0] == 'f' || p[0] == 'F' ||
-           p[0] == 'n' || p[0] == 'N');
+  // empty string
+  if (!p[0])
+    return empty_default;
+  // anything else needs to resemble "yes" or "true"
+  return strchr ("YyTt", p[0]);
 }
 
 String
@@ -582,88 +586,86 @@ cstrings_to_vector (const char *s, ...)
 }
 
 // === String Options ===
-static const char*
-string_option_find_value (const String   &option_string,
-                          const String   &option)
-{
-  const char *p, *match = NULL;
-  int l = strlen (option.c_str());
-  assert_return (l > 0, NULL);
-  if (option_string == "")
-    return NULL;        /* option not found */
+#define is_sep(c)               (c == ';' || c == ':')
+#define is_spacesep(c)          (isspace (c) || is_sep (c))
+#define find_sep(str)           (strpbrk (str, ";:"))
 
-  /* try first match */
-  p = strstr (option_string.c_str(), option.c_str());
-  if (p &&
-      (p == option_string.c_str() || p[-1] == ':') &&
-      (p[l] == ':' || p[l] == 0 || p[l] == '=' ||
-       ((p[l] == '-' || p[l] == '+') && (p[l + 1] == ':' || p[l + 1] == 0))))
-    match = p;
-  /* allow later matches to override */
-  while (p)
+static void
+string_option_add (const String   &assignment,
+                   vector<String> *option_namesp,
+                   vector<String> &option_values,
+                   const String   &empty_default,
+                   const String   *filter)
+{
+  assert_return ((option_namesp != NULL) ^ (filter != NULL));
+  const char *n = assignment.c_str();
+  while (isspace (*n))
+    n++;
+  const char *p = n;
+  while (isalnum (*p) || *p == '-' || *p == '_')
+    p++;
+  const String name = String (n, p - n);
+  if (filter && name != *filter)
+    return;
+  while (isspace (*p))
+    p++;
+  const String value = *p == '=' ? String (p + 1) : empty_default;
+  if (!name.empty() && (*p == '=' || *p == 0)) // valid name
     {
-      p = strstr (p + l, option.c_str());
-      if (p &&
-          p[-1] == ':' &&
-          (p[l] == ':' || p[l] == 0 || p[l] == '=' ||
-           ((p[l] == '-' || p[l] == '+') && (p[l + 1] == ':' || p[l + 1] == 0))))
-        match = p;
+      if (!filter)
+        option_namesp->push_back (name);
+      option_values.push_back (value);
     }
-  return match ? match + l : NULL;
+}
+
+static void
+string_options_split_filtered (const String   &option_string,
+                               vector<String> *option_namesp,
+                               vector<String> &option_values,
+                               const String   &empty_default,
+                               const String   *filter)
+{
+  const char *s = option_string.c_str();
+  while (s)
+    {
+      // find next separator
+      const char *b = find_sep (s);
+      string_option_add (String (s, b ? b - s : strlen (s)), option_namesp, option_values, empty_default, filter);
+      s = b ? b + 1 : NULL;
+    }
+}
+
+void
+string_options_split (const String   &option_string,
+                      vector<String> &option_names,
+                      vector<String> &option_values,
+                      const String   &empty_default)
+{
+  string_options_split_filtered (option_string, &option_names, option_values, empty_default, NULL);
+}
+
+static String
+string_option_find_value (const String &option_string,
+                          const String &option)
+{
+  vector<String> option_names, option_values;
+  string_options_split_filtered (option_string, NULL, option_values, "1", &option);
+  return option_values.empty() ? "0" : option_values[option_values.size() - 1];
 }
 
 String
 string_option_get (const String   &option_string,
                    const String   &option)
 {
-  const char *value = string_option_find_value (option_string, option);
-
-  if (!value)
-    return NULL;                        /* option not present */
-  else switch (value[0])
-      {
-        const char *s;
-      case ':':   return "1";           /* option was present, no modifier */
-      case 0:     return "1";           /* option was present, no modifier */
-      case '+':   return "1";           /* option was present, enable modifier */
-      case '-':   return NULL;          /* option was present, disable modifier */
-      case '=':                         /* option present with assignment */
-        value++;
-        s = strchr (value, ':');
-        return s ? String (value, s - value) : value;
-      default:    return NULL;            /* anything else, undefined */
-      }
+  return string_option_find_value (option_string, option);
 }
 
 bool
 string_option_check (const String   &option_string,
                      const String   &option)
 {
-  const char *value = string_option_find_value (option_string, option);
-
-  if (!value)
-    return false;                       /* option not present */
-  else switch (value[0])
-    {
-      const char *s;
-    case ':':   return true;            /* option was present, no modifier */
-    case 0:     return true;            /* option was present, no modifier */
-    case '+':   return true;            /* option was present, enable modifier */
-    case '-':   return false;           /* option was present, disable modifier */
-    case '=':                           /* option present with assignment */
-      value++;
-      s = strchr (value, ':');
-      if (!s || s == value)             /* empty assignment */
-        return false;
-      else switch (s[0])
-        {
-        case '0': case 'f': case 'F':
-        case 'n': case 'N':             /* false assigments */
-          return false;
-        default: return true;           /* anything else holds true */
-        }
-    default:    return false;           /* anything else, undefined */
-    }
+  const String value = string_option_find_value (option_string, option);
+  return string_to_bool (value, true);
 }
 
 // == Strings ==

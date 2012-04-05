@@ -387,7 +387,7 @@ Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
         continue;
       const String aname = canonify_dashes (cnode->get_attribute ("id"));
       String value = cnode->xml_string (0, false);
-      if (value.find ('`') != String::npos && string_to_bool1 (cnode->get_attribute ("evaluate")))
+      if (value.find ('`') != String::npos && string_to_bool (cnode->get_attribute ("evaluate"), true))
         {
           Evaluator env;
           env.push_map (m_locals);
