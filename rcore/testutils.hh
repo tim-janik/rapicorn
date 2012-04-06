@@ -116,7 +116,7 @@ void    add             (const String &testname,
 
 /// == Stringify Args ==
 inline String                   stringify_arg  (const char   *a, const char *str_a) { return a ? string_to_cquote (a) : "(__null)"; }
-template<class V> inline String stringify_arg  (V            *a, const char *str_a) { return string_printf ("%p", a); }
+template<class V> inline String stringify_arg  (const V      *a, const char *str_a) { return string_printf ("%p", a); }
 template<class A> inline String stringify_arg  (const A      &a, const char *str_a) { return str_a; }
 template<> inline String stringify_arg<float>  (const float  &a, const char *str_a) { return string_printf ("%.8g", a); }
 template<> inline String stringify_arg<double> (const double &a, const char *str_a) { return string_printf ("%.17g", a); }
