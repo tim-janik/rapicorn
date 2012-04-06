@@ -2,6 +2,8 @@
 #include "viewport.hh"
 #include "factory.hh"
 
+#define VDEBUG(...)     RAPICORN_KEY_DEBUG ("Viewport", __VA_ARGS__)
+
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl () :
@@ -150,7 +152,7 @@ ViewportImpl::collapse_expose_region ()
        * rectangle which is good enough to avoid worst case explosion.
        */
       m_expose_region.add (m_expose_region.extents());
-      // printerr ("ViewportImpl: collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, m_expose_region.count_rects());
+      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, m_expose_region.count_rects());
     }
 }
 
