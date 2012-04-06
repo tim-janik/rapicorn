@@ -7,7 +7,8 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl () :
-  m_tunable_requisition_counter (0), m_xoffset (0), m_yoffset (0)
+  m_tunable_requisition_counter (0), m_xoffset (0), m_yoffset (0),
+  sig_scrolled (*this, &ViewportImpl::do_scrolled)
 {}
 
 ViewportImpl::~ViewportImpl ()
@@ -66,9 +67,23 @@ ViewportImpl::scroll_offsets (int deltax, int deltay)
     {
       m_xoffset = deltax;
       m_yoffset = deltay;
-      expose();
       // FIXME: need to issue 0-distance move here
+      sig_scrolled.emit();
     }
+}
+
+void
+ViewportImpl::do_scrolled ()
+{
+  expose();
+}
+
+Allocation
+ViewportImpl::child_viewport ()
+{
+  const Allocation &area = allocation();
+  const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
+  return Allocation (xoffset, yoffset, area.width, area.height);
 }
 
 Affine

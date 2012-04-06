@@ -23,11 +23,14 @@ protected:
   virtual void          render_item             (RenderContext &rcontext);
   virtual void          render                  (RenderContext &rcontext, const Rect &rect);
   void                  scroll_offsets          (int deltax, int deltay);
+  void                  do_scrolled             ();
   int                   scroll_offset_x         () const { return m_xoffset; }
   int                   scroll_offset_y         () const { return m_yoffset; }
 public:
+  Signal<ViewportImpl, void ()> sig_scrolled;
   void                  expose_child_region     (const Region &region);
   bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
+  Allocation            child_viewport          ();
   explicit              ViewportImpl            ();
   virtual              ~ViewportImpl            ();
 };
