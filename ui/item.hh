@@ -41,8 +41,8 @@ class ItemImpl : public virtual ItemIface {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
-  uint32                      m_flags;          /* interface-inlined for fast read-out */
-  ContainerImpl              *m_parent;         /* interface-inlined for fast read-out */
+  uint64                      m_flags;  // inlined for fast access
+  ContainerImpl              *m_parent; // inlined for fast access
   Heritage                   *m_heritage;
   Requisition                 m_requisition;
   Allocation                  m_allocation;
@@ -68,20 +68,18 @@ protected:
     IMPRESSED                 = 1 <<  7,
     FOCUS_CHAIN               = 1 <<  8,
     HAS_DEFAULT               = 1 <<  9,
-    INVALID_REQUISITION       = 1 << 10,
-    INVALID_ALLOCATION        = 1 << 11,
-    INVALID_CONTENT           = 1 << 12,
-    HSPREAD_CONTAINER         = 1 << 13,
-    VSPREAD_CONTAINER         = 1 << 14,
-    HSPREAD                   = 1 << 15,
-    VSPREAD                   = 1 << 16,
-    HEXPAND                   = 1 << 17,
-    VEXPAND                   = 1 << 18,
-    HSHRINK                   = 1 << 19,
-    VSHRINK                   = 1 << 20,
-    ALLOCATABLE               = 1 << 21,
-    DEBUG                     = 1 << 22,
-    LAST_FLAG                 = 1 << 23
+    INVALID_REQUISITION       = 1 << 11,
+    INVALID_ALLOCATION        = 1 << 12,
+    INVALID_CONTENT           = 1 << 13,
+    HSPREAD_CONTAINER         = 1 << 14,
+    VSPREAD_CONTAINER         = 1 << 15,
+    HSPREAD                   = 1 << 16,
+    VSPREAD                   = 1 << 17,
+    HEXPAND                   = 1 << 18,
+    VEXPAND                   = 1 << 19,
+    HSHRINK                   = 1 << 20,
+    VSHRINK                   = 1 << 21,
+    ALLOCATABLE               = 1 << 22,
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
@@ -89,7 +87,7 @@ protected:
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
   virtual bool                pseudo_selector   (const String &ident, const String &arg, String &error) { return false; }
-  /* size requisition and allocation */
+  // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
   virtual void                invalidate_parent ();
@@ -151,8 +149,6 @@ public:
   void                        hshrink           (bool b) { set_flag (HSHRINK, b); }
   bool                        vshrink           () const { return test_flags (VSHRINK); }
   void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
-  bool                        debug             () const { return test_flags (DEBUG); }
-  void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const;
   virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;

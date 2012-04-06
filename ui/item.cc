@@ -71,7 +71,7 @@ ItemImpl::self_visible () const
 
 bool
 ItemImpl::change_flags_silently (uint32 mask,
-                             bool   on)
+                                 bool   on)
 {
   uint32 old_flags = m_flags;
   if (on)
@@ -242,7 +242,7 @@ ItemImpl::notify_key_error ()
 
 void
 ItemImpl::cross_link (ItemImpl           &link,
-                  const ItemSlot &uncross)
+                      const ItemSlot &uncross)
 {
   assert (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
@@ -252,7 +252,7 @@ ItemImpl::cross_link (ItemImpl           &link,
 
 void
 ItemImpl::cross_unlink (ItemImpl           &link,
-                    const ItemSlot &uncross)
+                        const ItemSlot &uncross)
 {
   assert (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
