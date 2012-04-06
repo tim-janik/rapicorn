@@ -119,7 +119,7 @@ public:
 // === Development Messages ===
 #define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_cmsg ('I', RAPICORN_STRLOC_STRING(), "%s", #cond); } while (0)
 #define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_cmsg ('C', RAPICORN_STRLOC_STRING(), __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)             do { Rapicorn::debug_cmsg ('X', RAPICORN_STRLOC_STRING(), __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)             do { Rapicorn::debug_cmsg ('X', RAPICORN_SRCLOC_STRING(), __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
 #define RAPICORN_DEBUG(...)             do { if (debug_enabled()) Rapicorn::debug_cmsg ('D', RAPICORN_SRCLOC_STRING(), __VA_ARGS__); } while (0)

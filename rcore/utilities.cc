@@ -348,7 +348,7 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
   const char kind = toupper (dkind);
-  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, };
+  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXME = 128, };
   static int conftest_logfd = 0;
   const String conftest_logfile = conftest_logfd == 0 ? conftest_procure().slookup ("logfile") : "";
   const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
@@ -361,7 +361,7 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
   f |= kind != 'C' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // critical
   f |= kind != 'I' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // condition failed
   f |= kind != 'D' ? 0 : DO_DEBUG | DO_STAMP;                   // debug
-  f |= kind != 'X' ? 0 : DO_DEBUG;                              // fixing needed
+  f |= kind != 'X' ? 0 : DO_DEBUG | DO_FIXME;                   // fixing needed
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
   const char *w = NULL;
   w = kind == 'F' ? "FATAL" : w;
@@ -380,8 +380,6 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
     msg = "condition failed: " + msg;
   else if (kind == 'U')
     msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
-  if (f & DO_STAMP)
-    ;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_DEBUG)
     {
@@ -400,12 +398,14 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
                         start / 1000000, start % 1000000);
               once_leave (&first_debug, true);
             }
-          String prefix = key ? key : dbg_prefix (where);
+          String intro, prefix = key ? key : dbg_prefix (where);
           if (!prefix.empty())
             prefix = prefix + ": ";
-          printerr ("[%llu.%06llu] %s%s%s",
-                    delta / 1000000, delta % 1000000,
-                    prefix.c_str(), msg.c_str(), emsg.c_str());
+          if (f & DO_STAMP)
+            intro = string_printf ("[%llu.%06llu]", delta / 1000000, delta % 1000000);
+          else if (f & DO_FIXME)
+            intro = "FIX""ME:";
+          printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
         }
     }
   if (f & DO_STDERR)
