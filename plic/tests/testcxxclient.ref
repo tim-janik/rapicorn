@@ -829,6 +829,7 @@ FirstInterface_SmartHandle::void_func ()
   fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL); // msgid
   fb <<= (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 inline void __attribute__ ((used))
 operator<<= (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
@@ -1488,6 +1489,7 @@ UIWidgetArea_SmartHandle::void_method ()
   fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL); // msgid
   fb <<= (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 std::string
 UIWidgetArea_SmartHandle::on_click2out ()
@@ -1511,6 +1513,7 @@ UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
   fb <<= (*this);
   fb <<= arg_command;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 
 // === Parent ===
@@ -1955,6 +1958,7 @@ QuickIface_SmartHandle::simple_function (int arg_i)
   fb <<= (*this);
   fb <<= arg_i;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 
 // === MethodTestInterface ===
@@ -2045,6 +2049,7 @@ MethodTestInterface_SmartHandle::method_with_void ()
   fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL); // msgid
   fb <<= (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 bool
 MethodTestInterface_SmartHandle::method_with_bools (bool arg_input,

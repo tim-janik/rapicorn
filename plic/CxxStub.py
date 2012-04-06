@@ -634,6 +634,8 @@ class Generator:
       s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       s += '  delete fr;\n'
       s += '  return retval;\n'
+    else:
+      s += '  if (PLIC_UNLIKELY (fr != NULL)) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
   def generate_server_method_stub (self, class_info, mtype, reglines):
