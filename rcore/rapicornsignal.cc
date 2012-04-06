@@ -63,7 +63,7 @@ ConId
 SignalBase::connect_link (TrampolineLink *link,
                           bool            with_emitter)
 {
-  assert_return (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
+  assert_return (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, 0);
   const bool connected_before = has_connections();
   link->owner_ref();
   link->prev = start.prev;
