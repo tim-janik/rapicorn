@@ -369,6 +369,8 @@ Builder::apply_args (ItemImpl &item,
           if (!idignore)
             fatal ("%s: invalid property: %s", node_location (caller).c_str(), prop_names[i].c_str());
         }
+      else if (prop_names[i].find (':') != String::npos)
+        ; // ignore namespaced attributes
       else if (item.try_set_property (aname, prop_values[i]))
         {}
       else
