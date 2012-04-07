@@ -213,6 +213,7 @@ AC_DEFUN([MC_PROG_CC_WITH_CFLAGS], [
 		dnl # Sane Behaviour
 		MC_EVAR_ADD(CFLAGS, -fno-cond-mismatch, -fno-cond-mismatch)
 		MC_PROG_CC_SUPPORTS_OPTION(-mcx16, MC_EVAR_ADD(CFLAGS, -mcx16, -mcx16))
+		MC_PROG_CC_SUPPORTS_OPTION(-rdynamic, MC_EVAR_ADD(CFLAGS, -rdynamic, -rdynamic))
 
 		dnl # Debugging
 		MC_EVAR_SUPPLEMENT(CFLAGS, -g, -ggdb3)
@@ -300,7 +301,8 @@ AC_DEFUN([MC_PROG_CXX_WITH_CXXFLAGS], [
 	dnl # Further setup CXXFLAGS for GXX.
 	MC_IF_VAR_EQ(GXX, yes,
 		dnl # Sane Behaviour
-                MC_PROG_CC_SUPPORTS_OPTION(-mcx16, MC_EVAR_ADD(CXXFLAGS, -mcx16, -mcx16))
+                MC_PROG_CC_SUPPORTS_OPTION(-mcx16,    MC_EVAR_ADD(CXXFLAGS, -mcx16, -mcx16))
+		MC_PROG_CC_SUPPORTS_OPTION(-rdynamic, MC_EVAR_ADD(CXXFLAGS, -rdynamic, -rdynamic))
 
 		dnl # enable many useful warnings
 		MC_EVAR_ADD(CXXFLAGS, -Wall, -Wall)
