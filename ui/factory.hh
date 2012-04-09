@@ -24,6 +24,10 @@ String      parse_ui_data       (const String           &uinamespace,
                                  vector<String>         *definitions = NULL);
 ItemImpl&   create_ui_item      (const String           &item_identifier,
                                  const ArgumentList     &arguments = ArgumentList());
+void        create_ui_children  (ContainerImpl          &container,
+                                 vector<ItemImpl*>      *children,
+                                 const String           &presuppose,
+                                 int64                   max_children = -1);
 bool        check_ui_window     (const String           &item_identifier);
 void        use_ui_namespace    (const String           &uinamespace);
 

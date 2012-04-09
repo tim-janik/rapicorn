@@ -18,6 +18,42 @@ static void initialize_factory_lazily (void);
 
 namespace Factory {
 
+class NodeData {
+  void
+  setup (XmlNode &xnode)
+  {
+    const StringVector &attributes_names = xnode.list_attributes(); // &attributes_values = xnode.list_values();
+    for (size_t i = 0; i < attributes_names.size(); i++)
+      if (attributes_names[i] == "tmpl:presuppose")
+        tmpl_presuppose = true;
+  }
+  static struct NodeDataKey : public DataKey<NodeData*> {
+    virtual void destroy (NodeData *data) { delete data; }
+  } node_data_key;
+public:
+  bool tmpl_presuppose;
+  String domain;
+  NodeData (XmlNode &xnode) : tmpl_presuppose (false) { setup (xnode); }
+  static NodeData&
+  from_xml_node (XmlNode &xnode)
+  {
+    NodeData *ndata = xnode.get_data (&node_data_key);
+    if (!ndata)
+      {
+        ndata = new NodeData (xnode);
+        xnode.set_data (&node_data_key, ndata);
+      }
+    return *ndata;
+  }
+};
+
+NodeData::NodeDataKey NodeData::node_data_key;
+
+static const NodeData&
+xml_node_data (const XmlNode &xnode)
+{
+  return NodeData::from_xml_node (*const_cast<XmlNode*> (&xnode));
+}
 
 static std::list<const ItemTypeFactory*> *item_type_factories_p = NULL;
 
@@ -40,7 +76,7 @@ ItemTypeFactory::register_item_factory (const ItemTypeFactory &itfactory)
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')
-    fatal ("%s: invalid/missing domain name in item type: %s", STRFUNC, ident);
+    fatal ("ItemTypeFactory registration with invalid/missing domain name: %s", ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
   item_type_factories.push_back (&itfactory);
@@ -49,7 +85,6 @@ ItemTypeFactory::register_item_factory (const ItemTypeFactory &itfactory)
 typedef map<String, const XmlNode*> GadgetDefinitionMap;
 static GadgetDefinitionMap gadget_definition_map;
 static vector<String>      gadget_namespace_list;
-static DataKey<String>     xml_node_domain_key;
 
 static const XmlNode*
 gadget_definition_lookup (const String &item_identifier, const XmlNode *context_node)
@@ -59,9 +94,9 @@ gadget_definition_lookup (const String &item_identifier, const XmlNode *context_
     return it->second; // non-namespace lookup succeeded
   if (context_node)
     {
-      String context_domain = context_node->get_data (&xml_node_domain_key);
-      if (!context_domain.empty())
-        it = gadget_definition_map.find (context_domain + ":" + item_identifier);
+      const NodeData &ndata = xml_node_data (*context_node);
+      if (!ndata.domain.empty())
+        it = gadget_definition_map.find (ndata.domain + ":" + item_identifier);
       if (it != gadget_definition_map.end())
         return it->second; // lookup in context namespace succeeded
     }
@@ -113,7 +148,7 @@ void
 ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
   if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
-    fatal ("item type lacks \"Rapicorn::Factory::\" qualification: %s", namespaced_ident);
+    fatal ("ItemTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
 }
 
 String
@@ -209,14 +244,16 @@ class Builder {
   void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
   void      apply_args      (ItemImpl &item, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
   void      apply_props     (const XmlNode *pnode, ItemImpl &item);
-  void      call_children   (const XmlNode *pnode, ItemImpl *item);
+  void      call_children   (const XmlNode *pnode, ItemImpl *item, vector<ItemImpl*> *vchildren = NULL, const String &presuppose = "", int64 max_children = -1);
   ItemImpl* call_item       (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const XmlNode *caller, const XmlNode *outmost_caller);
   ItemImpl* call_child      (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const String &name, const XmlNode *caller);
+  explicit  Builder         (const XmlNode &definition_node);
 public:
-  explicit  Builder       (const String &item_identifier, const XmlNode *context_node);
+  explicit  Builder             (const String &item_identifier, const XmlNode *context_node);
   static ItemImpl* build_item   (const String &item_identifier, const StringVector &call_names, const StringVector &call_values);
   static ItemImpl* inherit_item (const String &item_identifier, const StringVector &call_names, const StringVector &call_values,
                                  const XmlNode *caller, const XmlNode *derived);
+  static void build_children    (ContainerImpl &container, vector<ItemImpl*> *children, const String &presuppose, int64 max_children);
   static bool item_has_ancestor (const String &item_identifier, const String &ancestor_identifier);
 };
 
@@ -225,6 +262,40 @@ Builder::Builder (const String &item_identifier, const XmlNode *context_node) :
 {
   if (!m_dnode)
     return;
+}
+
+Builder::Builder (const XmlNode &definition_node) :
+  m_dnode (&definition_node), m_child_container (NULL)
+{
+  assert_return (m_dnode->name() == "tmpl:define");
+}
+
+void
+Builder::build_children (ContainerImpl &container, vector<ItemImpl*> *children, const String &presuppose, int64 max_children)
+{
+  assert_return (presuppose != "");
+  const XmlNode *dnode, *pnode = (XmlNode*) container.factory_context();
+  if (!pnode)
+    return;
+  while (pnode)
+    {
+      if (pnode->name() == "tmpl:define")
+        dnode = pnode;
+      else // lookup definition node from child node
+        {
+          dnode = gadget_definition_lookup (pnode->name(), pnode);
+          assert_return (dnode != NULL);
+          assert_return (dnode->name() == "tmpl:define");
+        }
+      Builder builder (*dnode);
+      builder.call_children (pnode, &container, children, presuppose, max_children);
+      if (children && max_children >= 0 && children->size() >= size_t (max_children))
+        return;
+      if (pnode == dnode)
+        pnode = gadget_definition_lookup (dnode->get_attribute ("inherit"), dnode);
+      else
+        pnode = dnode;
+    }
 }
 
 ItemImpl*
@@ -367,14 +438,14 @@ Builder::apply_args (ItemImpl &item,
       if (aname == "name" || aname == "id")
         {
           if (!idignore)
-            fatal ("%s: invalid property: %s", node_location (caller).c_str(), prop_names[i].c_str());
+            critical ("%s: internal-error, property should have been filtered: %s", node_location (caller).c_str(), prop_names[i].c_str());
         }
       else if (prop_names[i].find (':') != String::npos)
         ; // ignore namespaced attributes
       else if (item.try_set_property (aname, prop_values[i]))
         {}
       else
-        fatal ("%s: item %s: unknown property: %s", node_location (caller).c_str(), item.name().c_str(), prop_names[i].c_str());
+        critical ("%s: item %s: unknown property: %s", node_location (caller).c_str(), item.name().c_str(), prop_names[i].c_str());
     }
 }
 
@@ -397,11 +468,11 @@ Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
           env.push_map (m_locals);
         }
       if (aname == "name" || aname == "id")
-        fatal ("%s: invalid property: %s", node_location (cnode).c_str(), cnode->name().c_str());
+        critical ("%s: internal-error, property should have been filtered: %s", node_location (cnode).c_str(), cnode->name().c_str());
       else if (item.try_set_property (aname, value))
         {}
       else
-        fatal ("%s: item %s: unknown property: %s", node_location (pnode).c_str(), item.name().c_str(), aname.c_str());
+        critical ("%s: item %s: unknown property: %s", node_location (pnode).c_str(), item.name().c_str(), aname.c_str());
     }
 }
 
@@ -439,7 +510,7 @@ Builder::call_item (const XmlNode *anode,
   if (m_child_container)
     item->as_container()->child_container (m_child_container);
   else if (!m_child_container_name.empty())
-    fatal ("%s: failed to find child container: %s", node_location (m_dnode).c_str(), m_child_container_name.c_str());
+    critical ("%s: failed to find child container: %s", node_location (m_dnode).c_str(), m_child_container_name.c_str());
   return item;
 }
 
@@ -470,17 +541,17 @@ Builder::call_child (const XmlNode *anode,
       if (cc)
         {
           if (m_child_container)
-            fatal ("%s: duplicate child containers: %s", node_location (m_dnode).c_str(), node_location (anode).c_str());
+            critical ("%s: duplicate child containers: %s", node_location (m_dnode).c_str(), node_location (anode).c_str());
           m_child_container = cc;
           FDEBUG ("assign child-container for %s: %s", m_dnode->name().c_str(), m_child_container_name.c_str());
-          // FIXME: mismatches occour, because chidl caller args are not passed as call_names/values
+          // FIXME: mismatches occour, because child caller args are not passed as call_names/values
         }
     }
   return item;
 }
 
 void
-Builder::call_children (const XmlNode *pnode, ItemImpl *item)
+Builder::call_children (const XmlNode *pnode, ItemImpl *item, vector<ItemImpl*> *vchildren, const String &presuppose, int64 max_children)
 {
   // add children
   XmlNode::ConstNodes &children = pnode->children();
@@ -492,16 +563,22 @@ Builder::call_children (const XmlNode *pnode, ItemImpl *item)
         continue;
       else if (cnode->name() == "tmpl:argument")
         {
-          if (pnode->name() == "tmpl:define")
-            continue;
-          fatal ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
+          if (pnode->name() != "tmpl:define")
+            critical ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
+          continue;
         }
+      // check extended node data
+      const NodeData &cdata = xml_node_data (*cnode);
+      if ((cdata.tmpl_presuppose ^ !presuppose.empty()) ||
+          (cdata.tmpl_presuppose && presuppose != cnode->get_attribute ("tmpl:presuppose")))
+        continue;
       if (!container)
         {
           container = item->as_container();
           if (!container)
-            fatal ("%s: parent type is not a container: %s:%s", node_location (cnode).c_str(),
-                   node_location (pnode).c_str(), pnode->name().c_str());
+            critical ("%s: parent type is not a container: %s:%s", node_location (cnode).c_str(),
+                      node_location (pnode).c_str(), pnode->name().c_str());
+          return_unless (container != NULL);
         }
       // create child
       StringVector call_names, call_values, arg_names, arg_values;
@@ -509,18 +586,26 @@ Builder::call_children (const XmlNode *pnode, ItemImpl *item)
       eval_args (cnode->list_attributes(), cnode->list_values(), call_names, call_values, pnode, &child_name, NULL, NULL);
       ItemImpl *child = call_child (cnode, call_names, call_values, child_name, cnode);
       if (!child)
-        fatal ("%s: unknown item type: %s", node_location (cnode).c_str(), cnode->name().c_str());
+        {
+          critical ("%s: unknown item type: %s", node_location (cnode).c_str(), cnode->name().c_str());
+          continue;
+        }
+      else if (vchildren)
+        vchildren->push_back (child);
       // add to parent
       try {
         container->add (child);
       } catch (std::exception &exc) {
-        fatal ("%s: adding %s to parent failed: %s", node_location (cnode).c_str(), cnode->name().c_str(), exc.what());
+        critical ("%s: adding %s to parent failed: %s", node_location (cnode).c_str(), cnode->name().c_str(), exc.what());
         unref (ref_sink (child));
         throw; // FIXME: unref parent?
       } catch (...) {
         unref (ref_sink (child));
         throw; // FIXME: unref parent?
       }
+      // limit amount of children
+      if (vchildren && max_children >= 0 && vchildren->size() >= size_t (max_children))
+        return;
     }
 }
 
@@ -575,17 +660,27 @@ create_ui_item (const String       &item_identifier,
   return *item;
 }
 
-static void
-assign_xml_node_domain_recursive (XmlNode *xnode, const String &domain)
+void
+create_ui_children (ContainerImpl     &container,
+                    vector<ItemImpl*> *children,
+                    const String      &presuppose,
+                    int64              max_children)
 {
-  xnode->set_data (&xml_node_domain_key, domain);
+  return Builder::build_children (container, children, presuppose, max_children);
+}
+
+static void
+assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
+{
+  NodeData &ndata = NodeData::from_xml_node (*xnode);
+  ndata.domain = domain;
   XmlNode::ConstNodes &children = xnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
       if (cnode->istext() || cnode->name() == "tmpl:property" || cnode->name() == "tmpl:argument")
         continue;
-      assign_xml_node_domain_recursive (const_cast<XmlNode*> (cnode), domain);
+      assign_xml_node_data_recursive (const_cast<XmlNode*> (cnode), domain);
     }
 }
 
@@ -602,7 +697,7 @@ register_ui_node (const String   &domain,
       if (it != gadget_definition_map.end())
         return string_printf ("%s: redefinition of: %s (previously at %s)",
                               node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
-      assign_xml_node_domain_recursive (xnode, domain);
+      assign_xml_node_data_recursive (xnode, domain);
       gadget_definition_map[ident] = ref_sink (xnode);
       if (definitions)
         definitions->push_back (ident);
