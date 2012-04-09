@@ -21,6 +21,7 @@ class ContainerImpl;
 class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
+namespace Selector { class Selob; }
 
 /* --- event handler --- */
 class EventHandler : public virtual ReferenceCountable {
@@ -87,7 +88,7 @@ protected:
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
   bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
   virtual bool                self_visible      () const;
-  virtual bool                pseudo_selector   (const String &ident, const String &arg, String &error) { return false; }
+  virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;

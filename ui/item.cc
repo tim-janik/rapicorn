@@ -7,6 +7,7 @@
 #include "sizegroup.hh"
 #include "factory.hh"
 #include "selector.hh"
+#include "selob.hh"
 
 #define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
 
@@ -299,24 +300,29 @@ ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMat
 bool
 ItemImpl::match_selector (const String &selector)
 {
-  return Selector::Matcher::match_selector (selector, *this);
+  Selector::SelobAllocator sallocator;
+  return Selector::Matcher::query_selector_bool (selector, *sallocator.item_selob (*this));
 }
 
 ItemIface*
 ItemImpl::query_selector (const String &selector)
 {
-  return Selector::Matcher::query_selector_first (selector, *this);
+  Selector::SelobAllocator sallocator;
+  Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.item_selob (*this));
+  return selob ? sallocator.selob_item (*selob) : NULL;
 }
 
 ItemSeq
 ItemImpl::query_selector_all (const String &selector)
 {
-  vector<ItemImpl*> result = Selector::Matcher::query_selector_all (selector, *this);
+  Selector::SelobAllocator sallocator;
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_all (selector, *sallocator.item_selob (*this));
   ItemSeq items;
-  for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
+  for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
     {
-      ItemHandle ih = *it->*Aida::_handle;
-      items.push_back (ih);
+      ItemImpl *item = sallocator.selob_item (**it);
+      if (item)
+        items.push_back (item->*Aida::_handle);
     }
   return items;
 }
@@ -324,7 +330,9 @@ ItemImpl::query_selector_all (const String &selector)
 ItemIface*
 ItemImpl::query_selector_unique (const String &selector)
 {
-  return Selector::Matcher::query_selector_unique (selector, *this);
+  Selector::SelobAllocator sallocator;
+  Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.item_selob (*this));
+  return selob ? sallocator.selob_item (*selob) : NULL;
 }
 
 uint

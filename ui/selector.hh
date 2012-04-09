@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_SELECTOR_HH__
 #define __RAPICORN_SELECTOR_HH__
 
-#include <ui/item.hh>
+#include <rapicorn-core.hh>
 
 namespace Rapicorn {
 namespace Selector {
@@ -60,43 +60,66 @@ struct SelectorChain : public vector<SelectorNode> {
   String        string  (size_t first = 0);
 };
 
-class Matcher {
-  SelectorChain           chain;
-  size_t                  subject_index;
-  /*ctor*/                Matcher() : subject_index (-1) {}
-  bool                    match_attribute_selector (ItemImpl &item, const SelectorNode &snode);
-  bool                    match_pseudo_element     (ItemImpl &item, const SelectorNode &snode);
-  bool                    match_pseudo_class       (ItemImpl &item, const SelectorNode &snode);
-  bool                    match_element_selector   (ItemImpl &item, const SelectorNode &snode);
-  template<int CDIR> bool match_selector_stepwise  (ItemImpl &item, const size_t chain_index);
-  bool                    match_selector_children  (ContainerImpl &container, const size_t chain_index);
-  bool                    match_selector           (ItemImpl &item);
-  template<size_t COUNT>
-  vector<ItemImpl*>       recurse_selector         (ItemImpl &item);
-  bool                    parse_selector           (const String &selector, bool with_combinators, String *errorp = NULL);
+class Selob { // Matchable Objects
 public:
-  template<class Iter> vector<ItemImpl*>
-  static                   match_selector        (const String &selector, Iter first, Iter last, String *errorp = NULL);
-  static bool              match_selector        (const String &selector, ItemImpl &item);
-  static vector<ItemImpl*> query_selector_all    (const String &selector, ItemImpl &item);
-  static ItemImpl*         query_selector_first  (const String &selector, ItemImpl &item);
-  static ItemImpl*         query_selector_unique (const String &selector, ItemImpl &item);
+  typedef std::vector<std::string> Strings;
+  virtual             ~Selob           () {}
+  virtual String       get_id          () = 0;
+  virtual String       get_type        () = 0;            // Factory::factory_context_type (selob.factory_context())
+  virtual StringVector get_type_list   () = 0;
+  virtual bool         has_property    (const String &name) = 0;   // item.lookup_property
+  virtual String       get_property    (const String &name) = 0;
+  virtual Selob*       get_parent      () = 0;
+  virtual Selob*       get_sibling     (int64 dir) = 0;
+  virtual bool         has_children    () = 0;
+  virtual int64        n_children      () = 0;
+  virtual Selob*       get_child       (int64 index) = 0;
+  virtual bool         is_nth_child    (int64 nth1based) = 0;
+  virtual Selob*       pseudo_selector (const String &ident, const String &arg, String &error) = 0;
+  static Selob*        true_match      ();
+  static bool          is_true_match   (Selob *selob) { return selob == true_match(); }
+};
+
+class Matcher {
+  SelectorChain             chain;
+  uint                      subject_index, last_combinator, first_pseudo_element;
+  /*ctor*/                  Matcher() : subject_index (UINT_MAX), last_combinator (UINT_MAX), first_pseudo_element (UINT_MAX) {}
+  bool                      match_attribute_selector   (Selob &selob, const SelectorNode &snode);
+  Selob*                    match_pseudo_element       (Selob &selob, const SelectorNode &snode);
+  bool                      match_pseudo_class         (Selob &selob, const SelectorNode &snode);
+  bool                      match_element_selector     (Selob &selob, const SelectorNode &snode);
+  template<int CDIR> Selob* match_selector_stepwise    (Selob &selob, const size_t chain_index);
+  Selob*                    match_selector_descendants (Selob &selob, const size_t chain_index);
+  Selob*                    match_selector_chain       (Selob &selob);
+  template<size_t COUNT>
+  vector<Selob*>            recurse_selector           (Selob &selob);
+  bool                      parse_selector             (const String &selector, bool with_combinators, String *errorp = NULL);
+public:
+  static bool               query_selector_bool        (const String &selector, Selob &selob, String *errorp = NULL);
+  static Selob*             query_selector_first       (const String &selector, Selob &selob, String *errorp = NULL);
+  static Selob*             query_selector_unique      (const String &selector, Selob &selob, String *errorp = NULL);
+  static vector<Selob*>     query_selector_all         (const String &selector, Selob &selob, String *errorp = NULL);
+  template<class Iter>
+  static vector<Selob*>     query_selector_objects     (const String &selector, Iter first, Iter last, String *errorp = NULL);
 };
 
 // Implementations
-template<class Iter> vector<ItemImpl*>
-Matcher::match_selector (const String &selector, Iter first, Iter last, String *errorp)
+template<class Iter> vector<Selob*>
+Matcher::query_selector_objects (const String &selector, Iter first, Iter last, String *errorp)
 {
   Matcher matcher;
-  vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector, errorp))
+  vector<Selob*> rvector;
+  if (matcher.parse_selector (selector, true, errorp))
     for (Iter it = first; it != last; it++)
       {
-        ItemImpl *item = *it;
-        if (item && matcher.match_selector (*item))
-          result.push_back (item);
+        Selob *selob = *it;
+        if (!selob)
+          continue;
+        Selob *result = matcher.match_selector_chain (*selob);
+        if (result)
+          rvector.push_back (result);
       }
-  return result;
+  return rvector;
 }
 
 } // Selector

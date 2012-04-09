@@ -6,6 +6,7 @@
 #include "image.hh"
 #include "uithread.hh"
 #include "internal.hh"
+#include "selob.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -285,33 +286,35 @@ ApplicationImpl::close_all ()
 WindowIface*
 ApplicationImpl::query_window (const String &selector)
 {
-  vector<ItemImpl*> input;
+  Selector::SelobAllocator sallocator;
+  vector<Selector::Selob*> input;
   for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
     {
       ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
       if (item)
-        input.push_back (item);
+        input.push_back (sallocator.item_selob (*item));
     }
-  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   if (result.size() == 1) // unique
-    return dynamic_cast<WindowIface*> (result[0]);
+    return dynamic_cast<WindowIface*> (sallocator.selob_item (*result[0]));
   return NULL;
 }
 
 WindowList
 ApplicationImpl::query_windows (const String &selector)
 {
-  vector<ItemImpl*> input;
+  Selector::SelobAllocator sallocator;
+  vector<Selector::Selob*> input;
   for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
     {
       ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
       if (item)
-        input.push_back (item);
+        input.push_back (sallocator.item_selob (*item));
     }
-  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   WindowList wlist;
-  for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
-    wlist.push_back (dynamic_cast<WindowIface*> (*it)->*Aida::_handle);
+  for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
+    wlist.push_back (dynamic_cast<WindowIface*> (sallocator.selob_item (**it))->*Aida::_handle);
   return wlist;
 }
 

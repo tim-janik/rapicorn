@@ -25,6 +25,7 @@
 #include <ui/region.hh>
 #include <ui/scrollitems.hh>
 #include <ui/selector.hh>
+#include <ui/selob.hh>
 #include <ui/sinfex.hh>
 #include <ui/sizegroup.hh>
 #include <ui/stock.hh>
