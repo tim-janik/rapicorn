@@ -17,6 +17,12 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 // == String ==
 String                          string_multiply          (const String &s,
                                                           uint64       count);
+String                          string_canonify          (const String &s,
+                                                          const String &valid_chars,
+                                                          const String &substitute);
+String                          string_set_a2z           ();
+String                          string_set_A2Z           ();
+String                          string_set_ascii_alnum   ();
 String  			string_tolower           (const String &str);
 String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);

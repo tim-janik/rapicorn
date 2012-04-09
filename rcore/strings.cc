@@ -57,6 +57,45 @@ string_multiply (const String &s,
 }
 
 String
+string_canonify (const String &s, const String &valid_chars, const String &substitute)
+{
+  const size_t l = s.size();
+  const char *valids = valid_chars.c_str(), *p = s.c_str();
+  size_t i;
+  for (i = 0; i < l; i++)
+    if (!strchr (valids, p[i]))
+      goto rewrite_string;
+  return s; // only ref increment
+ rewrite_string:
+  String d = s.substr (0, i);
+  d += substitute;
+  for (++i; i < l; i++)
+    if (strchr (valids, p[i]))
+      d += p[i];
+    else
+      d += substitute;
+  return d;
+}
+
+String
+string_set_a2z ()
+{
+  return "abcdefghijklmnopqrstuvwxyz";
+}
+
+String
+string_set_A2Z ()
+{
+  return "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+}
+
+String
+string_set_ascii_alnum ()
+{
+  return "0123456789" + string_set_A2Z() + string_set_a2z();
+}
+
+String
 string_tolower (const String &str)
 {
   String s (str);

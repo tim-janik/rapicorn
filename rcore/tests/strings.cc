@@ -356,6 +356,19 @@ test_string_charsets (void)
 REGISTER_TEST ("Strings/charsets", test_string_charsets);
 
 static void
+test_string_misc (void)
+{
+  TCMP (string_canonify ("", "", ""), ==, "");
+  TCMP (string_canonify ("a", "", "+"), ==, "+");
+  TCMP (string_canonify ("abc", "", "+"), ==, "+++");
+  TCMP (string_canonify ("AbraCadaBra", string_set_A2Z(), "#+"), ==, "A#+#+#+C#+#+#+B#+#+");
+  TCMP (string_canonify ("Foo123bar+baz", string_set_a2z() + string_set_A2Z(), "^"), ==, "Foo^^^bar^baz");
+  TCMP (string_canonify ("#Foo_Frob", string_set_a2z() + string_set_A2Z(), "-"), ==, "-Foo-Frob");
+  TCMP (string_canonify ("/usr/bin/ls", string_set_ascii_alnum(), "_"), ==, "_usr_bin_ls");
+}
+REGISTER_TEST ("Strings/Misc", test_string_misc);
+
+static void
 test_string_stripping (void)
 {
   TCMP (string_strip (""), ==, "");
