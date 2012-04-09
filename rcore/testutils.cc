@@ -285,6 +285,8 @@ run_tests (void)
   char ftype = logging() ? 'l' : (slow() ? 's' : 't');
   if (ui_test())
     ftype = toupper (ftype);
+  RAPICORN_DEBUG ("Test: running %zu + %zu tests", entries.size(), testfuncs.size());
+  size_t skipped = 0, passed = 0;
   for (size_t i = 0; i < entries.size(); i++)
     {
       const TestEntry *te = entries[i];
@@ -293,14 +295,20 @@ run_tests (void)
           TSTART ("%s", te->name.c_str());
           te->func (te->data);
           TDONE();
+          passed++;
         }
+      else
+        skipped++;
     }
   for (uint i = 0; i < testfuncs.size(); i++)
     {
       TSTART ("%s", testnames[i].c_str());
       testfuncs[i] (testdatas[i]);
       TDONE();
+      passed++;
     }
+  RAPICORN_DEBUG ("Test: passed %zu tests", passed);
+  RAPICORN_DEBUG ("Test: skipped deselected %zu tests", skipped);
 }
 
 void

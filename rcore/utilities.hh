@@ -19,10 +19,8 @@
 #define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
+//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in rapicorncdefs.h
 #define STRLOC()                        RAPICORN_STRLOC()
-#define SRCLOC()                        RAPICORN_SRCLOC()
-#define FUNLOC()                        RAPICORN_FUNLOC()
-#define CODELOC()                       RAPICORN_CODELOC()
 #define return_if                       RAPICORN_RETURN_IF
 #define return_unless                   RAPICORN_RETURN_UNLESS
 #define assert                          RAPICORN_ASSERT
@@ -100,52 +98,51 @@ public:
 };
 
 // === source location strings ===
-#define RAPICORN_STRLOC()                       (RAPICORN_STRLOC_STRING().c_str())      ///< Return "FILE:LINE"
-#define RAPICORN_SRCLOC()                       (RAPICORN_SRCLOC_STRING().c_str())      ///< Return "BASE_FILE"
-#define RAPICORN_FUNLOC()                       (RAPICORN_FUNLOC_STRING().c_str())      ///< Return "FUNCTION()"
-#define RAPICORN_CODELOC()                      (RAPICORN_CODELOC_STRING().c_str())     ///< Return "FILE:LINE:FUNCTION()"
-#define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string) ///< Return stringiified argument
+#define RAPICORN_STRLOC()                       (__FILE__ ":" RAPICORN_STRINGIFY (__LINE__))    ///< Return "FILE:LINE"
+#define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
+#define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string)        ///< Return stringiified argument
 
 // === Control Flow Helpers ===
 #define RAPICORN_RETURN_IF(cond, ...)           do { if (RAPICORN_UNLIKELY (cond)) return __VA_ARGS__; } while (0)
 #define RAPICORN_RETURN_UNLESS(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; return __VA_ARGS__; } while (0)
 
 // === Development Guards ===
-#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_emsg ('F', RAPICORN_STRLOC_STRING(), __VA_ARGS__); } while (0)
-#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_emsg ('A', RAPICORN_CODELOC_STRING(), "%s", #cond); } while (0)
-#define RAPICORN_ASSERT_RETURN(c, ...)          do { if (RAPICORN_LIKELY (c)) break; Rapicorn::debug_cmsg ('I', RAPICORN_FUNLOC_STRING(), "%s", #c); return __VA_ARGS__; } while (0)
-#define RAPICORN_ASSERT_UNREACHED(...)          do { Rapicorn::debug_emsg ('U', RAPICORN_CODELOC_STRING(), "%s", std::string (__VA_ARGS__).c_str()); } while (0)
+#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (__FILE__, __LINE__, #cond); } while (0)
+#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE__, __LINE__, #cond); return __VA_ARGS__; } while (0)
+#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (__FILE__, __LINE__, "code must not be reached"); } while (0)
 
 // === Development Messages ===
-#define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_cmsg ('I', RAPICORN_STRLOC_STRING(), "%s", #cond); } while (0)
-#define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_cmsg ('C', RAPICORN_STRLOC_STRING(), __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)             do { Rapicorn::debug_cmsg ('X', RAPICORN_SRCLOC_STRING(), __VA_ARGS__); } while (0)
+#define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE__, __LINE__, #cond); } while (0)
+#define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (__FILE__, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (debug_enabled()) Rapicorn::debug_cmsg ('D', RAPICORN_SRCLOC_STRING(), __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { if (debug_enabled()) Rapicorn::debug_kmsg ('D', key, RAPICORN_SRCLOC_STRING(), __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (debug_enabled()) Rapicorn::debug_simple (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { if (debug_enabled()) Rapicorn::debug_keymsg (__FILE__, __LINE__, key, __VA_ARGS__); } while (0)
 
 // === Debugging Functions (internal) ===
+vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
 extern bool _debug_flag;
-inline bool debug_enabled () { return RAPICORN_UNLIKELY (_debug_flag); }
-void        debug_cmsg  (const char dkind, const String &location, const char *format, ...) RAPICORN_PRINTF (3, 4);
-void        debug_emsg  (const char dkind, const String &location, const char *format, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
-void        debug_kmsg  (const char dkind, const char *key, const String &location, const char *format, ...) RAPICORN_PRINTF (4, 5);
-String      debug_help  ();
+inline bool debug_enabled    () { return RAPICORN_UNLIKELY (_debug_flag); }
 void        debug_configure  (const String &options);
 String      debug_confstring (const String &option, const String &vdefault = "");
 bool        debug_confbool   (const String &option, bool vdefault = false);
 int64       debug_confnum    (const String &option, int64 vdefault = 0);
+String      debug_help       ();
 const char* strerror    (void);         // simple wrapper for strerror (errno)
 const char* strerror    (int errnum);   // wrapper for ::strerror
+// implementation prototypes
+void        debug_assert     (const char*, int, const char*);
+void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
+void        debug_fatal      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
+void        debug_critical   (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void        debug_fixit      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void        debug_simple     (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void        debug_keymsg     (const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (4, 5);
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg
-#define RAPICORN_LINE_STRING()          std::string (RAPICORN_STRINGIFY (__LINE__))
-#define RAPICORN_STRLOC_STRING()        std::string (std::string (__FILE__) + ":" + RAPICORN_LINE_STRING())
-#define RAPICORN_SRCLOC_STRING()        std::string (std::string (RAPICORN__SOURCE_COMPONENT__))
-#define RAPICORN_FUNLOC_STRING()        std::string (__FUNCTION__ + std::string ("()"))
-#define RAPICORN_CODELOC_STRING()       std::string (RAPICORN_STRLOC_STRING() + ":" + RAPICORN_FUNLOC_STRING())
 #define RAPICORN_STARTUP_ASSERTi(e, _N) namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
 #define RAPICORN_STARTUP_ASSERT(expr)   RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 #ifdef  __SOURCE_COMPONENT__

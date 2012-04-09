@@ -320,7 +320,7 @@ init_core (const String       &app_ident,
   // ensure logging is fully initialized
   debug_configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
-  RAPICORN_DEBUG ("startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
+  RAPICORN_DEBUG ("Startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
   // setup init settings
   parse_settings_and_args (vinit_settings, args, argcp, argv);

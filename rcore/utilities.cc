@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstring>
 #include <syslog.h>
+#include <execinfo.h>
 #include <stdexcept>
 
 #if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
@@ -336,84 +337,101 @@ dbg_prefix (const String &fileline)
   return fileline;
 }
 
-void
-debug_kmsg (const char dkind, const char *key, const String &where, const char *format, ...)
+static void debug_msg (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
+
+static void // internal function, this + caller are skipped in backtraces
+debug_msg (const char dkind, const String &file_line, const String &message, const char *key)
 {
   /* The logging system must work before Rapicorn is initialized, and possibly even during
    * global_ctor phase. So any initialization needed here needs to be handled on demand.
    */
-  int saved_errno = errno;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
+  String msg = message;
   const char kind = toupper (dkind);
-  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXME = 128, };
+  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
+         DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXIT = 128, DO_BACKTRACE = 256, };
   static int conftest_logfd = 0;
   const String conftest_logfile = conftest_logfd == 0 ? conftest_procure().slookup ("logfile") : "";
   const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
   const int MAY_SYSLOG = debug_confbool ("syslog") ? DO_SYSLOG : 0;
   const int MAY_ABORT  = debug_confbool ("fatal-warnings") ? DO_ABORT  : 0;
+  const char *what = "DEBUG";
   int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
-  f |= kind != 'F' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // fatal
-  f |= kind != 'A' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // assertion failed
-  f |= kind != 'U' ? 0 : DO_STDERR | FATAL_SYSLOG | DO_ABORT;   // unreachable is fatal
-  f |= kind != 'C' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // critical
-  f |= kind != 'I' ? 0 : DO_STDERR | MAY_SYSLOG | MAY_ABORT;    // condition failed
-  f |= kind != 'D' ? 0 : DO_DEBUG | DO_STAMP;                   // debug
-  f |= kind != 'X' ? 0 : DO_DEBUG | DO_FIXME;                   // fixing needed
+  switch (kind)
+    {
+    case 'F': what = "FATAL";    f |= DO_STDERR | FATAL_SYSLOG | DO_ABORT;  break;      // fatal, assertions
+    case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
+    case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
+    case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
+    case 'K': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug with key
+    }
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
-  const char *w = NULL;
-  w = kind == 'F' ? "FATAL" : w;
-  w = kind == 'A' ? "FATAL" : w;
-  w = kind == 'U' ? "FATAL" : w;
-  w = kind == 'C' ? "CRITICAL" : w;
-  w = kind == 'I' ? "CRITICAL" : w;
-  w = kind == 'D' ? "DEBUG" : w;
-  w = kind == 'X' ? "FIX""ME" : w;
-  const String what = w ? String (w) + ": " : "";
-  const String wherewhat = where.empty() ? what + String (what.empty() ? "" : " ") : where + ": " + what;
-  String emsg = f & DO_ERRNO ? ": " + string_from_errno (saved_errno) + "\n" : "\n";
+  f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
+  const String where = file_line + (file_line.empty() ? "" : ": ");
+  const String wherewhat = where + what + ": ";
+  String emsg = "\n"; // (f & DO_ERRNO ? ": " + string_from_errno (saved_errno) : "")
   if (kind == 'A')
     msg = "assertion failed: " + msg;
-  else if (kind == 'I')
-    msg = "condition failed: " + msg;
   else if (kind == 'U')
     msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
+  else if (kind == 'I')
+    msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
+  if (f & DO_STAMP)
+    {
+      static bool first_debug = false;
+      if (once_enter (&first_debug))
+        {
+          printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
+                    delta / 1000000, delta % 1000000,
+                    program_name().c_str(), thread_pid(),
+                    start / 1000000, start % 1000000);
+          once_leave (&first_debug, true);
+        }
+    }
   if (f & DO_DEBUG)
     {
       String dkey = key ? key : "";
       std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
-      if ((conftest_any_debugging && dkey.empty()) ||
-          (conftest_key_debugging && !dkey.empty() &&
-           (debug_confbool ("debug-" + dkey) || debug_confbool ("debug-all"))))
+      const bool keycheck = !key || debug_confbool ("debug-" + dkey) || debug_confbool ("debug-all");
+      if (keycheck)
         {
-          static bool first_debug = false;
-          if (once_enter (&first_debug))
-            {
-              printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
-                        delta / 1000000, delta % 1000000,
-                        program_name().c_str(), thread_pid(),
-                        start / 1000000, start % 1000000);
-              once_leave (&first_debug, true);
-            }
-          String intro, prefix = key ? key : dbg_prefix (where);
-          if (!prefix.empty())
+          String intro, prefix = key ? key : dbg_prefix (file_line);
+          if (prefix.size())
             prefix = prefix + ": ";
           if (f & DO_STAMP)
             intro = string_printf ("[%llu.%06llu]", delta / 1000000, delta % 1000000);
-          else if (f & DO_FIXME)
-            intro = "FIX""ME:";
           printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
         }
     }
+  if (f & DO_FIXIT)
+    {
+      printerr ("%s: %s%s%s", what, where.c_str(), msg.c_str(), emsg.c_str());
+    }
   if (f & DO_STDERR)
     {
-      String end = emsg;
+      printerr ("%s[%u]:%s%s%s", program_name().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
-        end += "Aborting...\n";
-      printerr ("%s[%u]:%s%s%s", program_name().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), end.c_str());
+        printerr ("Aborting...\n");
+    }
+  if (f & DO_SYSLOG)
+    {
+      ensure_openlog();
+      String end = emsg;
+      if (!end.empty() && end[end.size()-1] == '\n')
+        end.resize (end.size()-1);
+      const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
+      const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
+      syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
+    }
+  String btmsg;
+  if (f & DO_BACKTRACE)
+    {
+      size_t addr;
+      const vector<String> syms = pretty_backtrace (2, &addr);
+      btmsg = string_printf ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
+                             addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
+      for (size_t i = 0; i < syms.size(); i++)
+        btmsg += string_printf ("  %s\n", syms[i].c_str());
     }
   if (f & DO_LOGFILE)
     {
@@ -443,17 +461,13 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
       do
         err = write (conftest_logfd, out.data(), out.size());
       while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      if (f & DO_BACKTRACE)
+        do
+          err = write (conftest_logfd, btmsg.data(), btmsg.size());
+        while (err < 0 && (errno == EINTR || errno == EAGAIN));
     }
-  if (f & DO_SYSLOG)
-    {
-      ensure_openlog();
-      String end = emsg;
-      if (!end.empty() && end[end.size()-1] == '\n')
-        end.resize (end.size()-1);
-      const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
-      const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
-      syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
-    }
+  if (f & DO_BACKTRACE)
+    printerr ("%s", btmsg.c_str());
   if (f & DO_ABORT)
     {
       ::abort();
@@ -461,24 +475,67 @@ debug_kmsg (const char dkind, const char *key, const String &where, const char *
 }
 
 void
-debug_cmsg (const char dkind, const String &location, const char *format, ...)
+debug_assert (const char *file, const int line, const char *message)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_kmsg (dkind, NULL, location, "%s", msg.c_str());
+  debug_msg ('C', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
 }
 
 void
-debug_emsg (const char dkind, const String &location, const char *format, ...)
+debug_fassert (const char *file, const int line, const char *message)
+{
+  debug_msg ('F', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
+  ::abort();
+}
+
+void
+debug_fatal (const char *file, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_kmsg (dkind, NULL, location, "%s", msg.c_str());
+  debug_msg ('F', string_printf ("%s:%d", file, line), msg);
   ::abort();
+}
+
+void
+debug_critical (const char *file, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_msg ('C', string_printf ("%s:%d", file, line), msg);
+}
+
+void
+debug_fixit (const char *file, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_msg ('X', string_printf ("%s:%d", file, line), msg);
+}
+
+void
+debug_simple (const char *file, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_msg ('D', string_printf ("%s:%d", file, line), msg);
+}
+
+void
+debug_keymsg (const char *file, const int line, const char *key, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_msg ('K', string_printf ("%s:%d", file, line), msg, key);
 }
 
 const char*
@@ -491,6 +548,45 @@ const char*
 strerror (int errnum)
 {
   return ::strerror (errnum);
+}
+
+std::vector<std::string>
+pretty_backtrace (uint level, size_t *parent_addr)
+{
+  void *ptrbuffer[1024];
+  const int nptrs = backtrace (ptrbuffer, ARRAY_SIZE (ptrbuffer));
+  if (parent_addr)
+    *parent_addr = nptrs >= 1 + int (level) ? size_t (ptrbuffer[1 + level]) : 0;
+  char **btsymbols = backtrace_symbols (ptrbuffer, nptrs);
+  std::vector<std::string> symbols;
+  if (btsymbols)
+    {
+      for (int i = 1 + level; i < nptrs; i++) // skip current function plus some
+        {
+          char dso[1234+1] = "???", fsym[1234+1] = "???"; size_t addr = size_t (ptrbuffer[i]);
+          // parse: ./executable(_MangledFunction+0x00b33f) [0x00deadbeef]
+          sscanf (btsymbols[i], "%1234[^(]", dso);
+          sscanf (btsymbols[i], "%*[^(]%*[(]%1234[^)+-]", fsym);
+          std::string func;
+          if (fsym[0])
+            {
+              int status = 0;
+              char *demang = abi::__cxa_demangle (fsym, NULL, NULL, &status);
+              func = status == 0 && demang ? demang : fsym + std::string (" ()");
+              if (demang)
+                free (demang);
+            }
+          const char *dsof = strrchr (dso, '/');
+          dsof = dsof ? dsof + 1 : dso;
+          char buffer[2048] = { 0 };
+          snprintf (buffer, sizeof (buffer), "0x%08zx %-26s %s", addr, dsof, func.c_str());
+          symbols.push_back (buffer);
+          if (strcmp (fsym, "main") == 0 || strcmp (fsym, "__libc_start_main") == 0)
+            break;
+        }
+      free (btsymbols);
+    }
+  return symbols;
 }
 
 // == AssertionError ==

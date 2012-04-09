@@ -59,13 +59,13 @@ REGISTER_LOGTEST ("Message/Dialog Message Types", test_dialog_messages);
 static void
 bogus_func ()
 {
-  assert_return (0 == "test-return-if-fail");
+  assert_return (0 == "assert-return-void");
 }
 
 static int
 value_func (int)
 {
-  assert_return (0 == "test-return-val-if-fail", 0);
+  assert_return (0 == "assert-return+val", 0);
   return 1;
 }
 
@@ -79,8 +79,12 @@ test_logging (const char *logarg)
     RAPICORN_ASSERT_UNREACHED();
   if (String ("--test-fatal") == logarg)
     fatal ("execution has reached a fatal condition (\"test-fatal\")");
+  if (String ("--test-TCMP") == logarg)
+    TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)
     {
+#define FIXIT FIX##ME
+      FIXIT ("nothing to fix here, FIX""ME() test");
       debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
       RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
       RAPICORN_CRITICAL_UNLESS (0 > 1);
