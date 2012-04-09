@@ -8,6 +8,8 @@
 #include "factory.hh"
 #include "selector.hh"
 
+#define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
+
 namespace Rapicorn {
 
 struct ClassDoctor {
@@ -1050,6 +1052,9 @@ ItemImpl::inner_size_request()
             inner.width = ovr.width;
           if (ovr.height >= 0)
             inner.height = ovr.height;
+          SZDEBUG ("size requesting: 0x%016zx:%s: %s => %.17gx%.17g", size_t (this),
+                   Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
+                   inner.width, inner.height);
         }
       m_requisition = inner;
     }
@@ -1435,6 +1440,9 @@ ItemImpl::set_allocation (const Allocation &area)
   /* expose new area */
   if (need_expose)
     expose();
+  SZDEBUG ("size allocation: 0x%016zx:%s: %s => %s", size_t (this),
+           Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
+           a.string().c_str());
 }
 
 // == rendering ==
