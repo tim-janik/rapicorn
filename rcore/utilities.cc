@@ -392,7 +392,9 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
     {
       String dkey = key ? key : "";
       std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
-      const bool keycheck = !key || debug_confbool ("debug-" + dkey) || debug_confbool ("debug-all");
+      const bool keycheck = !key || debug_confbool ("debug-" + dkey) || // key selected
+                            (debug_confbool ("debug-all") &&
+                             debug_confbool ("debug-" + dkey, true));   // ensure key was not deselected
       if (keycheck)
         {
           String intro, prefix = key ? key : dbg_prefix (file_line);
