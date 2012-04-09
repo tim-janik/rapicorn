@@ -42,6 +42,7 @@ public:
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual size_t        n_children      () = 0;
+  virtual ItemImpl*     nth_child       (size_t nth) = 0;
   bool                  has_children    ()                          { return 0 != n_children(); }
   void                  remove          (ItemImpl           &item);
   void                  remove          (ItemImpl           *item)  { assert_return (item != NULL); remove (*item); }
@@ -74,6 +75,7 @@ protected:
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
   virtual size_t        n_children              () { return child_item ? 1 : 0; }
+  virtual ItemImpl*     nth_child               (size_t nth) { return nth == 0 ? child_item : NULL; }
   bool                  has_visible_child       () { return child_item && child_item->visible(); }
   bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
   bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
@@ -91,6 +93,7 @@ protected:
   virtual void          render                  (RenderContext&, const Rect&) {}
   virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual size_t        n_children              () { return items.size(); }
+  virtual ItemImpl*     nth_child               (size_t nth) { return nth < items.size() ? items[nth] : NULL; }
   virtual void          add_child               (ItemImpl   &item);
   virtual void          remove_child            (ItemImpl   &item);
   void                  raise_child             (ItemImpl   &item);
