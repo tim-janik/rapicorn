@@ -867,10 +867,10 @@ SelectorChain::parse (const char **stringp, const bool with_combinators)
 }
 
 String
-SelectorChain::string ()
+SelectorChain::string (size_t first)
 {
   String s;
-  for (size_t i = 0; i < size(); i++)
+  for (size_t i = first; i < size(); i++)
     {
       const SelectorNode &node = operator[] (i);
       const char *flag = "";

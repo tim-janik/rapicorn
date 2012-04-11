@@ -18,6 +18,7 @@ enum Kind {
   ATTRIBUTE_DASHSTART, ATTRIBUTE_DASHSTART_I, ATTRIBUTE_SUBSTRING, ATTRIBUTE_SUBSTRING_I,
   ATTRIBUTE_INCLUDES, ATTRIBUTE_INCLUDES_I,
 };
+inline bool is_combinator           (Kind kind) { return kind >= DESCENDANT && kind <= NEIGHBORING; }
 
 class CustomPseudoRegistry : protected NonCopyable {
   CustomPseudoRegistry                 *m_next;
@@ -55,7 +56,7 @@ struct SelectorNode {
 };
 struct SelectorChain : public vector<SelectorNode> {
   bool          parse   (const char **stringp, bool with_combinators = true);
-  String        string  ();
+  String        string  (size_t first = 0);
 };
 
 class Matcher {
