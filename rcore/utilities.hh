@@ -13,6 +13,12 @@
 #error Only <rapicorn-core.hh> can be included directly.
 #endif
 
+// === Standard Macro Definitions ===
+#ifndef SIZE_T_MAX
+#define SIZE_T_MAX              (~size_t (0))
+#define SSIZE_T_MAX             (ssize_t (SIZE_T_MAX / 2))
+#endif
+
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
 #define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
