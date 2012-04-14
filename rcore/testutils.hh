@@ -165,6 +165,21 @@ int32   rand_int_range          (int32 begin, int32 end);               ///< Ret
 double  test_rand_double        (void);                                 ///< Return random double.
 double  test_rand_double_range  (double range_start, double range_end); ///< Return random double within range.
 
+enum TrapFlags {
+  TRAP_INHERIT_STDIN   = 1 << 0,
+  TRAP_SILENCE_STDOUT  = 1 << 1,
+  TRAP_SILENCE_STDERR  = 1 << 2,
+  TRAP_NO_FATAL_SYSLOG = 1 << 3,
+};
+
+bool    trap_fork          (uint64 usec_timeout, uint test_trap_flags);
+bool    trap_fork_silent   ();
+bool    trap_timed_out     ();
+bool    trap_passed        ();
+bool    trap_aborted       ();
+String  trap_stdout        ();
+String  trap_stderr        ();
+
 } // Test
 } // Rapicorn
 

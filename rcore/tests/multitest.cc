@@ -29,14 +29,96 @@ using namespace Rapicorn;
 #endif
 
 static void
-test_misc (void)
+test_failing ()
 {
+  // check STRINGIFY, needed for assertions
   const char *lstr = RAPICORN_CPP_STRINGIFY (__LINE__);
-  assert (lstr);
-  assert (lstr[0] >= '0' && lstr[0] <= '9');
-  assert (lstr[1] >= '0' && lstr[1] <= '9');
+  if (!lstr || !(lstr[0] >= '0' && lstr[0] <= '9') || !(lstr[1] >= '0' && lstr[1] <= '9'))
+    {
+      errno = ENOSYS;
+      perror ("Rapicorn: Failed to verify working STRINGIFY()");
+      exit (127);
+    }
+
+  // check TASSERT() itself, so we can trust our other tests
+  if (Test::trap_fork_silent())
+    {
+      TASSERT (0 == "TASSERT is working...");
+      _exit (0);
+    }
+  if (Test::trap_aborted() == false)
+    {
+      errno = ENOSYS;
+      perror ("Rapicorn: Failed to verify working TASSERT()");
+      exit (127);
+    }
+
+  // also check test traps as such
+  if (Test::trap_fork_silent())
+    {
+      printout ("1\n");
+      printerr ("2\n");
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == false);
+  TASSERT (Test::trap_stdout() == "1\n");
+  TASSERT (Test::trap_stderr() == "2\n");
+
+  // fatal, basing checks on TASSERT
+  if (Test::trap_fork_silent())
+    {
+      fatal ("BOOM!");
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("BOOM") != String::npos);
+
+  // criticals
+  if (Test::trap_fork_silent())
+    {
+      critical ("Bang!");
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("Bang") != String::npos);
+  if (Test::trap_fork_silent())
+    {
+      critical_unless (42 == 3);
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("fail") != String::npos);
+  TASSERT (Test::trap_stderr().find ("42") != String::npos);
+
+  // assertions
+  if (Test::trap_fork_silent())
+    {
+      assert (!"something");
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("fail") != String::npos);
+  TASSERT (Test::trap_stderr().find ("something") != String::npos);
+
+  if (Test::trap_fork_silent())
+    {
+      assert_return ("beep" == NULL);
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("fail") != String::npos);
+  TASSERT (Test::trap_stderr().find ("beep") != String::npos);
+
+  if (Test::trap_fork_silent())
+    {
+      assert_unreached();
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("fail") != String::npos);
+  TASSERT (Test::trap_stderr().find ("reach") != String::npos);
 }
-REGISTER_TEST ("General/Stringify", test_misc);
+REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 
 static void
 test_cpu_info (void)
