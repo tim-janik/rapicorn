@@ -28,17 +28,19 @@
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
+#define TOK()                   do {} while (0) // printerr (".")
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
 #define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
-#define TOK()                   do {} while (0) // printerr (".")
-#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) TOK(); else {    \
+#define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
+    Rapicorn::debug_fatal (__FILE__, __LINE__, "error: %s", __s.c_str()); } while (0)
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
   String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
   String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
   Rapicorn::debug_fatal (__FILE__, __LINE__,                            \
                          "assertion failed: %s %s %s: %s %s %s",        \
                          sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-    } } while (0)
+  } while (0)
 
 namespace Rapicorn {
 
