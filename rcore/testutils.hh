@@ -32,6 +32,7 @@
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
 #define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
+#define TASSERT_AT(F,L,cond)    do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (F, L, #cond); } while (0)
 #define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
     Rapicorn::debug_fatal (__FILE__, __LINE__, "error: %s", __s.c_str()); } while (0)
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
