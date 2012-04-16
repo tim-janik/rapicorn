@@ -1,12 +1,16 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "main.hh"
 #include "strings.hh"
+#include "configbits.cc"
 #include <string.h>
 #include <algorithm>
 
 #include <glib.h>
 
 namespace Rapicorn {
+
+String  rapicorn_version ()     { return RAPICORN_VERSION; }
+String  rapicorn_buildid ()     { return RAPICORN_BUILDID; }
 
 // === initialization hooks ===
 static InitHook *init_hooks = NULL;

@@ -35,6 +35,9 @@ bool    arg_parse_string_option (uint         argc,
                                  const char **strp);
 int     arg_parse_collapse      (int         *argcp,
                                  char       **argv);
+String  rapicorn_version        ();
+String  rapicorn_buildid        ();
+
 
 // === process info ===
 String       program_file       ();
