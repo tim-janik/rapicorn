@@ -124,7 +124,7 @@ parse_args (int    *argc_p,
         }
       else if (strcmp (argv[i], "--version") == 0 || strcmp (argv[i], "-v") == 0)
         {
-          printout ("rapidrun (Rapicorn utilities) %s\n", RAPICORN_VERSION);
+          printout ("rapidrun (Rapicorn utilities) %s (Build ID: %s)\n", rapicorn_version().c_str(), rapicorn_buildid().c_str());
           printout ("Copyright (C) 2007 Tim Janik.\n");
           printout ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printout ("the source for copying conditions. Sources, examples and contact\n");
