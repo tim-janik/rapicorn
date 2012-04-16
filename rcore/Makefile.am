@@ -33,6 +33,7 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
         rapicornsignaltemplate.hh	\
+        configbits.cc			\
 	mksignals.sh			\
 )
 
@@ -95,6 +96,25 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
 
+
+# === configbits.cc ===
+BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
+	git log -n1 --pretty=format:Git-%h --abbrev=11 ; \
+	C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) \
+	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
+BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
+configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
+	$(Q) cd . \
+	&& echo "// Generated data from $< (by make $@)" 					 > xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo '#define RAPICORN_BUILDID	"$(BUILDID)"'					>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "// Generated data ends here"	 						>> xgen-$(@F) \
+	&& (cmp -s xgen-$(@F) $@ || cp xgen-$(@F) $@)
+	$(Q) rm -f xgen-$(@F)
+CLEANFILES += xgen-configbits.cc configbits.cc
+$(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): configbits.cc
+.PHONY: PHONY_REBUILDS
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile

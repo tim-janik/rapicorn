@@ -1,4 +1,5 @@
 librapicorncore[0-9][0-9][0-9][0-9].la
+configbits.cc
 rapicornconfig.h
 rapicornsignalvariants.hh
 types-ptpp.cc
