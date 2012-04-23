@@ -40,6 +40,7 @@ typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
 class ItemImpl : public virtual ItemIface {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
+  friend                      class ViewportImpl;
   friend                      class SizeGroup;
   uint64                      m_flags;  // inlined for fast access
   ContainerImpl              *m_parent; // inlined for fast access

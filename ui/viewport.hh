@@ -11,12 +11,12 @@ class ViewportImpl : public virtual SingleContainerImpl {
   Region                m_expose_region;        // maintained in child coord space
   uint                  m_tunable_requisition_counter;
   int                   m_xoffset, m_yoffset;
-  void                  negotiate_size          (const Allocation *carea);
+  void                  negotiate_child         (ItemImpl         &child,
+                                                 const Allocation *carea);
   void                  collapse_expose_region  ();
 protected:
   virtual void          size_request            (Requisition &requisition);
-  void                  negotiate_size          (void) { negotiate_size (NULL); }
-  void                  allocate_size           (const Allocation &area);
+  virtual void          size_allocate           (Allocation   area, bool changed);
   virtual Affine        child_affine            (const ItemImpl &item);
   const Region&         peek_expose_region      () const { return m_expose_region; }
   void                  discard_expose_region   () { m_expose_region.clear(); }

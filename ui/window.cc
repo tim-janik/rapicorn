@@ -187,18 +187,17 @@ WindowImpl::resize_screen_window()
 {
   assert_return (requisitions_tunable() == false);
 
-  // negotiate size requisition
-  negotiate_size();
+  // negotiate size and ensure window is allocated
+  const Requisition rsize = requisition();
 
   // grow screen window if needed
   if (!m_screen_window)
     return;
-  const Allocation asize = allocation();
   ScreenWindow::State state = m_screen_window->get_state();
-  if (state.width <= 0 || state.height <= 0 || asize.width > state.width || asize.height > state.height)
+  if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
     {
-      m_config.request_width = asize.width;
-      m_config.request_height = asize.height;
+      m_config.request_width = rsize.width;
+      m_config.request_height = rsize.height;
       m_pending_win_size = true;
       m_screen_window->enqueue_win_draws();
       discard_expose_region(); // we'll get a new WIN_DRAW event
@@ -206,8 +205,8 @@ WindowImpl::resize_screen_window()
       return;
     }
   // screen window size is good, allocate it
-  if (asize.width != state.width || asize.height != state.height)
-    allocate_size (Allocation (0, 0, state.width, state.height));
+  if (rsize.width != state.width || rsize.height != state.height)
+    set_allocation (Allocation (0, 0, state.width, state.height));
 }
 
 void
@@ -541,7 +540,7 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   if (wevent)
     {
       m_pending_win_size = false;
-      allocate_size (Allocation (0, 0, wevent->width, wevent->height));
+      set_allocation (Allocation (0, 0, wevent->width, wevent->height));
       discard_expose_region(); // we'll get a new WIN_DRAW event
       if (0)
         DEBUG ("win-size: %f %f", wevent->width, wevent->height);
