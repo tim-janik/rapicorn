@@ -54,6 +54,14 @@ ViewportImpl::negotiate_size (const Allocation *carea)
 }
 
 void
+ViewportImpl::size_request (Requisition &requisition)
+{
+  bool hspread, vspread;
+  size_request_child (requisition, &hspread, &vspread);
+  // Viewport does NOT propagate h/v-spreading
+}
+
+void
 ViewportImpl::allocate_size (const Allocation &area)
 {
   assert_return (area.width >= 0 && area.height >= 0);

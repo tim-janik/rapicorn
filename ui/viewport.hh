@@ -14,6 +14,7 @@ class ViewportImpl : public virtual SingleContainerImpl {
   void                  negotiate_size          (const Allocation *carea);
   void                  collapse_expose_region  ();
 protected:
+  virtual void          size_request            (Requisition &requisition);
   void                  negotiate_size          (void) { negotiate_size (NULL); }
   void                  allocate_size           (const Allocation &area);
   virtual Affine        child_affine            (const ItemImpl &item);

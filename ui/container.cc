@@ -699,7 +699,7 @@ SingleContainerImpl::remove_child (ItemImpl &item)
 }
 
 void
-SingleContainerImpl::size_request (Requisition &requisition)
+SingleContainerImpl::size_request_child (Requisition &requisition, bool *hspread, bool *vspread)
 {
   bool chspread = false, cvspread = false;
   if (has_allocatable_child())
@@ -712,8 +712,20 @@ SingleContainerImpl::size_request (Requisition &requisition)
       chspread = child.hspread();
       cvspread = child.vspread();
     }
-  set_flag (HSPREAD_CONTAINER, chspread);
-  set_flag (VSPREAD_CONTAINER, cvspread);
+  if (hspread)
+    *hspread = chspread;
+  else
+    set_flag (HSPREAD_CONTAINER, chspread);
+  if (vspread)
+    *vspread = cvspread;
+  else
+    set_flag (VSPREAD_CONTAINER, cvspread);
+}
+
+void
+SingleContainerImpl::size_request (Requisition &requisition)
+{
+  size_request_child (requisition, NULL, NULL);
 }
 
 Allocation

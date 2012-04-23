@@ -111,26 +111,6 @@ class ScrollPortImpl : public virtual ViewportImpl {
       }
   }
   virtual void
-  size_request (Requisition &requisition)
-  {
-    bool chspread = false, cvspread = false;
-    if (has_children())
-      {
-        ItemImpl &child = get_child();
-        if (child.allocatable())
-          {
-            requisition = child.requisition();
-            chspread = child.hspread();
-            cvspread = child.vspread();
-          }
-      }
-    if (0) /* ScrollPortImpl does NOT propagate h/v-spreading */
-      {
-        set_flag (HSPREAD_CONTAINER, chspread);
-        set_flag (VSPREAD_CONTAINER, cvspread);
-      }
-  }
-  virtual void
   size_allocate (Allocation area, bool changed)
   {
     if (!has_allocatable_child())

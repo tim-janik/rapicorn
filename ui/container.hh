@@ -67,6 +67,7 @@ public:
 class SingleContainerImpl : public virtual ContainerImpl {
   ItemImpl             *child_item;
 protected:
+  void                  size_request_child      (Requisition &requisition, bool *hspread, bool *vspread);
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}
