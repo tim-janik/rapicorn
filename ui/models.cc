@@ -23,6 +23,12 @@ ListModelRelayImpl::row (int n)
   return n >= 0 && size_t (n) < m_rows.size() ? m_rows[n] : AnySeq();
 }
 
+Any
+ListModelRelayImpl::cell (int r, int c)
+{
+  return r >= 0 && size_t (r) < m_rows.size() && c >= 0 && size_t (c) <= m_columns ? m_rows[r][c] : Any();
+}
+
 void
 ListModelRelayImpl::resize (int _size)
 {
@@ -147,11 +153,22 @@ MemoryListStore::MemoryListStore (int n_columns) :
 AnySeq
 MemoryListStore::row (int n)
 {
-  assert_return (n >= -1, AnySeq());
   if (n < 0)
-    n = m_rows.size() - 1;
+    n = m_rows.size() + n;
   assert_return (size_t (n) < m_rows.size(), AnySeq());
   return m_rows[n];
+}
+
+Any
+MemoryListStore::cell (int r, int c)
+{
+  if (r < 0)
+    r += m_rows.size();
+  if (c < 0)
+    c += m_columns;
+  assert_return (size_t (r) < m_rows.size(), Any());
+  assert_return (size_t (c) < m_columns, Any());
+  return m_rows[r][c];
 }
 
 void

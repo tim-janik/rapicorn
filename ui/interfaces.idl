@@ -217,6 +217,7 @@ interface ListModel {
   int32       size     () = 0;		      ///< Obtain the number of rows provided by this model.
   int32       columns  () = 0;		      ///< Obtain the number of columns provided by this model.
   AnySeq      row      (int32 n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
+  Any         cell     (int32 r, int32 c) = 0;     ///< Read-out the cell at row @a r and column @a c.
   signal void inserted (int32 first, int32 last); ///< Notify about insertion of last-first+1 rows.
   signal void changed  (int32 first, int32 last); ///< Notify about changes in last-first+1 rows.
   signal void removed  (int32 first, int32 last); ///< Notify about removal of last-first+1 rows.

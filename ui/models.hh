@@ -18,7 +18,8 @@ public:
   // model API
   virtual int                   size            ()              { return m_size; }
   virtual int                   columns         ();
-  virtual AnySeq            row             (int n);
+  virtual AnySeq                row             (int n);
+  virtual Any                   cell            (int r, int c);
   // relay API
   virtual void                  resize          (int size);
   virtual void                  inserted        (int first, int last);
@@ -37,11 +38,13 @@ public:
   explicit              MemoryListStore (int n_columns);
   virtual int           size            ()              { return m_rows.size(); }
   virtual int           columns         ()              { return m_columns; }
-  virtual AnySeq    row             (int n);
+  virtual AnySeq        row             (int n);
+  virtual Any           cell            (int r, int c);
   void                  insert          (int  n, const AnySeq &aseq);
   void                  update          (uint n, const AnySeq &aseq);
   void                  remove          (uint first, uint last = 0);
 };
+
 
 } // Rapicorn
 
