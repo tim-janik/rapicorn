@@ -164,7 +164,9 @@ private: LockHooks  m_lock_hooks;
 
 // === EventLoop::State ===
 struct EventLoop::State {
+  enum Phase { NONE, COLLECT, PREPARE, CHECK, DISPATCH };
   uint64 current_time_usecs;
+  Phase  phase;
   bool   seen_primary; ///< Useful as hint for primary source presence, MainLoop::finishable() checks exhaustively
   State();
 };

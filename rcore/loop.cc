@@ -694,6 +694,7 @@ EventLoop::dispatch_source_Lm (State &state)
 bool
 MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
 {
+  assert_return (state.phase == state.NONE, false);
   Mutex &main_mutex = m_main_loop.mutex();
   int64 timeout_usecs = INT64_MAX;
   bool any_dispatchable = false;
@@ -710,10 +711,12 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   for (size_t i = 0; i < nloops; i++)
     loops[i] = ref (m_loops[i]);
   // collect
+  state.phase = state.COLLECT;
   state.seen_primary = false;
   for (size_t i = 0; i < nloops; i++)
     loops[i]->collect_sources_Lm (state);
   // prepare
+  state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
   for (size_t i = 0; i < nloops; i++)
     {
@@ -743,6 +746,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   else if (pfda[wakeup_idx].revents)
     m_eventfd.flush(); // restart queueing wakeups, possibly triggered by dispatching
   // check
+  state.phase = state.CHECK;
   state.current_time_usecs = timestamp_realtime();
   for (size_t i = 0; i < nloops; i++)
     {
@@ -757,9 +761,11 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
       do        // find next dispatchable loop in round-robin fashion
         index = m_rr_index++ % nloops;
       while (!dispatchable[index] && i--);
+      state.phase = state.DISPATCH;
       unref_source = loops[index]->dispatch_source_Lm (state); // passes on dispatch_source reference
     }
   // cleanup
+  state.phase = state.NONE;
   main_mutex.unlock();
   if (unref_source)
     unref (unref_source); // unlocked
@@ -804,8 +810,7 @@ MainLoop::_new ()
 
 // === EventLoop::State ===
 EventLoop::State::State() :
-  current_time_usecs (0),
-  seen_primary (false)
+  current_time_usecs (0), phase (NONE), seen_primary (false)
 {}
 
 // === EventLoop::Source ===
