@@ -226,7 +226,7 @@ struct EventLoop::QuickSourceArray : public QuickArray<Source*> {
 
 // === EventLoop ===
 EventLoop::EventLoop (MainLoop &main) :
-  m_main_loop (main), m_dispatch_priority (0), m_poll_sources (*new (pollmem1) QuickSourceArray (0, NULL))
+  m_main_loop (main), m_dispatch_priority (0), m_poll_sources (*new (pollmem1) QuickSourceArray (0, NULL)), m_primary (false)
 {
   RAPICORN_STATIC_ASSERT (sizeof (QuickSourceArray) <= sizeof (EventLoop::pollmem1));
   // we cannot *use* m_main_loop yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
@@ -257,6 +257,8 @@ EventLoop::find_source_L (uint id)
 bool
 EventLoop::has_primary_L()
 {
+  if (m_primary)
+    return true;
   for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
     if ((*lit)->primary())
       return true;
@@ -268,6 +270,17 @@ EventLoop::has_primary()
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
   return has_primary_L();
+}
+
+bool
+EventLoop::flag_primary (bool on)
+{
+  ScopedLock<Mutex> locker (m_main_loop.mutex());
+  const bool was_primary = m_primary;
+  m_primary = on;
+  if (m_primary != was_primary)
+    wakeup();
+  return was_primary;
 }
 
 uint
@@ -478,7 +491,7 @@ bool
 MainLoop::finishable_L()
 {
   // loop list shouldn't be modified by querying finishable state
-  bool found_primary = false;
+  bool found_primary = m_primary;
   for (size_t i = 0; !found_primary && i < m_loops.size(); i++)
     if (m_loops[i]->has_primary_L())
       found_primary = true;
@@ -542,6 +555,8 @@ EventLoop::collect_sources_Lm (State &state)
       main_mutex.lock();
       assert (m_poll_sources.empty());
     }
+  if (UNLIKELY (!state.seen_primary && m_primary))
+    state.seen_primary = true;
   // since m_poll_sources is empty, poll_candidates can reuse pollmem2
   QuickSourceArray poll_candidates (ARRAY_SIZE (pollmem2), pollmem2);
   // determine dispatch priority & collect sources for preparing

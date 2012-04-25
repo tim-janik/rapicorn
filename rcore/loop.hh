@@ -67,6 +67,7 @@ protected:
   QuickSourceArray &m_poll_sources;
   uint64        pollmem1[3];
   Source*       pollmem2[7];
+  bool          m_primary;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
   Source*       find_first_L     ();
@@ -99,6 +100,7 @@ public:
   bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
   void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
+  bool flag_primary    (bool            on);
   uint exec_now        (const VoidSlot &sl);    ///< Execute a callback with priority "now" (highest).
   uint exec_now        (const BoolSlot &sl);    ///< Executes callback as exec_now(), returning true repeats callback.
   uint exec_next       (const VoidSlot &sl);    ///< Execute a callback with priority "next" (very important).
