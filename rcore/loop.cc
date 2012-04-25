@@ -917,7 +917,45 @@ EventLoop::Source::~Source ()
     free (m_pfds);
 }
 
-/* --- EventLoop::TimedSource --- */
+// == EventLoop::DispatcherSource ==
+EventLoop::DispatcherSource::DispatcherSource (Signals::Trampoline1<bool,const State&> &tr) :
+  m_trampoline (ref_sink (&tr))
+{}
+
+EventLoop::DispatcherSource::~DispatcherSource ()
+{
+  Signals::Trampoline1<bool,const State&> *old_trampoline = m_trampoline;
+  m_trampoline = NULL;
+  unref (old_trampoline);
+}
+
+bool
+EventLoop::DispatcherSource::prepare (const State &state, int64 *timeout_usecs_p)
+{
+  return (*m_trampoline) (state);
+}
+
+bool
+EventLoop::DispatcherSource::check (const State &state)
+{
+  return (*m_trampoline) (state);
+}
+
+bool
+EventLoop::DispatcherSource::dispatch (const State &state)
+{
+  return (*m_trampoline) (state);
+}
+
+void
+EventLoop::DispatcherSource::destroy()
+{
+  State state;
+  state.phase = state.DESTROY;
+  (*m_trampoline) (state);
+}
+
+// == EventLoop::TimedSource ==
 EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
                                      uint initial_interval_msecs,
                                      uint repeat_interval_msecs) :

@@ -52,6 +52,7 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
 {
   class TimedSource;
   class PollFDSource;
+  class DispatcherSource;
   class QuickPfdArray;          // pseudo vector<PollFD>
   class QuickSourceArray;       // pseudo vector<Source*>
   friend class MainLoop;
@@ -78,8 +79,9 @@ protected:
   bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
   bool          check_sources_Lm    (State&, const QuickPfdArray&);
   Source*       dispatch_source_Lm  (State&);
-  typedef Signals::Slot1<void,PollFD&> VPfdSlot;
-  typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
+  typedef Signals::Slot1<void,PollFD&>      VPfdSlot;
+  typedef Signals::Slot1<bool,PollFD&>      BPfdSlot;
+  typedef Signals::Slot1<bool,const State&> DispatcherSlot;
 public:
   static const int PRIORITY_NOW        = -1073741824;   ///< Most important, used for immediate async execution (MAXINT/2)
   static const int PRIORITY_HIGH       = -100 - 10;     ///< Very important, used for io handlers (G*HIGH)
@@ -109,6 +111,8 @@ public:
   uint exec_update     (const BoolSlot &sl);    ///< Executes callback as exec_update(), returning true repeats callback.
   uint exec_background (const VoidSlot &sl);    ///< Execute a callback with background priority (when idle).
   uint exec_background (const BoolSlot &sl);    ///< Executes callback as exec_background(), returning true repeats callback.
+  uint exec_dispatcher (const DispatcherSlot &sl,
+                        int    priority = PRIORITY_NORMAL); ///< Execute a single dispatcher callback for prepare, check, dispatch.
   uint exec_timer      (uint            timeout_ms,
                         const VoidSlot &sl,
                         int             priority = PRIORITY_NEXT); ///< Execute a callback after a specified timeout.
@@ -164,7 +168,7 @@ private: LockHooks  m_lock_hooks;
 
 // === EventLoop::State ===
 struct EventLoop::State {
-  enum Phase { NONE, COLLECT, PREPARE, CHECK, DISPATCH };
+  enum Phase { NONE, COLLECT, PREPARE, CHECK, DISPATCH, DESTROY };
   uint64 current_time_usecs;
   Phase  phase;
   bool   seen_primary; ///< Useful as hint for primary source presence, MainLoop::finishable() checks exhaustively
@@ -207,6 +211,20 @@ public:
   void         remove_poll (PollFD * const pfd);            ///< Remove a previously added PollFD.
   void         loop_remove ();                              ///< Remove this source from its event loop if any.
   MainLoop*    main_loop   () const { return m_loop ? m_loop->main_loop() : NULL; } ///< Get the main loop for this source.
+};
+
+// === EventLoop::DispatcherSource ===
+class EventLoop::DispatcherSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
+{
+  Signals::Trampoline1<bool,const State&> *m_trampoline;
+protected:
+  virtual     ~DispatcherSource ();
+  virtual bool prepare          (const State &state, int64 *timeout_usecs_p);
+  virtual bool check            (const State &state);
+  virtual bool dispatch         (const State &state);
+  virtual void destroy          ();
+public:
+  explicit     DispatcherSource (Signals::Trampoline1<bool,const State&> &tr);
 };
 
 // === EventLoop::TimedSource ===
@@ -336,6 +354,12 @@ inline uint
 EventLoop::exec_background (const BoolSlot &sl)
 {
   return add (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
+}
+
+inline uint
+EventLoop::exec_dispatcher (const DispatcherSlot &sl, int priority)
+{
+  return add (new DispatcherSource (*sl.get_trampoline()), priority);
 }
 
 inline uint
