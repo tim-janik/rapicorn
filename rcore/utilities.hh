@@ -124,8 +124,8 @@ public:
 #define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (__FILE__, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (debug_enabled()) Rapicorn::debug_simple (__FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { if (debug_enabled()) Rapicorn::debug_keymsg (__FILE__, __LINE__, key, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_simple (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { if (Rapicorn::debug_enabled()) Rapicorn::debug_keymsg (__FILE__, __LINE__, key, __VA_ARGS__); } while (0)
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
