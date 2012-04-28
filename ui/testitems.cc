@@ -83,7 +83,7 @@ public:
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
     m_epsilon (DFLTEPS), m_test_container_counted (false),
-    m_fatal_asserts (true), m_paint_allocation (false)
+    m_fatal_asserts (false), m_paint_allocation (false)
   {}
   virtual String value           () const            { return m_value; }
   virtual void   value           (const String &val) { m_value = val; }

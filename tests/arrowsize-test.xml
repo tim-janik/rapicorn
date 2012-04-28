@@ -40,7 +40,7 @@
       <Label markup-text="Square Arrow:"/>
       <HBox>
 	<Alignment hexpand="1"/> <!-- space eater -->
-	<TestContainer fatal_asserts="1" assert-width="200" assert-height="200">
+	<TestContainer assert-width="200" assert-height="200">
 	  <arrow-frame center-child="0" vspread="1" height="200">
 	    <Arrow arrow-dir="left" size-policy="width-from-height" height="33"/>
 	  </arrow-frame>
