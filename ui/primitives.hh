@@ -164,6 +164,7 @@ public:
   Point         lr              () const { return lower_right(); }
   Point         ll              () const { return lower_left(); }
   double        diagonal        () const { return ll().dist (ur()); }
+  double        area            () const { return width * height; }
   Point         ul_tangent      () const;
   Point         ur_tangent      () const;
   Point         lr_tangent      () const;
