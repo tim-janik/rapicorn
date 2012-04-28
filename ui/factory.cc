@@ -177,21 +177,21 @@ factory_context_type (FactoryContext *fc)
   return xnode->get_attribute ("id");
 }
 
-StringList
-factory_context_tags (FactoryContext *fc)
+static void
+factory_context_list_types (StringList &types, FactoryContext *fc, const bool need_ids, const bool need_variants)
 {
-  StringList types;
-  assert_return (fc != NULL, types);
+  assert_return (fc != NULL);
   const XmlNode *xnode = (XmlNode*) fc;
   if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
-      assert_return (xnode != NULL, types);
+      assert_return (xnode != NULL);
     }
   while (xnode)
     {
-      assert_return (xnode->name() == "tmpl:define", types);
-      types.push_back (xnode->get_attribute ("id"));
+      assert_return (xnode->name() == "tmpl:define");
+      if (need_ids)
+        types.push_back (xnode->get_attribute ("id"));
       const StringVector &attributes_names = xnode->list_attributes(), &attributes_values = xnode->list_values();
       const XmlNode *cnode = xnode;
       xnode = NULL;
@@ -202,18 +202,36 @@ factory_context_tags (FactoryContext *fc)
             if (!xnode)
               {
                 const ItemTypeFactory *itfactory = lookup_item_factory (attributes_values[i]);
-                assert_return (itfactory != NULL, types);
+                assert_return (itfactory != NULL);
                 types.push_back (itfactory->type_name());
-                if (itfactory->iseventhandler)
+                if (need_variants && itfactory->iseventhandler)
                   types.push_back ("Rapicorn::Factory::EventHandler");
-                if (itfactory->iscontainer)
+                if (need_variants && itfactory->iscontainer)
                   types.push_back ("Rapicorn::Factory::Container");
-                types.push_back ("Rapicorn::Factory::Item");
+                if (need_variants)
+                  types.push_back ("Rapicorn::Factory::Item");
               }
             break;
           }
     }
+}
+
+StringList
+factory_context_tags (FactoryContext *fc)
+{
+  StringList types;
+  assert_return (fc != NULL, types);
+  factory_context_list_types (types, fc, true, true);
   return types;
+}
+
+String
+factory_context_impl_type (FactoryContext *fc)
+{
+  assert_return (fc != NULL, "");
+  StringList types;
+  factory_context_list_types (types, fc, false, false);
+  return types.size() ? types[types.size() - 1] : "";
 }
 
 #if 0
