@@ -122,7 +122,6 @@ WindowImpl::create_snapshot (const Rect &subarea)
 
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
-  m_source (NULL),
   m_screen_window (NULL),
   m_entered (false), m_auto_close (false), m_pending_win_size (false),
   m_notify_displayed_id (0)
@@ -137,11 +136,10 @@ WindowImpl::WindowImpl() :
   m_config.min_width = 13;
   m_config.min_height = 7;
   /* create event loop (auto-starts) */
-  RAPICORN_ASSERT (m_source == NULL);
-  EventLoop::Source *source = new WindowSource (*this);
-  RAPICORN_ASSERT (m_source == source);
-  m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
-  m_source->primary (false);
+  m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+  m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  m_loop.flag_primary (false);
   ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
@@ -171,7 +169,6 @@ WindowImpl::~WindowImpl()
     remove (get_child());
   /* shutdown event loop */
   m_loop.kill_sources();
-  RAPICORN_ASSERT (m_source == NULL); // should have been destroyed with loop
   /* this should be done last */
   unref (&m_loop);
 }
@@ -188,6 +185,7 @@ WindowImpl::resize_screen_window()
   assert_return (requisitions_tunable() == false);
 
   // negotiate size and ensure window is allocated
+  negotiate_size (NULL);
   const Requisition rsize = requisition();
 
   // grow screen window if needed
@@ -206,7 +204,10 @@ WindowImpl::resize_screen_window()
     }
   // screen window size is good, allocate it
   if (rsize.width != state.width || rsize.height != state.height)
-    set_allocation (Allocation (0, 0, state.width, state.height));
+    {
+      Allocation area = Allocation (0, 0, state.width, state.height);
+      negotiate_size (&area);
+    }
 }
 
 void
@@ -540,7 +541,8 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   if (wevent)
     {
       m_pending_win_size = false;
-      set_allocation (Allocation (0, 0, wevent->width, wevent->height));
+      Allocation area = Allocation (0, 0, wevent->width, wevent->height);
+      negotiate_size (&area);
       discard_expose_region(); // we'll get a new WIN_DRAW event
       if (0)
         DEBUG ("win-size: %f %f", wevent->width, wevent->height);
@@ -823,20 +825,55 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::prepare (const EventLoop::State &state,
-                     int64                  *timeout_usecs_p)
+WindowImpl::event_dispatcher (const EventLoop::State &state)
 {
-  ScopedLock<Mutex> aelocker (m_async_mutex);
-  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
-  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      ScopedLock<Mutex> aelocker (m_async_mutex);
+      const bool has_events = !m_async_event_queue.empty();
+      return has_events;
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      ref (this);
+      Event *event = NULL;
+      {
+        ScopedLock<Mutex> aelocker (m_async_mutex);
+        if (!m_async_event_queue.empty())
+          {
+            event = m_async_event_queue.front();
+            m_async_event_queue.pop_front();
+          }
+      }
+      if (event)
+        {
+          dispatch_event (*event);
+          delete event;
+        }
+      unref (this);
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    destroy_screen_window();
+  return false;
 }
 
 bool
-WindowImpl::check (const EventLoop::State &state)
+WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 {
-  ScopedLock<Mutex> aelocker (m_async_mutex);
-  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
-  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
+  const bool can_resize = !m_pending_win_size && m_screen_window;
+  const bool need_resize = can_resize && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return need_resize;
+  else if (state.phase == state.DISPATCH)
+    {
+      ref (this);
+      if (need_resize)
+        resize_screen_window();
+      unref (this);
+      return true;
+    }
+  return false;
 }
 
 void
@@ -846,41 +883,49 @@ WindowImpl::enable_auto_close ()
 }
 
 bool
+WindowImpl::drawing_dispatcher (const EventLoop::State &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return !m_pending_win_size && exposes_pending();
+  else if (state.phase == state.DISPATCH)
+    {
+      ref (this);
+      if (exposes_pending())
+        {
+          draw_now();
+          if (m_auto_close)
+            {
+              EventLoop *loop = get_loop();
+              if (loop)
+                {
+                  loop->exec_timer (0, slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
+                  m_auto_close = false;
+                }
+            }
+        }
+      unref (this);
+      return true;
+    }
+  return false;
+}
+
+bool
+WindowImpl::prepare (const EventLoop::State &state,
+                     int64                  *timeout_usecs_p)
+{
+  return false;
+}
+
+bool
+WindowImpl::check (const EventLoop::State &state)
+{
+  return false;
+}
+
+bool
 WindowImpl::dispatch (const EventLoop::State &state)
 {
-  ref (this);
-  {
-    m_async_mutex.lock();
-    Event *event = NULL;
-    if (!m_async_event_queue.empty())
-      {
-        event = m_async_event_queue.front();
-        m_async_event_queue.pop_front();
-      }
-    m_async_mutex.unlock();
-    if (event)
-      {
-        dispatch_event (*event);
-        delete event;
-      }
-    else if (!m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-      resize_screen_window();
-    else if (exposes_pending())
-      {
-        draw_now();
-        if (m_auto_close)
-          {
-            EventLoop *loop = get_loop();
-            if (loop)
-              {
-                loop->exec_timer (0, slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
-                m_auto_close = false;
-              }
-          }
-      }
-  }
-  unref();
-  return true;
+  return false;
 }
 
 EventLoop*
@@ -920,7 +965,7 @@ WindowImpl::idle_show()
 void
 WindowImpl::create_screen_window ()
 {
-  if (m_source)
+  if (!finalizing())
     {
       if (!m_screen_window)
         {
@@ -928,7 +973,7 @@ WindowImpl::create_screen_window ()
           resize_screen_window();
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
-      m_source->primary (true); // FIXME: depends on WM-managable
+      m_loop.flag_primary (true); // FIXME: depends on WM-managable
       VoidSlot sl = slot (*this, &WindowImpl::idle_show);
       m_loop.exec_now (sl);
     }
@@ -937,7 +982,7 @@ WindowImpl::create_screen_window ()
 bool
 WindowImpl::has_screen_window ()
 {
-  return m_source && m_screen_window && m_screen_window->visible();
+  return m_screen_window && m_screen_window->visible();
 }
 
 void
@@ -949,17 +994,16 @@ WindowImpl::destroy_screen_window ()
   m_screen_window->hide();
   delete m_screen_window;
   m_screen_window = NULL;
-  if (m_source)
-    {
-      m_loop.kill_sources(); // calls m_source methods
-      RAPICORN_ASSERT (m_source == NULL);
-      EventLoop::Source *source = new WindowSource (*this);
-      RAPICORN_ASSERT (m_source == source);
-      m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
-      m_source->primary (false);
-    }
+  m_loop.flag_primary (false);
+  m_loop.kill_sources();
   // reset item state where needed
   cancel_item_events (NULL);
+  if (!finalizing())
+    {
+      m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+      m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+    }
   unref (this);
 }
 

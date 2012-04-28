@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <stdio.h>
 
+#define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
+
 namespace Rapicorn {
 
 struct ClassDoctor {
@@ -779,6 +781,103 @@ SingleContainerImpl::~SingleContainerImpl()
 {
   while (child_item)
     remove (child_item);
+}
+
+ResizeContainerImpl::ResizeContainerImpl() :
+  m_tunable_requisition_counter (0), m_resizer (0)
+{}
+
+ResizeContainerImpl::~ResizeContainerImpl()
+{
+  clear_exec (&m_resizer);
+}
+
+static inline String
+impl_type (ItemImpl *item)
+{
+  String tag;
+  if (item)
+    tag = Factory::factory_context_impl_type (item->factory_context());
+  const size_t cpos = tag.rfind (':');
+  return cpos != String::npos ? tag.c_str() + cpos + 1 : tag;
+}
+
+void
+ResizeContainerImpl::idle_sizing ()
+{
+  assert_return (m_resizer != 0);
+  m_resizer = 0;
+  if (anchored() && drawable())
+    {
+      ContainerImpl *pc = parent();
+      if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+        DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), "pass upwards...");
+      else
+        {
+          Allocation area = allocation();
+          negotiate_size (&area);
+        }
+    }
+}
+
+void
+ResizeContainerImpl::negotiate_size (const Allocation *carea)
+{
+  assert_return (requisitions_tunable() == false); // prevent recursion
+  const bool have_allocation = carea != NULL;
+  Allocation area;
+  if (have_allocation)
+    {
+      area = *carea;
+      change_flags_silently (INVALID_ALLOCATION, true);
+    }
+  const bool need_debugging = Rapicorn::debug_enabled() && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  if (need_debugging)
+    DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
+                  !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
+  /* this is the core of the resizing loop. via Item.tune_requisition(), we
+   * allow items to adjust the requisition from within size_allocate().
+   * whether the tuned requisition is honored at all, depends on
+   * m_tunable_requisition_counter.
+   * currently, we simply freeze the allocation after 3 iterations. for the
+   * future it's possible to honor the tuned requisition only partially or
+   * proportionally as m_tunable_requisition_counter decreases, so to mimick
+   * a simulated annealing process yielding the final layout.
+   */
+  m_tunable_requisition_counter = 3;
+  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    {
+      const Requisition creq = requisition(); // unsets INVALID_REQUISITION
+      if (!have_allocation)
+        {
+          // seed allocation from requisition
+          area.width = creq.width;
+          area.height = creq.height;
+        }
+      set_allocation (area); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
+      if (m_tunable_requisition_counter)
+        m_tunable_requisition_counter--;
+    }
+  m_tunable_requisition_counter = 0;
+  if (need_debugging && !carea)
+    DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
+}
+
+void
+ResizeContainerImpl::invalidate_parent ()
+{
+  if (anchored() && drawable())
+    {
+      if (!m_resizer)
+        {
+          WindowImpl *w = get_window();
+          EventLoop *loop = w ? w->get_loop() : NULL;
+          if (loop)
+            m_resizer = loop->exec_timer (0, slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
+        }
+      return;
+    }
+  SingleContainerImpl::invalidate_parent();
 }
 
 MultiContainerImpl::MultiContainerImpl ()

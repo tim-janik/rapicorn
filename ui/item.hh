@@ -18,6 +18,7 @@ class ItemImpl;
 class SizeGroup;
 class Adjustment;
 class ContainerImpl;
+class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
 
@@ -40,7 +41,6 @@ typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
 class ItemImpl : public virtual ItemIface {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
-  friend                      class ViewportImpl;
   friend                      class SizeGroup;
   uint64                      m_flags;  // inlined for fast access
   ContainerImpl              *m_parent; // inlined for fast access
@@ -85,7 +85,6 @@ protected:
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
   bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
-  bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
   virtual bool                pseudo_selector   (const String &ident, const String &arg, String &error) { return false; }
   // resizing, requisition and allocation
@@ -117,6 +116,8 @@ protected:
   void                        notify_key_error  ();
 public:
   explicit                    ItemImpl              ();
+  bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
+  bool                        test_any_flag     (uint32 mask) const { return test_flags (mask); }
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
@@ -180,8 +181,9 @@ public:
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
-  ViewportImpl*               get_viewport      () const;
-  WindowImpl*                 get_window        () const;
+  WindowImpl*                 get_window           () const;
+  ViewportImpl*               get_viewport         () const;
+  ResizeContainerImpl*        get_resize_container () const;
   /* cross links */
   void                        cross_link        (ItemImpl       &link,
                                                  const ItemSlot &uncross);

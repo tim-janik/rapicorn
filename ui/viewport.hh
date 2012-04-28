@@ -7,16 +7,11 @@
 
 namespace Rapicorn {
 
-class ViewportImpl : public virtual SingleContainerImpl {
+class ViewportImpl : public virtual ResizeContainerImpl {
   Region                m_expose_region;        // maintained in child coord space
-  uint                  m_tunable_requisition_counter;
   int                   m_xoffset, m_yoffset;
-  void                  negotiate_child         (ItemImpl         &child,
-                                                 const Allocation *carea);
   void                  collapse_expose_region  ();
 protected:
-  virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation   area, bool changed);
   virtual Affine        child_affine            (const ItemImpl &item);
   const Region&         peek_expose_region      () const { return m_expose_region; }
   void                  discard_expose_region   () { m_expose_region.clear(); }
@@ -30,7 +25,6 @@ protected:
 public:
   Signal<ViewportImpl, void ()> sig_scrolled;
   void                  expose_child_region     (const Region &region);
-  bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
   Allocation            child_viewport          ();
   explicit              ViewportImpl            ();
   virtual              ~ViewportImpl            ();

@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-/* --- Container --- */
+// == Container ==
 struct ContainerImpl : public virtual ItemImpl, public virtual ContainerIface {
   friend              class ItemImpl;
   friend              class WindowImpl;
@@ -63,7 +63,7 @@ public:
                                          const StringListImpl   &args);
 };
 
-/* --- Single Child Container Impl --- */
+// == Single Child Container ==
 class SingleContainerImpl : public virtual ContainerImpl {
   ItemImpl             *child_item;
 protected:
@@ -85,7 +85,21 @@ protected:
   explicit              SingleContainerImpl     ();
 };
 
-/* --- Multi Child Container Impl --- */
+// == Resize Container ==
+class ResizeContainerImpl : public virtual SingleContainerImpl {
+  uint                  m_tunable_requisition_counter;
+  uint                  m_resizer;
+  void                  idle_sizing             ();
+protected:
+  virtual void          invalidate_parent       ();
+  void                  negotiate_size          (const Allocation *carea);
+  explicit              ResizeContainerImpl     ();
+  virtual              ~ResizeContainerImpl     ();
+public:
+  bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
+};
+
+// == Multi Child Container ==
 class MultiContainerImpl : public virtual ContainerImpl {
   std::vector<ItemImpl*>    items;
 protected:

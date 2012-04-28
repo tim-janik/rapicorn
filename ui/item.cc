@@ -961,6 +961,15 @@ ItemImpl::common_ancestor (const ItemImpl &other) const
   return NULL;
 }
 
+WindowImpl*
+ItemImpl::get_window () const
+{
+  ItemImpl *parent = const_cast<ItemImpl*> (this);
+  while (parent->parent())
+    parent = parent->parent();
+  return dynamic_cast<WindowImpl*> (parent); // NULL if parent is not of type WindowImpl*
+}
+
 ViewportImpl*
 ItemImpl::get_viewport () const
 {
@@ -975,13 +984,18 @@ ItemImpl::get_viewport () const
   return NULL;
 }
 
-WindowImpl*
-ItemImpl::get_window () const
+ResizeContainerImpl*
+ItemImpl::get_resize_container () const
 {
   ItemImpl *parent = const_cast<ItemImpl*> (this);
-  while (parent->parent())
-    parent = parent->parent();
-  return dynamic_cast<WindowImpl*> (parent); // NULL if parent is not of type WindowImpl*
+  while (parent)
+    {
+      ResizeContainerImpl *rc = dynamic_cast<ResizeContainerImpl*> (parent);
+      if (rc)
+        return rc;
+      parent = parent->parent();
+    }
+  return NULL;
 }
 
 void
@@ -1392,8 +1406,8 @@ ItemImpl::tune_requisition (Requisition requisition)
   ItemImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      ViewportImpl *vp = p->get_viewport();
-      if (vp && vp->requisitions_tunable())
+      ResizeContainerImpl *rc = p->get_resize_container();
+      if (rc && rc->requisitions_tunable())
         {
           Requisition ovr (width(), height());
           requisition.width = ovr.width >= 0 ? ovr.width : MAX (requisition.width, 0);

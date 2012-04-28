@@ -9,10 +9,9 @@ namespace Rapicorn {
 
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
-                   public virtual EventLoop::Source, public virtual ScreenWindow::EventReceiver {
+                   public virtual ScreenWindow::EventReceiver {
   friend class  ItemImpl;
   EventLoop            &m_loop;
-  EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   ScreenWindow         *m_screen_window;
@@ -29,6 +28,7 @@ protected:
   virtual void  set_parent              (ContainerImpl    *parent);
   virtual void  dispose                 ();
 public:
+  static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
@@ -82,6 +82,9 @@ private:
   virtual void          destroy_screen_window                   ();
   void                  idle_show                               ();
   /* main loop */
+  virtual bool          event_dispatcher                        (const EventLoop::State &state);
+  virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
+  virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
   virtual bool          prepare                                 (const EventLoop::State &state,
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (const EventLoop::State &state);
@@ -131,45 +134,6 @@ private:
     }
   };
   map<ButtonState,uint> m_button_state_map;
-  /* --- EventLoop Source --- */
-  class WindowSource : public EventLoop::Source {
-    WindowImpl &window;
-  public:
-    explicit
-    WindowSource  (WindowImpl &_window) :
-      window (_window)
-    {
-      bool entered = rapicorn_thread_entered();
-      if (!entered)
-        rapicorn_thread_enter();
-      RAPICORN_ASSERT (window.m_source == NULL);
-      window.m_source = this;
-      if (!entered)
-        rapicorn_thread_leave();
-    }
-    virtual
-    ~WindowSource ()
-    {
-      bool entered = rapicorn_thread_entered();
-      if (!entered)
-        rapicorn_thread_enter();
-      RAPICORN_ASSERT (window.m_source != this);
-      if (!entered)
-        rapicorn_thread_leave();
-    }
-    virtual bool prepare    (const EventLoop::State &state,
-                             int64        *timeout_usecs_p)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.prepare (state, timeout_usecs_p); }
-    virtual bool check      (const EventLoop::State &state)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.check (state); }
-    virtual bool dispatch   (const EventLoop::State &state)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.dispatch (state); }
-    virtual void
-    destroy ()
-    {
-      RAPICORN_ASSERT (rapicorn_thread_entered());
-      RAPICORN_ASSERT (window.m_source == this);
-      window.m_source = NULL;
-      window.destroy_screen_window();
-    }
-  };
 };
 
 } // Rapicorn

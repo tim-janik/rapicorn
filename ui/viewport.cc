@@ -7,76 +7,13 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl () :
-  m_tunable_requisition_counter (0), m_xoffset (0), m_yoffset (0),
+  m_xoffset (0), m_yoffset (0),
   sig_scrolled (*this, &ViewportImpl::do_scrolled)
 {}
 
 ViewportImpl::~ViewportImpl ()
 {}
 
-void
-ViewportImpl::negotiate_child (ItemImpl         &child,
-                               const Allocation *carea)
-{
-  assert_return (requisitions_tunable() == false); // prevent recursion
-  const bool have_allocation = carea != NULL;
-  Allocation area;
-  if (have_allocation)
-    {
-      area = *carea;
-      area.x = area.y = 0;
-      child.change_flags_silently (INVALID_ALLOCATION, true);
-    }
-  /* this is the core of the resizing loop. via Item.tune_requisition(), we
-   * allow items to adjust the requisition from within size_allocate().
-   * whether the tuned requisition is honored at all, depends on
-   * m_tunable_requisition_counter.
-   * currently, we simply freeze the allocation after 3 iterations. for the
-   * future it's possible to honor the tuned requisition only partially or
-   * proportionally as m_tunable_requisition_counter decreases, so to mimick
-   * a simulated annealing process yielding the final layout.
-   */
-  m_tunable_requisition_counter = 3;
-  while (child.test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      const Requisition creq = child.requisition(); // unsets INVALID_REQUISITION
-      if (!have_allocation)
-        {
-          // seed allocation from requisition
-          area.width = creq.width;
-          area.height = creq.height;
-        }
-      // a viewport child is allocated relative to the Viewport origin, normally at 0,0
-      child.set_allocation (layout_child (child, area)); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
-      if (m_tunable_requisition_counter)
-        m_tunable_requisition_counter--;
-    }
-  m_tunable_requisition_counter = 0;
-}
-
-void
-ViewportImpl::size_request (Requisition &requisition)
-{
-  bool hspread, vspread;
-  size_request_child (requisition, &hspread, &vspread);
-  // Viewport does NOT propagate h/v-spreading
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      negotiate_child (child, NULL);
-    }
-}
-
-void
-ViewportImpl::size_allocate (Allocation area, bool changed)
-{
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      Allocation child_area = layout_child (child, area);
-      negotiate_child (child, &child_area);
-    }
-}
 
 void
 ViewportImpl::scroll_offsets (int deltax, int deltay)
