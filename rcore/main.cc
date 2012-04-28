@@ -202,8 +202,10 @@ parse_settings_and_args (VInitSettings      &vsettings,
   const size_t argc = *argcp;
   for (size_t i = 1; i < argc; i++)
     {
-      if (            arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings"))
+      if (            arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
+                      arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings")) // legacy option support
         {
+          debug_configure ("fatal-warnings");
           const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
         }

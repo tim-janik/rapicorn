@@ -379,7 +379,7 @@ init_core_test (const String       &app_ident,
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
   init_core (app_ident, argcp, argv, targs);
-  debug_configure ("fatal-criticals:fatal-warnings");
+  debug_configure ("fatal-warnings");
   const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
   g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   CPUInfo ci = cpu_info(); // initialize cpu info

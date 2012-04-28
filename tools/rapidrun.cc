@@ -29,6 +29,7 @@ help_usage (bool usage_error)
   printout ("  -l <uilib>                    Load ''uilib'' upon startup.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  --list                        List parsed definitions.\n");
+  printout ("  --fatal-warnings              Turn criticals/warnings into fatal conditions.\n");
   printout ("  --snapshot pngname            Dump a snapshot to <pngname>.\n");
   printout ("  --test-dump                   Dump test stream after first expose.\n");
   printout ("  --test-matched-node PATTERN   Filter nodes in test dumps.\n");
