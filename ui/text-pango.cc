@@ -22,6 +22,8 @@
 #include "painter.hh"
 #include "screenwindow.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
+#define RDEBUG(...)     RAPICORN_KEY_DEBUG ("Label-Rendering", __VA_ARGS__)
+
 #include <algorithm>
 
 #if PANGO_SCALE != 1024
@@ -1226,6 +1228,8 @@ protected:
   {
     uint vdot_size = 0;
     Rect larea = layout_area (&vdot_size);
+    RDEBUG ("rendering label 0x%016zx at %3.f%% coverage: %s", size_t (this),
+            larea.area() > 0 ? Rect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
     if (larea.width < 1) // allowed: larea.height < 1
       return;
     /* render text */
