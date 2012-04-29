@@ -1526,13 +1526,21 @@ ItemImpl::cairo_context (RenderContext  &rcontext,
   Rect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = allocation();
+  const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels
+  if (empty_dummy)
+    rect.width = rect.height = 1;
   assert_return (rect.width > 0 && rect.height > 0, NULL);
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
-  critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
+    critical ("%s: failed to create ARGB32 cairo surface with %lldx%lld pixels: %s\n", __func__, iceil (rect.width), iceil (rect.height),
+              cairo_status_to_string (cairo_surface_status (surface)));
   cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
-  rcontext.surfaces.push_back (surface);
   cairo_t *cr = cairo_create (surface);
   rcontext.cairos.push_back (cr);
+  if (empty_dummy)
+    cairo_surface_destroy (surface);
+  else
+    rcontext.surfaces.push_back (surface);
   return cr;
 }
 
