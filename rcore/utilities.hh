@@ -215,6 +215,7 @@ uint64  timestamp_startup    ();        // µseconds
 uint64  timestamp_realtime   ();        // µseconds
 uint64  timestamp_benchmark  ();        // nseconds
 uint64  timestamp_resolution ();        // nseconds
+String  timestamp_format     (uint64 stamp);
 
 /* --- file/path functionality --- */
 namespace Path {

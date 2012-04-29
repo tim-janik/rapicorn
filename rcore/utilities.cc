@@ -136,6 +136,20 @@ timestamp_benchmark ()
   return stamp;
 }
 
+String
+timestamp_format (uint64 stamp)
+{
+  const size_t fieldwidth = 8;
+  const String fsecs = string_printf ("%zu", size_t (stamp) / 1000000);
+  const String usecs = string_printf ("%06zu", size_t (stamp) % 1000000);
+  String r = fsecs;
+  if (r.size() < fieldwidth)
+    r += '.';
+  if (r.size() < fieldwidth)
+    r += usecs.substr (0, fieldwidth - r.size());
+  return r;
+}
+
 // == KeyConfig ==
 struct KeyConfig {
   typedef std::map<String, String> StringMap;
@@ -381,10 +395,10 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
       static bool first_debug = false;
       if (once_enter (&first_debug))
         {
-          printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
-                    delta / 1000000, delta % 1000000,
+          printerr ("[%s] %s[%u]: program started at: %.6f\n",
+                    timestamp_format (delta).c_str(),
                     program_name().c_str(), thread_pid(),
-                    start / 1000000, start % 1000000);
+                    start / 1000000.0);
           once_leave (&first_debug, true);
         }
     }
@@ -401,7 +415,7 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
           if (prefix.size())
             prefix = prefix + ": ";
           if (f & DO_STAMP)
-            intro = string_printf ("[%llu.%06llu]", delta / 1000000, delta % 1000000);
+            intro = string_printf ("[%s]", timestamp_format (delta).c_str());
           printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
         }
     }
@@ -449,13 +463,13 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
               fd = dup (fd);
               close (0);
             }
-          out = string_printf ("[%llu.%06llu] %s[%u]: program started at: %5llu.%06llu\n",
-                               delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
-                               start / 1000000, start % 1000000);
+          out = string_printf ("[%s] %s[%u]: program started at: %s\n",
+                               timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
+                               timestamp_format (start).c_str());
           once_leave (&conftest_logfd, fd);
         }
-      out += string_printf ("[%llu.%06llu] %s[%u]:%s%s%s",
-                            delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
+      out += string_printf ("[%s] %s[%u]:%s%s%s",
+                            timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
                             wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         out += "aborting...\n";
