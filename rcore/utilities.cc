@@ -287,6 +287,17 @@ debug_confnum (const String &option, int64 vdefault)
   return string_to_int (debug_confstring (option, string_from_int (vdefault)));
 }
 
+bool
+debug_key_enabled (const char *key)
+{
+  String dkey = key ? key : "";
+  std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
+  const bool keycheck = !key || debug_confbool ("debug-" + dkey) || // key selected
+                        (debug_confbool ("debug-all") &&            // all keys enabled by default
+                         debug_confbool ("debug-" + dkey, true));   // ensure key was not deselected
+  return keycheck;
+}
+
 static String
 program_name ()
 {
@@ -351,10 +362,11 @@ dbg_prefix (const String &fileline)
   return fileline;
 }
 
-static void debug_msg (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
+// export debug_handler() symbol for debugging stacktraces and gdb
+extern void debug_handler (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
 
-static void // internal function, this + caller are skipped in backtraces
-debug_msg (const char dkind, const String &file_line, const String &message, const char *key)
+void // internal function, this + caller are skipped in backtraces
+debug_handler (const char dkind, const String &file_line, const String &message, const char *key)
 {
   /* The logging system must work before Rapicorn is initialized, and possibly even during
    * global_ctor phase. So any initialization needed here needs to be handled on demand.
@@ -404,20 +416,12 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
     }
   if (f & DO_DEBUG)
     {
-      String dkey = key ? key : "";
-      std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
-      const bool keycheck = !key || debug_confbool ("debug-" + dkey) || // key selected
-                            (debug_confbool ("debug-all") &&
-                             debug_confbool ("debug-" + dkey, true));   // ensure key was not deselected
-      if (keycheck)
-        {
-          String intro, prefix = key ? key : dbg_prefix (file_line);
-          if (prefix.size())
-            prefix = prefix + ": ";
-          if (f & DO_STAMP)
-            intro = string_printf ("[%s]", timestamp_format (delta).c_str());
-          printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
-        }
+      String intro, prefix = key ? key : dbg_prefix (file_line);
+      if (prefix.size())
+        prefix = prefix + ": ";
+      if (f & DO_STAMP)
+        intro = string_printf ("[%s]", timestamp_format (delta).c_str());
+      printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
     }
   if (f & DO_FIXIT)
     {
@@ -493,13 +497,13 @@ debug_msg (const char dkind, const String &file_line, const String &message, con
 void
 debug_assert (const char *file, const int line, const char *message)
 {
-  debug_msg ('C', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('C', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
 }
 
 void
 debug_fassert (const char *file, const int line, const char *message)
 {
-  debug_msg ('F', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('F', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
   ::abort();
 }
 
@@ -510,7 +514,7 @@ debug_fatal (const char *file, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_msg ('F', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('F', string_printf ("%s:%d", file, line), msg);
   ::abort();
 }
 
@@ -521,7 +525,7 @@ debug_critical (const char *file, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_msg ('C', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('C', string_printf ("%s:%d", file, line), msg);
 }
 
 void
@@ -531,7 +535,7 @@ debug_fixit (const char *file, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_msg ('X', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('X', string_printf ("%s:%d", file, line), msg);
 }
 
 void
@@ -541,17 +545,19 @@ debug_simple (const char *file, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_msg ('D', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('D', string_printf ("%s:%d", file, line), msg);
 }
 
 void
 debug_keymsg (const char *file, const int line, const char *key, const char *format, ...)
 {
+  if (!debug_enabled (key))
+    return;
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_msg ('K', string_printf ("%s:%d", file, line), msg, key);
+  debug_handler ('K', string_printf ("%s:%d", file, line), msg, key);
 }
 
 const char*

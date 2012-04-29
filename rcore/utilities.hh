@@ -125,17 +125,19 @@ public:
 
 // === Conditional Debugging ===
 #define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_simple (__FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { if (Rapicorn::debug_enabled()) Rapicorn::debug_keymsg (__FILE__, __LINE__, key, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (__FILE__, __LINE__, __k_, __VA_ARGS__); } while (0)
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
 extern bool _debug_flag;
-inline bool debug_enabled    () { return RAPICORN_UNLIKELY (_debug_flag); }
-void        debug_configure  (const String &options);
-String      debug_confstring (const String &option, const String &vdefault = "");
-bool        debug_confbool   (const String &option, bool vdefault = false);
-int64       debug_confnum    (const String &option, int64 vdefault = 0);
-String      debug_help       ();
+bool        debug_key_enabled (const char *key);
+inline bool debug_enabled     () { return RAPICORN_UNLIKELY (_debug_flag); }
+inline bool debug_enabled     (const char *key) { return RAPICORN_UNLIKELY (_debug_flag) && debug_key_enabled (key); }
+void        debug_configure   (const String &options);
+String      debug_confstring  (const String &option, const String &vdefault = "");
+bool        debug_confbool    (const String &option, bool vdefault = false);
+int64       debug_confnum     (const String &option, int64 vdefault = 0);
+String      debug_help        ();
 const char* strerror    (void);         // simple wrapper for strerror (errno)
 const char* strerror    (int errnum);   // wrapper for ::strerror
 // implementation prototypes
