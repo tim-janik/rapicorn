@@ -24,6 +24,16 @@ test_rect (void)
   r3.translate (-2.5, +1.6);
   Rect r4 (4.6, 8.8, 1.0, 1.0);
   TASSERT (r3.equals (r4, 0.00000000000001));           // using epsilon due to precision artefacts
+  r1 = Rect (-1, -1, 0, 0);
+  r2 = Rect (-1, -1, -1, -1);                           // width and height are MAXed up to 0
+  r3 = Rect (0, 0, 0, 0);
+  r4 = Rect (1, 1, 1, 1);
+  TASSERT (r1 == r2);                                   // both empty at (-1,-1)
+  TASSERT (r1 != r3);                                   // both empty, but at diferent coords
+  TASSERT (r1 != r4);                                   // empty vs. non-empty
+  TASSERT (r2 != r3);                                   // both empty, but at diferent coords
+  TASSERT (r2 != r4);                                   // empty vs. non-empty
+  TASSERT (r3 != r4);                                   // empty vs. non-empty
 }
 REGISTER_UITHREAD_TEST ("Region/rectangles", test_rect);
 

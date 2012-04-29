@@ -765,8 +765,6 @@ Rect::Rect (const IRect &ir) :
 inline bool
 Rect::operator== (const Rect &other) const
 {
-  if (empty() && other.empty())
-    return true;
   return other.x == x && other.y == y && other.width == width && other.height == height;
 }
 
