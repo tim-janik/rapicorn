@@ -150,6 +150,7 @@ public:
   explicit      Rect            (Point cp0, Point cp1);
   explicit      Rect            (Point p0, double cwidth, double cheight);
   explicit      Rect            (double cx, double cy, double cwidth, double cheight);
+  inline        Rect            (const IRect &ir);
   Rect&         assign          (Point p0, Point p1);
   Rect&         assign          (Point p0, double cwidth, double cheight);
   Rect&         assign          (double cx, double cy, double cwidth, double cheight);
@@ -189,6 +190,7 @@ public:
   Rect&         add_border      (double b);
   Rect&         intersect       (const Rect &r);
   bool          intersecting    (const Rect &r) const;
+  Rect          intersection    (const Rect &r) const           { return Rect (*this).intersect (r); }
   bool          empty           () const;
   Point         anchor_point    (AnchorType anchor);
   Rect&         translate       (double deltax,
@@ -754,6 +756,11 @@ Rect::Rect (Point cp0, Point cp1)
 {
   assign (cp0, cp1);
 }
+
+inline
+Rect::Rect (const IRect &ir) :
+  x (ir.x), y (ir.y), width (ir.width), height (ir.height)
+{}
 
 inline bool
 Rect::operator== (const Rect &other) const
