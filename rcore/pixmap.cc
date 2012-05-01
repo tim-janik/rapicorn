@@ -33,22 +33,6 @@ static Pixmap*  anon_load_png (const String &filename); /* assigns errno */
 
 namespace Rapicorn {
 
-static inline int /* 0 or 1..64 */
-fmsb (uint64 val)
-{
-  if (val >> 32)
-    return 32 + fmsb (val >> 32);
-  int nb = 32;
-  do
-    {
-      nb--;
-      if (val & (1U << nb))
-        return nb + 1;  /* 1..32 */
-    }
-  while (nb > 0);
-  return 0; /* none found */
-}
-
 static inline uint64
 upper_power2 (uint64 number)
 {

@@ -2075,6 +2075,27 @@ malloc_aligned (gsize	  total_size,
   return aligned_mem;
 }
 
+/**
+ * The fmsb() function returns the position of the most significant bit set in the word @a val.
+ * The least significant bit is position 1 and the most significant position is, for example, 32 or 64.
+ * @returns The position of the most significant bit set is returned, or 0 if no bits were set.
+ */
+int // 0 or 1..64
+fmsb (uint64 val)
+{
+  if (val >> 32)
+    return 32 + fmsb (val >> 32);
+  int nb = 32;
+  do
+    {
+      nb--;
+      if (val & (1U << nb))
+        return nb + 1;  /* 1..32 */
+    }
+  while (nb > 0);
+  return 0; /* none found */
+}
+
 /* --- zintern support --- */
 #include <zlib.h>
 

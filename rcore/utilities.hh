@@ -270,6 +270,7 @@ void cleanup_force_handlers     (void);
 void* malloc_aligned            (size_t                total_size,
                                  size_t                alignment,
                                  uint8               **free_pointer);
+int   fmsb                      (uint64                value) RAPICORN_CONST;
 
 /* --- Id Allocator --- */
 class IdAllocator : protected NonCopyable {
