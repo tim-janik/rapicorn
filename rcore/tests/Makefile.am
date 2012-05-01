@@ -18,7 +18,7 @@ imgcheck_LDADD     = $(LDADDS)
 # test programs
 LOGTEST_PROGS     += testrcore1
 TEST_PROGS        += testrcore1
-testrcore1_SOURCES = multitest.cc markup.cc strings.cc datalist.cc loops.cc
+testrcore1_SOURCES = multitest.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc
 

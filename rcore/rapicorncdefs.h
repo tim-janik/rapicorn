@@ -290,6 +290,17 @@ typedef struct {
   void*		    (*qdata_steal)	    (uint		glib_quark);
 } RapicornThreadTable;
 
+// == X86 Architecture ==
+#if defined __i386__ || defined __x86_64__
+#define RAPICORN_HAVE_X86_RDTSC  1
+#define RAPICORN_X86_RDTSC()            ({ RapicornUInt32 __l_, __h_, __s_;                           \
+                                           __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_)); \
+                                           __s_ = __l_ + (RapicornUInt64 (__h_) << 32); __s_; })
+#else
+#define RAPICORN_HAVE_X86_RDTSC  0
+#define RAPICORN_X86_RDTSC()    (0)
+#endif
+
 /* --- implementation bits --- */
 /* the above macros rely on a problem handler macro: */
 // RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,exprformat,...); // noreturn cases: 'E', 'A', 'N'

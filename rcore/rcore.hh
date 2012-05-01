@@ -25,6 +25,7 @@
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/pixmap.hh>
+#include <rcore/quicktimer.hh>
 #include <rcore/rapicornmath.hh>
 #include <rcore/rapicornmsg.hh>
 #include <rcore/rapicornsignal.hh>
