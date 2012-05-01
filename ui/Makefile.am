@@ -89,13 +89,13 @@ librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
 CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
-EXTRA_DIST += interfaces.idl serverinsert.cc hardcoded.idl
+EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
 # build interfaces.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
-serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.cc
+serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
 	${PLICINT} -G CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
 	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
-	  --insertions $(srcdir)/serverinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
+	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
@@ -103,11 +103,11 @@ serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
 	  -g RapicornSignal --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
-EXTRA_DIST += clientinsert.cc
-clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.cc
+EXTRA_DIST += clientinsert.hh
+clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.hh
 	${PLICINT} -G CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
 	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
-	  --insertions $(srcdir)/clientinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
+	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
