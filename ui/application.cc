@@ -25,6 +25,93 @@ ApplicationIface::factory_window (const std::string &factory_definition)
   return Factory::check_ui_window (factory_definition);
 }
 
+typedef std::map<String,BaseObject*> StringObjectMap;
+static Mutex           xurl_mutex;
+static StringObjectMap xurl_map;
+
+static bool
+xurl_map_add (BaseObject   &object,
+              const String &key)
+{
+  ScopedLock<Mutex> locker (xurl_mutex);
+  StringObjectMap::iterator it = xurl_map.find (key);
+  if (it != xurl_map.end())
+    return false;
+  xurl_map[key] = &object;
+  return true;
+}
+
+static bool
+xurl_map_sub (const String &key)
+{
+  ScopedLock<Mutex> locker (xurl_mutex);
+  StringObjectMap::iterator it = xurl_map.find (key);
+  if (it != xurl_map.end())
+    {
+      xurl_map.erase (it);
+      return true;
+    }
+  return false;
+}
+
+static BaseObject*
+xurl_map_get (const String &key)
+{
+  ScopedLock<Mutex> locker (xurl_mutex);
+  StringObjectMap::iterator it = xurl_map.find (key);
+  return it != xurl_map.end() ? it->second : NULL;
+}
+
+static class XurlDataKey : public DataKey<String> {
+  virtual void destroy (String data) { xurl_map_sub (data); }
+} xurl_name_key;
+
+bool
+ApplicationIface::xurl_add (const String &model_path, ListModelIface &model)
+{
+  assert_return (model_path.find ("local/data/") == 0, false); // FIXME
+  if (model_path.find ("local/data/") != 0)
+    return false;
+  const String xurl_name = model.get_data (&xurl_name_key);
+  if (!xurl_name.empty())
+    return false; // model already in map
+  if (!xurl_map_add (model, model_path))
+    return false; // model_path already in map
+  model.set_data (&xurl_name_key, model_path);
+  return true;
+}
+
+bool
+ApplicationIface::xurl_sub (ListModelIface &model)
+{
+  const String xurl_name = model.get_data (&xurl_name_key);
+  if (!xurl_name.empty())
+    {
+      BaseObject *bo = xurl_map_get (xurl_name);
+      assert_return (bo == &model, false);
+      model.delete_data (&xurl_name_key);       // calls xurl_map_sub
+      bo = xurl_map_get (xurl_name);
+      assert_return (bo == NULL, false);
+      return true;
+    }
+  else
+    return false;
+}
+
+ListModelIface*
+ApplicationIface::xurl_find (const String &model_path)
+{
+  BaseObject *bo = model_path.empty() ? NULL : xurl_map_get (model_path);
+  return dynamic_cast<ListModelIface*> (bo);
+}
+
+String
+ApplicationIface::xurl_path (const ListModelIface &model)
+{
+  const String xurl_name = model.get_data (&xurl_name_key);
+  return xurl_name;
+}
+
 static ApplicationImpl *the_app = NULL;
 static void
 create_application (const StringVector &args)

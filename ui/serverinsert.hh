@@ -30,9 +30,11 @@ class_scope:Window:
   const WindowImpl& impl () const;
 
 class_scope:Application:
-  static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  static bool        plor_add      (ItemIface    &item, const String &plor_name);
-  static ItemIface*  plor_remove   (const String &plor_name);
+  static void            pixstream  (const String &pix_name, const uint8 *static_const_pixstream);
+  static bool            xurl_add   (const String &model_path, ListModelIface &model);
+  static bool            xurl_sub   (ListModelIface &model);
+  static ListModelIface* xurl_find  (const String &model_path);
+  static String          xurl_path  (const ListModelIface &model);
   /* global mutex */
   struct ApplicationMutex {
     static void lock    () { rapicorn_thread_enter (); }
