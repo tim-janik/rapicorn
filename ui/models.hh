@@ -12,7 +12,7 @@ class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual Li
   explicit                      ListModelRelayImpl (int n_columns);
   virtual                      ~ListModelRelayImpl ();
 protected:
-  static ListModelRelayIface&   create_list_model_relay (int n_columns);
+  static ListModelRelayImpl&    create_list_model_relay (int n_columns);
 public:
   // model API
   virtual int                   size            ()              { return m_size; }

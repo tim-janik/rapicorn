@@ -110,7 +110,7 @@ ListModelRelayImpl::refill (int first, int last)
     }
 }
 
-ListModelRelayIface&
+ListModelRelayImpl&
 ListModelRelayImpl::create_list_model_relay (int n_columns)
 {
   ListModelRelayImpl *relay = new ListModelRelayImpl (n_columns);
@@ -122,7 +122,14 @@ ApplicationImpl::create_list_model_relay (int                n_columns,
                                           const std::string &name)
 {
   struct Accessor : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
-  return &Accessor::create_list_model_relay (n_columns);
+  ListModelRelayImpl &lmr = Accessor::create_list_model_relay (n_columns);
+  if (ApplicationImpl::the().xurl_add (name, lmr))
+    return &lmr;
+  else
+    {
+      unref (ref_sink (lmr));
+      return NULL;
+    }
 }
 
 MemoryListStore::MemoryListStore (int n_columns) :
