@@ -5,115 +5,91 @@
 namespace Rapicorn {
 
 ListModelRelayImpl::ListModelRelayImpl (int n_columns) :
-  m_size (0), m_columns (n_columns)
+  m_columns (n_columns)
 {}
 
 ListModelRelayImpl::~ListModelRelayImpl ()
 {}
 
-int
-ListModelRelayImpl::columns ()
-{
-  return 1;
-}
-
 AnySeq
-ListModelRelayImpl::row (int n)
+ListModelRelayImpl::row (int r)
 {
-  return n >= 0 && size_t (n) < m_rows.size() ? m_rows[n] : AnySeq();
+  const size_t row = r;
+  return r >= 0 && row < m_rows.size() ? m_rows[row] : AnySeq();
 }
 
 Any
 ListModelRelayImpl::cell (int r, int c)
 {
-  return r >= 0 && size_t (r) < m_rows.size() && c >= 0 && size_t (c) <= m_columns ? m_rows[r][c] : Any();
+  const size_t row = r, col = c;
+  const size_t n_columns = m_columns;
+  return r >= 0 && row < m_rows.size() && c >= 0 && col < n_columns ? m_rows[row][col] : Any();
 }
 
 void
-ListModelRelayImpl::resize (int _size)
+ListModelRelayImpl::emit_updated (UpdateKind kind, uint start, uint length)
 {
-  const int old = m_size;
-  m_size = _size;
-  m_rows.resize (m_size);
-  if (m_size < old)
-    sig_removed.emit (m_size, old-1);
-  else if (m_size > old)
-    sig_inserted.emit (old, m_size-1);
+  sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length), UpdateSpan (0, m_columns)));
 }
 
 void
-ListModelRelayImpl::inserted (int first, int last)
+ListModelRelayImpl::relay (const UpdateRequest &urequest)
 {
-  assert_return (first >= 0);
-  assert_return (first <= m_size);
-  if (last)
-    assert_return (last >= first);
-  else
-    last = first;
-  m_size += last - first + 1;
-  m_rows.resize (m_size);
-  sig_inserted.emit (first, last);
-}
-
-void
-ListModelRelayImpl::changed (int first, int last)
-{
-  assert_return (first >= 0);
-  assert_return (first < m_size);
-  if (last)
+  switch (urequest.kind)
     {
-      assert_return (last >= first);
-      assert_return (last < m_size);
+    case UPDATE_INSERTION:
+      assert_return (urequest.rowspan.start >= 0);
+      assert_return (urequest.rowspan.start <= size());
+      assert_return (urequest.rowspan.length >= 0);
+      m_rows.insert (m_rows.begin() + urequest.rowspan.start, urequest.rowspan.length,
+                     ({ AnySeq adefault; adefault.resize (m_columns); adefault; }));
+      sig_updated.emit (urequest);
+      refill (urequest.rowspan.start, urequest.rowspan.length);
+      break;
+    case UPDATE_CHANGE:
+      assert_return (urequest.rowspan.start >= 0);
+      assert_return (urequest.rowspan.start <= size());
+      assert_return (urequest.rowspan.length >= 0);
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= size());
+      refill (urequest.rowspan.start, urequest.rowspan.length); // emits UPDATE_CHANGE later
+      break;
+    case UPDATE_DELETION:
+      assert_return (urequest.rowspan.start >= 0);
+      assert_return (urequest.rowspan.start <= size());
+      assert_return (urequest.rowspan.length >= 0);
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= size());
+      m_rows.erase (m_rows.begin() + urequest.rowspan.start, m_rows.begin() + urequest.rowspan.start + urequest.rowspan.length);
+      sig_updated.emit (urequest);
+      break;
+    case UPDATE_READ: ;
     }
-  else
-    last = first;
-  refill (first, last);
-  // sig_changed.emit (first, last);
 }
 
 void
-ListModelRelayImpl::removed (int first, int last)
+ListModelRelayImpl::fill (int first, const AnySeqSeq &anyseq)
 {
   assert_return (first >= 0);
-  assert_return (first < m_size);
-  if (last)
-    {
-      assert_return (last >= first);
-      assert_return (last < m_size);
-    }
-  else
-    last = first;
-  m_size -= last - first + 1;
-  m_rows.resize (m_size);
-  sig_removed.emit (first, last);
-}
-
-void
-ListModelRelayImpl::fill (int first, const AnySeqSeq &ss)
-{
-  assert_return (first >= 0);
-  if (first >= m_size)
+  if (first >= size())
     return;
-  size_t i = first;
-  for (size_t j = 0; i < m_rows.size() && j < ss.size(); i++, j++)
-    m_rows[i] = ss[j];
-  if (i > size_t (first))
-    sig_changed.emit (first, i-1);
+  const size_t n_columns = m_columns;
+  for (size_t i = 0; i < anyseq.size(); i++)
+    assert_return (anyseq[i].size() == n_columns);
+  size_t i;
+  for (i = 0; i < anyseq.size() && first + i < m_rows.size(); i++)
+    m_rows[first + i] = anyseq[i];
+  if (i)
+    emit_updated (UPDATE_CHANGE, first, i);
 }
 
 void
-ListModelRelayImpl::refill (int first, int last)
+ListModelRelayImpl::refill (int start, int length)
 {
-  assert_return (first >= 0);
-  if (last)
-    assert_return (last >= first);
-  else
-    last = first;
-  if (first < m_size)
-    {
-      last = min (last, m_size);
-      sig_refill.emit (first, last);
-    }
+  assert_return (start >= 0);
+  assert_return (start < size());
+  assert_return (length >= 0);
+  length = MIN (start + length, size()) - start;
+  if (length)
+    sig_refill.emit (UpdateRequest (UPDATE_READ, UpdateSpan (start, length), UpdateSpan (0, m_columns)));
 }
 
 ListModelRelayImpl&
@@ -172,6 +148,12 @@ MemoryListStore::cell (int r, int c)
 }
 
 void
+MemoryListStore::emit_updated (UpdateKind kind, uint start, uint length)
+{
+  sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length), UpdateSpan (0, m_columns)));
+}
+
+void
 MemoryListStore::insert (int n, const AnySeq &aseq)
 {
   assert_return (aseq.size() == m_columns);
@@ -180,26 +162,25 @@ MemoryListStore::insert (int n, const AnySeq &aseq)
   if (n < 0)
     n = m_rows.size(); // append
   m_rows.insert (m_rows.begin() + n, aseq);
-  sig_inserted.emit (n, n);
+  emit_updated (UPDATE_INSERTION, n, 1);
 }
 
 void
-MemoryListStore::update (uint n, const AnySeq &aseq)
+MemoryListStore::update_row (uint n, const AnySeq &aseq)
 {
   assert_return (aseq.size() == m_columns);
   assert_return (n < m_rows.size());
   m_rows[n] = aseq;
-  sig_changed.emit (n, n);
+  emit_updated (UPDATE_CHANGE, n, 1);
 }
 
 void
-MemoryListStore::remove (uint first, uint last)
+MemoryListStore::remove (uint start, uint length)
 {
-  assert_return (first < m_rows.size());
-  if (last < first)
-    last = first;
-  m_rows.erase (m_rows.begin() + first, m_rows.begin() + last + 1);
-  sig_removed.emit (first, last);
+  assert_return (start < m_rows.size());
+  assert_return (start + length <= m_rows.size());
+  m_rows.erase (m_rows.begin() + start, m_rows.begin() + start + length);
+  emit_updated (UPDATE_DELETION, start, length);
 }
 
 } // Rapicorn

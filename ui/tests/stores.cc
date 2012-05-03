@@ -78,16 +78,20 @@ test_any_seq_seq ()
 REGISTER_UITHREAD_TEST ("Stores/AnySeqSeq Chess", test_any_seq_seq);
 
 static uint store_inserted_counter = 0;
-static void
-store_inserted (int first, int last)
-{
-  store_inserted_counter++;
-}
 static uint store_changed_counter = 0;
 static void
-store_changed (int first, int last)
+store_updated (const UpdateRequest &urequest)
 {
-  store_changed_counter++;
+  switch (urequest.kind)
+    {
+    case UPDATE_INSERTION:
+      store_inserted_counter++;
+      break;
+    case UPDATE_CHANGE:
+      store_changed_counter++;
+      break;
+    default: ;
+    }
 }
 
 static void
@@ -98,8 +102,7 @@ test_basic_memory_store ()
   // check model/store identity (for memory stores)
   ListModelIface &m1 = *store;
   assert (&m1 == store);
-  store->sig_inserted += store_inserted;
-  store->sig_changed += store_changed;
+  store->sig_updated += store_updated;
   // basic store assertions
   assert (store->size() == 0);
   // insert first row
@@ -112,7 +115,7 @@ test_basic_memory_store ()
   assert (store->row (0)[0].as_string() == "first");
   last_counter = store_changed_counter;
   row[0] <<= "foohoo";
-  store->update (0, row);
+  store->update_row (0, row);
   assert (store_changed_counter > last_counter);
   assert (store->row (0)[0].as_string() == "foohoo");
   last_counter = store_inserted_counter;
@@ -162,9 +165,9 @@ test_store_modifications ()
 
   row = store.row (1);
   row[3] <<= "Extra_text_added_to_row_1";
-  store.update (1, row);
+  store.update_row (1, row);
 
-  store.remove (2);
+  store.remove (2, 1);
   row.clear();
   row.resize (4);
   row[0] <<= "Replacement_for_removed_row_2";
