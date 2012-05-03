@@ -69,8 +69,8 @@ static class XurlDataKey : public DataKey<String> {
 bool
 ApplicationIface::xurl_add (const String &model_path, ListModelIface &model)
 {
-  assert_return (model_path.find ("local/data/") == 0, false); // FIXME
-  if (model_path.find ("local/data/") != 0)
+  assert_return (model_path.find ("//local/data/") == 0, false); // FIXME
+  if (model_path.find ("//local/data/") != 0)
     return false;
   const String xurl_name = model.get_data (&xurl_name_key);
   if (!xurl_name.empty())
