@@ -4,24 +4,18 @@ include "hardcoded.idl";
 
 namespace Rapicorn {
 
-/**
- * A sequence of \a any objects, useful when the sequence element types need to be determined at runtime.
- */
-sequence AnySeq {
+sequence AnySeq         /// A sequence of @a any objects, useful when the sequence element types need to be determined at runtime.
+{
   any vany;
 };
 
-/**
- * A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
- */
-sequence AnySeqSeq {
+sequence AnySeqSeq      /// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
+{
   AnySeq seq;
 };
 
-/**
- * A sequence of C++ std::strings.
- */
-sequence StringList {
+sequence StringList     /// A sequence of strings (in C++ of std::string).
+{
   string strings;
 };
 
