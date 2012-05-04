@@ -90,7 +90,7 @@ ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
 CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
 EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
-# build interfaces.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
+# build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
 	${PLICINT} -G CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
