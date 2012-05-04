@@ -226,6 +226,7 @@ test_convert_svg2png()
   Cairo::surface_printout (surface, 56);
   cairo_surface_destroy (surface);
   delete[] pixels;
+  unlink ("tmp-testsvg.png");
 }
 REGISTER_LOGTEST ("SVG/svg2png", test_convert_svg2png);
 
