@@ -161,6 +161,14 @@ standard_tests ()
   assert (tcany.kind_name () == "ANY");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
+  // SmartHandle
+  assert (SmartHandle::_null_handle()._is_null() == true);
+  assert (SmartHandle::_null_handle()._rpc_id() == 0);
+  struct OneHandle : SmartHandle { OneHandle() : SmartHandle (1) {} };
+  assert (OneHandle()._is_null() == false);
+  assert (OneHandle()._rpc_id() == 1);
+  assert (OneHandle()._null_handle()._is_null() == true);
+  assert (OneHandle()._null_handle()._rpc_id() == 0);
   printf ("  TEST   Plic standard types                                             OK\n");
 }
 

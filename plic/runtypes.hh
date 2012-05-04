@@ -231,17 +231,20 @@ protected:
 // == SmartHandle ==
 class SmartHandle {
   uint64_t m_rpc_id;
+  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
+  typedef NullSmartHandle<SmartHandle> NullHandle;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
-  static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
+  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Plic::SmartHandle::_is_null; }
   typedef uint64_t RpcId;
   explicit                  SmartHandle (uint64_t ipcid);
   void                      _reset      ();
-public:
   explicit                  SmartHandle ();
+public:
   uint64_t                  _rpc_id     () const;
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
+  static NullHandle         _null_handle()                      { return NullHandle(); }
 };
 
 // == SimpleServer ==
