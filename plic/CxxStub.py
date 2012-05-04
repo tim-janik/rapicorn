@@ -218,9 +218,13 @@ class Generator:
     s = '\n'
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.R (fl[1]) + '> {\n'
+      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.R (fl[1]) + '>\n'
+      s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
+      s += '{\n'
     else:
-      s += 'struct %s {\n' % self.C (type_info)
+      s += 'struct %s\n' % self.C (type_info)
+      s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
+      s += '{\n'
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:

@@ -147,7 +147,9 @@ void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface*);
 void operator>>= (Plic::FieldReader&, I_FirstInterface_Interface*&);
 
-struct XFooRecordImpl {
+struct XFooRecordImpl
+  /// See also the corresponding IDL class XFooRecord.
+{
   bool                          single_bool;
   int                           single_num;
   double                        single_float;
@@ -170,70 +172,90 @@ struct XFooRecordImpl {
 void operator<<= (Plic::FieldBuffer&, const XFooRecordImpl&);
 void operator>>= (Plic::FieldReader&, XFooRecordImpl&);
 
-struct XFooSequenceImpl : public std::vector<bool> {
+struct XFooSequenceImpl : public std::vector<bool>
+  /// See also the corresponding IDL class XFooSequence.
+{
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const XFooSequenceImpl&);
 void operator>>= (Plic::FieldReader&, XFooSequenceImpl&);
 
-struct IntSequenceImpl : public std::vector<int> {
+struct IntSequenceImpl : public std::vector<int>
+  /// See also the corresponding IDL class IntSequence.
+{
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const IntSequenceImpl&);
 void operator>>= (Plic::FieldReader&, IntSequenceImpl&);
 
-struct FloatSequenceImpl : public std::vector<double> {
+struct FloatSequenceImpl : public std::vector<double>
+  /// See also the corresponding IDL class FloatSequence.
+{
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const FloatSequenceImpl&);
 void operator>>= (Plic::FieldReader&, FloatSequenceImpl&);
 
-struct StringSequenceImpl : public std::vector<std::string> {
+struct StringSequenceImpl : public std::vector<std::string>
+  /// See also the corresponding IDL class StringSequence.
+{
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const StringSequenceImpl&);
 void operator>>= (Plic::FieldReader&, StringSequenceImpl&);
 
-struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum> {
+struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum>
+  /// See also the corresponding IDL class ExtensiveEnumSequence.
+{
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
 void operator>>= (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
 
-struct RecordSequenceImpl : public std::vector<XFooRecordImpl> {
+struct RecordSequenceImpl : public std::vector<XFooRecordImpl>
+  /// See also the corresponding IDL class RecordSequence.
+{
   typedef std::vector<XFooRecordImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const RecordSequenceImpl&);
 void operator>>= (Plic::FieldReader&, RecordSequenceImpl&);
 
-struct SequenceSequenceImpl : public std::vector<IntSequenceImpl> {
+struct SequenceSequenceImpl : public std::vector<IntSequenceImpl>
+  /// See also the corresponding IDL class SequenceSequence.
+{
   typedef std::vector<IntSequenceImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const SequenceSequenceImpl&);
 void operator>>= (Plic::FieldReader&, SequenceSequenceImpl&);
 
-struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
+struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*>
+  /// See also the corresponding IDL class InterfaceSequence.
+{
   typedef std::vector<I_FirstInterface_Interface*> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 void operator>>= (Plic::FieldReader&, InterfaceSequenceImpl&);
 
-struct AnySequenceImpl : public std::vector<Plic::Any> {
+struct AnySequenceImpl : public std::vector<Plic::Any>
+  /// See also the corresponding IDL class AnySequence.
+{
   typedef std::vector<Plic::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Plic::FieldBuffer&, const AnySequenceImpl&);
 void operator>>= (Plic::FieldReader&, AnySequenceImpl&);
 
-struct NestedTypesRecImpl {
+struct NestedTypesRecImpl
+  /// See also the corresponding IDL class NestedTypesRec.
+{
   XFooRecordImpl                rec;
   XFooSequenceImpl              seq;
   inline                        NestedTypesRecImpl () { }
@@ -241,7 +263,9 @@ struct NestedTypesRecImpl {
 void operator<<= (Plic::FieldBuffer&, const NestedTypesRecImpl&);
 void operator>>= (Plic::FieldReader&, NestedTypesRecImpl&);
 
-struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
+struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl>
+  /// See also the corresponding IDL class NestedTypesSeq.
+{
   typedef std::vector<NestedTypesRecImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
@@ -264,7 +288,9 @@ typedef XFooSequenceImpl AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
-struct NewRecordImpl {
+struct NewRecordImpl
+  /// See also the corresponding IDL class NewRecord.
+{
   int                           i;
   Enum1                         enum1;
   XFooSequenceImpl              xfs;
@@ -276,7 +302,9 @@ void operator>>= (Plic::FieldReader&, NewRecordImpl&);
 
 namespace Inner {
 
-struct InnerRecordImpl {
+struct InnerRecordImpl
+  /// See also the corresponding IDL class InnerRecord.
+{
   int                           x;
   int                           y;
   NewRecordImpl                 rec;
@@ -286,7 +314,9 @@ void operator<<= (Plic::FieldBuffer&, const InnerRecordImpl&);
 void operator>>= (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
-struct Refer2InnerImpl {
+struct Refer2InnerImpl
+  /// See also the corresponding IDL class Refer2Inner.
+{
   Inner::InnerRecordImpl        r;
   inline                        Refer2InnerImpl () { }
 };
@@ -296,7 +326,9 @@ void operator>>= (Plic::FieldReader&, Refer2InnerImpl&);
 
 namespace OtherNamespace {
 
-struct SomeRecordImpl {
+struct SomeRecordImpl
+  /// See also the corresponding IDL class SomeRecord.
+{
   MandatoryNamespace::NewRecordImpl r1;
   MandatoryNamespace::NewRecordImpl r2;
   MandatoryNamespace::Inner::InnerRecordImpl r3;
@@ -414,7 +446,9 @@ enum QuickEnum {
 inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum &e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
-struct QuickRecordImpl {
+struct QuickRecordImpl
+  /// See also the corresponding IDL class QuickRecord.
+{
   int                           int1;
   int                           int2;
   inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
@@ -422,7 +456,9 @@ struct QuickRecordImpl {
 void operator<<= (Plic::FieldBuffer&, const QuickRecordImpl&);
 void operator>>= (Plic::FieldReader&, QuickRecordImpl&);
 
-struct QuickSequenceImpl : public std::vector<double> {
+struct QuickSequenceImpl : public std::vector<double>
+  /// See also the corresponding IDL class QuickSequence.
+{
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
