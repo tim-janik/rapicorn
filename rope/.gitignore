@@ -1,7 +1,6 @@
-pyRapicorn.la
-protocol-pb2.hh
-protocol-pb2.cc
-testpystub.pyc
-cpy2rope.cc
-py2cpy.py
-*.pyc
+/pyRapicorn.la
+/protocol-pb2.hh
+/protocol-pb2.cc
+/cpy2rope.cc
+/py2cpy.py
+/cxxrapicorn
