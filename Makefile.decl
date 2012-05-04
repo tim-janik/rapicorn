@@ -163,7 +163,7 @@ export TSTOCR = tstocr() { IMG="$$1"; OUT=`basename "$$1".tocr`; shift; \
   printf '  CHECK  %-64s%s\n' "$$MAKE_TARGET_FILE: $$1" "$${FAILOK:$$(($$_e?0:6)):6}" ; [ $$_e = 0 ] || exit $$_e ; \
   shift ; done || \
   printf '  CHECK  %-64s%s\n' "$$MAKE_TARGET_FILE: OCR tests with gocr(1)..." "SKIP" ; \
-  rm -f "$OUT" ; }; tstocr
+  rm -f "$$OUT" ; }; tstocr
 # $(call TSTOUT, [postfix]) - test output filename
 TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
 # $(call TSTTMP, [postfix]) - temporary test filename
