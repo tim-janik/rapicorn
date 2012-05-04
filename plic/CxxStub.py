@@ -904,6 +904,8 @@ class Generator:
     return s
   def generate_server_method_registry (self, reglines):
     s = ''
+    if len (reglines) == 0:
+      return '// Skipping empty MethodRegistry\n'
     s += 'static const Plic::ServerConnection::MethodEntry _plic_stub_entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
