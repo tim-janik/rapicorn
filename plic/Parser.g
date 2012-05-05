@@ -353,7 +353,7 @@ def parse_try (input_string, filename, implinc, linenumbers = True):
     raise Error (errstr, ecaret)
   return result
 
-def parse_main (config, input_string, filename, linenumbers):
+def parse_file (config, input_string, filename, linenumbers):
   yy.configure (config)
   try:
     result = parse_try (input_string, filename, True, linenumbers)

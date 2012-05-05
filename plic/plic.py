@@ -33,7 +33,7 @@ class ParseError (Exception):
     self.kind = kind
 
 def parse_main (config, input_string, filename, linenumbers = True):
-  impltypes, error, caret, inclist = Parser.parse_main (config, input_string, filename, linenumbers)
+  impltypes, error, caret, inclist = Parser.parse_file (config, input_string, filename, linenumbers)
   nsdict = {}
   nslist = []
   if impltypes:
@@ -62,18 +62,23 @@ def module_import (module_or_file):
 def main():
   config = parse_files_and_args()
   files = config['files']
-  if len (files) >= 1: # file IO
-    f = open (files[0], 'r')
-    input_string = f.read()
-    filename = files[0]
-  else:               # interactive
+  if len (files) == 0: # interactive
     try:
       input_string = raw_input ('IDL> ')
     except EOFError:
       input_string = ""
     filename = '<stdin>'
     print
-  nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
+    nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
+  else: # file IO
+    error = None
+    for fname in files:
+      f = open (fname, 'r')
+      input_string = f.read()
+      filename = fname
+      nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
+      if error:
+        break
   if error:
     print >>sys.stderr, error
     if caret:
