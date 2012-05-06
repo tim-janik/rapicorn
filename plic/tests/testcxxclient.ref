@@ -48,33 +48,33 @@ namespace MandatoryNamespace {
 
 enum Empty {
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Empty &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Empty  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); }
 
 enum Enum1 {
   E1_A = 1,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum1 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum1  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
 
 enum Enum1c {
   E1C_A = 1,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum1c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum1c  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
 
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum2 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum2  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
 
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum2c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum2c  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
 
 enum Enum3 {
@@ -82,7 +82,7 @@ enum Enum3 {
   E3_B = 2,
   E3_C = 3,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum3 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum3  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
 
 enum Enum3c {
@@ -90,7 +90,7 @@ enum Enum3c {
   E3C_B = 2,
   E3C_C = 3,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum3c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum3c  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
 
 enum Enum4a {
@@ -99,7 +99,7 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum4a &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4a  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
 
 enum Enum4b {
@@ -108,7 +108,7 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum4b &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4b  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
 
 enum Enum4c {
@@ -117,7 +117,7 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum4c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4c  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
 
 enum Enum4d {
@@ -126,7 +126,7 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  Enum4d &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4d  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
 
 enum ExtensiveEnum {
@@ -166,7 +166,7 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 
 class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
@@ -500,7 +500,7 @@ void operator>>= (Plic::FieldReader&, GrandChild_SmartHandle&);
 enum QuickEnum {
   ZERO = 0,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
 struct QuickRecord_Handle
@@ -720,7 +720,7 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-inline void operator<<= (Plic::FieldBuffer &fb,  ClickType &e) { fb <<= Plic::EnumValue (e); }
+inline void operator<<= (Plic::FieldBuffer &fb,  ClickType  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 
 class ButtonArea_SmartHandle : public virtual Plic::SmartHandle

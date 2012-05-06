@@ -954,7 +954,7 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
-    s += 'inline void operator<<= (Plic::FieldBuffer &fb,  %s &e) ' % type_info.name
+    s += 'inline void operator<<= (Plic::FieldBuffer &fb,  %s  e) ' % type_info.name
     s += '{ fb <<= Plic::EnumValue (e); }\n'
     s += 'inline void operator>>= (Plic::FieldReader &frr, %s &e) ' % type_info.name
     s += '{ e = %s (frr.pop_evalue()); }\n' % type_info.name
