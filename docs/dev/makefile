@@ -65,5 +65,5 @@ upload: all
 clean:
 	rm -f build-stamp
 	rm -rf $(SRCTREE)/ html.tmp/
-maintainer-clean: clean
 	rm -rf html/
+maintainer-clean: clean
