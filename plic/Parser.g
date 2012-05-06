@@ -331,7 +331,7 @@ def parse_try (filename, input_string, implinc):
   try:
     saved_impl_includes = yy.impl_includes
     yy.impl_includes = implinc or rpath in yy.impl_rpaths
-    result = xparser.IdlSyntax ()
+    result = xparser.IdlSyntax () # returns yy.impl_list
     yy.impl_includes = saved_impl_includes
   except AssertionError: raise  # pass on language exceptions
   except Error: raise           # preprocessed parsing exception
