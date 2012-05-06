@@ -32,8 +32,8 @@ class ParseError (Exception):
     Exception.__init__ (self, msg)
     self.kind = kind
 
-def parse_main (config, input_string, filename, linenumbers = True):
-  impltypes, error, caret, inclist = Parser.parse_file (config, input_string, filename, linenumbers)
+def parse_main (config, input_string, filename):
+  impltypes, error, caret, inclist = Parser.parse_file (config, input_string, filename)
   nsdict = {}
   nslist = []
   if impltypes:
@@ -191,16 +191,16 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
     n += 1
     ls = line.strip()
     if ls and not ls.startswith ('//'):
-      filename = "%s:%d" % (files[0], n)
+      filename = infile.name
       Parser.yy.reset()
       if line.startswith ("include"):
-        code = line
+        code = '\n' * (n-1) + line
       else:
-        code = 'namespace PlicFailTest { ' + line + '\n}'
-      nslist, impltypes, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
+        code = '\n' * (n-2) + 'namespace PlicFailTest {\n' + line + '\n}'
+      nslist, impltypes, error, caret, inclist = parse_main (config, code, filename)
       if error:
         import re
-        error = re.sub (r'^[^:]*/([^/:]+):', r'.../\1:', error)
+        error = re.sub (r'^[^:]*/([^/:]+):([0-9]+):', r'.../\1:\2:', error)
         print error
         if caret:
           print caret

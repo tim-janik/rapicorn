@@ -317,7 +317,7 @@ class Error (Exception):
     self.ecaret = ecaret
     self.exception = None       # chain
 
-def parse_try (input_string, filename, implinc, linenumbers = True):
+def parse_try (input_string, filename, implinc):
   xscanner = IdlSyntaxParserScanner (input_string, filename = filename)
   xparser  = IdlSyntaxParser (xscanner)
   result, exmsg = (None, None)
@@ -340,10 +340,7 @@ def parse_try (input_string, filename, implinc, linenumbers = True):
     file_name, line_number, column_number = pos
     if yy.config.get ('anonimize-filepaths', 0):        # FIXME: global yy reference
         file_name = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + file_name)
-    if linenumbers:
-      errstr = '%s:%d:%d: %s' % (file_name, line_number, column_number, exmsg)
-    else:
-      errstr = '%s: %s' % (file_name, exmsg)
+    errstr = '%s:%d:%d: %s' % (file_name, line_number, column_number, exmsg)
     class WritableObject:
       def __init__ (self): self.content = []
       def write (self, string): self.content.append (string)
@@ -353,10 +350,10 @@ def parse_try (input_string, filename, implinc, linenumbers = True):
     raise Error (errstr, ecaret)
   return result
 
-def parse_file (config, input_string, filename, linenumbers):
+def parse_file (config, input_string, filename):
   yy.configure (config)
   try:
-    result = parse_try (input_string, filename, True, linenumbers)
+    result = parse_try (input_string, filename, True)
     return (result, None, None, [])
   except Error, ex:
     el = []
