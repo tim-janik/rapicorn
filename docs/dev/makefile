@@ -36,6 +36,10 @@ $(SRCTREE):
 	&& cd $(SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
+	@echo "### Skipping generated Enums..." \
+	&& cd $(SRCTREE)/ \
+	&& sed 's/^enum\b/#ifndef DOXYGEN\nenum/ ; s/\(operator>>=.*\.pop_evalue().*\)/\1\n#endif/' \
+	    */clientapi.hh */serverapi.hh --in-place
 	@echo "### Pruning excludes..." \
 	&& rm -f $(patsubst %, $(SRCTREE)/%, $(EXCLUDES))
 	@echo "### Forcing enum value docs..." \
