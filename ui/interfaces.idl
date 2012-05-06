@@ -208,6 +208,29 @@ record Pixbuf {
   StringSeq variables;
 };
 
+/// Classification for element update request messages.
+enum UpdateKind {
+  UPDATE_READ,                  ///< Indicates an element range read request.
+  UPDATE_CHANGE,                ///< Indicates element range changes.
+  UPDATE_INSERTION,             ///< Indicates element range insertions.
+  UPDATE_DELETION               ///< Indicates deletion of a range of elements.
+};
+
+/// Specification of a span with start position and extent length. The upper bound is retrieved as start + length;
+record UpdateSpan {
+  int32 start;                  ///< Start of the span.
+  int32 length;                 ///< Length of the span.
+};
+
+/// An update request specifies the kind of update, the element ranges affected and optional context variables.
+record UpdateRequest {
+  UpdateKind kind;              ///< Classifies the update request type.
+  UpdateSpan rowspan;           ///< List of rows affected.
+  UpdateSpan colspan;           ///< List of columns affected.
+  UpdateSpan lvlspan;           ///< List of levels affected.
+  StringSeq  variables;         ///< Optional "key=UTF-8 string" pairs to provide auxillary information.
+};
+
 /**
  * The ListModel interface serves as a row-oriented data provider for list views.
  * For most model implementations, in-order read outs should be of complexity O(1),

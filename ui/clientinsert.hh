@@ -30,6 +30,13 @@ class_scope:Pixbuf:
   /// Height of the Pixbuf.
   int             height       () const         { return row_length ? pixels.size() / row_length : 0; }
 
+class_scope:UpdateSpan:
+  explicit UpdateSpan (int _start, int _length) : start (_start), length (_length) {}
+
+class_scope:UpdateRequest:
+  explicit UpdateRequest (UpdateKind _kind, const UpdateSpan &rs, const UpdateSpan &cs) :
+    kind (_kind), rowspan (rs), colspan (cs) {}
+
 class_scope:Requisition:
   inline Requisition (double w, double h) : width (w), height (h) {}
 

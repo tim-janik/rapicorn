@@ -48,6 +48,13 @@ class_scope:Application:
   static ListModelIface* xurl_find  (const String &model_path);
   static String          xurl_path  (const ListModelIface &model);
 
+class_scope:UpdateSpan:
+  explicit UpdateSpanImpl (int _start, int _length) : start (_start), length (_length) {}
+
+class_scope:UpdateRequest:
+  explicit UpdateRequestImpl (UpdateKind _kind, const UpdateSpanImpl &rs, const UpdateSpanImpl &cs) :
+    kind (_kind), rowspan (rs), colspan (cs) {}
+
 IGNORE: // close last _scope
 }; // close dummy class scope
 
