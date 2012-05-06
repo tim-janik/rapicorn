@@ -4,8 +4,7 @@
 using namespace Rapicorn;
 
 static String
-cmdjoin (const String       &name,
-         const StringList   &args)
+cmdjoin (const String &name, const StringSeq &args)
 {
   return name + ";" + string_join (";", args);
 }
@@ -14,7 +13,7 @@ static void
 test_command_scanning (void)
 {
   String name;
-  StringList args;
+  StringSeq args;
   bool success;
   success = command_scan (" cmd ", &name, &args);
   assert (success && cmdjoin (name, args) == "cmd;");

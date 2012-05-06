@@ -22,7 +22,7 @@ namespace Rapicorn {
 
 static void
 item_print (ItemImpl           &item,
-            const StringList   &args)
+            const StringSeq    &args)
 {
   bool last_empty = false;
   const StringVector &strings = args;
@@ -37,44 +37,44 @@ item_print (ItemImpl           &item,
 }
 
 static struct {
-  void      (*cmd) (ItemImpl&, const StringList&);
+  void      (*cmd) (ItemImpl&, const StringSeq&);
   const char *name;
 } item_cmds[] = {
   { item_print,         "Item::print" },
 };
 
 static void
-window_close (WindowIface      &window,
-              const StringList &args)
+window_close (WindowIface     &window,
+              const StringSeq &args)
 {
   window.close();
 }
 
 static struct {
-  void      (*cmd) (WindowIface&, const StringList&);
+  void      (*cmd) (WindowIface&, const StringSeq&);
   const char *name;
 } window_cmds[] = {
   { window_close,       "Window::close" },
 };
 
 static void
-application_close (ItemImpl           &item,
-                   const StringList   &args)
+application_close (ItemImpl          &item,
+                   const StringSeq   &args)
 {
   printout ("app.close()\n");
 }
 
 static struct {
-  void      (*cmd) (ItemImpl&, const StringList&);
+  void      (*cmd) (ItemImpl&, const StringSeq&);
   const char *name;
 } application_cmds[] = {
   { application_close,  "Application::close" },
 };
 
 bool
-command_lib_exec (ItemImpl           &item,
-                  const String       &cmd_name,
-                  const StringList   &args)
+command_lib_exec (ItemImpl          &item,
+                  const String      &cmd_name,
+                  const StringSeq   &args)
 {
   for (uint ui = 0; ui < ARRAY_SIZE (item_cmds); ui++)
     if (item_cmds[ui].name == cmd_name)
@@ -186,7 +186,7 @@ static const char *whitespaces = " \t\v\f\n\r";
 bool
 command_scan (const String &input,
               String       *cmd_name,
-              StringList   *args)
+              StringSeq    *args)
 {
   const char *ident0 = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const char *identn = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789";

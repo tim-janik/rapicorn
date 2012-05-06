@@ -652,8 +652,8 @@ ContainerImpl::dump_test_data (TestStream &tstream)
 }
 
 ItemIface*
-ContainerImpl::create_child (const std::string    &item_identifier,
-                             const StringListImpl &args)
+ContainerImpl::create_child (const std::string   &item_identifier,
+                             const StringSeqImpl &args)
 {
   ItemImpl &item = Factory::create_ui_item (item_identifier, args);
   ref_sink (item);

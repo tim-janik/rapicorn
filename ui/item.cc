@@ -485,7 +485,7 @@ bool
 ItemImpl::exec_command (const String &command_call_string)
 {
   String cmd_name;
-  StringList args;
+  StringSeq args;
   if (!command_scan (command_call_string, &cmd_name, &args))
     {
       critical ("Invalid command syntax: %s", command_call_string.c_str());
@@ -520,8 +520,8 @@ ItemImpl::exec_command (const String &command_call_string)
 }
 
 bool
-ItemImpl::custom_command (const String       &command_name,
-                      const StringList   &command_args)
+ItemImpl::custom_command (const String    &command_name,
+                          const StringSeq &command_args)
 {
   return false;
 }

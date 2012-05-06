@@ -5,9 +5,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (WindowH          &window,
-                 const String     &command,
-                 const StringList &args)
+custom_commands (WindowH &window, const String &command, const StringSeq &args)
 {
   if (command == "testdump")
     {

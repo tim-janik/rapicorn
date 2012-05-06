@@ -12,7 +12,7 @@ public:
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true);
-  virtual StringList  auto_load              (const std::string &defs_domain,
+  virtual StringSeq   auto_load              (const std::string &defs_domain,
                                               const std::string &file_name,
                                               const std::string &binary_path,
                                               const std::string &i18n_domain = "");
@@ -20,7 +20,7 @@ public:
                                               const std::string &xml_string,
                                               const std::string &i18n_domain = "");
   virtual WindowIface* create_window         (const std::string &window_identifier,
-                                              const StringList &arguments = StringList());
+                                              const StringSeq &arguments = StringSeq());
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
   virtual WindowIface*query_window           (const String &selector);

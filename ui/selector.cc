@@ -1075,9 +1075,9 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
     case CLASS:         ; // pass through
     }
   // CLASS:
-  StringList tags = Factory::factory_context_tags (item.factory_context());
+  StringSeq tags = Factory::factory_context_tags (item.factory_context());
   bool result = false;
-  for (StringList::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
+  for (StringSeq::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
     {
       const String &tag = *it;
       size_t i = tag.rfind (snode.ident);

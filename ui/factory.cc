@@ -178,7 +178,7 @@ factory_context_type (FactoryContext *fc)
 }
 
 static void
-factory_context_list_types (StringList &types, FactoryContext *fc, const bool need_ids, const bool need_variants)
+factory_context_list_types (StringSeq &types, FactoryContext *fc, const bool need_ids, const bool need_variants)
 {
   assert_return (fc != NULL);
   const XmlNode *xnode = (XmlNode*) fc;
@@ -216,10 +216,10 @@ factory_context_list_types (StringList &types, FactoryContext *fc, const bool ne
     }
 }
 
-StringList
+StringSeq
 factory_context_tags (FactoryContext *fc)
 {
-  StringList types;
+  StringSeq types;
   assert_return (fc != NULL, types);
   factory_context_list_types (types, fc, true, true);
   return types;
@@ -229,7 +229,7 @@ String
 factory_context_impl_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  StringList types;
+  StringSeq types;
   factory_context_list_types (types, fc, false, false);
   return types.size() ? types[types.size() - 1] : "";
 }

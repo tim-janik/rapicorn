@@ -5,9 +5,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (WindowH          &window,
-                 const String     &command,
-                 const StringList &args)
+handle_commands (WindowH &window, const String &command, const StringSeq &args)
 {
   printout ("%s(): command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   if (command == "close")

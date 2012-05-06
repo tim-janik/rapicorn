@@ -132,7 +132,7 @@ ApplicationImpl::the ()
 
 WindowIface*
 ApplicationImpl::create_window (const std::string    &window_identifier,
-                                const StringList     &arguments)
+                                const StringSeq      &arguments)
 {
   ItemImpl &item = Factory::create_ui_item (window_identifier, arguments);
   WindowIface *window = dynamic_cast<WindowIface*> (&item);
@@ -184,14 +184,14 @@ ApplicationImpl::auto_path (const String  &file_name,
   return Path::join (bpath, file_name);
 }
 
-StringList
+StringSeq
 ApplicationImpl::auto_load (const String  &defs_domain,
                             const String  &file_name,
                             const String  &binary_path,
                             const String  &i18n_domain)
 {
   String fullname = auto_path (file_name, binary_path, true);
-  vector<String> definitions;
+  StringSeq definitions;
   String errs = Factory::parse_ui_file (defs_domain, fullname, i18n_domain, &definitions);
   if (!errs.empty())
     fatal ("%s: %s", fullname.c_str(), errs.c_str());

@@ -90,7 +90,7 @@ private:
   virtual bool          check                                   (const EventLoop::State &state);
   virtual bool          dispatch                                (const EventLoop::State &state);
   virtual bool          custom_command                          (const String       &command_name,
-                                                                 const StringList   &command_args);
+                                                                 const StringSeq    &command_args);
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (ItemImpl               *item);

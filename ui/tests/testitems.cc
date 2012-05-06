@@ -184,11 +184,11 @@ test_idl_test_item ()
   titem.enum_prop (TEST_ENUM_VALUE3); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE3);
   Requisition r (123, 765);
   titem.record_prop (r); TASSERT (titem.record_prop().width == r.width && titem.record_prop().height == r.height);
-  StringList sl;
+  StringSeq sl;
   sl.push_back ("one");
   sl.push_back ("2");
   sl.push_back ("THREE");
-  titem.sequence_prop (sl); StringList sv = titem.sequence_prop();
+  titem.sequence_prop (sl); StringSeq sv = titem.sequence_prop();
   TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
   titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
   titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);

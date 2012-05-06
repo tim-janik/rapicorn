@@ -23,10 +23,10 @@ namespace Rapicorn {
 
 bool    command_lib_exec        (ItemImpl           &item,
                                  const String       &cmd_name,
-                                 const StringList   &args);
+                                 const StringSeq    &args);
 bool    command_scan            (const String       &input,
                                  String             *cmd_name,
-                                 StringList         *args);
+                                 StringSeq          *args);
 String  command_string_unquote  (const String       &input);
 
 } // Rapicorn

@@ -18,10 +18,6 @@ struct DUMMY { // dummy class for auto indentation
 class_scope:Requisition:
   inline RequisitionImpl (double w, double h) : width (w), height (h) {}
 
-class_scope:StringList:
-  /*Con*/  StringListImpl () {}
-  /*Con*/  StringListImpl (const std::vector<String> &strv) : Sequence (strv) {}
-
 class_scope:Item:
   ItemImpl&       impl ();
   const ItemImpl& impl () const;

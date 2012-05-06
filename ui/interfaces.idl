@@ -70,8 +70,7 @@ interface Item {
  */
 interface Container : Item {
   /// Create a child item from the @a item_identifier template and add it to the container.
-  Item          create_child            (string item_identifier,
-					 StringList args = 0) = 0;
+  Item          create_child            (string item_identifier, StringSeq args = 0) = 0;
 };
 
 /**
@@ -118,8 +117,7 @@ interface Window : Container {
   bool          closed                  () = 0;
   void          close                   () = 0;
   bool          snapshot                (string     pngname) = 0;
-  signal bool   commands                (string     cmdname,
-                                         StringList args);
+  signal bool   commands                (string     cmdname, StringSeq args);
   signal void   displayed               ();
   bool          synthesize_click        (Item       item,
                                          int        button,
@@ -145,7 +143,7 @@ interface Application {
   string        auto_path       (string         file_name,
                                  string         binary_path,
                                  bool           search_vpath = true) = 0;
-  StringList    auto_load       (string         defs_domain,
+  StringSeq     auto_load       (string         defs_domain,
                                  string         file_name,
                                  string         binary_path,
                                  string         i18n_domain = "") = 0;
@@ -155,7 +153,7 @@ interface Application {
                                  string         i18n_domain = "") = 0;
   /* windows */
   Window        create_window   (string         window_identifier,
-                                 StringList     arguments = 0) = 0;
+                                 StringSeq      arguments = 0) = 0;
   bool          finishable      ();
   signal void   missing_primary ();
   void          close           ();
@@ -185,7 +183,7 @@ interface IdlTestItem : Item {
   string         string_prop;
   TestEnum       enum_prop;
   Requisition    record_prop;
-  StringList     sequence_prop;
+  StringSeq      sequence_prop;
   IdlTestItem    self_prop;
 };
 

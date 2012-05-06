@@ -45,8 +45,8 @@ WindowImpl::set_parent (ContainerImpl *parent)
 }
 
 bool
-WindowImpl::custom_command (const String     &command_name,
-                            const StringList &command_args)
+WindowImpl::custom_command (const String    &command_name,
+                            const StringSeq &command_args)
 {
   bool handled = false;
   if (!handled)

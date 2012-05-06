@@ -105,7 +105,7 @@ void    string_options_split    (const String   &option_string,
                                  const String   &empty_default = "");
 
 // == Strings ==
-class Strings : public std::vector<std::string> /// Convenience Constructor for StringList or std::vector<std::string>
+class Strings : public std::vector<std::string> /// Convenience Constructor for StringSeq or std::vector<std::string>
 {
   typedef const std::string CS;
 public:

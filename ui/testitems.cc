@@ -259,7 +259,7 @@ static const ItemFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::Test
 
 class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface {
   bool m_bool; int m_int; double m_float; std::string m_string; TestEnum m_enum;
-  Requisition m_rec; StringList m_seq; IdlTestItemIface *m_self;
+  Requisition m_rec; StringSeq m_seq; IdlTestItemIface *m_self;
   virtual bool          bool_prop () const                      { return m_bool; }
   virtual void          bool_prop (bool b)                      { m_bool = b; }
   virtual int           int_prop () const                       { return m_int; }
@@ -272,8 +272,8 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          enum_prop (TestEnum v)                  { m_enum = v; }
   virtual Requisition   record_prop () const                    { return m_rec; }
   virtual void          record_prop (const Requisition &r)      { m_rec = r; }
-  virtual StringList    sequence_prop () const                  { return m_seq; }
-  virtual void          sequence_prop (const StringList &s)     { m_seq = s; }
+  virtual StringSeq     sequence_prop () const                  { return m_seq; }
+  virtual void          sequence_prop (const StringSeq &s)      { m_seq = s; }
   virtual IdlTestItemIface* self_prop () const                  { return m_self; }
   virtual void          self_prop (IdlTestItemIface *s)         { m_self = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }

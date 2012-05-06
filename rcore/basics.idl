@@ -2,7 +2,7 @@
 
 namespace Rapicorn {
 
-sequence StringList     /// A sequence of strings (in C++ of std::string).
+sequence StringSeq      /// A sequence of strings (in C++ of std::string).
 {
   string strings;
 };

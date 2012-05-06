@@ -8,9 +8,9 @@ includes:
 IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
-class_scope:StringList:
-  /*ctor*/ StringListImpl () {}
-  /*ctor*/ StringListImpl (const std::vector<std::string> &strv) : Sequence (strv) {}
+class_scope:StringSeq:
+  /*ctor*/ StringSeqImpl () {}
+  /*ctor*/ StringSeqImpl (const std::vector<std::string> &strv) : Sequence (strv) {}
 
 IGNORE: // close last _scope
 }; // close dummy class scope
