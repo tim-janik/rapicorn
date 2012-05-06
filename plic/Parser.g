@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import sys, Decls
+import sys, os, Decls
 true, false, length = (True, False, len)
 #@PLICSUBST_PREIMPORT@
 PLIC_VERSION=\
@@ -40,9 +40,13 @@ class YYGlobals (object):
     self.ns_list = [] # namespaces
     self.impl_list = [] # ordered impl types list
     self.impl_includes = false
-  def configure (self, confdict):
+    self.impl_rpaths = []
+    self.parsed_files = []
+  def configure (self, confdict, implfiles):
     self.config = {}
     self.config.update (confdict)
+    self.impl_rpaths = list (implfiles)
+    self.parsed_files = []
   def nsadd_const (self, name, value):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
@@ -242,13 +246,12 @@ class YYGlobals (object):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[:-1]
   def handle_include (self, includefilename, origscanner, implinc):
-    import os
     dir = os.path.dirname (origscanner.filename) # directory for source relative includes
     filepath = os.path.join (dir, includefilename)
     f = open (filepath)
     input = f.read()
     try:
-      result = parse_try (input, filepath, implinc)
+      result = parse_try (filepath, input, implinc)
     except Error, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
       if self.config.get ('anonimize-filepaths', 0):
@@ -317,13 +320,17 @@ class Error (Exception):
     self.ecaret = ecaret
     self.exception = None       # chain
 
-def parse_try (input_string, filename, implinc):
+def parse_try (filename, input_string, implinc):
   xscanner = IdlSyntaxParserScanner (input_string, filename = filename)
   xparser  = IdlSyntaxParser (xscanner)
+  rpath = os.path.realpath (filename)
+  if rpath in yy.parsed_files:
+    return yy.impl_list # IdlSyntax result
+  yy.parsed_files += [ rpath ]
   result, exmsg = (None, None)
   try:
     saved_impl_includes = yy.impl_includes
-    yy.impl_includes = implinc
+    yy.impl_includes = implinc or rpath in yy.impl_rpaths
     result = xparser.IdlSyntax ()
     yy.impl_includes = saved_impl_includes
   except AssertionError: raise  # pass on language exceptions
@@ -350,10 +357,17 @@ def parse_try (input_string, filename, implinc):
     raise Error (errstr, ecaret)
   return result
 
-def parse_file (config, input_string, filename):
-  yy.configure (config)
+def parse_files (config, filepairs):
+  implfiles = []
+  for fp in filepairs:
+    filename, fileinput = fp
+    implfiles += [ os.path.realpath (filename) ]
+  yy.configure (config, implfiles)
   try:
-    result = parse_try (input_string, filename, True)
+    result = ()
+    for fp in filepairs:
+      filename, fileinput = fp
+      result = parse_try (filename, fileinput, True)
     return (result, None, None, [])
   except Error, ex:
     el = []

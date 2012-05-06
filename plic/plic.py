@@ -32,8 +32,8 @@ class ParseError (Exception):
     Exception.__init__ (self, msg)
     self.kind = kind
 
-def parse_main (config, input_string, filename):
-  impltypes, error, caret, inclist = Parser.parse_file (config, input_string, filename)
+def parse_main (config, filepairs):
+  impltypes, error, caret, inclist = Parser.parse_files (config, filepairs)
   nsdict = {}
   nslist = []
   if impltypes:
@@ -69,16 +69,14 @@ def main():
       input_string = ""
     filename = '<stdin>'
     print
-    nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
+    nslist, impltypes, error, caret, inclist = parse_main (config, [ (filename, input_string) ])
   else: # file IO
     error = None
+    filepairs = []
     for fname in files:
       f = open (fname, 'r')
-      input_string = f.read()
-      filename = fname
-      nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
-      if error:
-        break
+      filepairs += [ (fname, f.read()) ]
+    nslist, impltypes, error, caret, inclist = parse_main (config, filepairs)
   if error:
     print >>sys.stderr, error
     if caret:
@@ -92,7 +90,7 @@ def print_help (with_help = True):
   print "plic version", pkginstall_configvars["PLIC_VERSION"]
   if not with_help:
     return
-  print "Usage: %s [options] <idlfile>" % os.path.basename (sys.argv[0])
+  print "Usage: %s [options] <idlfiles...>" % os.path.basename (sys.argv[0])
   print "       %s [solitary-option]" % os.path.basename (sys.argv[0])
   print "Options:"
   print "  --help, -h                print this help message"
@@ -197,7 +195,7 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
         code = '\n' * (n-1) + line
       else:
         code = '\n' * (n-2) + 'namespace PlicFailTest {\n' + line + '\n}'
-      nslist, impltypes, error, caret, inclist = parse_main (config, code, filename)
+      nslist, impltypes, error, caret, inclist = parse_main (config, [ (filename, code) ])
       if error:
         import re
         error = re.sub (r'^[^:]*/([^/:]+):([0-9]+):', r'.../\1:\2:', error)
