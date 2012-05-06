@@ -6,6 +6,7 @@
 
 includes:
 #include <ui/utilities.hh>
+#include <rcore/serverapi.hh>
 namespace Rapicorn {
 class ItemImpl;
 class WindowImpl;

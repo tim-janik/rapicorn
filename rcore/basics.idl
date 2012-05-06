@@ -1,0 +1,20 @@
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+
+namespace Rapicorn {
+
+sequence StringList     /// A sequence of strings (in C++ of std::string).
+{
+  string strings;
+};
+
+sequence AnySeq         /// A sequence of @a any objects, useful when the sequence element types need to be determined at runtime.
+{
+  any vany;
+};
+
+sequence AnySeqSeq      /// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
+{
+  AnySeq seq;
+};
+
+} // Rapicorn

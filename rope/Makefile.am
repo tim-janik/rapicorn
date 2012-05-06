@@ -8,7 +8,6 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-RAPICORNINS  = $(srcdir)/../ui/serverinsert.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
@@ -36,14 +35,14 @@ python-call-info:
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc
-	${PLICINT} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
-	${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 	rm -f xgen-$(@F)
 CLEANFILES += xgen-py2cpy.py py2cpy.py

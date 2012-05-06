@@ -17,7 +17,7 @@ rapicorn_public_headers = $(strip	\
 	$(rapicorn_impl_headers) \
 	rapicorncdefs.h	rcore.hh \
 )
-rapicorn_cc_sources = $(sort		\
+rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
@@ -29,6 +29,7 @@ rapicorn_impl_headers = $(strip 	\
 rapicorn_generated_headers = $(strip	\
         rapicornsignalvariants.hh	\
 	rapicornconfig.h		\
+	clientapi.hh			\
 )
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
@@ -115,6 +116,34 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): configbits.cc
 .PHONY: PHONY_REBUILDS
+
+# === Rapicorn Basics IDL ===
+PLICINT     = $(top_builddir)/plic/plic-intern
+CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
+EXTRA_DIST += basics.idl serverinsert.hh
+# build serverapi.{hh|cc} and clientapi.{hh|cc} from basics.idl
+$(rapicorn_cc_sources): serverapi.hh clientapi.hh
+serverapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/serverinsert.hh
+	${PLICINT} -G CxxStub -g serverhh -g shortalias -g cppguard=__RAPICORN_RCORE_SERVERAPI_HH_ \
+	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+serverglue.cc: serverapi.cc
+serverapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl serverapi.hh
+	${PLICINT} -G CxxStub -g servercc --inclusions '"serverapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
+	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
+	mv xgen-$(@F) $@
+CLEANFILES += serverapi.cc serverapi.hh
+EXTRA_DIST += clientinsert.hh
+clientapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/clientinsert.hh
+	${PLICINT} -G CxxStub -g clienthh -g shortalias -g cppguard=__RAPICORN_RCORE_CLIENTAPI_HH_ \
+	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+clientglue.cc: clientapi.cc
+clientapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl clientapi.hh
+	${PLICINT} -G CxxStub -g clientcc --inclusions '"clientapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
+	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
+	mv xgen-$(@F) $@
+CLEANFILES += clientapi.cc clientapi.hh
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
