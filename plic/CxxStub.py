@@ -857,7 +857,7 @@ class Generator:
     s += 'class %s {\n' % closure_class
     s += '  Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;\n'
     s += 'public:\n'
-    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
+    s += '  typedef std::shared_ptr<%s> SharedPtr;\n' % closure_class
     s += '  %s (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'

@@ -419,6 +419,8 @@ AC_DEFUN([RAPICORN_CPU_FLAGS],
     # --- SSE3 flags ---
     MC_PROG_CC_SPECIAL_FLAGS(SSE3_FLAGS, -msse3 -ftree-vectorize)
     AC_SUBST(SSE3_FLAGS)
+    # -- C++11 --
+    MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread)
 ])
 
 # check for development build rules (autogen.sh based builds)

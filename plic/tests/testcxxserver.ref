@@ -1753,7 +1753,7 @@ _$caller__UIWidgetArea__on_click2in (Plic::FieldReader &fbr)
 class _$Closure__UIWidgetArea__void_signal {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__UIWidgetArea__void_signal> SharedPtr;
+  typedef std::shared_ptr<_$Closure__UIWidgetArea__void_signal> SharedPtr;
   _$Closure__UIWidgetArea__void_signal (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__UIWidgetArea__void_signal()
   {
@@ -1792,7 +1792,7 @@ _$sigcon__UIWidgetArea__void_signal (Plic::FieldReader &fbr)
 class _$Closure__UIWidgetArea__sample_signal {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__UIWidgetArea__sample_signal> SharedPtr;
+  typedef std::shared_ptr<_$Closure__UIWidgetArea__sample_signal> SharedPtr;
   _$Closure__UIWidgetArea__sample_signal (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__UIWidgetArea__sample_signal()
   {
@@ -2130,7 +2130,7 @@ _$lsttyp__SignalTestInterface__ (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__void_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__void_result> SharedPtr;
   _$Closure__SignalTestInterface__void_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__void_result()
   {
@@ -2169,7 +2169,7 @@ _$sigcon__SignalTestInterface__void_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__bool_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__bool_result> SharedPtr;
   _$Closure__SignalTestInterface__bool_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__bool_result()
   {
@@ -2209,7 +2209,7 @@ _$sigcon__SignalTestInterface__bool_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__int_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__int_result> SharedPtr;
   _$Closure__SignalTestInterface__int_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__int_result()
   {
@@ -2249,7 +2249,7 @@ _$sigcon__SignalTestInterface__int_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__float_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__float_result> SharedPtr;
   _$Closure__SignalTestInterface__float_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__float_result()
   {
@@ -2289,7 +2289,7 @@ _$sigcon__SignalTestInterface__float_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__string_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__string_result> SharedPtr;
   _$Closure__SignalTestInterface__string_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__string_result()
   {
@@ -2329,7 +2329,7 @@ _$sigcon__SignalTestInterface__string_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__enum_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__enum_result> SharedPtr;
   _$Closure__SignalTestInterface__enum_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__enum_result()
   {
@@ -2369,7 +2369,7 @@ _$sigcon__SignalTestInterface__enum_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__record_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__record_result> SharedPtr;
   _$Closure__SignalTestInterface__record_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__record_result()
   {
@@ -2409,7 +2409,7 @@ _$sigcon__SignalTestInterface__record_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__sequence_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__sequence_result> SharedPtr;
   _$Closure__SignalTestInterface__sequence_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__sequence_result()
   {
@@ -2449,7 +2449,7 @@ _$sigcon__SignalTestInterface__sequence_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__interface_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__interface_result> SharedPtr;
   _$Closure__SignalTestInterface__interface_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__interface_result()
   {
@@ -2489,7 +2489,7 @@ _$sigcon__SignalTestInterface__interface_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__any_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__any_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__any_result> SharedPtr;
   _$Closure__SignalTestInterface__any_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__any_result()
   {
@@ -2529,7 +2529,7 @@ _$sigcon__SignalTestInterface__any_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__self_result {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_result> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__self_result> SharedPtr;
   _$Closure__SignalTestInterface__self_result (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__self_result()
   {
@@ -2569,7 +2569,7 @@ _$sigcon__SignalTestInterface__self_result (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__void_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__void_arg> SharedPtr;
   _$Closure__SignalTestInterface__void_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__void_arg()
   {
@@ -2608,7 +2608,7 @@ _$sigcon__SignalTestInterface__void_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__bool_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__bool_arg> SharedPtr;
   _$Closure__SignalTestInterface__bool_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__bool_arg()
   {
@@ -2649,7 +2649,7 @@ _$sigcon__SignalTestInterface__bool_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__int_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__int_arg> SharedPtr;
   _$Closure__SignalTestInterface__int_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__int_arg()
   {
@@ -2690,7 +2690,7 @@ _$sigcon__SignalTestInterface__int_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__float_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__float_arg> SharedPtr;
   _$Closure__SignalTestInterface__float_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__float_arg()
   {
@@ -2731,7 +2731,7 @@ _$sigcon__SignalTestInterface__float_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__string_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__string_arg> SharedPtr;
   _$Closure__SignalTestInterface__string_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__string_arg()
   {
@@ -2772,7 +2772,7 @@ _$sigcon__SignalTestInterface__string_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__enum_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__enum_arg> SharedPtr;
   _$Closure__SignalTestInterface__enum_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__enum_arg()
   {
@@ -2813,7 +2813,7 @@ _$sigcon__SignalTestInterface__enum_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__record_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__record_arg> SharedPtr;
   _$Closure__SignalTestInterface__record_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__record_arg()
   {
@@ -2854,7 +2854,7 @@ _$sigcon__SignalTestInterface__record_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__sequence_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__sequence_arg> SharedPtr;
   _$Closure__SignalTestInterface__sequence_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__sequence_arg()
   {
@@ -2895,7 +2895,7 @@ _$sigcon__SignalTestInterface__sequence_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__interface_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__interface_arg> SharedPtr;
   _$Closure__SignalTestInterface__interface_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__interface_arg()
   {
@@ -2936,7 +2936,7 @@ _$sigcon__SignalTestInterface__interface_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__any_arg {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__any_arg> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__any_arg> SharedPtr;
   _$Closure__SignalTestInterface__any_arg (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__any_arg()
   {
@@ -2977,7 +2977,7 @@ _$sigcon__SignalTestInterface__any_arg (Plic::FieldReader &fbr)
 class _$Closure__SignalTestInterface__self_args {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_args> SharedPtr;
+  typedef std::shared_ptr<_$Closure__SignalTestInterface__self_args> SharedPtr;
   _$Closure__SignalTestInterface__self_args (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__self_args()
   {
@@ -3034,7 +3034,7 @@ _$lsttyp__ChildInheritingSignals__ (Plic::FieldReader &fbr)
 class _$Closure__ChildInheritingSignals__child_signal {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__ChildInheritingSignals__child_signal> SharedPtr;
+  typedef std::shared_ptr<_$Closure__ChildInheritingSignals__child_signal> SharedPtr;
   _$Closure__ChildInheritingSignals__child_signal (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__ChildInheritingSignals__child_signal()
   {
@@ -3472,7 +3472,7 @@ _$setter__ButtonArea__click_type (Plic::FieldReader &fbr)
 class _$Closure__ButtonArea__check_activate {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__ButtonArea__check_activate> SharedPtr;
+  typedef std::shared_ptr<_$Closure__ButtonArea__check_activate> SharedPtr;
   _$Closure__ButtonArea__check_activate (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__ButtonArea__check_activate()
   {
@@ -3512,7 +3512,7 @@ _$sigcon__ButtonArea__check_activate (Plic::FieldReader &fbr)
 class _$Closure__ButtonArea__activate {
   Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;
 public:
-  typedef Plic::shared_ptr<_$Closure__ButtonArea__activate> SharedPtr;
+  typedef std::shared_ptr<_$Closure__ButtonArea__activate> SharedPtr;
   _$Closure__ButtonArea__activate (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__ButtonArea__activate()
   {

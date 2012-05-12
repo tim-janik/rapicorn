@@ -10,8 +10,8 @@ class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual Li
   int                           m_size, m_columns;
   vector<AnySeqImpl>            m_rows;
   explicit                      ListModelRelayImpl (int n_columns);
-  virtual                      ~ListModelRelayImpl ();
 protected:
+  virtual                      ~ListModelRelayImpl ();
   static ListModelRelayImpl&    create_list_model_relay (int n_columns);
 public:
   // model API

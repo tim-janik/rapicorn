@@ -233,7 +233,7 @@ struct Connection3 {
 static uint emission_counter = 0;
 
 void
-shared_ptr_callback (int i, String s, float f, shared_ptr<ExtraType> data)
+shared_ptr_callback (int i, String s, float f, std::shared_ptr<ExtraType> data)
 {
   emission_counter++;
   TINFO ("  callback: %s (%d, %s, %f, %s);\n", __func__, i, s.c_str(), f, data->message());
@@ -264,7 +264,7 @@ struct TemporaryObject : public virtual Deletable {
     TINFO ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
     TASSERT (msg2 == "Blub");
   }
-  void shared_ptr_method (int i, String s, float f, shared_ptr<ExtraType> data)
+  void shared_ptr_method (int i, String s, float f, std::shared_ptr<ExtraType> data)
   {
     emission_counter++;
     TINFO ("  callback: %s (%d, %s, %f, %s); [%s]\n", __func__, i, s.c_str(), f,
@@ -323,7 +323,7 @@ struct TemporaryObject : public virtual Deletable {
     // check shared_ptr<ExtraType> destruction
     {
       edata_deletions = ExtraType_deletions;
-      shared_ptr<ExtraType> sp (new ExtraType()); // ExtraType will be deleted at scope end
+      std::shared_ptr<ExtraType> sp (new ExtraType()); // ExtraType will be deleted at scope end
       TASSERT (edata_deletions == ExtraType_deletions);
     } // ~shared_ptr<ExtraType> -> ~ExtraType
     TASSERT (edata_deletions + 1 == ExtraType_deletions);
@@ -334,7 +334,7 @@ struct TemporaryObject : public virtual Deletable {
       edata_deletions = ExtraType_deletions;
       Signals::ConId cid;
       {
-        shared_ptr<ExtraType> sp (new ExtraType());
+        std::shared_ptr<ExtraType> sp (new ExtraType());
         TASSERT (edata_deletions == ExtraType_deletions); // undestructed
         cid = e3.sig_void_mixed.connect (slot (tobj, &TemporaryObject::shared_ptr_method, sp));
         TASSERT (edata_deletions == ExtraType_deletions); // undestructed
@@ -354,7 +354,7 @@ struct TemporaryObject : public virtual Deletable {
       TemporaryObject tobj;
       edata_deletions = ExtraType_deletions;
       {
-        shared_ptr<ExtraType> sp (new ExtraType());
+        std::shared_ptr<ExtraType> sp (new ExtraType());
         TASSERT (edata_deletions == ExtraType_deletions); // undestructed
         e3.sig_void_mixed += slot (tobj, &TemporaryObject::shared_ptr_method, sp);
       } // ~shared_ptr<ExtraType>
@@ -375,7 +375,7 @@ struct TemporaryObject : public virtual Deletable {
       edata_deletions = ExtraType_deletions;
       Signals::ConId cid;
       {
-        shared_ptr<ExtraType> sp (new ExtraType());
+        std::shared_ptr<ExtraType> sp (new ExtraType());
         TASSERT (edata_deletions == ExtraType_deletions); // undestructed
         cid = e3.sig_void_mixed.connect (slot (shared_ptr_callback, sp));
       } // ~shared_ptr<ExtraType>

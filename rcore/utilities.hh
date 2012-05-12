@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <tr1/memory>   // shared_ptr
 #include <plic/runtime.hh>
 
 #if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
@@ -57,10 +56,6 @@ typedef RapicornInt64   int64;
 typedef RapicornUnichar unichar;
 
 /* --- convenient stdc++ types --- */
-using std::tr1::bad_weak_ptr;
-using std::tr1::enable_shared_from_this;
-using std::tr1::shared_ptr;
-using std::tr1::weak_ptr;
 using std::vector;
 using std::map;
 typedef std::string String;

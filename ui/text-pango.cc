@@ -174,8 +174,8 @@ ellipsize_type_from_pango_ellipsize_mode (PangoEllipsizeMode em)
 /* --- LayoutCache --- */
 #define RETURN_LESS_IF_UNEQUAL(lhs,rhs) { if (lhs < rhs) return 1; else if (rhs < lhs) return 0; }
 class LayoutCache {
-  static const uint   cache_threshold   = 100; /* threshold beyond which the cache needs trimming */
-  static const double cache_probability = 0.5; /* probability for keeping an element alive */
+  static uint const       cache_threshold   = 100; /* threshold beyond which the cache needs trimming */
+  static double constexpr cache_probability = 0.5; /* probability for keeping an element alive */
   struct ContextKey {
     PangoDirection direction;
     String         language;
