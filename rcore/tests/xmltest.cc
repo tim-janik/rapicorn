@@ -22,8 +22,6 @@
 namespace {
 using namespace Rapicorn;
 
-static const void *null = NULL; // needed for stringification
-
 static void
 xml_tree_test (void)
 {
@@ -35,7 +33,7 @@ xml_tree_test (void)
   if (error.code)
     fatal ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
   else
-    TCMP (xnode, !=, null);
+    TCMP (xnode, !=, nullptr);
   /* check root */
   TCMP (xnode->name(), ==, "toplevel-tag");
   vector<XmlNode*>::const_iterator cit;
@@ -62,7 +60,7 @@ xml_tree_test (void)
         for (uint i = 0; i < ARRAY_SIZE (children); i++)
           {
             const XmlNode *c = child->first_child (children[i]);
-            TCMP (c, !=, null);
+            TCMP (c, !=, nullptr);
             TCMP (c->name(), ==, children[i]);
           }
         testmask |= 2;
@@ -85,7 +83,7 @@ xml_tree_test (void)
   TCMP (testmask, ==, 15);
   /* check attribute order */
   const XmlNode *cnode = xnode->first_child ("orderedattribs");
-  TCMP (cnode, !=, null);
+  TCMP (cnode, !=, nullptr);
   TCMP (cnode->text(), ==, "orderedattribs-text");
   const vector<String> oa = cnode->list_attributes();
   TCMP (oa.size(), ==, 6);

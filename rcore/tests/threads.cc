@@ -178,8 +178,6 @@ public:
   Thread_Plus1 (const String &name, void *udata) : Thread (name), data (udata) {}
 };
 
-static const void *null = NULL; // needed for stringification
-
 static Mutex    static_mutex;
 static RecMutex static_rec_mutex;
 static Cond     static_cond;
@@ -238,9 +236,9 @@ test_threads (void)
   Thread *thread3 = new Thread_Plus1 ("plus3", &thread_data3);
   ref_sink (thread3);
   thread3->start();
-  TCMP (thread1, !=, null);
-  TCMP (thread2, !=, null);
-  TCMP (thread3, !=, null);
+  TCMP (thread1, !=, nullptr);
+  TCMP (thread2, !=, nullptr);
+  TCMP (thread3, !=, nullptr);
   TCMP (thread_data1, ==, 0);
   TCMP (thread_data2, ==, 0);
   TCMP (thread_data3, ==, 0);
@@ -293,7 +291,7 @@ lockable (M &mutex)
 static void
 test_thread_cxx (void)
 {
-  TCMP (null, !=, &Thread::self());
+  TCMP (nullptr, !=, &Thread::self());
   volatile int atomic_counter = 0;
   int result = 0;
   int count = 35;
@@ -333,9 +331,9 @@ test_thread_cxx (void)
   TCMP (static_omutex.mine(), ==, true);
   static_omutex.unlock();
   TCMP (static_omutex.mine(), ==, false);
-  TCMP (null, !=, &Thread::self());
+  TCMP (nullptr, !=, &Thread::self());
   OwnedMutex omutex;
-  TCMP (omutex.owner(), ==, null);
+  TCMP (omutex.owner(), ==, nullptr);
   TCMP (omutex.mine(), ==, false);
   omutex.lock();
   TCMP (omutex.owner(), ==, &Thread::self());
@@ -345,15 +343,15 @@ test_thread_cxx (void)
   TCMP (locked, ==, true);
   omutex.unlock();
   omutex.unlock();
-  TCMP (omutex.owner(), ==, null);
+  TCMP (omutex.owner(), ==, nullptr);
   TCMP (lockable (omutex), ==, true);
-  TCMP (omutex.owner(), ==, null);
+  TCMP (omutex.owner(), ==, nullptr);
   locked = omutex.trylock();
   TCMP (locked, ==, true);
   TCMP (omutex.owner(), ==, &Thread::self());
   TCMP (lockable (omutex), ==, true);
   omutex.unlock();
-  TCMP (omutex.owner(), ==, null);
+  TCMP (omutex.owner(), ==, nullptr);
 }
 REGISTER_TEST ("Threads/C++Threading", test_thread_cxx);
 
@@ -711,7 +709,7 @@ struct MyDeletableHook : public Deletable::DeletionHook {
   virtual void
   monitoring_deletable (Deletable &deletable_obj)
   {
-    TCMP (deletable, ==, null);
+    TCMP (deletable, ==, nullptr);
     deletable = &deletable_obj;
   }
   virtual void
@@ -759,7 +757,7 @@ test_deletable_destruction ()
      */
   }
   MyDeletable *deletable2 = new MyDeletable;
-  TCMP (deletable2, !=, null);
+  TCMP (deletable2, !=, nullptr);
   deletable_destructor = false;
   delete deletable2;
   TCMP (deletable_destructor, ==, true);
