@@ -9,13 +9,13 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  Application app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);
 
   // create and show main window
-  Window window = app.create_window ("RapicornExamples:main-shell");
+  WindowH window = app.create_window ("RapicornExamples:main-shell");
   window.show();
 
   // run event loops while windows are on screen

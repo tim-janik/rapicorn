@@ -107,8 +107,6 @@ class Generator:
     if typename == 'string': return 'std::string'
     fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
     return fullnsname
-  def H (self, name):                                   # construct client class Handle
-    return name + '_SmartHandle'
   def C4server (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
@@ -120,9 +118,9 @@ class Generator:
   def C4client (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
-      return tname + "_Handle"  # FIXME
+      return tname + "Struct"                           # construct client structure name
     elif type_node.storage == Decls.INTERFACE:
-      return self.H (tname)
+      return tname + 'Handle'                           # construct client class SmartHandle
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
     mode = mode or self.gen_mode
@@ -216,14 +214,13 @@ class Generator:
     return '0'
   def generate_recseq_decl (self, type_info):
     s = '\n'
+    s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
       s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.R (fl[1]) + '>\n'
-      s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
       s += '{\n'
     else:
       s += 'struct %s\n' % self.C (type_info)
-      s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
       s += '{\n'
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
@@ -378,11 +375,11 @@ class Generator:
   def generate_interface_class (self, type_info):
     s, classC = '\n', self.C (type_info) # class names
     # declare
+    s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
     # inherit
     l, heritage, cl, ddc = self.interface_class_inheritance (type_info)
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
-    s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
     s += '{\n'
     if self.gen_mode == G4CLIENT:
       s += '  ' + self.F ('static %s' % classC) + '_cast (Plic::SmartHandle&, const Plic::TypeHashList&);\n'
@@ -401,7 +398,7 @@ class Generator:
     if self.gen_mode == G4SERVER:
       s += '  virtual ' + self.F ('void') + '_list_types (Plic::TypeHashList&) const;\n'
     else: # G4CLIENT
-      classH = self.H (type_info.name) # smart handle class name
+      classH = self.C4client (type_info) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
       s += '  template<class C>\n'
       s += '  ' + self.F ('static %s' % classH) + identifiers['downcast'] + ' (C c) ' # ctor
@@ -454,14 +451,24 @@ class Generator:
       s += 'void operator>>= (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
+  def generate_shortdoc (self, type_info):      # doxygen snippets
+    classC = self.C (type_info) # class name
+    xside = 'server side' if self.gen_mode == G4SERVER else 'client side'
+    s  = '/** @interface %s\n' % type_info.name
+    s += ' * See also the corresponding C++ class %s (%s). */\n' % (classC, xside)
+    s += '/// See also the corresponding IDL class %s.\n' % type_info.name
+    return s
   def generate_shortalias (self, type_info):
-    classC = self.C (type_info) # class names
+    classC = self.C (type_info) # class name
     if not self.gen_shortalias: return ''
-    s  = '/** @interface %s\n' % type_info.name # doxygen
-    s += ' * See also the corresponding C++ class %s. */\n' % classC
-    if type_info.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
-      s += '// '
-    s += 'typedef %s %s;' % (self.C (type_info), self.type2cpp (type_info))
+    s = ''
+    alias = self.type2cpp (type_info)
+    if type_info.storage == Decls.INTERFACE:
+      if self.gen_mode == G4SERVER:
+        s += '// '
+      else: # G4CLIENT
+        alias += 'H'
+    s += 'typedef %s %s;' % (self.C (type_info), alias)
     s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
     if self.gen_sharedimpls:
       # shared client & server impl
@@ -487,7 +494,7 @@ class Generator:
     s += ';\n'
     return s
   def generate_client_class_context (self, class_info):
-    s, classH, classC = '\n', self.H (class_info.name), class_info.name + '_Context$' # class names
+    s, classH, classC = '\n', self.C4client (class_info), class_info.name + '_Context$' # class names
     s += '// === %s ===\n' % class_info.name
     s += 'static inline void ref   (%s&) {} // dummy stub for Signal<>.emit\n' % classH
     s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
@@ -532,13 +539,13 @@ class Generator:
     s += '}\n'
     return s
   def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
-    s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)
+    s, classH, signame = '', self.C4client (class_info), self.generate_signal_typename (sg, class_info)
     sh, signature = 'SignalHandler__%s' % sg.name, self.generate_signal_signature (sg, class_info)
     s += '  typedef Plic::CxxStub::SignalHandler<%s, %s> %s;\n' % (classH, signature, sh)
     s += '  %s %s;\n' % (sh, sg.name)
     return s
   def generate_client_class_methods (self, class_info):
-    s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
+    s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
     l, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor

@@ -12,7 +12,7 @@ namespace {
 using namespace Rapicorn;
 
 static void
-drawable_redraw (Drawable &drawable, int x, int y, int w, int h)
+drawable_redraw (DrawableH &drawable, int x, int y, int w, int h)
 {
   // boilerplate
   PixelRect pic;
@@ -49,16 +49,16 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  Application app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
 
   // create main window
-  Window window = app.create_window ("RapicornExamples:graphics-dialog");
+  WindowH window = app.create_window ("RapicornExamples:graphics-dialog");
 
   // hook up drawable test
-  Drawable drawable = window.component<Drawable> ("Drawable#drawable1");
+  DrawableH drawable = window.component<DrawableH> ("Drawable#drawable1");
   RAPICORN_ASSERT (drawable._is_null() == false);
   drawable.sig_redraw() += slot (&drawable_redraw);
 

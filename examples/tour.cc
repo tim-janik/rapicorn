@@ -5,7 +5,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Window           &window,
+custom_commands (WindowH          &window,
                  const String     &command,
                  const StringList &args)
 {
@@ -28,7 +28,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  Application app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
 
 #if 0 // FIMXE: test builtin images
   ApplicationIface::pixstream ("testimage-alpha-rle", alpha_rle);
@@ -41,7 +41,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   // create window, handle commands
-  Window window = app.create_window ("RapicornTest:tour-dialog");
+  WindowH window = app.create_window ("RapicornTest:tour-dialog");
   window.sig_commands() += custom_commands;
 
   // display window and enter main event loop

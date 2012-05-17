@@ -5,11 +5,11 @@
 namespace { // Anon
 using namespace Rapicorn;
 
-static Application app;
-static Window
+static ApplicationH app;
+static WindowH
 create_plain_window ()
 {
-  Window window = app.create_window ("Window");
+  WindowH window = app.create_window ("Window");
   TASSERT (window._is_null() == false);
   return window;
 }
@@ -17,16 +17,16 @@ create_plain_window ()
 static void
 test_item_usage()
 {
-  Window window = create_plain_window();
-  Item item = window;
+  WindowH window = create_plain_window();
+  ItemH item = window;
   TASSERT (item._is_null() == false);
-  Container c = Container::downcast (item);
+  ContainerH c = ContainerH::downcast (item);
   TASSERT (c._is_null() == false);
-  TASSERT (Window::downcast (c)._is_null() == false);
+  TASSERT (WindowH::downcast (c)._is_null() == false);
   window.close();
-  TASSERT (Item::downcast (app)._is_null() == true);
-  TASSERT (Container::downcast (app)._is_null() == true);
-  TASSERT (Window::downcast (app)._is_null() == true);
+  TASSERT (ItemH::downcast (app)._is_null() == true);
+  TASSERT (ContainerH::downcast (app)._is_null() == true);
+  TASSERT (WindowH::downcast (app)._is_null() == true);
   const char *testname = "3e3b0d44-ded6-4fc5-a134-c16569c23d96";
   String name = item.name();
   TASSERT (name != testname);
@@ -35,12 +35,12 @@ test_item_usage()
   TASSERT (name == testname);
   window.name ("Test-Name");
   TASSERT ("Test-Name" == item.name());
-  TASSERT (c.component<Window> (".Window")._is_null() == false);
-  TASSERT (c.component<Window> (":root")._is_null() == false);
-  TASSERT (window.component<Container> (".Window")._is_null() == false);
-  TASSERT (item.component<ButtonArea> (".Window")._is_null() == true);
-  TASSERT (item.component<Item> (".Window")._is_null() == false);
-  TASSERT (item.component<Item> ("FrobodoNotHere")._is_null() == true);
+  TASSERT (c.component<WindowH> (".Window")._is_null() == false);
+  TASSERT (c.component<WindowH> (":root")._is_null() == false);
+  TASSERT (window.component<ContainerH> (".Window")._is_null() == false);
+  TASSERT (item.component<ButtonAreaH> (".Window")._is_null() == true);
+  TASSERT (item.component<ItemH> (".Window")._is_null() == false);
+  TASSERT (item.component<ItemH> ("FrobodoNotHere")._is_null() == true);
 }
 REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
 

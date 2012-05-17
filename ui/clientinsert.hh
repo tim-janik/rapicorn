@@ -13,11 +13,11 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:
-  inline Requisition_Handle (double w, double h) : width (w), height (h) {}
+  inline RequisitionStruct (double w, double h) : width (w), height (h) {}
 
 class_scope:StringList:
-  /*Con*/  StringList_Handle () {}
-  /*Con*/  StringList_Handle (const std::vector<String> &strv) : Sequence (strv) {}
+  /*Con*/  StringListStruct () {}
+  /*Con*/  StringListStruct (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:Item:
   /// Carry out Item::query_selector_unique() and Target::downcast() in one step, for type safe access to a descendant.
@@ -28,7 +28,7 @@ class_scope:Application:
   static void                     quit           (int quit_code = 0);
   static void                     shutdown       ();
   static int                      run_and_exit   () RAPICORN_NORETURN;
-  static Application_SmartHandle  the            ();
+  static ApplicationHandle        the            ();
   static ClientConnection         ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
@@ -41,14 +41,14 @@ IGNORE: // close last _scope
 global_scope:
 namespace Rapicorn {
 
-Application_SmartHandle init_app                (const String       &app_ident,
-                                                 int                *argcp,
-                                                 char              **argv,
-                                                 const StringVector &args = StringVector());
-Application_SmartHandle init_test_app           (const String       &app_ident,
-                                                 int                *argcp,
-                                                 char              **argv,
-                                                 const StringVector &args = StringVector());
-void                    exit                    (int status) RAPICORN_NORETURN;
+ApplicationHandle init_app                (const String       &app_ident,
+                                           int                *argcp,
+                                           char              **argv,
+                                           const StringVector &args = StringVector());
+ApplicationHandle init_test_app           (const String       &app_ident,
+                                           int                *argcp,
+                                           char              **argv,
+                                           const StringVector &args = StringVector());
+void              exit                    (int status) RAPICORN_NORETURN;
 
 } // Rapicorn

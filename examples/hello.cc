@@ -5,7 +5,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Window           &window,
+handle_commands (WindowH          &window,
                  const String     &command,
                  const StringList &args)
 {
@@ -20,7 +20,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 backend with application name */
-  Application app = init_app ("HelloWorld", &argc, argv);
+  ApplicationH app = init_app ("HelloWorld", &argc, argv);
 
   /* find and load GUI definitions relative to argv[0] */
   app.auto_load ("RapicornTest",        // namespace domain
@@ -28,7 +28,7 @@ main (int   argc,
                  argv[0]);
 
   /* create main window */
-  Window window = app.create_window ("RapicornTest:main-window");
+  WindowH window = app.create_window ("RapicornTest:main-window");
 
   /* connect custom callback to handle UI commands */
   window.sig_commands() += handle_commands;

@@ -50,14 +50,14 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  Application app = init_app ("RapicornFileView", &argc, argv);
+  ApplicationH app = init_app ("RapicornFileView", &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornFileView", "fileview.xml", argv[0]);
 
   // create main window
   // FIXME: Store1 *s1 = create_store();
-  Window window = app.create_window ("RapicornFileView:main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
+  WindowH window = app.create_window ("RapicornFileView:main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
   window.show();
 
   // run event loops while windows are on screen

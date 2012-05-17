@@ -9,7 +9,7 @@ uint64            uithread_bootup       (int *argcp, char **argv, const StringVe
 static void       clientglue_setup      (Plic::ClientConnection connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
-static Application_SmartHandle app_cached;
+static ApplicationH app_cached;
 
 /**
  * Initialize Rapicorn core via init_core(), and then starts a seperately
@@ -23,13 +23,13 @@ static Application_SmartHandle app_cached;
  * @param argv          The @a argv argument as passed into main().
  * @param args          Internal initialization arguments, see init_core() for details.
  */
-Application_SmartHandle
+ApplicationH
 init_app (const String       &app_ident,
           int                *argcp,
           char              **argv,
           const StringVector &args)
 {
-  assert_return (Application_SmartHandle::the()._is_null() == true, app_cached);
+  assert_return (ApplicationH::the()._is_null() == true, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
@@ -51,8 +51,8 @@ init_app (const String       &app_ident,
   return app_cached;
 }
 
-Application_SmartHandle
-Application_SmartHandle::the ()
+ApplicationH
+ApplicationH::the ()
 {
   return app_cached;
 }
@@ -78,7 +78,7 @@ class AppSource : public EventLoop::Source {
   check_primaries()
   {
     // seen_primary is merely a hint, need to check local and remote states
-    if (Application_SmartHandle::the().finishable() &&  // remote
+    if (ApplicationH::the().finishable() &&  // remote
         main_loop()->finishable() && m_loop)            // local
       main_loop()->quit();
   }
@@ -91,7 +91,7 @@ public:
     m_pfd.revents = 0;
     add_poll (&m_pfd);
     primary (false);
-    Application_SmartHandle::the().sig_missing_primary() += slot (*this, &AppSource::queue_check_primaries);
+    ApplicationH::the().sig_missing_primary() += slot (*this, &AppSource::queue_check_primaries);
   }
   virtual bool
   prepare (const EventLoop::State &state,
@@ -178,13 +178,13 @@ connection_handle2id (const Plic::SmartHandle &h)
 namespace Rapicorn {
 
 ClientConnection
-Application_SmartHandle::ipc_connection()
+ApplicationH::ipc_connection()
 {
   return PLIC_CONNECTION();
 }
 
 MainLoop*
-Application_SmartHandle::main_loop()
+ApplicationH::main_loop()
 {
   assert_return (the()._is_null() == false, NULL);
   assert_return (_clientglue_connection.is_null() == false, NULL);
@@ -210,7 +210,7 @@ Application_SmartHandle::main_loop()
  * Initialize Rapicorn like init_app(), and boots up the test suite framework.
  * Normally, Test::run() should be called next to execute all unit tests.
  */
-Application_SmartHandle
+ApplicationH
 init_test_app (const String       &app_ident,
                int                *argcp,
                char              **argv,
@@ -231,7 +231,7 @@ clientglue_setup (Plic::ClientConnection connection)
  * Cause the application's main loop to quit, and run() to return @a quit_code.
  */
 void
-Application_SmartHandle::quit (int quit_code)
+ApplicationH::quit (int quit_code)
 {
   main_loop()->quit (quit_code);
 }
@@ -242,7 +242,7 @@ Application_SmartHandle::quit (int quit_code)
  * @returns the @a quit_code passed in to loop_quit() or 0.
  */
 int
-Application_SmartHandle::run ()
+ApplicationH::run ()
 {
   return main_loop()->run();
 }
@@ -253,7 +253,7 @@ Application_SmartHandle::run ()
  * passed on to exit() and thus tp the parent process.
  */
 int
-Application_SmartHandle::run_and_exit ()
+ApplicationH::run_and_exit ()
 {
   int status = run();
   shutdown();
@@ -269,7 +269,7 @@ Application_SmartHandle::run_and_exit ()
  *                      as: return Application::shutdown (exit_status);
  */
 void
-Application_SmartHandle::shutdown()
+ApplicationH::shutdown()
 {
   uithread_shutdown();
 }

@@ -48,7 +48,7 @@ rope_printout (PyObject *self,
 static void
 shutdown_rapicorn_atexit (void)
 {
-  Application_SmartHandle::shutdown();
+  ApplicationH::shutdown();
 }
 
 static PyObject*
@@ -89,7 +89,7 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   StringVector iargs;
   iargs.push_back (string_printf ("cpu-affinity=%d", !Thread::Self::affinity()));
   // initialize core
-  Application app = init_app (application_name, &argc, argv, iargs);
+  ApplicationH app = init_app (application_name, &argc, argv, iargs);
   uint64 app_id = app._rpc_id();
   if (app_id == 0)
     ; // FIXME: throw exception

@@ -146,7 +146,7 @@ parse_args (int    *argc_p,
 }
 
 static void
-window_displayed (Window &window)
+window_displayed (WindowH &window)
 {
   if (!dump_snapshot.empty())
     {
@@ -171,7 +171,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its backend (X11) */
-  Application app = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
+  ApplicationH app = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
 
   parse_args (&argc, &argv);
   if (argc != 2)
@@ -204,7 +204,7 @@ main (int   argc,
     }
 
   // create window, hook up post-display handler
-  Window window = app.create_window (dialog);
+  WindowH window = app.create_window (dialog);
   window.sig_displayed() += window_displayed;
 
   /* show window and process events */

@@ -19,7 +19,7 @@ main (int   argc,
   iargs.push_back (string_printf ("cpu-affinity=%d", mycpu));
   // init test application
   init_core_test (argv[0], &argc, argv, iargs);
-  Application app = init_app (argv[0], &argc, argv, iargs);
+  ApplicationH app = init_app (argv[0], &argc, argv, iargs);
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
   double calls = 0, slowest = 0, fastest = 9e+9;
   for (uint j = 0; j < 29; j++)

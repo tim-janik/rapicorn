@@ -169,26 +169,30 @@ enum ExtensiveEnum {
 inline void operator<<= (Plic::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 
-class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class FirstInterface.
+/** @interface FirstInterface
+ * See also the corresponding C++ class FirstInterfaceHandle (client side). */
+/// See also the corresponding IDL class FirstInterface.
+class FirstInterfaceHandle : public virtual Plic::SmartHandle
 {
-  static FirstInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static FirstInterfaceHandle   _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static FirstInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static FirstInterfaceHandle   downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      FirstInterface_SmartHandle ();
-  void                          void_func                  ();
+  explicit                      FirstInterfaceHandle ();
+  void                          void_func            ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const FirstInterface_SmartHandle&);
-void operator>>= (Plic::FieldReader&, FirstInterface_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const FirstInterfaceHandle&);
+void operator>>= (Plic::FieldReader&, FirstInterfaceHandle&);
 
-struct XFooRecord_Handle
-  /// See also the corresponding IDL class XFooRecord.
+/** @interface XFooRecord
+ * See also the corresponding C++ class XFooRecordStruct (client side). */
+/// See also the corresponding IDL class XFooRecord.
+struct XFooRecordStruct
 {
   bool                          single_bool;
   int                           single_num;
@@ -201,116 +205,138 @@ struct XFooRecord_Handle
   int                           multi3;
   int                           multi4;
   ExtensiveEnum                 enum_field;
-  FirstInterface_SmartHandle    iface1;
-  FirstInterface_SmartHandle    iface2;
-  FirstInterface_SmartHandle    iface3;
+  FirstInterfaceHandle          iface1;
+  FirstInterfaceHandle          iface2;
+  FirstInterfaceHandle          iface3;
   Plic::Any                     any1;
   Plic::Any                     any2;
   Plic::Any                     any3;
-  inline                        XFooRecord_Handle () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  inline                        XFooRecordStruct () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
-void operator<<= (Plic::FieldBuffer&, const XFooRecord_Handle&);
-void operator>>= (Plic::FieldReader&, XFooRecord_Handle&);
+void operator<<= (Plic::FieldBuffer&, const XFooRecordStruct&);
+void operator>>= (Plic::FieldReader&, XFooRecordStruct&);
 
-struct XFooSequence_Handle : public std::vector<bool>
-  /// See also the corresponding IDL class XFooSequence.
+/** @interface XFooSequence
+ * See also the corresponding C++ class XFooSequenceStruct (client side). */
+/// See also the corresponding IDL class XFooSequence.
+struct XFooSequenceStruct : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const XFooSequence_Handle&);
-void operator>>= (Plic::FieldReader&, XFooSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const XFooSequenceStruct&);
+void operator>>= (Plic::FieldReader&, XFooSequenceStruct&);
 
-struct IntSequence_Handle : public std::vector<int>
-  /// See also the corresponding IDL class IntSequence.
+/** @interface IntSequence
+ * See also the corresponding C++ class IntSequenceStruct (client side). */
+/// See also the corresponding IDL class IntSequence.
+struct IntSequenceStruct : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const IntSequence_Handle&);
-void operator>>= (Plic::FieldReader&, IntSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const IntSequenceStruct&);
+void operator>>= (Plic::FieldReader&, IntSequenceStruct&);
 
-struct FloatSequence_Handle : public std::vector<double>
-  /// See also the corresponding IDL class FloatSequence.
+/** @interface FloatSequence
+ * See also the corresponding C++ class FloatSequenceStruct (client side). */
+/// See also the corresponding IDL class FloatSequence.
+struct FloatSequenceStruct : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const FloatSequence_Handle&);
-void operator>>= (Plic::FieldReader&, FloatSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const FloatSequenceStruct&);
+void operator>>= (Plic::FieldReader&, FloatSequenceStruct&);
 
-struct StringSequence_Handle : public std::vector<std::string>
-  /// See also the corresponding IDL class StringSequence.
+/** @interface StringSequence
+ * See also the corresponding C++ class StringSequenceStruct (client side). */
+/// See also the corresponding IDL class StringSequence.
+struct StringSequenceStruct : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const StringSequence_Handle&);
-void operator>>= (Plic::FieldReader&, StringSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const StringSequenceStruct&);
+void operator>>= (Plic::FieldReader&, StringSequenceStruct&);
 
-struct ExtensiveEnumSequence_Handle : public std::vector<ExtensiveEnum>
-  /// See also the corresponding IDL class ExtensiveEnumSequence.
+/** @interface ExtensiveEnumSequence
+ * See also the corresponding C++ class ExtensiveEnumSequenceStruct (client side). */
+/// See also the corresponding IDL class ExtensiveEnumSequence.
+struct ExtensiveEnumSequenceStruct : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const ExtensiveEnumSequence_Handle&);
-void operator>>= (Plic::FieldReader&, ExtensiveEnumSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const ExtensiveEnumSequenceStruct&);
+void operator>>= (Plic::FieldReader&, ExtensiveEnumSequenceStruct&);
 
-struct RecordSequence_Handle : public std::vector<XFooRecord_Handle>
-  /// See also the corresponding IDL class RecordSequence.
+/** @interface RecordSequence
+ * See also the corresponding C++ class RecordSequenceStruct (client side). */
+/// See also the corresponding IDL class RecordSequence.
+struct RecordSequenceStruct : public std::vector<XFooRecordStruct>
 {
-  typedef std::vector<XFooRecord_Handle> Sequence;
+  typedef std::vector<XFooRecordStruct> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const RecordSequence_Handle&);
-void operator>>= (Plic::FieldReader&, RecordSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const RecordSequenceStruct&);
+void operator>>= (Plic::FieldReader&, RecordSequenceStruct&);
 
-struct SequenceSequence_Handle : public std::vector<IntSequence_Handle>
-  /// See also the corresponding IDL class SequenceSequence.
+/** @interface SequenceSequence
+ * See also the corresponding C++ class SequenceSequenceStruct (client side). */
+/// See also the corresponding IDL class SequenceSequence.
+struct SequenceSequenceStruct : public std::vector<IntSequenceStruct>
 {
-  typedef std::vector<IntSequence_Handle> Sequence;
+  typedef std::vector<IntSequenceStruct> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const SequenceSequence_Handle&);
-void operator>>= (Plic::FieldReader&, SequenceSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const SequenceSequenceStruct&);
+void operator>>= (Plic::FieldReader&, SequenceSequenceStruct&);
 
-struct InterfaceSequence_Handle : public std::vector<FirstInterface_SmartHandle>
-  /// See also the corresponding IDL class InterfaceSequence.
+/** @interface InterfaceSequence
+ * See also the corresponding C++ class InterfaceSequenceStruct (client side). */
+/// See also the corresponding IDL class InterfaceSequence.
+struct InterfaceSequenceStruct : public std::vector<FirstInterfaceHandle>
 {
-  typedef std::vector<FirstInterface_SmartHandle> Sequence;
+  typedef std::vector<FirstInterfaceHandle> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
-void operator>>= (Plic::FieldReader&, InterfaceSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const InterfaceSequenceStruct&);
+void operator>>= (Plic::FieldReader&, InterfaceSequenceStruct&);
 
-struct AnySequence_Handle : public std::vector<Plic::Any>
-  /// See also the corresponding IDL class AnySequence.
+/** @interface AnySequence
+ * See also the corresponding C++ class AnySequenceStruct (client side). */
+/// See also the corresponding IDL class AnySequence.
+struct AnySequenceStruct : public std::vector<Plic::Any>
 {
   typedef std::vector<Plic::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const AnySequence_Handle&);
-void operator>>= (Plic::FieldReader&, AnySequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const AnySequenceStruct&);
+void operator>>= (Plic::FieldReader&, AnySequenceStruct&);
 
-struct NestedTypesRec_Handle
-  /// See also the corresponding IDL class NestedTypesRec.
+/** @interface NestedTypesRec
+ * See also the corresponding C++ class NestedTypesRecStruct (client side). */
+/// See also the corresponding IDL class NestedTypesRec.
+struct NestedTypesRecStruct
 {
-  XFooRecord_Handle             rec;
-  XFooSequence_Handle           seq;
-  inline                        NestedTypesRec_Handle () { }
+  XFooRecordStruct              rec;
+  XFooSequenceStruct            seq;
+  inline                        NestedTypesRecStruct () { }
 };
-void operator<<= (Plic::FieldBuffer&, const NestedTypesRec_Handle&);
-void operator>>= (Plic::FieldReader&, NestedTypesRec_Handle&);
+void operator<<= (Plic::FieldBuffer&, const NestedTypesRecStruct&);
+void operator>>= (Plic::FieldReader&, NestedTypesRecStruct&);
 
-struct NestedTypesSeq_Handle : public std::vector<NestedTypesRec_Handle>
-  /// See also the corresponding IDL class NestedTypesSeq.
+/** @interface NestedTypesSeq
+ * See also the corresponding C++ class NestedTypesSeqStruct (client side). */
+/// See also the corresponding IDL class NestedTypesSeq.
+struct NestedTypesSeqStruct : public std::vector<NestedTypesRecStruct>
 {
-  typedef std::vector<NestedTypesRec_Handle> Sequence;
+  typedef std::vector<NestedTypesRecStruct> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const NestedTypesSeq_Handle&);
-void operator>>= (Plic::FieldReader&, NestedTypesSeq_Handle&);
+void operator<<= (Plic::FieldBuffer&, const NestedTypesSeqStruct&);
+void operator>>= (Plic::FieldReader&, NestedTypesSeqStruct&);
 
 typedef Plic::Any AliasAny;
 
@@ -322,61 +348,69 @@ typedef bool AliasBool;
 
 typedef std::string AliasString;
 
-typedef XFooRecord_Handle AliasRecord;
+typedef XFooRecordStruct AliasRecord;
 
-typedef XFooSequence_Handle AliasSequence;
+typedef XFooSequenceStruct AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
-struct NewRecord_Handle
-  /// See also the corresponding IDL class NewRecord.
+/** @interface NewRecord
+ * See also the corresponding C++ class NewRecordStruct (client side). */
+/// See also the corresponding IDL class NewRecord.
+struct NewRecordStruct
 {
   int                           i;
   Enum1                         enum1;
-  XFooSequence_Handle           xfs;
-  NestedTypesRec_Handle         ntr;
-  inline                        NewRecord_Handle () { i = 0; enum1 = Enum1 (0); }
+  XFooSequenceStruct            xfs;
+  NestedTypesRecStruct          ntr;
+  inline                        NewRecordStruct () { i = 0; enum1 = Enum1 (0); }
 };
-void operator<<= (Plic::FieldBuffer&, const NewRecord_Handle&);
-void operator>>= (Plic::FieldReader&, NewRecord_Handle&);
+void operator<<= (Plic::FieldBuffer&, const NewRecordStruct&);
+void operator>>= (Plic::FieldReader&, NewRecordStruct&);
 
 namespace Inner {
 
-struct InnerRecord_Handle
-  /// See also the corresponding IDL class InnerRecord.
+/** @interface InnerRecord
+ * See also the corresponding C++ class InnerRecordStruct (client side). */
+/// See also the corresponding IDL class InnerRecord.
+struct InnerRecordStruct
 {
   int                           x;
   int                           y;
-  NewRecord_Handle              rec;
-  inline                        InnerRecord_Handle () { x = 0; y = 0; }
+  NewRecordStruct               rec;
+  inline                        InnerRecordStruct () { x = 0; y = 0; }
 };
-void operator<<= (Plic::FieldBuffer&, const InnerRecord_Handle&);
-void operator>>= (Plic::FieldReader&, InnerRecord_Handle&);
+void operator<<= (Plic::FieldBuffer&, const InnerRecordStruct&);
+void operator>>= (Plic::FieldReader&, InnerRecordStruct&);
 } // Inner
 
-struct Refer2Inner_Handle
-  /// See also the corresponding IDL class Refer2Inner.
+/** @interface Refer2Inner
+ * See also the corresponding C++ class Refer2InnerStruct (client side). */
+/// See also the corresponding IDL class Refer2Inner.
+struct Refer2InnerStruct
 {
-  Inner::InnerRecord_Handle     r;
-  inline                        Refer2Inner_Handle () { }
+  Inner::InnerRecordStruct      r;
+  inline                        Refer2InnerStruct () { }
 };
-void operator<<= (Plic::FieldBuffer&, const Refer2Inner_Handle&);
-void operator>>= (Plic::FieldReader&, Refer2Inner_Handle&);
+void operator<<= (Plic::FieldBuffer&, const Refer2InnerStruct&);
+void operator>>= (Plic::FieldReader&, Refer2InnerStruct&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
 
-struct SomeRecord_Handle
-  /// See also the corresponding IDL class SomeRecord.
+/** @interface SomeRecord
+ * See also the corresponding C++ class SomeRecordStruct (client side). */
+/// See also the corresponding IDL class SomeRecord.
+struct SomeRecordStruct
 {
-  MandatoryNamespace::NewRecord_Handle r1;
-  MandatoryNamespace::NewRecord_Handle r2;
-  MandatoryNamespace::Inner::InnerRecord_Handle r3;
-  MandatoryNamespace::Inner::InnerRecord_Handle r4;
-  inline                        SomeRecord_Handle () { }
+  MandatoryNamespace::NewRecordStruct r1;
+  MandatoryNamespace::NewRecordStruct r2;
+  MandatoryNamespace::Inner::InnerRecordStruct r3;
+  MandatoryNamespace::Inner::InnerRecordStruct r4;
+  inline                        SomeRecordStruct () { }
 };
-void operator<<= (Plic::FieldBuffer&, const SomeRecord_Handle&);
-void operator>>= (Plic::FieldReader&, SomeRecord_Handle&);
+void operator<<= (Plic::FieldBuffer&, const SomeRecordStruct&);
+void operator>>= (Plic::FieldReader&, SomeRecordStruct&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -390,112 +424,122 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class UIWidgetArea.
+/** @interface UIWidgetArea
+ * See also the corresponding C++ class UIWidgetAreaHandle (client side). */
+/// See also the corresponding IDL class UIWidgetArea.
+class UIWidgetAreaHandle : public virtual Plic::SmartHandle
 {
-  static UIWidgetArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static UIWidgetAreaHandle     _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Signals::SignalProxy<UIWidgetAreaHandle, void ()> Signal_void_signal;
+  typedef Rapicorn::Signals::SignalProxy<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> Signal_sample_signal;
 public:
   template<class C>
-  static UIWidgetArea_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static UIWidgetAreaHandle     downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      UIWidgetArea_SmartHandle ();
+  explicit                      UIWidgetAreaHandle ();
   double                        dummy    () const;
   void                          dummy    (double);
   std::string                   on_click () const;
   void                          on_click (const std::string&);
   Signal_void_signal&           sig_void_signal();
   Signal_sample_signal&         sig_sample_signal();
-  double                        simple_method            ();
-  double                        single_arg               (int n);
-  double                        single_arg2              (int n = 5);
-  double                        two_args                 (int n,
-                                                          double r);
-  double                        two_args2                (int n = 6,
-                                                          double r = 7.7);
-  double                        multi_args               (int n,
-                                                          double r,
-                                                          int i,
-                                                          const std::string &s = "String ding",
-                                                          double y = 5);
-  double                        self_method              (UIWidgetArea_SmartHandle &ba1,
-                                                          UIWidgetArea_SmartHandle &ba2);
-  void                          void_method              ();
-  std::string                   on_click2out             ();
-  void                          on_click2in              (const std::string &command);
+  double                        simple_method      ();
+  double                        single_arg         (int n);
+  double                        single_arg2        (int n = 5);
+  double                        two_args           (int n,
+                                                    double r);
+  double                        two_args2          (int n = 6,
+                                                    double r = 7.7);
+  double                        multi_args         (int n,
+                                                    double r,
+                                                    int i,
+                                                    const std::string &s = "String ding",
+                                                    double y = 5);
+  double                        self_method        (UIWidgetAreaHandle &ba1,
+                                                    UIWidgetAreaHandle &ba2);
+  void                          void_method        ();
+  std::string                   on_click2out       ();
+  void                          on_click2in        (const std::string &command);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const UIWidgetArea_SmartHandle&);
-void operator>>= (Plic::FieldReader&, UIWidgetArea_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const UIWidgetAreaHandle&);
+void operator>>= (Plic::FieldReader&, UIWidgetAreaHandle&);
 
-class Parent_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class Parent.
+/** @interface Parent
+ * See also the corresponding C++ class ParentHandle (client side). */
+/// See also the corresponding IDL class Parent.
+class ParentHandle : public virtual Plic::SmartHandle
 {
-  static Parent_SmartHandle     _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static ParentHandle           _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static Parent_SmartHandle     downcast (C c) { return _cast (c, c.cast_types()); }
+  static ParentHandle           downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      Parent_SmartHandle ();
+  explicit                      ParentHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const Parent_SmartHandle&);
-void operator>>= (Plic::FieldReader&, Parent_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const ParentHandle&);
+void operator>>= (Plic::FieldReader&, ParentHandle&);
 
-class Child_SmartHandle : public Parent_SmartHandle
-  /// See also the corresponding IDL class Child.
+/** @interface Child
+ * See also the corresponding C++ class ChildHandle (client side). */
+/// See also the corresponding IDL class Child.
+class ChildHandle : public ParentHandle
 {
-  static Child_SmartHandle      _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static ChildHandle            _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
 public:
   template<class C>
-  static Child_SmartHandle      downcast (C c) { return _cast (c, c.cast_types()); }
+  static ChildHandle            downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      Child_SmartHandle ();
+  explicit                      ChildHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const Child_SmartHandle&);
-void operator>>= (Plic::FieldReader&, Child_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const ChildHandle&);
+void operator>>= (Plic::FieldReader&, ChildHandle&);
 
-class Descendant_SmartHandle : public Child_SmartHandle
-  /// See also the corresponding IDL class Descendant.
+/** @interface Descendant
+ * See also the corresponding C++ class DescendantHandle (client side). */
+/// See also the corresponding IDL class Descendant.
+class DescendantHandle : public ChildHandle
 {
-  static Descendant_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static DescendantHandle       _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
 public:
   template<class C>
-  static Descendant_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static DescendantHandle       downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      Descendant_SmartHandle ();
+  explicit                      DescendantHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const Descendant_SmartHandle&);
-void operator>>= (Plic::FieldReader&, Descendant_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const DescendantHandle&);
+void operator>>= (Plic::FieldReader&, DescendantHandle&);
 
-class GrandChild_SmartHandle : public Descendant_SmartHandle
-  /// See also the corresponding IDL class GrandChild.
+/** @interface GrandChild
+ * See also the corresponding C++ class GrandChildHandle (client side). */
+/// See also the corresponding IDL class GrandChild.
+class GrandChildHandle : public DescendantHandle
 {
-  static GrandChild_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static GrandChildHandle       _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
 public:
   template<class C>
-  static GrandChild_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static GrandChildHandle       downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      GrandChild_SmartHandle ();
+  explicit                      GrandChildHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const GrandChild_SmartHandle&);
-void operator>>= (Plic::FieldReader&, GrandChild_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const GrandChildHandle&);
+void operator>>= (Plic::FieldReader&, GrandChildHandle&);
 
 enum QuickEnum {
   ZERO = 0,
@@ -503,115 +547,125 @@ enum QuickEnum {
 inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
-struct QuickRecord_Handle
-  /// See also the corresponding IDL class QuickRecord.
+/** @interface QuickRecord
+ * See also the corresponding C++ class QuickRecordStruct (client side). */
+/// See also the corresponding IDL class QuickRecord.
+struct QuickRecordStruct
 {
   int                           int1;
   int                           int2;
-  inline                        QuickRecord_Handle () { int1 = 0; int2 = 0; }
+  inline                        QuickRecordStruct () { int1 = 0; int2 = 0; }
 };
-void operator<<= (Plic::FieldBuffer&, const QuickRecord_Handle&);
-void operator>>= (Plic::FieldReader&, QuickRecord_Handle&);
+void operator<<= (Plic::FieldBuffer&, const QuickRecordStruct&);
+void operator>>= (Plic::FieldReader&, QuickRecordStruct&);
 
-struct QuickSequence_Handle : public std::vector<double>
-  /// See also the corresponding IDL class QuickSequence.
+/** @interface QuickSequence
+ * See also the corresponding C++ class QuickSequenceStruct (client side). */
+/// See also the corresponding IDL class QuickSequence.
+struct QuickSequenceStruct : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Plic::FieldBuffer&, const QuickSequence_Handle&);
-void operator>>= (Plic::FieldReader&, QuickSequence_Handle&);
+void operator<<= (Plic::FieldBuffer&, const QuickSequenceStruct&);
+void operator>>= (Plic::FieldReader&, QuickSequenceStruct&);
 
-class QuickIface_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class QuickIface.
+/** @interface QuickIface
+ * See also the corresponding C++ class QuickIfaceHandle (client side). */
+/// See also the corresponding IDL class QuickIface.
+class QuickIfaceHandle : public virtual Plic::SmartHandle
 {
-  static QuickIface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static QuickIfaceHandle       _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static QuickIface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static QuickIfaceHandle       downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      QuickIface_SmartHandle ();
-  void                          simple_function        (int i = 9);
+  explicit                      QuickIfaceHandle ();
+  void                          simple_function  (int i = 9);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const QuickIface_SmartHandle&);
-void operator>>= (Plic::FieldReader&, QuickIface_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const QuickIfaceHandle&);
+void operator>>= (Plic::FieldReader&, QuickIfaceHandle&);
 
-class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class MethodTestInterface.
+/** @interface MethodTestInterface
+ * See also the corresponding C++ class MethodTestInterfaceHandle (client side). */
+/// See also the corresponding IDL class MethodTestInterface.
+class MethodTestInterfaceHandle : public virtual Plic::SmartHandle
 {
-  static MethodTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static MethodTestInterfaceHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static MethodTestInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static MethodTestInterfaceHandle downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      MethodTestInterface_SmartHandle ();
-  void                          method_with_void                ();
-  bool                          method_with_bools               (bool input,
-                                                                 bool optval = 0);
-  int                           method_with_ints                (int input,
-                                                                 int optval = -2);
-  double                        method_with_floats              (double input,
-                                                                 double optval = 309.9);
-  std::string                   method_with_string              (const std::string &input,
-                                                                 const std::string &optval = "default");
-  QuickEnum                     method_with_enum                (QuickEnum input,
-                                                                 QuickEnum optval = QuickEnum (0));
-  QuickRecord_Handle            method_with_record              (const QuickRecord_Handle &input,
-                                                                 const QuickRecord_Handle &optval = QuickRecord_Handle());
-  QuickSequence_Handle          method_with_sequence            (const QuickSequence_Handle &input,
-                                                                 const QuickSequence_Handle &optval = QuickSequence_Handle());
-  GrandChild_SmartHandle        method_with_interface           (GrandChild_SmartHandle &input,
-                                                                 GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
-  Plic::Any                     method_with_anys                (const Plic::Any &input,
-                                                                 const Plic::Any &optval);
-  QuickIface_SmartHandle        method_with_quickiface          (QuickIface_SmartHandle &input,
-                                                                 QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
+  explicit                      MethodTestInterfaceHandle ();
+  void                          method_with_void          ();
+  bool                          method_with_bools         (bool input,
+                                                           bool optval = 0);
+  int                           method_with_ints          (int input,
+                                                           int optval = -2);
+  double                        method_with_floats        (double input,
+                                                           double optval = 309.9);
+  std::string                   method_with_string        (const std::string &input,
+                                                           const std::string &optval = "default");
+  QuickEnum                     method_with_enum          (QuickEnum input,
+                                                           QuickEnum optval = QuickEnum (0));
+  QuickRecordStruct             method_with_record        (const QuickRecordStruct &input,
+                                                           const QuickRecordStruct &optval = QuickRecordStruct());
+  QuickSequenceStruct           method_with_sequence      (const QuickSequenceStruct &input,
+                                                           const QuickSequenceStruct &optval = QuickSequenceStruct());
+  GrandChildHandle              method_with_interface     (GrandChildHandle &input,
+                                                           GrandChildHandle &optval = *(GrandChildHandle*) NULL);
+  Plic::Any                     method_with_anys          (const Plic::Any &input,
+                                                           const Plic::Any &optval);
+  QuickIfaceHandle              method_with_quickiface    (QuickIfaceHandle &input,
+                                                           QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const MethodTestInterface_SmartHandle&);
-void operator>>= (Plic::FieldReader&, MethodTestInterface_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const MethodTestInterfaceHandle&);
+void operator>>= (Plic::FieldReader&, MethodTestInterfaceHandle&);
 
-class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class SignalTestInterface.
+/** @interface SignalTestInterface
+ * See also the corresponding C++ class SignalTestInterfaceHandle (client side). */
+/// See also the corresponding IDL class SignalTestInterface.
+class SignalTestInterfaceHandle : public virtual Plic::SmartHandle
 {
-  static SignalTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static SignalTestInterfaceHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, int ()> Signal_int_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, double ()> Signal_float_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, std::string ()> Signal_string_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> Signal_record_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> Signal_sequence_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> Signal_interface_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, Plic::Any ()> Signal_any_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> Signal_self_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (int i)> Signal_int_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (double f)> Signal_float_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const std::string &s)> Signal_string_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> Signal_record_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> Signal_sequence_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> Signal_interface_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const Plic::Any &a)> Signal_any_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> Signal_self_args;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, bool ()> Signal_bool_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, int ()> Signal_int_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, std::string ()> Signal_string_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickRecordStruct ()> Signal_record_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickSequenceStruct ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, GrandChildHandle ()> Signal_interface_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, Plic::Any ()> Signal_any_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, SignalTestInterfaceHandle ()> Signal_self_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (int i)> Signal_int_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const QuickRecordStruct &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const QuickSequenceStruct &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (GrandChildHandle &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const Plic::Any &a)> Signal_any_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> Signal_self_args;
 public:
   template<class C>
-  static SignalTestInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static SignalTestInterfaceHandle downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      SignalTestInterface_SmartHandle ();
+  explicit                      SignalTestInterfaceHandle ();
   Signal_void_result&           sig_void_result();
   Signal_bool_result&           sig_bool_result();
   Signal_int_result&            sig_int_result();
@@ -636,55 +690,61 @@ public:
   Signal_self_args&             sig_self_args();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const SignalTestInterface_SmartHandle&);
-void operator>>= (Plic::FieldReader&, SignalTestInterface_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const SignalTestInterfaceHandle&);
+void operator>>= (Plic::FieldReader&, SignalTestInterfaceHandle&);
 
-class ChildInheritingSignals_SmartHandle : public SignalTestInterface_SmartHandle
-  /// See also the corresponding IDL class ChildInheritingSignals.
+/** @interface ChildInheritingSignals
+ * See also the corresponding C++ class ChildInheritingSignalsHandle (client side). */
+/// See also the corresponding IDL class ChildInheritingSignals.
+class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
 {
-  static ChildInheritingSignals_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static ChildInheritingSignalsHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
-  typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s)> Signal_child_signal;
+  typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Plic::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s)> Signal_child_signal;
 public:
   template<class C>
-  static ChildInheritingSignals_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static ChildInheritingSignalsHandle downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      ChildInheritingSignals_SmartHandle ();
+  explicit                      ChildInheritingSignalsHandle ();
   Signal_child_signal&          sig_child_signal();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const ChildInheritingSignals_SmartHandle&);
-void operator>>= (Plic::FieldReader&, ChildInheritingSignals_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const ChildInheritingSignalsHandle&);
+void operator>>= (Plic::FieldReader&, ChildInheritingSignalsHandle&);
 
-class AnotherChild_SmartHandle : public SignalTestInterface_SmartHandle
-  /// See also the corresponding IDL class AnotherChild.
+/** @interface AnotherChild
+ * See also the corresponding C++ class AnotherChildHandle (client side). */
+/// See also the corresponding IDL class AnotherChild.
+class AnotherChildHandle : public SignalTestInterfaceHandle
 {
-  static AnotherChild_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static AnotherChildHandle     _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
 public:
   template<class C>
-  static AnotherChild_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static AnotherChildHandle     downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      AnotherChild_SmartHandle ();
+  explicit                      AnotherChildHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const AnotherChild_SmartHandle&);
-void operator>>= (Plic::FieldReader&, AnotherChild_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const AnotherChildHandle&);
+void operator>>= (Plic::FieldReader&, AnotherChildHandle&);
 
-class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class PropertyTester.
+/** @interface PropertyTester
+ * See also the corresponding C++ class PropertyTesterHandle (client side). */
+/// See also the corresponding IDL class PropertyTester.
+class PropertyTesterHandle : public virtual Plic::SmartHandle
 {
-  static PropertyTester_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static PropertyTesterHandle   _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static PropertyTester_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static PropertyTesterHandle   downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      PropertyTester_SmartHandle ();
+  explicit                      PropertyTesterHandle ();
   bool                          bool_prop      () const;
   void                          bool_prop      (bool);
   int                           int_prop       () const;
@@ -695,20 +755,20 @@ public:
   void                          string_prop    (const std::string&);
   QuickEnum                     enum_prop      () const;
   void                          enum_prop      (QuickEnum);
-  QuickRecord_Handle            record_prop    () const;
-  void                          record_prop    (const QuickRecord_Handle&);
-  QuickSequence_Handle          sequence_prop  () const;
-  void                          sequence_prop  (const QuickSequence_Handle&);
-  GrandChild_SmartHandle        interface_prop () const;
-  void                          interface_prop (GrandChild_SmartHandle);
-  PropertyTester_SmartHandle    self_prop      () const;
-  void                          self_prop      (PropertyTester_SmartHandle);
+  QuickRecordStruct             record_prop    () const;
+  void                          record_prop    (const QuickRecordStruct&);
+  QuickSequenceStruct           sequence_prop  () const;
+  void                          sequence_prop  (const QuickSequenceStruct&);
+  GrandChildHandle              interface_prop () const;
+  void                          interface_prop (GrandChildHandle);
+  PropertyTesterHandle          self_prop      () const;
+  void                          self_prop      (PropertyTesterHandle);
   Plic::Any                     any_prop       () const;
   void                          any_prop       (const Plic::Any&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const PropertyTester_SmartHandle&);
-void operator>>= (Plic::FieldReader&, PropertyTester_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const PropertyTesterHandle&);
+void operator>>= (Plic::FieldReader&, PropertyTesterHandle&);
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -723,20 +783,22 @@ enum ClickType {
 inline void operator<<= (Plic::FieldBuffer &fb,  ClickType  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 
-class ButtonArea_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class ButtonArea.
+/** @interface ButtonArea
+ * See also the corresponding C++ class ButtonAreaHandle (client side). */
+/// See also the corresponding IDL class ButtonArea.
+class ButtonAreaHandle : public virtual Plic::SmartHandle
 {
-  static ButtonArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static ButtonAreaHandle       _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, bool ()> Signal_check_activate;
-  typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> Signal_activate;
+  typedef Rapicorn::Signals::SignalProxy<ButtonAreaHandle, bool ()> Signal_check_activate;
+  typedef Rapicorn::Signals::SignalProxy<ButtonAreaHandle, void ()> Signal_activate;
 public:
   template<class C>
-  static ButtonArea_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static ButtonAreaHandle       downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      ButtonArea_SmartHandle ();
+  explicit                      ButtonAreaHandle ();
   std::string                   on_click   () const;
   void                          on_click   (const std::string&);
   std::string                   on_click2  () const;
@@ -749,28 +811,30 @@ public:
   Signal_activate&              sig_activate();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const ButtonArea_SmartHandle&);
-void operator>>= (Plic::FieldReader&, ButtonArea_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const ButtonAreaHandle&);
+void operator>>= (Plic::FieldReader&, ButtonAreaHandle&);
 
-class PureMethods_SmartHandle;
+class PureMethodsHandle;
 
-class PureMethods_SmartHandle : public virtual Plic::SmartHandle
-  /// See also the corresponding IDL class PureMethods.
+/** @interface PureMethods
+ * See also the corresponding C++ class PureMethodsHandle (client side). */
+/// See also the corresponding IDL class PureMethods.
+class PureMethodsHandle : public virtual Plic::SmartHandle
 {
-  static PureMethods_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static PureMethodsHandle      _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
   static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
-  static PureMethods_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  static PureMethodsHandle      downcast (C c) { return _cast (c, c.cast_types()); }
   const Plic::TypeHashList&     cast_types ();
-  explicit                      PureMethods_SmartHandle ();
-  int                           pure_method             (double f);
+  explicit                      PureMethodsHandle ();
+  int                           pure_method       (double f);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-void operator<<= (Plic::FieldBuffer&, const PureMethods_SmartHandle&);
-void operator>>= (Plic::FieldReader&, PureMethods_SmartHandle&);
+void operator<<= (Plic::FieldBuffer&, const PureMethodsHandle&);
+void operator>>= (Plic::FieldReader&, PureMethodsHandle&);
 } // RapicornPlicTest
 
 // --- Implementations ---
@@ -778,10 +842,10 @@ void operator>>= (Plic::FieldReader&, PureMethods_SmartHandle&);
 namespace MandatoryNamespace {
 
 // === FirstInterface ===
-static inline void ref   (FirstInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (FirstInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct FirstInterface_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public FirstInterface_SmartHandle {
+  struct SmartHandle$ : public FirstInterfaceHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   FirstInterface_Context$ (Plic::uint64_t ipcid) :
@@ -817,41 +881,41 @@ FirstInterface_Context$::list_types ()
   }
   return *m_cached_types;
 }
-FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
+FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 Plic::ClientConnection
-FirstInterface_SmartHandle::__client_connection__ (void)
+FirstInterfaceHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const FirstInterfaceHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, FirstInterface_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, FirstInterfaceHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterface_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterfaceHandle();
 }
 const Plic::TypeHash&
-FirstInterface_SmartHandle::_type()
+FirstInterfaceHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x04be3719c81a379bULL, 0x1079454a90442f2cULL);
   return type_hash;
 }
-FirstInterface_SmartHandle
-FirstInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+FirstInterfaceHandle
+FirstInterfaceHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<FirstInterface_Context$> (connection_handle2id (other))->handle$;
-  return FirstInterface_SmartHandle();
+  return FirstInterfaceHandle();
 }
 const Plic::TypeHashList&
-FirstInterface_SmartHandle::cast_types()
+FirstInterfaceHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -859,7 +923,7 @@ FirstInterface_SmartHandle::cast_types()
   return connection_id2context<FirstInterface_Context$> (ipcid)->list_types();
 }
 void
-FirstInterface_SmartHandle::void_func ()
+FirstInterfaceHandle::void_func ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL); // msgid
@@ -868,7 +932,7 @@ FirstInterface_SmartHandle::void_func ()
   if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const XFooRecordStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (17);
   fb <<= self.single_bool;
@@ -890,7 +954,7 @@ operator<<= (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
   fb <<= self.any3;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, XFooRecord_Handle &self)
+operator>>= (Plic::FieldReader &src, XFooRecordStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 17) return;
@@ -913,7 +977,7 @@ operator>>= (Plic::FieldReader &src, XFooRecord_Handle &self)
   fbr >>= self.any3;
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const XFooSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const XFooSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -922,7 +986,7 @@ operator<<= (Plic::FieldBuffer &dst, const XFooSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, XFooSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, XFooSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -931,14 +995,14 @@ operator>>= (Plic::FieldReader &src, XFooSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-XFooSequence_Handle::reference
-XFooSequence_Handle::append_back()
+XFooSequenceStruct::reference
+XFooSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const IntSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const IntSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -947,7 +1011,7 @@ operator<<= (Plic::FieldBuffer &dst, const IntSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, IntSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, IntSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -956,14 +1020,14 @@ operator>>= (Plic::FieldReader &src, IntSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-IntSequence_Handle::reference
-IntSequence_Handle::append_back()
+IntSequenceStruct::reference
+IntSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const FloatSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const FloatSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -972,7 +1036,7 @@ operator<<= (Plic::FieldBuffer &dst, const FloatSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, FloatSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, FloatSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -981,14 +1045,14 @@ operator>>= (Plic::FieldReader &src, FloatSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-FloatSequence_Handle::reference
-FloatSequence_Handle::append_back()
+FloatSequenceStruct::reference
+FloatSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const StringSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const StringSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -997,7 +1061,7 @@ operator<<= (Plic::FieldBuffer &dst, const StringSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, StringSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, StringSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1006,14 +1070,14 @@ operator>>= (Plic::FieldReader &src, StringSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-StringSequence_Handle::reference
-StringSequence_Handle::append_back()
+StringSequenceStruct::reference
+StringSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const ExtensiveEnumSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const ExtensiveEnumSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1022,7 +1086,7 @@ operator<<= (Plic::FieldBuffer &dst, const ExtensiveEnumSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, ExtensiveEnumSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, ExtensiveEnumSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1031,14 +1095,14 @@ operator>>= (Plic::FieldReader &src, ExtensiveEnumSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-ExtensiveEnumSequence_Handle::reference
-ExtensiveEnumSequence_Handle::append_back()
+ExtensiveEnumSequenceStruct::reference
+ExtensiveEnumSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const RecordSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1047,7 +1111,7 @@ operator<<= (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, RecordSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, RecordSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1056,14 +1120,14 @@ operator>>= (Plic::FieldReader &src, RecordSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-RecordSequence_Handle::reference
-RecordSequence_Handle::append_back()
+RecordSequenceStruct::reference
+RecordSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const SequenceSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1072,7 +1136,7 @@ operator<<= (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, SequenceSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, SequenceSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1081,14 +1145,14 @@ operator>>= (Plic::FieldReader &src, SequenceSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-SequenceSequence_Handle::reference
-SequenceSequence_Handle::append_back()
+SequenceSequenceStruct::reference
+SequenceSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const InterfaceSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const InterfaceSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1097,7 +1161,7 @@ operator<<= (Plic::FieldBuffer &dst, const InterfaceSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, InterfaceSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, InterfaceSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1106,14 +1170,14 @@ operator>>= (Plic::FieldReader &src, InterfaceSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-InterfaceSequence_Handle::reference
-InterfaceSequence_Handle::append_back()
+InterfaceSequenceStruct::reference
+InterfaceSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const AnySequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const AnySequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1122,7 +1186,7 @@ operator<<= (Plic::FieldBuffer &dst, const AnySequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, AnySequence_Handle &self)
+operator>>= (Plic::FieldReader &src, AnySequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1131,21 +1195,21 @@ operator>>= (Plic::FieldReader &src, AnySequence_Handle &self)
     fbr >>= self[k];
   }
 }
-AnySequence_Handle::reference
-AnySequence_Handle::append_back()
+AnySequenceStruct::reference
+AnySequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const NestedTypesRec_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const NestedTypesRecStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
   fb <<= self.rec;
   fb <<= self.seq;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, NestedTypesRec_Handle &self)
+operator>>= (Plic::FieldReader &src, NestedTypesRecStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
@@ -1153,7 +1217,7 @@ operator>>= (Plic::FieldReader &src, NestedTypesRec_Handle &self)
   fbr >>= self.seq;
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const NestedTypesSeq_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const NestedTypesSeqStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1162,7 +1226,7 @@ operator<<= (Plic::FieldBuffer &dst, const NestedTypesSeq_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
+operator>>= (Plic::FieldReader &src, NestedTypesSeqStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1171,14 +1235,14 @@ operator>>= (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
     fbr >>= self[k];
   }
 }
-NestedTypesSeq_Handle::reference
-NestedTypesSeq_Handle::append_back()
+NestedTypesSeqStruct::reference
+NestedTypesSeqStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const NewRecord_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const NewRecordStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
   fb <<= self.i;
@@ -1187,7 +1251,7 @@ operator<<= (Plic::FieldBuffer &dst, const NewRecord_Handle &self)
   fb <<= self.ntr;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, NewRecord_Handle &self)
+operator>>= (Plic::FieldReader &src, NewRecordStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
@@ -1199,7 +1263,7 @@ operator>>= (Plic::FieldReader &src, NewRecord_Handle &self)
 
 namespace Inner {
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const InnerRecord_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const InnerRecordStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (3);
   fb <<= self.x;
@@ -1207,7 +1271,7 @@ operator<<= (Plic::FieldBuffer &dst, const InnerRecord_Handle &self)
   fb <<= self.rec;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, InnerRecord_Handle &self)
+operator>>= (Plic::FieldReader &src, InnerRecordStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 3) return;
@@ -1217,13 +1281,13 @@ operator>>= (Plic::FieldReader &src, InnerRecord_Handle &self)
 }
 } // Inner
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const Refer2Inner_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const Refer2InnerStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (1);
   fb <<= self.r;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, Refer2Inner_Handle &self)
+operator>>= (Plic::FieldReader &src, Refer2InnerStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 1) return;
@@ -1233,7 +1297,7 @@ operator>>= (Plic::FieldReader &src, Refer2Inner_Handle &self)
 
 namespace OtherNamespace {
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const SomeRecord_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const SomeRecordStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
   fb <<= self.r1;
@@ -1242,7 +1306,7 @@ operator<<= (Plic::FieldBuffer &dst, const SomeRecord_Handle &self)
   fb <<= self.r4;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, SomeRecord_Handle &self)
+operator>>= (Plic::FieldReader &src, SomeRecordStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
@@ -1256,15 +1320,15 @@ operator>>= (Plic::FieldReader &src, SomeRecord_Handle &self)
 namespace InterfaceTests {
 
 // === UIWidgetArea ===
-static inline void ref   (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
 struct UIWidgetArea_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public UIWidgetArea_SmartHandle {
+  struct SmartHandle$ : public UIWidgetAreaHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  typedef Plic::CxxStub::SignalHandler<UIWidgetArea_SmartHandle, void ()> SignalHandler__void_signal;
+  typedef Plic::CxxStub::SignalHandler<UIWidgetAreaHandle, void ()> SignalHandler__void_signal;
   SignalHandler__void_signal void_signal;
-  typedef Plic::CxxStub::SignalHandler<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> SignalHandler__sample_signal;
+  typedef Plic::CxxStub::SignalHandler<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> SignalHandler__sample_signal;
   SignalHandler__sample_signal sample_signal;
   UIWidgetArea_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
@@ -1301,59 +1365,59 @@ UIWidgetArea_Context$::list_types ()
   }
   return *m_cached_types;
 }
-UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle ()
+UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 Plic::ClientConnection
-UIWidgetArea_SmartHandle::__client_connection__ (void)
+UIWidgetAreaHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, UIWidgetArea_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, UIWidgetAreaHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetArea_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetAreaHandle();
 }
 const Plic::TypeHash&
-UIWidgetArea_SmartHandle::_type()
+UIWidgetAreaHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0c1b9195fa9a5a6cULL, 0xc1f636e721317b86ULL);
   return type_hash;
 }
-UIWidgetArea_SmartHandle
-UIWidgetArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+UIWidgetAreaHandle
+UIWidgetAreaHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (other))->handle$;
-  return UIWidgetArea_SmartHandle();
+  return UIWidgetAreaHandle();
 }
 const Plic::TypeHashList&
-UIWidgetArea_SmartHandle::cast_types()
+UIWidgetAreaHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<UIWidgetArea_Context$> (ipcid)->list_types();
 }
-UIWidgetArea_SmartHandle::Signal_void_signal&
-UIWidgetArea_SmartHandle::sig_void_signal ()
+UIWidgetAreaHandle::Signal_void_signal&
+UIWidgetAreaHandle::sig_void_signal ()
 {
   return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->void_signal.psignal;
 }
-UIWidgetArea_SmartHandle::Signal_sample_signal&
-UIWidgetArea_SmartHandle::sig_sample_signal ()
+UIWidgetAreaHandle::Signal_sample_signal&
+UIWidgetAreaHandle::sig_sample_signal ()
 {
   return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->sample_signal.psignal;
 }
 double
-UIWidgetArea_SmartHandle::dummy () const
+UIWidgetAreaHandle::dummy () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
@@ -1367,7 +1431,7 @@ UIWidgetArea_SmartHandle::dummy () const
   return retval;
 }
 void
-UIWidgetArea_SmartHandle::dummy (double value)
+UIWidgetAreaHandle::dummy (double value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
@@ -1377,7 +1441,7 @@ UIWidgetArea_SmartHandle::dummy (double value)
   if (fr) delete fr;
 }
 std::string
-UIWidgetArea_SmartHandle::on_click () const
+UIWidgetAreaHandle::on_click () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL);
@@ -1391,7 +1455,7 @@ UIWidgetArea_SmartHandle::on_click () const
   return retval;
 }
 void
-UIWidgetArea_SmartHandle::on_click (const std::string &value)
+UIWidgetAreaHandle::on_click (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL); // msgid
@@ -1401,7 +1465,7 @@ UIWidgetArea_SmartHandle::on_click (const std::string &value)
   if (fr) delete fr;
 }
 double
-UIWidgetArea_SmartHandle::simple_method ()
+UIWidgetAreaHandle::simple_method ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x39a122b559d15903ULL, 0x0a95fe35b7a1de33ULL); // msgid
@@ -1415,7 +1479,7 @@ UIWidgetArea_SmartHandle::simple_method ()
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::single_arg (int arg_n)
+UIWidgetAreaHandle::single_arg (int arg_n)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3910395d202c93c2ULL, 0x9206a89acaaf2086ULL); // msgid
@@ -1430,7 +1494,7 @@ UIWidgetArea_SmartHandle::single_arg (int arg_n)
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::single_arg2 (int arg_n)
+UIWidgetAreaHandle::single_arg2 (int arg_n)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3b5ae84b86dfa59cULL, 0x5d2ef3880b1fa360ULL); // msgid
@@ -1445,8 +1509,8 @@ UIWidgetArea_SmartHandle::single_arg2 (int arg_n)
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::two_args (int arg_n,
-                                    double arg_r)
+UIWidgetAreaHandle::two_args (int arg_n,
+                              double arg_r)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x359c33f1677a63ebULL, 0x3a05748016992575ULL); // msgid
@@ -1462,8 +1526,8 @@ UIWidgetArea_SmartHandle::two_args (int arg_n,
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::two_args2 (int arg_n,
-                                     double arg_r)
+UIWidgetAreaHandle::two_args2 (int arg_n,
+                               double arg_r)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3291a584ff9121b3ULL, 0xbd14f4bbc47fb2ccULL); // msgid
@@ -1479,11 +1543,11 @@ UIWidgetArea_SmartHandle::two_args2 (int arg_n,
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::multi_args (int arg_n,
-                                      double arg_r,
-                                      int arg_i,
-                                      const std::string &arg_s,
-                                      double arg_y)
+UIWidgetAreaHandle::multi_args (int arg_n,
+                                double arg_r,
+                                int arg_i,
+                                const std::string &arg_s,
+                                double arg_y)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 5), *fr = NULL;
   fb.add_msgid (0x3501ef84b7c1d9ffULL, 0x564566ab8a5e1b8bULL); // msgid
@@ -1502,8 +1566,8 @@ UIWidgetArea_SmartHandle::multi_args (int arg_n,
   return retval;
 }
 double
-UIWidgetArea_SmartHandle::self_method (UIWidgetArea_SmartHandle &arg_ba1,
-                                       UIWidgetArea_SmartHandle &arg_ba2)
+UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
+                                 UIWidgetAreaHandle &arg_ba2)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x316521a2bcc037d0ULL, 0x43987053dab0c3c0ULL); // msgid
@@ -1519,7 +1583,7 @@ UIWidgetArea_SmartHandle::self_method (UIWidgetArea_SmartHandle &arg_ba1,
   return retval;
 }
 void
-UIWidgetArea_SmartHandle::void_method ()
+UIWidgetAreaHandle::void_method ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL); // msgid
@@ -1528,7 +1592,7 @@ UIWidgetArea_SmartHandle::void_method ()
   if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 std::string
-UIWidgetArea_SmartHandle::on_click2out ()
+UIWidgetAreaHandle::on_click2out ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x3e4f2ff4e1424783ULL, 0x439ed3d602e3946eULL); // msgid
@@ -1542,7 +1606,7 @@ UIWidgetArea_SmartHandle::on_click2out ()
   return retval;
 }
 void
-UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
+UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2294f15cd15e9458ULL, 0x5e0ac9b493bb4f17ULL); // msgid
@@ -1553,10 +1617,10 @@ UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
 }
 
 // === Parent ===
-static inline void ref   (Parent_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (Parent_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (ParentHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (ParentHandle&) {} // dummy stub for Signal<>.emit
 struct Parent_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public Parent_SmartHandle {
+  struct SmartHandle$ : public ParentHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Parent_Context$ (Plic::uint64_t ipcid) :
@@ -1592,41 +1656,41 @@ Parent_Context$::list_types ()
   }
   return *m_cached_types;
 }
-Parent_SmartHandle::Parent_SmartHandle ()
+ParentHandle::ParentHandle ()
 {}
 Plic::ClientConnection
-Parent_SmartHandle::__client_connection__ (void)
+ParentHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const ParentHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, Parent_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, ParentHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : Parent_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : ParentHandle();
 }
 const Plic::TypeHash&
-Parent_SmartHandle::_type()
+ParentHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL);
   return type_hash;
 }
-Parent_SmartHandle
-Parent_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+ParentHandle
+ParentHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<Parent_Context$> (connection_handle2id (other))->handle$;
-  return Parent_SmartHandle();
+  return ParentHandle();
 }
 const Plic::TypeHashList&
-Parent_SmartHandle::cast_types()
+ParentHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -1635,10 +1699,10 @@ Parent_SmartHandle::cast_types()
 }
 
 // === Child ===
-static inline void ref   (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (ChildHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (ChildHandle&) {} // dummy stub for Signal<>.emit
 struct Child_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public Child_SmartHandle {
+  struct SmartHandle$ : public ChildHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Child_Context$ (Plic::uint64_t ipcid) :
@@ -1674,36 +1738,36 @@ Child_Context$::list_types ()
   }
   return *m_cached_types;
 }
-Child_SmartHandle::Child_SmartHandle ()
+ChildHandle::ChildHandle ()
 {}
 void
-operator<<= (Plic::FieldBuffer &fb, const Child_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const ChildHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, Child_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, ChildHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : Child_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : ChildHandle();
 }
 const Plic::TypeHash&
-Child_SmartHandle::_type()
+ChildHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0a44a1b5cf26cfc0ULL, 0xcd6e05d08ba2667eULL);
   return type_hash;
 }
-Child_SmartHandle
-Child_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+ChildHandle
+ChildHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<Child_Context$> (connection_handle2id (other))->handle$;
-  return Child_SmartHandle();
+  return ChildHandle();
 }
 const Plic::TypeHashList&
-Child_SmartHandle::cast_types()
+ChildHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -1712,10 +1776,10 @@ Child_SmartHandle::cast_types()
 }
 
 // === Descendant ===
-static inline void ref   (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (DescendantHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (DescendantHandle&) {} // dummy stub for Signal<>.emit
 struct Descendant_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public Descendant_SmartHandle {
+  struct SmartHandle$ : public DescendantHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Descendant_Context$ (Plic::uint64_t ipcid) :
@@ -1751,36 +1815,36 @@ Descendant_Context$::list_types ()
   }
   return *m_cached_types;
 }
-Descendant_SmartHandle::Descendant_SmartHandle ()
+DescendantHandle::DescendantHandle ()
 {}
 void
-operator<<= (Plic::FieldBuffer &fb, const Descendant_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const DescendantHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, Descendant_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, DescendantHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : Descendant_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : DescendantHandle();
 }
 const Plic::TypeHash&
-Descendant_SmartHandle::_type()
+DescendantHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0980fc7a8521c350ULL, 0x641568ba1f461de2ULL);
   return type_hash;
 }
-Descendant_SmartHandle
-Descendant_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+DescendantHandle
+DescendantHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<Descendant_Context$> (connection_handle2id (other))->handle$;
-  return Descendant_SmartHandle();
+  return DescendantHandle();
 }
 const Plic::TypeHashList&
-Descendant_SmartHandle::cast_types()
+DescendantHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -1789,10 +1853,10 @@ Descendant_SmartHandle::cast_types()
 }
 
 // === GrandChild ===
-static inline void ref   (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (GrandChildHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (GrandChildHandle&) {} // dummy stub for Signal<>.emit
 struct GrandChild_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public GrandChild_SmartHandle {
+  struct SmartHandle$ : public GrandChildHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   GrandChild_Context$ (Plic::uint64_t ipcid) :
@@ -1828,36 +1892,36 @@ GrandChild_Context$::list_types ()
   }
   return *m_cached_types;
 }
-GrandChild_SmartHandle::GrandChild_SmartHandle ()
+GrandChildHandle::GrandChildHandle ()
 {}
 void
-operator<<= (Plic::FieldBuffer &fb, const GrandChild_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const GrandChildHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, GrandChild_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, GrandChildHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChild_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChildHandle();
 }
 const Plic::TypeHash&
-GrandChild_SmartHandle::_type()
+GrandChildHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x001a87e60ed9bd66ULL, 0xfff1a96d7bab9cd9ULL);
   return type_hash;
 }
-GrandChild_SmartHandle
-GrandChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+GrandChildHandle
+GrandChildHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<GrandChild_Context$> (connection_handle2id (other))->handle$;
-  return GrandChild_SmartHandle();
+  return GrandChildHandle();
 }
 const Plic::TypeHashList&
-GrandChild_SmartHandle::cast_types()
+GrandChildHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -1865,14 +1929,14 @@ GrandChild_SmartHandle::cast_types()
   return connection_id2context<GrandChild_Context$> (ipcid)->list_types();
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const QuickRecord_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const QuickRecordStruct &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
   fb <<= self.int1;
   fb <<= self.int2;
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, QuickRecord_Handle &self)
+operator>>= (Plic::FieldReader &src, QuickRecordStruct &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
@@ -1880,7 +1944,7 @@ operator>>= (Plic::FieldReader &src, QuickRecord_Handle &self)
   fbr >>= self.int2;
 }
 inline void __attribute__ ((used))
-operator<<= (Plic::FieldBuffer &dst, const QuickSequence_Handle &self)
+operator<<= (Plic::FieldBuffer &dst, const QuickSequenceStruct &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -1889,7 +1953,7 @@ operator<<= (Plic::FieldBuffer &dst, const QuickSequence_Handle &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Plic::FieldReader &src, QuickSequence_Handle &self)
+operator>>= (Plic::FieldReader &src, QuickSequenceStruct &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1898,18 +1962,18 @@ operator>>= (Plic::FieldReader &src, QuickSequence_Handle &self)
     fbr >>= self[k];
   }
 }
-QuickSequence_Handle::reference
-QuickSequence_Handle::append_back()
+QuickSequenceStruct::reference
+QuickSequenceStruct::append_back()
 {
   resize (size() + 1);
   return back();
 }
 
 // === QuickIface ===
-static inline void ref   (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
 struct QuickIface_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public QuickIface_SmartHandle {
+  struct SmartHandle$ : public QuickIfaceHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   QuickIface_Context$ (Plic::uint64_t ipcid) :
@@ -1945,41 +2009,41 @@ QuickIface_Context$::list_types ()
   }
   return *m_cached_types;
 }
-QuickIface_SmartHandle::QuickIface_SmartHandle ()
+QuickIfaceHandle::QuickIfaceHandle ()
 {}
 Plic::ClientConnection
-QuickIface_SmartHandle::__client_connection__ (void)
+QuickIfaceHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const QuickIfaceHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, QuickIface_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, QuickIfaceHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIface_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIfaceHandle();
 }
 const Plic::TypeHash&
-QuickIface_SmartHandle::_type()
+QuickIfaceHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0ce40c896cfa0177ULL, 0x5ab6faf97ff6fed2ULL);
   return type_hash;
 }
-QuickIface_SmartHandle
-QuickIface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+QuickIfaceHandle
+QuickIfaceHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<QuickIface_Context$> (connection_handle2id (other))->handle$;
-  return QuickIface_SmartHandle();
+  return QuickIfaceHandle();
 }
 const Plic::TypeHashList&
-QuickIface_SmartHandle::cast_types()
+QuickIfaceHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -1987,7 +2051,7 @@ QuickIface_SmartHandle::cast_types()
   return connection_id2context<QuickIface_Context$> (ipcid)->list_types();
 }
 void
-QuickIface_SmartHandle::simple_function (int arg_i)
+QuickIfaceHandle::simple_function (int arg_i)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2446078b004b9aabULL, 0x37d6c73a34ac7070ULL); // msgid
@@ -1998,10 +2062,10 @@ QuickIface_SmartHandle::simple_function (int arg_i)
 }
 
 // === MethodTestInterface ===
-static inline void ref   (MethodTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (MethodTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct MethodTestInterface_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public MethodTestInterface_SmartHandle {
+  struct SmartHandle$ : public MethodTestInterfaceHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   MethodTestInterface_Context$ (Plic::uint64_t ipcid) :
@@ -2037,41 +2101,41 @@ MethodTestInterface_Context$::list_types ()
   }
   return *m_cached_types;
 }
-MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
+MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
 Plic::ClientConnection
-MethodTestInterface_SmartHandle::__client_connection__ (void)
+MethodTestInterfaceHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const MethodTestInterfaceHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, MethodTestInterface_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, MethodTestInterfaceHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterface_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterfaceHandle();
 }
 const Plic::TypeHash&
-MethodTestInterface_SmartHandle::_type()
+MethodTestInterfaceHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x03befccd5d5ee8d5ULL, 0x7f1f65a869ad267fULL);
   return type_hash;
 }
-MethodTestInterface_SmartHandle
-MethodTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+MethodTestInterfaceHandle
+MethodTestInterfaceHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<MethodTestInterface_Context$> (connection_handle2id (other))->handle$;
-  return MethodTestInterface_SmartHandle();
+  return MethodTestInterfaceHandle();
 }
 const Plic::TypeHashList&
-MethodTestInterface_SmartHandle::cast_types()
+MethodTestInterfaceHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -2079,7 +2143,7 @@ MethodTestInterface_SmartHandle::cast_types()
   return connection_id2context<MethodTestInterface_Context$> (ipcid)->list_types();
 }
 void
-MethodTestInterface_SmartHandle::method_with_void ()
+MethodTestInterfaceHandle::method_with_void ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL); // msgid
@@ -2088,8 +2152,8 @@ MethodTestInterface_SmartHandle::method_with_void ()
   if (PLIC_UNLIKELY (fr != NULL)) delete fr;
 }
 bool
-MethodTestInterface_SmartHandle::method_with_bools (bool arg_input,
-                                                    bool arg_optval)
+MethodTestInterfaceHandle::method_with_bools (bool arg_input,
+                                              bool arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL); // msgid
@@ -2105,8 +2169,8 @@ MethodTestInterface_SmartHandle::method_with_bools (bool arg_input,
   return retval;
 }
 int
-MethodTestInterface_SmartHandle::method_with_ints (int arg_input,
-                                                   int arg_optval)
+MethodTestInterfaceHandle::method_with_ints (int arg_input,
+                                             int arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x39555e79a31047bfULL, 0x0f06b4f122a81e1dULL); // msgid
@@ -2122,8 +2186,8 @@ MethodTestInterface_SmartHandle::method_with_ints (int arg_input,
   return retval;
 }
 double
-MethodTestInterface_SmartHandle::method_with_floats (double arg_input,
-                                                     double arg_optval)
+MethodTestInterfaceHandle::method_with_floats (double arg_input,
+                                               double arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x391dd7c671dada38ULL, 0x32ca18bc1bd39689ULL); // msgid
@@ -2139,8 +2203,8 @@ MethodTestInterface_SmartHandle::method_with_floats (double arg_input,
   return retval;
 }
 std::string
-MethodTestInterface_SmartHandle::method_with_string (const std::string &arg_input,
-                                                     const std::string &arg_optval)
+MethodTestInterfaceHandle::method_with_string (const std::string &arg_input,
+                                               const std::string &arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3ad5eafe588b965aULL, 0x38c04145925d2963ULL); // msgid
@@ -2156,8 +2220,8 @@ MethodTestInterface_SmartHandle::method_with_string (const std::string &arg_inpu
   return retval;
 }
 QuickEnum
-MethodTestInterface_SmartHandle::method_with_enum (QuickEnum arg_input,
-                                                   QuickEnum arg_optval)
+MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
+                                             QuickEnum arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL); // msgid
@@ -2172,9 +2236,9 @@ MethodTestInterface_SmartHandle::method_with_enum (QuickEnum arg_input,
   delete fr;
   return retval;
 }
-QuickRecord_Handle
-MethodTestInterface_SmartHandle::method_with_record (const QuickRecord_Handle &arg_input,
-                                                     const QuickRecord_Handle &arg_optval)
+QuickRecordStruct
+MethodTestInterfaceHandle::method_with_record (const QuickRecordStruct &arg_input,
+                                               const QuickRecordStruct &arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL); // msgid
@@ -2184,14 +2248,14 @@ MethodTestInterface_SmartHandle::method_with_record (const QuickRecord_Handle &a
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickRecord_Handle  retval;
+  QuickRecordStruct  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
-QuickSequence_Handle
-MethodTestInterface_SmartHandle::method_with_sequence (const QuickSequence_Handle &arg_input,
-                                                       const QuickSequence_Handle &arg_optval)
+QuickSequenceStruct
+MethodTestInterfaceHandle::method_with_sequence (const QuickSequenceStruct &arg_input,
+                                                 const QuickSequenceStruct &arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL); // msgid
@@ -2201,14 +2265,14 @@ MethodTestInterface_SmartHandle::method_with_sequence (const QuickSequence_Handl
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickSequence_Handle  retval;
+  QuickSequenceStruct  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
-GrandChild_SmartHandle
-MethodTestInterface_SmartHandle::method_with_interface (GrandChild_SmartHandle &arg_input,
-                                                        GrandChild_SmartHandle &arg_optval)
+GrandChildHandle
+MethodTestInterfaceHandle::method_with_interface (GrandChildHandle &arg_input,
+                                                  GrandChildHandle &arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x34619983babcee5bULL, 0x9875f78f28f381b7ULL); // msgid
@@ -2218,14 +2282,14 @@ MethodTestInterface_SmartHandle::method_with_interface (GrandChild_SmartHandle &
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  GrandChild_SmartHandle  retval;
+  GrandChildHandle  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 Plic::Any
-MethodTestInterface_SmartHandle::method_with_anys (const Plic::Any &arg_input,
-                                                   const Plic::Any &arg_optval)
+MethodTestInterfaceHandle::method_with_anys (const Plic::Any &arg_input,
+                                             const Plic::Any &arg_optval)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x37b8d8ed63487319ULL, 0xb18dc7a6d35529d5ULL); // msgid
@@ -2240,9 +2304,9 @@ MethodTestInterface_SmartHandle::method_with_anys (const Plic::Any &arg_input,
   delete fr;
   return retval;
 }
-QuickIface_SmartHandle
-MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle &arg_input,
-                                                         QuickIface_SmartHandle &arg_iface0)
+QuickIfaceHandle
+MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
+                                                   QuickIfaceHandle &arg_iface0)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL); // msgid
@@ -2252,62 +2316,62 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickIface_SmartHandle  retval;
+  QuickIfaceHandle  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 
 // === SignalTestInterface ===
-static inline void ref   (SignalTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (SignalTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct SignalTestInterface_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public SignalTestInterface_SmartHandle {
+  struct SmartHandle$ : public SignalTestInterfaceHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void ()> SignalHandler__void_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void ()> SignalHandler__void_result;
   SignalHandler__void_result void_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, bool ()> SignalHandler__bool_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, bool ()> SignalHandler__bool_result;
   SignalHandler__bool_result bool_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, int ()> SignalHandler__int_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, int ()> SignalHandler__int_result;
   SignalHandler__int_result int_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, double ()> SignalHandler__float_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, double ()> SignalHandler__float_result;
   SignalHandler__float_result float_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, std::string ()> SignalHandler__string_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, std::string ()> SignalHandler__string_result;
   SignalHandler__string_result string_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, QuickEnum ()> SignalHandler__enum_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickEnum ()> SignalHandler__enum_result;
   SignalHandler__enum_result enum_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> SignalHandler__record_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickRecordStruct ()> SignalHandler__record_result;
   SignalHandler__record_result record_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> SignalHandler__sequence_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickSequenceStruct ()> SignalHandler__sequence_result;
   SignalHandler__sequence_result sequence_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> SignalHandler__interface_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, GrandChildHandle ()> SignalHandler__interface_result;
   SignalHandler__interface_result interface_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, Plic::Any ()> SignalHandler__any_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, Plic::Any ()> SignalHandler__any_result;
   SignalHandler__any_result any_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> SignalHandler__self_result;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, SignalTestInterfaceHandle ()> SignalHandler__self_result;
   SignalHandler__self_result self_result;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void ()> SignalHandler__void_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void ()> SignalHandler__void_arg;
   SignalHandler__void_arg void_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (bool b)> SignalHandler__bool_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (bool b)> SignalHandler__bool_arg;
   SignalHandler__bool_arg bool_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (int i)> SignalHandler__int_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (int i)> SignalHandler__int_arg;
   SignalHandler__int_arg int_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (double f)> SignalHandler__float_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (double f)> SignalHandler__float_arg;
   SignalHandler__float_arg float_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (const std::string &s)> SignalHandler__string_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const std::string &s)> SignalHandler__string_arg;
   SignalHandler__string_arg string_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (QuickEnum e)> SignalHandler__enum_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (QuickEnum e)> SignalHandler__enum_arg;
   SignalHandler__enum_arg enum_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> SignalHandler__record_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const QuickRecordStruct &r)> SignalHandler__record_arg;
   SignalHandler__record_arg record_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> SignalHandler__sequence_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const QuickSequenceStruct &s)> SignalHandler__sequence_arg;
   SignalHandler__sequence_arg sequence_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> SignalHandler__interface_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (GrandChildHandle &i)> SignalHandler__interface_arg;
   SignalHandler__interface_arg interface_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (const Plic::Any &a)> SignalHandler__any_arg;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const Plic::Any &a)> SignalHandler__any_arg;
   SignalHandler__any_arg any_arg;
-  typedef Plic::CxxStub::SignalHandler<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> SignalHandler__self_args;
+  typedef Plic::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> SignalHandler__self_args;
   SignalHandler__self_args self_args;
   SignalTestInterface_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
@@ -2364,166 +2428,166 @@ SignalTestInterface_Context$::list_types ()
   }
   return *m_cached_types;
 }
-SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle ()
+SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 Plic::ClientConnection
-SignalTestInterface_SmartHandle::__client_connection__ (void)
+SignalTestInterfaceHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const SignalTestInterfaceHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, SignalTestInterface_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, SignalTestInterfaceHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterface_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterfaceHandle();
 }
 const Plic::TypeHash&
-SignalTestInterface_SmartHandle::_type()
+SignalTestInterfaceHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL);
   return type_hash;
 }
-SignalTestInterface_SmartHandle
-SignalTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+SignalTestInterfaceHandle
+SignalTestInterfaceHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (other))->handle$;
-  return SignalTestInterface_SmartHandle();
+  return SignalTestInterfaceHandle();
 }
 const Plic::TypeHashList&
-SignalTestInterface_SmartHandle::cast_types()
+SignalTestInterfaceHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<SignalTestInterface_Context$> (ipcid)->list_types();
 }
-SignalTestInterface_SmartHandle::Signal_void_result&
-SignalTestInterface_SmartHandle::sig_void_result ()
+SignalTestInterfaceHandle::Signal_void_result&
+SignalTestInterfaceHandle::sig_void_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->void_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_bool_result&
-SignalTestInterface_SmartHandle::sig_bool_result ()
+SignalTestInterfaceHandle::Signal_bool_result&
+SignalTestInterfaceHandle::sig_bool_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_int_result&
-SignalTestInterface_SmartHandle::sig_int_result ()
+SignalTestInterfaceHandle::Signal_int_result&
+SignalTestInterfaceHandle::sig_int_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_float_result&
-SignalTestInterface_SmartHandle::sig_float_result ()
+SignalTestInterfaceHandle::Signal_float_result&
+SignalTestInterfaceHandle::sig_float_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_string_result&
-SignalTestInterface_SmartHandle::sig_string_result ()
+SignalTestInterfaceHandle::Signal_string_result&
+SignalTestInterfaceHandle::sig_string_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->string_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_enum_result&
-SignalTestInterface_SmartHandle::sig_enum_result ()
+SignalTestInterfaceHandle::Signal_enum_result&
+SignalTestInterfaceHandle::sig_enum_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->enum_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_record_result&
-SignalTestInterface_SmartHandle::sig_record_result ()
+SignalTestInterfaceHandle::Signal_record_result&
+SignalTestInterfaceHandle::sig_record_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->record_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_sequence_result&
-SignalTestInterface_SmartHandle::sig_sequence_result ()
+SignalTestInterfaceHandle::Signal_sequence_result&
+SignalTestInterfaceHandle::sig_sequence_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->sequence_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_interface_result&
-SignalTestInterface_SmartHandle::sig_interface_result ()
+SignalTestInterfaceHandle::Signal_interface_result&
+SignalTestInterfaceHandle::sig_interface_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->interface_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_any_result&
-SignalTestInterface_SmartHandle::sig_any_result ()
+SignalTestInterfaceHandle::Signal_any_result&
+SignalTestInterfaceHandle::sig_any_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->any_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_self_result&
-SignalTestInterface_SmartHandle::sig_self_result ()
+SignalTestInterfaceHandle::Signal_self_result&
+SignalTestInterfaceHandle::sig_self_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->self_result.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_void_arg&
-SignalTestInterface_SmartHandle::sig_void_arg ()
+SignalTestInterfaceHandle::Signal_void_arg&
+SignalTestInterfaceHandle::sig_void_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->void_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_bool_arg&
-SignalTestInterface_SmartHandle::sig_bool_arg ()
+SignalTestInterfaceHandle::Signal_bool_arg&
+SignalTestInterfaceHandle::sig_bool_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_int_arg&
-SignalTestInterface_SmartHandle::sig_int_arg ()
+SignalTestInterfaceHandle::Signal_int_arg&
+SignalTestInterfaceHandle::sig_int_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_float_arg&
-SignalTestInterface_SmartHandle::sig_float_arg ()
+SignalTestInterfaceHandle::Signal_float_arg&
+SignalTestInterfaceHandle::sig_float_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_string_arg&
-SignalTestInterface_SmartHandle::sig_string_arg ()
+SignalTestInterfaceHandle::Signal_string_arg&
+SignalTestInterfaceHandle::sig_string_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->string_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_enum_arg&
-SignalTestInterface_SmartHandle::sig_enum_arg ()
+SignalTestInterfaceHandle::Signal_enum_arg&
+SignalTestInterfaceHandle::sig_enum_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->enum_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_record_arg&
-SignalTestInterface_SmartHandle::sig_record_arg ()
+SignalTestInterfaceHandle::Signal_record_arg&
+SignalTestInterfaceHandle::sig_record_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->record_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_sequence_arg&
-SignalTestInterface_SmartHandle::sig_sequence_arg ()
+SignalTestInterfaceHandle::Signal_sequence_arg&
+SignalTestInterfaceHandle::sig_sequence_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->sequence_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_interface_arg&
-SignalTestInterface_SmartHandle::sig_interface_arg ()
+SignalTestInterfaceHandle::Signal_interface_arg&
+SignalTestInterfaceHandle::sig_interface_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->interface_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_any_arg&
-SignalTestInterface_SmartHandle::sig_any_arg ()
+SignalTestInterfaceHandle::Signal_any_arg&
+SignalTestInterfaceHandle::sig_any_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->any_arg.psignal;
 }
-SignalTestInterface_SmartHandle::Signal_self_args&
-SignalTestInterface_SmartHandle::sig_self_args ()
+SignalTestInterfaceHandle::Signal_self_args&
+SignalTestInterfaceHandle::sig_self_args ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->self_args.psignal;
 }
 
 // === ChildInheritingSignals ===
-static inline void ref   (ChildInheritingSignals_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ChildInheritingSignals_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
 struct ChildInheritingSignals_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public ChildInheritingSignals_SmartHandle {
+  struct SmartHandle$ : public ChildInheritingSignalsHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  typedef Plic::CxxStub::SignalHandler<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s)> SignalHandler__child_signal;
+  typedef Plic::CxxStub::SignalHandler<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Plic::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s)> SignalHandler__child_signal;
   SignalHandler__child_signal child_signal;
   ChildInheritingSignals_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
@@ -2559,53 +2623,53 @@ ChildInheritingSignals_Context$::list_types ()
   }
   return *m_cached_types;
 }
-ChildInheritingSignals_SmartHandle::ChildInheritingSignals_SmartHandle ()
+ChildInheritingSignalsHandle::ChildInheritingSignalsHandle ()
 {}
 void
-operator<<= (Plic::FieldBuffer &fb, const ChildInheritingSignals_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const ChildInheritingSignalsHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, ChildInheritingSignals_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, ChildInheritingSignalsHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignals_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignalsHandle();
 }
 const Plic::TypeHash&
-ChildInheritingSignals_SmartHandle::_type()
+ChildInheritingSignalsHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0d6e67873f4098cbULL, 0xe7f2eb93eb46037cULL);
   return type_hash;
 }
-ChildInheritingSignals_SmartHandle
-ChildInheritingSignals_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+ChildInheritingSignalsHandle
+ChildInheritingSignalsHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<ChildInheritingSignals_Context$> (connection_handle2id (other))->handle$;
-  return ChildInheritingSignals_SmartHandle();
+  return ChildInheritingSignalsHandle();
 }
 const Plic::TypeHashList&
-ChildInheritingSignals_SmartHandle::cast_types()
+ChildInheritingSignalsHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ChildInheritingSignals_Context$> (ipcid)->list_types();
 }
-ChildInheritingSignals_SmartHandle::Signal_child_signal&
-ChildInheritingSignals_SmartHandle::sig_child_signal ()
+ChildInheritingSignalsHandle::Signal_child_signal&
+ChildInheritingSignalsHandle::sig_child_signal ()
 {
   return connection_id2context<ChildInheritingSignals_Context$> (connection_handle2id (*this))->child_signal.psignal;
 }
 
 // === AnotherChild ===
-static inline void ref   (AnotherChild_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (AnotherChild_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
 struct AnotherChild_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public AnotherChild_SmartHandle {
+  struct SmartHandle$ : public AnotherChildHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   AnotherChild_Context$ (Plic::uint64_t ipcid) :
@@ -2641,36 +2705,36 @@ AnotherChild_Context$::list_types ()
   }
   return *m_cached_types;
 }
-AnotherChild_SmartHandle::AnotherChild_SmartHandle ()
+AnotherChildHandle::AnotherChildHandle ()
 {}
 void
-operator<<= (Plic::FieldBuffer &fb, const AnotherChild_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const AnotherChildHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, AnotherChild_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, AnotherChildHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChild_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChildHandle();
 }
 const Plic::TypeHash&
-AnotherChild_SmartHandle::_type()
+AnotherChildHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0e2870deaacf05f9ULL, 0x2851002b6bd14b7aULL);
   return type_hash;
 }
-AnotherChild_SmartHandle
-AnotherChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+AnotherChildHandle
+AnotherChildHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<AnotherChild_Context$> (connection_handle2id (other))->handle$;
-  return AnotherChild_SmartHandle();
+  return AnotherChildHandle();
 }
 const Plic::TypeHashList&
-AnotherChild_SmartHandle::cast_types()
+AnotherChildHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -2679,10 +2743,10 @@ AnotherChild_SmartHandle::cast_types()
 }
 
 // === PropertyTester ===
-static inline void ref   (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
 struct PropertyTester_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public PropertyTester_SmartHandle {
+  struct SmartHandle$ : public PropertyTesterHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   PropertyTester_Context$ (Plic::uint64_t ipcid) :
@@ -2718,41 +2782,41 @@ PropertyTester_Context$::list_types ()
   }
   return *m_cached_types;
 }
-PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
+PropertyTesterHandle::PropertyTesterHandle ()
 {}
 Plic::ClientConnection
-PropertyTester_SmartHandle::__client_connection__ (void)
+PropertyTesterHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const PropertyTesterHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, PropertyTesterHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTester_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTesterHandle();
 }
 const Plic::TypeHash&
-PropertyTester_SmartHandle::_type()
+PropertyTesterHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0de89d5c207bc662ULL, 0x846800e315917b46ULL);
   return type_hash;
 }
-PropertyTester_SmartHandle
-PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+PropertyTesterHandle
+PropertyTesterHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<PropertyTester_Context$> (connection_handle2id (other))->handle$;
-  return PropertyTester_SmartHandle();
+  return PropertyTesterHandle();
 }
 const Plic::TypeHashList&
-PropertyTester_SmartHandle::cast_types()
+PropertyTesterHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -2760,7 +2824,7 @@ PropertyTester_SmartHandle::cast_types()
   return connection_id2context<PropertyTester_Context$> (ipcid)->list_types();
 }
 bool
-PropertyTester_SmartHandle::bool_prop () const
+PropertyTesterHandle::bool_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL);
@@ -2774,7 +2838,7 @@ PropertyTester_SmartHandle::bool_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::bool_prop (bool value)
+PropertyTesterHandle::bool_prop (bool value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL); // msgid
@@ -2784,7 +2848,7 @@ PropertyTester_SmartHandle::bool_prop (bool value)
   if (fr) delete fr;
 }
 int
-PropertyTester_SmartHandle::int_prop () const
+PropertyTesterHandle::int_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x369c402f00bbf1e2ULL, 0x515a4131e4516216ULL);
@@ -2798,7 +2862,7 @@ PropertyTester_SmartHandle::int_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::int_prop (int value)
+PropertyTesterHandle::int_prop (int value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a015ad6b813701dULL, 0x62fa674331e78289ULL); // msgid
@@ -2808,7 +2872,7 @@ PropertyTester_SmartHandle::int_prop (int value)
   if (fr) delete fr;
 }
 double
-PropertyTester_SmartHandle::float_prop () const
+PropertyTesterHandle::float_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3b2c96526265c4baULL, 0xc1f4b15d96504a08ULL);
@@ -2822,7 +2886,7 @@ PropertyTester_SmartHandle::float_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::float_prop (double value)
+PropertyTesterHandle::float_prop (double value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x25ae78062c0435cdULL, 0x1d21f473f7647360ULL); // msgid
@@ -2832,7 +2896,7 @@ PropertyTester_SmartHandle::float_prop (double value)
   if (fr) delete fr;
 }
 std::string
-PropertyTester_SmartHandle::string_prop () const
+PropertyTesterHandle::string_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x385771786e6432dbULL, 0xcb19bfb3aa9a26feULL);
@@ -2846,7 +2910,7 @@ PropertyTester_SmartHandle::string_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::string_prop (const std::string &value)
+PropertyTesterHandle::string_prop (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x206d200c92ba7e41ULL, 0x857975e0304c85f3ULL); // msgid
@@ -2856,7 +2920,7 @@ PropertyTester_SmartHandle::string_prop (const std::string &value)
   if (fr) delete fr;
 }
 QuickEnum
-PropertyTester_SmartHandle::enum_prop () const
+PropertyTesterHandle::enum_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d09e074f5d2f8edULL, 0x38e8a275e29c3fc2ULL);
@@ -2870,7 +2934,7 @@ PropertyTester_SmartHandle::enum_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::enum_prop (QuickEnum value)
+PropertyTesterHandle::enum_prop (QuickEnum value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2b77a2f3a3c4d5b4ULL, 0x4d5b96d1adf5f7ccULL); // msgid
@@ -2879,8 +2943,8 @@ PropertyTester_SmartHandle::enum_prop (QuickEnum value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
-QuickRecord_Handle
-PropertyTester_SmartHandle::record_prop () const
+QuickRecordStruct
+PropertyTesterHandle::record_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x31443949c61d0fecULL, 0xeb221638d6ffd3cfULL);
@@ -2888,13 +2952,13 @@ PropertyTester_SmartHandle::record_prop () const
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickRecord_Handle  retval;
+  QuickRecordStruct  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTester_SmartHandle::record_prop (const QuickRecord_Handle &value)
+PropertyTesterHandle::record_prop (const QuickRecordStruct &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a5f5c212625f446ULL, 0x30d24123307269ceULL); // msgid
@@ -2903,8 +2967,8 @@ PropertyTester_SmartHandle::record_prop (const QuickRecord_Handle &value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
-QuickSequence_Handle
-PropertyTester_SmartHandle::sequence_prop () const
+QuickSequenceStruct
+PropertyTesterHandle::sequence_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3f323c929c803ea8ULL, 0x6ebf49e977bfb699ULL);
@@ -2912,13 +2976,13 @@ PropertyTester_SmartHandle::sequence_prop () const
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickSequence_Handle  retval;
+  QuickSequenceStruct  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTester_SmartHandle::sequence_prop (const QuickSequence_Handle &value)
+PropertyTesterHandle::sequence_prop (const QuickSequenceStruct &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL); // msgid
@@ -2927,8 +2991,8 @@ PropertyTester_SmartHandle::sequence_prop (const QuickSequence_Handle &value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
-GrandChild_SmartHandle
-PropertyTester_SmartHandle::interface_prop () const
+GrandChildHandle
+PropertyTesterHandle::interface_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x33a8b72ea92bb600ULL, 0x3837c1118556aaedULL);
@@ -2936,13 +3000,13 @@ PropertyTester_SmartHandle::interface_prop () const
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  GrandChild_SmartHandle  retval;
+  GrandChildHandle  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTester_SmartHandle::interface_prop (GrandChild_SmartHandle value)
+PropertyTesterHandle::interface_prop (GrandChildHandle value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL); // msgid
@@ -2951,8 +3015,8 @@ PropertyTester_SmartHandle::interface_prop (GrandChild_SmartHandle value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
-PropertyTester_SmartHandle
-PropertyTester_SmartHandle::self_prop () const
+PropertyTesterHandle
+PropertyTesterHandle::self_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL);
@@ -2960,13 +3024,13 @@ PropertyTester_SmartHandle::self_prop () const
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  PropertyTester_SmartHandle  retval;
+  PropertyTesterHandle  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
+PropertyTesterHandle::self_prop (PropertyTesterHandle value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL); // msgid
@@ -2976,7 +3040,7 @@ PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
   if (fr) delete fr;
 }
 Plic::Any
-PropertyTester_SmartHandle::any_prop () const
+PropertyTesterHandle::any_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x331c2730c160062aULL, 0xaabfaeca6649ae46ULL);
@@ -2990,7 +3054,7 @@ PropertyTester_SmartHandle::any_prop () const
   return retval;
 }
 void
-PropertyTester_SmartHandle::any_prop (const Plic::Any &value)
+PropertyTesterHandle::any_prop (const Plic::Any &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x28a440900d170de2ULL, 0x69e43a111fa9fb39ULL); // msgid
@@ -3004,15 +3068,15 @@ PropertyTester_SmartHandle::any_prop (const Plic::Any &value)
 namespace RapicornPlicTest {
 
 // === ButtonArea ===
-static inline void ref   (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
 struct ButtonArea_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public ButtonArea_SmartHandle {
+  struct SmartHandle$ : public ButtonAreaHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  typedef Plic::CxxStub::SignalHandler<ButtonArea_SmartHandle, bool ()> SignalHandler__check_activate;
+  typedef Plic::CxxStub::SignalHandler<ButtonAreaHandle, bool ()> SignalHandler__check_activate;
   SignalHandler__check_activate check_activate;
-  typedef Plic::CxxStub::SignalHandler<ButtonArea_SmartHandle, void ()> SignalHandler__activate;
+  typedef Plic::CxxStub::SignalHandler<ButtonAreaHandle, void ()> SignalHandler__activate;
   SignalHandler__activate activate;
   ButtonArea_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
@@ -3049,59 +3113,59 @@ ButtonArea_Context$::list_types ()
   }
   return *m_cached_types;
 }
-ButtonArea_SmartHandle::ButtonArea_SmartHandle ()
+ButtonAreaHandle::ButtonAreaHandle ()
 {}
 Plic::ClientConnection
-ButtonArea_SmartHandle::__client_connection__ (void)
+ButtonAreaHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const ButtonAreaHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, ButtonArea_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, ButtonAreaHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonArea_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonAreaHandle();
 }
 const Plic::TypeHash&
-ButtonArea_SmartHandle::_type()
+ButtonAreaHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0dcb7c084481f495ULL, 0x58f43abd0dd694eaULL);
   return type_hash;
 }
-ButtonArea_SmartHandle
-ButtonArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+ButtonAreaHandle
+ButtonAreaHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<ButtonArea_Context$> (connection_handle2id (other))->handle$;
-  return ButtonArea_SmartHandle();
+  return ButtonAreaHandle();
 }
 const Plic::TypeHashList&
-ButtonArea_SmartHandle::cast_types()
+ButtonAreaHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ButtonArea_Context$> (ipcid)->list_types();
 }
-ButtonArea_SmartHandle::Signal_check_activate&
-ButtonArea_SmartHandle::sig_check_activate ()
+ButtonAreaHandle::Signal_check_activate&
+ButtonAreaHandle::sig_check_activate ()
 {
   return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->check_activate.psignal;
 }
-ButtonArea_SmartHandle::Signal_activate&
-ButtonArea_SmartHandle::sig_activate ()
+ButtonAreaHandle::Signal_activate&
+ButtonAreaHandle::sig_activate ()
 {
   return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->activate.psignal;
 }
 std::string
-ButtonArea_SmartHandle::on_click () const
+ButtonAreaHandle::on_click () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
@@ -3115,7 +3179,7 @@ ButtonArea_SmartHandle::on_click () const
   return retval;
 }
 void
-ButtonArea_SmartHandle::on_click (const std::string &value)
+ButtonAreaHandle::on_click (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
@@ -3125,7 +3189,7 @@ ButtonArea_SmartHandle::on_click (const std::string &value)
   if (fr) delete fr;
 }
 std::string
-ButtonArea_SmartHandle::on_click2 () const
+ButtonAreaHandle::on_click2 () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
@@ -3139,7 +3203,7 @@ ButtonArea_SmartHandle::on_click2 () const
   return retval;
 }
 void
-ButtonArea_SmartHandle::on_click2 (const std::string &value)
+ButtonAreaHandle::on_click2 (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
@@ -3149,7 +3213,7 @@ ButtonArea_SmartHandle::on_click2 (const std::string &value)
   if (fr) delete fr;
 }
 std::string
-ButtonArea_SmartHandle::on_click3 () const
+ButtonAreaHandle::on_click3 () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
@@ -3163,7 +3227,7 @@ ButtonArea_SmartHandle::on_click3 () const
   return retval;
 }
 void
-ButtonArea_SmartHandle::on_click3 (const std::string &value)
+ButtonAreaHandle::on_click3 (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
@@ -3173,7 +3237,7 @@ ButtonArea_SmartHandle::on_click3 (const std::string &value)
   if (fr) delete fr;
 }
 ClickType
-ButtonArea_SmartHandle::click_type () const
+ButtonAreaHandle::click_type () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
@@ -3187,7 +3251,7 @@ ButtonArea_SmartHandle::click_type () const
   return retval;
 }
 void
-ButtonArea_SmartHandle::click_type (ClickType value)
+ButtonAreaHandle::click_type (ClickType value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
@@ -3198,10 +3262,10 @@ ButtonArea_SmartHandle::click_type (ClickType value)
 }
 
 // === PureMethods ===
-static inline void ref   (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void ref   (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
 struct PureMethods_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public PureMethods_SmartHandle {
+  struct SmartHandle$ : public PureMethodsHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   PureMethods_Context$ (Plic::uint64_t ipcid) :
@@ -3237,41 +3301,41 @@ PureMethods_Context$::list_types ()
   }
   return *m_cached_types;
 }
-PureMethods_SmartHandle::PureMethods_SmartHandle ()
+PureMethodsHandle::PureMethodsHandle ()
 {}
 Plic::ClientConnection
-PureMethods_SmartHandle::__client_connection__ (void)
+PureMethodsHandle::__client_connection__ (void)
 {
   return PLIC_CONNECTION();
 }
 void
-operator<<= (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
+operator<<= (Plic::FieldBuffer &fb, const PureMethodsHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
 }
 void
-operator>>= (Plic::FieldReader &fbr, PureMethods_SmartHandle &handle)
+operator>>= (Plic::FieldReader &fbr, PureMethodsHandle &handle)
 {
   const Plic::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethods_SmartHandle();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethodsHandle();
 }
 const Plic::TypeHash&
-PureMethods_SmartHandle::_type()
+PureMethodsHandle::_type()
 {
   static const Plic::TypeHash type_hash = Plic::TypeHash (0x0364646bccfb6bbcULL, 0x37b842dacad68d00ULL);
   return type_hash;
 }
-PureMethods_SmartHandle
-PureMethods_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+PureMethodsHandle
+PureMethodsHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
 {
   size_t i; const Plic::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return connection_id2context<PureMethods_Context$> (connection_handle2id (other))->handle$;
-  return PureMethods_SmartHandle();
+  return PureMethodsHandle();
 }
 const Plic::TypeHashList&
-PureMethods_SmartHandle::cast_types()
+PureMethodsHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
   const Plic::uint64_t ipcid = connection_handle2id (*this);
@@ -3279,7 +3343,7 @@ PureMethods_SmartHandle::cast_types()
   return connection_id2context<PureMethods_Context$> (ipcid)->list_types();
 }
 int
-PureMethods_SmartHandle::pure_method (double arg_f)
+PureMethodsHandle::pure_method (double arg_f)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL); // msgid

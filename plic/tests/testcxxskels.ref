@@ -133,8 +133,10 @@ enum ExtensiveEnum {
 inline void operator<<= (Plic::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 
+/** @interface FirstInterface
+ * See also the corresponding C++ class I_FirstInterface_Interface (server side). */
+/// See also the corresponding IDL class FirstInterface.
 class I_FirstInterface_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class FirstInterface.
 {
 protected:
   explicit                               I_FirstInterface_Interface ();
@@ -147,8 +149,10 @@ void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface*);
 void operator>>= (Plic::FieldReader&, I_FirstInterface_Interface*&);
 
+/** @interface XFooRecord
+ * See also the corresponding C++ class XFooRecordImpl (server side). */
+/// See also the corresponding IDL class XFooRecord.
 struct XFooRecordImpl
-  /// See also the corresponding IDL class XFooRecord.
 {
   bool                          single_bool;
   int                           single_num;
@@ -172,8 +176,10 @@ struct XFooRecordImpl
 void operator<<= (Plic::FieldBuffer&, const XFooRecordImpl&);
 void operator>>= (Plic::FieldReader&, XFooRecordImpl&);
 
+/** @interface XFooSequence
+ * See also the corresponding C++ class XFooSequenceImpl (server side). */
+/// See also the corresponding IDL class XFooSequence.
 struct XFooSequenceImpl : public std::vector<bool>
-  /// See also the corresponding IDL class XFooSequence.
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -181,8 +187,10 @@ struct XFooSequenceImpl : public std::vector<bool>
 void operator<<= (Plic::FieldBuffer&, const XFooSequenceImpl&);
 void operator>>= (Plic::FieldReader&, XFooSequenceImpl&);
 
+/** @interface IntSequence
+ * See also the corresponding C++ class IntSequenceImpl (server side). */
+/// See also the corresponding IDL class IntSequence.
 struct IntSequenceImpl : public std::vector<int>
-  /// See also the corresponding IDL class IntSequence.
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -190,8 +198,10 @@ struct IntSequenceImpl : public std::vector<int>
 void operator<<= (Plic::FieldBuffer&, const IntSequenceImpl&);
 void operator>>= (Plic::FieldReader&, IntSequenceImpl&);
 
+/** @interface FloatSequence
+ * See also the corresponding C++ class FloatSequenceImpl (server side). */
+/// See also the corresponding IDL class FloatSequence.
 struct FloatSequenceImpl : public std::vector<double>
-  /// See also the corresponding IDL class FloatSequence.
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -199,8 +209,10 @@ struct FloatSequenceImpl : public std::vector<double>
 void operator<<= (Plic::FieldBuffer&, const FloatSequenceImpl&);
 void operator>>= (Plic::FieldReader&, FloatSequenceImpl&);
 
+/** @interface StringSequence
+ * See also the corresponding C++ class StringSequenceImpl (server side). */
+/// See also the corresponding IDL class StringSequence.
 struct StringSequenceImpl : public std::vector<std::string>
-  /// See also the corresponding IDL class StringSequence.
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -208,8 +220,10 @@ struct StringSequenceImpl : public std::vector<std::string>
 void operator<<= (Plic::FieldBuffer&, const StringSequenceImpl&);
 void operator>>= (Plic::FieldReader&, StringSequenceImpl&);
 
+/** @interface ExtensiveEnumSequence
+ * See also the corresponding C++ class ExtensiveEnumSequenceImpl (server side). */
+/// See also the corresponding IDL class ExtensiveEnumSequence.
 struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum>
-  /// See also the corresponding IDL class ExtensiveEnumSequence.
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -217,8 +231,10 @@ struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum>
 void operator<<= (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
 void operator>>= (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
 
+/** @interface RecordSequence
+ * See also the corresponding C++ class RecordSequenceImpl (server side). */
+/// See also the corresponding IDL class RecordSequence.
 struct RecordSequenceImpl : public std::vector<XFooRecordImpl>
-  /// See also the corresponding IDL class RecordSequence.
 {
   typedef std::vector<XFooRecordImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -226,8 +242,10 @@ struct RecordSequenceImpl : public std::vector<XFooRecordImpl>
 void operator<<= (Plic::FieldBuffer&, const RecordSequenceImpl&);
 void operator>>= (Plic::FieldReader&, RecordSequenceImpl&);
 
+/** @interface SequenceSequence
+ * See also the corresponding C++ class SequenceSequenceImpl (server side). */
+/// See also the corresponding IDL class SequenceSequence.
 struct SequenceSequenceImpl : public std::vector<IntSequenceImpl>
-  /// See also the corresponding IDL class SequenceSequence.
 {
   typedef std::vector<IntSequenceImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -235,8 +253,10 @@ struct SequenceSequenceImpl : public std::vector<IntSequenceImpl>
 void operator<<= (Plic::FieldBuffer&, const SequenceSequenceImpl&);
 void operator>>= (Plic::FieldReader&, SequenceSequenceImpl&);
 
+/** @interface InterfaceSequence
+ * See also the corresponding C++ class InterfaceSequenceImpl (server side). */
+/// See also the corresponding IDL class InterfaceSequence.
 struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*>
-  /// See also the corresponding IDL class InterfaceSequence.
 {
   typedef std::vector<I_FirstInterface_Interface*> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -244,8 +264,10 @@ struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*>
 void operator<<= (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 void operator>>= (Plic::FieldReader&, InterfaceSequenceImpl&);
 
+/** @interface AnySequence
+ * See also the corresponding C++ class AnySequenceImpl (server side). */
+/// See also the corresponding IDL class AnySequence.
 struct AnySequenceImpl : public std::vector<Plic::Any>
-  /// See also the corresponding IDL class AnySequence.
 {
   typedef std::vector<Plic::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -253,8 +275,10 @@ struct AnySequenceImpl : public std::vector<Plic::Any>
 void operator<<= (Plic::FieldBuffer&, const AnySequenceImpl&);
 void operator>>= (Plic::FieldReader&, AnySequenceImpl&);
 
+/** @interface NestedTypesRec
+ * See also the corresponding C++ class NestedTypesRecImpl (server side). */
+/// See also the corresponding IDL class NestedTypesRec.
 struct NestedTypesRecImpl
-  /// See also the corresponding IDL class NestedTypesRec.
 {
   XFooRecordImpl                rec;
   XFooSequenceImpl              seq;
@@ -263,8 +287,10 @@ struct NestedTypesRecImpl
 void operator<<= (Plic::FieldBuffer&, const NestedTypesRecImpl&);
 void operator>>= (Plic::FieldReader&, NestedTypesRecImpl&);
 
+/** @interface NestedTypesSeq
+ * See also the corresponding C++ class NestedTypesSeqImpl (server side). */
+/// See also the corresponding IDL class NestedTypesSeq.
 struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl>
-  /// See also the corresponding IDL class NestedTypesSeq.
 {
   typedef std::vector<NestedTypesRecImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -288,8 +314,10 @@ typedef XFooSequenceImpl AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
+/** @interface NewRecord
+ * See also the corresponding C++ class NewRecordImpl (server side). */
+/// See also the corresponding IDL class NewRecord.
 struct NewRecordImpl
-  /// See also the corresponding IDL class NewRecord.
 {
   int                           i;
   Enum1                         enum1;
@@ -302,8 +330,10 @@ void operator>>= (Plic::FieldReader&, NewRecordImpl&);
 
 namespace Inner {
 
+/** @interface InnerRecord
+ * See also the corresponding C++ class InnerRecordImpl (server side). */
+/// See also the corresponding IDL class InnerRecord.
 struct InnerRecordImpl
-  /// See also the corresponding IDL class InnerRecord.
 {
   int                           x;
   int                           y;
@@ -314,8 +344,10 @@ void operator<<= (Plic::FieldBuffer&, const InnerRecordImpl&);
 void operator>>= (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
+/** @interface Refer2Inner
+ * See also the corresponding C++ class Refer2InnerImpl (server side). */
+/// See also the corresponding IDL class Refer2Inner.
 struct Refer2InnerImpl
-  /// See also the corresponding IDL class Refer2Inner.
 {
   Inner::InnerRecordImpl        r;
   inline                        Refer2InnerImpl () { }
@@ -326,8 +358,10 @@ void operator>>= (Plic::FieldReader&, Refer2InnerImpl&);
 
 namespace OtherNamespace {
 
+/** @interface SomeRecord
+ * See also the corresponding C++ class SomeRecordImpl (server side). */
+/// See also the corresponding IDL class SomeRecord.
 struct SomeRecordImpl
-  /// See also the corresponding IDL class SomeRecord.
 {
   MandatoryNamespace::NewRecordImpl r1;
   MandatoryNamespace::NewRecordImpl r2;
@@ -350,8 +384,10 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
+/** @interface UIWidgetArea
+ * See also the corresponding C++ class I_UIWidgetArea_Interface (server side). */
+/// See also the corresponding IDL class UIWidgetArea.
 class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class UIWidgetArea.
 {
 protected:
   explicit                               I_UIWidgetArea_Interface ();
@@ -388,8 +424,10 @@ void operator<<= (Plic::FieldBuffer&, I_UIWidgetArea_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_UIWidgetArea_Interface*);
 void operator>>= (Plic::FieldReader&, I_UIWidgetArea_Interface*&);
 
+/** @interface Parent
+ * See also the corresponding C++ class I_Parent_Interface (server side). */
+/// See also the corresponding IDL class Parent.
 class I_Parent_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class Parent.
 {
 protected:
   explicit                               I_Parent_Interface ();
@@ -401,8 +439,10 @@ void operator<<= (Plic::FieldBuffer&, I_Parent_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_Parent_Interface*);
 void operator>>= (Plic::FieldReader&, I_Parent_Interface*&);
 
+/** @interface Child
+ * See also the corresponding C++ class I_Child_Interface (server side). */
+/// See also the corresponding IDL class Child.
 class I_Child_Interface : public virtual I_Parent_Interface
-  /// See also the corresponding IDL class Child.
 {
 protected:
   explicit                               I_Child_Interface ();
@@ -414,8 +454,10 @@ void operator<<= (Plic::FieldBuffer&, I_Child_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_Child_Interface*);
 void operator>>= (Plic::FieldReader&, I_Child_Interface*&);
 
+/** @interface Descendant
+ * See also the corresponding C++ class I_Descendant_Interface (server side). */
+/// See also the corresponding IDL class Descendant.
 class I_Descendant_Interface : public virtual I_Child_Interface
-  /// See also the corresponding IDL class Descendant.
 {
 protected:
   explicit                               I_Descendant_Interface ();
@@ -427,8 +469,10 @@ void operator<<= (Plic::FieldBuffer&, I_Descendant_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_Descendant_Interface*);
 void operator>>= (Plic::FieldReader&, I_Descendant_Interface*&);
 
+/** @interface GrandChild
+ * See also the corresponding C++ class I_GrandChild_Interface (server side). */
+/// See also the corresponding IDL class GrandChild.
 class I_GrandChild_Interface : public virtual I_Descendant_Interface
-  /// See also the corresponding IDL class GrandChild.
 {
 protected:
   explicit                               I_GrandChild_Interface ();
@@ -446,8 +490,10 @@ enum QuickEnum {
 inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
+/** @interface QuickRecord
+ * See also the corresponding C++ class QuickRecordImpl (server side). */
+/// See also the corresponding IDL class QuickRecord.
 struct QuickRecordImpl
-  /// See also the corresponding IDL class QuickRecord.
 {
   int                           int1;
   int                           int2;
@@ -456,8 +502,10 @@ struct QuickRecordImpl
 void operator<<= (Plic::FieldBuffer&, const QuickRecordImpl&);
 void operator>>= (Plic::FieldReader&, QuickRecordImpl&);
 
+/** @interface QuickSequence
+ * See also the corresponding C++ class QuickSequenceImpl (server side). */
+/// See also the corresponding IDL class QuickSequence.
 struct QuickSequenceImpl : public std::vector<double>
-  /// See also the corresponding IDL class QuickSequence.
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
@@ -465,8 +513,10 @@ struct QuickSequenceImpl : public std::vector<double>
 void operator<<= (Plic::FieldBuffer&, const QuickSequenceImpl&);
 void operator>>= (Plic::FieldReader&, QuickSequenceImpl&);
 
+/** @interface QuickIface
+ * See also the corresponding C++ class I_QuickIface_Interface (server side). */
+/// See also the corresponding IDL class QuickIface.
 class I_QuickIface_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class QuickIface.
 {
 protected:
   explicit                               I_QuickIface_Interface ();
@@ -479,8 +529,10 @@ void operator<<= (Plic::FieldBuffer&, I_QuickIface_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_QuickIface_Interface*);
 void operator>>= (Plic::FieldReader&, I_QuickIface_Interface*&);
 
+/** @interface MethodTestInterface
+ * See also the corresponding C++ class I_MethodTestInterface_Interface (server side). */
+/// See also the corresponding IDL class MethodTestInterface.
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class MethodTestInterface.
 {
 protected:
   explicit                               I_MethodTestInterface_Interface ();
@@ -513,8 +565,10 @@ void operator<<= (Plic::FieldBuffer&, I_MethodTestInterface_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_MethodTestInterface_Interface*);
 void operator>>= (Plic::FieldReader&, I_MethodTestInterface_Interface*&);
 
+/** @interface SignalTestInterface
+ * See also the corresponding C++ class I_SignalTestInterface_Interface (server side). */
+/// See also the corresponding IDL class SignalTestInterface.
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class SignalTestInterface.
 {
 protected:
   explicit                               I_SignalTestInterface_Interface ();
@@ -570,8 +624,10 @@ void operator<<= (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
 void operator>>= (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
+/** @interface ChildInheritingSignals
+ * See also the corresponding C++ class I_ChildInheritingSignals_Interface (server side). */
+/// See also the corresponding IDL class ChildInheritingSignals.
 class I_ChildInheritingSignals_Interface : public virtual I_SignalTestInterface_Interface
-  /// See also the corresponding IDL class ChildInheritingSignals.
 {
 protected:
   explicit                               I_ChildInheritingSignals_Interface ();
@@ -585,8 +641,10 @@ void operator<<= (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface*);
 void operator>>= (Plic::FieldReader&, I_ChildInheritingSignals_Interface*&);
 
+/** @interface AnotherChild
+ * See also the corresponding C++ class I_AnotherChild_Interface (server side). */
+/// See also the corresponding IDL class AnotherChild.
 class I_AnotherChild_Interface : public virtual I_SignalTestInterface_Interface
-  /// See also the corresponding IDL class AnotherChild.
 {
 protected:
   explicit                               I_AnotherChild_Interface ();
@@ -598,8 +656,10 @@ void operator<<= (Plic::FieldBuffer&, I_AnotherChild_Interface&);
 void operator<<= (Plic::FieldBuffer&, I_AnotherChild_Interface*);
 void operator>>= (Plic::FieldReader&, I_AnotherChild_Interface*&);
 
+/** @interface PropertyTester
+ * See also the corresponding C++ class I_PropertyTester_Interface (server side). */
+/// See also the corresponding IDL class PropertyTester.
 class I_PropertyTester_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class PropertyTester.
 {
 protected:
   explicit                               I_PropertyTester_Interface ();
@@ -644,8 +704,10 @@ enum ClickType {
 inline void operator<<= (Plic::FieldBuffer &fb,  ClickType  e) { fb <<= Plic::EnumValue (e); }
 inline void operator>>= (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 
+/** @interface ButtonArea
+ * See also the corresponding C++ class I_ButtonArea_Interface (server side). */
+/// See also the corresponding IDL class ButtonArea.
 class I_ButtonArea_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class ButtonArea.
 {
 protected:
   explicit                               I_ButtonArea_Interface ();
@@ -671,8 +733,10 @@ void operator>>= (Plic::FieldReader&, I_ButtonArea_Interface*&);
 
 class I_PureMethods_Interface;
 
+/** @interface PureMethods
+ * See also the corresponding C++ class I_PureMethods_Interface (server side). */
+/// See also the corresponding IDL class PureMethods.
 class I_PureMethods_Interface : public virtual Plic::SimpleServer
-  /// See also the corresponding IDL class PureMethods.
 {
 protected:
   explicit                               I_PureMethods_Interface ();
