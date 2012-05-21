@@ -26,7 +26,6 @@ help_usage (bool usage_error)
   printout ("\n");
   printout ("Options:\n");
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
-  printout ("  -l <uilib>                    Load ''uilib'' upon startup.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  --list                        List parsed definitions.\n");
   printout ("  --fatal-warnings              Turn criticals/warnings into fatal conditions.\n");
@@ -61,21 +60,6 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "-x") == 0)
         {
           auto_exit = true;
-          argv[i] = NULL;
-        }
-      else if (strcmp (argv[i], "-l") == 0 ||
-               strncmp ("-l=", argv[i], 2) == 0)
-        {
-          const char *v = NULL, *equal = argv[i] + 2;
-          if (*equal == '=')
-            v = equal + 1;
-          else if (i + 1 < argc)
-            {
-              argv[i++] = NULL;
-              v = argv[i];
-            }
-          if (v)
-            Svg::Library::add_library (v);
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--list") == 0)
