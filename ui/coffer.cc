@@ -27,9 +27,9 @@ list_library_files ()
         if (s.size())
           {
             Svg::FileP fp = Svg::File::load (s);
-            if (!fp->error())
+            SVGDEBUG ("loading: %s: %s", s.c_str(), strerror (errno));
+            if (fp)
               lv.push_back (fp);
-            SVGDEBUG ("loading: %s: %s", s.c_str(), strerror (fp->error()));
           }
       once_leave (&lib_list, &lv);
     }

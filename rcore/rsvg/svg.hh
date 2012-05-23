@@ -48,7 +48,6 @@ class File {
 public:
   virtual void          dump_tree       () = 0;
   virtual ElementP      lookup          (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
-  virtual int           error           () = 0;
   static  void          add_search_dir  (const String &absdir);         ///< Adds a directory for relative Svg::File::load() calls.
   static  FileP         load            (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
 protected: // Impl details

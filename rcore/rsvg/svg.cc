@@ -178,10 +178,8 @@ ElementImpl::render (cairo_surface_t *surface, const Allocation &area)
 
 struct FileImpl : public File {
   RsvgHandle           *m_handle;
-  int                   m_errno;
-  explicit              FileImpl        (RsvgHandle *hh) : m_handle (hh), m_errno (0) {}
+  explicit              FileImpl        (RsvgHandle *hh) : m_handle (hh) {}
   /*dtor*/             ~FileImpl        () { if (m_handle) g_object_unref (m_handle); }
-  virtual int           error           () { return m_errno; }
   virtual void          dump_tree       ();
   virtual ElementP      lookup          (const String &elementid);
 };
@@ -213,36 +211,33 @@ find_library_file (const String &filename)
 FileP
 File::load (const String &svgfilename)
 {
-  RsvgHandle *handle = NULL;
-  bool success = false;
-  errno = 0;
   FILE *file = fopen (find_library_file (svgfilename).c_str(), "rb");
-  int errsaved = errno;
   if (file)
     {
-      handle = rsvg_handle_new();
+      int errsaved = 0;
+      bool success = false;
+      RsvgHandle *handle = rsvg_handle_new();
       g_object_ref_sink (handle);
       uint8 buffer[8192];
       ssize_t len;
       while ((len = fread (buffer, 1, sizeof (buffer), file)) > 0)
         if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
           break;
-      if (!success)
-        errsaved = errsaved ? errsaved : errno;
+      if (len < 0)
+        errsaved = errno ? errno : EIO;
       fclose (file);
       success = success && rsvg_handle_close (handle, NULL);
-      if (!success)
+      if (success)
         {
-          g_object_unref (handle);
-          handle = NULL;
-          errsaved = errsaved ? errsaved : EINVAL;
+          FileP fp (new FileImpl (handle));
+          errno = 0;
+          return fp;
         }
+      g_object_unref (handle);
+      handle = NULL;
+      errno = errsaved ? errsaved : EINVAL;
     }
-  else
-    errsaved = errsaved ? errsaved : EIO;
-  FileImpl *fp = new FileImpl (handle);
-  fp->m_errno = errsaved;
-  return FileP (fp);
+  return FileP(); // NULL, errno is set
 }
 
 static void
