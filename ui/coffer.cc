@@ -5,18 +5,56 @@
 #include "../rcore/rsvg/svg.hh"
 #include <string.h>
 
+#define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
+
 #define CHECK_CAIRO_STATUS(status)      do { \
   cairo_status_t ___s = (status);            \
   if (___s != CAIRO_STATUS_SUCCESS)          \
-    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+    SVGDEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 namespace Rapicorn {
 
+static const vector<Svg::FileP>&
+list_library_files ()
+{
+  static vector<Svg::FileP> *lib_list = NULL;
+  if (once_enter (&lib_list))
+    {
+      static vector<Svg::FileP> lv;
+      const char *rp = getenv ("RAPICORN_SVG");
+      for (auto s : Path::searchpath_split (rp ? rp : ""))
+        if (s.size())
+          {
+            Svg::FileP fp = Svg::File::load (s);
+            if (!fp->error())
+              lv.push_back (fp);
+            SVGDEBUG ("loading: %s: %s", s.c_str(), strerror (fp->error()));
+          }
+      once_leave (&lib_list, &lv);
+    }
+  return *lib_list;
+}
+
+static Svg::ElementP
+library_lookup (const String &elementid)
+{
+  const vector<Svg::FileP> &libs = list_library_files();
+  Svg::ElementP ep;
+  for (auto file : libs)
+    {
+      ep = file->lookup (elementid);
+      if (ep)
+        break;
+    }
+  SVGDEBUG ("lookup: %s: %s", elementid.c_str(), ep ? "OK" : "failed");
+  return ep;
+}
+
 class CofferImpl : public virtual SingleContainerImpl, public virtual Coffer {
-  String        element_;
-  Svg::Element  sel_;
-  bool          overlap_child_;
+  String        m_element;
+  Svg::ElementP m_sel;
+  bool          m_overlap_child;
 protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
@@ -54,13 +92,13 @@ CofferImpl::do_invalidate()
 {
   if (element_.empty())
     {
-      sel_ = sel_.none();
+      m_sel = m_sel->none();
       return;
     }
-  Svg::Element e = Svg::Library::lookup_element (element_);
-  if (e.is_null())
+  Svg::ElementP ep = library_lookup (m_element);
+  if (!ep)
     return;
-  sel_ = e;
+  m_sel = ep;
 }
 
 void
@@ -69,8 +107,8 @@ CofferImpl::size_request (Requisition &requisition)
   SingleContainerImpl::size_request (requisition);
   if (sel_)
     {
-      requisition.width = sel_.allocation().width;
-      requisition.height = sel_.allocation().height;
+      requisition.width = m_sel->allocation().width;
+      requisition.height = m_sel->allocation().height;
       int thickness = 2; // FIXME: use real border marks
       if (!overlap_child_)
         {
@@ -106,21 +144,16 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
   if (sel_)
     {
       const Allocation &area = allocation();
-      const int aw = area.width, ah = area.height;
-      uint8 *pixels = new uint8[int (aw * ah * 4)];
-      memset (pixels, 0, aw * ah * 4);
-      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, aw, ah, 4 * aw);
+      const int width = area.width, height = area.height;
+      uint8 *pixels = new uint8[int (width * height * 4)];
+      memset (pixels, 0, width * height * 4);
+      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      bool rendered = sel_.render (surface, Svg::Allocation (0, 0, aw, ah));
+      bool rendered = m_sel->render (surface, Svg::Allocation (0, 0, width, height));
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);
-          cairo_set_source_surface (cr, surface, 0, 0); // (x,y) are set in the matrix below
-          cairo_matrix_t matrix;
-          cairo_matrix_init_identity (&matrix);
-          cairo_matrix_translate (&matrix, -area.x, (area.y + area.height)); // -x, y + height
-          cairo_matrix_scale (&matrix, 1, -1);
-          cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+          cairo_set_source_surface (cr, surface, area.x, area.y); // shift into allocation area
           cairo_paint (cr);
         }
       else
