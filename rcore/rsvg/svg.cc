@@ -34,26 +34,6 @@ affine_y (const double x, const double y, const double affine[6])
 namespace Rapicorn {
 namespace Svg {
 
-struct Tweaker {
-  double cx_, cy_, lx_, rx_, by_, ty_;
-  explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty) :
-    cx_ (cx), cy_ (cy), lx_ (lx), rx_ (rx), by_ (by), ty_ (ty) {}
-  bool          point_tweak     (double vx, double vy, double *px, double *py);
-  static void   thread_set      (Tweaker *tweaker);
-};
-
-struct ElementImpl : public ReferenceCountable {
-  RsvgHandle    *handle;
-  int            x, y, width, height, rw, rh; // relative to bottom_left
-  double         em, ex;
-  String         id;
-  explicit      ElementImpl     () : handle (NULL), x (0), y (0), width (0), height (0), em (0), ex (0) {}
-  virtual      ~ElementImpl     () { id = ""; if (handle) g_object_unref (handle); }
-};
-
-Info::Info () : em (0), ex (0)
-{}
-
 Allocation::Allocation () :
   x (-1), y (-1), width (0), height (0)
 {}
@@ -62,157 +42,153 @@ Allocation::Allocation (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
-const Element&
+struct Tweaker {
+  double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
+  double m_xoffset, m_xscale, m_yoffset, m_yscale;
+  explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty,
+                                 double xoffset, double xscale, double yoffset, double yscale) :
+    m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty),
+    m_xoffset (xoffset), m_xscale (xscale), m_yoffset (yoffset), m_yscale (yscale) {}
+  bool          point_tweak     (double vx, double vy, double *px, double *py);
+  static void   thread_set      (Tweaker *tweaker);
+};
+
+bool
+Tweaker::point_tweak (double vx, double vy, double *px, double *py)
+{
+  bool mod = 0;
+#if 0
+  const double xdelta = *px - m_xoffset;
+  *px = m_xoffset + xdelta * m_xscale;
+  const double ydelta = *py - m_yoffset;
+  *py = m_yoffset + ydelta * m_yscale;
+  mod = true;
+#else // nonlinear shifting away from center
+  const double eps = 0.0001;
+  // FIXME: for filters to work, the document page must grow so that it contains the tweaked
+  // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
+  if (vx > m_cx + eps)
+    *px += m_lx + m_rx, mod = 1;
+  else if (vx >= m_cx - eps)
+    *px += m_lx, mod = 1;
+  if (vy > m_cy + eps)
+    *py += m_ty + m_by, mod = 1;
+  else if (vy >= m_cy - eps)
+    *py += m_ty, mod = 1;
+#endif
+  return mod;
+}
+
+struct ElementImpl : public Element {
+  String         m_id;
+  int            m_x, m_y, m_width, m_height, m_rw, m_rh; // relative to bottom_left
+  double         m_em, m_ex;
+  RsvgHandle    *m_handle;
+  explicit              ElementImpl     () : m_x (0), m_y (0), m_width (0), m_height (0), m_em (0), m_ex (0), m_handle (NULL) {}
+  virtual              ~ElementImpl     ();
+  virtual Info          info            ();
+  virtual Allocation    allocation      () { return Allocation (m_x, m_y, m_width, m_height); }
+  virtual Allocation    allocation      (Allocation &_containee);
+  virtual Allocation    containee       ();
+  virtual Allocation    containee       (Allocation &_resized);
+  virtual bool          render          (cairo_surface_t *surface, const Allocation &area);
+};
+
+const ElementP
 Element::none ()
 {
-  static const Element _none;
-  return _none;
+  return ElementP();
 }
 
-Element&
-Element::operator= (const Element &src)
+ElementImpl::~ElementImpl ()
 {
-  if (this != &src)
-    {
-      ElementImpl *old = impl;
-      this->impl = src.impl;
-      if (impl)
-        impl->ref();
-      if (old)
-        old->unref();
-    }
-  return *this;
-}
-
-Element::Element (const Element &src) :
-  impl (NULL)
-{
-  *this = src;
-}
-
-Element::Element () :
-  impl (NULL)
-{}
-
-Element::~Element ()
-{
-  ElementImpl *old = impl;
-  impl = NULL;
-  if (old)
-    old->unref();
+  m_id = "";
+  RsvgHandle *ohandle = m_handle;
+  m_handle = NULL;
+  if (ohandle)
+    g_object_unref (ohandle);
 }
 
 Info
-Element::info ()
+ElementImpl::info ()
 {
   Info i;
-  if (impl)
-    {
-      i.id = impl->id;
-      i.em = impl->em;
-      i.ex = impl->ex;
-    }
-  else
-    {
-      i.id = "";
-      i.em = i.ex = 0;
-    }
+  i.id = m_id;
+  i.em = m_em;
+  i.ex = m_ex;
   return i;
 }
 
 Allocation
-Element::allocation ()
+ElementImpl::allocation (Allocation &containee)
 {
-  if (impl)
-    {
-      Allocation a = Allocation (impl->x, impl->y, impl->width, impl->height);
-      return a;
-    }
-  else
-    return Allocation();
-}
-
-Allocation
-Element::allocation (Allocation &_containee)
-{
-  if (!impl || _containee.width <= 0 || _containee.height <= 0)
+  if (containee.width <= 0 || containee.height <= 0)
     return allocation();
   // FIXME: resize for _containee width/height
-  Allocation a = Allocation (impl->x, impl->y, _containee.width + 4, _containee.height + 4);
+  Allocation a = Allocation (m_x, m_y, containee.width + 4, containee.height + 4);
   return a;
 }
 
 Allocation
-Element::containee ()
+ElementImpl::containee ()
 {
-  if (!impl || impl->width <= 4 || impl->height <= 4)
+  if (m_width <= 4 || m_height <= 4)
     return Allocation();
   // FIXME: calculate _containee size
-  Allocation a = Allocation (impl->x + 2, impl->y + 2, impl->width - 4, impl->height - 4);
+  Allocation a = Allocation (m_x + 2, m_y + 2, m_width - 4, m_height - 4);
   return a;
 }
 
 Allocation
-Element::containee (Allocation &_resized)
+ElementImpl::containee (Allocation &resized)
 {
-  if (!impl || (_resized.width == impl->width && _resized.height == impl->height))
+  if (resized.width == m_width && resized.height == m_height)
     return containee();
   // FIXME: calculate _containee size when resized
   return containee();
 }
 
 bool
-Element::render (cairo_surface_t  *surface,
-                 const Allocation &area)
+ElementImpl::render (cairo_surface_t *surface, const Allocation &area)
 {
   assert_return (surface != NULL, false);
-  if (!impl) return false;
   cairo_t *cr = cairo_create (surface);
-  cairo_translate (cr, -impl->x, -impl->y); // shift sub into top_left
+  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left
   cairo_translate (cr, area.x, area.y);    // translate by requested offset
-  const char *cid = impl->id.empty() ? NULL : impl->id.c_str();
-  const double rx = (area.width - impl->width) / 2.0;
-  const double lx = (area.width - impl->width) - rx;
-  const double ty = (area.height - impl->height) / 2.0;
-  const double by = (area.height - impl->height) - ty;
-  Tweaker tw (impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by);
+  const char *cid = m_id.empty() ? NULL : m_id.c_str();
+  const double rx = (area.width - m_width) / 2.0;
+  const double lx = (area.width - m_width) - rx;
+  const double ty = (area.height - m_height) / 2.0;
+  const double by = (area.height - m_height) - ty;
+  Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
+              m_x, area.width / m_width, m_y, area.height / m_height);
   if (svg_tweak_debugging)
     printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
-              impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by,
-              impl->x,impl->y,impl->width,impl->height);
+              m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
+              m_x, m_y, m_width, m_height);
   svg_tweak_debugging = debug_enabled();
   tw.thread_set (&tw);
-  bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, cid);
+  bool rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
   tw.thread_set (NULL);
   cairo_destroy (cr);
   return rendered;
 }
 
-bool
-Tweaker::point_tweak (double vx, double vy, double *px, double *py)
-{
-  bool mod = 0;
-  const double eps = 0.0001;
-  // FIXME: for filters to work, the document page must grow so that it contains the tweaked
-  // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
-  if (vx > cx_ + eps)
-    *px += lx_ + rx_, mod = 1;
-  else if (vx >= cx_ - eps)
-    *px += lx_, mod = 1;
-  if (vy > cy_ + eps)
-    *py += ty_ + by_, mod = 1;
-  else if (vy >= cy_ - eps)
-    *py += ty_, mod = 1;
-  return mod;
-}
+struct FileImpl : public File {
+  RsvgHandle           *m_handle;
+  int                   m_errno;
+  explicit              FileImpl        (RsvgHandle *hh) : m_handle (hh), m_errno (0) {}
+  /*dtor*/             ~FileImpl        () { if (m_handle) g_object_unref (m_handle); }
+  virtual int           error           () { return m_errno; }
+  virtual void          dump_tree       ();
+  virtual ElementP      lookup          (const String &elementid);
+};
 
 static vector<String>      library_search_dirs;
 
-/**
- * Add a directory to search for SVG library fiels.
- */
+// Add a directory to search for SVG files with relative pathnames.
 void
-Library::add_search_dir (const String &absdir)
+File::add_search_dir (const String &absdir)
 {
   assert_return (Path::isabs (absdir));
   library_search_dirs.push_back (absdir);
@@ -232,58 +208,39 @@ find_library_file (const String &filename)
   return Path::abspath (filename); // uses CWD
 }
 
-static vector<RsvgHandle*> library_handles;
-
-void
-Library::add_resource (const String &res_svg)
+FileP
+File::load (const String &svgfilename)
 {
-  errno = ENOENT;
-  Blob blob = Blob::load (res_svg);
-  if (blob)
-    {
-      errno = ENODATA;
-      RsvgHandle *handle = rsvg_handle_new();
-      g_object_ref_sink (handle);
-      bool success = rsvg_handle_write (handle, blob.bytes(), blob.size(), NULL);
-      success = success && rsvg_handle_close (handle, NULL);
-      if (success)
-        {
-          library_handles.push_back (handle);
-          errno = 0;
-        }
-      else
-        g_object_unref (handle);
-    }
-  if (errno)
-    DEBUG ("SVG: failed to load %s: %s", CQUOTE (res_svg), strerror (errno));
-}
-
-/**
- * Add @filename to the list of SVG libraries used for looking up UI graphics.
- */
-void
-Library::add_library (const String &filename)
-{
-  // loading *could* be deferred here
-  FILE *fp = fopen (find_library_file (filename).c_str(), "rb");
+  RsvgHandle *handle = NULL;
   bool success = false;
-  if (fp)
+  errno = 0;
+  FILE *file = fopen (find_library_file (svgfilename).c_str(), "rb");
+  int errsaved = errno;
+  if (file)
     {
+      handle = rsvg_handle_new();
+      g_object_ref_sink (handle);
       uint8 buffer[8192];
       ssize_t len;
-      RsvgHandle *handle = rsvg_handle_new();
-      g_object_ref_sink (handle);
-      while ((len = fread (buffer, 1, sizeof (buffer), fp)) > 0)
+      while ((len = fread (buffer, 1, sizeof (buffer), file)) > 0)
         if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
           break;
-      fclose (fp);
+      if (!success)
+        errsaved = errsaved ? errsaved : errno;
+      fclose (file);
       success = success && rsvg_handle_close (handle, NULL);
-      if (success)
-        library_handles.push_back (handle);
-      else
-        g_object_unref (handle);
+      if (!success)
+        {
+          g_object_unref (handle);
+          handle = NULL;
+          errsaved = errsaved ? errsaved : EINVAL;
+        }
     }
-  DEBUG ("loading uilib: %s", strerror());
+  else
+    errsaved = errsaved ? errsaved : EIO;
+  FileImpl *fp = new FileImpl (handle);
+  fp->m_errno = errsaved;
+  return FileP (fp);
 }
 
 static void
@@ -302,59 +259,55 @@ dump_node (RsvgNode *self, int64 depth, int64 maxdepth)
 }
 
 void
-Library::dump_tree (const String &id)
+FileImpl::dump_tree ()
 {
-  for (size_t i = 0; i < library_handles.size(); i++)
-    if (library_handles[i])
-      {
-        RsvgHandlePrivate *p = library_handles[i]->priv;
-        RsvgNode *node = p->treebase;
-        printerr ("\n%s:\n", p->title ? p->title->str : "???");
-        dump_node (node, 0, INT64_MAX);
-      }
+  if (m_handle)
+    {
+      RsvgHandlePrivate *p = m_handle->priv;
+      RsvgNode *node = p->treebase;
+      printerr ("\n%s:\n", p->title ? p->title->str : "???");
+      dump_node (node, 0, INT64_MAX);
+    }
 }
 
-Element
-Library::lookup_element (const String &id)
+ElementP
+FileImpl::lookup (const String &elementid)
 {
-  for (size_t i = 0; i < library_handles.size(); i++)
+  if (m_handle)
     {
-      RsvgHandle *handle = library_handles[i];
+      RsvgHandle *handle = m_handle;
       RsvgDimensionData rd = { 0, 0, 0, 0 };
       RsvgDimensionData dd = { 0, 0, 0, 0 };
       RsvgPositionData dp = { 0, 0 };
-      const char *cid = id.empty() ? NULL : id.c_str();
+      const char *cid = elementid.empty() ? NULL : elementid.c_str();
       rsvg_handle_get_dimensions (handle, &rd);         // FIXME: cache results
       if (rd.width > 0 && rd.height > 0 &&
           rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
           rsvg_handle_get_position_sub (handle, &dp, cid))
         {
           ElementImpl *ei = new ElementImpl();
-          ei->handle = handle;
-          g_object_ref (ei->handle);
-          ei->x = dp.x;
-          ei->y = dp.y;
-          ei->width = dd.width;
-          ei->height = dd.height;
-          ei->rw = rd.width;
-          ei->rh = rd.height;
-          ei->em = dd.em;
-          ei->ex = dd.ex;
-          ei->id = id;
-          struct ElementInternal : public Element {
-            ElementInternal (ElementImpl *ei) { impl = ref_sink (ei); }
-          };
-          return ElementInternal (ei);
+          ei->m_handle = handle;
+          g_object_ref (ei->m_handle);
+          ei->m_x = dp.x;
+          ei->m_y = dp.y;
+          ei->m_width = dd.width;
+          ei->m_height = dd.height;
+          ei->m_rw = rd.width;
+          ei->m_rh = rd.height;
+          ei->m_em = dd.em;
+          ei->m_ex = dd.ex;
+          ei->m_id = elementid;
+          return ElementP (ei);
         }
     }
-  return Element();
+  return Element::none();
 }
 
 static void
 init_svg_lib (const StringVector &args)
 {
   g_type_init(); // NOP on subsequent invocations
-  Library::add_search_dir (RAPICORN_SVGDIR);
+  File::add_search_dir (RAPICORN_SVGDIR);
 }
 static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
 

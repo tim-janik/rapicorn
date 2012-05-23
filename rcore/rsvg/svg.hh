@@ -11,7 +11,7 @@ namespace Svg {
 
 struct Info {
   String id; double em, ex;
-  Info ();
+  Info () : em (0), ex (0) {}
 };
 struct Allocation {
   double x, y, width, height;
@@ -19,37 +19,32 @@ struct Allocation {
   Allocation (double, double, double, double);
 };
 
-class ElementImpl;
+class Element;
+typedef std::shared_ptr<Element> ElementP;
 class Element {
-  typedef bool (Element::*_unspecified_bool_type) () const; // non-numeric operator bool() result
-  static inline _unspecified_bool_type _unspecified_bool_true () { return &Element::is_null; }
-protected:
-  ElementImpl  *impl;
 public:
-  Element&      operator=       (const Element&);
-  /*Copy*/      Element         (const Element&);
-  /*Con*/       Element         ();
-  /*Des*/      ~Element         ();
-  Info          info            ();
-  Allocation    allocation      ();
-  Allocation    allocation      (Allocation &_containee);
-  Allocation    containee       ();
-  Allocation    containee       (Allocation &_resized);
-  bool          render          (cairo_surface_t *surface, const Allocation &area);
-  // none type and boolean evaluation
-  static const
-  Element&      none            ();
-  bool          is_null         () const { return !impl; }
-  inline operator _unspecified_bool_type () const { return is_null() ? NULL : _unspecified_bool_true(); }
+  virtual Info          info            () = 0;
+  virtual Allocation    allocation      () = 0;
+  virtual Allocation    allocation      (Allocation &_containee) = 0;
+  virtual Allocation    containee       () = 0;
+  virtual Allocation    containee       (Allocation &_resized) = 0;
+  virtual bool          render          (cairo_surface_t *surface, const Allocation &area) = 0;
+  // empty and none types
+  static const ElementP none            (); ///< Returns null ElementP, which yields false in boolean tests.
+protected: // Impl details
+  ~Element() {}
 };
 
-class Library {
-public:
-  static void           add_search_dir  (const String   &absdir);
-  static void           add_library     (const String   &filename);
-  static void           add_resource    (const String   &res_svg);
-  static Element        lookup_element  (const String   &id);
-  static void           dump_tree       (const String   &id);
+class File;
+typedef std::shared_ptr<File> FileP;
+struct File {
+  virtual void          dump_tree       () = 0;
+  virtual ElementP      lookup          (const String &elementid) = 0;
+  virtual int           error           () = 0;
+  static  void          add_search_dir  (const String &absdir);
+  static  FileP         load            (const String &svgfilename);
+protected: // Impl details
+  ~File() {}
 };
 
 } // Svg
