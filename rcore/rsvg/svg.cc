@@ -32,6 +32,8 @@ affine_y (const double x, const double y, const double affine[6])
 }
 
 namespace Rapicorn {
+
+/// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
 Allocation::Allocation () :
