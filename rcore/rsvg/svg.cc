@@ -272,6 +272,10 @@ FileImpl::dump_tree ()
     }
 }
 
+/**
+ * @fn File::lookup
+ * Lookup @a elementid in the SVG file and return a non-NULL element on success.
+ */
 ElementP
 FileImpl::lookup (const String &elementid)
 {
@@ -355,4 +359,4 @@ svg_tweak_point_simple (double *px, double *py, const double affine[6], const do
   return svg_tweak_point_tweak (*px, *py, px, py, affine, iaffine);
 }
 
-};
+} // extern "C"
