@@ -196,13 +196,12 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
       if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
         key = "debug";
       m_map[key] = val;
-      // printerr ("DEBUG-CONFIG: %s = %s\n", key.c_str(), val.c_str());
     }
 }
 
 // === Logging ===
 bool                        _debug_flag = true; // bootup default before _init()
-static bool                 conftest_any_debugging = false;
+static bool                 conftest_general_debugging = false;
 static bool                 conftest_key_debugging = false;
 static KeyConfig * volatile conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
@@ -238,8 +237,8 @@ debug_configure (const String &options)
   conftest_procure().configure (options, seen_debug_key);
   if (seen_debug_key)
     Atomic::value_set (&conftest_key_debugging, true);
-  Atomic::value_set (&conftest_any_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
-  Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_any_debugging)); // update "cached" configuration
+  Atomic::value_set (&conftest_general_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
+  Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_general_debugging)); // update "cached" configuration
   static bool first_help = false;
   if (debug_confbool ("help") && once_enter (&first_help))
     {
@@ -539,8 +538,10 @@ debug_fixit (const char *file, const int line, const char *format, ...)
 }
 
 void
-debug_simple (const char *file, const int line, const char *format, ...)
+debug_general (const char *file, const int line, const char *format, ...)
 {
+  if (!conftest_general_debugging)
+    return;
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);

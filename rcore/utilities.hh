@@ -119,7 +119,7 @@ public:
 #define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (__FILE__, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_simple (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_general (__FILE__, __LINE__, __VA_ARGS__); } while (0)
 #define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (__FILE__, __LINE__, __k_, __VA_ARGS__); } while (0)
 
 // === Debugging Functions (internal) ===
@@ -141,7 +141,7 @@ void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
 void        debug_fatal      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
 void        debug_critical   (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
 void        debug_fixit      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_simple     (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void        debug_general    (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
 void        debug_keymsg     (const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (4, 5);
 
 // === Macro Implementations ===
