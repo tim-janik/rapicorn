@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief User interface keyboard codes.
+ */
+
 /* fgrep "define GDK" gdkkeysyms.h  | sed -e 's/#define //' -e 's/GDK_/KEY_/g' -e 's/ / = /' -e 's/$/,/' | sort -k 3 */
 
 KEY_space = 0x020,

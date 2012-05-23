@@ -1,4 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+/**
+ * @file
+ * @brief Rapicorn user interface API classes.
+ */
 
 include "../rcore/basics.idl";
 include "hardcoded.idl";
