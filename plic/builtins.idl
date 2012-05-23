@@ -1,6 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-
-// PLIC builtin type definitions
+/**
+ * @file
+ * @brief PLIC builtin type definitions.
+ */
 
 namespace Plic {
   namespace __system_typedefs__ {
