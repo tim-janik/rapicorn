@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
 #ifndef __RAPICORN_REGION_HH__
 #define __RAPICORN_REGION_HH__
 
@@ -22,6 +7,8 @@
 namespace Rapicorn {
 
 /**
+ * @brief The Region class manages areas defined through a list of rectangles.
+ *
  * Region implements various common operations on areas which can be covered
  * by a list of rectangles. Region calculations use fixed point arithmetics,
  * so only a small number of fractional digits are supported (2 decimals,
@@ -38,43 +25,39 @@ class Region {
   inline const void* region_mem   () const;
 public: /* rectangles are represented at 64bit integer precision */
   typedef enum { OUTSIDE = 0, INSIDE = 1, PARTIAL } ContainedType;
-  explicit      Region            ();
-  /*Con*/       Region            (const Region         &src);
-  /*Con*/       Region            (const Rect           &src);
-  /*Con*/       Region            (const Point          &rect_p1,
-                                   const Point          &rect_p2);
-  Region&       operator=         (const Region         &src);
-  void          clear             ();
-  bool          empty             () const;
-  bool          equal             (const Region &other) const;
-  int           cmp               (const Region &other) const;
-  void          swap              (Region               &other);
-  Rect          extents           () const;
-  bool          contains          (const Point          &point) const;
-  bool          contains          (double                x,
-                                   double                y) const       { return contains (Point (x, y)); }
-  ContainedType contains          (const Rect           &rect) const;
-  ContainedType contains          (const Region         &other) const;
-  void          list_rects        (std::vector<Rect>    &rects) const;
-  uint          count_rects       () const;
-  void          add               (const Rect           &rect);
-  void          add               (const Region         &other);
-  void          subtract          (const Region         &subtrahend);
-  void          intersect         (const Region         &other);
-  void          exor              (const Region         &other);
-  void          translate         (double deltax, double deltay);
-  void          affine            (const Affine         &aff);
-  double        epsilon           () const;
-  String        string            ();
-  /*Des*/      ~Region            ();
+  explicit      Region            ();                           ///< Construct an empty Region.
+  /*Con*/       Region            (const Region &region);       ///< Copy-construct a Region.
+  /*Con*/       Region            (const Rect   &rectangle);    ///< Construct a Region covering @a rectangle.
+  /*Con*/       Region            (const Point  &pt1,
+                                   const Point  &pt2);          ///< Construct a Region covering a rectangle defined by two points.
+  Region&       operator=         (const Region &region);       ///< Region assignment.
+  void          clear             ();                           ///< Forces an empty Region.
+  bool          empty             () const;                     ///< Returns whether the Region is empty.
+  bool          equal             (const Region &other) const;  ///< Returns whether two Regions cover the same area.
+  int           cmp               (const Region &other) const;  ///< Provides linear ordering for regions.
+  void          swap              (Region              &other); ///< Swaps the contents of two Regions.
+  Rect          extents           () const;                     ///< Provides rectangle extents of the region.
+  bool          contains          (const Point  &point) const;  ///< Test if @a point is inside Region.
+  bool          contains          (double x, double y) const    { return contains (Point (x, y)); } ///< Point test with coordinates.
+  ContainedType contains          (const Rect   &rect) const;   ///< Returns if Region covers @a rect fully, partially or not at all.
+  ContainedType contains          (const Region &other) const;  ///< Returns if Region covers @a other fully, partially or not at all.
+  void          list_rects        (vector<Rect> &rects) const;  ///< Provides a list of rectangles that define Region.
+  uint          count_rects       () const;                     ///< Provides the number of rectangles that cover Region.
+  void          add               (const Rect   &rect);         ///< Adds a rectangle to the Region.
+  void          add               (const Region &other);        ///< Causes Region to contain the union with @a other.
+  void          subtract          (const Region &subtrahend);   ///< Removes @a subtrahend from Region.
+  void          intersect         (const Region &other);        ///< Causes Region to contain the intersection with @a other.
+  void          exor              (const Region &other);        ///< Causes Region to contain the XOR composition with @a other.
+  void          translate         (double dx, double dy);       ///< Shifts Region by @a dx, @a dy.
+  void          affine            (const Affine &affine);       ///< Transforms Region by @a affine.
+  double        epsilon           () const;                     ///< Returns the precision (granularity) between fractional digits.
+  String        string            ();                           ///< Describes Region in a string.
+  /*dtor*/     ~Region            ();                           ///< Public destructor, Region is a simple copyable structure.
 };
 
-bool operator== (const Region &r1,
-                 const Region &r2);
-bool operator!= (const Region &r1,
-                 const Region &r2);
-bool operator<  (const Region &r1,
-                 const Region &r2);
+bool operator== (const Region &r1, const Region &r2);   ///< Compare two Region structures for equality.
+bool operator!= (const Region &r1, const Region &r2);   ///< Compare two Region structures returns if these are unequal.
+bool operator<  (const Region &r1, const Region &r2);   ///< Provides linear ordering for regions.
 
 } // Rapicorn
 
