@@ -605,7 +605,7 @@ Builder::call_children (const XmlNode *pnode, ItemImpl *item, vector<ItemImpl*> 
       ItemImpl *child = call_child (cnode, call_names, call_values, child_name, cnode);
       if (!child)
         {
-          critical ("%s: unknown item type: %s", node_location (cnode).c_str(), cnode->name().c_str());
+          critical ("%s: failed to create item type: %s", node_location (cnode).c_str(), cnode->name().c_str());
           continue;
         }
       else if (vchildren)
@@ -674,7 +674,7 @@ create_ui_item (const String       &item_identifier,
     }
   ItemImpl *item = Builder::build_item (item_identifier, anames, avalues);
   if (!item)
-    fatal ("%s: unknown item type: %s", "Rapicorn:Factory", item_identifier.c_str());
+    fatal ("%s: failed to create item type: %s", "Rapicorn:Factory", item_identifier.c_str());
   return *item;
 }
 
