@@ -1,6 +1,9 @@
 # Build and upload development documentation
 
 all: build-stamp
+build-stamp:
+	$(MAKE) all-docs
+	touch $@
 
 top_srcdir  = ../..
 git_stamp   = $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
@@ -46,7 +49,7 @@ $(SRCTREE):
 	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
 	| xargs -0 python enumdoc.py
 
-build-stamp: $(git_stamp) doxygen.cfg
+all-docs: $(git_stamp) doxygen.cfg
 	rm -rf html.tmp/ && mkdir -p html.tmp/
 	$(MAKE) $(SRCTREE)
 	@echo "### Doxygen..."
@@ -61,7 +64,6 @@ build-stamp: $(git_stamp) doxygen.cfg
 	ln -s $(SED_VERSION) html.tmp/latest
 	rsync -aH --del html.tmp/ html/
 	rm -rf html.tmp/
-	touch $@
 
 upload: all
 	rsync -aHP --del '--filter=P /*/' html/  dev.testbit.eu:/srv/dev/html/rapicorn/
