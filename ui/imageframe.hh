@@ -1,12 +1,12 @@
-/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
-#ifndef __RAPICORN_COFFER_HH__
-#define __RAPICORN_COFFER_HH__
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_IMAGE_FRAME_HH__
+#define __RAPICORN_IMAGE_FRAME_HH__
 
 #include <ui/container.hh>
 
 namespace Rapicorn {
 
-class Coffer : public virtual ContainerImpl {
+class ImageFrame : public virtual ContainerImpl {
 protected:
   virtual const PropertyList& _property_list ();
 public:
@@ -18,4 +18,4 @@ public:
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_COFFER_HH__ */
+#endif  /* __RAPICORN_IMAGE_FRAME_HH__ */

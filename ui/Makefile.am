@@ -10,9 +10,9 @@ AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
-	cmdlib.hh	coffer.hh	commands.hh			container.hh	\
+	cmdlib.hh			commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	widget.hh		keysymbols.hh	\
+	image.hh	widget.hh	imageframe.hh	keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
@@ -27,9 +27,9 @@ rapicorn_public_headers = $(strip	\
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
-	cmdlib.cc	coffer.cc	commands.cc			container.cc	\
+	cmdlib.cc			commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
-	image.cc	widget.cc		\
+	image.cc	widget.cc	imageframe.cc	\
 	layoutcontainers.cc	listarea.cc	models.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\

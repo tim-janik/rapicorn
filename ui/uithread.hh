@@ -6,7 +6,6 @@
 #include <ui/application.hh>
 #include <ui/arrangement.hh>
 #include <ui/buttons.hh>
-#include <ui/coffer.hh>
 #include <ui/container.hh>
 #include <ui/cmdlib.hh>
 #include <ui/evaluator.hh>
@@ -15,6 +14,7 @@
 #include <ui/heritage.hh>
 #include <ui/image.hh>
 #include <ui/widget.hh>
+#include <ui/imageframe.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/listarea.hh>
 #include <ui/models.hh>

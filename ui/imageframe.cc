@@ -1,5 +1,5 @@
-/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
-#include "coffer.hh"
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#include "imageframe.hh"
 #include "container.hh"
 #include "factory.hh"
 #include "../rcore/rsvg/svg.hh"
@@ -51,7 +51,7 @@ library_lookup (const String &elementid)
   return ep;
 }
 
-class CofferImpl : public virtual SingleContainerImpl, public virtual Coffer {
+class ImageFrameImpl : public virtual SingleContainerImpl, public virtual ImageFrame {
   String        m_element;
   Svg::ElementP m_sel;
   bool          m_overlap_child;
@@ -61,34 +61,34 @@ protected:
   virtual void          do_invalidate   ();
   virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
-  explicit              CofferImpl      ();
-  virtual              ~CofferImpl      ();
-  virtual String        element         () const                { return element_; }
-  virtual void          element         (const String &id)      { element_ = id; invalidate(); }
-  virtual bool          overlap_child   () const                { return overlap_child_; }
-  virtual void          overlap_child   (bool overlap)          { overlap_child_ = overlap; invalidate(); }
+  explicit              ImageFrameImpl      ();
+  virtual              ~ImageFrameImpl      ();
+  virtual String        element         () const                { return m_element; }
+  virtual void          element         (const String &id)      { m_element = id; invalidate(); }
+  virtual bool          overlap_child   () const                { return m_overlap_child; }
+  virtual void          overlap_child   (bool overlap)          { m_overlap_child = overlap; invalidate(); }
 };
 
 const PropertyList&
-Coffer::_property_list()
+ImageFrame::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Coffer, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
-    MakeProperty (Coffer, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
+    MakeProperty (ImageFrame, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
+    MakeProperty (ImageFrame, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
   };
   static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
-CofferImpl::CofferImpl() :
-  overlap_child_ (false)
+ImageFrameImpl::ImageFrameImpl() :
+  m_overlap_child (false)
 {}
 
-CofferImpl::~CofferImpl()
+ImageFrameImpl::~ImageFrameImpl()
 {}
 
 void
-CofferImpl::do_invalidate()
+ImageFrameImpl::do_invalidate()
 {
   if (element_.empty())
     {
@@ -102,7 +102,7 @@ CofferImpl::do_invalidate()
 }
 
 void
-CofferImpl::size_request (Requisition &requisition)
+ImageFrameImpl::size_request (Requisition &requisition)
 {
   SingleContainerImpl::size_request (requisition);
   if (sel_)
@@ -119,7 +119,7 @@ CofferImpl::size_request (Requisition &requisition)
 }
 
 void
-CofferImpl::size_allocate (Allocation area, bool changed)
+ImageFrameImpl::size_allocate (Allocation area, bool changed)
 {
   if (has_visible_child())
     {
@@ -139,7 +139,7 @@ CofferImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-CofferImpl::render (RenderContext &rcontext, const Rect &rect)
+ImageFrameImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   if (sel_)
     {
@@ -163,6 +163,6 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<CofferImpl> coffer_factory ("Rapicorn::Factory::Coffer");
+static const ItemFactory<ImageFrameImpl> image_frame_factory ("Rapicorn::Factory::ImageFrame");
 
 } // Rapicorn
