@@ -107,8 +107,8 @@ CofferImpl::size_request (Requisition &requisition)
   SingleContainerImpl::size_request (requisition);
   if (sel_)
     {
-      requisition.width = m_sel->allocation().width;
-      requisition.height = m_sel->allocation().height;
+      requisition.width = m_sel->bbox().width;
+      requisition.height = m_sel->bbox().height;
       int thickness = 2; // FIXME: use real border marks
       if (!overlap_child_)
         {
@@ -149,7 +149,7 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
       memset (pixels, 0, width * height * 4);
       cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      bool rendered = m_sel->render (surface, Svg::Allocation (0, 0, width, height));
+      bool rendered = m_sel->render (surface, Svg::BBox (0, 0, width, height));
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);

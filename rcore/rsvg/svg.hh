@@ -18,26 +18,25 @@ struct Info {
   Info () : em (0), ex (0) {}
 };
 
-/// Information structure for SVG element sizes.
-struct Allocation {
+/// A BBox provides bounding box information for SVG elements.
+struct BBox {
   double x, y, width, height;
-  Allocation ();
-  Allocation (double, double, double, double);
+  BBox ();
+  BBox (double, double, double, double);
 };
 
 typedef std::shared_ptr<Element> ElementP;      ///< Smart pointer to an Svg::Element.
 /// An SVG Element can be queried for size, rendered to pixmaps and scaled in various ways.
 class Element {
 public:
-  virtual Info          info            () = 0;                         ///< Provides information on size units.
-  virtual Allocation    allocation      () = 0;                         ///< Provides the size of an element.
-  virtual Allocation    allocation      (Allocation &_containee) = 0;   ///< Provides the size of an element for a given containee size.
-  virtual Allocation    containee       () = 0;                         ///< Provides the size of the containee if supported.
-  virtual Allocation    containee       (Allocation &_resized) = 0;     ///< Provides the containee size for a given element size.
-  virtual bool          render          (cairo_surface_t *surface,
-                                         const Allocation &area) = 0;   ///< Renders an SVG element into a cairo_surface_t.
-  // empty and none types
-  static const ElementP none            (); ///< Returns null ElementP, which yields false in boolean tests.
+  virtual Info  info            () = 0;                 ///< Provides information on size units.
+  virtual BBox  bbox            () = 0;                 ///< Provides the bounding box of an element.
+  virtual BBox  enfolding_bbox  (BBox &inner) = 0;      ///< Provides the size of an element for a given containee size.
+  virtual BBox  containee_bbox  () = 0;                 ///< Provides the bounding box of a containee if supported.
+  virtual BBox  containee_bbox  (BBox &_resized) = 0;   ///< Provides the containee size for a given element size. FIXNME: scaling
+  virtual bool  render          (cairo_surface_t *surface,
+                                 const BBox &area) = 0; ///< Renders an SVG element into a cairo_surface_t. FIXME: scaling
+  static const ElementP none    ();                     ///< Returns null ElementP, which yields false in boolean tests.
 protected: // Impl details
   ~Element() {}                         ///< Internal destructor, Svg::ElementP automatically manages the Element class lifetime.
 };

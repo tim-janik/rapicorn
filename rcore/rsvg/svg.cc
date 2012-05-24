@@ -36,11 +36,11 @@ namespace Rapicorn {
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
-Allocation::Allocation () :
+BBox::BBox () :
   x (-1), y (-1), width (0), height (0)
 {}
 
-Allocation::Allocation (double _x, double _y, double w, double h) :
+BBox::BBox (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
@@ -82,18 +82,18 @@ Tweaker::point_tweak (double vx, double vy, double *px, double *py)
 }
 
 struct ElementImpl : public Element {
-  String         m_id;
-  int            m_x, m_y, m_width, m_height, m_rw, m_rh; // relative to bottom_left
-  double         m_em, m_ex;
-  RsvgHandle    *m_handle;
-  explicit              ElementImpl     () : m_x (0), m_y (0), m_width (0), m_height (0), m_em (0), m_ex (0), m_handle (NULL) {}
-  virtual              ~ElementImpl     ();
-  virtual Info          info            ();
-  virtual Allocation    allocation      () { return Allocation (m_x, m_y, m_width, m_height); }
-  virtual Allocation    allocation      (Allocation &_containee);
-  virtual Allocation    containee       ();
-  virtual Allocation    containee       (Allocation &_resized);
-  virtual bool          render          (cairo_surface_t *surface, const Allocation &area);
+  String        m_id;
+  int           m_x, m_y, m_width, m_height, m_rw, m_rh; // relative to bottom_left
+  double        m_em, m_ex;
+  RsvgHandle   *m_handle;
+  explicit      ElementImpl     () : m_x (0), m_y (0), m_width (0), m_height (0), m_em (0), m_ex (0), m_handle (NULL) {}
+  virtual      ~ElementImpl     ();
+  virtual Info  info            ();
+  virtual BBox  bbox            ()                      { return BBox (m_x, m_y, m_width, m_height); }
+  virtual BBox  enfolding_bbox  (BBox &inner);
+  virtual BBox  containee_bbox  ();
+  virtual BBox  containee_bbox  (BBox &_resized);
+  virtual bool  render          (cairo_surface_t *surface, const BBox &area);
 };
 
 const ElementP
@@ -121,37 +121,37 @@ ElementImpl::info ()
   return i;
 }
 
-Allocation
-ElementImpl::allocation (Allocation &containee)
+BBox
+ElementImpl::enfolding_bbox (BBox &containee)
 {
   if (containee.width <= 0 || containee.height <= 0)
-    return allocation();
+    return bbox();
   // FIXME: resize for _containee width/height
-  Allocation a = Allocation (m_x, m_y, containee.width + 4, containee.height + 4);
+  BBox a = BBox (m_x, m_y, containee.width + 4, containee.height + 4);
   return a;
 }
 
-Allocation
-ElementImpl::containee ()
+BBox
+ElementImpl::containee_bbox ()
 {
   if (m_width <= 4 || m_height <= 4)
-    return Allocation();
+    return BBox();
   // FIXME: calculate _containee size
-  Allocation a = Allocation (m_x + 2, m_y + 2, m_width - 4, m_height - 4);
+  BBox a = BBox (m_x + 2, m_y + 2, m_width - 4, m_height - 4);
   return a;
 }
 
-Allocation
-ElementImpl::containee (Allocation &resized)
+BBox
+ElementImpl::containee_bbox (BBox &resized)
 {
   if (resized.width == m_width && resized.height == m_height)
-    return containee();
+    return bbox();
   // FIXME: calculate _containee size when resized
-  return containee();
+  return bbox();
 }
 
 bool
-ElementImpl::render (cairo_surface_t *surface, const Allocation &area)
+ElementImpl::render (cairo_surface_t *surface, const BBox &area)
 {
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
