@@ -110,7 +110,7 @@ ImageFrameImpl::size_request (Requisition &requisition)
       requisition.width = m_sel->bbox().width;
       requisition.height = m_sel->bbox().height;
       int thickness = 2; // FIXME: use real border marks
-      if (!overlap_child_)
+      if (!m_overlap_child && has_children())
         {
           requisition.width += 2 * thickness;
           requisition.height += 2 * thickness;
@@ -139,21 +139,26 @@ ImageFrameImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ImageFrameImpl::render (RenderContext &rcontext, const Rect &rect)
+ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
 {
-  if (sel_)
+  const Allocation &area = allocation();
+  Rect rect = area;
+  rect.intersect (render_rect);
+  if (m_sel && rect.width > 0 && rect.height > 0)
     {
-      const Allocation &area = allocation();
-      const int width = area.width, height = area.height;
-      uint8 *pixels = new uint8[int (width * height * 4)];
-      memset (pixels, 0, width * height * 4);
-      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
+      const uint npixels = rect.width * rect.height;
+      uint8 *pixels = new uint8[int (npixels * 4)];
+      memset (pixels, 0, npixels * 4);
+      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
+                                                                      rect.width, rect.height, 4 * rect.width);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      bool rendered = m_sel->render (surface, Svg::BBox (0, 0, width, height));
+      cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
+      Svg::BBox bbox = m_sel->bbox();
+      const bool rendered = m_sel->render (surface, area.width / bbox.width, area.height / bbox.height);
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);
-          cairo_set_source_surface (cr, surface, area.x, area.y); // shift into allocation area
+          cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
           cairo_paint (cr);
         }
       else

@@ -203,8 +203,9 @@ test_convert_svg2png()
   Svg::FileP file = Svg::File::load ("sample1.svg");
   Svg::ElementP e = file->lookup ("#test-box");
   assert (e);
-  Svg::BBox a = e->bbox();
-  assert (a.width && a.height);
+  const Svg::BBox bbox = e->bbox();
+  assert (bbox.width && bbox.height);
+  Svg::BBox a = bbox;
   a.width *= 9;
   a.height *= 7;
   const int frame = 11, width = a.width + 2 * frame, height = a.height + 2 * frame;
@@ -214,7 +215,8 @@ test_convert_svg2png()
   cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
   assert (surface != NULL);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-  bool rendered = e->render (surface, Svg::BBox (frame, frame, width - 2 * frame, height - 2 * frame));
+  cairo_surface_set_device_offset (surface, frame, frame);
+  bool rendered = e->render (surface, (width - 2 * frame) / bbox.width, (height - 2 * frame) / bbox.height);
   assert (rendered);
   cairo_status_t cstatus = cairo_surface_write_to_png (surface, "tmp-testsvg.png");
   assert (cstatus == CAIRO_STATUS_SUCCESS);

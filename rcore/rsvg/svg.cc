@@ -93,7 +93,7 @@ struct ElementImpl : public Element {
   virtual BBox  enfolding_bbox  (BBox &inner);
   virtual BBox  containee_bbox  ();
   virtual BBox  containee_bbox  (BBox &_resized);
-  virtual bool  render          (cairo_surface_t *surface, const BBox &area);
+  virtual bool  render          (cairo_surface_t *surface, double xscale, double yscale);
 };
 
 const ElementP
@@ -151,19 +151,19 @@ ElementImpl::containee_bbox (BBox &resized)
 }
 
 bool
-ElementImpl::render (cairo_surface_t *surface, const BBox &area)
+ElementImpl::render (cairo_surface_t *surface, double xscale, double yscale)
 {
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
-  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left
-  cairo_translate (cr, area.x, area.y);    // translate by requested offset
+  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
   const char *cid = m_id.empty() ? NULL : m_id.c_str();
-  const double rx = (area.width - m_width) / 2.0;
-  const double lx = (area.width - m_width) - rx;
-  const double ty = (area.height - m_height) / 2.0;
-  const double by = (area.height - m_height) - ty;
+  const BBox target (0, 0, m_width * xscale, m_height * yscale);
+  const double rx = (target.width - m_width) / 2.0;
+  const double lx = (target.width - m_width) - rx;
+  const double ty = (target.height - m_height) / 2.0;
+  const double by = (target.height - m_height) - ty;
   Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
-              m_x, area.width / m_width, m_y, area.height / m_height);
+              m_x, target.width / m_width, m_y, target.height / m_height);
   if (svg_tweak_debugging)
     printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
               m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
@@ -298,6 +298,10 @@ FileImpl::lookup (const String &elementid)
           ei->m_em = dd.em;
           ei->m_ex = dd.ex;
           ei->m_id = elementid;
+          if (0)
+            printerr ("SUB: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
+                      ei->m_id.c_str(), ei->m_x, ei->m_y, ei->m_width, ei->m_height,
+                      ei->m_rw, ei->m_rh, ei->m_em, ei->m_ex);
           return ElementP (ei);
         }
     }
