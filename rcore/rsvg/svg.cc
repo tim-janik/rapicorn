@@ -155,8 +155,13 @@ ElementImpl::render (cairo_surface_t *surface, double xscale, double yscale)
 {
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
-  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
   const char *cid = m_id.empty() ? NULL : m_id.c_str();
+#if 1 // Zooming
+  cairo_scale (cr, xscale, yscale); // scale as requested
+  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+  const bool rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+#else // Stretching
+  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
   const BBox target (0, 0, m_width * xscale, m_height * yscale);
   const double rx = (target.width - m_width) / 2.0;
   const double lx = (target.width - m_width) - rx;
@@ -172,6 +177,7 @@ ElementImpl::render (cairo_surface_t *surface, double xscale, double yscale)
   tw.thread_set (&tw);
   bool rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
   tw.thread_set (NULL);
+#endif
   cairo_destroy (cr);
   return rendered;
 }
