@@ -25,6 +25,8 @@ struct BBox {
   BBox (double, double, double, double);
 };
 
+enum class RenderSize { STATIC, ZOOM, WARP };
+
 typedef std::shared_ptr<Element> ElementP;      ///< Smart pointer to an Svg::Element.
 /// An SVG Element can be queried for size, rendered to pixmaps and scaled in various ways.
 class Element {
@@ -34,8 +36,8 @@ public:
   virtual BBox  enfolding_bbox  (BBox &inner) = 0;      ///< Provides the size of an element for a given containee size.
   virtual BBox  containee_bbox  () = 0;                 ///< Provides the bounding box of a containee if supported.
   virtual BBox  containee_bbox  (BBox &_resized) = 0;   ///< Provides the containee size for a given element size. FIXME: scaling
-  virtual bool  render          (cairo_surface_t *surface, double xscale,
-                                 double yscale) = 0;    ///< Renders a scaled SVG element into a cairo_surface_t.
+  virtual bool  render          (cairo_surface_t *surface, RenderSize rsize = RenderSize::ZOOM, double xscale = 1,
+                                 double yscale = 1) = 0;///< Renders a scaled SVG element into a cairo_surface_t.
   static const ElementP none    ();                     ///< Returns null ElementP, which yields false in boolean tests.
 protected: // Impl details
   ~Element() {}                         ///< Internal destructor, Svg::ElementP automatically manages the Element class lifetime.

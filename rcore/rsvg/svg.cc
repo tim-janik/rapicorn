@@ -93,7 +93,7 @@ struct ElementImpl : public Element {
   virtual BBox  enfolding_bbox  (BBox &inner);
   virtual BBox  containee_bbox  ();
   virtual BBox  containee_bbox  (BBox &_resized);
-  virtual bool  render          (cairo_surface_t *surface, double xscale, double yscale);
+  virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
 };
 
 const ElementP
@@ -151,33 +151,46 @@ ElementImpl::containee_bbox (BBox &resized)
 }
 
 bool
-ElementImpl::render (cairo_surface_t *surface, double xscale, double yscale)
+ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale)
 {
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
   const char *cid = m_id.empty() ? NULL : m_id.c_str();
-#if 1 // Zooming
-  cairo_scale (cr, xscale, yscale); // scale as requested
-  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
-  const bool rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
-#else // Stretching
-  cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
   const BBox target (0, 0, m_width * xscale, m_height * yscale);
-  const double rx = (target.width - m_width) / 2.0;
-  const double lx = (target.width - m_width) - rx;
-  const double ty = (target.height - m_height) / 2.0;
-  const double by = (target.height - m_height) - ty;
-  Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
-              m_x, target.width / m_width, m_y, target.height / m_height);
-  if (svg_tweak_debugging)
-    printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
-              m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
-              m_x, m_y, m_width, m_height);
-  svg_tweak_debugging = debug_enabled();
-  tw.thread_set (&tw);
-  bool rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
-  tw.thread_set (NULL);
-#endif
+  bool rendered = false;
+  switch (rsize)
+    {
+    case RenderSize::STATIC:
+      cairo_translate (cr, // shift sub into top_left and center extra space
+                       -m_x + (target.width - m_width) / 2.0,
+                       -m_y + (target.height - m_height) / 2.0);
+      rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+      break;
+    case RenderSize::ZOOM:
+      cairo_scale (cr, xscale, yscale); // scale as requested
+      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+      rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+      break;
+    case RenderSize::WARP:
+      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+      {
+        const double rx = (target.width - m_width) / 2.0;
+        const double lx = (target.width - m_width) - rx;
+        const double ty = (target.height - m_height) / 2.0;
+        const double by = (target.height - m_height) - ty;
+        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
+                    m_x, target.width / m_width, m_y, target.height / m_height);
+        if (svg_tweak_debugging)
+          printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
+                    m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
+                    m_x, m_y, m_width, m_height);
+        svg_tweak_debugging = debug_enabled();
+        tw.thread_set (&tw);
+        rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+        tw.thread_set (NULL);
+      }
+      break;
+    }
   cairo_destroy (cr);
   return rendered;
 }

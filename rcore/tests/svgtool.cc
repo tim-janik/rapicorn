@@ -216,7 +216,7 @@ test_convert_svg2png()
   assert (surface != NULL);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
   cairo_surface_set_device_offset (surface, frame, frame);
-  bool rendered = e->render (surface, (width - 2 * frame) / bbox.width, (height - 2 * frame) / bbox.height);
+  bool rendered = e->render (surface, Svg::RenderSize::WARP, (width - 2 * frame) / bbox.width, (height - 2 * frame) / bbox.height);
   assert (rendered);
   cairo_status_t cstatus = cairo_surface_write_to_png (surface, "tmp-testsvg.png");
   assert (cstatus == CAIRO_STATUS_SUCCESS);
