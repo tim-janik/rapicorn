@@ -46,12 +46,12 @@ BBox::BBox (double _x, double _y, double w, double h) :
 
 struct Tweaker {
   double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
-  double m_xoffset, m_xscale, m_yoffset, m_yscale;
   RenderSize m_rsize;
+  cairo_matrix_t *m_matrix;
   explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty,
-                                 RenderSize rsize, double xoffset, double xscale, double yoffset, double yscale) :
+                                 RenderSize rsize, cairo_matrix_t *cmatrix = NULL) :
     m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty),
-    m_xoffset (xoffset), m_xscale (xscale), m_yoffset (yoffset), m_yscale (yscale), m_rsize (rsize) {}
+    m_rsize (rsize), m_matrix (cmatrix) {}
   bool          point_tweak     (double vx, double vy, double *px, double *py);
   static void   thread_set      (Tweaker *tweaker);
 };
@@ -131,14 +131,13 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
   const char *cid = m_id.empty() ? NULL : m_id.c_str();
-  const BBox target (0, 0, m_width * xscale, m_height * yscale);
   bool rendered = false;
   switch (rsize)
     {
     case RenderSize::STATIC:
       cairo_translate (cr, // shift sub into top_left and center extra space
-                       -m_x + (target.width - m_width) / 2.0,
-                       -m_y + (target.height - m_height) / 2.0);
+                       -m_x + (m_width * xscale - m_width) / 2.0,
+                       -m_y + (m_height * yscale - m_height) / 2.0);
       rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
       break;
     case RenderSize::ZOOM:
@@ -149,7 +148,11 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
     case RenderSize::STRETCH:
       cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
       {
-        Tweaker tw (0, 0, 0, 0, 0, 0, rsize, m_x, target.width / m_width, m_y, target.height / m_height);
+        cairo_matrix_t cmatrix;
+        cairo_matrix_init_identity (&cmatrix);
+        cairo_matrix_scale (&cmatrix, xscale, yscale); // scale matrix as requested
+        cairo_matrix_translate (&cmatrix, -m_x, -m_y); // shift matrix by top_left surface offset
+        Tweaker tw (0, 0, 0, 0, 0, 0, rsize, &cmatrix);
         tw.thread_set (&tw);
         rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
         tw.thread_set (NULL);
@@ -158,12 +161,12 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
     case RenderSize::WARP:
       cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
       {
+        const BBox target (0, 0, m_width * xscale, m_height * yscale);
         const double rx = (target.width - m_width) / 2.0;
         const double lx = (target.width - m_width) - rx;
         const double ty = (target.height - m_height) / 2.0;
         const double by = (target.height - m_height) - ty;
-        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by, rsize,
-                    m_x, target.width / m_width, m_y, target.height / m_height);
+        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by, rsize);
         if (svg_tweak_debugging)
           printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
                     m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
@@ -186,12 +189,7 @@ Tweaker::point_tweak (double vx, double vy, double *px, double *py)
   switch (m_rsize)
     {
     case RenderSize::STRETCH:   // linear path & pattern stretching
-      {
-        const double xdelta = *px - m_xoffset;
-        *px = m_xoffset + xdelta * m_xscale;
-        const double ydelta = *py - m_yoffset;
-        *py = m_yoffset + ydelta * m_yscale;
-      }
+      cairo_matrix_transform_point (m_matrix, px, py);
       mod = true;
       break;
     case RenderSize::WARP:      // nonlinear shifting away from center
@@ -394,6 +392,17 @@ int
 svg_tweak_point_simple (double *px, double *py, const double affine[6], const double iaffine[6])
 {
   return svg_tweak_point_tweak (*px, *py, px, py, affine, iaffine);
+}
+
+cairo_matrix_t*
+svg_tweak_matrix ()
+{
+  cairo_matrix_t *tmatrix = NULL;
+  if (Rapicorn::Svg::thread_tweaker)
+    {
+      tmatrix = Rapicorn::Svg::thread_tweaker->m_matrix;
+    }
+  return tmatrix;
 }
 
 } // extern "C"

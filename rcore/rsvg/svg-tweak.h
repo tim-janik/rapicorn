@@ -5,10 +5,12 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern int      svg_tweak_debugging;
+
 int             svg_tweak_point_tweak   (double vx, double vy, double *px, double *py,
                                          const double affine[6], const double iaffine[6]);
 int             svg_tweak_point_simple  (double *px, double *py, const double affine[6], const double iaffine[6]);
-extern int      svg_tweak_debugging;
+cairo_matrix_t* svg_tweak_matrix        ();
 
 #ifdef __cplusplus
 };

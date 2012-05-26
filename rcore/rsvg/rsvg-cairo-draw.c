@@ -159,6 +159,8 @@ _pattern_add_rsvg_color_stops (cairo_pattern_t * pattern,
     }
 }
 
+#include "svg-tweak.h"
+
 static void
 _set_source_rsvg_linear_gradient (RsvgDrawingCtx * ctx,
                                   RsvgLinearGradient * linear,
@@ -193,6 +195,18 @@ _set_source_rsvg_linear_gradient (RsvgDrawingCtx * ctx,
         cairo_matrix_init (&bboxmatrix, bbox.w, 0, 0, bbox.h, bbox.x, bbox.y);
         cairo_matrix_multiply (&matrix, &matrix, &bboxmatrix);
     }
+
+    cairo_matrix_t *tmatrix = svg_tweak_matrix ();
+    if (tmatrix)
+        {
+            const double *ctx_affine = ctx->state->affine;
+            cairo_matrix_t ctx_iaffine = { ctx_affine[0], ctx_affine[1], ctx_affine[2], ctx_affine[3], ctx_affine[4], ctx_affine[5] };
+            cairo_matrix_invert (&ctx_iaffine);
+            cairo_matrix_t transform_matrix = *tmatrix;
+            cairo_matrix_multiply (&transform_matrix, &transform_matrix, &ctx_iaffine);
+            cairo_matrix_multiply (&matrix, &matrix, &transform_matrix);
+        }
+
     cairo_matrix_invert (&matrix);
     cairo_pattern_set_matrix (pattern, &matrix);
 
