@@ -199,12 +199,13 @@ _set_source_rsvg_linear_gradient (RsvgDrawingCtx * ctx,
     cairo_matrix_t *tmatrix = svg_tweak_matrix ();
     if (tmatrix)
         {
-            const double *ctx_affine = ctx->state->affine;
-            cairo_matrix_t ctx_iaffine = { ctx_affine[0], ctx_affine[1], ctx_affine[2], ctx_affine[3], ctx_affine[4], ctx_affine[5] };
-            cairo_matrix_invert (&ctx_iaffine);
-            cairo_matrix_t transform_matrix = *tmatrix;
-            cairo_matrix_multiply (&transform_matrix, &transform_matrix, &ctx_iaffine);
-            cairo_matrix_multiply (&matrix, &matrix, &transform_matrix);
+            const double *ctxa = ctx->state->affine;
+            const cairo_matrix_t ctx_matrix = { ctxa[0], ctxa[1], ctxa[2], ctxa[3], ctxa[4], ctxa[5] };
+            cairo_matrix_t ctx_imatrix = ctx_matrix;
+            cairo_matrix_invert (&ctx_imatrix);
+            cairo_matrix_multiply (&matrix, &matrix, &ctx_matrix);  // account for outer pattern transformation
+            cairo_matrix_multiply (&matrix, &matrix, tmatrix);      // apply outermost tweaking
+            cairo_matrix_multiply (&matrix, &matrix, &ctx_imatrix); // revert back to pattern space
         }
 
     cairo_matrix_invert (&matrix);
