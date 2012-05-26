@@ -25,7 +25,7 @@ struct BBox {
   BBox (double, double, double, double);
 };
 
-enum class RenderSize { STATIC, ZOOM, WARP };
+enum class RenderSize { STATIC, ZOOM, STRETCH, WARP };
 
 typedef std::shared_ptr<Element> ElementP;      ///< Smart pointer to an Svg::Element.
 /// An SVG Element can be queried for size, rendered to pixmaps and scaled in various ways.

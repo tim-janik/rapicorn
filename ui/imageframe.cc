@@ -154,7 +154,7 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
       cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
       Svg::BBox bbox = m_sel->bbox();
-      const bool rendered = m_sel->render (surface, Svg::RenderSize::WARP, area.width / bbox.width, area.height / bbox.height);
+      const bool rendered = m_sel->render (surface, Svg::RenderSize::STRETCH, area.width / bbox.width, area.height / bbox.height);
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);

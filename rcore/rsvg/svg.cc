@@ -47,39 +47,14 @@ BBox::BBox (double _x, double _y, double w, double h) :
 struct Tweaker {
   double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
   double m_xoffset, m_xscale, m_yoffset, m_yscale;
+  RenderSize m_rsize;
   explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty,
-                                 double xoffset, double xscale, double yoffset, double yscale) :
+                                 RenderSize rsize, double xoffset, double xscale, double yoffset, double yscale) :
     m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty),
-    m_xoffset (xoffset), m_xscale (xscale), m_yoffset (yoffset), m_yscale (yscale) {}
+    m_xoffset (xoffset), m_xscale (xscale), m_yoffset (yoffset), m_yscale (yscale), m_rsize (rsize) {}
   bool          point_tweak     (double vx, double vy, double *px, double *py);
   static void   thread_set      (Tweaker *tweaker);
 };
-
-bool
-Tweaker::point_tweak (double vx, double vy, double *px, double *py)
-{
-  bool mod = 0;
-#if 0
-  const double xdelta = *px - m_xoffset;
-  *px = m_xoffset + xdelta * m_xscale;
-  const double ydelta = *py - m_yoffset;
-  *py = m_yoffset + ydelta * m_yscale;
-  mod = true;
-#else // nonlinear shifting away from center
-  const double eps = 0.0001;
-  // FIXME: for filters to work, the document page must grow so that it contains the tweaked
-  // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
-  if (vx > m_cx + eps)
-    *px += m_lx + m_rx, mod = 1;
-  else if (vx >= m_cx - eps)
-    *px += m_lx, mod = 1;
-  if (vy > m_cy + eps)
-    *py += m_ty + m_by, mod = 1;
-  else if (vy >= m_cy - eps)
-    *py += m_ty, mod = 1;
-#endif
-  return mod;
-}
 
 struct ElementImpl : public Element {
   String        m_id;
@@ -171,6 +146,15 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
       cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
       rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
       break;
+    case RenderSize::STRETCH:
+      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+      {
+        Tweaker tw (0, 0, 0, 0, 0, 0, rsize, m_x, target.width / m_width, m_y, target.height / m_height);
+        tw.thread_set (&tw);
+        rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+        tw.thread_set (NULL);
+      }
+      break;
     case RenderSize::WARP:
       cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
       {
@@ -178,7 +162,7 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
         const double lx = (target.width - m_width) - rx;
         const double ty = (target.height - m_height) / 2.0;
         const double by = (target.height - m_height) - ty;
-        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
+        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by, rsize,
                     m_x, target.width / m_width, m_y, target.height / m_height);
         if (svg_tweak_debugging)
           printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
@@ -193,6 +177,41 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
     }
   cairo_destroy (cr);
   return rendered;
+}
+
+bool
+Tweaker::point_tweak (double vx, double vy, double *px, double *py)
+{
+  bool mod = 0;
+  switch (m_rsize)
+    {
+    case RenderSize::STRETCH:   // linear path & pattern stretching
+      {
+        const double xdelta = *px - m_xoffset;
+        *px = m_xoffset + xdelta * m_xscale;
+        const double ydelta = *py - m_yoffset;
+        *py = m_yoffset + ydelta * m_yscale;
+      }
+      mod = true;
+      break;
+    case RenderSize::WARP:      // nonlinear shifting away from center
+      {
+        const double eps = 0.0001;
+        // FIXME: for filters to work, the document page must grow so that it contains the tweaked
+        // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
+        if (vx > m_cx + eps)
+          *px += m_lx + m_rx, mod = 1;
+        else if (vx >= m_cx - eps)
+          *px += m_lx, mod = 1;
+        if (vy > m_cy + eps)
+          *py += m_ty + m_by, mod = 1;
+        else if (vy >= m_cy - eps)
+          *py += m_ty, mod = 1;
+      }
+      break;
+    default: ; // silence gcc
+    }
+  return mod;
 }
 
 struct FileImpl : public File {
