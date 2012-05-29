@@ -664,68 +664,117 @@ public:
   }
 };
 
+// == lock-free, single-consumer queue ==
+template<class Data> struct MpScQueueF {
+  struct Node { Node *next; Data data; };
+  MpScQueueF() :
+    m_head (NULL), m_local (NULL)
+  {}
+  bool
+  push (Data data)
+  {
+    Node *node = new Node;
+    node->data = data;
+    Node *last_head;
+    do
+      node->next = last_head = m_head;
+    while (!__sync_bool_compare_and_swap (&m_head, node->next, node));
+    return last_head == NULL; // was empty
+  }
+  Data
+  pop()
+  {
+    Node *node = pop_node();
+    if (node)
+      {
+        Data d = node->data;
+        delete node;
+        return d;
+      }
+    else
+      return Data();
+  }
+protected:
+  Node*
+  pop_node()
+  {
+    if (PLIC_UNLIKELY (!m_local))
+      {
+        Node *prev, *next, *node;
+        do
+          node = m_head;
+        while (!__sync_bool_compare_and_swap (&m_head, node, NULL));
+        for (prev = NULL; node; node = next)
+          {
+            next = node->next;
+            node->next = prev;
+            prev = node;
+          }
+        m_local = prev;
+      }
+    if (m_local)
+      {
+        Node *node = m_local;
+        m_local = node->next;
+        return node;
+      }
+    else
+      return NULL;
+  }
+private:
+  Node  *m_head __attribute__ ((aligned (64)));
+  // we pad/align with CPU_CACHE_LINE_SIZE to avoid false sharing between pushing and popping threads
+  Node  *m_local __attribute__ ((aligned (64)));
+} __attribute__ ((aligned (64)));
+
+
 // == TransportChannel ==
 class TransportChannel : public EventFd { // Channel for cross-thread FieldBuffer IO
-  std::vector<FieldBuffer*> msg_queue;
-  size_t                    msg_index, msg_last_size;
-  pthread_spinlock_t        msg_spinlock;
-  std::vector<FieldBuffer*> msg_vector;
+  MpScQueueF<FieldBuffer*> msg_queue;
+  FieldBuffer             *last_fb;
   enum Op { PEEK, POP, POP_BLOCKED };
   FieldBuffer*
   get_msg (const Op op)
   {
-    do
-      {
-        // fetch new messages
-        if (msg_index >= msg_queue.size())      // no buffered messages left
-          {
-            if (msg_index)
-              msg_queue.resize (0);             // get rid of stale pointers
-            msg_index = 0;
-            flush();
-            pthread_spin_lock (&msg_spinlock);
-            msg_vector.swap (msg_queue);        // actual cross-thread fetching
-            pthread_spin_unlock (&msg_spinlock);
-          }
-        // hand out message
-        if (msg_index < msg_queue.size())       // have buffered messages
-          {
-            const size_t index = msg_index;
-            if (op != PEEK) // advance
-              msg_index++;
-            return msg_queue[index];
-          }
-        // no messages available
-        if (op == POP_BLOCKED)
-          pollin();
-      }
-    while (op == POP_BLOCKED);
-    return NULL;
+    if (!last_fb)
+      do
+        {
+          // fetch new messages
+          last_fb = msg_queue.pop();
+          if (!last_fb)
+            {
+              flush();                          // flush stale wakeups, to allow blocking until an empty => full transition
+              last_fb = msg_queue.pop();        // retry, to ensure we've not just discarded a real wakeup
+            }
+          if (last_fb)
+            break;
+          // no messages available
+          if (op == POP_BLOCKED)
+            pollin();
+        }
+      while (op == POP_BLOCKED);
+    FieldBuffer *fb = last_fb;
+    if (op != PEEK) // advance
+      last_fb = NULL;
+    return fb; // may be NULL
   }
 public:
   void
   send_msg (FieldBuffer *fb, // takes fb ownership
-            bool         _wakeup)
+            bool         may_wakeup)
   {
-    pthread_spin_lock (&msg_spinlock);
-    msg_vector.push_back (fb);
-    msg_last_size = msg_vector.size();
-    pthread_spin_unlock (&msg_spinlock);
-    if (_wakeup)
-      wakeup();
+    const bool was_empty = msg_queue.push (fb);
+    if (may_wakeup && was_empty)
+      wakeup();                                 // wakeups are needed to catch empty => full transition
   }
   FieldBuffer*  fetch_msg()     { return get_msg (POP); }
   bool          has_msg()       { return get_msg (PEEK); }
   FieldBuffer*  pop_msg()       { return get_msg (POP_BLOCKED); }
   ~TransportChannel ()
-  {
-    pthread_spin_destroy (&msg_spinlock);
-  }
+  {}
   TransportChannel () :
-    msg_index (0), msg_last_size (0)
-  {
-    pthread_spin_init (&msg_spinlock, 0 /* pshared */);
-  }
+    last_fb (NULL)
+  {}
 };
 
 // == ConnectionTransport ==
