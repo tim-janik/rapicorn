@@ -1,19 +1,4 @@
-/* Rapicorn - experimental UI toolkit
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_PIXMAP_HH__
 #define __RAPICORN_PIXMAP_HH__
 
@@ -21,50 +6,38 @@
 
 namespace Rapicorn {
 
-class Pixbuf {
-  uint32         *m_pixels;
-protected:
-  const int       m_rowstride;
-  const int       m_width, m_height;
-  virtual        ~Pixbuf    ();
-  explicit        Pixbuf    (uint _width, uint _height, int alignment = -1);
+/// A Pixmap (i.e. PixmapT<Pixbuf>) conveniently wraps a Pixbuf and provides various pixel operations.
+template<class Pixbuf>
+class PixmapT {
+  std::shared_ptr<Pixbuf> m_pixbuf;
 public:
-  int             width     () const { return m_width; }
-  int             height    () const { return m_height; }
-  const uint32*   row       (uint y) const; /* endian dependant ARGB integers */
-  bool            compare   (const Pixbuf &source,
-                             uint sx, uint sy, int swidth, int sheight,
-                             uint tx, uint ty,
-                             double *averrp = NULL, double *maxerrp = NULL,
-                             double *nerrp = NULL, double *npixp = NULL) const;
-  static bool     try_alloc (uint width, uint height, int alignment = -1);
-  static bool     save_png  (const String &filename,    /* assigns errno */
-                             const Pixbuf &pixbuf,
-                             const String &comment);
+  explicit      PixmapT         ();                     ///< Construct Pixmap with 0x0 pixesl.
+  explicit      PixmapT         (uint w, uint h);       ///< Construct Pixmap at given width and height.
+  explicit      PixmapT         (const Pixbuf &source); ///< Copy-construct Pixmap from a Pixbuf structure.
+  PixmapT&      operator=       (const Pixbuf &source); ///< Re-initialize the Pixmap from a Pixbuf structure.
+  int           width           () const { return m_pixbuf->width(); }  ///< Get the width of the Pixmap.
+  int           height          () const { return m_pixbuf->height(); } ///< Get the height of the Pixmap.
+  void          resize          (uint w, uint h);   ///< Reset width and height and resize pixel sequence.
+  bool          try_resize      (uint w, uint h);   ///< Resize unless width and height are too big.
+  const uint32* row             (uint y) const { return m_pixbuf->row (y); } ///< Access row read-only.
+  uint32*       row             (uint y) { return m_pixbuf->row (y); } ///< Access row as endian dependant ARGB integers.
+  uint32&       pixel           (uint x, uint y) { return m_pixbuf->row (y)[x]; }       ///< Retrieve an ARGB pixel value reference.
+  uint32        pixel           (uint x, uint y) const { return m_pixbuf->row (y)[x]; } ///< Retrieve an ARGB pixel value.
+  bool          load_png        (const String &filename, bool tryrepair = false); ///< Load from PNG, assigns errno on failure.
+  bool          save_png        (const String &filename); ///< Save to PNG, assigns errno on failure.
+  bool          load_pixstream  (const uint8 *pixstream); ///< Decode and load from pixel stream, assigns errno on failure.
+  void          set_attribute   (const String &name, const String &value); ///< Set string attribute, e.g. "comment".
+  String        get_attribute   (const String &name) const;                ///< Get string attribute, e.g. "comment".
+  void          copy            (const Pixbuf &source, uint sx, uint sy,
+                                 int swidth, int sheight, uint tx, uint ty); ///< Copy a Pixbuf area into this pximap.
+  bool          compare         (const Pixbuf &source, uint sx, uint sy, int swidth, int sheight,
+                                 uint tx, uint ty, double *averrp = NULL, double *maxerrp = NULL, double *nerrp = NULL,
+                                 double *npixp = NULL) const; ///< Compare area and calculate difference metrics.
+  operator const Pixbuf& () const { return *m_pixbuf; } ///< Allow automatic conversion of a Pixmap into a Pixbuf.
 };
 
-class Pixmap : public Pixbuf, public virtual BaseObject {
-  String          m_comment;
-protected:
-  virtual        ~Pixmap    ();
-public:
-  explicit        Pixmap    (uint _width, uint _height, int alignment = -1);
-  String          comment   () const    { return m_comment; }
-  void            comment   (const String &_comment);
-  uint32*         row       (uint y)    { return const_cast<uint32*> (Pixbuf::row (y)); }
-  uint32*         data      (int *stride); // stride in bytes
-  using           Pixbuf::row;
-  bool            save_png  (const String &filename);   /* assigns errno */
-  void            copy      (const Pixmap &source,
-                             uint sx, uint sy, int swidth, int sheight,
-                             uint tx, uint ty);
-  static Pixmap*  load_png  (const String &filename,    /* assigns errno */
-                             bool          tryrepair = false);
-  static Pixmap*  pixstream (const uint8  *pixstream);  /* assigns errno */
-  static Pixmap*  stock     (const String &stock_name);
-  static void     add_stock (const String &stock_name,
-                             const uint8  *pixstream);
-};
+// RAPICORN_PIXBUF_TYPE is defined in <rcore/clientapi.hh> and <rcore/serverapi.hh>
+typedef PixmapT<RAPICORN_PIXBUF_TYPE> Pixmap; ///< Pixmap is a convenience alias for PixmapT<Pixbuf>.
 
 } // Rapicorn
 

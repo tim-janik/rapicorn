@@ -21,8 +21,8 @@ rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
-        pixmap.cc	regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
-        rapicornthreadimpl.cc plicwrapper.cc \
+			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
+        rapicornthreadimpl.cc plicwrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 )
@@ -36,6 +36,7 @@ rapicorn_private_files = $(strip	\
         rapicornsignaltemplate.hh	\
         configbits.cc			\
 	mksignals.sh			\
+	pixmap.cc			\
 )
 
 # === CPU flags ===

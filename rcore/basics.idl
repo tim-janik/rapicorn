@@ -11,4 +11,14 @@ sequence AnySeq { any vany; };
 /// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
 sequence AnySeqSeq { AnySeq seq; };
 
+/// A sequence of ARGB pixel values.
+sequence PixelSeq { int argb; };
+
+/// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
+record Pixbuf {
+  int       row_length;         ///< Length of a Pixbuf row in pixels.
+  PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
+  StringSeq variables;
+};
+
 } // Rapicorn

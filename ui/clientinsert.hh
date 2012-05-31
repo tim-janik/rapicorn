@@ -29,8 +29,6 @@ class_scope:Application:
   static ClientConnection         ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
-  // FIXME: static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  int           m_tc;           // FIXME: uninitialized
 
 IGNORE: // close last _scope
 }; // close dummy class scope

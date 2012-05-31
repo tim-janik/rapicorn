@@ -195,7 +195,6 @@ public:
             int h = height - 2 * ythick;        /* dot1 */
             n_vdots = 1 + h / (3 * ythick);
           }
-        Color color = 0x80000000;
         cairo_t *cr = cairo_context (rcontext, rect);
         CPainter rp (cr);
         for (int j = 0; j < n_vdots; j++)
@@ -215,7 +214,8 @@ public:
 static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
 
 // == DrawableImpl ==
-DrawableImpl::DrawableImpl()
+DrawableImpl::DrawableImpl() :
+  m_x (0), m_y (0)
 {}
 
 void
@@ -228,22 +228,32 @@ DrawableImpl::size_request (Requisition &requisition)
 void
 DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  m_pic = PixelRectImpl();
+  m_pixbuf = PixbufImpl();
+  m_x = 0;
+  m_y = 0;
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }
 
 void
-DrawableImpl::draw_rect (const PixelRectImpl &pixrect)
+DrawableImpl::draw_rect (int x, int y, const PixbufImpl &pixbuf)
 {
   const Allocation &area = allocation();
-  if (pixrect.x >= area.x && pixrect.y >= area.y &&
-      pixrect.x + pixrect.width <= area.x + area.width &&
-      pixrect.y + pixrect.height <= area.y + area.height &&
-      pixrect.rowstride >= pixrect.width &&
-      size_t (pixrect.offset) + pixrect.rowstride * pixrect.height <= pixrect.argb_pixels.size())
-    m_pic = pixrect;
-  else if (m_pic.width > 0)
-    m_pic = PixelRectImpl();
+  const size_t rowstride = pixbuf.width();
+  if (x >= area.x && y >= area.y &&
+      x + pixbuf.width() <= area.x + area.width &&
+      y + pixbuf.height() <= area.y + area.height &&
+      rowstride * pixbuf.height() <= pixbuf.pixels.size())
+    {
+      m_x = x;
+      m_y = y;
+      m_pixbuf = pixbuf;
+    }
+  else if (m_pixbuf.width() > 0)
+    {
+      m_pixbuf = PixbufImpl();
+      m_x = 0;
+      m_y = 0;
+    }
   expose();
 }
 
@@ -281,12 +291,13 @@ DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
       cairo_restore (cr);
     }
   // handle user draw
-  if (m_pic.width > 0)
+  if (m_pixbuf.width() > 0 && m_pixbuf.height() > 0)
     {
-      cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) m_pic.argb_pixels.data(), CAIRO_FORMAT_ARGB32,
-                                                                      m_pic.width, m_pic.height, m_pic.rowstride * 4);
+      const int rowstride = m_pixbuf.width();
+      cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) m_pixbuf.pixels.data(), CAIRO_FORMAT_ARGB32,
+                                                                      m_pixbuf.width(), m_pixbuf.height(), rowstride * 4);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      cairo_set_source_surface (cr, surface, m_pic.x, m_pic.y);
+      cairo_set_source_surface (cr, surface, m_x, m_y);
       cairo_paint (cr);
       cairo_surface_destroy (surface);
     }

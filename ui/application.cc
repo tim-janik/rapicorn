@@ -12,13 +12,6 @@ namespace Rapicorn {
 
 ApplicationIface::ApplicationMutex ApplicationIface::mutex;
 
-void
-ApplicationIface::pixstream (const String  &pix_name,
-                             const uint8   *static_const_pixstream)
-{
-  Pixmap::add_stock (pix_name, static_const_pixstream);
-}
-
 bool
 ApplicationIface::factory_window (const std::string &factory_definition)
 {
@@ -111,6 +104,10 @@ ApplicationIface::xurl_path (const ListModelIface &model)
   const String xurl_name = model.get_data (&xurl_name_key);
   return xurl_name;
 }
+
+ApplicationImpl::ApplicationImpl() :
+  m_tc (0)
+{}
 
 static ApplicationImpl *the_app = NULL;
 static void

@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
+#include <rcore/clientapi.hh>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -28,25 +29,21 @@ static double
 compare_image_files (const String &image1_file,
                      const String &image2_file)
 {
+  Pixmap image1 (0, 0), image2 (0, 0);
   /* load images */
-  Pixmap *image1 = Pixmap::load_png (image1_file);
-  if (!image1 || errno)
+  if (!image1.load_png (image1_file))
     fatal ("failed to load \"%s\": %s", image1_file.c_str(), string_from_errno (errno).c_str());
-  ref_sink (image1);
 
-  Pixmap *image2 = Pixmap::load_png (image2_file);
-  if (!image2 || errno)
+  if (!image2.load_png (image2_file))
     fatal ("failed to load \"%s\": %s", image2_file.c_str(), string_from_errno (errno).c_str());
-  ref_sink (image2);
 
   /* check sizes */
-  if (image1->width() != image2->width() ||
-      image1->height() != image2->height())
+  if (image1.width() != image2.width() || image1.height() != image2.height())
     return DBL_MAX;
 
   /* check equality */
   double avgerror = 0, npixels = 0;
-  image1->compare (*image2, 0, 0, -1, -1, 0, 0, &avgerror, NULL, NULL, &npixels);
+  image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, NULL, NULL, &npixels);
 
   return avgerror * npixels;
 }

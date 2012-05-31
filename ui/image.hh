@@ -27,8 +27,8 @@ class Image : public virtual ItemImpl {
 protected:
   const PropertyList&   list_properties ();
 public:
-  virtual void             pixmap       (Pixmap       *pixmap) = 0;
-  virtual Pixmap*          pixmap       (void) = 0;
+  virtual void             pixbuf       (const Pixbuf &pixbuf) = 0;
+  virtual Pixbuf           pixbuf       (void) = 0;
   virtual void /*errno*/   stock_pixmap (const String &stock_name) = 0;
   virtual void /*errno*/   image_file   (const String &filename) = 0;
 };

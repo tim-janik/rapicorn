@@ -35,10 +35,10 @@ Image::list_properties()
 static const uint8* get_broken16_pixdata (void);
 
 static cairo_surface_t*
-cairo_surface_from_pixmap (Pixmap &pixmap)
+cairo_surface_from_pixmap (Pixmap pixmap)
 {
-  int stride = 0;
-  uint32 *data = pixmap.data (&stride);
+  const int stride = pixmap.width() * 4;
+  uint32 *data = pixmap.row (0);
   cairo_surface_t *isurface =
     cairo_image_surface_create_for_data ((unsigned char*) data,
                                          CAIRO_FORMAT_ARGB32,
@@ -50,76 +50,69 @@ cairo_surface_from_pixmap (Pixmap &pixmap)
 }
 
 class ImageImpl : public virtual ItemImpl, public virtual Image {
-  Pixmap           *m_pixmap;
+  Pixmap           m_pixmap;
 public:
-  explicit ImageImpl() :
-    m_pixmap (NULL)
+  explicit ImageImpl()
   {}
   void
   reset ()
   {
-    if (m_pixmap)
-      {
-        Pixmap *op = m_pixmap;
-        m_pixmap = NULL;
-        unref (op);
-      }
+    m_pixmap = Pixmap();
     invalidate();
   }
   ~ImageImpl()
   {}
   virtual void
-  pixmap (Pixmap *pixmap)
+  pixbuf (const Pixbuf &pixbuf)
   {
-    if (pixmap)
-      ref_sink (pixmap);
     reset();
-    m_pixmap = pixmap;
+    m_pixmap = pixbuf;
   }
-  virtual Pixmap*
-  pixmap (void)
+  virtual Pixbuf
+  pixbuf()
   {
     return m_pixmap;
   }
   virtual void
   stock_pixmap (const String &stock_name)
   {
-    Pixmap *pixmap = Pixmap::stock (stock_name);
+#if 0 // FIXME
+    P1xmap *pixmap = P1xmap::stock (stock_name);
     int saved = errno;
     if (!pixmap)
       {
-        pixmap = Pixmap::pixstream (get_broken16_pixdata());
+        pixmap = P1xmap::pixstream (get_broken16_pixdata());
         assert (pixmap);
       }
     ref_sink (pixmap);
     this->pixmap (pixmap);
     unref (pixmap);
     errno = saved;
+#endif
   }
   virtual void
   image_file (const String &filename)
   {
-    Pixmap *pixmap = Pixmap::load_png (filename, true);
+#if 0 // FIXME
+    P1xmap *pixmap = P1xmap::load_png (filename, true);
     int saved = errno;
     if (!pixmap)
       {
-        pixmap = Pixmap::pixstream (get_broken16_pixdata());
+        pixmap = P1xmap::pixstream (get_broken16_pixdata());
         assert (pixmap);
       }
     ref_sink (pixmap);
     this->pixmap (pixmap);
     unref (pixmap);
     errno = saved;
+#endif
   }
 protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    if (m_pixmap)
-      {
-        requisition.width += m_pixmap->width();
-        requisition.height += m_pixmap->height();
-      }
+    requisition.width += m_pixmap.width();
+    requisition.height += m_pixmap.height();
   }
   virtual void
   size_allocate (Allocation area, bool changed)
@@ -136,15 +129,15 @@ protected:
     const bool grow = true;
     PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
     const Allocation &area = allocation();
-    if (area.width < 1 || area.height < 1 || !m_pixmap)
+    if (area.width < 1 || area.height < 1 || m_pixmap.width() < 1 || m_pixmap.height() < 1)
       return view;
-    view.xscale = m_pixmap->width() / area.width;
-    view.yscale = m_pixmap->height() / area.height;
+    view.xscale = m_pixmap.width() / area.width;
+    view.yscale = m_pixmap.height() / area.height;
     view.scale = max (view.xscale, view.yscale);
     if (!grow)
       view.scale = max (view.scale, 1.0);
-    view.pwidth = m_pixmap->width() / view.scale + 0.5;
-    view.pheight = m_pixmap->height() / view.scale + 0.5;
+    view.pwidth = m_pixmap.width() / view.scale + 0.5;
+    view.pheight = m_pixmap.height() / view.scale + 0.5;
     const PackInfo &pi = pack_info();
     view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
     view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
@@ -154,7 +147,7 @@ public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (m_pixmap)
+    if (m_pixmap.width() > 0 && m_pixmap.height() > 0)
       {
         const Allocation &area = allocation();
         PixView view = adjust_view();
@@ -162,7 +155,7 @@ public:
         Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
         erect.intersect (rect);
         cairo_t *cr = cairo_context (rcontext, erect);
-        cairo_surface_t *isurface = cairo_surface_from_pixmap (*m_pixmap);
+        cairo_surface_t *isurface = cairo_surface_from_pixmap (m_pixmap);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
         cairo_matrix_init_identity (&matrix);

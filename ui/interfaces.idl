@@ -88,26 +88,10 @@ interface ButtonArea : Container {
   string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
 };
 
-sequence Pixels {
-  int pixel;
-};
-record PixelRect {
-  int	   x;
-  int     y;
-  int     width;
-  int     height;
-  int     rowstride;
-  int     offset;
-  string  comment;
-  Pixels  argb_pixels;
-};
-
-/**
- * The Drawable interface allows display of custom images, created by client-side rendering.
- */
+/// The Drawable interface allows display of custom images, created by client-side rendering.
 interface Drawable : Item {
-  signal void	redraw		(int x, int y, int w, int h);	///< Requests a redraw at @a width and @a height.
-  void		draw_rect	(PixelRect pixrect) = 0;	///< Draws pixels on the drawable display.
+  signal void redraw    (int x, int y, int w, int h);	        ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int x, int y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
 };
 
 /**
@@ -141,9 +125,10 @@ sequence WindowList {
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
  * such as the facility to create Window objects on the screen.
+ * @nosubgrouping
  */
 interface Application {
-  /* startup */
+  /// @name Application Startup
   string        auto_path       (string         file_name,
                                  string         binary_path,
                                  bool           search_vpath = true) = 0;
@@ -155,23 +140,22 @@ interface Application {
   void          load_string     (string         defs_domain,
                                  string         xml_string,
                                  string         i18n_domain = "") = 0;
-  /* windows */
-  Window        create_window   (string         window_identifier,
-                                 StringSeq      arguments = 0) = 0;
-  bool          finishable      ();
-  signal void   missing_primary ();
+  /// @name Window handling
+  Window        create_window   (string window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
+  bool          finishable      ();                     ///< Indicates whether all windows and other primary event sources are gone.
+  signal void   missing_primary ();                     ///< Indicates the Application entering finishable() state.
   void          close           ();
-  Window        query_window    (string         selector) = 0;
-  WindowList    query_windows   (string         selector) = 0;
-  WindowList    list_windows            () = 0;
-  // helpers
-  ListModelRelay create_list_model_relay (int n_columns,
-                                          string name = "") = 0; ///< Create a ListModel & ListModelRelay bundle.
-  /* testing */
-  void          test_counter_set        (int val) = 0;
-  void          test_counter_add        (int val) = 0;
-  int           test_counter_get        () = 0;
-  int           test_counter_inc_fetch  () = 0;
+  Window        query_window    (string selector) = 0;  ///< Returns first Window match for @a selector.
+  WindowList    query_windows   (string selector) = 0;  ///< Returns all Window matches for @a selector.
+  WindowList    list_windows    () = 0;
+  /// @name Application Registries
+  ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
+  ListModelRelay create_list_model_relay (int n_columns, string name = "") = 0;
+  /// @name Test counter for debugging/profiling
+  void          test_counter_set        (int val) = 0;  ///< Testing, set the test counter.
+  void          test_counter_add        (int val) = 0;  ///< Testing, add to the test counter.
+  int           test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
+  int           test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
 };
 
 enum TestEnum {

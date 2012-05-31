@@ -27,7 +27,6 @@ class_scope:Window:
   const WindowImpl& impl () const;
 
 class_scope:Application:
-  static void            pixstream  (const String &pix_name, const uint8 *static_const_pixstream);
   static bool            xurl_add   (const String &model_path, ListModelIface &model);
   static bool            xurl_sub   (ListModelIface &model);
   static ListModelIface* xurl_find  (const String &model_path);
@@ -39,9 +38,6 @@ class_scope:Application:
     static void unlock  () { rapicorn_thread_leave (); }
   };
   static ApplicationMutex mutex;  // singleton
-  /* singleton defs */
-protected:
-  int                m_tc; // FIXME: uninitialized
 
 IGNORE: // close last _scope
 }; // close dummy class scope

@@ -15,18 +15,18 @@ static void
 drawable_redraw (DrawableH &drawable, int x, int y, int w, int h)
 {
   // boilerplate
-  PixelRect pic;
-  pic.x = x, pic.y = y, pic.width = w, pic.height = h, pic.rowstride = pic.width;
-  pic.argb_pixels.resize (pic.rowstride * pic.height);
-  cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) pic.argb_pixels.data(), CAIRO_FORMAT_ARGB32,
-                                                                  pic.width, pic.height, pic.rowstride * 4);
+  Pixbuf pixbuf;
+  int px = x, py = y;
+  pixbuf.resize (w, h);
+  cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) pixbuf.pixels.data(), CAIRO_FORMAT_ARGB32,
+                                                                  pixbuf.width(), pixbuf.height(), pixbuf.width() * 4);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
   cairo_t *cr = cairo_create (surface);
   cairo_surface_destroy (surface);
   // outline drawing rectangle
   cairo_set_line_width (cr, 1);
   cairo_set_source_rgba (cr, 0, 0, 1, 1);
-  cairo_rectangle (cr, 0, 0, pic.width, pic.height);
+  cairo_rectangle (cr, 0, 0, pixbuf.width(), pixbuf.height());
   cairo_stroke (cr);
   // custom drawing
   const double lthickness = 2.25;
@@ -41,7 +41,7 @@ drawable_redraw (DrawableH &drawable, int x, int y, int w, int h)
   cairo_move_to (cr, 75, 120), cairo_line_to (cr, 230, 110);
   // render remotely
   cairo_destroy (cr);
-  drawable.draw_rect (pic);
+  drawable.draw_rect (px, py, pixbuf);
 }
 
 extern "C" int

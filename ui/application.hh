@@ -7,8 +7,10 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<WindowIface*>     m_windows;
+  vector<WindowIface*> m_windows;
+  int                  m_tc;
 public:
+  explicit            ApplicationImpl        ();
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true);

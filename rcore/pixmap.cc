@@ -1,21 +1,7 @@
-/* Rapicorn - experimental UI toolkit
- * Copyright (C) 2005-2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#include "pixmap.hh"
-#include "rapicornthread.hh"
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_RCORE_SERVERAPI_HH_
+#include "clientapi.hh" // includes pixmap.hh
+#endif
 #include "strings.hh"
 #include <errno.h>
 #include <math.h>
@@ -27,107 +13,97 @@
 namespace {
 using namespace Rapicorn;
 
-static Pixmap*  anon_load_png (const String &filename); /* assigns errno */
+static bool anon_load_png (Pixmap pixmap, const String &filename); /* assigns errno */
 
 } // Anon
 
 namespace Rapicorn {
 
-static inline uint64
-upper_power2 (uint64 number)
+template<class Pixbuf>
+PixmapT<Pixbuf>::PixmapT() :
+  m_pixbuf (new Pixbuf())
+{}
+
+template<class Pixbuf>
+PixmapT<Pixbuf>::PixmapT (uint w, uint h) :
+  m_pixbuf (new Pixbuf())
 {
-  return number ? 1 << fmsb (number - 1) : 0;
+  assert (w <= MAXDIM);
+  assert (h <= MAXDIM);
+  m_pixbuf->resize (w, h);
 }
 
-static int
-align_rowstride (uint width,
-                 int  alignment)
+template<class Pixbuf>
+PixmapT<Pixbuf>::PixmapT (const Pixbuf &source) :
+  m_pixbuf (new Pixbuf())
 {
-  if (alignment < 0)
-    alignment = 16;     // default
-  else
-    alignment = upper_power2 (alignment);
-  return alignment ? ALIGN_SIZE (width, alignment) : width;
+  *m_pixbuf = source;
 }
 
-bool
-Pixbuf::try_alloc (uint width,
-                   uint height,
-                   int  alignment)
+template<class Pixbuf>
+PixmapT<Pixbuf>&
+PixmapT<Pixbuf>::operator= (const Pixbuf &source)
+{
+  *m_pixbuf = source;
+  return *this;
+}
+
+template<class Pixbuf> void
+PixmapT<Pixbuf>::resize (uint width, uint height)
+{
+  assert (width <= MAXDIM);
+  assert (height <= MAXDIM);
+  m_pixbuf->resize (width, height);
+}
+
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::try_resize (uint width, uint height)
 {
   if (width && height && width <= MAXDIM && height <= MAXDIM)
     {
-      uint64 rowstride = align_rowstride (width, alignment);
-      uint64 total = rowstride * height;
+      //uint64 rowstride = align_rowstride (width, alignment);
+      //uint64 total = rowstride * height;
+      const size_t total = width * size_t (height);
       uint32 *pixels = new uint32[total];
       if (pixels)
         {
           pixels[0] = 0xff1155bb;
           delete[] pixels;
+          resize (width, height);
           return true;
         }
     }
   return false;
 }
 
-Pixbuf::Pixbuf (uint _width,
-                uint _height,
-                int  alignment) :
-  m_pixels (NULL), m_rowstride (align_rowstride (_width, alignment)),
-  m_width (_width), m_height (_height)
-{
-  assert (_width <= MAXDIM);
-  assert (_height <= MAXDIM);
-  m_pixels = new uint32[m_rowstride * m_height];
-  if (!m_pixels)
-    fatal ("failed to allocate %zu bytes for %ux%u pixels",
-           sizeof (uint32[m_rowstride * m_height]), _width, _height);
-  memset (m_pixels, 0, sizeof (uint32[m_rowstride * m_height]));
-}
-
-const uint32*
-Pixbuf::row (uint y) const /* endian dependant ARGB integers */
-{
-  if (y >= (uint) m_height)
-    return NULL;
-  return &m_pixels[m_rowstride * y];
-}
-
-Pixbuf::~Pixbuf ()
-{
-  *const_cast<int*> (&m_rowstride) = 0;
-  delete[] m_pixels;
-  m_pixels = NULL;
-}
-
 #define SQR(x)  ((x) * (x))
 
-bool
-Pixbuf::compare (const Pixbuf &source,
-                 uint sx, uint sy, int swidth, int sheight,
-                 uint tx, uint ty,
-                 double *averrp, double *maxerrp,
-                 double *nerrp, double *npixp) const
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::compare (const Pixbuf &source,
+                          uint sx, uint sy, int swidth, int sheight,
+                          uint tx, uint ty,
+                          double *averrp, double *maxerrp,
+                          double *nerrp, double *npixp) const
 {
   if (averrp) *averrp = 0;
   if (maxerrp) *maxerrp = 0;
   if (nerrp) *nerrp = 0;
   if (npixp) *npixp = 0;
-  if (sx >= (uint) source.width() || sy >= (uint) source.height() ||
-      tx >= (uint) width() || ty >= (uint) height())
+  if (sx >= size_t (source.width()) || sy >= size_t (source.height()) ||
+      tx >= size_t (m_pixbuf->width()) || ty >= size_t (m_pixbuf->height()))
     return false;
   if (swidth < 0)
     swidth = source.width();
   if (sheight < 0)
     sheight = source.height();
-  swidth = MIN (MIN (width() - (int) tx, source.width() - (int) sx), swidth);
-  sheight = MIN (MIN (height() - (int) ty, source.height() - (int) sy), sheight);
+  swidth = MIN (MIN (m_pixbuf->width() - int (tx), source.width() - int (sx)), swidth);
+  sheight = MIN (MIN (m_pixbuf->height() - int (ty), source.height() - int (sy)), sheight);
   const uint npix = sheight * swidth;
   uint nerr = 0;
   double erraccu = 0, errmax = 0;
   for (int k = 0; k < sheight; k++)
     {
-      const uint32 *r1 = row (ty + k);
+      const uint32 *r1 = m_pixbuf->row (ty + k);
       const uint32 *r2 = source.row (sy + k);
       for (int j = 0; j < swidth; j++)
         if (r1[tx + j] != r2[sx + j])
@@ -151,68 +127,24 @@ Pixbuf::compare (const Pixbuf &source,
   return nerr != 0;
 }
 
-Pixmap::Pixmap (uint _width,
-                uint _height,
-                int  alignment) :
-  Pixbuf (_width, _height, alignment)
-{}
-
-uint32*
-Pixmap::data (int *stride)
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::load_png (const String &filename, bool tryrepair)
 {
-  if (!stride)
-    return NULL;
-  *stride = m_rowstride * 4;
-  return row (0);
+  return anon_load_png (*this, filename) || tryrepair;
 }
 
-void
-Pixmap::comment (const String &_comment)
+template<class Pixbuf> void
+PixmapT<Pixbuf>::copy (const Pixbuf &source, uint sx, uint sy, int swidth, int sheight, uint tx, uint ty)
 {
-  m_comment = _comment;
-}
-
-Pixmap*
-Pixmap::load_png (const String &filename, /* assigns errno */
-                  bool          tryrepair)
-{
-  Pixmap *pixmap = anon_load_png (filename);
-  if (pixmap && errno && !tryrepair)
-    {
-      int saved = errno;
-      unref (ref_sink (pixmap));
-      pixmap = NULL;
-      errno = saved;
-    }
-  return pixmap;
-}
-
-bool
-Pixmap::save_png (const String &filename) /* assigns errno */
-{
-  return Pixbuf::save_png (filename, *this, m_comment);
-}
-
-Pixmap::~Pixmap ()
-{
-  m_comment.erase();
-}
-
-void
-Pixmap::copy (const Pixmap &source,
-              uint sx, uint sy,
-              int swidth, int sheight,
-              uint tx, uint ty)
-{
-  if (sx >= (uint) source.width() || sy >= (uint) source.height() ||
-      tx >= (uint) width() || ty >= (uint) height())
+  if (sx >= uint (source.width()) || sy >= uint (source.height()) ||
+      tx >= uint (width()) || ty >= uint (height()))
     return;
   if (swidth < 0)
     swidth = source.width();
   if (sheight < 0)
     sheight = source.height();
-  swidth = MIN (MIN (width() - (int) tx, source.width() - (int) sx), swidth);
-  sheight = MIN (MIN (height() - (int) ty, source.height() - (int) sy), sheight);
+  swidth = MIN (MIN (width() - int (tx), source.width() - int (sx)), swidth);
+  sheight = MIN (MIN (height() - int (ty), source.height() - int (sy)), sheight);
   for (int j = 0; j < sheight; j++)
     {
       uint32 *r1 = row (ty + j);
@@ -221,21 +153,51 @@ Pixmap::copy (const Pixmap &source,
     }
 }
 
-static void
-pixmap_border (Pixmap *pixmap,
-               uint32  pixel)
+static inline vector<String>::const_iterator
+find_attribute (const vector<String> &attributes, const String &name)
 {
-  uint32 *row = pixmap->row (0);
-  for (int i = 0; i < pixmap->width(); i++)
+  const size_t l = name.size();
+  const char *key = name.c_str();
+  for (auto it = attributes.begin(); it != attributes.end(); ++it)
+    if (strncmp (it->c_str(), key, l) == 0 && (*it)[l] == '=')
+      return it;
+  return attributes.end();
+}
+
+template<class Pixbuf> void
+PixmapT<Pixbuf>::set_attribute (const String &name, const String &value)
+{
+  vector<String>::const_iterator it = find_attribute (m_pixbuf->variables, name);
+  if (it == m_pixbuf->variables.end())
+    m_pixbuf->variables.push_back (name + "=" + value);
+  else
+    m_pixbuf->variables[it - m_pixbuf->variables.begin()] = name + "=" + value;
+}
+
+template<class Pixbuf> String
+PixmapT<Pixbuf>::get_attribute (const String &name) const
+{
+  vector<String>::const_iterator it = find_attribute (m_pixbuf->variables, name);
+  if (it == m_pixbuf->variables.end())
+    return "";
+  else
+    return m_pixbuf->variables[it - m_pixbuf->variables.begin()].substr (name.size() + 1);
+}
+
+static void
+pixmap_border (Pixmap pixmap, uint32 pixel)
+{
+  uint32 *row = pixmap.row (0);
+  for (int i = 0; i < pixmap.width(); i++)
     row[i] = pixel;
-  row = pixmap->row (pixmap->height() - 1);
-  for (int i = 0; i < pixmap->width(); i++)
+  row = pixmap.row (pixmap.height() - 1);
+  for (int i = 0; i < pixmap.width(); i++)
     row[i] = pixel;
-  for (int i = 1; i < pixmap->height() - 1; i++)
+  for (int i = 1; i < pixmap.height() - 1; i++)
     {
-      row = pixmap->row (i);
+      row = pixmap.row (i);
       row[0] = pixel;
-      row[pixmap->width() - 1] = pixel;
+      row[pixmap.width() - 1] = pixel;
     }
 }
 
@@ -253,7 +215,7 @@ premultiply (uint32 pixel)
 }
 
 static int /* errno */
-fill_pixmap_from_pixstream (Pixmap      &pixmap,
+fill_pixmap_from_pixstream (Pixmap       pixmap,
                             bool         has_alpha,
                             bool         rle_encoded,
                             uint         pixdata_width,
@@ -345,8 +307,8 @@ next_uint32 (const uint8 **streamp)
   return result;
 }
 
-Pixmap*
-Pixmap::pixstream (const uint8 *pixstream)
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::load_pixstream (const uint8 *pixstream)
 {
   errno = EINVAL;
   assert_return (pixstream != NULL, NULL);
@@ -372,47 +334,19 @@ Pixmap::pixstream (const uint8 *pixstream)
 
   errno = ENOMEM;
   next_uint32 (&s); /* rowstride */
-  uint width = next_uint32 (&s);
-  uint height = next_uint32 (&s);
-  if (width < 1 || height < 1)
+  const uint pwidth = next_uint32 (&s);
+  const uint pheight = next_uint32 (&s);
+  if (pwidth < 1 || pheight < 1)
     return NULL;
 
   errno = ENOMEM;
-  if (!Pixbuf::try_alloc (width, height, 0))
+  if (!try_resize (pwidth, pheight))
     return NULL;
-  Pixmap *pixmap = new Pixmap (width, height, 0);
-  errno = fill_pixmap_from_pixstream (*pixmap,
+  errno = fill_pixmap_from_pixstream (*this,
                                       (type & 0xff) == 0x02,
                                       (type >> 24) == 0x02,
-                                      width, height, s);
-  if (errno == 0)
-    return pixmap;
-  int saved = errno;
-  unref (ref_sink (pixmap));
-  errno = saved;
-  return NULL;
-}
-
-static Mutex stock_mutex;
-static map <const String, const uint8*> stock_map;
-
-void
-Pixmap::add_stock (const String &stock_name,
-                   const uint8  *pixstream)
-{
-  ScopedLock<Mutex> locker (stock_mutex);
-  stock_map[stock_name] = pixstream;
-}
-
-Pixmap*
-Pixmap::stock (const String &stock_name)
-{
-  const uint8 *pixstream = NULL;
-  {
-    ScopedLock<Mutex> locker (stock_mutex);
-    pixstream = stock_map[stock_name];
-  }
-  return pixstream ? Pixmap::pixstream (pixstream) : NULL;
+                                      pwidth, pheight, s);
+  return errno == 0;
 }
 
 } // Rapicorn
@@ -457,11 +391,11 @@ argb_pre_2_rgba (png_structp png, png_row_infop row_info, png_bytep data)
 }
 
 struct PngContext {
-  Pixmap    *pixmap;
+  Pixmap     pixmap;
   int        error;
   FILE      *fp;
   png_byte **rows;
-  PngContext() : pixmap (NULL), error (0), fp (NULL), rows (NULL) {}
+  PngContext (Pixmap pxm) : pixmap (pxm), error (0), fp (NULL), rows (NULL) {}
 };
 
 static int /* returns errno; longjmp() may jump out of this function */
@@ -535,8 +469,7 @@ pngcontext_read_image (PngContext &pcontext,
     }
   /* setup pixmap and rows */
   pcontext.rows = new png_bytep[height];
-  pcontext.pixmap = Pixbuf::try_alloc (width, height, 0) ? new Pixmap (width, height) : NULL;
-  if (!pcontext.rows || !pcontext.pixmap)
+  if (!pcontext.rows || !pcontext.pixmap.try_resize (width, height))
     {
       pcontext.error = ENOMEM;
       return;
@@ -544,7 +477,7 @@ pngcontext_read_image (PngContext &pcontext,
   // pixmap_fill (pcontext.pixmap, 0);          // pixmaps are preinitialized to transparent bg
   pixmap_border (pcontext.pixmap, 0x80ff0000);  /* show red error border for partial images */
   for (uint i = 0; i < height; i++)
-    pcontext.rows[i] = (png_byte*) pcontext.pixmap->row (i);
+    pcontext.rows[i] = (png_byte*) pcontext.pixmap.row (i);
   /* read image rows */
   png_read_image (png_ptr, pcontext.rows);
   png_read_end (png_ptr, info_ptr);
@@ -560,7 +493,7 @@ pngcontext_read_image (PngContext &pcontext,
             std::string output, input (text_ptr[i].text);
             if (text_convert ("UTF-8", output, "ISO-8859-1", input) && output.size())
               {
-                pcontext.pixmap->comment (output);
+                pcontext.pixmap.set_attribute ("comment", output);
                 if (is_comment)
                   break;
               }
@@ -584,10 +517,10 @@ pngcontext_nop (png_structp     png_ptr,
                 png_const_charp error_msg)
 {}
 
-static Pixmap*
-anon_load_png (const String &filename) /* assigns errno */
+static bool
+anon_load_png (Pixmap pixmap, const String &filename)
 {
-  PngContext pcontext;
+  PngContext pcontext (pixmap);
   /* open image */
   pcontext.fp = fopen (filename.c_str(), "rb");
   if (!pcontext.fp)
@@ -626,23 +559,21 @@ anon_load_png (const String &filename) /* assigns errno */
   if (pcontext.rows)
     delete[] pcontext.rows;
   errno = pcontext.error; // maybe set even if pcontext.pixmap!=NULL
-  return pcontext.pixmap;
+  return errno == 0;
 }
 
 } // Anon
 
 namespace Rapicorn {
 
-bool
-Pixbuf::save_png (const String &filename, /* assigns errno */
-                  const Pixbuf &pixbuf,
-                  const String &comment)
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
 {
-  const int w = pixbuf.width();
-  const int h = pixbuf.height();
+  const int w = width();
+  const int h = height();
   const int depth = 8;
-  /* allocate resources */
-  PngContext pcontext;
+  // allocate resources
+  PngContext pcontext (*this);
   pcontext.error = ENOMEM;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, &pcontext,
                                                  pngcontext_error, pngcontext_nop);
@@ -655,9 +586,7 @@ Pixbuf::save_png (const String &filename, /* assigns errno */
       return false;
     }
   /* setup key=value pairs for PNG text section */
-  StringVector sv;
-  if (comment.size())
-    sv.insert (sv.begin(), "Comment=" + comment);
+  const StringVector &sv = m_pixbuf->variables;
   StringVector keys, values;
   for (uint i = 0; i < sv.size(); i++)
     {
@@ -707,7 +636,7 @@ Pixbuf::save_png (const String &filename, /* assigns errno */
       png_set_write_user_transform_fn (png_ptr, argb_pre_2_rgba);
       for (int y = 0; y < h; y++)
         {
-          png_bytep row_ptr = (png_bytep) pixbuf.row (y);
+          png_bytep row_ptr = (png_bytep) row (y);
           png_write_rows (png_ptr, &row_ptr, 1);
         }
       png_write_end (png_ptr, info_ptr);
@@ -727,5 +656,7 @@ Pixbuf::save_png (const String &filename, /* assigns errno */
   return pcontext.error == 0;
 }
 
+// Explicitely force instantiation and compilation of this template
+template class PixmapT<RAPICORN_PIXBUF_TYPE>; // Instantiates client-side for PixbufStruct and server-side for PixbufImpl
 
 } // Rapicorn
