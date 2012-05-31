@@ -245,9 +245,6 @@ test_threads (void)
   TCMP (thread1->running(), ==, TRUE);
   TCMP (thread2->running(), ==, TRUE);
   TCMP (thread3->running(), ==, TRUE);
-  thread1->wakeup();
-  thread2->wakeup();
-  thread3->wakeup();
   thread1->abort();
   thread2->abort();
   thread3->abort();

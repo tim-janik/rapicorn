@@ -130,7 +130,6 @@ public:
   void                  queue_abort     ();
   void                  abort           ();
   bool                  aborted         ();
-  void                  wakeup          ();
   bool                  running         ();
   void                  wait_for_exit   ();
   int                   last_affinity   () const;
@@ -139,7 +138,6 @@ public:
   void                  exec_loop       ();
   void                  quit_loop       ();
   /* global methods */
-  static void           emit_wakeups    (uint64             stamp);
   static Thread&        self            ();
   static int            online_cpus     ();
   /* Self thread */
@@ -150,10 +148,6 @@ public:
     static bool         aborted         ();
     static int          affinity        (int cpu = -1);
     static int          pid             ();
-    static void         awake_after     (uint64             stamp);
-    static void         set_wakeup      (RapicornThreadWakeup wakeup_func,
-                                         void              *wakeup_data,
-                                         void             (*destroy_data) (void*));
     static OwnedMutex&  owned_mutex     ();
     static void         yield           ();
     static void         exit            (void              *retval = NULL) RAPICORN_NORETURN;

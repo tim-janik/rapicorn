@@ -207,12 +207,6 @@ private:
   {
     fatal ("UIThread singleton in dtor");
   }
-  static void
-  trigger_wakeup (void*)
-  {
-    if (the_uithread)
-      the_uithread->m_main_loop.wakeup();
-  }
   void
   initialize ()
   {
@@ -251,11 +245,9 @@ private:
   {
     m_lifetime.lock();
     rapicorn_thread_enter();
-    Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups (unused)
     initialize();
     assert_return (m_idata == NULL);
     m_main_loop.run();
-    Self::set_wakeup (NULL, NULL, NULL);        // main loop canot be woken up further
     m_main_loop.kill_loops();
     rapicorn_thread_leave();
     m_lifetime.unlock(); // can be used for external lifetime syncronization
