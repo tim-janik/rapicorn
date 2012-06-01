@@ -671,10 +671,8 @@ test_before_thread_init()
 {
   /* check C++ mutex init + destruct before g_thread_init() */
   Mutex *mutex = new Mutex;
-  RecMutex *rmutex = new RecMutex;
   Cond *cond = new Cond;
   delete mutex;
-  delete rmutex;
   delete cond;
 }
 

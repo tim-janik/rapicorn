@@ -78,7 +78,7 @@ namespace Rapicorn {
 
 /* --- prototypes --- */
 static void             rapicorn_guard_deregister_all   (RapicornThread *thread);
-static void	        rapicorn_thread_handle_exit     (RapicornThread *thread);
+static void	        rapicorn_thread_handle_exit     (RapicornThread *thread) {}
 static void             rapicorn_thread_accounting_L    (RapicornThread *self,
                                                          bool            force_update);
 static void             thread_get_tid                  (RapicornThread *thread);
@@ -177,42 +177,6 @@ common_thread_unref (RapicornThread *thread)
       g_free (thread);
 #endif
     }
-}
-
-static void
-rapicorn_thread_handle_exit (RapicornThread *thread)
-{
-  /* run custom data cleanup handlers */
-  g_datalist_clear (&thread->qdata);
-  thread->wakeup_func = NULL;
-  while (thread->wakeup_destroy)
-    {
-      GDestroyNotify wakeup_destroy = thread->wakeup_destroy;
-      thread->wakeup_destroy = NULL;
-      wakeup_destroy (thread->wakeup_data);
-    }
-  g_datalist_clear (&thread->qdata);
-  void *threadcxx = Atomic::ptr_get (&thread->threadxx);
-  while (threadcxx)
-    {
-      struct ThreadAccessWrapper : public Thread {
-        ThreadAccessWrapper () : Thread ("") {}
-        static void tdelete (void *cxxthread) { return threadxx_delete (cxxthread); }
-      };
-      ThreadAccessWrapper::tdelete (threadcxx);
-      g_datalist_clear (&thread->qdata);
-      threadcxx = Atomic::ptr_get (&thread->threadxx);
-    }
-  global_thread_mutex.lock();
-  global_thread_list = g_slist_remove (global_thread_list, thread);
-  if (thread->awake_stamp)
-    thread_awaken_list = g_slist_remove (thread_awaken_list, thread);
-  thread->awake_stamp = 1;
-  global_thread_cond.broadcast();
-  global_thread_mutex.unlock();
-  
-  /* free thread structure */
-  ThreadTable.thread_unref (thread);
 }
 
 static void
@@ -376,48 +340,6 @@ common_thread_self (void)
       global_thread_mutex.unlock();
     }
   return thread;
-}
-
-static inline void*
-common_thread_getxx (RapicornThread *thread)
-{
-  void *ptr = Atomic::ptr_get (&thread->threadxx);
-  if (UNLIKELY (!ptr))
-    {
-      struct ThreadAccessWrapper : public Thread {
-        ThreadAccessWrapper () : Thread ("") {}
-        static void wrap (RapicornThread *cthread) { return threadxx_wrap (cthread); }
-      };
-      ThreadAccessWrapper::wrap (thread);
-      ptr = Atomic::ptr_get (&thread->threadxx);
-    }
-  return ptr;
-}
-
-static void*
-common_thread_selfxx (void)
-{
-  RapicornThread *thread = ThreadTable.thread_get_handle ();
-  if (UNLIKELY (!thread))
-    thread = ThreadTable.thread_self();
-  return common_thread_getxx (thread);
-}
-
-static bool
-common_thread_setxx (RapicornThread *thread,
-                     void         *xxdata)
-{
-  global_thread_mutex.lock();
-  bool success = false;
-  if (!Atomic::ptr_get (&thread->threadxx) || !xxdata)
-    {
-      Atomic::ptr_set (&thread->threadxx, xxdata);
-      success = true;
-    }
-  else
-    g_error ("attempt to exchange C++ thread handle");
-  global_thread_mutex.unlock();
-  return success;
 }
 
 /**
@@ -1183,9 +1105,9 @@ static RapicornThreadTable fallback_thread_table = {
   common_thread_unref,
   common_thread_start,
   common_thread_self,
-  common_thread_selfxx,
-  common_thread_getxx,
-  common_thread_setxx,
+  NULL, // common_thread_selfxx,
+  NULL, // common_thread_getxx,
+  NULL, // common_thread_setxx,
   common_thread_pid,
   common_thread_name,
   common_thread_set_name,
@@ -1244,9 +1166,9 @@ static RapicornThreadTable pth_thread_table = {
   common_thread_unref,
   common_thread_start,
   common_thread_self,
-  common_thread_selfxx,
-  common_thread_getxx,
-  common_thread_setxx,
+  NULL, // common_thread_selfxx,
+  NULL, // common_thread_getxx,
+  NULL, // common_thread_setxx,
   common_thread_pid,
   common_thread_name,
   common_thread_set_name,
@@ -1297,7 +1219,7 @@ init_threads (const StringVector &args)
 
   RapicornThread *init_self = ThreadTable.thread_self();
   RAPICORN_ASSERT (init_self != NULL);
-  Thread::self().affinity (-1);
+  Thread::Self::affinity (-1);
 }
 static InitHook _init_threads ("threading/00 Init Threads", init_threads);
 

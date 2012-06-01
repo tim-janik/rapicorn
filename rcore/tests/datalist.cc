@@ -105,15 +105,6 @@ data_list_test ()
   }
   TDONE();
 
-  TSTART ("DataList/Threaded");
-  {
-    Thread &thread = Thread::self();
-    data_list_test_strings (thread);
-    data_list_test_ints (thread);
-    data_list_test_strings (thread);
-  }
-  TDONE();
-
   TSTART ("DataList/END");
 }
 REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);

@@ -20,11 +20,5 @@
 ::StringKey::destroy: delete "RAPICORN";
 ::MyKey::destroy: delete 9;
   TEST   DataList/Mixed:                                                 OK
-# Test:  DataList/Threaded ...
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::StringKey::destroy: delete "RAPICORN";
-  TEST   DataList/Threaded:                                              OK
 # Test:  DataList/END ...
   TEST   DataList/END:                                                   OK

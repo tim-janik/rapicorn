@@ -1,27 +1,10 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_THREAD_XX_HH__
 #define __RAPICORN_THREAD_XX_HH__
 
 #include <rcore/utilities.hh>
 
 namespace Rapicorn {
-
-class Thread;
 
 template<class Value> inline bool once_enter (volatile Value *value_location);
 template<class Value> inline void once_leave (volatile Value *value_location,
@@ -39,16 +22,6 @@ public:
   void          unlock  ();
   bool          trylock (); // TRUE indicates success
   /*Des*/       ~Mutex  ();
-};
-
-class RecMutex : protected NonCopyable {
-  RapicornRecMutex rmutex;
-public:
-  explicit      RecMutex  ();
-  void          lock      ();
-  void          unlock    ();
-  bool          trylock   ();
-  /*Des*/       ~RecMutex ();
 };
 
 class Cond : protected NonCopyable {
@@ -104,77 +77,17 @@ template<typename V> inline void stack_push        (V volatile &head, V &next, V
 template<>           inline void stack_push<void*> (void* volatile &head, void* &next, void* vv) { do { next = head; } while (!Atomic::ptr_cas (&head, next, vv)); }
 } // Atomic
 
-class OwnedMutex : protected NonCopyable {
-  RecMutex m_rec_mutex;
-  Thread * volatile m_owner;
-  uint     volatile m_count;
-public:
-  explicit       OwnedMutex ();
-  inline void    lock       ();
-  inline bool    trylock    ();
-  inline void    unlock     ();
-  inline Thread* owner      ();
-  inline bool    mine       ();
-  /*Des*/       ~OwnedMutex ();
-};
-
-class Thread : public virtual BaseObject {
-protected:
-  explicit              Thread          (const String      &name);
-  virtual void          run             () = 0;
-  virtual               ~Thread         ();
-public:
-  void                  start           ();
-  int                   pid             () const;
-  String                name            () const;
-  void                  queue_abort     ();
-  void                  abort           ();
-  bool                  aborted         ();
-  bool                  running         ();
-  void                  wait_for_exit   ();
-  int                   last_affinity   () const;
-  int                   affinity        (int cpu = -1);
-  /* event loop */
-  void                  exec_loop       ();
-  void                  quit_loop       ();
-  /* global methods */
-  static Thread&        self            ();
-  static int            online_cpus     ();
+namespace Thread {
   /* Self thread */
   struct Self {
-    static String       name            ();
-    static void         name            (const String      &name);
     static bool         sleep           (long               max_useconds);
     static bool         aborted         ();
     static int          affinity        (int cpu = -1);
-    static int          pid             ();
-    static OwnedMutex&  owned_mutex     ();
+    static int          thread_pid      ();
     static void         yield           ();
     static void         exit            (void              *retval = NULL) RAPICORN_NORETURN;
   };
-  /* DataListContainer API */
-  template<typename Type> inline void set_data    (DataKey<Type> *key,
-                                                   Type           data) { thread_lock(); data_list.set (key, data); thread_unlock(); }
-  template<typename Type> inline Type get_data    (DataKey<Type> *key)  { thread_lock(); Type d = data_list.get (key); thread_unlock(); return d; }
-  template<typename Type> inline Type swap_data   (DataKey<Type> *key)  { thread_lock(); Type d = data_list.swap (key); thread_unlock(); return d; }
-  template<typename Type> inline Type swap_data   (DataKey<Type> *key,
-                                                   Type           data) { thread_lock(); Type d = data_list.swap (key, data); thread_unlock(); return d; }
-  template<typename Type> inline void delete_data (DataKey<Type> *key)  { thread_lock(); data_list.del (key); thread_unlock(); }
-  /* implementaiton details */
-private:
-  DataList              data_list;
-  RapicornThread       *bthread;
-  OwnedMutex            m_omutex;
-  int                   last_cpu;
-  explicit              Thread          (RapicornThread      *thread);
-  void                  thread_lock     ()                              { m_omutex.lock(); }
-  bool                  thread_trylock  ()                              { return m_omutex.trylock(); }
-  void                  thread_unlock   ()                              { m_omutex.unlock(); }
-protected:
-  class ThreadWrapperInternal;
-  static void threadxx_wrap   (RapicornThread *cthread);
-  static void threadxx_delete (void         *cxxthread);
-};
+}
 
 enum LockState { BALANCED = 0, AUTOLOCK = 1 };
 
@@ -302,48 +215,7 @@ public:
 
 } // Atomic
 
-/* --- implementation --- */
-inline void
-OwnedMutex::lock ()
-{
-  m_rec_mutex.lock();
-  Atomic::ptr_set (&m_owner, &Thread::self());
-  m_count++;
-}
-
-inline bool
-OwnedMutex::trylock ()
-{
-  if (m_rec_mutex.trylock())
-    {
-      Atomic::ptr_set (&m_owner, &Thread::self());
-      m_count++;
-      return true; /* TRUE indicates success */
-    }
-  else
-    return false;
-}
-
-inline void
-OwnedMutex::unlock ()
-{
-  if (--m_count == 0)
-    Atomic::ptr_set (&m_owner, (Thread*) 0);
-  m_rec_mutex.unlock();
-}
-
-inline Thread*
-OwnedMutex::owner ()
-{
-  return Atomic::ptr_get (&m_owner);
-}
-
-inline bool
-OwnedMutex::mine ()
-{
-  return Atomic::ptr_get (&m_owner) == &Thread::self();
-}
-
+// == implementation ==
 #ifdef RAPICORN_CONVENIENCE
 #define ONCE_CONSTRUCT  RAPICORN_ONCE_CONSTRUCT
 #endif // RAPICORN_CONVENIENCE

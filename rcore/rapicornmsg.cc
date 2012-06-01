@@ -437,6 +437,7 @@ log_prefix (const String &prg_name,
 
 static DataKey<Msg::Handler> msg_thread_handler_key;
 
+#if 0 // FIXME
 /**
  * @param handler       a valid Msg::Handler or NULL
  *
@@ -452,6 +453,7 @@ Msg::set_thread_handler (Handler handler)
   Thread &self = Thread::self();
   self.set_data (&msg_thread_handler_key, handler);
 }
+#endif
 
 void
 Msg::display_parts (const char         *domain,
@@ -480,7 +482,7 @@ Msg::display_parts (const char         *domain,
       bool   is_debug = message_type == DEBUG, is_diag = message_type == DIAG;
       String label = type_label (message_type);
       String prefix = log_prefix (prgname (is_debug),                                   /* strip prgname path for debugging */
-                                  Thread::Self::pid(), true,                            /* print pid or testpid0 */
+                                  Thread::Self::thread_pid(), true,                     /* print pid or testpid0 */
                                   is_debug ? "" : domain,                               /* print domain except when debugging */
                                   is_debug || is_diag ? "" : label,                     /* print translated message type execpt for debug/diagnosis */
                                   is_debug ? ident : "");                               /* print identifier if debugging */
@@ -512,7 +514,7 @@ Msg::display_parts (const char         *domain,
   if (msg_log_file && (actions & LOG_TO_STDLOG))
     {
       String prefix = log_prefix (prgname (false),                                      /* printf fully qualified program name */
-                                  Thread::Self::pid(), false,                           /* always print pid */
+                                  Thread::Self::thread_pid(), false,                    /* always print pid */
                                   domain,                                               /* always print log domain */
                                   "",                                                   /* skip translated message type */
                                   ident);                                               /* print machine readable message type */
@@ -528,8 +530,11 @@ Msg::display_parts (const char         *domain,
   /* log to log handler */
   if (actions & LOG_TO_HANDLER)
     {
+#if 0 // FIXME
       Thread &self = Thread::self();
       Handler log_handler = self.get_data (&msg_thread_handler_key);
+#endif
+      Handler log_handler = NULL;
       if (!log_handler)
         log_handler = default_handler;
       log_handler (domain, message_type, parts);

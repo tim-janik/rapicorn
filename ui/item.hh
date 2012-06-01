@@ -320,7 +320,6 @@ public:
   template<class C> typename
   InterfaceMatch<C>::Result parent_interface (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
-  virtual OwnedMutex&       owned_mutex        ();
 protected:
   virtual bool          do_event        (const Event &event);
 private:

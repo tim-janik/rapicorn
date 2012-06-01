@@ -27,94 +27,6 @@
 namespace Rapicorn {
 extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
 
-/* --- Thread::ThreadWrapperInternal --- */
-struct Thread::ThreadWrapperInternal : public Thread {
-  ThreadWrapperInternal (RapicornThread *bthread) :
-    Thread (bthread)
-  {}
-  virtual void
-  run ()
-  {}
-  static Thread*
-  thread_from_c (RapicornThread *bthread)
-  {
-    Thread::ThreadWrapperInternal *ithread = new ThreadWrapperInternal (bthread);
-    if (!ithread->bthread)
-      {
-        /* someone else was faster */
-        ithread->ref_sink();
-        ithread->unref();
-      }
-    void *threadxx = ThreadTable.thread_getxx (bthread);
-    RAPICORN_ASSERT (threadxx != NULL);
-    return reinterpret_cast<Thread*> (threadxx);
-  }
-  static void
-  thread_reset_c (Thread *thread)
-  {
-    RapicornThread *bthread = thread->bthread;
-    RAPICORN_ASSERT (thread->bthread != NULL);
-    thread->data_list.clear_like_destructor();
-    thread->bthread = NULL;
-    ThreadTable.thread_setxx (bthread, NULL);
-  }
-  static void
-  run_static (void *thread_data)
-  {
-    Thread &self = *reinterpret_cast<Thread*> (thread_data);
-    ref_sink (self);
-    self.run();
-    unref (self);
-  }
-};
-
-/* --- ThreadWrapperInternal (public version of Thread::ThreadWrapperInternal --- */
-struct ThreadDescendant : public Thread {
-  typedef ThreadWrapperInternal PublicThreadWrapperInternal;
-  ThreadDescendant (const String &name) : Thread (name) {}
-};
-typedef ThreadDescendant::PublicThreadWrapperInternal ThreadWrapperInternal;
-
-/* --- Thread methods --- */
-void
-Thread::threadxx_wrap (RapicornThread *cthread)
-{
-  ThreadWrapperInternal::thread_from_c (cthread);
-}
-
-void
-Thread::threadxx_delete (void *cxxthread)
-{
-  Thread *thread = reinterpret_cast<Thread*> (cxxthread);
-  ThreadWrapperInternal::thread_reset_c (thread);
-}
-
-Thread::Thread (RapicornThread* thread) :
-  bthread (NULL),
-  last_cpu (-1)
-{
-  ThreadTable.thread_ref (thread);
-  if (ThreadTable.thread_setxx (thread, this))
-    {
-      bthread = thread;
-      ThreadTable.thread_ref_sink (thread);
-      RAPICORN_ASSERT (ThreadTable.thread_getxx (thread) == this);
-    }
-  else
-    ; /* invalid object state; this should be reaped by thread_from_c() */
-  ThreadTable.thread_unref (thread);
-}
-
-int
-Thread::online_cpus ()
-{
-  int cpus = -1;
-#ifdef _SC_NPROCESSORS_ONLN
-  cpus = sysconf (_SC_NPROCESSORS_ONLN);
-#endif
-  return cpus;
-}
-
 static int
 cpu_affinity (int cpu)
 {
@@ -137,6 +49,8 @@ cpu_affinity (int cpu)
   return -1;
 }
 
+namespace Thread {
+
 /**
  * @param cpu   CPU# to operate on, use -1 to leave unspecified.
  *
@@ -144,124 +58,12 @@ cpu_affinity (int cpu)
  * @returns CPU affinity of the current thread.
  */
 int
-Thread::Self::affinity (int cpu)
+Self::affinity (int cpu)
 {
   int real = cpu_affinity (cpu);
   if (cpu >= 0 && real >= 0)
     DEBUG ("Thread::Self: affinitiy: cpu#%u", 1 + real);
   return real;
-}
-
-int
-Thread::affinity (int cpu)
-{
-  last_cpu = cpu_affinity (cpu);
-  if (cpu >= 0 && last_cpu >= 0)
-    DEBUG ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
-  return last_cpu;
-}
-
-int
-Thread::last_affinity() const
-{
-  return last_cpu;
-}
-
-static RapicornThread*
-bthread_create_for_thread (const String &name,
-                           void         *threadxx)
-{
-  RapicornThread *bthread = ThreadTable.thread_new (name.c_str());
-  bool success = ThreadTable.thread_setxx (bthread, threadxx);
-  RAPICORN_ASSERT (success);
-  ThreadTable.thread_ref_sink (bthread);
-  return bthread;
-}
-
-Thread::Thread (const String &_name) :
-  bthread (bthread_create_for_thread (_name, this))
-{}
-
-Thread::~Thread ()
-{
-  if (bthread)  /* can be NULL in thread_from_c() */
-    {
-      ThreadTable.thread_setxx (bthread, NULL);
-      ThreadTable.thread_unref (bthread);
-    }
-}
-
-void
-Thread::start ()
-{
-  bool success = false;
-  while (!success)
-    {
-      success = ThreadTable.thread_start (bthread, Thread::ThreadWrapperInternal::run_static, this);
-      if (!success)
-        Thread::Self::yield();
-    }
-}
-
-int
-Thread::pid () const
-{
-  return ThreadTable.thread_pid (bthread);
-}
-
-String
-Thread::name () const
-{
-  return ThreadTable.thread_name (bthread);
-}
-
-void
-Thread::queue_abort ()
-{
-  ThreadTable.thread_queue_abort (bthread);
-}
-
-void
-Thread::abort ()
-{
-  ThreadTable.thread_abort (bthread);
-}
-
-bool
-Thread::aborted ()
-{
-  return ThreadTable.thread_get_aborted (bthread);
-}
-
-bool
-Thread::running ()
-{
-  return ThreadTable.thread_get_running (bthread);
-}
-
-void
-Thread::wait_for_exit ()
-{
-  ThreadTable.thread_wait_for_exit (bthread);
-}
-
-Thread&
-Thread::self ()
-{
-  Thread *thread = (Thread*) ThreadTable.thread_selfxx();
-  return *thread;
-}
-
-String
-Thread::Self::name ()
-{
-  return ThreadTable.thread_name (ThreadTable.thread_self());
-}
-
-void
-Thread::Self::name (const String &name)
-{
-  ThreadTable.thread_set_name (name.c_str());
 }
 
 /**
@@ -271,40 +73,30 @@ Thread::Self::name (const String &name)
  * This is a wrapper for rapicorn_thread_sleep().
  */
 bool
-Thread::Self::sleep (long max_useconds)
+Self::sleep (long max_useconds)
 {
   return ThreadTable.thread_sleep (max_useconds);
 }
 
-bool
-Thread::Self::aborted ()
-{
-  return ThreadTable.thread_aborted();
-}
-
 int
-Thread::Self::pid ()
+Self::thread_pid ()
 {
-  return ThreadTable.thread_pid (ThreadTable.thread_self());
-}
-
-OwnedMutex&
-Thread::Self::owned_mutex ()
-{
-  return self().m_omutex;
+  return 0; // FIXME: ThreadTable.thread_pid (ThreadTable.thread_self());
 }
 
 void
-Thread::Self::yield ()
+Self::yield ()
 {
   sched_yield();
 }
 
 void
-Thread::Self::exit (void *retval)
+Self::exit (void *retval)
 {
   ThreadTable.thread_exit (retval);
 }
+
+} // Thread
 
 #define M_SPINPTR       ((pthread_spinlock_t*) &this->spinspace)
 
@@ -392,43 +184,6 @@ Mutex::~Mutex ()
   pthread_mutex_destroy ((pthread_mutex_t*) &mutex);
 }
 
-static const RapicornRecMutex zero_rec_mutex = { { 0, }, };
-
-RecMutex::RecMutex () :
-  rmutex (zero_rec_mutex)
-{
-  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init (&attr);
-  pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init ((pthread_mutex_t*) &rmutex, &attr);
-  pthread_mutexattr_destroy (&attr);
-}
-
-void
-RecMutex::lock ()
-{
-  pthread_mutex_lock ((pthread_mutex_t*) &rmutex);
-}
-
-void
-RecMutex::unlock ()
-{
-  pthread_mutex_unlock ((pthread_mutex_t*) &rmutex);
-}
-
-bool
-RecMutex::trylock ()
-{
-  // TRUE indicates success
-  return 0 == pthread_mutex_trylock ((pthread_mutex_t*) &rmutex);
-}
-
-RecMutex::~RecMutex ()
-{
-  pthread_mutex_destroy ((pthread_mutex_t*) &rmutex);
-}
-
 static const RapicornCond zero_cond = { 0, };
 
 Cond::Cond () :
@@ -496,17 +251,6 @@ Cond::wait_timed (Mutex &m, int64 max_usecs)
 Cond::~Cond ()
 {
   pthread_cond_destroy ((pthread_cond_t*) &cond);
-}
-
-OwnedMutex::OwnedMutex () :
-  m_owner (NULL),
-  m_count (0)
-{}
-
-OwnedMutex::~OwnedMutex()
-{
-  RAPICORN_ASSERT (m_owner == NULL);
-  RAPICORN_ASSERT (m_count == 0);
 }
 
 struct OnceData {

@@ -450,15 +450,6 @@ ItemImpl::~ItemImpl()
     }
 }
 
-OwnedMutex&
-ItemImpl::owned_mutex ()
-{
-  if (m_parent)
-    return m_parent->owned_mutex();
-  else
-    return Thread::Self::owned_mutex();
-}
-
 Command*
 ItemImpl::lookup_command (const String &command_name)
 {
