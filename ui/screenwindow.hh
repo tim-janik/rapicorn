@@ -149,6 +149,7 @@ public:
 /* internal */
 void rapicorn_gtk_threads_enter         ();
 void rapicorn_gtk_threads_leave         ();
+void rapicorn_gtk_threads_shutdown      ();
 
 } // Rapicorn
 

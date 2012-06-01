@@ -23,7 +23,10 @@
 #include <gdk/gdkx.h>
 #include <cairo/cairo-xlib.h>
 
+#include <fcntl.h> // for wakeup pipe
+
 #include <cstring>
+#include <thread>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 
@@ -38,6 +41,7 @@ using namespace Rapicorn;
 
 /* --- prototypes --- */
 class ScreenWindowGtk;
+static void         gtkthread_wakeup ();
 static gboolean     rapicorn_screen_window_ancestor_event (GtkWidget  *ancestor,
                                                            GdkEvent   *event,
                                                            GtkWidget  *widget);
@@ -65,14 +69,15 @@ struct RapicronGdkSyncLock {
   {
     /* unprotect Gtk/Gdk */
     GDK_THREADS_LEAVE();
-    /* X commands enqueued by any Gtk/Gdk functions so far
-     * may still be queued and need to be flushed. also, any
-     * X events that may have arrived already need to be
-     * handled by the gtk_main() loop. waking up the default
-     * main context will do exactly this, wake up gtk_main(),
-     * and call XPending() which flushes any queued events.
+    /* X commands enqueued by any Gtk/Gdk functions so far may still be queued and need to be flushed. also,
+     * any X events that may have arrived already need to be handled by the GTK loop. waking up the default
+     * main context will wake up the GTK loop, and call XPending() which flushes any queued events.
      */
     g_main_context_wakeup (NULL);
+    /* unfortunately, g_main_context_wakeup() is racy in discarding wakeups right before entering poll(),
+     * so we roll our own wakeup descriptor.
+     */
+    gtkthread_wakeup();
   }
 };
 static RapicronGdkSyncLock GTK_GDK_THREAD_SYNC;
@@ -1282,24 +1287,56 @@ rapicorn_screen_window_class_init (RapicornScreenWindowClass *klass)
 }
 
 /* --- RapicornGtkThread --- */
-class RapicornGtkThread : public virtual Thread {
-public:
-  RapicornGtkThread() :
-    Thread ("RapicornGtkThread")
-  {}
-  virtual void
-  run ()
-  {
-    ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-    gtk_main(); /* does GDK_THREADS_LEAVE(); ... GDK_THREADS_ENTER(); */
-  }
-};
+static int     gtkthread_wakefds[2] = { -1, -1 };
+static GPollFD gtkthread_pollfd = { 0, };
+
+static void
+gtkthread_wakeup()
+{
+  int err;
+  char w = 'w';
+  do
+    err = write (gtkthread_wakefds[1], &w, 1);
+  while (err < 0 && errno == EINTR);
+}
+
+static void
+gtkthread_flush()
+{
+  int err;
+  char buffer[512]; // 512 is posix pipe atomic read/write size
+  do
+    err = read (gtkthread_wakefds[0], buffer, sizeof (buffer));
+  while (err < 0 && errno == EINTR);
+}
+
+static bool volatile gtkthread_run_loop = false;
+static void
+gtkthread_run()
+{
+  // we roll our own loop condition here, because GTK's g_main_loop_quit vs. g_main_loop_run is racy
+  // we poll on gtkthread_pollfd, because g_main_context_wakeup()s are discarded before the main_context poll()
+  GTK_GDK_THREAD_SYNC.lock();
+  while (gtkthread_run_loop)
+    {
+      GTK_GDK_THREAD_SYNC.unlock();
+      g_main_context_iteration (NULL, TRUE);
+      if (gtkthread_pollfd.revents)
+        {
+          gtkthread_pollfd.revents = 0;
+          gtkthread_flush();
+        }
+      GTK_GDK_THREAD_SYNC.lock();
+      gdk_flush();
+    }
+  GTK_GDK_THREAD_SYNC.unlock();
+}
+
+static std::thread gtkthread;
 
 } // Anon
 
 namespace Rapicorn {
-
-static Thread *gtkthread = NULL;
 
 static void     init_with_gtk_thread  (const StringVector &args);
 static InitHook _init_with_gtk_thread ("ui-core/50 Init Backend: Gtk+ (threaded)", init_with_gtk_thread);
@@ -1317,13 +1354,48 @@ init_with_gtk_thread (const StringVector &args)
     argv[i] = main_args[i - 1].c_str();
   argv[i] = NULL;
   assert (i == int (1 + main_args.size()));
-  { // does gdk_threads_enter
-    ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-    gtk_init (&i, const_cast<char***> (&argvp));
-    gtkthread = new RapicornGtkThread ();
-    ref_sink (gtkthread);
-    gtkthread->start();
-  } // does gdk_threads_leave
+  GTK_GDK_THREAD_SYNC.lock();   // does gdk_threads_enter
+  gtk_init (&i, const_cast<char***> (&argvp));
+  { // we need to roll our own wakeup mechanism, g_main_context_wakeup() is not reliable
+    int err;
+    do
+      err = pipe (gtkthread_wakefds);
+    while (err < 0 && (errno == EAGAIN || errno == EINTR));
+    if (gtkthread_wakefds[1] >= 0)
+      {
+        int nflags = fcntl (gtkthread_wakefds[0], F_GETFL, 0);
+        nflags |= O_NONBLOCK;
+        do
+          err = fcntl (gtkthread_wakefds[0], F_SETFL, nflags);
+        while (err < 0 && (errno == EINTR || errno == EAGAIN));
+        nflags = fcntl (gtkthread_wakefds[1], F_GETFL, 0);
+        nflags |= O_NONBLOCK;
+        do
+          err = fcntl (gtkthread_wakefds[1], F_SETFL, nflags);
+        while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      }
+    else
+      fatal ("GtkMainLoop: failed to create pipe(): %s", strerror());
+    gtkthread_pollfd.fd = gtkthread_wakefds[0];
+    gtkthread_pollfd.events = G_IO_IN;
+    g_main_context_add_poll (NULL, &gtkthread_pollfd, 0);
+  }
+  gtkthread_run_loop = true;
+  gtkthread = std::thread (gtkthread_run);
+  GTK_GDK_THREAD_SYNC.unlock(); // does gdk_threads_leave
+}
+
+void
+rapicorn_gtk_threads_shutdown ()
+{
+  if (gtkthread.get_id() != std::thread::id())
+    {
+      GTK_GDK_THREAD_SYNC.lock();
+      if (gtkthread_run_loop)
+        gtkthread_run_loop = FALSE;
+      GTK_GDK_THREAD_SYNC.unlock(); // wakes up gtkthread
+      gtkthread.join();
+    }
 }
 
 void
