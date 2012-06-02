@@ -263,13 +263,13 @@ static OnceData *static_once_data = NULL;
 static inline OnceData&
 atomic_once_data ()
 {
-  OnceData *od = Atomic::value_get (&static_once_data);
+  OnceData *od = Atomic0::value_get (&static_once_data);
   if (LIKELY (od != NULL))
     return *od;
   od = new OnceData;
-  if (!Atomic::value_cas (&static_once_data, (OnceData*) NULL, od))
+  if (!Atomic0::value_cas (&static_once_data, (OnceData*) NULL, od))
     delete od;
-  return *Atomic::value_get (&static_once_data);
+  return *Atomic0::value_get (&static_once_data);
 }
 
 void

@@ -209,13 +209,13 @@ static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-w
 static inline KeyConfig&
 conftest_procure ()
 {
-  KeyConfig *kconfig = Atomic::ptr_get (&conftest_map);
+  KeyConfig *kconfig = Atomic0::ptr_get (&conftest_map);
   if (UNLIKELY (kconfig == NULL))
     {
       kconfig = new KeyConfig();
       bool dummy = 0;
       kconfig->configure (conftest_defaults, dummy);
-      if (Atomic::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
+      if (Atomic0::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
         {
           const char *env_rapicorn = getenv ("RAPICORN");
           // configure with support for aliases, caches, etc
@@ -224,7 +224,7 @@ conftest_procure ()
       else
         {
           delete kconfig; // some other thread was faster
-          kconfig = Atomic::ptr_get (&conftest_map);
+          kconfig = Atomic0::ptr_get (&conftest_map);
         }
     }
   return *kconfig;
@@ -236,9 +236,9 @@ debug_configure (const String &options)
   bool seen_debug_key = false;
   conftest_procure().configure (options, seen_debug_key);
   if (seen_debug_key)
-    Atomic::value_set (&conftest_key_debugging, true);
-  Atomic::value_set (&conftest_general_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
-  Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_general_debugging)); // update "cached" configuration
+    Atomic0::value_set (&conftest_key_debugging, true);
+  Atomic0::value_set (&conftest_general_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
+  Atomic0::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_general_debugging)); // update "cached" configuration
   static bool first_help = false;
   if (debug_confbool ("help") && once_enter (&first_help))
     {
@@ -1363,7 +1363,7 @@ auto_init_deletable_maps (void)
   if (UNLIKELY (deletable_maps == NULL))
     {
       DeletableMap *dmaps = new DeletableMap[DELETABLE_MAP_HASH];
-      if (!Atomic::ptr_cas (&deletable_maps, (DeletableMap*) NULL, dmaps))
+      if (!Atomic0::ptr_cas (&deletable_maps, (DeletableMap*) NULL, dmaps))
         delete dmaps;
       // ensure threading works
       deletable_maps[0].mutex.lock();
@@ -1439,7 +1439,7 @@ Deletable::invoke_deletion_hooks()
    * threading being initialized. to avoid calling into a NULL threading
    * table, we'll detect the case and return
    */
-  if (NULL == Atomic::ptr_get (&deletable_maps))
+  if (NULL == Atomic0::ptr_get (&deletable_maps))
     return;
   auto_init_deletable_maps();
   const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;

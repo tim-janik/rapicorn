@@ -29,7 +29,7 @@ rapicorn_thread_enter ()
 {
   assert (rapicorn_thread_entered() == false);
   thread_mutex.lock();
-  Atomic::add (&thread_counter, +1);
+  Atomic0::add (&thread_counter, +1);
 }
 
 bool
@@ -37,7 +37,7 @@ rapicorn_thread_try_enter ()
 {
   if (thread_mutex.trylock())
     {
-      Atomic::add (&thread_counter, +1);
+      Atomic0::add (&thread_counter, +1);
       return true;
     }
   else
@@ -47,14 +47,14 @@ rapicorn_thread_try_enter ()
 bool
 rapicorn_thread_entered ()
 {
-  return Atomic::get (&thread_counter) > 0;
+  return Atomic0::get (&thread_counter) > 0;
 }
 
 void
 rapicorn_thread_leave ()
 {
   assert (rapicorn_thread_entered());
-  Atomic::add (&thread_counter, -1);
+  Atomic0::add (&thread_counter, -1);
   thread_mutex.unlock();
 }
 

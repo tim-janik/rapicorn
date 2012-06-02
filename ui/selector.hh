@@ -29,7 +29,7 @@ public:
   const String& blurb                () const { return m_blurb; }
   explicit      CustomPseudoRegistry (const String &id, const String &b = "") :
     m_next (NULL), m_ident (string_tolower (id)), m_blurb (b)
-  { Atomic::stack_push (stack_head, m_next, this); }
+  { Atomic0::stack_push (stack_head, m_next, this); }
   CustomPseudoRegistry*         next () const { return m_next; }
   static CustomPseudoRegistry*  head ()       { return stack_head; }
 };

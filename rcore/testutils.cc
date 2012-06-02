@@ -234,7 +234,7 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   te->kind = kind;
   do
     te->next = test_entry_list;
-  while (!Atomic::value_cas (&test_entry_list, te->next, te));
+  while (!Atomic0::value_cas (&test_entry_list, te->next, te));
 }
 
 static bool flag_test_verbose = false;

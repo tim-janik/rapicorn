@@ -48,7 +48,7 @@ public:
   /*Des*/ ~SpinLock ();
 };
 
-namespace Atomic {
+namespace Atomic0 {
 inline void    read_barrier  (void)                           { __sync_synchronize(); }
 inline void    write_barrier (void)                           { __sync_synchronize(); }
 inline void    full_barrier  (void)                           { __sync_synchronize(); }
@@ -74,8 +74,8 @@ template<class V> inline V*   ptr_get (V* volatile const *ptr_addr)      { retur
 template<class V> inline bool ptr_cas (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 // atomic stack, push-only
 template<typename V> inline void stack_push        (V volatile &head, V &next, V newv) { stack_push<void*> ((void* volatile&) head, (void*&) next, (void*) newv); }
-template<>           inline void stack_push<void*> (void* volatile &head, void* &next, void* vv) { do { next = head; } while (!Atomic::ptr_cas (&head, next, vv)); }
-} // Atomic
+template<>           inline void stack_push<void*> (void* volatile &head, void* &next, void* vv) { do { next = head; } while (!Atomic0::ptr_cas (&head, next, vv)); }
+} // Atomic0
 
 namespace Thread {
   /* Self thread */
@@ -112,7 +112,7 @@ public:
   { if (lockstate == AUTOLOCK) lock(); }
 };
 
-namespace Atomic {
+namespace Atomic0 {
 
 template<typename T>
 class RingBuffer : protected NonCopyable {
@@ -125,21 +125,21 @@ public:
     m_size (bsize + 1), m_wmark (0), m_rmark (bsize)
   {
     m_buffer = new T[m_size];
-    Atomic::set (&m_wmark, 0);
-    Atomic::set (&m_rmark, 0);
+    Atomic0::set (&m_wmark, 0);
+    Atomic0::set (&m_rmark, 0);
   }
   ~RingBuffer()
   {
-    // Atomic::set (&m_size, 0);
-    Atomic::set (&m_rmark, 0);
-    Atomic::set (&m_wmark, 0);
+    // Atomic0::set (&m_size, 0);
+    Atomic0::set (&m_rmark, 0);
+    Atomic0::set (&m_wmark, 0);
     delete[] m_buffer;
   }
   uint
   n_writable()
   {
-    const uint rm = Atomic::get (&m_rmark);
-    const uint wm = Atomic::get (&m_wmark);
+    const uint rm = Atomic0::get (&m_rmark);
+    const uint wm = Atomic0::get (&m_wmark);
     uint space = (m_size - 1 + rm - wm) % m_size;
     return space;
   }
@@ -149,8 +149,8 @@ public:
          bool     partial = true)
   {
     const uint orig_length = length;
-    const uint rm = Atomic::get (&m_rmark);
-    uint wm = Atomic::get (&m_wmark);
+    const uint rm = Atomic0::get (&m_rmark);
+    uint wm = Atomic0::get (&m_wmark);
     uint space = (m_size - 1 + rm - wm) % m_size;
     if (!partial && length > space)
       return 0;
@@ -168,16 +168,16 @@ public:
         data += space;
         length -= space;
       }
-    Atomic::write_barrier();
+    Atomic0::write_barrier();
     /* the write barrier ensures m_buffer writes are made visible before the m_wmark update */
-    Atomic::set (&m_wmark, wm);
+    Atomic0::set (&m_wmark, wm);
     return orig_length - length;
   }
   uint
   n_readable()
   {
-    const uint wm = Atomic::get (&m_wmark);
-    const uint rm = Atomic::get (&m_rmark);
+    const uint wm = Atomic0::get (&m_wmark);
+    const uint rm = Atomic0::get (&m_rmark);
     uint space = (m_size + wm - rm) % m_size;
     return space;
   }
@@ -187,10 +187,10 @@ public:
         bool partial = true)
   {
     const uint orig_length = length;
-    Atomic::read_barrier();
+    Atomic0::read_barrier();
     /* the read barrier ensures m_buffer writes are seen before m_wmark updates */
-    const uint wm = Atomic::get (&m_wmark);
-    uint rm = Atomic::get (&m_rmark);
+    const uint wm = Atomic0::get (&m_wmark);
+    uint rm = Atomic0::get (&m_rmark);
     uint space = (m_size + wm - rm) % m_size;
     if (!partial && length > space)
       return 0;
@@ -208,12 +208,12 @@ public:
         data += space;
         length -= space;
       }
-    Atomic::set (&m_rmark, rm);
+    Atomic0::set (&m_rmark, rm);
     return orig_length - length;
   }
 };
 
-} // Atomic
+} // Atomic0
 
 // == implementation ==
 #ifdef RAPICORN_CONVENIENCE
@@ -227,12 +227,12 @@ bool once_list_leave  (volatile void *ptr);
 template<class Value> inline bool
 once_enter (volatile Value *value_location)
 {
-  if (RAPICORN_LIKELY (Atomic::value_get (value_location) != 0))
+  if (RAPICORN_LIKELY (Atomic0::value_get (value_location) != 0))
     return false;
   else
     {
       once_list_enter();
-      const bool initialized = Atomic::value_get (value_location) != 0;
+      const bool initialized = Atomic0::value_get (value_location) != 0;
       const bool needs_init = once_list_bounce (initialized ? NULL : value_location);
       return needs_init;
     }
@@ -242,10 +242,10 @@ template<class Value> inline void
 once_leave (volatile Value *value_location,
             Value           initialization_value)
 {
-  RAPICORN_RETURN_UNLESS (Atomic::value_get (value_location) == 0);
+  RAPICORN_RETURN_UNLESS (Atomic0::value_get (value_location) == 0);
   RAPICORN_RETURN_UNLESS (initialization_value != 0);
 
-  Atomic::value_set (value_location, initialization_value);
+  Atomic0::value_set (value_location, initialization_value);
   const bool found_and_removed = once_list_leave (value_location);
   RAPICORN_RETURN_UNLESS (found_and_removed == true);
 }

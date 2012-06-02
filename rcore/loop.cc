@@ -156,7 +156,7 @@ static volatile uint static_id_counter = 65536;
 static uint
 alloc_id ()
 {
-  uint id = Atomic::add (&static_id_counter, 1);
+  uint id = Atomic0::add (&static_id_counter, 1);
   if (!id)
     fatal ("EventLoop: id counter overflow, please report"); // FIXME
   return id;

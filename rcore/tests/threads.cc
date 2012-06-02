@@ -36,7 +36,7 @@ class Thread_AtomicUp : public Thread {
     TCMP (name(), ==, "AtomicTest");
     volatile int *ip = (int*) data;
     for (uint i = 0; i < 25; i++)
-      Atomic::add (ip, +3);
+      Atomic0::add (ip, +3);
     atomic_mutex.lock();
     atomic_count -= 1;
     atomic_cond.signal();
@@ -54,7 +54,7 @@ class Thread_AtomicDown : public Thread {
     TCMP (name(), ==, "AtomicTest");
     volatile int *ip = (int*) data;
     for (uint i = 0; i < 25; i++)
-      Atomic::add (ip, -4);
+      Atomic0::add (ip, -4);
     atomic_mutex.lock();
     atomic_count -= 1; // FIXME: make this atomic
     atomic_cond.signal();
@@ -117,14 +117,14 @@ class Thread_RunOnce : public Thread {
         runonce_cond.broadcast();
         runonce_mutex.unlock();
         usleep (1); // sched_yield replacement to force contention
-        Atomic::add (runonce_counter, 1);
+        Atomic0::add (runonce_counter, 1);
         usleep (500); // sched_yield replacement to force contention
         once_leave (&runonce_value, size_t (42));
       }
     TCMP (*runonce_counter, ==, 1);
     TCMP (runonce_value, ==, 42);
     /* sinal thread end */
-    Atomic::add (&runonce_threadcount, -1);
+    Atomic0::add (&runonce_threadcount, -1);
     runonce_mutex.lock();
     runonce_cond.signal();
     runonce_mutex.unlock();
@@ -139,7 +139,7 @@ test_runonce (void)
   int count = 44;
   Thread *threads[count];
   volatile int runonce_counter = 0;
-  Atomic::set (&runonce_threadcount, count);
+  Atomic0::set (&runonce_threadcount, count);
   runonce_mutex.lock();
   for (int i = 0; i < count; i++)
     {
@@ -151,7 +151,7 @@ test_runonce (void)
   TCMP (runonce_value, ==, 0);
   runonce_mutex.unlock(); // syncronized thread start
   runonce_mutex.lock();
-  while (Atomic::get (&runonce_threadcount) > 0)
+  while (Atomic0::get (&runonce_threadcount) > 0)
     {
       TOK();
       runonce_cond.wait (runonce_mutex);
@@ -274,7 +274,7 @@ struct ThreadA : public virtual Rapicorn::Thread {
     TCMP (this->name(), ==, "ThreadA");
     TCMP (this->name(), ==, Thread::Self::name());
     for (int j = 0; j < 17905; j++)
-      Atomic::add (counter, value);
+      Atomic0::add (counter, value);
   }
 };
 
@@ -474,52 +474,52 @@ test_thread_atomic_cxx (void)
 {
   /* integer functions */
   volatile int ai, r;
-  Atomic::set (&ai, 17);
+  Atomic0::set (&ai, 17);
   TCMP (ai, ==, 17);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, 17);
-  Atomic::add (&ai, 9);
-  r = Atomic::get (&ai);
+  Atomic0::add (&ai, 9);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, 26);
-  Atomic::set (&ai, -1147483648);
+  Atomic0::set (&ai, -1147483648);
   TCMP (ai, ==, -1147483648);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, -1147483648);
-  Atomic::add (&ai, 9);
-  r = Atomic::get (&ai);
+  Atomic0::add (&ai, 9);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, -1147483639);
-  Atomic::add (&ai, -20);
-  r = Atomic::get (&ai);
+  Atomic0::add (&ai, -20);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, -1147483659);
-  r = Atomic::cas (&ai, 17, 19);
+  r = Atomic0::cas (&ai, 17, 19);
   TCMP (r, ==, false);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, -1147483659);
-  r = Atomic::cas (&ai, -1147483659, 19);
+  r = Atomic0::cas (&ai, -1147483659, 19);
   TCMP (r, ==, true);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, 19);
-  r = Atomic::add (&ai, 1);
+  r = Atomic0::add (&ai, 1);
   TCMP (r, ==, 19);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, 20);
-  r = Atomic::add (&ai, -20);
+  r = Atomic0::add (&ai, -20);
   TCMP (r, ==, 20);
-  r = Atomic::get (&ai);
+  r = Atomic0::get (&ai);
   TCMP (r, ==, 0);
   /* pointer functions */
   void * volatile ap, * volatile p;
-  Atomic::ptr_set (&ap, (void*) 119);
+  Atomic0::ptr_set (&ap, (void*) 119);
   TCMP (ap, ==, (void*) 119);
-  p = Atomic::ptr_get (&ap);
+  p = Atomic0::ptr_get (&ap);
   TCMP (p, ==, (void*) 119);
-  r = Atomic::ptr_cas (&ap, (void*) 17, (void*) -42);
+  r = Atomic0::ptr_cas (&ap, (void*) 17, (void*) -42);
   TCMP (r, ==, false);
-  p = Atomic::ptr_get (&ap);
+  p = Atomic0::ptr_get (&ap);
   TCMP (p, ==, (void*) 119);
-  r = Atomic::ptr_cas (&ap, (void*) 119, (void*) 4294967279U);
+  r = Atomic0::ptr_cas (&ap, (void*) 119, (void*) 4294967279U);
   TCMP (r, ==, true);
-  p = Atomic::ptr_get (&ap);
+  p = Atomic0::ptr_get (&ap);
   TCMP (p, ==, (void*) 4294967279U);
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
@@ -549,7 +549,7 @@ handle_contention ()
 }
 
 /* --- ring buffer --- */
-typedef Atomic::RingBuffer<int> IntRingBuffer;
+typedef Atomic0::RingBuffer<int> IntRingBuffer;
 class IntSequence {
   uint32 accu;
 public:
@@ -640,7 +640,7 @@ test_ring_buffer ()
 {
   static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
-  Atomic::RingBuffer<char> rb1 (ttl);
+  Atomic0::RingBuffer<char> rb1 (ttl);
   TCMP (rb1.n_writable(), ==, ttl);
   n = rb1.write (ttl, testtext);
   TCMP (n, ==, ttl);
