@@ -21,23 +21,23 @@
 
 namespace Rapicorn {
 
-static Mutex         thread_mutex;
-static volatile uint thread_counter = 0;
+static Mutex        thread_mutex;
+static Atomic<uint> thread_counter = 0;
 
 void
 rapicorn_thread_enter ()
 {
   assert (rapicorn_thread_entered() == false);
   thread_mutex.lock();
-  Atomic0::add (&thread_counter, +1);
+  thread_counter++;
 }
 
 bool
 rapicorn_thread_try_enter ()
 {
-  if (thread_mutex.trylock())
+  if (thread_mutex.try_lock())
     {
-      Atomic0::add (&thread_counter, +1);
+      thread_counter++;
       return true;
     }
   else
@@ -47,14 +47,14 @@ rapicorn_thread_try_enter ()
 bool
 rapicorn_thread_entered ()
 {
-  return Atomic0::get (&thread_counter) > 0;
+  return thread_counter.load() > 0;
 }
 
 void
 rapicorn_thread_leave ()
 {
   assert (rapicorn_thread_entered());
-  Atomic0::add (&thread_counter, -1);
+  thread_counter--;
   thread_mutex.unlock();
 }
 

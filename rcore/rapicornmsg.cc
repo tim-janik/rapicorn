@@ -1,6 +1,6 @@
 /* Rapicorn
  * Copyright (C) 2006 Tim Janik
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -16,7 +16,7 @@
  */
 #include "rapicornmsg.hh"
 #include "main.hh"
-#include "rapicornthread.hh"
+#include "thread.hh"
 #include "strings.hh"
 #include <syslog.h>
 #include <stdio.h>
@@ -50,9 +50,15 @@ Msg::Part::setup (uint8       _ptype,
 }
 
 const Msg::Part &Msg::empty_part = Part();
+static Atomic<uint>   n_msg_types = 0;
+static Atomic<uint64> msg_type_bits = 0;
 
-volatile int    Msg::n_msg_types = 0;
-uint8 *volatile Msg::msg_type_bits = NULL;
+bool
+Msg::check (Type mtype)
+{
+  /* this function is supposed to preserve errno */
+  return mtype < n_msg_types && (msg_type_bits.load() & (uint64 (1) << mtype));
+}
 
 struct MsgType {
   /* this structure cannot use C++ types because it's not properly constructed */
@@ -74,27 +80,27 @@ Msg::set_msg_type_L (uint   mtype,
                      bool   enabled)
 {
   /* adjust and uncouple mtype */
-  if (mtype < (uint) n_msg_types)
+  if (mtype < n_msg_types)
     {
       msg_types[mtype].flags = flags;
       msg_types[mtype].enabled = enabled;
       if (msg_types[mtype].flags && msg_types[mtype].enabled)
-        msg_type_bits[mtype / 8] |= 1 << mtype % 8;
+        msg_type_bits |= 1 << mtype;
       else
-        msg_type_bits[mtype / 8] &= ~(1 << mtype % 8);
+        msg_type_bits &= ~(1 << mtype);
       msg_types[mtype].default_type = (Type) mtype; /* uncouple from default_type */
       RAPICORN_ASSERT (mtype == (uint) msg_types[mtype].default_type);
     }
   /* adjust all types which default to mtype */
-  for (int i = mtype + 1; i < n_msg_types; i++)
+  for (uint i = mtype + 1; i < n_msg_types; i++)
     if (mtype == (uint) msg_types[i].default_type)
       {
         msg_types[i].flags = flags;
         msg_types[i].enabled = enabled;
         if (msg_types[i].flags && msg_types[i].enabled)
-          msg_type_bits[i / 8] |= 1 << i % 8;
+          msg_type_bits |= 1 << i;
         else
-          msg_type_bits[i / 8] &= ~(1 << i % 8);
+          msg_type_bits &= ~(1 << i);
       }
 }
 
@@ -105,7 +111,7 @@ Msg::init_standard_types()
   if (initialized)
     return;
   initialized++;
-  /* Here's a nasty design issue that needs fixing:
+  /* FIXME: Here's a nasty design issue that needs fixing:
    * - Message type registration happens at global_ctor time.
    * - Mesage type registration needs gettext to work.
    * - gettext is not setup before init_core.
@@ -182,13 +188,13 @@ Msg::register_type (const char *ident,
   init_standard_types();
   /* check arguments */
   g_return_val_if_fail (ident != NULL, NONE);
-  if (default_ouput >= (int) n_msg_types)
+  g_return_val_if_fail (n_msg_types + 1 <= 8 * sizeof (msg_type_bits.load()), NONE);
+  if (default_ouput >= n_msg_types)
     default_ouput = NONE;
   /* lock messages */
-  uint8 *old_mbits = NULL;
   ScopedLock<Mutex> locker (msg_mutex);
   /* allow duplicate registration */
-  for (int i = 0; i < n_msg_types; i++)
+  for (uint i = 0; i < n_msg_types; i++)
     if (strcmp (msg_types[i].ident, ident) == 0)
       {
         /* found duplicate */
@@ -197,27 +203,14 @@ Msg::register_type (const char *ident,
   /* add new message type */
   int n_mtypes = n_msg_types;
   Type mtype = Type (n_mtypes++);
-  uint old_flags_size = (mtype + 7) / 8;
-  uint new_flags_size = (n_mtypes + 7) / 8;
-  if (old_flags_size < new_flags_size)
-    {
-      uint8 *mflags = g_new (guint8, new_flags_size);
-      memcpy (mflags, (uint8*) msg_type_bits, sizeof (msg_type_bits[0]) * old_flags_size);
-      mflags[new_flags_size - 1] = 0;
-      old_mbits = msg_type_bits;
-      /* we are holding a lock in the multi-threaded case so no need for compare_and_swap */
-      Atomic0::ptr_set (&msg_type_bits, mflags);
-    }
   msg_types = g_renew (MsgType, msg_types, n_mtypes);
   memset (&msg_types[mtype], 0, sizeof (msg_types[mtype]));
   msg_types[mtype].ident = g_strdup (ident);
   msg_types[mtype].label = g_strdup (label ? label : "");
   msg_types[mtype].default_type = default_ouput; /* couple to default_ouput */
-  Atomic0::set (&n_msg_types, n_mtypes); /* only ever grows */
+  n_msg_types.store (n_mtypes); /* only ever grows */
   /* adjust msg type config (after n_msg_types was incremented) */
   set_msg_type_L (mtype, msg_types[default_ouput].flags, msg_types[default_ouput].enabled);
-  // FIXME: msg_type_bits should be registered as hazard pointer so we don't g_free() while other threads read old_mbits[*]
-  g_free (old_mbits);
   return mtype;
 }
 
@@ -233,7 +226,7 @@ Msg::Type
 Msg::lookup_type (const String &ident)
 {
   ScopedLock<Mutex> locker (msg_mutex);
-  for (int i = 0; i < n_msg_types; i++)
+  for (uint i = 0; i < n_msg_types; i++)
     if (ident == msg_types[i].ident)
       return Type (i);
   return Msg::NONE;
@@ -328,7 +321,7 @@ Msg::key_list_change_L (const String &keylist,
   /* handle :all: special case */
   if (strstr (s.c_str(), ":all:"))
     {
-      for (int i = DEBUG; i < n_msg_types; i++)
+      for (uint i = DEBUG; i < n_msg_types; i++)
         set_msg_type_L (i, msg_types[i].flags, isenabled);
       return;
     }
@@ -341,7 +334,7 @@ Msg::key_list_change_L (const String &keylist,
       if (k < c)
         {
           s[c] = 0;
-          int i;
+          uint i;
           for (i = DEBUG; i < n_msg_types; i++)
             if (String (s.c_str() + k) == msg_types[i].ident)
               break;

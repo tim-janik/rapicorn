@@ -1,168 +1,119 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <string.h>
+#include <thread>
 
 namespace {
 using namespace Rapicorn;
 
-#if 0 // FIXME
+// == atomicity tests ==
+template<typename V> static void
+atomic_counter_func (Atomic<V> &ai, int niters, V d)
+{
+  if (d < 0)
+    for (int i = 0; i < niters; i++)
+      ai -= -d;
+  else
+    for (int i = 0; i < niters; i++)
+      ai += d;
+}
 
-/* --- atomicity tests --- */
-static volatile uint atomic_count = 0;
-static Mutex         atomic_mutex;
-static Cond          atomic_cond;
-
-class Thread_AtomicUp : public Thread {
-  void *data;
-  virtual void
-  run ()
-  {
-    TCMP (name(), ==, "AtomicTest");
-    volatile int *ip = (int*) data;
-    for (uint i = 0; i < 25; i++)
-      Atomic0::add (ip, +3);
-    atomic_mutex.lock();
-    atomic_count -= 1;
-    atomic_cond.signal();
-    atomic_mutex.unlock();
-  }
-public:
-  Thread_AtomicUp (const String &name, void *udata) : Thread (name), data (udata) {}
-};
-
-class Thread_AtomicDown : public Thread {
-  void *data;
-  virtual void
-  run ()
-  {
-    TCMP (name(), ==, "AtomicTest");
-    volatile int *ip = (int*) data;
-    for (uint i = 0; i < 25; i++)
-      Atomic0::add (ip, -4);
-    atomic_mutex.lock();
-    atomic_count -= 1; // FIXME: make this atomic
-    atomic_cond.signal();
-    atomic_mutex.unlock();
-  }
-public:
-  Thread_AtomicDown (const String &name, void *udata) : Thread (name), data (udata) {}
-};
+template<typename V> static void
+test_atomic_counter (const int nthreads, int niters, V a, V b)
+{
+  assert (0 == (nthreads & 1));
+  std::thread threads[nthreads];
+  Atomic<V> atomic_counter = 0;
+  for (int i = 0; i < nthreads; i++)
+    {
+      if (i & 1)
+        threads[i] = std::thread (atomic_counter_func<V>, std::ref (atomic_counter), niters, a);
+      else
+        threads[i] = std::thread (atomic_counter_func<V>, std::ref (atomic_counter), niters, b);
+      TASSERT (threads[i].joinable());
+    }
+  for (int i = 0; i < nthreads; i++)
+    threads[i].join();
+  const int64 result = nthreads / 2 * niters * a + nthreads / 2 * niters * b;
+  const int64 atomic_result = V (atomic_counter);
+  TCMP (atomic_result, ==, result);
+}
 
 static void
-test_atomic (void)
+test_atomic ()
 {
-  int count = 44;
-  Thread *threads[count];
-  volatile int atomic_counter = 0;
-  atomic_count = count;
-  for (int i = 0; i < count; i++)
-    {
-      if (i&1)
-        threads[i] = new Thread_AtomicUp ("AtomicTest", (void*) &atomic_counter);
-      else
-        threads[i] = new Thread_AtomicDown ("AtomicTest", (void*) &atomic_counter);
-      ref_sink (threads[i]);
-      threads[i]->start();
-      TASSERT (threads[i]);
-    }
-  atomic_mutex.lock();
-  while (atomic_count > 0)
-    {
-      TOK();
-      atomic_cond.wait (atomic_mutex);
-    }
-  atomic_mutex.unlock();
-  int result = count / 2 * 25 * +3 + count / 2 * 25 * -4;
-  // g_printerr ("{ %d ?= %d }", atomic_counter, result);
-  for (int i = 0; i < count; i++)
-    unref (threads[i]);
-  TCMP (atomic_counter, ==, result);
+  test_atomic_counter<char>  (4, 3, +4, -3);
+  test_atomic_counter<int8>  (6, 5, +2, -1);
+  test_atomic_counter<uint8> (6, 5, +2, +1);
+  test_atomic_counter<int>   (44, 25, +5, -2);
+  test_atomic_counter<uint>  (44, 25, 1, 6);
+  test_atomic_counter<int64> (52, 125, -50, +37);
+  test_atomic_counter<int64> (52, 125, +42, +77);
+  test_atomic_counter<__int128> (68, 12500, +4200, +77000);
 }
-REGISTER_TEST ("Threads/AtomicThreading", test_atomic);
+REGISTER_TEST ("Threads/Atomic Operations", test_atomic);
 
 // == runonce tests ==
-static volatile uint runonce_threadcount = 0;
-static Mutex         runonce_mutex;
-static Cond          runonce_cond;
-
+static Atomic<uint>    runonce_threadcount = 0;
+static Mutex           runonce_mutex;
+static Cond            runonce_cond;
 static volatile size_t runonce_value = 0;
 
-class Thread_RunOnce : public Thread {
-  volatile void *data;
-  virtual void
-  run ()
-  {
-    runonce_mutex.lock(); // syncronize
-    runonce_mutex.unlock();
-    volatile int *runonce_counter = (volatile int*) data;
-    if (once_enter (&runonce_value))
-      {
-        runonce_mutex.lock();
-        runonce_cond.broadcast();
-        runonce_mutex.unlock();
-        usleep (1); // sched_yield replacement to force contention
-        Atomic0::add (runonce_counter, 1);
-        usleep (500); // sched_yield replacement to force contention
-        once_leave (&runonce_value, size_t (42));
-      }
-    TCMP (*runonce_counter, ==, 1);
-    TCMP (runonce_value, ==, 42);
-    /* sinal thread end */
-    Atomic0::add (&runonce_threadcount, -1);
-    runonce_mutex.lock();
-    runonce_cond.signal();
-    runonce_mutex.unlock();
-  }
-public:
-  Thread_RunOnce (const String &name, volatile void *udata) : Thread (name), data (udata) {}
-};
+static void
+runonce_thread (Atomic<uint> &runonce_counter)
+{
+  runonce_mutex.lock(); // syncronize
+  runonce_mutex.unlock();
+  if (once_enter (&runonce_value))
+    {
+      runonce_mutex.lock();
+      runonce_cond.broadcast();
+      runonce_mutex.unlock();
+      usleep (1); // sched_yield replacement to force contention
+      ++runonce_counter;
+      usleep (500); // sched_yield replacement to force contention
+      once_leave (&runonce_value, size_t (42));
+    }
+  TCMP (runonce_counter, ==, 1);
+  TCMP (runonce_value, ==, 42);
+  /* sinal thread end */
+  --runonce_threadcount;
+  runonce_mutex.lock();
+  runonce_cond.signal();
+  runonce_mutex.unlock();
+}
 
 static void
-test_runonce (void)
+test_runonce()
 {
-  int count = 44;
-  Thread *threads[count];
-  volatile int runonce_counter = 0;
-  Atomic0::set (&runonce_threadcount, count);
+  const int count = 44;
+  std::thread threads[count];
+  Atomic<uint> runonce_counter = 0;
+  runonce_threadcount.store (count);
   runonce_mutex.lock();
   for (int i = 0; i < count; i++)
     {
-      threads[i] = new Thread_RunOnce ("RunOnceTest", &runonce_counter);
-      ref_sink (threads[i]);
-      threads[i]->start();
-      TASSERT (threads[i]);
+      threads[i] = std::thread (runonce_thread, std::ref (runonce_counter));
+      TASSERT (threads[i].joinable());
     }
   TCMP (runonce_value, ==, 0);
   runonce_mutex.unlock(); // syncronized thread start
   runonce_mutex.lock();
-  while (Atomic0::get (&runonce_threadcount) > 0)
+  while (runonce_threadcount.load() > 0)
     {
       TOK();
       runonce_cond.wait (runonce_mutex);
     }
   runonce_mutex.unlock();
   for (int i = 0; i < count; i++)
-    unref (threads[i]);
+    threads[i].join();
   TCMP (runonce_counter, ==, 1);
   TCMP (runonce_value, ==, 42);
 }
 REGISTER_TEST ("Threads/RunOnceTest", test_runonce);
+
+#if 0 // FIXME
 
 /* --- basic threading tests --- */
 class Thread_Plus1 : public Thread {
@@ -190,30 +141,30 @@ test_threads (void)
   static Mutex test_mutex;
   bool locked;
   /* test C mutex */
-  locked = test_mutex.trylock();
+  locked = test_mutex.try_lock();
   TASSERT (locked);
-  locked = test_mutex.trylock();
+  locked = test_mutex.try_lock();
   TASSERT (!locked);
   test_mutex.unlock();
   /* not initializing static_mutex */
-  locked = static_mutex.trylock();
+  locked = static_mutex.try_lock();
   TASSERT (locked);
-  locked = static_mutex.trylock();
+  locked = static_mutex.try_lock();
   TASSERT (!locked);
   static_mutex.unlock();
-  locked = static_mutex.trylock();
+  locked = static_mutex.try_lock();
   TASSERT (locked);
   static_mutex.unlock();
   /* not initializing static_rec_mutex */
-  locked = static_rec_mutex.trylock();
+  locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.lock();
-  locked = static_rec_mutex.trylock();
+  locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.unlock();
   static_rec_mutex.unlock();
   static_rec_mutex.unlock();
-  locked = static_rec_mutex.trylock();
+  locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.unlock();
   /* not initializing static_cond */
@@ -281,7 +232,7 @@ struct ThreadA : public virtual Rapicorn::Thread {
 template<class M> static bool
 lockable (M &mutex)
 {
-  bool lockable = mutex.trylock();
+  bool lockable = mutex.try_lock();
   if (lockable)
     mutex.unlock();
   return lockable;
@@ -338,14 +289,14 @@ test_thread_cxx (void)
   TCMP (omutex.owner(), ==, &Thread::self());
   TCMP (omutex.mine(), ==, true);
   TCMP (lockable (omutex), ==, true);
-  bool locked = omutex.trylock();
+  bool locked = omutex.try_lock();
   TCMP (locked, ==, true);
   omutex.unlock();
   omutex.unlock();
   TCMP (omutex.owner(), ==, nullptr);
   TCMP (lockable (omutex), ==, true);
   TCMP (omutex.owner(), ==, nullptr);
-  locked = omutex.trylock();
+  locked = omutex.try_lock();
   TCMP (locked, ==, true);
   TCMP (omutex.owner(), ==, &Thread::self());
   TCMP (lockable (omutex), ==, true);
@@ -354,36 +305,36 @@ test_thread_cxx (void)
 }
 REGISTER_TEST ("Threads/C++Threading", test_thread_cxx);
 
-// simple spin lock test
+#endif
+
+// == simple spin lock test ==
 static void
 test_spin_lock_simple (void)
 {
-  SpinLock sp;
+  Spinlock sp;
   bool l;
-  l = sp.trylock();
+  l = sp.try_lock();
   TASSERT (l);
-  l = sp.trylock();
+  l = sp.try_lock();
   TASSERT (!l);
   sp.unlock();
-  l = sp.trylock();
+  l = sp.try_lock();
   TASSERT (l);
-  l = sp.trylock();
+  l = sp.try_lock();
   TASSERT (!l);
   sp.unlock();
   sp.lock();
-  l = sp.trylock();
+  l = sp.try_lock();
   TASSERT (!l);
   sp.unlock();
 }
 REGISTER_TEST ("Threads/C++SpinLock", test_spin_lock_simple);
 
-#endif
-
-/* --- ScopedLock test --- */
+// == ScopedLock test ==
 template<class M> static bool
 lockable (M &mutex)
 {
-  bool lockable = mutex.trylock();
+  bool lockable = mutex.try_lock();
   if (lockable)
     mutex.unlock();
   return lockable;
@@ -400,8 +351,8 @@ test_recursive_scoped_lock (XMutex &rec_mutex, uint depth)
       locker.lock();
       locker.lock();
       locker.lock();
-      bool lockable1 = rec_mutex.trylock();
-      bool lockable2 = rec_mutex.trylock();
+      bool lockable1 = rec_mutex.try_lock();
+      bool lockable2 = rec_mutex.try_lock();
       TASSERT (lockable1 && lockable2);
       rec_mutex.unlock();
       rec_mutex.unlock();
@@ -422,7 +373,7 @@ test_scoped_locks()
   }
   TCMP (lockable (mutex1), ==, true);
   {
-    ScopedLock<Mutex> locker0 (mutex1, BALANCED);
+    ScopedLock<Mutex> locker0 (mutex1, BALANCED_LOCK);
     TCMP (lockable (mutex1), ==, true);
     locker0.lock();
     TCMP (lockable (mutex1), ==, false);
@@ -431,7 +382,7 @@ test_scoped_locks()
   }
   TCMP (lockable (mutex1), ==, true);
   {
-    ScopedLock<Mutex> locker2 (mutex1, AUTOLOCK);
+    ScopedLock<Mutex> locker2 (mutex1, AUTOMATIC_LOCK);
     TCMP (lockable (mutex1), ==, false);
     locker2.unlock();
     TCMP (lockable (mutex1), ==, true);
@@ -443,83 +394,93 @@ test_scoped_locks()
   mutex1.lock();
   {
     TCMP (lockable (mutex1), ==, false);
-    ScopedLock<Mutex> locker (mutex1, BALANCED);
+    ScopedLock<Mutex> locker (mutex1, BALANCED_LOCK);
     locker.unlock();
     TCMP (lockable (mutex1), ==, true);
-  } // ~ScopedLock (BALANCED) now does locker.lock()
+  } // ~ScopedLock (BALANCED_LOCK) now does locker.lock()
   TCMP (lockable (mutex1), ==, false);
   {
-    ScopedLock<Mutex> locker (mutex1, BALANCED);
-  } // ~ScopedLock (BALANCED) now does nothing
+    ScopedLock<Mutex> locker (mutex1, BALANCED_LOCK);
+  } // ~ScopedLock (BALANCED_LOCK) now does nothing
   TCMP (lockable (mutex1), ==, false);
   mutex1.unlock();
   // test ScopedLock balancing lock + unlock
   {
     TCMP (lockable (mutex1), ==, true);
-    ScopedLock<Mutex> locker (mutex1, BALANCED);
+    ScopedLock<Mutex> locker (mutex1, BALANCED_LOCK);
     locker.lock();
     TCMP (lockable (mutex1), ==, false);
-  } // ~ScopedLock (BALANCED) now does locker.unlock()
+  } // ~ScopedLock (BALANCED_LOCK) now does locker.unlock()
   TCMP (lockable (mutex1), ==, true);
   {
-    ScopedLock<Mutex> locker (mutex1, BALANCED);
-  } // ~ScopedLock (BALANCED) now does nothing
+    ScopedLock<Mutex> locker (mutex1, BALANCED_LOCK);
+  } // ~ScopedLock (BALANCED_LOCK) now does nothing
   TCMP (lockable (mutex1), ==, true);
 }
 REGISTER_TEST ("Threads/Scoped Locks", test_scoped_locks);
 
-/* --- C++ atomicity tests --- */
+// == C++ atomicity tests ==
 static void
 test_thread_atomic_cxx (void)
 {
   /* integer functions */
-  volatile int ai, r;
-  Atomic0::set (&ai, 17);
+  Atomic<int> ai;
+  int r;
+  ai.store (17);
   TCMP (ai, ==, 17);
-  r = Atomic0::get (&ai);
+  r = ai;
   TCMP (r, ==, 17);
-  Atomic0::add (&ai, 9);
-  r = Atomic0::get (&ai);
+  ai += 9;
+  r = ai.load();
   TCMP (r, ==, 26);
-  Atomic0::set (&ai, -1147483648);
+  ai = -1147483648;
   TCMP (ai, ==, -1147483648);
-  r = Atomic0::get (&ai);
+  r = ai.load();
   TCMP (r, ==, -1147483648);
-  Atomic0::add (&ai, 9);
-  r = Atomic0::get (&ai);
+  ai += 9;
+  r = ai;
   TCMP (r, ==, -1147483639);
-  Atomic0::add (&ai, -20);
-  r = Atomic0::get (&ai);
+  ai += -20;
+  r = ai.load();
   TCMP (r, ==, -1147483659);
-  r = Atomic0::cas (&ai, 17, 19);
+  r = ai.cas (17, 19);
   TCMP (r, ==, false);
-  r = Atomic0::get (&ai);
+  r = ai.load();
   TCMP (r, ==, -1147483659);
-  r = Atomic0::cas (&ai, -1147483659, 19);
+  r = ai.cas (-1147483659, 19);
   TCMP (r, ==, true);
-  r = Atomic0::get (&ai);
+  r = ai.load();
   TCMP (r, ==, 19);
-  r = Atomic0::add (&ai, 1);
-  TCMP (r, ==, 19);
-  r = Atomic0::get (&ai);
+  r = ai++;
+  TCMP (r, ==, 19); TCMP (ai, ==, 20);
+  r = ai--;
+  TCMP (r, ==, 20); TCMP (ai, ==, 19);
+  r = ++ai;
+  TCMP (r, ==, 20); TCMP (ai, ==, 20);
+  r = --ai;
+  TCMP (r, ==, 19); TCMP (ai, ==, 19);
+  r = (ai += 1);
   TCMP (r, ==, 20);
-  r = Atomic0::add (&ai, -20);
+  r = ai.load();
   TCMP (r, ==, 20);
-  r = Atomic0::get (&ai);
+  r = (ai -= 20);
+  TCMP (r, ==, 0);
+  r = ai.load();
   TCMP (r, ==, 0);
   /* pointer functions */
-  void * volatile ap, * volatile p;
-  Atomic0::ptr_set (&ap, (void*) 119);
+  Atomic<void*> ap;
+  void *p;
+  ap = (void*) 119;
   TCMP (ap, ==, (void*) 119);
-  p = Atomic0::ptr_get (&ap);
+  p = ap;
   TCMP (p, ==, (void*) 119);
-  r = Atomic0::ptr_cas (&ap, (void*) 17, (void*) -42);
+  r = ap.cas ((void*) 17, (void*) -42);
   TCMP (r, ==, false);
-  p = Atomic0::ptr_get (&ap);
+  p = ap.load();
   TCMP (p, ==, (void*) 119);
-  r = Atomic0::ptr_cas (&ap, (void*) 119, (void*) 4294967279U);
+  r = ap.cas ((void*) 119, (void*) 4294967279U);
   TCMP (r, ==, true);
-  p = Atomic0::ptr_get (&ap);
+  p = ap;
   TCMP (p, ==, (void*) 4294967279U);
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);

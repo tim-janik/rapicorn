@@ -3,7 +3,7 @@
 #define __RAPICORN_LOOP_HH__
 
 #include <rcore/utilities.hh>
-#include <rcore/rapicornthread.hh>
+#include <rcore/thread.hh>
 #include <rcore/rapicornsignal.hh>
 
 

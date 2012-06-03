@@ -10,10 +10,10 @@
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/quicktimer.hh>
+#include <rcore/thread.hh>
 #include <rcore/rapicornmath.hh>
 #include <rcore/rapicornmsg.hh>
 #include <rcore/rapicornsignal.hh>
-#include <rcore/rapicornthread.hh>
 #include <rcore/rapicornutf8.hh>
 #include <rcore/utilities.hh>
 #include <rcore/rapicornxml.hh>

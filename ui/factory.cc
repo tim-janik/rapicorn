@@ -60,7 +60,7 @@ static std::list<const ItemTypeFactory*> *item_type_factories_p = NULL;
 static const ItemTypeFactory*
 lookup_item_factory (String namespaced_ident)
 {
-  std::list<const ItemTypeFactory*> &item_type_factories = *ONCE_CONSTRUCT (item_type_factories_p);
+  std::list<const ItemTypeFactory*> &item_type_factories = *RAPICORN_NEW_ONCE (item_type_factories_p);
   namespaced_ident = namespaced_ident;
   std::list<const ItemTypeFactory*>::iterator it;
   for (it = item_type_factories.begin(); it != item_type_factories.end(); it++)
@@ -72,7 +72,7 @@ lookup_item_factory (String namespaced_ident)
 void
 ItemTypeFactory::register_item_factory (const ItemTypeFactory &itfactory)
 {
-  std::list<const ItemTypeFactory*> &item_type_factories = *ONCE_CONSTRUCT (item_type_factories_p);
+  std::list<const ItemTypeFactory*> &item_type_factories = *RAPICORN_NEW_ONCE (item_type_factories_p);
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')

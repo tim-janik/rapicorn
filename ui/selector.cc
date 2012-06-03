@@ -39,7 +39,7 @@ strcasestr (const char *haystack, const char *needle)
 }
 #endif // UNOPTIMIZE
 
-CustomPseudoRegistry *volatile CustomPseudoRegistry::stack_head = NULL;
+Atomic<CustomPseudoRegistry*> CustomPseudoRegistry::stack_head = NULL;
 
 static bool
 find_custom_pseudo (const String &ident)

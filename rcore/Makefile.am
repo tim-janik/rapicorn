@@ -10,21 +10,24 @@ PLICINT	     = $(top_builddir)/plic/plic-intern
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-        rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	utilities.hh  \
+        rapicorncpu.hh	rapicorndebugtools.hh				utilities.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
+	thread.hh	\
 	$(rapicorn_impl_headers) \
 	rapicorncdefs.h	rcore.hh \
 )
 rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
-        rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
+        rapicorncpu.cc  rapicorndebugtools.cc				utilities.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
-        rapicornthreadimpl.cc plicwrapper.cc	\
+	thread.cc	\
+        plicwrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
+	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
         rapicornsignalvariants.hh	\

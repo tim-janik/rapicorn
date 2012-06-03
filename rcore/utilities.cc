@@ -3,7 +3,7 @@
 #include "main.hh"
 #include "strings.hh"
 #include "rapicornutf8.hh"
-#include "rapicornthread.hh"
+#include "thread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"
 #include <errno.h>
@@ -201,21 +201,21 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 
 // === Logging ===
 bool                        _debug_flag = true; // bootup default before _init()
-static bool                 conftest_general_debugging = false;
-static bool                 conftest_key_debugging = false;
-static KeyConfig * volatile conftest_map = NULL;
+static Atomic<char>         conftest_general_debugging = false;
+static Atomic<char>         conftest_key_debugging = false;
+static Atomic<KeyConfig*>   conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
 
 static inline KeyConfig&
 conftest_procure ()
 {
-  KeyConfig *kconfig = Atomic0::ptr_get (&conftest_map);
+  KeyConfig *kconfig = conftest_map.load();
   if (UNLIKELY (kconfig == NULL))
     {
       kconfig = new KeyConfig();
       bool dummy = 0;
       kconfig->configure (conftest_defaults, dummy);
-      if (Atomic0::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
+      if (conftest_map.cas (NULL, kconfig))
         {
           const char *env_rapicorn = getenv ("RAPICORN");
           // configure with support for aliases, caches, etc
@@ -224,7 +224,7 @@ conftest_procure ()
       else
         {
           delete kconfig; // some other thread was faster
-          kconfig = Atomic0::ptr_get (&conftest_map);
+          kconfig = conftest_map.load();
         }
     }
   return *kconfig;
@@ -236,9 +236,9 @@ debug_configure (const String &options)
   bool seen_debug_key = false;
   conftest_procure().configure (options, seen_debug_key);
   if (seen_debug_key)
-    Atomic0::value_set (&conftest_key_debugging, true);
-  Atomic0::value_set (&conftest_general_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
-  Atomic0::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_general_debugging)); // update "cached" configuration
+    conftest_key_debugging.store (true);
+  conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
+  Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
   static bool first_help = false;
   if (debug_confbool ("help") && once_enter (&first_help))
     {
@@ -1355,15 +1355,15 @@ struct DeletableMap {
   std::map<Deletable*,DeletableAuxData> dmap;
 };
 typedef std::map<Deletable*,DeletableAuxData>::iterator DMapIterator;
-static DeletableMap * volatile deletable_maps = NULL;
+static Atomic<DeletableMap*> deletable_maps = NULL;
 
 static inline void
 auto_init_deletable_maps (void)
 {
-  if (UNLIKELY (deletable_maps == NULL))
+  if (UNLIKELY (deletable_maps.load() == NULL))
     {
       DeletableMap *dmaps = new DeletableMap[DELETABLE_MAP_HASH];
-      if (!Atomic0::ptr_cas (&deletable_maps, (DeletableMap*) NULL, dmaps))
+      if (!deletable_maps.cas (NULL, dmaps))
         delete dmaps;
       // ensure threading works
       deletable_maps[0].mutex.lock();
@@ -1439,7 +1439,7 @@ Deletable::invoke_deletion_hooks()
    * threading being initialized. to avoid calling into a NULL threading
    * table, we'll detect the case and return
    */
-  if (NULL == Atomic0::ptr_get (&deletable_maps))
+  if (NULL == deletable_maps.load())
     return;
   auto_init_deletable_maps();
   const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
@@ -1484,7 +1484,7 @@ IdAllocator::~IdAllocator ()
 {}
 
 class IdAllocatorImpl : public IdAllocator {
-  SpinLock     mutex;
+  Spinlock     mutex;
   const uint   counterstart, wbuffer_capacity;
   uint         counter, wbuffer_pos, wbuffer_size;
   uint        *wbuffer;
@@ -1560,7 +1560,7 @@ IdAllocatorImpl::seen_id (uint unique_id)
 
 /* --- Locatable --- */
 #define LOCATOR_ID_OFFSET 0xa0000000
-static SpinLock           locatable_mutex;
+static Spinlock           locatable_mutex;
 static vector<Locatable*> locatable_objs;
 static IdAllocatorImpl    locator_ids (1, 227); // has own mutex
 
@@ -1572,7 +1572,7 @@ Locatable::~Locatable ()
 {
   if (UNLIKELY (m_locatable_index))
     {
-      ScopedLock<SpinLock> locker (locatable_mutex);
+      ScopedLock<Spinlock> locker (locatable_mutex);
       assert_return (m_locatable_index <= locatable_objs.size());
       const uint index = m_locatable_index - 1;
       locatable_objs[index] = NULL;
@@ -1588,7 +1588,7 @@ Locatable::locatable_id () const
     {
       m_locatable_index = locator_ids.alloc_id();
       const uint index = m_locatable_index - 1;
-      ScopedLock<SpinLock> locker (locatable_mutex);
+      ScopedLock<Spinlock> locker (locatable_mutex);
       if (index >= locatable_objs.size())
         locatable_objs.resize (index + 1);
       locatable_objs[index] = const_cast<Locatable*> (this);
@@ -1604,7 +1604,7 @@ Locatable::from_locatable_id (uint64 locatable_id)
   if (locatable_id >> 32 != locatable_process_hash64 >> 32)
     return NULL; // id from wrong process
   const uint index = locatable_id - locatable_process_hash64  - 1;
-  ScopedLock<SpinLock> locker (locatable_mutex);
+  ScopedLock<Spinlock> locker (locatable_mutex);
   assert_return (index < locatable_objs.size(), NULL);
   Locatable *_this = locatable_objs[index];
   return _this;

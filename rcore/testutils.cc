@@ -222,7 +222,7 @@ add (const String &testname,
   add (testname, (void(*)(void*)) test_func, (void*) 0);
 }
 
-static TestEntry *volatile test_entry_list = NULL;
+static Atomic<TestEntry*> test_entry_list = NULL;
 
 void
 RegisterTest::add_test (char kind, const String &testname, void (*test_func) (void*), void *data)
@@ -234,7 +234,7 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   te->kind = kind;
   do
     te->next = test_entry_list;
-  while (!Atomic0::value_cas (&test_entry_list, te->next, te));
+  while (!test_entry_list.cas (te->next, te));
 }
 
 static bool flag_test_verbose = false;

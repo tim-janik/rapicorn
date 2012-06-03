@@ -23,13 +23,13 @@ inline bool is_combinator           (Kind kind) { return kind >= DESCENDANT && k
 class CustomPseudoRegistry : protected NonCopyable {
   CustomPseudoRegistry                 *m_next;
   String                                m_ident, m_blurb;
-  static CustomPseudoRegistry *volatile stack_head;
+  static Atomic<CustomPseudoRegistry*>  stack_head;
 public:
   const String& ident                () const { return m_ident; }
   const String& blurb                () const { return m_blurb; }
   explicit      CustomPseudoRegistry (const String &id, const String &b = "") :
     m_next (NULL), m_ident (string_tolower (id)), m_blurb (b)
-  { Atomic0::stack_push (stack_head, m_next, this); }
+  { stack_head.push_link (&m_next, this); }
   CustomPseudoRegistry*         next () const { return m_next; }
   static CustomPseudoRegistry*  head ()       { return stack_head; }
 };
