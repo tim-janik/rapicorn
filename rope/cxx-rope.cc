@@ -10,10 +10,10 @@ main (int   argc,
       char *argv[])
 {
   // find out which CPU we run on
-  int mycpu = Thread::Self::affinity();
+  int mycpu = ThisThread::affinity();
   mycpu = MAX (0, mycpu);
   // fixate the CPU we're running on
-  Thread::Self::affinity (mycpu);
+  ThisThread::affinity (mycpu);
   // request CPU for server thread
   StringVector iargs;
   iargs.push_back (string_printf ("cpu-affinity=%d", mycpu));

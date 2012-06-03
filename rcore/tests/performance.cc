@@ -42,7 +42,7 @@ count_whitespace_strchr ()
 static void
 perf_skip_whitespace (void)
 {
-  Thread::Self::yield(); // volountarily giveup time slice, so we last longer during the benchmark
+  ThisThread::yield(); // volountarily giveup time slice, so we last longer during the benchmark
   Test::Timer timer;
   arg = "Hello World,\nhere is text.\fAnd more \v and \t \t more.\n0\r1\n";
   result = 0;

@@ -7,7 +7,6 @@
 #include <sys/eventfd.h>
 #include <deque>
 #include <set>
-#include <thread>       // FIXME
 
 namespace { // Anon
 static void wrap_test_runner  (void);
@@ -230,7 +229,7 @@ private:
     MainLoop::LockHooks lock_hooks = { rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave };
     m_main_loop.set_lock_hooks (lock_hooks);
     // idata_core() already called
-    Thread::Self::affinity (string_to_int (string_vector_find (*m_idata->args, "cpu-affinity=", "-1")));
+    ThisThread::affinity (string_to_int (string_vector_find (*m_idata->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
     ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (m_main_loop, m_server_connection));
     (void) server_source;

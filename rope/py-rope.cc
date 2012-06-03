@@ -87,7 +87,7 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   int argc = 1 + len;
   // construct internal arguments
   StringVector iargs;
-  iargs.push_back (string_printf ("cpu-affinity=%d", !Thread::Self::affinity()));
+  iargs.push_back (string_printf ("cpu-affinity=%d", !ThisThread::affinity()));
   // initialize core
   ApplicationH app = init_app (application_name, &argc, argv, iargs);
   uint64 app_id = app._rpc_id();

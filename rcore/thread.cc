@@ -1,6 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "thread.hh"
 #include <sys/time.h>
+#include <sys/types.h>
 #include <algorithm>
 #include <list>
 
@@ -33,6 +34,70 @@ Cond::abstime (int64 usecs)
     }
   return ts;
 }
+
+namespace ThisThread {
+
+/** This function may be called before Rapicorn is initialized. */
+int
+online_cpus ()
+{
+  static int cpus = 0;
+  if (!cpus)
+    cpus = sysconf (_SC_NPROCESSORS_ONLN);
+  return cpus;
+}
+
+/** This function may be called before Rapicorn is initialized. */
+int
+affinity ()
+{
+  pthread_t thread = pthread_self();
+  cpu_set_t cpuset;
+  if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+    {
+      DEBUG ("pthread_getaffinity_np: %s", strerror());
+      CPU_ZERO (&cpuset);
+    }
+  for (uint j = 0; j < CPU_SETSIZE; j++)
+    if (CPU_ISSET (j, &cpuset))
+      return j;
+  return -1;
+}
+
+/** This function may be called before Rapicorn is initialized. */
+void
+affinity (int cpu)
+{
+  pthread_t thread = pthread_self();
+  cpu_set_t cpuset;
+  if (cpu >= 0 && cpu < CPU_SETSIZE)
+    {
+      CPU_ZERO (&cpuset);
+      CPU_SET (cpu, &cpuset);
+      if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+        DEBUG ("pthread_setaffinity_np: %s", strerror());
+    }
+}
+
+int
+thread_pid ()
+{
+  int tid = -1;
+#if     defined (__linux__) && defined (__NR_gettid)    /* present on linux >= 2.4.20 */
+  tid = syscall (__NR_gettid);
+#endif
+  if (tid < 0)
+    tid = process_pid();
+  return tid;
+}
+
+int
+process_pid ()
+{
+  return getpid();
+}
+
+} // ThisThread
 
 namespace Lib {
 

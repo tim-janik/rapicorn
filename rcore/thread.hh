@@ -4,6 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <rcore/threadlib.hh>
+#include <thread>
 
 namespace Rapicorn {
 
@@ -18,27 +19,6 @@ public:
   using std::mutex::unlock;
   using std::mutex::try_lock;
   using std::mutex::native_handle;
-};
-
-/**
- * The Cond synchronization primitive is a thin wrapper around pthread_cond_wait().
- * This class supports static construction.
- */
-class Cond {
-  pthread_cond_t m_cond;
-  static struct timespec abstime (int64);
-  /*ctor*/      Cond        (const Cond&) = delete;
-  Cond&         operator=   (const Cond&) = delete;
-public:
-  constexpr     Cond        () : m_cond (PTHREAD_COND_INITIALIZER) {}
-  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&m_cond); }
-  void          signal      ()  { pthread_cond_signal (&m_cond); }
-  void          broadcast   ()  { pthread_cond_broadcast (&m_cond); }
-  void          wait        (Mutex &m)  { pthread_cond_wait (&m_cond, m.native_handle()); }
-  void          wait_timed  (Mutex &m, int64 max_usecs)
-  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&m_cond, m.native_handle(), &abs); }
-  typedef pthread_cond_t* native_handle_type;
-  native_handle_type native_handle() { return &m_cond; }
 };
 
 /**
@@ -59,8 +39,8 @@ public:
   Mutex&    operator=   (const Spinlock&) = delete;
 };
 
-struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {};
-struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {};
+struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic lockinf of a ScopedLock<Mutex>.
+struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {}; ///< Flag for balancing unlock/lock in a ScopedLock<Mutex>.
 
 /**
  * The ScopedLock is a scope based lock ownership wrapper.
@@ -87,6 +67,50 @@ public:
   inline      ScopedLock (MUTEX &mutex, struct BALANCED_LOCK) : m_mutex (mutex), m_count (0) {}
 };
 
+/**
+ * The Cond synchronization primitive is a thin wrapper around pthread_cond_wait().
+ * This class supports static construction.
+ */
+class Cond {
+  pthread_cond_t m_cond;
+  static struct timespec abstime (int64);
+  /*ctor*/      Cond        (const Cond&) = delete;
+  Cond&         operator=   (const Cond&) = delete;
+public:
+  constexpr     Cond        () : m_cond (PTHREAD_COND_INITIALIZER) {}
+  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&m_cond); }
+  void          signal      ()  { pthread_cond_signal (&m_cond); }
+  void          broadcast   ()  { pthread_cond_broadcast (&m_cond); }
+  void          wait        (Mutex &m)  { pthread_cond_wait (&m_cond, m.native_handle()); }
+  void          wait_timed  (Mutex &m, int64 max_usecs)
+  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&m_cond, m.native_handle(), &abs); }
+  typedef pthread_cond_t* native_handle_type;
+  native_handle_type native_handle() { return &m_cond; }
+};
+
+/// @namespace Rapicorn::ThisThread The Rapicorn::ThisThread namespace provides functions for the current thread of execution.
+namespace ThisThread
+{
+
+int     online_cpus     ();             ///< Get the number of available CPUs.
+int     affinity        ();             ///< Get the current CPU affinity.
+void    affinity        (int cpu);      ///< Set the current CPU affinity.
+int     thread_pid      ();             ///< Get the current threads's thread ID (TID). For further details, see gettid().
+int     process_pid     ();             ///< Get the process ID (PID). For further details, see getpid().
+
+#ifdef  DOXYGEN // parts reused from std::this_thread
+/// Relinquish the processor to allow execution of other threads. For further details, see std::this_thread::yield().
+void                                       yield       ();
+/// Returns the pthread_t id for the current thread. For further details, see std::this_thread::get_id().
+std::thread::id                            get_id      ();
+/// Sleep for @a sleep_duration has been reached. For further details, see std::this_thread::sleep_for().
+template<class Rep, class Period>     void sleep_for   (std::chrono::duration<Rep,Period> sleep_duration);
+/// Sleep until @a sleep_time has been reached. For further details, see std::this_thread::sleep_until().
+template<class Clock, class Duration> void sleep_until (const std::chrono::time_point<Clock,Duration> &sleep_time);
+#else // !DOXYGEN
+using namespace std::this_thread;
+#endif // !DOXYGEN
+}
 
 //template<class Value> inline bool once_enter (volatile Value *value_location);
 //template<class Value> inline void once_leave (volatile Value *value_location, Value initialization_value);
@@ -96,13 +120,6 @@ using Lib::once_leave; // FIXME
 #ifdef RAPICORN_CONVENIENCE
 #define NEW_ONCE(object_pointer)        RAPICORN_NEW_ONCE (object_pointer)
 #endif  // RAPICORN_CONVENIENCE
-
-namespace Thread { namespace Self { // FIXME
-inline bool         sleep           (long max_usecs)   { return 0; }
-inline int          affinity        (int cpu = -1)     { return 0; }
-inline int          thread_pid      ()                 { return 0; }
-inline void         yield           ()                 {}
-} } // Thread::Self
 
 template<typename T> class Atomic;
 

@@ -475,7 +475,7 @@ Msg::display_parts (const char         *domain,
       bool   is_debug = message_type == DEBUG, is_diag = message_type == DIAG;
       String label = type_label (message_type);
       String prefix = log_prefix (prgname (is_debug),                                   /* strip prgname path for debugging */
-                                  Thread::Self::thread_pid(), true,                     /* print pid or testpid0 */
+                                  ThisThread::thread_pid(), true,                       /* print pid or testpid0 */
                                   is_debug ? "" : domain,                               /* print domain except when debugging */
                                   is_debug || is_diag ? "" : label,                     /* print translated message type execpt for debug/diagnosis */
                                   is_debug ? ident : "");                               /* print identifier if debugging */
@@ -507,7 +507,7 @@ Msg::display_parts (const char         *domain,
   if (msg_log_file && (actions & LOG_TO_STDLOG))
     {
       String prefix = log_prefix (prgname (false),                                      /* printf fully qualified program name */
-                                  Thread::Self::thread_pid(), false,                    /* always print pid */
+                                  ThisThread::thread_pid(), false,                      /* always print pid */
                                   domain,                                               /* always print log domain */
                                   "",                                                   /* skip translated message type */
                                   ident);                                               /* print machine readable message type */
