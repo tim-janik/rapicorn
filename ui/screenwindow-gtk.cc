@@ -73,10 +73,6 @@ struct RapicronGdkSyncLock {
      * main context will wake up the GTK loop, and call XPending() which flushes any queued events.
      */
     g_main_context_wakeup (NULL);
-    /* unfortunately, g_main_context_wakeup() is racy in discarding wakeups right before entering poll(),
-     * so we roll our own wakeup descriptor.
-     */
-    gtkthread_wakeup();
   }
 };
 static RapicronGdkSyncLock GTK_GDK_THREAD_SYNC;
@@ -1393,6 +1389,10 @@ rapicorn_gtk_threads_shutdown ()
       if (gtkthread_run_loop)
         gtkthread_run_loop = FALSE;
       GTK_GDK_THREAD_SYNC.unlock(); // wakes up gtkthread
+      /* unfortunately, g_main_context_wakeup() is racy in discarding wakeups right before entering poll(),
+       * so we roll our own wakeup descriptor.
+       */
+      gtkthread_wakeup();
       gtkthread.join();
     }
 }
