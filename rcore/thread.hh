@@ -42,7 +42,7 @@ public:
 };
 
 /**
- * The Spinlock uses low-latency busy spinning to acuire locks.
+ * The Spinlock uses low-latency busy spinning to acquire locks.
  * It is a thin wrapper around pthread_spin_lock().
  * This class supports static construction.
  */
