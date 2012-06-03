@@ -1,9 +1,12 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "thread.hh"
+#include "strings.hh"
 #include <sys/time.h>
 #include <sys/types.h>
 #include <algorithm>
 #include <list>
+
+#define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Threading", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -53,15 +56,20 @@ affinity ()
 {
   pthread_t thread = pthread_self();
   cpu_set_t cpuset;
-  if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-    {
-      DEBUG ("pthread_getaffinity_np: %s", strerror());
-      CPU_ZERO (&cpuset);
-    }
+  if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) == 0)
+    errno = 0;
+  else
+    CPU_ZERO (&cpuset);
+  int cpu = -1;
   for (uint j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET (j, &cpuset))
-      return j;
-  return -1;
+      {
+        cpu = j;
+        break;
+      }
+  TDEBUG ("thread(%d/%d): pthread_getaffinity_np: %s", thread_pid(), process_pid(),
+          errno ? strerror() : string_printf ("%d", cpu).c_str());
+  return cpu;
 }
 
 /** This function may be called before Rapicorn is initialized. */
@@ -74,8 +82,10 @@ affinity (int cpu)
     {
       CPU_ZERO (&cpuset);
       CPU_SET (cpu, &cpuset);
-      if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-        DEBUG ("pthread_setaffinity_np: %s", strerror());
+      if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) == 0)
+        errno = 0;
+      TDEBUG ("thread(%d/%d): pthread_setaffinity_np: %s", thread_pid(), process_pid(),
+              errno ? strerror() : string_printf ("%d", cpu).c_str());
     }
 }
 
