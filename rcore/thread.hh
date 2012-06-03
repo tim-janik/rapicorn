@@ -12,13 +12,17 @@ namespace Rapicorn {
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
  * This class supports static construction.
  */
-class Mutex : protected std::mutex {
+class Mutex {
+  pthread_mutex_t m_mutex;
 public:
-  constexpr         Mutex       () : std::mutex() {}
-  using std::mutex::lock;
-  using std::mutex::unlock;
-  using std::mutex::try_lock;
-  using std::mutex::native_handle;
+  constexpr Mutex       () : m_mutex (PTHREAD_MUTEX_INITIALIZER) {}
+  void      lock        ()      { pthread_mutex_lock (&m_mutex); }
+  void      unlock      ()      { pthread_mutex_unlock (&m_mutex); }
+  bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&m_mutex); }
+  typedef pthread_mutex_t* native_handle_type;
+  native_handle_type native_handle() { return &m_mutex; }
+  /*ctor*/  Mutex       (const Mutex&) = delete;
+  Mutex&    operator=   (const Mutex&) = delete;
 };
 
 /**
