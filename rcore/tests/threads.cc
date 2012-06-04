@@ -77,8 +77,7 @@ runonce_thread (Atomic<uint> &runonce_counter)
     }
   TCMP (runonce_counter, ==, 1);
   TCMP (runonce_value, ==, 42);
-  /* sinal thread end */
-  --runonce_threadcount;
+  --runonce_threadcount;        // sinal thread end
   runonce_mutex.lock();
   runonce_cond.signal();
   runonce_mutex.unlock();
@@ -113,40 +112,22 @@ test_runonce()
 }
 REGISTER_TEST ("Threads/RunOnceTest", test_runonce);
 
-#if 0 // FIXME
-
-/* --- basic threading tests --- */
-class Thread_Plus1 : public Thread {
-  void *data;
-  virtual void
-  run ()
-  {
-    uint *tdata = (uint*) data;
-    Thread::Self::sleep (-1);
-    *tdata += 1;
-    while (!Thread::Self::aborted ())
-      Thread::Self::sleep (-1);
-  }
-public:
-  Thread_Plus1 (const String &name, void *udata) : Thread (name), data (udata) {}
-};
-
+// == basic mutex tests ==
 static Mutex    static_mutex;
-static RecMutex static_rec_mutex;
 static Cond     static_cond;
 
 static void
-test_threads (void)
+test_mutex (void)
 {
-  static Mutex test_mutex;
+  Mutex test_mutex;
   bool locked;
-  /* test C mutex */
+  // test stack mutex
   locked = test_mutex.try_lock();
   TASSERT (locked);
   locked = test_mutex.try_lock();
   TASSERT (!locked);
   test_mutex.unlock();
-  /* not initializing static_mutex */
+  // testing static_mutex
   locked = static_mutex.try_lock();
   TASSERT (locked);
   locked = static_mutex.try_lock();
@@ -155,7 +136,9 @@ test_threads (void)
   locked = static_mutex.try_lock();
   TASSERT (locked);
   static_mutex.unlock();
-  /* not initializing static_rec_mutex */
+#if 0
+  // testing static_rec_mutex
+  static RecMutex static_rec_mutex;
   locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.lock();
@@ -167,145 +150,19 @@ test_threads (void)
   locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.unlock();
-  /* not initializing static_cond */
+#endif
+  // condition tests
   static_cond.signal();
   static_cond.broadcast();
-  /* test C++ mutex */
+  // testing function-static mutex
   static Mutex mutex;
-  static RecMutex rmutex;
+  //static RecMutex rmutex;
   mutex.lock();
-  rmutex.lock();
+  //rmutex.lock();
   mutex.unlock();
-  rmutex.unlock();
-  uint thread_data1 = 0;
-  Thread *thread1 = new Thread_Plus1 ("plus1", &thread_data1);
-  ref_sink (thread1);
-  thread1->start();
-  uint thread_data2 = 0;
-  Thread *thread2 = new Thread_Plus1 ("plus2", &thread_data2);
-  ref_sink (thread2);
-  thread2->start();
-  uint thread_data3 = 0;
-  Thread *thread3 = new Thread_Plus1 ("plus3", &thread_data3);
-  ref_sink (thread3);
-  thread3->start();
-  TCMP (thread1, !=, nullptr);
-  TCMP (thread2, !=, nullptr);
-  TCMP (thread3, !=, nullptr);
-  TCMP (thread_data1, ==, 0);
-  TCMP (thread_data2, ==, 0);
-  TCMP (thread_data3, ==, 0);
-  TCMP (thread1->running(), ==, TRUE);
-  TCMP (thread2->running(), ==, TRUE);
-  TCMP (thread3->running(), ==, TRUE);
-  thread1->abort();
-  thread2->abort();
-  thread3->abort();
-  TCMP (thread_data1, >, 0);
-  TCMP (thread_data2, >, 0);
-  TCMP (thread_data3, >, 0);
-  unref (thread1);
-  unref (thread2);
-  unref (thread3);
+  //rmutex.unlock();
 }
-REGISTER_TEST ("Threads/Threading", test_threads);
-
-/* --- C++ threading tests --- */
-struct ThreadA : public virtual Rapicorn::Thread {
-  int value;
-  volatile int *counter;
-  ThreadA (volatile int *counterp,
-           int           v) :
-    Thread ("ThreadA"),
-    value (v), counter (counterp)
-  {}
-  virtual void
-  run ()
-  {
-    TCMP (this->name(), ==, "ThreadA");
-    TCMP (this->name(), ==, Thread::Self::name());
-    for (int j = 0; j < 17905; j++)
-      Atomic0::add (counter, value);
-  }
-};
-
-template<class M> static bool
-lockable (M &mutex)
-{
-  bool lockable = mutex.try_lock();
-  if (lockable)
-    mutex.unlock();
-  return lockable;
-}
-
-static void
-test_thread_cxx (void)
-{
-  TCMP (nullptr, !=, &Thread::self());
-  volatile int atomic_counter = 0;
-  int result = 0;
-  int count = 35;
-  Rapicorn::Thread *threads[count];
-  for (int i = 0; i < count; i++)
-    {
-      int v = rand();
-      for (int j = 0; j < 17905; j++)
-        result += v;
-      threads[i] = new ThreadA (&atomic_counter, v);
-      TASSERT (threads[i]);
-      ref_sink (threads[i]);
-    }
-  TCMP (atomic_counter, ==, 0);
-  for (int i = 0; i < count; i++)
-    threads[i]->start();
-  for (int i = 0; i < count; i++)
-    {
-      threads[i]->wait_for_exit();
-      unref (threads[i]);
-    }
-  TCMP (atomic_counter, ==, result);
-  TDONE ();
-
-  TSTART ("Threads/C++OwnedMutex");
-  static OwnedMutex static_omutex;
-  TCMP (static_omutex.mine(), ==, false);
-  static_omutex.lock();
-  TCMP (static_omutex.mine(), ==, true);
-  static_omutex.unlock();
-  TCMP (static_omutex.mine(), ==, false);
-  static_omutex.lock();
-  TCMP (static_omutex.mine(), ==, true);
-  static_omutex.lock();
-  TCMP (static_omutex.mine(), ==, true);
-  static_omutex.unlock();
-  TCMP (static_omutex.mine(), ==, true);
-  static_omutex.unlock();
-  TCMP (static_omutex.mine(), ==, false);
-  TCMP (nullptr, !=, &Thread::self());
-  OwnedMutex omutex;
-  TCMP (omutex.owner(), ==, nullptr);
-  TCMP (omutex.mine(), ==, false);
-  omutex.lock();
-  TCMP (omutex.owner(), ==, &Thread::self());
-  TCMP (omutex.mine(), ==, true);
-  TCMP (lockable (omutex), ==, true);
-  bool locked = omutex.try_lock();
-  TCMP (locked, ==, true);
-  omutex.unlock();
-  omutex.unlock();
-  TCMP (omutex.owner(), ==, nullptr);
-  TCMP (lockable (omutex), ==, true);
-  TCMP (omutex.owner(), ==, nullptr);
-  locked = omutex.try_lock();
-  TCMP (locked, ==, true);
-  TCMP (omutex.owner(), ==, &Thread::self());
-  TCMP (lockable (omutex), ==, true);
-  omutex.unlock();
-  TCMP (omutex.owner(), ==, nullptr);
-}
-REGISTER_TEST ("Threads/C++Threading", test_thread_cxx);
-
-#endif
+REGISTER_TEST ("Threads/Basic Mutex", test_mutex);
 
 // == simple spin lock test ==
 static void
@@ -485,7 +342,7 @@ test_thread_atomic_cxx (void)
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
-#if 0 // FIXME
+#if 0 // FIXME: RingBuffer test
 
 /* --- thread_yield --- */
 static inline void
