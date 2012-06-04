@@ -20,9 +20,8 @@ template<typename T> void atomic_store (T volatile *p, T i) { RAPICORN_SFENCE; *
 template<typename T>
 class Atomic {
   T volatile v;
-  // FIXME /*ctor*/  Atomic    () = delete;
+  /*ctor*/  Atomic    () = delete;
 protected:
-  constexpr Atomic    () : v () {}
   constexpr Atomic    (T i) : v (i) {}
   Atomic<T>& operator=(Atomic<T> &o) { store (o.load()); return *this; }
   Atomic<T> volatile& operator=(Atomic<T> &o) volatile { store (o.load()); return *this; }
