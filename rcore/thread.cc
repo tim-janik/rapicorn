@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <algorithm>
+#include <sys/syscall.h>        // SYS_gettid
 #include <list>
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Threading", __VA_ARGS__)
@@ -93,8 +94,8 @@ int
 thread_pid ()
 {
   int tid = -1;
-#if     defined (__linux__) && defined (__NR_gettid)    /* present on linux >= 2.4.20 */
-  tid = syscall (__NR_gettid);
+#ifdef  __linux__       // SYS_gettid is present on linux >= 2.4.20
+  tid = syscall (SYS_gettid);
 #endif
   if (tid < 0)
     tid = process_pid();
