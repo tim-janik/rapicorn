@@ -93,8 +93,7 @@ public:
 };
 
 /// @namespace Rapicorn::ThisThread The Rapicorn::ThisThread namespace provides functions for the current thread of execution.
-namespace ThisThread
-{
+namespace ThisThread {
 
 int     online_cpus     ();             ///< Get the number of available CPUs.
 int     affinity        ();             ///< Get the current CPU affinity.
@@ -114,7 +113,8 @@ template<class Clock, class Duration> void sleep_until (const std::chrono::time_
 #else // !DOXYGEN
 using namespace std::this_thread;
 #endif // !DOXYGEN
-}
+
+} // ThisThread
 
 //template<class Value> inline bool once_enter (volatile Value *value_location);
 //template<class Value> inline void once_leave (volatile Value *value_location, Value initialization_value);
@@ -160,11 +160,6 @@ template<> struct Atomic<int64> : Lib::Atomic<int64> {
 template<> struct Atomic<uint64> : Lib::Atomic<uint64> {
   Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
   using Lib::Atomic<uint64>::operator=;
-};
-
-template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
-  Atomic<__int128> (__int128 i = 0) : Lib::Atomic<__int128> (i) {}
-  using Lib::Atomic<__int128>::operator=;
 };
 
 template<typename V> class Atomic<V*> : protected Lib::Atomic<V*> {

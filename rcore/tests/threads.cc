@@ -4,6 +4,15 @@
 #include <string.h>
 #include <thread>
 
+#if     __SIZEOF_POINTER__ == 8
+namespace Rapicorn {
+template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
+  Atomic<__int128> (__int128 i = 0) : Lib::Atomic<__int128> (i) {}
+  using Lib::Atomic<__int128>::operator=;
+};
+} // Rapicorn
+#endif
+
 namespace {
 using namespace Rapicorn;
 
@@ -50,7 +59,9 @@ test_atomic ()
   test_atomic_counter<uint>  (44, 25, 1, 6);
   test_atomic_counter<int64> (52, 125, -50, +37);
   test_atomic_counter<int64> (52, 125, +42, +77);
+#if     __SIZEOF_POINTER__ == 8
   test_atomic_counter<__int128> (68, 12500, +4200, +77000);
+#endif
 }
 REGISTER_TEST ("Threads/Atomic Operations", test_atomic);
 
