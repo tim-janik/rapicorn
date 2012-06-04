@@ -116,52 +116,65 @@ using namespace std::this_thread;
 
 } // ThisThread
 
-//template<class Value> inline bool once_enter (volatile Value *value_location);
-//template<class Value> inline void once_leave (volatile Value *value_location, Value initialization_value);
-using Lib::once_enter;
-using Lib::once_leave; // FIXME
+/// Guard for entering a critical code section, @a value_location needs to point to a 0-initialized variable.
+template<class Value> inline bool once_enter (volatile Value *value_location)
+{ return Lib::once_enter (value_location); }
+
+/// Counterpart to once_enter(), marks the end of a critical code section, @a initialization_value needs to be non-0.
+template<class Value> inline void once_leave (volatile Value *value_location, Value initialization_value)
+{ Lib::once_leave (value_location, initialization_value); }
 
 #ifdef RAPICORN_CONVENIENCE
 #define NEW_ONCE(object_pointer)        RAPICORN_NEW_ONCE (object_pointer)
 #endif  // RAPICORN_CONVENIENCE
 
+/// Atomic types are race free integer and pointer types, similar to std::atomic.
+/// All atomic types support load(), store(), cas() and additional type specific accessors.
 template<typename T> class Atomic;
 
+/// Atomic char type.
 template<> struct Atomic<char> : Lib::Atomic<char> {
   Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
   using Lib::Atomic<char>::operator=;
 };
 
+/// Atomic int8 type.
 template<> struct Atomic<int8> : Lib::Atomic<int8> {
   Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
   using Lib::Atomic<int8>::operator=;
 };
 
+/// Atomic uint8 type.
 template<> struct Atomic<uint8> : Lib::Atomic<uint8> {
   Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
   using Lib::Atomic<uint8>::operator=;
 };
 
+/// Atomic int32 type.
 template<> struct Atomic<int32> : Lib::Atomic<int32> {
   Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
   using Lib::Atomic<int32>::operator=;
 };
 
+/// Atomic uint32 type.
 template<> struct Atomic<uint32> : Lib::Atomic<uint32> {
   Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
   using Lib::Atomic<uint32>::operator=;
 };
 
+/// Atomic int64 type.
 template<> struct Atomic<int64> : Lib::Atomic<int64> {
   Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
   using Lib::Atomic<int64>::operator=;
 };
 
+/// Atomic uint64 type.
 template<> struct Atomic<uint64> : Lib::Atomic<uint64> {
   Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
   using Lib::Atomic<uint64>::operator=;
 };
 
+/// Atomic pointer type.
 template<typename V> class Atomic<V*> : protected Lib::Atomic<V*> {
   typedef Lib::Atomic<V*> A;
 public:
