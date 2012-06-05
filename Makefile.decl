@@ -37,9 +37,10 @@ x11test-start:
 	  && test ! -e /tmp/.X$$X11TEST_DISPLAY-lock && break ; done \
 	  || { echo "$(MAKECMDGOALS): out of available X11 Display IDs"; exit 1 ; }; \
 	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp -keybd ephyr \
-	         -auth /dev/null -noreset -retro -host-cursor >$(x11test_log) 2>&1 & X11TEST_PID="$$!" \
+	         -auth /dev/null -noreset -retro >$(x11test_log) 2>&1 & X11TEST_PID="$$!" \
 	  && { [ -z "$$DISPLAY" ] || { sleep 1; setxkbmap -print | xkbcomp - :$$X11TEST_DISPLAY 2>/dev/null ; }; }; } \
 	&& echo "DISPLAY=:$$X11TEST_DISPLAY # x11test: Xephyr: pid=$$X11TEST_PID"
+# -host-cursor
 x11test-stop:
 	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no x11test running" ; exit 0 ; } \
 	&& kill -SIGTERM $$X11TEST_PID \
