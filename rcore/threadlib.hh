@@ -7,6 +7,7 @@
 namespace Rapicorn {
 namespace Lib {
 
+#define RAPICORN_CACHE_LINE_ALIGNMENT   128
 #define RAPICORN_MFENCE    __sync_synchronize() ///< Memory Fence - prevent processor (and compiler) from reordering loads/stores (read/write barrier).
 #define RAPICORN_SFENCE    RAPICORN_X86SFENCE   ///< Store Fence - prevent processor (and compiler) from reordering stores (read barrier).
 #define RAPICORN_LFENCE    RAPICORN_X86LFENCE   ///< Load Fence - prevent processor (and compiler) from reordering loads (read barrier).

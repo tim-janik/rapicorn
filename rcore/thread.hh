@@ -8,6 +8,32 @@
 
 namespace Rapicorn {
 
+/// Class for per Thread inforamtion.
+struct ThreadInfo {
+  void *volatile              hp[8];   ///< Hazard Pointers, see: http://www.research.ibm.com/people/m/michael/ieeetpds-2004.pdf
+private:
+  ThreadInfo        *volatile next;
+  pthread_t                   pth_thread_id;
+  char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
+  String                      m_name;
+  static ThreadInfo __thread *self_cached;
+  /*ctor*/              ThreadInfo      ();
+  /*ctor*/              ThreadInfo      (const ThreadInfo&) = delete;
+  ThreadInfo&           operator=       (const ThreadInfo&) = delete;
+  static void           destroy_specific(void *vdata);
+  void                  reset_specific  ();
+  void                  setup_specific  ();
+  static ThreadInfo*    create          ();
+public:
+  typedef std::vector<void*> VoidPointers;
+  String                ident           ();                             ///< Simple identifier for this thread, usually TID/PID.
+  String                name            ();                             ///< Get thread name.
+  void                  name            (const String &newname);        ///< Change thread name.
+  static VoidPointers   collect_hazards ();  ///< Collect hazard pointers from all threads. Returns sorted vector of unique elements.
+  static inline bool    lookup_pointer  (const std::vector<void*> &ptrs, void *arg); ///< Lookup pointers in a hazard pointer vector.
+  static inline ThreadInfo& self        ();  ///< Get ThreadInfo for the current thread, inlined, using fast thread local storage.
+};
+
 /**
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
  * This class supports static construction.
@@ -95,6 +121,7 @@ public:
 /// @namespace Rapicorn::ThisThread The Rapicorn::ThisThread namespace provides functions for the current thread of execution.
 namespace ThisThread {
 
+String  name            ();             ///< Get thread name.
 int     online_cpus     ();             ///< Get the number of available CPUs.
 int     affinity        ();             ///< Get the current CPU affinity.
 void    affinity        (int cpu);      ///< Set the current CPU affinity.
@@ -188,6 +215,33 @@ public:
   operator V* () const volatile { return load(); }
   void     push_link (V*volatile *nextp, V *newv) { do { *nextp = load(); } while (!cas (*nextp, newv)); }
 };
+
+// == Implementation Bits ==
+inline ThreadInfo&
+ThreadInfo::self()
+{
+  if (RAPICORN_UNLIKELY (!self_cached))
+    self_cached = create();
+  return *self_cached;
+}
+
+inline bool
+ThreadInfo::lookup_pointer (const std::vector<void*> &ptrs, void *arg)
+{
+  size_t n_elements = ptrs.size(), offs = 0;
+  while (offs < n_elements)
+    {
+      size_t i = (offs + n_elements) >> 1;
+      void *current = ptrs[i];
+      if (arg == current)
+        return true;    // match
+      else if (arg < current)
+        n_elements = i;
+      else // (arg > current)
+        offs = i + 1;
+    }
+  return false; // unmatched
+}
 
 } // Rapicorn
 

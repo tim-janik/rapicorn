@@ -258,6 +258,7 @@ public:
   void
   operator() ()
   {
+    ThreadInfo::self().name ("RapicornUIThread");
     const bool running_twice = __sync_fetch_and_add (&m_running, +1);
     assert (running_twice == false);
 

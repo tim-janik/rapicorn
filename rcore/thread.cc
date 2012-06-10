@@ -9,7 +9,156 @@
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Threading", __VA_ARGS__)
 
+#define fixalloc_aligned(sz, align)     ({ void *__m_ = NULL; if (posix_memalign (&__m_, (align), (sz)) != 0) __m_ = NULL; __m_; })
+
 namespace Rapicorn {
+
+static ThreadInfo *volatile     list_head = NULL;
+static size_t volatile          thread_counter = 0;
+ThreadInfo __thread*            ThreadInfo::self_cached = NULL;
+static Mutex                    thread_info_mutex;
+
+ThreadInfo::ThreadInfo () :
+  hp ({ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }),
+  next (NULL), pth_thread_id (pthread_self())
+{}
+
+static pthread_key_t
+thread_data_key (void (*destroy_specific) (void*))
+{
+  static pthread_key_t tdkey; // might be 0 after key_create
+  static bool tdkey_initialized = false;
+  if (UNLIKELY (!tdkey_initialized))
+    {
+      thread_info_mutex.lock();
+      if (!tdkey_initialized)
+        {
+          if (pthread_key_create (&tdkey, destroy_specific) == 0)
+            tdkey_initialized = true;
+          else
+            {
+              perror ("pthread_key_create: failed to create ThreadInfo key");
+              _exit (-127);
+            }
+        }
+      thread_info_mutex.unlock();
+      assert (tdkey_initialized);
+    }
+  return tdkey;
+}
+
+void
+ThreadInfo::setup_specific()
+{
+  const pthread_t pttid = pthread_self();
+  assert (pth_thread_id == pttid);
+  pthread_setspecific (thread_data_key (&destroy_specific), NULL);
+  assert (pth_thread_id == pttid); // reset_specific must not have been triggered here
+  pthread_setspecific (thread_data_key (&destroy_specific), this);
+  assert (pth_thread_id == pttid); // reset_specific must not have been triggered here
+}
+
+ThreadInfo*
+ThreadInfo::create ()
+{
+  const pthread_t pttid = pthread_self();
+  bool needs_listing = false;
+  // find existing ThreadInfo
+  ThreadInfo *tdata = static_cast<ThreadInfo*> (pthread_getspecific (thread_data_key (&destroy_specific)));
+  if (tdata)
+    {
+      assert (tdata->pth_thread_id == pttid);
+      return tdata;
+    }
+  // reuse existing ThreadInfo
+  for (tdata = list_head; tdata; tdata = tdata->next)
+    if (!tdata->pth_thread_id && __sync_bool_compare_and_swap (&tdata->pth_thread_id, 0, pttid))
+      break;
+  // allocate new ThreadInfo
+  if (!tdata)
+    {
+      tdata = (ThreadInfo*) fixalloc_aligned (sizeof (ThreadInfo), RAPICORN_CACHE_LINE_ALIGNMENT);
+      assert (tdata);
+      assert (0 == (size_t (&tdata->hp[0]) & 0x3f)); // verify 64byte cache line alignment
+      new (tdata) ThreadInfo();
+      __sync_add_and_fetch (&thread_counter, +1);
+      needs_listing = true;
+    }
+  // setup ThreadInfo with setspecific
+  tdata->setup_specific();
+  // enlist, now that setspecific knows about this
+  if (needs_listing)
+    {
+      assert (tdata->next == NULL);
+      do
+        tdata->next = list_head;
+      while (!__sync_bool_compare_and_swap (&list_head, tdata->next, tdata));
+    }
+  return tdata;
+}
+
+void
+ThreadInfo::reset_specific ()
+{
+  for (size_t i = 0; i < ARRAY_SIZE (hp); i++)
+    hp[i] = NULL;
+  self_cached = NULL;
+  const pthread_t pttid = pthread_self();
+  do
+    assert (pttid == pth_thread_id);
+  while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
+  // TESTED: printout ("resetted: %zx (%p)\n", pttid, this);
+}
+
+void
+ThreadInfo::destroy_specific (void *vdata)
+{
+  assert (vdata);
+  const pthread_t pttid = pthread_self();
+  ThreadInfo *tdata = NULL;
+  for (tdata = list_head; tdata; tdata = tdata->next)
+    if (tdata->pth_thread_id == pttid)
+      break;
+  assert (tdata && tdata == vdata);
+  tdata->reset_specific();
+  // if (rand() & 4) assert (NULL != &ThreadInfo::self());
+}
+
+std::vector<void*>
+ThreadInfo::collect_hazards()
+{
+  std::vector<void*> ptrs;
+  for (ThreadInfo *tdata = list_head; tdata; tdata = tdata->next)
+    for (size_t i = 0; i < ARRAY_SIZE (tdata->hp); i++)
+      {
+        void *const cptr = tdata->hp[i];
+        if (UNLIKELY (cptr != NULL))
+          ptrs.push_back (cptr);
+      }
+  stable_sort (ptrs.begin(), ptrs.end());
+  unique (ptrs.begin(), ptrs.end());
+  return ptrs;
+}
+
+String
+ThreadInfo::ident ()
+{
+  return string_printf ("thread(%d/%d)", ThisThread::thread_pid(), ThisThread::process_pid());
+}
+
+String
+ThreadInfo::name ()
+{
+  ScopedLock<Mutex> locker (thread_info_mutex);
+  return m_name.size() ? m_name : ident();
+}
+
+void
+ThreadInfo::name (const String &newname)
+{
+  ScopedLock<Mutex> locker (thread_info_mutex);
+  m_name = newname;
+}
 
 struct timespec
 Cond::abstime (int64 usecs)
@@ -41,6 +190,12 @@ Cond::abstime (int64 usecs)
 
 namespace ThisThread {
 
+String
+name()
+{
+  return ThreadInfo::self().name();
+}
+
 /** This function may be called before Rapicorn is initialized. */
 int
 online_cpus ()
@@ -68,7 +223,7 @@ affinity ()
         cpu = j;
         break;
       }
-  TDEBUG ("thread(%d/%d): pthread_getaffinity_np: %s", thread_pid(), process_pid(),
+  TDEBUG ("%s: pthread_getaffinity_np: %s", name().c_str(),
           errno ? strerror() : string_printf ("%d", cpu).c_str());
   return cpu;
 }
@@ -85,7 +240,7 @@ affinity (int cpu)
       CPU_SET (cpu, &cpuset);
       if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) == 0)
         errno = 0;
-      TDEBUG ("thread(%d/%d): pthread_setaffinity_np: %s", thread_pid(), process_pid(),
+      TDEBUG ("%s: pthread_setaffinity_np: %s", name().c_str(),
               errno ? strerror() : string_printf ("%d", cpu).c_str());
     }
 }
