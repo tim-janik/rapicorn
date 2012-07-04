@@ -8,32 +8,6 @@
 
 namespace Rapicorn {
 
-/// Class for per Thread inforamtion.
-struct ThreadInfo {
-  void *volatile              hp[8];   ///< Hazard Pointers, see: http://www.research.ibm.com/people/m/michael/ieeetpds-2004.pdf
-private:
-  ThreadInfo        *volatile next;
-  pthread_t                   pth_thread_id;
-  char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
-  String                      m_name;
-  static ThreadInfo __thread *self_cached;
-  /*ctor*/              ThreadInfo      ();
-  /*ctor*/              ThreadInfo      (const ThreadInfo&) = delete;
-  ThreadInfo&           operator=       (const ThreadInfo&) = delete;
-  static void           destroy_specific(void *vdata);
-  void                  reset_specific  ();
-  void                  setup_specific  ();
-  static ThreadInfo*    create          ();
-public:
-  typedef std::vector<void*> VoidPointers;
-  String                ident           ();                             ///< Simple identifier for this thread, usually TID/PID.
-  String                name            ();                             ///< Get thread name.
-  void                  name            (const String &newname);        ///< Change thread name.
-  static VoidPointers   collect_hazards ();  ///< Collect hazard pointers from all threads. Returns sorted vector of unique elements.
-  static inline bool    lookup_pointer  (const std::vector<void*> &ptrs, void *arg); ///< Lookup pointers in a hazard pointer vector.
-  static inline ThreadInfo& self        ();  ///< Get ThreadInfo for the current thread, inlined, using fast thread local storage.
-};
-
 /**
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
  * This class supports static construction.
@@ -67,6 +41,46 @@ public:
   native_handle_type native_handle() { return &m_spinlock; }
   /*ctor*/  Spinlock    (const Spinlock&) = delete;
   Mutex&    operator=   (const Spinlock&) = delete;
+};
+
+/// Class keeping information per Thread.
+struct ThreadInfo {
+  /// @name Hazard Pointers
+  typedef std::vector<void*> VoidPointers;
+  void *volatile      hp[8];   ///< Hazard pointers variables, see: http://www.research.ibm.com/people/m/michael/ieeetpds-2004.pdf .
+  static VoidPointers collect_hazards (); ///< Collect hazard pointers from all threads. Returns sorted vector of unique elements.
+  static inline bool  lookup_pointer  (const std::vector<void*> &ptrs, void *arg); ///< Lookup pointers in a hazard pointer vector.
+  /// @name Thread identification
+  String                    ident       ();                             ///< Simple identifier for this thread, usually TID/PID.
+  String                    name        ();                             ///< Get thread name.
+  void                      name        (const String &newname);        ///< Change thread name.
+  static inline ThreadInfo& self        ();  ///< Get ThreadInfo for the current thread, inlined, using fast thread local storage.
+  /** @name Accessing custom data members
+   * For further details, see DataListContainer.
+   */
+  template<typename T> inline T    get_data    (DataKey<T> *key)         { tdl(); T d = m_data_list.get (key); tdu(); return d; }
+  template<typename T> inline void set_data    (DataKey<T> *key, T data) { tdl(); m_data_list.set (key, data); tdu(); }
+  template<typename T> inline void delete_data (DataKey<T> *key)         { tdl(); m_data_list.del (key); tdu(); }
+  template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = m_data_list.swap (key); tdu(); return d; }
+  template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = m_data_list.swap (key, data); tdu(); return d; }
+private:
+  ThreadInfo        *volatile next;
+  pthread_t                   pth_thread_id;
+  char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
+  String                      m_name;
+  Mutex                       m_data_mutex;
+  DataList                    m_data_list;
+  static ThreadInfo __thread *self_cached;
+  /*ctor*/              ThreadInfo      ();
+  /*ctor*/              ThreadInfo      (const ThreadInfo&) = delete;
+  /*dtor*/             ~ThreadInfo      ();
+  ThreadInfo&           operator=       (const ThreadInfo&) = delete;
+  static void           destroy_specific(void *vdata);
+  void                  reset_specific  ();
+  void                  setup_specific  ();
+  static ThreadInfo*    create          ();
+  void                  tdl             () { m_data_mutex.lock(); }
+  void                  tdu             () { m_data_mutex.unlock(); }
 };
 
 struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic lockinf of a ScopedLock<Mutex>.

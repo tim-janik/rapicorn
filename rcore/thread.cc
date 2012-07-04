@@ -18,6 +18,11 @@ static size_t volatile          thread_counter = 0;
 ThreadInfo __thread*            ThreadInfo::self_cached = NULL;
 static Mutex                    thread_info_mutex;
 
+ThreadInfo::~ThreadInfo ()
+{
+  assert ("~ThreadInfo must not be reached" == 0);
+}
+
 ThreadInfo::ThreadInfo () :
   hp ({ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }),
   next (NULL), pth_thread_id (pthread_self())
@@ -100,6 +105,7 @@ ThreadInfo::create ()
 void
 ThreadInfo::reset_specific ()
 {
+  m_data_list.clear_like_destructor();
   for (size_t i = 0; i < ARRAY_SIZE (hp); i++)
     hp[i] = NULL;
   self_cached = NULL;
@@ -107,6 +113,7 @@ ThreadInfo::reset_specific ()
   do
     assert (pttid == pth_thread_id);
   while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
+  m_data_list.clear_like_destructor(); // should be empty
   // TESTED: printout ("resetted: %zx (%p)\n", pttid, this);
 }
 
