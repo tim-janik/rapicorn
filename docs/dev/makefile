@@ -49,6 +49,10 @@ $(SRCTREE):
 	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
 	| xargs -0 python enumdoc.py
 
+STRIP_SNIPPET_MARKS = \
+	-e '/^ *<span class="comment"> *\/\/\/ *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *$$/d' \
+	-e   's,<span class="comment"> */// *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *</span>\n\?,,'
+
 all-docs: $(git_stamp) doxygen.cfg
 	rm -rf html.tmp/ && mkdir -p html.tmp/
 	$(MAKE) $(SRCTREE)
@@ -56,10 +60,12 @@ all-docs: $(git_stamp) doxygen.cfg
 	(cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
 	&& echo "INPUT		  = $(SRCTREE)/" \
+	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
 	&& echo -n "PROJECT_NUMBER = $(SED_VERSION)" \
 	) | nice $(DOXYGEN) -
 	rm -rf $(SRCTREE)/
+	sed $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
 	mv html.tmp/html/ html.tmp/$(SED_VERSION)/
 	ln -s $(SED_VERSION) html.tmp/latest
 	rsync -aH --del html.tmp/ html/
