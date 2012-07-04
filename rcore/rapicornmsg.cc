@@ -430,7 +430,6 @@ log_prefix (const String &prg_name,
 
 static DataKey<Msg::Handler> msg_thread_handler_key;
 
-#if 0 // FIXME
 /**
  * @param handler       a valid Msg::Handler or NULL
  *
@@ -443,10 +442,9 @@ static DataKey<Msg::Handler> msg_thread_handler_key;
 void
 Msg::set_thread_handler (Handler handler)
 {
-  Thread &self = Thread::self();
+  ThreadInfo &self = ThreadInfo::self();
   self.set_data (&msg_thread_handler_key, handler);
 }
-#endif
 
 void
 Msg::display_parts (const char         *domain,
@@ -523,11 +521,8 @@ Msg::display_parts (const char         *domain,
   /* log to log handler */
   if (actions & LOG_TO_HANDLER)
     {
-#if 0 // FIXME
-      Thread &self = Thread::self();
+      ThreadInfo &self = ThreadInfo::self();
       Handler log_handler = self.get_data (&msg_thread_handler_key);
-#endif
-      Handler log_handler = NULL;
       if (!log_handler)
         log_handler = default_handler;
       log_handler (domain, message_type, parts);
