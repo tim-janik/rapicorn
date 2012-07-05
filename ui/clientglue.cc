@@ -250,7 +250,7 @@ ApplicationH::run ()
 /**
  * This function runs the Application main loop via loop_run(), and exits
  * the running process once the loop has quit. The loop_quit() status is
- * passed on to exit() and thus tp the parent process.
+ * passed on to exit() and thus to the parent process.
  */
 int
 ApplicationH::run_and_exit ()
