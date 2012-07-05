@@ -36,7 +36,7 @@ struct Msg : protected NonCopyable {
     LOG_TO_STDERR     = 1,
     LOG_TO_STDLOG     = 2,
     LOG_TO_HANDLER    = 4,
-    _1FORCE32 = 0xf000000
+    _1FORCE32 = 0xf000000 // FIXME
   } LogFlags;
   /* message types */
   typedef enum {
@@ -44,7 +44,7 @@ struct Msg : protected NonCopyable {
     ALWAYS      = 1,    /* always on */
     ERROR,      WARNING,        SCRIPT,
     INFO,       DIAG,           DEBUG,
-    _2FORCE32 = 0xf000000
+    _2FORCE32 = 0xf000000 // FIXME
   } Type;
   static Type        register_type      (const char         *ident,
                                          Type                default_ouput,
@@ -53,7 +53,7 @@ struct Msg : protected NonCopyable {
   static const char* type_ident         (Type                mtype);
   static const char* type_label         (Type                mtype);
   static uint32      type_flags         (Type                mtype);
-  static inline bool check              (Type                mtype);
+  static bool        check              (Type                mtype);
   static void        enable             (Type                mtype);
   static void        disable            (Type                mtype);
   static void        configure          (Type                mtype,
@@ -111,8 +111,6 @@ protected:
                                       const char         *format,
                                       va_list             args);
 private:
-  static volatile int    n_msg_types;
-  static uint8 *volatile msg_type_bits;
   static void            init_standard_types ();
   static void            key_list_change_L   (const String &keylist,
                                               bool          isenabled);
@@ -154,16 +152,7 @@ public:
   };
 };
 
-/* --- inline implementations --- */
-inline bool
-Msg::check (Type mtype)
-{
-  /* this function is supposed to preserve errno */
-  return (mtype >= 0 &&
-          mtype < n_msg_types &&
-          (msg_type_bits[mtype / 8] & (1 << mtype % 8)));
-}
-
+// == inline implementations ==
 inline void
 Msg::display (Type        message_type,
               const Part &p0, const Part &p1,

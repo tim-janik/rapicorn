@@ -1,6 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "main.hh"
 #include "strings.hh"
+#include "thread.hh"
 #include "configbits.cc"
 #include <string.h>
 #include <algorithm>
@@ -259,7 +260,14 @@ program_cwd ()
   return program_cwd0;
 }
 
-static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe16) { v++; } } __staticctortest;
+static struct __StaticCTorTest {
+  int v;
+  __StaticCTorTest() : v (0x12affe16)
+  {
+    v++;
+    ThreadInfo::self().name ("MainThread");
+  }
+} __staticctortest;
 
 /**
  * @param app_ident     Application identifier, used to associate persistent resources
@@ -322,6 +330,8 @@ init_core (const String       &app_ident,
     g_set_prgname (Path::basename (program_argv0).c_str());
   if (!g_get_application_name() || g_get_application_name() == g_get_prgname())
     g_set_application_name (program_app_ident.c_str());
+  if (!program_argv0.empty())
+    ThreadInfo::self().name (string_printf ("%s-MainThread", Path::basename (program_argv0).c_str()));
 
   // ensure logging is fully initialized
   debug_configure ("");

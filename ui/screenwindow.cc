@@ -28,8 +28,7 @@ ScreenWindow::FactoryBase::~FactoryBase ()
 void
 ScreenWindow::FactoryBase::register_backend (FactoryBase &factory)
 {
-  if (once_enter (&screen_window_backends))
-    once_leave (&screen_window_backends, new std::list<ScreenWindow::FactoryBase*>());
+  do_once { screen_window_backends = new std::list<ScreenWindow::FactoryBase*>(); }
   screen_window_backends->push_back (&factory);
 }
 

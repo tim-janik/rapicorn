@@ -2,7 +2,6 @@
  * GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
  */
 #include "rapicorndebugtools.hh"
-#include "rapicornthread.hh"
 #include "regex.hh"
 #include "markup.hh"
 #include <stdio.h>

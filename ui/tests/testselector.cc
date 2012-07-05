@@ -582,12 +582,10 @@ static const char test_dialog_xml[] =
 static void
 load_ui_defs()
 {
-  static bool initialized = false;
-  if (once_enter (&initialized))
+  do_once
     {
       String errs = Factory::parse_ui_data ("RapicornSelectorTest", RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml);
       if (!errs.empty())
         fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
-      once_leave (&initialized, true);
     }
 }

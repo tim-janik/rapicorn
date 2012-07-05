@@ -11,7 +11,7 @@ LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 
-# programs
+# environment
 TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 
 # test programs

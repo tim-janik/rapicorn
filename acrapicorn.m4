@@ -122,6 +122,47 @@ case $ac_vm in
 esac
 ])
 
+dnl # MC_DEFINE_SPINLOCK_INITIALIZER(includes)
+AC_DEFUN([MC_DEFINE_SPINLOCK_INITIALIZER],
+[AC_REQUIRE([AC_PROG_CC])
+AC_LANG_PUSH([C])
+LDFLAGS_SAVE="$LDFLAGS" ; LDFLAGS="-pthread $LDFLAGS"
+AC_CACHE_CHECK(for Spinlock initializer, mc_cv_spinlock_initializer,
+ [AC_RUN_IFELSE([AC_LANG_PROGRAM([
+  #include <stdio.h>
+  #include <stddef.h>
+  #include <assert.h>
+  #include <pthread.h>
+  #include <inttypes.h>
+  $1], [[
+  static char xmem[1024] = { 0, };
+  pthread_spinlock_t *slock1 = (pthread_spinlock_t*) (((ptrdiff_t) xmem + (sizeof xmem)/2) & 0xffffffffffffff00);
+  int i;
+  for (i = 0; i < (sizeof (pthread_spinlock_t) + 3) / 4; i++)
+    assert (0 == ((int*) slock1)[i]);
+  int ret = pthread_spin_init (slock1, 0);
+  assert (ret == 0);
+  char ymem[1024] = { 0, };
+  pthread_spinlock_t *slock2 = (pthread_spinlock_t*) (((ptrdiff_t) ymem + (sizeof ymem)/2) & 0xffffffffffffff00);
+  ret = pthread_spin_init (slock2, 0);
+  assert (ret == 0);
+  assert (*slock1 == *slock2);
+  FILE *f = fopen ("conftest_spinlock_initializer", "w");
+  assert (f);
+  fprintf (f, "{ ");
+  for (i = 0; i < (sizeof (pthread_spinlock_t) + 3) / 4; i++)
+    fprintf (f, "%s0x%04x", i ? ", " : "", ((int*) slock2)[i]);
+  fprintf (f, " }\n");
+  assert (sizeof (pthread_spinlock_t) == 4); // implementation assumption
+  fclose (f);
+  return 0;
+]])],
+     [mc_cv_spinlock_initializer=`cat conftest_spinlock_initializer`; rm -f conftest_spinlock_initializer],
+     AC_MSG_FAILURE([spinlock check failed to execute]))])
+LDFLAGS="$LDFLAGS_SAVE"
+AC_LANG_POP([C])
+])
+
 dnl # MC_ASSERT_NONEMPTY(variable, program, srcpackage)
 AC_DEFUN([MC_ASSERT_NONEMPTY], [
     case "x$[$1]"y in

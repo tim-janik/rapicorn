@@ -148,13 +148,11 @@ REGISTER_UITHREAD_TEST ("TestItem/Test GUI assertions (alignment-test)", test_te
 static void
 ensure_ui_file()
 {
-  static bool initialized = false;
-  if (once_enter (&initialized))
+  do_once
     {
       // first, load required ui files
       ApplicationImpl &app = ApplicationImpl::the();
       app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), program_file());
-      once_leave (&initialized, true);
     }
 }
 

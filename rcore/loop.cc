@@ -152,11 +152,11 @@ EventFd::~EventFd ()
 }
 
 // === Stupid ID allocator ===
-static volatile uint static_id_counter = 65536;
+static Atomic<uint> static_id_counter = 65536;
 static uint
 alloc_id ()
 {
-  uint id = Atomic::add (&static_id_counter, 1);
+  uint id = static_id_counter++;
   if (!id)
     fatal ("EventLoop: id counter overflow, please report"); // FIXME
   return id;
@@ -303,7 +303,7 @@ EventLoop::add (Source *source,
 void
 EventLoop::remove_source_Lm (Source *source)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED_LOCK);
   assert_return (source->m_loop == this);
   source->m_loop = NULL;
   source->m_loop_state = WAITING;
@@ -351,7 +351,7 @@ EventLoop::kill_sources_Lm()
 {
   for (Source *source = find_first_L(); source != NULL; source = find_first_L())
     remove_source_Lm (source);
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED_LOCK);
   locker.unlock();
   unpoll_sources_U(); // unlocked
   locker.lock();

@@ -19,6 +19,42 @@
 namespace {
 using namespace Rapicorn;
 
+/// [DataListContainer-EXAMPLE]
+// Declare a global key for custom floating point data members
+static DataKey<double> float_data_key;
+
+static void // Access data on any object derived from DataListContainer
+data_member_access (DataListContainer &some_object)
+{
+  // Set the custom float member identified by float_data_key to 21.7
+  some_object.set_data (&float_data_key, 21.7);
+
+  // Read out the custom member
+  double number = some_object.get_data (&float_data_key);
+  assert (number > 21.5 && number < 22);
+
+  // Swap custom member for 1.0
+  const double old_float = some_object.swap_data (&float_data_key, 1.0);
+  assert (old_float > 21 && old_float < 22);
+
+  // Verify swapped member
+  number = some_object.get_data (&float_data_key);
+  assert (number == 1.0);
+
+  // Delete custom member
+  some_object.delete_data (&float_data_key);
+  assert (some_object.get_data (&float_data_key) == 0.0);
+}
+/// [DataListContainer-EXAMPLE]
+
+static void
+data_list_container_example()
+{
+  DataListContainer some_object;
+  data_member_access (some_object);
+}
+REGISTER_TEST ("Examples/DataListContainer", data_list_container_example);
+
 class MyKey : public DataKey<int> {
   void destroy (int i)
   {
@@ -102,15 +138,6 @@ data_list_test ()
     data_list_test_strings (r);
     data_list_test_ints (r);
     data_list_test_strings (r);
-  }
-  TDONE();
-
-  TSTART ("DataList/Threaded");
-  {
-    Thread &thread = Thread::self();
-    data_list_test_strings (thread);
-    data_list_test_ints (thread);
-    data_list_test_strings (thread);
   }
   TDONE();
 

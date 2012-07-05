@@ -3,7 +3,7 @@
 #include "main.hh"
 #include "strings.hh"
 #include "rapicornutf8.hh"
-#include "rapicornthread.hh"
+#include "thread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"
 #include <errno.h>
@@ -62,8 +62,7 @@ static uint64    realtime_start = 0;
 static void
 timestamp_init_ ()
 {
-  static bool clockinit = 0;
-  if (once_enter (&clockinit))
+  do_once
     {
       realtime_start = timestamp_realtime();
       struct timespec tp = { 0, 0 };
@@ -81,7 +80,6 @@ timestamp_init_ ()
         }
 #endif
       monotonic_start = mstart;
-      once_leave (&clockinit, true);
     }
 }
 namespace { static struct Timestamper { Timestamper() { timestamp_init_(); } } realtime_startup; } // Anon
@@ -201,21 +199,21 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 
 // === Logging ===
 bool                        _debug_flag = true; // bootup default before _init()
-static bool                 conftest_general_debugging = false;
-static bool                 conftest_key_debugging = false;
-static KeyConfig * volatile conftest_map = NULL;
+static Atomic<char>         conftest_general_debugging = false;
+static Atomic<char>         conftest_key_debugging = false;
+static Atomic<KeyConfig*>   conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
 
 static inline KeyConfig&
 conftest_procure ()
 {
-  KeyConfig *kconfig = Atomic::ptr_get (&conftest_map);
+  KeyConfig *kconfig = conftest_map.load();
   if (UNLIKELY (kconfig == NULL))
     {
       kconfig = new KeyConfig();
       bool dummy = 0;
       kconfig->configure (conftest_defaults, dummy);
-      if (Atomic::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
+      if (conftest_map.cas (NULL, kconfig))
         {
           const char *env_rapicorn = getenv ("RAPICORN");
           // configure with support for aliases, caches, etc
@@ -224,7 +222,7 @@ conftest_procure ()
       else
         {
           delete kconfig; // some other thread was faster
-          kconfig = Atomic::ptr_get (&conftest_map);
+          kconfig = conftest_map.load();
         }
     }
   return *kconfig;
@@ -236,15 +234,11 @@ debug_configure (const String &options)
   bool seen_debug_key = false;
   conftest_procure().configure (options, seen_debug_key);
   if (seen_debug_key)
-    Atomic::value_set (&conftest_key_debugging, true);
-  Atomic::value_set (&conftest_general_debugging, bool (debug_confbool ("verbose") || debug_confbool ("debug-all")));
-  Atomic::value_set (&_debug_flag, bool (conftest_key_debugging | conftest_general_debugging)); // update "cached" configuration
-  static bool first_help = false;
-  if (debug_confbool ("help") && once_enter (&first_help))
-    {
-      printerr ("%s", debug_help().c_str());
-      once_leave (&first_help, true);
-    }
+    conftest_key_debugging.store (true);
+  conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
+  Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
+  if (debug_confbool ("help"))
+    do_once { printerr ("%s", debug_help().c_str()); }
 }
 
 String
@@ -323,12 +317,7 @@ thread_pid()
 static void
 ensure_openlog()
 {
-  static bool opened = false;
-  if (once_enter (&opened))
-    {
-      openlog (NULL, LOG_PID, LOG_USER); // force pid logging
-      once_leave (&opened, true);
-    }
+  do_once { openlog (NULL, LOG_PID, LOG_USER); } // force pid logging
 }
 
 static inline int
@@ -402,16 +391,11 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_STAMP)
-    {
-      static bool first_debug = false;
-      if (once_enter (&first_debug))
-        {
-          printerr ("[%s] %s[%u]: program started at: %.6f\n",
-                    timestamp_format (delta).c_str(),
-                    program_name().c_str(), thread_pid(),
-                    start / 1000000.0);
-          once_leave (&first_debug, true);
-        }
+    do_once {
+      printerr ("[%s] %s[%u]: program started at: %.6f\n",
+                timestamp_format (delta).c_str(),
+                program_name().c_str(), thread_pid(),
+                start / 1000000.0);
     }
   if (f & DO_DEBUG)
     {
@@ -455,7 +439,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   if (f & DO_LOGFILE)
     {
       String out;
-      if (once_enter (&conftest_logfd))
+      do_once
         {
           int fd;
           do
@@ -469,7 +453,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
           out = string_printf ("[%s] %s[%u]: program started at: %s\n",
                                timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
                                timestamp_format (start).c_str());
-          once_leave (&conftest_logfd, fd);
+          conftest_logfd = fd;
         }
       out += string_printf ("[%s] %s[%u]:%s%s%s",
                             timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
@@ -1355,15 +1339,15 @@ struct DeletableMap {
   std::map<Deletable*,DeletableAuxData> dmap;
 };
 typedef std::map<Deletable*,DeletableAuxData>::iterator DMapIterator;
-static DeletableMap * volatile deletable_maps = NULL;
+static Atomic<DeletableMap*> deletable_maps = NULL;
 
 static inline void
 auto_init_deletable_maps (void)
 {
-  if (UNLIKELY (deletable_maps == NULL))
+  if (UNLIKELY (deletable_maps.load() == NULL))
     {
       DeletableMap *dmaps = new DeletableMap[DELETABLE_MAP_HASH];
-      if (!Atomic::ptr_cas (&deletable_maps, (DeletableMap*) NULL, dmaps))
+      if (!deletable_maps.cas (NULL, dmaps))
         delete dmaps;
       // ensure threading works
       deletable_maps[0].mutex.lock();
@@ -1439,7 +1423,7 @@ Deletable::invoke_deletion_hooks()
    * threading being initialized. to avoid calling into a NULL threading
    * table, we'll detect the case and return
    */
-  if (NULL == Atomic::ptr_get (&deletable_maps))
+  if (NULL == deletable_maps.load())
     return;
   auto_init_deletable_maps();
   const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
@@ -1484,7 +1468,7 @@ IdAllocator::~IdAllocator ()
 {}
 
 class IdAllocatorImpl : public IdAllocator {
-  SpinLock     mutex;
+  Spinlock     mutex;
   const uint   counterstart, wbuffer_capacity;
   uint         counter, wbuffer_pos, wbuffer_size;
   uint        *wbuffer;
@@ -1560,7 +1544,7 @@ IdAllocatorImpl::seen_id (uint unique_id)
 
 /* --- Locatable --- */
 #define LOCATOR_ID_OFFSET 0xa0000000
-static SpinLock           locatable_mutex;
+static Spinlock           locatable_mutex;
 static vector<Locatable*> locatable_objs;
 static IdAllocatorImpl    locator_ids (1, 227); // has own mutex
 
@@ -1572,7 +1556,7 @@ Locatable::~Locatable ()
 {
   if (UNLIKELY (m_locatable_index))
     {
-      ScopedLock<SpinLock> locker (locatable_mutex);
+      ScopedLock<Spinlock> locker (locatable_mutex);
       assert_return (m_locatable_index <= locatable_objs.size());
       const uint index = m_locatable_index - 1;
       locatable_objs[index] = NULL;
@@ -1588,7 +1572,7 @@ Locatable::locatable_id () const
     {
       m_locatable_index = locator_ids.alloc_id();
       const uint index = m_locatable_index - 1;
-      ScopedLock<SpinLock> locker (locatable_mutex);
+      ScopedLock<Spinlock> locker (locatable_mutex);
       if (index >= locatable_objs.size())
         locatable_objs.resize (index + 1);
       locatable_objs[index] = const_cast<Locatable*> (this);
@@ -1604,7 +1588,7 @@ Locatable::from_locatable_id (uint64 locatable_id)
   if (locatable_id >> 32 != locatable_process_hash64 >> 32)
     return NULL; // id from wrong process
   const uint index = locatable_id - locatable_process_hash64  - 1;
-  ScopedLock<SpinLock> locker (locatable_mutex);
+  ScopedLock<Spinlock> locker (locatable_mutex);
   assert_return (index < locatable_objs.size(), NULL);
   Locatable *_this = locatable_objs[index];
   return _this;
