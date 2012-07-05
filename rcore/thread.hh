@@ -83,7 +83,7 @@ private:
   void                  tdu             () { m_data_mutex.unlock(); }
 };
 
-struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic lockinf of a ScopedLock<Mutex>.
+struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic locking of a ScopedLock<Mutex>.
 struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {}; ///< Flag for balancing unlock/lock in a ScopedLock<Mutex>.
 
 /**
