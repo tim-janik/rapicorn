@@ -191,7 +191,7 @@ ApplicationH::main_loop()
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;
-  if (once_enter (&app_loop))
+  do_once
     {
       MainLoop *mloop = MainLoop::_new();
       ref_sink (mloop);
@@ -201,7 +201,7 @@ ApplicationH::main_loop()
       ref_sink (source);
       slave->add (source);
       source->queue_check_primaries();
-      once_leave (&app_loop, mloop);
+      app_loop = mloop;
     }
   return app_loop;
 }

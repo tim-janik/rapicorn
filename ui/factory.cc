@@ -55,12 +55,21 @@ xml_node_data (const XmlNode &xnode)
   return NodeData::from_xml_node (*const_cast<XmlNode*> (&xnode));
 }
 
-static std::list<const ItemTypeFactory*> *item_type_factories_p = NULL;
+static std::list<const ItemTypeFactory*>&
+item_type_list()
+{
+  static std::list<const ItemTypeFactory*> *item_type_factories_p = NULL;
+  do_once
+    {
+      item_type_factories_p = new std::list<const ItemTypeFactory*>();
+    }
+  return *item_type_factories_p;
+}
 
 static const ItemTypeFactory*
 lookup_item_factory (String namespaced_ident)
 {
-  std::list<const ItemTypeFactory*> &item_type_factories = *RAPICORN_NEW_ONCE (item_type_factories_p);
+  std::list<const ItemTypeFactory*> &item_type_factories = item_type_list();
   namespaced_ident = namespaced_ident;
   std::list<const ItemTypeFactory*>::iterator it;
   for (it = item_type_factories.begin(); it != item_type_factories.end(); it++)
@@ -72,7 +81,7 @@ lookup_item_factory (String namespaced_ident)
 void
 ItemTypeFactory::register_item_factory (const ItemTypeFactory &itfactory)
 {
-  std::list<const ItemTypeFactory*> &item_type_factories = *RAPICORN_NEW_ONCE (item_type_factories_p);
+  std::list<const ItemTypeFactory*> &item_type_factories = item_type_list();
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')
@@ -812,8 +821,7 @@ namespace { // Anon
 static void
 initialize_factory_lazily (void)
 {
-  static bool initialized = false;
-  if (once_enter (&initialized))
+  do_once
     {
       uint8 *data;
       const char *domain = "Rapicorn";
@@ -826,7 +834,6 @@ initialize_factory_lazily (void)
                                  sizeof (STANDARD_XML_DATA) / sizeof (STANDARD_XML_DATA[0]));
       Factory::parse_ui_data_internal (domain, STANDARD_XML_NAME, STANDARD_XML_SIZE, (const char*) data, "", NULL);
       zintern_free (data);
-      once_leave (&initialized, true);
     }
 }
 

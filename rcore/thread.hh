@@ -157,16 +157,13 @@ using namespace std::this_thread;
 
 } // ThisThread
 
-/// Guard for entering a critical code section, @a value_location needs to point to a 0-initialized variable.
-template<class Value> inline bool once_enter (volatile Value *value_location)
-{ return Lib::once_enter (value_location); }
-
-/// Counterpart to once_enter(), marks the end of a critical code section, @a initialization_value needs to be non-0.
-template<class Value> inline void once_leave (volatile Value *value_location, Value initialization_value)
-{ Lib::once_leave (value_location, initialization_value); }
-
 #ifdef RAPICORN_CONVENIENCE
-#define NEW_ONCE(object_pointer)        RAPICORN_NEW_ONCE (object_pointer)
+
+/** The @e do_once statement preceeds code blocks to ensure that a critical section is executed atomically and at most once.
+ *  Example: @SNIPPET{rcore/tests/threads.cc, do_once-EXAMPLE}
+ */
+#define do_once                         RAPICORN_DO_ONCE
+
 #endif  // RAPICORN_CONVENIENCE
 
 /// Atomic types are race free integer and pointer types, similar to std::atomic.

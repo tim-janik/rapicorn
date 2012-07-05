@@ -65,7 +65,35 @@ test_atomic ()
 }
 REGISTER_TEST ("Threads/Atomic Operations", test_atomic);
 
-// == runonce tests ==
+// == do_once ==
+/// [do_once-EXAMPLE]
+static const char*
+startup_message ()
+{
+  // A global variable that needs one time initialization
+  static char text_variable[1024];
+
+  // Initialize text_variable only once
+  do_once
+    {
+      snprintf (text_variable, sizeof (text_variable), "Initialized at: %zu", size_t (timestamp_realtime()));
+    }
+
+  // Always returns the same text
+  return text_variable;
+}
+/// [do_once-EXAMPLE]
+
+static void
+do_once_example_test()
+{
+  String first (startup_message());
+  assert (first.size() > 5);
+  String second (startup_message());
+  TCMP (first, ==, second);
+}
+REGISTER_TEST ("Examples/do_once", do_once_example_test);
+
 static Atomic<uint>    runonce_threadcount = 0;
 static Mutex           runonce_mutex;
 static Cond            runonce_cond;
@@ -76,7 +104,7 @@ runonce_thread (Atomic<uint> &runonce_counter)
 {
   runonce_mutex.lock(); // syncronize
   runonce_mutex.unlock();
-  if (once_enter (&runonce_value))
+  do_once
     {
       runonce_mutex.lock();
       runonce_cond.broadcast();
@@ -84,7 +112,7 @@ runonce_thread (Atomic<uint> &runonce_counter)
       usleep (1); // sched_yield replacement to force contention
       ++runonce_counter;
       usleep (500); // sched_yield replacement to force contention
-      once_leave (&runonce_value, size_t (42));
+      runonce_value = 42;
     }
   TCMP (runonce_counter, ==, 1);
   TCMP (runonce_value, ==, 42);

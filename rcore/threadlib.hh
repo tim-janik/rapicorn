@@ -43,39 +43,41 @@ public:
   operator  T         () const volatile { return load(); }
 };
 
-#define RAPICORN_NEW_ONCE(pointer_variable)       \
-  ({ typeof (pointer_variable) *___vp = &pointer_variable;      \
-    while (once_enter (___vp)) { once_leave (___vp, new typeof (**___vp)); } *___vp; })
-
+// == Once Scope ==
 void once_list_enter  ();
 bool once_list_bounce (volatile void *ptr);
 bool once_list_leave  (volatile void *ptr);
 
-template<class Value> inline bool
-once_enter (volatile Value *value_location)
-{
-  if (RAPICORN_LIKELY (atomic_load (value_location) != 0))
-    return false;
-  else
-    {
-      once_list_enter();
-      const bool initialized = atomic_load (value_location) != 0;
-      const bool needs_init = once_list_bounce (initialized ? NULL : value_location);
-      return needs_init;
-    }
-}
+class OnceScope {
+  /*ctor*/       OnceScope (const OnceScope&) = delete;
+  OnceScope&     operator= (const OnceScope&) = delete;
+  volatile char *volatile flagp;
+  bool           entered_once;
+public:
+  OnceScope (volatile char *volatile p) : flagp (p), entered_once (false) {}
+  inline bool
+  operator() ()
+  {
+    if (RAPICORN_LIKELY (*flagp != 0))
+      return false;
+    if (entered_once > 0)       // second or later invocation from for()
+      {
+        const bool is_first_initialization = __sync_bool_compare_and_swap (flagp, 0, 1);
+        const bool found_and_removed = once_list_leave (flagp);
+        if (!is_first_initialization || !found_and_removed)
+          printerr ("__once: %s: assertion failed during leave: %d %d", __func__, is_first_initialization, found_and_removed);
+      }
+    entered_once = 1;           // mark first invocation
+    once_list_enter();
+    const bool initialized = atomic_load (flagp) != 0;
+    const bool needs_init = once_list_bounce (initialized ? NULL : flagp);
+    return needs_init;
+  }
+};
 
-template<class Value> inline void
-once_leave (volatile Value *value_location,
-            Value           initialization_value)
-{
-  RAPICORN_RETURN_UNLESS (atomic_load (value_location) == 0);
-  RAPICORN_RETURN_UNLESS (initialization_value != 0);
-
-  atomic_store (value_location, initialization_value);
-  const bool found_and_removed = once_list_leave (value_location);
-  RAPICORN_RETURN_UNLESS (found_and_removed == true);
-}
+#define RAPICORN_ASECTION(bytes)    __attribute__ ((section (".data.aligned" #bytes), aligned (bytes)))
+#define RAPICORN_DO_ONCE_COUNTER    ({ static volatile char RAPICORN_ASECTION (1) __rapicorn_oncebyte_ = 0; &__rapicorn_oncebyte_; })
+#define RAPICORN_DO_ONCE   for (Rapicorn::Lib::OnceScope __rapicorn_oncescope_ (RAPICORN_DO_ONCE_COUNTER); __rapicorn_oncescope_(); )
 
 } // Lib
 } // Rapicorn

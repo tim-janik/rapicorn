@@ -62,8 +62,7 @@ static uint64    realtime_start = 0;
 static void
 timestamp_init_ ()
 {
-  static bool clockinit = 0;
-  if (once_enter (&clockinit))
+  do_once
     {
       realtime_start = timestamp_realtime();
       struct timespec tp = { 0, 0 };
@@ -81,7 +80,6 @@ timestamp_init_ ()
         }
 #endif
       monotonic_start = mstart;
-      once_leave (&clockinit, true);
     }
 }
 namespace { static struct Timestamper { Timestamper() { timestamp_init_(); } } realtime_startup; } // Anon
@@ -239,12 +237,8 @@ debug_configure (const String &options)
     conftest_key_debugging.store (true);
   conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
   Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
-  static bool first_help = false;
-  if (debug_confbool ("help") && once_enter (&first_help))
-    {
-      printerr ("%s", debug_help().c_str());
-      once_leave (&first_help, true);
-    }
+  if (debug_confbool ("help"))
+    do_once { printerr ("%s", debug_help().c_str()); }
 }
 
 String
@@ -323,12 +317,7 @@ thread_pid()
 static void
 ensure_openlog()
 {
-  static bool opened = false;
-  if (once_enter (&opened))
-    {
-      openlog (NULL, LOG_PID, LOG_USER); // force pid logging
-      once_leave (&opened, true);
-    }
+  do_once { openlog (NULL, LOG_PID, LOG_USER); } // force pid logging
 }
 
 static inline int
@@ -402,16 +391,11 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_STAMP)
-    {
-      static bool first_debug = false;
-      if (once_enter (&first_debug))
-        {
-          printerr ("[%s] %s[%u]: program started at: %.6f\n",
-                    timestamp_format (delta).c_str(),
-                    program_name().c_str(), thread_pid(),
-                    start / 1000000.0);
-          once_leave (&first_debug, true);
-        }
+    do_once {
+      printerr ("[%s] %s[%u]: program started at: %.6f\n",
+                timestamp_format (delta).c_str(),
+                program_name().c_str(), thread_pid(),
+                start / 1000000.0);
     }
   if (f & DO_DEBUG)
     {
@@ -455,7 +439,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   if (f & DO_LOGFILE)
     {
       String out;
-      if (once_enter (&conftest_logfd))
+      do_once
         {
           int fd;
           do
@@ -469,7 +453,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
           out = string_printf ("[%s] %s[%u]: program started at: %s\n",
                                timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
                                timestamp_format (start).c_str());
-          once_leave (&conftest_logfd, fd);
+          conftest_logfd = fd;
         }
       out += string_printf ("[%s] %s[%u]:%s%s%s",
                             timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
