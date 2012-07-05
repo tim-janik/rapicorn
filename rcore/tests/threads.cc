@@ -381,9 +381,98 @@ test_thread_atomic_cxx (void)
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
-#if 0 // FIXME: RingBuffer test
+// == Atomic Ring Buffer
+template<typename T>
+class RingBuffer : protected Rapicorn::NonCopyable {
+  const uint    m_size;
+  Atomic<uint>  m_wmark, m_rmark;
+  T            *m_buffer;
+public:
+  explicit
+  RingBuffer (uint bsize) :
+    m_size (bsize + 1), m_wmark (0), m_rmark (0), m_buffer (new T[m_size])
+  {}
+  ~RingBuffer()
+  {
+    // m_size = 0;
+    T *old = m_buffer;
+    m_buffer = NULL;
+    m_rmark = 0;
+    m_wmark = 0;
+    delete[] old;
+  }
+  uint
+  n_writable() const
+  {
+    const uint rm = m_rmark.load();
+    const uint wm = m_wmark.load();
+    const uint space = (m_size - 1 + rm - wm) % m_size;
+    return space;
+  }
+  uint
+  write (uint length, const T *data, bool partial = true)
+  {
+    const uint orig_length = length;
+    const uint rm = m_rmark.load();
+    uint wm = m_wmark.load();
+    uint space = (m_size - 1 + rm - wm) % m_size;
+    if (!partial && length > space)
+      return 0;
+    while (length)
+      {
+        if (rm <= wm)
+          space = m_size - wm + (rm == 0 ? -1 : 0);
+        else
+          space = rm - wm -1;
+        if (!space)
+          break;
+        space = MIN (space, length);
+        std::copy (data, &data[space], &m_buffer[wm]);
+        wm = (wm + space) % m_size;
+        data += space;
+        length -= space;
+      }
+    RAPICORN_SFENCE; // wmb ensures m_buffer writes are made visible before the m_wmark update
+    m_wmark.store (wm);
+    return orig_length - length;
+  }
+  uint
+  n_readable() const
+  {
+    const uint wm = m_wmark.load();
+    const uint rm = m_rmark.load();
+    const uint space = (m_size + wm - rm) % m_size;
+    return space;
+  }
+  uint
+  read (uint length, T *data, bool partial = true)
+  {
+    const uint orig_length = length;
+    RAPICORN_LFENCE; // rmb ensures m_buffer contents are seen before m_wmark updates
+    const uint wm = m_wmark.load();
+    uint rm = m_rmark.load();
+    uint space = (m_size + wm - rm) % m_size;
+    if (!partial && length > space)
+      return 0;
+    while (length)
+      {
+        if (wm < rm)
+          space = m_size - rm;
+        else
+          space = wm - rm;
+        if (!space)
+          break;
+        space = MIN (space, length);
+        std::copy (&m_buffer[rm], &m_buffer[rm + space], data);
+        rm = (rm + space) % m_size;
+        data += space;
+        length -= space;
+      }
+    m_rmark.store (rm);
+    return orig_length - length;
+  }
+};
 
-/* --- thread_yield --- */
 static inline void
 handle_contention ()
 {
@@ -405,8 +494,7 @@ handle_contention ()
   usleep (500); // 1usec is the minimum value to cause an effect
 }
 
-/* --- ring buffer --- */
-typedef Atomic0::RingBuffer<int> IntRingBuffer;
+typedef RingBuffer<int> IntRingBuffer;
 class IntSequence {
   uint32 accu;
 public:
@@ -414,24 +502,30 @@ public:
   inline int32  gen_int    () { accu = 1664525 * accu + 1013904223; return accu; }
 };
 #define CONTENTION_PRINTF       while (0) printerr
-struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
+
+struct RingBufferWriter : public IntSequence {
   IntRingBuffer *ring;
+  uint64         total;
   uint           ring_buffer_test_length;
   RingBufferWriter (IntRingBuffer *rb,
                     uint           rbtl) :
-    Thread ("RingBufferWriter"),
-    ring (rb), ring_buffer_test_length (rbtl)
-  {}
-  virtual void
-  run ()
+    ring (rb), total (0), ring_buffer_test_length (rbtl)
   {
-    TINFO ("%s start.", Thread::Self::name().c_str());
+    ThreadInfo::self().name ("RingBufferWriter");
+  }
+  void
+  run()
+  {
+    TINFO ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = Test::rand_int() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
         int buffer[n], *b = buffer;
         for (uint i = 0; i < n; i++)
-          b[i] = gen_int();
+          {
+            b[i] = gen_int();
+            total += b[i];
+          }
         uint j = n;
         while (j)
           {
@@ -447,21 +541,24 @@ struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
           TOK();
         l += n;
       }
-    TINFO ("%s done.", Thread::Self::name().c_str());
+    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
   }
 };
-struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
+
+struct RingBufferReader : public IntSequence {
   IntRingBuffer *ring;
+  uint64         total;
   uint           ring_buffer_test_length;
   RingBufferReader (IntRingBuffer *rb,
                     uint           rbtl) :
-    Thread ("RingBufferReader"),
-    ring (rb), ring_buffer_test_length (rbtl)
-  {}
-  virtual void
-  run ()
+    ring (rb), total (0), ring_buffer_test_length (rbtl)
   {
-    TINFO ("%s start.", Thread::Self::name().c_str());
+    ThreadInfo::self().name ("RingBufferReader");
+  }
+  void
+  run()
+  {
+    TINFO ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = ring->n_readable();
@@ -483,12 +580,15 @@ struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
             CONTENTION_PRINTF (k ? "+" : "\\");
           }
         for (uint i = 0; i < k; i++)
-          TCMP (b[i], ==, gen_int());
+          {
+            TCMP (b[i], ==, gen_int());
+            total += b[i];
+          }
         if (l / 499999 != (l + k) / 499999)
           TOK();
         l += k;
       }
-    TINFO ("%s done.", Thread::Self::name().c_str());
+    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -497,7 +597,7 @@ test_ring_buffer ()
 {
   static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
-  Atomic0::RingBuffer<char> rb1 (ttl);
+  RingBuffer<char> rb1 (ttl);
   TCMP (rb1.n_writable(), ==, ttl);
   n = rb1.write (ttl, testtext);
   TCMP (n, ==, ttl);
@@ -511,48 +611,38 @@ test_ring_buffer ()
   TCMP (strncmp (buffer, testtext, n), ==, 0);
   TDONE();
 
-  /* check lower end ring buffer sizes (high contention test) */
+  // check miniscule ring buffer sizes (high contention test)
   for (uint step = 1; step < 8; step++)
     {
       uint ring_buffer_test_length = 17 * step + (rand() % 19);
       TSTART ("Threads/AsyncRingBuffer-%d-%d", step, ring_buffer_test_length);
       IntRingBuffer irb (step);
-      RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
-      ref_sink (rbr);
-      RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
-      ref_sink (rbw);
-      TASSERT (rbr && rbw);
-      rbr->start();
-      rbw->start();
-      rbw->wait_for_exit();
-      rbr->wait_for_exit();
-      TASSERT (rbr && rbw);
-      unref (rbr);
-      unref (rbw);
+      RingBufferReader rbr (&irb, ring_buffer_test_length);
+      RingBufferWriter rbw (&irb, ring_buffer_test_length);
+      TASSERT (rbr.total == 0 && rbr.total == rbw.total);
+      std::thread r_thread = std::thread (&RingBufferReader::run, std::ref (rbr));
+      std::thread w_thread = std::thread (&RingBufferWriter::run, std::ref (rbw));
+      r_thread.join();
+      w_thread.join();
+      TASSERT (rbr.total != 0 && rbr.total == rbw.total);
       TDONE();
     }
 
-  /* check big ring buffer sizes */
+  // check big ring buffer sizes
   TSTART ("Threads/AsyncRingBuffer-big");
   uint ring_buffer_test_length = 999999 * (Test::slow() ? 20 : 1);
   IntRingBuffer irb (16384 + (lrand48() % 8192));
-  RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
-  ref_sink (rbr);
-  RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
-  ref_sink (rbw);
-  TASSERT (rbr && rbw);
-  rbr->start();
-  rbw->start();
-  rbw->wait_for_exit();
-  rbr->wait_for_exit();
-  TASSERT (rbr && rbw);
-  unref (rbr);
-  unref (rbw);
+  RingBufferReader rbr (&irb, ring_buffer_test_length);
+  RingBufferWriter rbw (&irb, ring_buffer_test_length);
+  TASSERT (rbr.total == 0 && rbr.total == rbw.total);
+  std::thread r_thread = std::thread (&RingBufferReader::run, std::ref (rbr));
+  std::thread w_thread = std::thread (&RingBufferWriter::run, std::ref (rbw));
+  r_thread.join();
+  w_thread.join();
+  TASSERT (rbr.total != 0 && rbr.total == rbw.total);
 }
 REGISTER_TEST ("Threads/RingBuffer", test_ring_buffer);
 REGISTER_SLOWTEST ("Threads/RingBuffer (slow)", test_ring_buffer);
-
-#endif
 
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;
