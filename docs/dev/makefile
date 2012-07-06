@@ -74,7 +74,7 @@ all-docs: $(git_stamp) doxygen.cfg
 	rm -rf html.tmp/
 
 upload: all
-	rsync -aHP --del '--filter=P /*/' html/  testbit:/srv/dev/html/rapicorn/
+	rsync -zaHP --del '--filter=P /*/' html/  testbit:/srv/dev/html/rapicorn/
 
 clean:
 	rm -f build-stamp
