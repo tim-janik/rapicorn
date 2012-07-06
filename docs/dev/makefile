@@ -7,7 +7,9 @@ build-stamp:
 
 top_srcdir  = ../..
 git_stamp   = $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
-SED_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
+GBR_VERSION   = $(shell git name-rev HEAD 2>/dev/null | sed 's/.* //')
+PRJ_VERSION   = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
+DOC_VERSION = $(or $(GBR_VERSION), $(PRJ_VERSION))
 SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
 
 DOC_FILES   = rapicorn-core.hh rapicorn.hh
@@ -62,17 +64,17 @@ all-docs: $(git_stamp) doxygen.cfg
 	&& echo "INPUT		  = $(SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
-	&& echo -n "PROJECT_NUMBER = $(SED_VERSION)" \
+	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
 	) | nice $(DOXYGEN) -
 	rm -rf $(SRCTREE)/
 	sed $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
-	mv html.tmp/html/ html.tmp/$(SED_VERSION)/
-	ln -s $(SED_VERSION) html.tmp/latest
+	mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
+	test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
 	rsync -aH --del html.tmp/ html/
 	rm -rf html.tmp/
 
 upload: all
-	rsync -aHP --del '--filter=P /*/' html/  dev.testbit.eu:/srv/dev/html/rapicorn/
+	rsync -aHP --del '--filter=P /*/' html/  testbit:/srv/dev/html/rapicorn/
 
 clean:
 	rm -f build-stamp
