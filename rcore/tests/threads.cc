@@ -175,9 +175,8 @@ test_mutex (void)
   locked = static_mutex.try_lock();
   TASSERT (locked);
   static_mutex.unlock();
-#if 0
   // testing static_rec_mutex
-  static RecMutex static_rec_mutex;
+  static Mutex static_rec_mutex (RECURSIVE_LOCK);
   locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.lock();
@@ -189,7 +188,6 @@ test_mutex (void)
   locked = static_rec_mutex.try_lock();
   TASSERT (locked);
   static_rec_mutex.unlock();
-#endif
   // condition tests
   static_cond.signal();
   static_cond.broadcast();
@@ -312,6 +310,9 @@ test_scoped_locks()
     ScopedLock<Mutex> locker (mutex1, BALANCED_LOCK);
   } // ~ScopedLock (BALANCED_LOCK) now does nothing
   TCMP (lockable (mutex1), ==, true);
+  // test ScopedLock with recursive mutex
+  Mutex rmutex (RECURSIVE_LOCK);
+  test_recursive_scoped_lock (rmutex, 999);
 }
 REGISTER_TEST ("Threads/Scoped Locks", test_scoped_locks);
 

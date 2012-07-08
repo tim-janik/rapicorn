@@ -8,6 +8,8 @@
 
 namespace Rapicorn {
 
+struct RECURSIVE_LOCK {} constexpr RECURSIVE_LOCK {}; ///< Flag for recursive Mutex initialization.
+
 /**
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
  * This class supports static construction.
@@ -16,6 +18,7 @@ class Mutex {
   pthread_mutex_t m_mutex;
 public:
   constexpr Mutex       () : m_mutex (PTHREAD_MUTEX_INITIALIZER) {}
+  constexpr Mutex       (struct RECURSIVE_LOCK) : m_mutex (PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) {}
   void      lock        ()      { pthread_mutex_lock (&m_mutex); }
   void      unlock      ()      { pthread_mutex_unlock (&m_mutex); }
   bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&m_mutex); }
