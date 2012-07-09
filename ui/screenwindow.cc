@@ -18,22 +18,32 @@ ScreenWindow::FactoryBase::register_backend (FactoryBase &factory)
 }
 
 /* --- ScreenWindow --- */
+template<class InputIterator, class Function> InputIterator
+find_match (InputIterator first, InputIterator last, Function f)
+{
+  for (; first != last; ++first)
+    if (f (first))
+      break;
+  return first;
+}
+
 ScreenWindow*
 ScreenWindow::create_screen_window (const String                &backend_name,
                                     WindowType                   screen_window_type,
                                     ScreenWindow::EventReceiver &receiver)
 {
-  std::list<ScreenWindow::FactoryBase*>::iterator it;
-  for (it = screen_window_backends->begin(); it != screen_window_backends->end(); it++)
-    if (backend_name == (*it)->m_name)
-      return (*it)->create_screen_window (screen_window_type, receiver);
-  if (backend_name == "auto")
+  auto itb = screen_window_backends->begin(), ite = screen_window_backends->end(), it = ite;
+  if (backend_name != "auto")
+    it = find_match (itb, ite, [backend_name] (decltype (itb) it) { return (*it)->m_name == backend_name; });
+  else
     {
-      /* cruel approximation of automatic selection logic */
-      it = screen_window_backends->begin();
-      if (it != screen_window_backends->end())
-        return (*it)->create_screen_window (screen_window_type, receiver);
+      // rough implementation of automatic backend selection
+      it = find_match (itb, ite, [backend_name] (decltype (itb) it) { return (*it)->m_name == "X11Window"; });
+      if (it == ite)
+        it = find_match (itb, ite, [backend_name] (decltype (itb) it) { return (*it)->m_name == "GtkWindow"; });
     }
+  if (it != ite)
+    return (*it)->create_screen_window (screen_window_type, receiver);
   return NULL;
 }
 
