@@ -4,6 +4,7 @@
 #include <cairo/cairo-xlib.h>
 #include <fcntl.h> // for wakeup pipe
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 #define XDEBUG(...)     RAPICORN_KEY_DEBUG ("X11", __VA_ARGS__)
@@ -34,7 +35,9 @@ struct X11Context {
   int                   depth;
   Window                root_window;
   map<size_t, X11Item*> x11ids;
-  X11Context (const String &x11display);
+  explicit              X11Context (const String &x11display);
+  Atom                  atom       (const String &text, bool force_create = true);
+  String                atom       (Atom atom) const;
 };
 
 X11Context::X11Context (const String &x11display) :
@@ -52,6 +55,25 @@ X11Context::X11Context (const String &x11display) :
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);
   root_window = XRootWindow (display, screen);
+}
+
+Atom
+X11Context::atom (const String &text, bool force_create)
+{
+  Atom a = XInternAtom (display, text.c_str(), !force_create);
+  // FIXME: optimize roundtrips
+  return a;
+}
+
+String
+X11Context::atom (Atom atom) const
+{
+  char *res = XGetAtomName (display, atom);
+  // FIXME: optimize roundtrips
+  String result (res ? res : "");
+  if (res)
+    XFree (res);
+  return result;
 }
 
 static X11Context&
@@ -77,7 +99,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   State                 m_state;
   Color                 m_average_background;
   Window                m_window;
-  int                   m_width, m_height, m_last_motion_time;
+  int                   m_last_motion_time;
   bool                  m_mapped, m_focussed;
   EventContext          m_event_context;
   std::vector<Rect>     m_expose_rectangles;
@@ -104,11 +126,12 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
 static ScreenWindow::Factory<ScreenWindowX11> screen_window_x11_factory ("X11Window");
 
 ScreenWindowX11::ScreenWindowX11(const String &backend_name, WindowType screen_window_type, EventReceiver &receiver) :
-  x11context (x11_context()), m_receiver (receiver), m_info ({ WindowType (screen_window_type) }),
-  m_state ({ false, false, false, WindowState (0), NAN, NAN }), m_average_background (0xff808080),
-  m_window (0), m_width (33), m_height (33), m_last_motion_time (0), m_mapped (false), m_focussed (false)
+  x11context (x11_context()), m_receiver (receiver), m_average_background (0xff808080),
+  m_window (0), m_last_motion_time (0), m_mapped (false), m_focussed (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  m_info.window_type = screen_window_type;
+  const Config sample_config;
   const bool is_override_redirect =
     (m_info.window_type == WINDOW_TYPE_DESKTOP ||
      m_info.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
@@ -131,7 +154,7 @@ ScreenWindowX11::ScreenWindowX11(const String &backend_name, WindowType screen_w
   unsigned long attribute_mask = CWWinGravity | CWBitGravity |
                                  /*CWBackPixel |*/ CWBorderPixel | CWOverrideRedirect | CWEventMask;
   const int border = 3;
-  m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, m_width, m_height, border,
+  m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, sample_config.request_width, sample_config.request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   if (m_window)
     x11context.x11ids[m_window] = this;
@@ -160,7 +183,8 @@ ScreenWindowX11::ScreenWindowX11(const String &backend_name, WindowType screen_w
   // configure state for this window
   {
     XConfigureEvent xev = { ConfigureNotify, /*serial*/ 0, true, x11context.display, m_window, m_window,
-                            0, 0, m_width, m_height, border, /*above*/ 0, is_override_redirect };
+                            0, 0, int (sample_config.request_width), int (sample_config.request_height), border, // FIXME: uncast
+                            /*above*/ 0, is_override_redirect };
     XEvent xevent;
     xevent.xconfigure = xev;
     process_event (xevent);
@@ -225,12 +249,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (xev.event != xev.window)
         break;
       EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
-      if (m_width != xev.width || m_height != xev.height)
+      if (m_state.width != xev.width || m_state.height != xev.height)
         {
           m_expose_rectangles.push_back (Rect (Point (0, 0), xev.width, xev.height));
-          m_width = xev.width;
-          m_height = xev.height;
-          enqueue_locked (create_event_win_size (m_event_context, 0, m_width, m_height));
+          m_state.width = xev.width;
+          m_state.height = xev.height;
+          enqueue_locked (create_event_win_size (m_event_context, 0, m_state.width, m_state.height));
         }
       consumed = true;
       break; }
@@ -339,9 +363,9 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
     return;
   assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
   // surface for drawing on the X11 window
-  cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_width, m_height);
+  cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_state.width, m_state.height);
   assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
-  cairo_xlib_surface_set_size (xsurface, m_width, m_height);
+  cairo_xlib_surface_set_size (xsurface, m_state.width, m_state.height);
   assert_return (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
   // cairo context
   cairo_t *xcr = cairo_create (xsurface);
@@ -374,35 +398,11 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
 }
 
 void
-ScreenWindowX11::present_screen_window () { /*FIXME*/ }
-
-void
 ScreenWindowX11::enqueue_locked (Event *event)
 {
   // ScopedLock<Mutex> x11locker (x11_rmutex);
   m_receiver.enqueue_async (event);
 }
-
-void
-ScreenWindowX11::start_user_move (uint button, double root_x, double root_y) { /*FIXME*/ }
-
-void
-ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, AnchorType edge) { /*FIXME*/ }
-
-bool
-ScreenWindowX11::visible (void) { /*FIXME*/ return false; }
-
-bool
-ScreenWindowX11::viewable (void) { /*FIXME*/ return false; }
-
-void
-ScreenWindowX11::hide (void) { /*FIXME*/ }
-
-void
-ScreenWindowX11::enqueue_win_draws (void) { /*FIXME*/ }
-
-uint
-ScreenWindowX11::last_draw_stamp () { /*FIXME*/ return 0; }
 
 ScreenWindow::Info
 ScreenWindowX11::get_info ()
@@ -418,11 +418,70 @@ ScreenWindowX11::get_state () // FIXME
   return m_state;
 }
 
+enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
+
+static bool
+set_text_property (X11Context &x11context, Window window, const String &property, XICCEncodingStyle ecstyle,
+                   const String &value, XPEmpty when_empty = KEEP_EMPTY)
+{
+  bool success = true;
+  if (when_empty == DELETE_EMPTY && value.empty())
+    XDeleteProperty (x11context.display, window, x11context.atom (property));
+  else if (ecstyle == XUTF8StringStyle)
+    XChangeProperty (x11context.display, window, x11context.atom (property), x11context.atom ("UTF8_STRING"), 8,
+                     PropModeReplace, (uint8*) value.c_str(), value.size());
+  else
+    {
+      char *text = const_cast<char*> (value.c_str());
+      XTextProperty xtp = { 0, };
+      const int result = Xutf8TextListToTextProperty (x11context.display, &text, 1, ecstyle, &xtp);
+      printerr ("XUTF8CONVERT: target=%s len=%zd result=%d: %s -> %s\n", x11context.atom(xtp.encoding).c_str(), value.size(), result, text, xtp.value);
+      if (result >= 0 && xtp.nitems && xtp.value)
+        XChangeProperty (x11context.display, window, x11context.atom (property), xtp.encoding, xtp.format,
+                         PropModeReplace, xtp.value, xtp.nitems);
+      else
+        success = false;
+      if (xtp.value)
+        XFree (xtp.value);
+    }
+  return success;
+}
+
 void
-ScreenWindowX11::set_config (const Config &config, bool force_resize_draw) { /*FIXME*/ }
+ScreenWindowX11::set_config (const Config &config, bool force_resize_draw)
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  set_text_property (x11context, m_window, "WM_NAME", XStdICCTextStyle, config.title);                          // ICCCM
+  set_text_property (x11context, m_window, "_NET_WM_NAME", XUTF8StringStyle, config.title);                     // EWMH
+  set_text_property (x11context, m_window, "WM_WINDOW_ROLE", XStringStyle, config.session_role, DELETE_EMPTY);  // ICCCM
+}
 
 void
 ScreenWindowX11::beep() { /*FIXME*/ }
+
+void
+ScreenWindowX11::hide (void) { /*FIXME*/ }
+
+void
+ScreenWindowX11::present_screen_window () { /*FIXME*/ }
+
+void
+ScreenWindowX11::start_user_move (uint button, double root_x, double root_y) { /*FIXME*/ }
+
+void
+ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, AnchorType edge) { /*FIXME*/ }
+
+bool
+ScreenWindowX11::visible (void) { /*FIXME*/ return false; }
+
+bool
+ScreenWindowX11::viewable (void) { /*FIXME*/ return false; }
+
+void
+ScreenWindowX11::enqueue_win_draws (void) { /*FIXME*/ }
+
+uint
+ScreenWindowX11::last_draw_stamp () { /*FIXME*/ return 0; }
 
 void
 ScreenWindowX11::trigger_hint_action (WindowHint window_hint) { /*FIXME*/ }

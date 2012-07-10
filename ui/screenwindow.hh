@@ -14,6 +14,7 @@ public:
   /* screen_window info (constant during runtime) */
   struct Info {
     WindowType  window_type;
+    constexpr   Info();
   };
   /* screen_window state */
   typedef enum {
@@ -32,6 +33,7 @@ public:
     bool        has_toplevel_focus;     /* for embedded windows, this may be false allthough is_active==true */
     WindowState window_state;
     double      width, height;
+    constexpr   State();
   };
   /* screen_window configuration */
   typedef enum {
@@ -65,19 +67,7 @@ public:
     double      width_inc,      height_inc;
     double      min_aspect,     max_aspect;     /* horizontal / vertical */
     Color       average_background;
-    explicit    Config() :
-      modal (false),
-      window_hint (WindowHint (HINT_DECORATED | HINT_ACCEPT_FOCUS | HINT_DELETABLE)),
-      root_x (NAN), root_y (NAN),
-      request_width (33), request_height (33),
-      min_width (0), min_height (0),
-      initial_width (0), initial_height (0),
-      max_width (0), max_height (0),
-      base_width (0), base_height (0),
-      width_inc (0), height_inc (0),
-      min_aspect (0), max_aspect (0),
-      average_background (0xff808080)
-    {}
+    inline      Config();
   };
   /* --- frontend API --- */
   struct EventReceiver {
@@ -131,7 +121,26 @@ public:
   };
 };
 
-/* internal */
+// == Implementations ==
+constexpr
+ScreenWindow::State::State() :
+  local_blitting (false), is_active (false), has_toplevel_focus (false), window_state (WindowState (0)), width (NAN), height (NAN)
+{}
+
+constexpr
+ScreenWindow::Info::Info() :
+  window_type (WindowType (0))
+{}
+
+ScreenWindow::Config::Config() :
+  modal (false), window_hint (WindowHint (HINT_DECORATED | HINT_ACCEPT_FOCUS | HINT_DELETABLE)),
+  root_x (NAN), root_y (NAN), request_width (33), request_height (33), min_width (0), min_height (0),
+  initial_width (0), initial_height (0), max_width (0), max_height (0), base_width (0), base_height (0),
+  width_inc (0), height_inc (0), min_aspect (0), max_aspect (0), average_background (0xff808080)
+{}
+
+
+// internal
 void rapicorn_gtk_threads_enter         ();
 void rapicorn_gtk_threads_leave         ();
 void rapicorn_gtk_threads_shutdown      ();
