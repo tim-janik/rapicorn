@@ -155,6 +155,7 @@ public:
   virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;
   void                        factory_context   (FactoryContext *fc);
+  UserSource                  user_source       () const;
   ColorSchemeType             color_scheme      () const;
   void                        color_scheme      (ColorSchemeType cst);
   /* override requisition */

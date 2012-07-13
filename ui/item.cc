@@ -1370,6 +1370,12 @@ ItemImpl::factory_context (FactoryContext *fc)
   m_factory_context = fc;
 }
 
+UserSource
+ItemImpl::user_source () const
+{
+  return Factory::factory_context_source (factory_context());
+}
+
 static DataKey<ColorSchemeType> item_color_scheme_key;
 
 ColorSchemeType

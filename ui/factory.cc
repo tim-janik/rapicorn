@@ -186,6 +186,20 @@ factory_context_type (FactoryContext *fc)
   return xnode->get_attribute ("id");
 }
 
+UserSource
+factory_context_source (FactoryContext *fc)
+{
+  assert_return (fc != NULL, UserSource (""));
+  const XmlNode *xnode = (XmlNode*) fc;
+  if (xnode->name() != "tmpl:define") // lookup definition node from child node
+    {
+      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      assert_return (xnode != NULL, UserSource (""));
+    }
+  assert_return (xnode->name() == "tmpl:define", UserSource (""));
+  return UserSource (xnode->parsed_file(), xnode->parsed_line());
+}
+
 static void
 factory_context_list_types (StringSeq &types, FactoryContext *fc, const bool need_ids, const bool need_variants)
 {
