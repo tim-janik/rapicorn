@@ -98,6 +98,16 @@ public:
   enum { TRUTH = sizeof (f()) != sizeof (f ((Y*) 0)), };
 };
 
+// === User Messages ==
+class UserSource;
+void    user_notice     (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void    user_warning    (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+
+struct UserSource {
+  String line, filename; int lineno;
+  UserSource (String _filename, int _lineno = 0);
+};
+
 // === source location strings ===
 #define RAPICORN_STRLOC()                       (__FILE__ ":" RAPICORN_STRINGIFY (__LINE__))    ///< Return "FILE:LINE"
 #define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
