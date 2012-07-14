@@ -14,6 +14,14 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #define N_(str) (str)
 #endif
 
+// == Macros ==
+#ifdef RAPICORN_CONVENIENCE
+/// Produce a const char* string, wrapping @a str into C-style double quotes.
+#define CQUOTE(str)                                     RAPICORN_CQUOTE(str)
+/// Create a Rapicorn::StringVector, from a const char* C-style array.
+#define STRING_VECTOR_FROM_ARRAY(ConstCharArray)        RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)
+#endif // RAPICORN_CONVENIENCE
+
 // == String ==
 String                          string_multiply          (const String &s,
                                                           uint64       count);
@@ -131,13 +139,14 @@ bool    text_convert    (const String &to_charset,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
 
-// == StringVector ==
+// == Implementations ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \
   Rapicorn::StringVector __a;                                           \
   const Rapicorn::uint64 __l = RAPICORN_ARRAY_SIZE (ConstCharArray);    \
   for (Rapicorn::uint64 __ai = 0; __ai < __l; __ai++)                   \
     __a.push_back (ConstCharArray[__ai]);                               \
   __a; })
+#define RAPICORN_CQUOTE(str)    (Rapicorn::string_to_cquote (str).c_str())
 
 } // Rapicorn
 
