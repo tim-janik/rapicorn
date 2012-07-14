@@ -121,6 +121,21 @@ public:
   };
 };
 
+// == ScreenDriver ==
+class ScreenDriver : protected NonCopyable {
+protected:
+  ScreenDriver         *m_sibling;
+  String                m_name;
+  int                   m_priority;
+public:
+  explicit              ScreenDriver            (const String &name, int priority = 0);
+  virtual bool          open                    () = 0;
+  virtual ScreenWindow* create_screen_window    (WindowType screen_window_type, ScreenWindow::EventReceiver &receiver) = 0;
+  virtual void          close                   () = 0;
+  static ScreenDriver*  open_screen_driver      (const String &backend_name);
+  static bool           driver_priority_lesser  (ScreenDriver *d1, ScreenDriver *d2);
+};
+
 // == Implementations ==
 constexpr
 ScreenWindow::State::State() :

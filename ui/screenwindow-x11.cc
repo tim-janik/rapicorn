@@ -19,6 +19,11 @@
 namespace { // Anon
 using namespace Rapicorn;
 
+// == declarations ==
+class X11Thread;
+class X11Context;
+static X11Thread*       start_x11_thread (X11Context &x11context);
+static void             stop_x11_thread  (X11Thread *x11_thread);
 static Mutex x11_rmutex (RECURSIVE_LOCK);
 
 // == X11Item ==
@@ -29,6 +34,7 @@ struct X11Item {
 
 // == X11Context ==
 struct X11Context {
+  X11Thread            *x11_thread;
   Display              *display;
   int                   screen;
   Visual               *visual;
@@ -38,10 +44,11 @@ struct X11Context {
   explicit              X11Context (const String &x11display);
   Atom                  atom       (const String &text, bool force_create = true);
   String                atom       (Atom atom) const;
+  /*dtor*/             ~X11Context ();
 };
 
 X11Context::X11Context (const String &x11display) :
-  display (NULL), screen (0), visual (NULL), depth (0)
+  x11_thread (NULL), display (NULL), screen (0), visual (NULL), depth (0)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   const char *s = x11display.c_str();
@@ -49,12 +56,28 @@ X11Context::X11Context (const String &x11display) :
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
   if (!display)
     return;
+  x11_thread = start_x11_thread (*this);
   if (1) // FIXME: toggle sync
     XSynchronize (display, true);
   screen = DefaultScreen (display);
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);
   root_window = XRootWindow (display, screen);
+}
+
+X11Context::~X11Context ()
+{
+  if (x11_thread)
+    {
+      stop_x11_thread (x11_thread);
+      x11_thread = NULL;
+    }
+  x11ids.clear();
+  if (display)
+    {
+      XCloseDisplay (display);
+      display = NULL;
+    }
 }
 
 Atom
@@ -91,9 +114,50 @@ x11_context ()
   return *x11p;
 }
 
+// == ScreenDriverX11 ==
+struct ScreenDriverX11 : ScreenDriver {
+  X11Context *m_x11context;
+  uint        m_open_count;
+  virtual bool
+  open ()
+  {
+    if (!m_x11context)
+      {
+        assert_return (m_open_count == 0, false);
+        const char *s = getenv ("DISPLAY");
+        String ds = s ? s : "";
+        X11Context *x11context = new X11Context (ds);
+        if (!x11context->display)
+          {
+            delete x11context;
+            return false;
+          }
+        m_x11context = x11context;
+      }
+    m_open_count++;
+    return true;
+  }
+  virtual void
+  close ()
+  {
+    assert_return (m_open_count > 0);
+    m_open_count--;
+    if (!m_open_count)
+      {
+        X11Context *x11context = m_x11context;
+        m_x11context = NULL;
+        delete x11context;
+      }
+  }
+  virtual ScreenWindow* create_screen_window (WindowType screen_window_type, ScreenWindow::EventReceiver &receiver);
+  ScreenDriverX11() : ScreenDriver ("X11Window", -1), m_x11context (NULL), m_open_count (0) {}
+};
+static ScreenDriverX11 screen_driver_x11;
+
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
+  ScreenDriverX11      &m_x11driver;
   EventReceiver        &m_receiver;
   Info                  m_info;
   State                 m_state;
@@ -103,7 +167,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   bool                  m_mapped, m_focussed;
   EventContext          m_event_context;
   std::vector<Rect>     m_expose_rectangles;
-  explicit              ScreenWindowX11         (const String &backend_name, WindowType screen_window_type, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, WindowType screen_window_type, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual void          trigger_hint_action     (WindowHint hint);
   virtual void          start_user_move         (uint button, double root_x, double root_y);
@@ -123,13 +187,20 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
 };
-static ScreenWindow::Factory<ScreenWindowX11> screen_window_x11_factory ("X11Window");
 
-ScreenWindowX11::ScreenWindowX11(const String &backend_name, WindowType screen_window_type, EventReceiver &receiver) :
-  x11context (x11_context()), m_receiver (receiver), m_average_background (0xff808080),
+ScreenWindow*
+ScreenDriverX11::create_screen_window (WindowType screen_window_type, ScreenWindow::EventReceiver &receiver)
+{
+  assert_return (m_open_count > 0, NULL);
+  return new ScreenWindowX11 (*this, screen_window_type, receiver);
+}
+
+ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, WindowType screen_window_type, EventReceiver &receiver) :
+  x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
   m_window (0), m_last_motion_time (0), m_mapped (false), m_focussed (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  m_x11driver.open();
   m_info.window_type = screen_window_type;
   const Config sample_config;
   const bool is_override_redirect =
@@ -140,7 +211,6 @@ ScreenWindowX11::ScreenWindowX11(const String &backend_name, WindowType screen_w
      m_info.window_type == WINDOW_TYPE_NOTIFICATION ||
      m_info.window_type == WINDOW_TYPE_COMBO ||
      m_info.window_type == WINDOW_TYPE_DND);
-  assert (backend_name == "X11Window");
   XSetWindowAttributes attributes;
   attributes.event_mask        = ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask |
                                  KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
@@ -195,6 +265,7 @@ ScreenWindowX11::~ScreenWindowX11()
 {
   if (m_window)
     x11context.x11ids.erase (m_window);
+  m_x11driver.close();
 }
 
 void
@@ -487,12 +558,8 @@ void
 ScreenWindowX11::trigger_hint_action (WindowHint window_hint) { /*FIXME*/ }
 
 // == X11 thread ==
-class X11Thread;
-static X11Thread *x11_thread = NULL;
-static std::thread x11_thread_handle;
 class X11Thread {
   X11Context &x11context;
-  X11Thread (X11Context &ix11context) : x11context (ix11context) {}
   bool
   filter_event (const XEvent &xevent)
   {
@@ -549,18 +616,34 @@ class X11Thread {
           XDEBUG ("select(%d): %s", ConnectionNumber (x11context.display), strerror (errno));
       }
   }
+  std::thread m_thread_handle;
 public:
-  static void
-  start (const StringVector &args)
+  X11Thread (X11Context &ix11context) : x11context (ix11context) {}
+  void
+  start()
   {
     ScopedLock<Mutex> x11locker (x11_rmutex);
-    do_once {
-      X11Context &x11context = x11_context();
-      x11_thread = new X11Thread (x11context);
-      x11_thread_handle = std::thread (&X11Thread::run, x11_thread);
-    }
+    assert_return (std::thread::id() == m_thread_handle.get_id());
+    m_thread_handle = std::thread (&X11Thread::run, this);
   }
 };
-static InitHook init_x11_thread ("ui-core/50 Init Backend: X11 (threaded)", X11Thread::start);
+
+static X11Thread*
+start_x11_thread (X11Context &x11context)
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  X11Thread *x11_thread = new X11Thread (x11context);
+  x11_thread->start();
+  return x11_thread;
+}
+
+static void
+stop_x11_thread (X11Thread *x11_thread)
+{
+  assert_return (x11_thread != NULL);
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  FIXME ("stop and join X11Thread");
+  assert_unreached();
+}
 
 } // Rapicorn
