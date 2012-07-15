@@ -645,12 +645,17 @@ WindowImpl::draw_now ()
     {
       // force delivery of any pending exposes
       expose_now();
-      // render invalidated contents
+      // determine invalidated rendering region
       Region region = area;
       region.intersect (peek_expose_region());
       discard_expose_region();
-
-      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (area.width), iceil (area.height));
+      // rendering rectangle
+      Rect rrect = region.extents();
+      const int x1 = ifloor (rrect.x), y1 = ifloor (rrect.y), x2 = iceil (rrect.x + rrect.width), y2 = iceil (rrect.y + rrect.height);
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
+      cairo_surface_set_device_offset (surface, -x1, -y1);
+      if (0)
+        printerr ("render-sruface: %+d%+d%+dx%d coverage=%.1f%%\n", x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height));
       critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
