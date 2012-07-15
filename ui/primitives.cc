@@ -259,6 +259,29 @@ Color::set_hsv (double hue,             /* 0..360: 0=red, 120=green, 240=blue */
     }
 }
 
+void
+Color::set_hsv_value (double v)
+{
+  double frac = v / get_hsv_value();
+  double r = red() * frac, g = green() * frac, b = blue() * frac;
+  set (iround (r), iround (g), iround (b));
+}
+
+void
+Color::tint (double hsv_shift, double saturation_factor, double value_factor)
+{
+  double hue, saturation, value;
+  get_hsv (&hue, &saturation, &value);
+  saturation *= saturation_factor;
+  value *= value_factor;
+  hue += hsv_shift;
+  if (hue > 360)
+    hue -= 360;
+  if (hue < 0)
+    hue += 360;
+  set_hsv (hue, MIN (1, saturation), MIN (1, value));
+}
+
 Color
 Color::from_name (const String &color_name)
 {

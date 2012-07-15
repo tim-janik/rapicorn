@@ -288,19 +288,14 @@ public:
   Color&        green  (uint8 v) { argb_pixel &= 0xffff00ff; argb_pixel |= v << 8; return *this; }
   Color&        blue   (uint8 v) { argb_pixel &= 0xffffff00; argb_pixel |= v << 0; return *this; }
   double        get_hsv_value () { return max (max (red(), green()), blue()) / 255.; }
+  void          set_hsv_value (double v);
   void          get_hsv (double *huep,          /* 0..360: 0=red, 120=green, 240=blue */
                          double *saturationp,   /* 0..1 */
                          double *valuep);       /* 0..1 */
   void          set_hsv (double hue,            /* 0..360: 0=red, 120=green, 240=blue */
                          double saturation,     /* 0..1 */
                          double value);         /* 0..1 */
-  void
-  set_hsv_value (double v)
-  {
-    double frac = v / get_hsv_value();
-    double r = red() * frac, g = green() * frac, b = blue() * frac;
-    set (iround (r), iround (g), iround (b));
-  }
+  void          tint    (double hsv_shift, double saturation_factor, double value_factor);
   uint8         channel (uint nth) const
   {
     switch (nth)
