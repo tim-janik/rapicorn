@@ -132,9 +132,6 @@ WindowImpl::WindowImpl() :
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
-  /* adjust default ScreenWindow config */
-  m_config.min_width = 13;
-  m_config.min_height = 7;
   /* create event loop (auto-starts) */
   m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
@@ -197,9 +194,13 @@ WindowImpl::resize_screen_window()
       m_config.request_width = rsize.width;
       m_config.request_height = rsize.height;
       m_pending_win_size = true;
-      m_screen_window->enqueue_win_draws();
       discard_expose_region(); // we'll get a new WIN_DRAW event
-      m_screen_window->set_config (m_config, true);
+      if (m_config.title.empty())
+        {
+          user_warning (this->user_source(), "window title is unset");
+          m_config.title = "Foo - fröbenbaz - (日本人, Nihonjin, Nipponjin)"; // FIXME
+        }
+      m_screen_window->configure (m_config);
       return;
     }
   // screen window size is good, allocate it
@@ -546,6 +547,7 @@ WindowImpl::dispatch_win_size_event (const Event &event)
       discard_expose_region(); // we'll get a new WIN_DRAW event
       if (0)
         DEBUG ("win-size: %f %f", wevent->width, wevent->height);
+      expose (); // FIXME
       handled = true;
     }
   return handled;
@@ -586,8 +588,6 @@ WindowImpl::expose_now ()
 {
   if (m_screen_window)
     {
-      /* force delivery of any pending update events */
-      m_screen_window->enqueue_win_draws();
       /* collect all WIN_DRAW events */
       m_async_mutex.lock();
       std::list<Event*> events;
@@ -946,7 +946,7 @@ WindowImpl::enqueue_async (Event *event)
 bool
 WindowImpl::viewable ()
 {
-  return visible() && m_screen_window && m_screen_window->visible();
+  return visible() && m_screen_window && m_screen_window->viewable();
 }
 
 void
@@ -955,8 +955,7 @@ WindowImpl::idle_show()
   if (m_screen_window)
     {
       /* request size, WIN_SIZE and WIN_DRAW */
-      if (!m_screen_window->visible())
-        resize_screen_window();
+      resize_screen_window();
       /* size requested, show up */
       m_screen_window->show();
     }
@@ -969,8 +968,23 @@ WindowImpl::create_screen_window ()
     {
       if (!m_screen_window)
         {
-          m_screen_window = ScreenWindow::create_screen_window ("auto", WINDOW_TYPE_NORMAL, *this);
-          resize_screen_window();
+          ScreenDriver *sdriver = ScreenDriver::open_screen_driver ("auto");
+          if (sdriver)
+            {
+              ScreenWindow::Setup setup;
+              setup.window_type = WINDOW_TYPE_NORMAL;
+              setup.window_flags = ScreenWindow::Flags (ScreenWindow::DELETABLE | ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DECORATED);
+              String prg = program_ident();
+              if (prg.empty())
+                prg = program_file();
+              setup.session_role = "RAPICORN :: " + prg;
+              setup.bg_average = background();
+              m_screen_window = sdriver->create_screen_window (setup, *this);
+              sdriver->close();
+              resize_screen_window();
+            }
+          else
+            fatal ("failed to find and open any screen driver");
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
       m_loop.flag_primary (true); // FIXME: depends on WM-managable
@@ -982,7 +996,7 @@ WindowImpl::create_screen_window ()
 bool
 WindowImpl::has_screen_window ()
 {
-  return m_screen_window && m_screen_window->visible();
+  return m_screen_window;
 }
 
 void
@@ -991,7 +1005,6 @@ WindowImpl::destroy_screen_window ()
   if (!m_screen_window)
     return; // during destruction, ref_count == 0
   ref (this);
-  m_screen_window->hide();
   delete m_screen_window;
   m_screen_window = NULL;
   m_loop.flag_primary (false);

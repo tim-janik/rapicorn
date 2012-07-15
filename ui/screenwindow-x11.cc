@@ -6,9 +6,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define XDEBUG(...)     RAPICORN_KEY_DEBUG ("X11", __VA_ARGS__)
-#define CQUOTE(str)     String (str ? String ("\"" + String (str) + "\"") : String ("NULL")).c_str() // FIXME
 
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
@@ -32,6 +31,25 @@ struct X11Item {
   virtual ~X11Item() {}
 };
 
+// == X11 Error Handling ==
+static XErrorHandler xlib_error_handler = NULL;
+static int
+x11_error (Display *error_display, XErrorEvent *error_event)
+{
+  int result = -1;
+  try
+    {
+      atexit (abort);
+      result = xlib_error_handler (error_display, error_event);
+    }
+  catch (...)
+    {
+      // ignore C++ exceptions from atexit handlers
+    }
+  abort();
+  return result;
+}
+
 // == X11Context ==
 struct X11Context {
   X11Thread            *x11_thread;
@@ -51,6 +69,7 @@ X11Context::X11Context (const String &x11display) :
   x11_thread (NULL), display (NULL), screen (0), visual (NULL), depth (0)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
   const char *s = x11display.c_str();
   display = XOpenDisplay (s[0] ? s : NULL);
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
@@ -99,21 +118,6 @@ X11Context::atom (Atom atom) const
   return result;
 }
 
-static X11Context&
-x11_context ()
-{
-  static X11Context *x11p = NULL;
-  do_once {
-    const char *s = getenv ("DISPLAY");
-    String ds = s ? s : "";
-    static X11Context x11context (ds);
-    if (!x11context.display)
-      fatal ("failed to open X11 display: %s", CQUOTE (ds.c_str()));
-    x11p = &x11context;
-  }
-  return *x11p;
-}
-
 // == ScreenDriverX11 ==
 struct ScreenDriverX11 : ScreenDriver {
   X11Context *m_x11context;
@@ -149,7 +153,7 @@ struct ScreenDriverX11 : ScreenDriver {
         delete x11context;
       }
   }
-  virtual ScreenWindow* create_screen_window (WindowType screen_window_type, ScreenWindow::EventReceiver &receiver);
+  virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup, ScreenWindow::EventReceiver &receiver);
   ScreenDriverX11() : ScreenDriver ("X11Window", -1), m_x11context (NULL), m_open_count (0) {}
 };
 static ScreenDriverX11 screen_driver_x11;
@@ -159,58 +163,50 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
   ScreenDriverX11      &m_x11driver;
   EventReceiver        &m_receiver;
-  Info                  m_info;
   State                 m_state;
   Color                 m_average_background;
   Window                m_window;
   int                   m_last_motion_time;
-  bool                  m_mapped, m_focussed;
+  bool                  m_override_redirect, m_mapped, m_focussed;
   EventContext          m_event_context;
   std::vector<Rect>     m_expose_rectangles;
-  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, WindowType screen_window_type, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
-  virtual void          trigger_hint_action     (WindowHint hint);
+  virtual State         get_state               ();
+  virtual void          configure               (const Config &config);
+  void                  setup                   (const ScreenWindow::Setup &setup);
+  virtual void          beep                    ();
+  virtual void          show                    ();
+  virtual void          present                 ();
+  virtual bool          viewable                ();
+  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region);
   virtual void          start_user_move         (uint button, double root_x, double root_y);
   virtual void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
-  virtual void          present_screen_window   ();
-  virtual void          show                    ();
-  virtual bool          visible                 ();
-  virtual bool          viewable                ();
-  virtual void          hide                    ();
-  virtual void          enqueue_win_draws       ();
-  virtual uint          last_draw_stamp         ();
-  virtual Info          get_info                ();
-  virtual State         get_state               ();
-  virtual void          beep                    ();
-  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region);
-  virtual void          set_config              (const Config &config, bool force_resize_draw);
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
 };
 
 ScreenWindow*
-ScreenDriverX11::create_screen_window (WindowType screen_window_type, ScreenWindow::EventReceiver &receiver)
+ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, ScreenWindow::EventReceiver &receiver)
 {
   assert_return (m_open_count > 0, NULL);
-  return new ScreenWindowX11 (*this, screen_window_type, receiver);
+  return new ScreenWindowX11 (*this, setup, receiver);
 }
 
-ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, WindowType screen_window_type, EventReceiver &receiver) :
+ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
-  m_window (0), m_last_motion_time (0), m_mapped (false), m_focussed (false)
+  m_window (0), m_last_motion_time (0), m_override_redirect (false), m_mapped (false), m_focussed (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
-  m_info.window_type = screen_window_type;
-  const Config sample_config;
-  const bool is_override_redirect =
-    (m_info.window_type == WINDOW_TYPE_DESKTOP ||
-     m_info.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
-     m_info.window_type == WINDOW_TYPE_POPUP_MENU ||
-     m_info.window_type == WINDOW_TYPE_TOOLTIP ||
-     m_info.window_type == WINDOW_TYPE_NOTIFICATION ||
-     m_info.window_type == WINDOW_TYPE_COMBO ||
-     m_info.window_type == WINDOW_TYPE_DND);
+  m_state.setup.window_type = setup.window_type;
+  m_override_redirect = (setup.window_type == WINDOW_TYPE_DESKTOP ||
+                         setup.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
+                         setup.window_type == WINDOW_TYPE_POPUP_MENU ||
+                         setup.window_type == WINDOW_TYPE_TOOLTIP ||
+                         setup.window_type == WINDOW_TYPE_NOTIFICATION ||
+                         setup.window_type == WINDOW_TYPE_COMBO ||
+                         setup.window_type == WINDOW_TYPE_DND);
   XSetWindowAttributes attributes;
   attributes.event_mask        = ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask |
                                  KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
@@ -218,43 +214,24 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, WindowType screen_
                                  Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask;
   attributes.background_pixel  = XWhitePixel (x11context.display, x11context.screen);
   attributes.border_pixel      = XBlackPixel (x11context.display, x11context.screen);
-  attributes.override_redirect = is_override_redirect;
+  attributes.override_redirect = m_override_redirect;
   attributes.win_gravity       = StaticGravity;
   attributes.bit_gravity       = StaticGravity;
   unsigned long attribute_mask = CWWinGravity | CWBitGravity |
                                  /*CWBackPixel |*/ CWBorderPixel | CWOverrideRedirect | CWEventMask;
-  const int border = 3;
-  m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, sample_config.request_width, sample_config.request_height, border,
+  const int border = 3, request_width = 33, request_height = 33;
+  m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   if (m_window)
     x11context.x11ids[m_window] = this;
   printerr ("window: %lu\n", m_window);
-#if 0 // FIXME:  set GdkWindowTypeHint
-  switch (m_info.window_type)
-    {
-    case WINDOW_TYPE_NORMAL:            gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_NORMAL);		break;
-    case WINDOW_TYPE_DESKTOP:           gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DESKTOP);	break;
-    case WINDOW_TYPE_DOCK:              gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DOCK);		break;
-    case WINDOW_TYPE_TOOLBAR:           gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_TOOLBAR);	break;
-    case WINDOW_TYPE_MENU:              gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_MENU);		break;
-    case WINDOW_TYPE_UTILITY:           gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_UTILITY);	break;
-    case WINDOW_TYPE_SPLASH:            gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);	break;
-    case WINDOW_TYPE_DIALOG:            gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DIALOG);		break;
-    case WINDOW_TYPE_DROPDOWN_MENU:     gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DROPDOWN_MENU);  break;
-    case WINDOW_TYPE_POPUP_MENU:        gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_POPUP_MENU);	break;
-    case WINDOW_TYPE_TOOLTIP:           gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_TOOLTIP);	break;
-    case WINDOW_TYPE_NOTIFICATION:      gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_NOTIFICATION);	break;
-    case WINDOW_TYPE_COMBO:             gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_COMBO);		break;
-    case WINDOW_TYPE_DND:               gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DND);		break;
-    default: break;
-    }
-  gtk_widget_grab_focus (GTK_WIDGET (m_screen_window));
-#endif
+  // window setup
+  this->setup (setup);
+  // FIXME:  set Window hints & focus
   // configure state for this window
   {
     XConfigureEvent xev = { ConfigureNotify, /*serial*/ 0, true, x11context.display, m_window, m_window,
-                            0, 0, int (sample_config.request_width), int (sample_config.request_height), border, // FIXME: uncast
-                            /*above*/ 0, is_override_redirect };
+                            0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect };
     XEvent xevent;
     xevent.xconfigure = xev;
     process_event (xevent);
@@ -366,6 +343,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       m_focussed = xev.focus;
       enqueue_locked (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
+      if (xev.detail != NotifyInferior)
+        m_last_motion_time = xev.time;
       consumed = true;
       break; }
     case KeyPress: case KeyRelease: {
@@ -466,6 +445,7 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
       cairo_surface_destroy (xsurface);
       xsurface = NULL;
     }
+  XFlush (x11context.display);
 }
 
 void
@@ -475,15 +455,8 @@ ScreenWindowX11::enqueue_locked (Event *event)
   m_receiver.enqueue_async (event);
 }
 
-ScreenWindow::Info
-ScreenWindowX11::get_info ()
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  return m_info;
-}
-
 ScreenWindow::State
-ScreenWindowX11::get_state () // FIXME
+ScreenWindowX11::get_state ()
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   return m_state;
@@ -518,44 +491,82 @@ set_text_property (X11Context &x11context, Window window, const String &property
   return success;
 }
 
+static void
+cairo_set_source_color (cairo_t *cr, Color c)
+{
+  cairo_set_source_rgba (cr, c.red() / 255., c.green() / 255., c.blue() / 255., c.alpha() / 255.);
+}
+
+static Pixmap
+create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable, uint depth,
+                            int tile_size, Color c1, Color c2)
+{
+  const int bw = tile_size * 2, bh = tile_size * 2;
+  Pixmap xpixmap = XCreatePixmap (display, drawable, bw, bh, depth);
+  cairo_surface_t *xsurface = cairo_xlib_surface_create (display, xpixmap, visual, bw, bh);
+  assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS, 0);
+  cairo_t *cr = cairo_create (xsurface);
+  cairo_set_source_color (cr, c1);
+  cairo_rectangle (cr,         0,         0, tile_size, tile_size);
+  cairo_rectangle (cr, tile_size, tile_size, tile_size, tile_size);
+  cairo_fill (cr);
+  cairo_set_source_color (cr, c2);
+  cairo_rectangle (cr,         0, tile_size, tile_size, tile_size);
+  cairo_rectangle (cr, tile_size,         0, tile_size, tile_size);
+  cairo_fill (cr);
+  cairo_destroy (cr);
+  cairo_surface_destroy (xsurface);
+  return xpixmap;
+}
+
 void
-ScreenWindowX11::set_config (const Config &config, bool force_resize_draw)
+ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
+{
+  // window is not yet mapped
+  m_state.setup.window_type = setup.window_type;
+  m_state.setup.window_flags = setup.window_flags;
+  if (setup.modal)
+    FIXME ("modal window's unimplemented");
+  m_state.setup.modal = setup.modal;
+  m_state.setup.bg_average = setup.bg_average;
+  set_text_property (x11context, m_window, "WM_WINDOW_ROLE", XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
+  m_state.setup.session_role = setup.session_role;
+  m_state.setup.bg_average = setup.bg_average;
+  Color c1 = setup.bg_average, c2 = setup.bg_average;
+  c1.tint (0, 0.96, 0.96);
+  c2.tint (0, 1.03, 1.03);
+  Pixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
+  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap); // m_state.setup.bg_average ?
+  XFreePixmap (x11context.display, xpixmap);
+}
+
+void
+ScreenWindowX11::configure (const Config &config)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  set_text_property (x11context, m_window, "WM_NAME", XStdICCTextStyle, config.title);                          // ICCCM
-  set_text_property (x11context, m_window, "_NET_WM_NAME", XUTF8StringStyle, config.title);                     // EWMH
-  set_text_property (x11context, m_window, "WM_WINDOW_ROLE", XStringStyle, config.session_role, DELETE_EMPTY);  // ICCCM
+  if (config.title != m_state.config.title)
+    {
+      set_text_property (x11context, m_window, "WM_NAME", XStdICCTextStyle, config.title);                      // ICCCM
+      set_text_property (x11context, m_window, "_NET_WM_NAME", XUTF8StringStyle, config.title);                 // EWMH
+      m_state.config.title = config.title;
+    }
+  enqueue_locked (create_event_win_size (m_event_context, 0, m_state.width, m_state.height));
 }
+
+bool
+ScreenWindowX11::viewable (void) { /*FIXME*/ return false; }
 
 void
 ScreenWindowX11::beep() { /*FIXME*/ }
 
 void
-ScreenWindowX11::hide (void) { /*FIXME*/ }
-
-void
-ScreenWindowX11::present_screen_window () { /*FIXME*/ }
+ScreenWindowX11::present () { /*FIXME*/ }
 
 void
 ScreenWindowX11::start_user_move (uint button, double root_x, double root_y) { /*FIXME*/ }
 
 void
 ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, AnchorType edge) { /*FIXME*/ }
-
-bool
-ScreenWindowX11::visible (void) { /*FIXME*/ return false; }
-
-bool
-ScreenWindowX11::viewable (void) { /*FIXME*/ return false; }
-
-void
-ScreenWindowX11::enqueue_win_draws (void) { /*FIXME*/ }
-
-uint
-ScreenWindowX11::last_draw_stamp () { /*FIXME*/ return 0; }
-
-void
-ScreenWindowX11::trigger_hint_action (WindowHint window_hint) { /*FIXME*/ }
 
 // == X11 thread ==
 class X11Thread {
