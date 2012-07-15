@@ -166,7 +166,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   State                 m_state;
   Color                 m_average_background;
   Window                m_window;
-  int                   m_last_motion_time;
+  int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_mapped, m_focussed;
   EventContext          m_event_context;
   std::vector<Rect>     m_expose_rectangles;
@@ -195,7 +195,8 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, ScreenW
 
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
-  m_window (0), m_last_motion_time (0), m_override_redirect (false), m_mapped (false), m_focussed (false)
+  m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
+  m_override_redirect (false), m_mapped (false), m_focussed (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
@@ -279,6 +280,34 @@ notify_detail (int notify_type)
     }
 }
 
+struct PendingSensor {
+  Drawable window;
+  int pending_configures, pending_exposes;
+};
+
+static Bool
+pending_event_sensor (Display *display, XEvent *event, XPointer arg)
+{
+  PendingSensor &ps = *(PendingSensor*) arg;
+  if (event->xany.window == ps.window)
+    switch (event->xany.type)
+      {
+      case Expose:              ps.pending_exposes++;           break;
+      case ConfigureNotify:     ps.pending_configures++;        break;
+      }
+  return False;
+}
+
+static void
+check_pending (Display *display, Drawable window, int *pending_configures, int *pending_exposes)
+{
+  XEvent dummy;
+  PendingSensor ps = { window, 0, 0 };
+  XCheckIfEvent (display, &dummy, pending_event_sensor, XPointer (&ps));
+  *pending_configures = ps.pending_configures;
+  *pending_exposes = ps.pending_exposes;
+}
+
 bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
@@ -302,8 +331,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           m_expose_rectangles.push_back (Rect (Point (0, 0), xev.width, xev.height));
           m_state.width = xev.width;
           m_state.height = xev.height;
-          enqueue_locked (create_event_win_size (m_event_context, 0, m_state.width, m_state.height));
         }
+      if (m_pending_configures)
+        m_pending_configures--;
+      if (!m_pending_configures)
+        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
+      enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
       consumed = true;
       break; }
     case MapNotify: {
@@ -412,6 +445,7 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   if (!m_window)
     return;
   assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
+  const unsigned long blit_serial = XNextRequest (x11context.display) - 1;
   // surface for drawing on the X11 window
   cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_state.width, m_state.height);
   assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
@@ -425,14 +459,19 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   cairo_save (xcr);
   vector<Rect> rects;
   region.list_rects (rects);
+  uint coverage = 0;
   for (size_t i = 0; i < rects.size(); i++)
-    cairo_rectangle (xcr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+    {
+      cairo_rectangle (xcr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      coverage += rects[i].width * rects[i].height;
+    }
   cairo_clip (xcr);
   cairo_set_source_surface (xcr, surface, 0, 0);
   cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
   cairo_paint (xcr);
   cairo_restore (xcr);
-  EDEBUG ("BlitS: nrects=%zu", rects.size());
+  // debugging info
+  EDEBUG ("BlitS: S=%lu nrects=%zu coverage=%.1f%%", blit_serial, rects.size(), coverage * 100.0 / (m_state.width * m_state.height));
   // cleanup
   assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
   if (xcr)
@@ -550,7 +589,7 @@ ScreenWindowX11::configure (const Config &config)
       set_text_property (x11context, m_window, "_NET_WM_NAME", XUTF8StringStyle, config.title);                 // EWMH
       m_state.config.title = config.title;
     }
-  enqueue_locked (create_event_win_size (m_event_context, 0, m_state.width, m_state.height));
+  enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
 }
 
 bool

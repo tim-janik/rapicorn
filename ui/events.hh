@@ -97,11 +97,11 @@ public:
 };
 struct EventWinSize : public Event {
 protected:
-  explicit        EventWinSize (EventType, const EventContext&, uint, double, double);
+  explicit        EventWinSize (EventType, const EventContext&, double, double, bool);
 public:
   virtual        ~EventWinSize();
-  uint            draw_stamp;
   double          width, height;
+  bool            intermediate;
 };
 struct EventWinDraw : public Event {
 protected:
@@ -140,9 +140,9 @@ EventKey*       create_event_key          (EventType           type,
                                            uint32              key,
                                            const char         *name);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
-                                           uint                draw_stamp,
                                            double              width,
-                                           double              height);
+                                           double              height,
+                                           bool                intermediate);
 EventWinDraw*   create_event_win_draw     (const EventContext &econtext,
                                            uint                draw_stamp,
                                            const std::vector<Rect> &rects);

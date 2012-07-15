@@ -124,7 +124,7 @@ create_event_transformed (const Event  &source_event,
     case WIN_SIZE:
       {
         const EventWinSize *source = dynamic_cast<const EventWinSize*> (&source_event);
-        return create_event_win_size (dcontext, source->draw_stamp, affine.hexpansion() * source->width, affine.vexpansion() * source->height);
+        return create_event_win_size (dcontext, affine.hexpansion() * source->width, affine.vexpansion() * source->height, source->intermediate);
       }
     case WIN_DRAW:
       {
@@ -239,30 +239,30 @@ EventWinSize::~EventWinSize()
 
 EventWinSize::EventWinSize (EventType           etype,
                             const EventContext &econtext,
-                            uint                _draw_stamp,
                             double              _width,
-                            double              _height) :
+                            double              _height,
+                            bool                _intermediate) :
   Event (etype, econtext),
-  draw_stamp (_draw_stamp),
+  intermediate (_intermediate),
   width (_width), height (_height)
 {}
 
 EventWinSize*
 create_event_win_size (const EventContext &econtext,
-                       uint                draw_stamp,
                        double              width,
-                       double              height)
+                       double              height,
+                       bool                intermediate)
 {
   struct EventWinSizeImpl : public EventWinSize {
     EventWinSizeImpl (EventType           etype,
                       const EventContext &econtext,
-                      uint                _draw_stamp,
                       double              _width,
-                      double              _height) :
-      EventWinSize (etype, econtext, _draw_stamp, _width, _height)
+                      double              _height,
+                      bool                _intermediate) :
+      EventWinSize (etype, econtext, _width, _height, _intermediate)
     {}
   };
-  EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, draw_stamp, width, height);
+  EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, width, height, intermediate);
   return wevent;
 }
 

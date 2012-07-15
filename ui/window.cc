@@ -541,13 +541,25 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      m_pending_win_size = false;
-      Allocation area = Allocation (0, 0, wevent->width, wevent->height);
-      negotiate_size (&area);
-      discard_expose_region(); // we'll get a new WIN_DRAW event
+      m_pending_win_size = wevent->intermediate;
+      if (!m_pending_win_size)
+        m_pending_win_size = has_pending_win_size();
+      const Allocation area = allocation();
+      bool need_resize = false;
+      if (wevent->width != area.width || wevent->height != area.height)
+        {
+          Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
+          if (!m_pending_win_size)
+            negotiate_size (&new_area);
+          if (m_pending_win_size)
+            discard_expose_region(); // we'll get more WIN_SIZE events
+          else
+            expose ();
+          need_resize = true;
+        }
       if (0)
-        DEBUG ("win-size: %f %f", wevent->width, wevent->height);
-      expose (); // FIXME
+        printerr ("win-size: width=%f height=%f intermediate=%d pending=%d resize=%d\n", wevent->width, wevent->height,
+                  wevent->intermediate, m_pending_win_size, need_resize);
       handled = true;
     }
   return handled;
@@ -761,6 +773,8 @@ WindowImpl::dispose_item (ItemImpl &item)
 bool
 WindowImpl::has_pending_win_size ()
 {
+  if (m_pending_win_size)
+    return true;
   bool found_one = false;
   m_async_mutex.lock();
   for (std::list<Event*>::iterator it = m_async_event_queue.begin();
@@ -817,7 +831,7 @@ WindowImpl::dispatch_event (const Event &event)
     case SCROLL_RIGHT:       /* button7 */
       /**/                    return dispatch_scroll_event (event);
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
-    case WIN_SIZE:            return has_pending_win_size() ? true : dispatch_win_size_event (event);
+    case WIN_SIZE:            return dispatch_win_size_event (event);
     case WIN_DRAW:            return has_pending_win_size() ? true : dispatch_win_draw_event (event);
     case WIN_DELETE:          return dispatch_win_delete_event (event);
     }
