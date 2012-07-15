@@ -1,3 +1,4 @@
+#if 0
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "screenwindow.hh"
 #include <ui/utilities.hh>
@@ -1395,3 +1396,11 @@ rapicorn_gtk_threads_leave ()
 }
 
 } // Rapicorn
+#else
+#include "screenwindow.hh"
+namespace Rapicorn {
+void    rapicorn_gtk_threads_shutdown ()        {}
+void    rapicorn_gtk_threads_enter ()           {}
+void    rapicorn_gtk_threads_leave ()           {}
+} // Rapicorn
+#endif
