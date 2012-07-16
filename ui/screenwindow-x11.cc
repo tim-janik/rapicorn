@@ -265,6 +265,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   virtual void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
+  void                  property_changed        (Atom atom, bool deleted);
   void                  blit_expose_region      ();
 };
 
@@ -475,6 +476,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const bool deleted = xev.state == PropertyDelete;
       EDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       m_event_context.time = xev.time;
+      property_changed (xev.atom, deleted);
       consumed = true;
       break; }
     case Expose: {
@@ -591,6 +593,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     default: ;
     }
   return consumed;
+}
+
+void
+ScreenWindowX11::property_changed (Atom atom, bool deleted)
+{
+  // FIXME
 }
 
 static Rect
