@@ -3,13 +3,9 @@
 #include <ui/utilities.hh>
 #include <cairo/cairo-xlib.h>
 #include <fcntl.h> // for wakeup pipe
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/XShm.h>
-#include <sys/shm.h>
+#include "screenwindow-xaux.cc"
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
-#define XDEBUG(...)     RAPICORN_KEY_DEBUG ("X11", __VA_ARGS__)
 
 template<class T> cairo_status_t cairo_status_from_any (T t);
 template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
@@ -32,8 +28,7 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
   } while (0)
 #define CHECK_CAIRO_STATUS(cairox)      RAPICORN_CHECK_CAIRO_STATUS (cairox)
 
-namespace { // Anon
-using namespace Rapicorn;
+namespace Rapicorn {
 
 // == declarations ==
 class X11Thread;
@@ -47,48 +42,6 @@ struct X11Item {
   explicit X11Item() {}
   virtual ~X11Item() {}
 };
-
-// == X11 Error Handling ==
-static XErrorHandler xlib_error_handler = NULL;
-static XErrorEvent *xlib_error_trap = NULL;
-static int
-x11_error (Display *error_display, XErrorEvent *error_event)
-{
-  if (xlib_error_trap)
-    {
-      *xlib_error_trap = *error_event;
-      return 0;
-    }
-  int result = -1;
-  try
-    {
-      atexit (abort);
-      result = xlib_error_handler (error_display, error_event);
-    }
-  catch (...)
-    {
-      // ignore C++ exceptions from atexit handlers
-    }
-  abort();
-  return result;
-}
-
-static void
-x11_trap_errors (XErrorEvent *trapped_event)
-{
-  assert_return (xlib_error_trap == NULL);
-  xlib_error_trap = trapped_event;
-  trapped_event->error_code = 0;
-}
-
-static int
-x11_untrap_errors()
-{
-  assert_return (xlib_error_trap != NULL, -1);
-  const int error_code = xlib_error_trap->error_code;
-  xlib_error_trap = NULL;
-  return error_code;
-}
 
 // == X11Context ==
 struct X11Context {
@@ -163,38 +116,9 @@ X11Context::atom (Atom atom) const
 bool
 X11Context::local_x11()
 {
-  if (m_shared_mem >= 0)
-    return m_shared_mem;
-  m_shared_mem = 0;
-  XShmSegmentInfo shminfo = { 0 /*shmseg*/, -1 /*shmid*/, (char*) -1 /*shmaddr*/, True /*readOnly*/ };
-  XImage *ximage = XShmCreateImage (display, visual, depth, ZPixmap, NULL, &shminfo, 1, 1);
-  if (ximage)
-    {
-      shminfo.shmid = shmget (IPC_PRIVATE, ximage->bytes_per_line * ximage->height, IPC_CREAT | 0600);
-      if (shminfo.shmid != -1)
-        {
-          shminfo.shmaddr = (char*) shmat (shminfo.shmid, NULL, SHM_RDONLY);
-          if (ptrdiff_t (shminfo.shmaddr) != -1)
-            {
-              XErrorEvent dummy = { 0, };
-              x11_trap_errors (&dummy);
-              Bool result = XShmAttach (display, &shminfo);
-              XSync (display, False); // forces error delivery
-              if (!x11_untrap_errors())
-                {
-                  // if we got here, shared memory works
-                  m_shared_mem = result != 0;
-                }
-            }
-          shmctl (shminfo.shmid, IPC_RMID, NULL); // delete the shm segment upon last detaching process
-          // cleanup
-          if (m_shared_mem)
-            XShmDetach (display, &shminfo);
-          if (ptrdiff_t (shminfo.shmaddr) != -1)
-            shmdt (shminfo.shmaddr);
-        }
-      XDestroyImage (ximage);
-    }
+  if (m_shared_mem < 0)
+    m_shared_mem = x11_check_shared_image (display, visual, depth);
+  XDEBUG ("XShmCreateImage: %s", m_shared_mem ? "ok" : "failed to attach");
   return m_shared_mem;
 }
 
@@ -310,7 +234,6 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   if (m_window)
     x11context.x11ids[m_window] = this;
-  printerr ("window: %lu\n", m_window);
   // window setup
   this->setup (setup);
   // FIXME:  set Window hints & focus
@@ -336,48 +259,6 @@ ScreenWindowX11::show (void)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   XMapWindow (x11context.display, m_window);
-}
-
-static const char*
-notify_mode (int notify_type)
-{
-  switch (notify_type)
-    {
-    case NotifyNormal:          return "Normal";
-    case NotifyGrab:            return "Grab";
-    case NotifyUngrab:          return "Ungrab";
-    case NotifyWhileGrabbed:    return "WhileGrabbed";
-    default:                    return "Unknown";
-    }
-}
-
-static const char*
-notify_detail (int notify_type)
-{
-  switch (notify_type)
-    {
-    case NotifyAncestor:         return "Ancestor";
-    case NotifyVirtual:          return "Virtual";
-    case NotifyInferior:         return "Inferior";
-    case NotifyNonlinear:        return "Nonlinear";
-    case NotifyNonlinearVirtual: return "NonlinearVirtual";
-    case NotifyPointer:          return "NotifyPointer";
-    case NotifyPointerRoot:      return "NotifyPointerRoot";
-    case NotifyDetailNone:       return "NotifyDetailNone";
-    default:                     return "Unknown";
-    }
-}
-
-static const char*
-visibility_state (int visibility_type)
-{
-  switch (visibility_type)
-    {
-    case VisibilityUnobscured:          return "VisibilityUnobscured";
-    case VisibilityPartiallyObscured:   return "VisibilityPartiallyObscured";
-    case VisibilityFullyObscured:       return "VisibilityFullyObscured";
-    default:                            return "Unknown";
-    }
 }
 
 struct PendingSensor {
@@ -701,35 +582,6 @@ ScreenWindowX11::get_state ()
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   return m_state;
-}
-
-enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
-
-static bool
-set_text_property (X11Context &x11context, Window window, const String &property, XICCEncodingStyle ecstyle,
-                   const String &value, XPEmpty when_empty = KEEP_EMPTY)
-{
-  bool success = true;
-  if (when_empty == DELETE_EMPTY && value.empty())
-    XDeleteProperty (x11context.display, window, x11context.atom (property));
-  else if (ecstyle == XUTF8StringStyle)
-    XChangeProperty (x11context.display, window, x11context.atom (property), x11context.atom ("UTF8_STRING"), 8,
-                     PropModeReplace, (uint8*) value.c_str(), value.size());
-  else
-    {
-      char *text = const_cast<char*> (value.c_str());
-      XTextProperty xtp = { 0, };
-      const int result = Xutf8TextListToTextProperty (x11context.display, &text, 1, ecstyle, &xtp);
-      printerr ("XUTF8CONVERT: target=%s len=%zd result=%d: %s -> %s\n", x11context.atom(xtp.encoding).c_str(), value.size(), result, text, xtp.value);
-      if (result >= 0 && xtp.nitems && xtp.value)
-        XChangeProperty (x11context.display, window, x11context.atom (property), xtp.encoding, xtp.format,
-                         PropModeReplace, xtp.value, xtp.nitems);
-      else
-        success = false;
-      if (xtp.value)
-        XFree (xtp.value);
-    }
-  return success;
 }
 
 static void

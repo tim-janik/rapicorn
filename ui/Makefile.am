@@ -54,6 +54,7 @@ rapicorn_private_files = $(strip 	\
 	regionimpl.h			\
 	key2utf8.cc			\
 	clientapi.cc			\
+	screenwindow-xaux.cc		\
 	serverapi.cc			\
 )
 
