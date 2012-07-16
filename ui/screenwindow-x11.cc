@@ -11,11 +11,26 @@
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define XDEBUG(...)     RAPICORN_KEY_DEBUG ("X11", __VA_ARGS__)
 
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    EDEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+template<class T> cairo_status_t cairo_status_from_any (T t);
+template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
+template<> cairo_status_t cairo_status_from_any (cairo_rectangle_list_t *c) { return c ? c->status : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_font_options_t *c)   { return c ? cairo_font_options_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_font_face_t *c)      { return c ? cairo_font_face_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_scaled_font_t *c)    { return c ? cairo_scaled_font_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_path_t *c)           { return c ? c->status : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_t *c)                { return c ? cairo_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_device_t *c)         { return c ? cairo_device_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_surface_t *c)        { return c ? cairo_surface_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (cairo_pattern_t *c)        { return c ? cairo_pattern_status (c) : CAIRO_STATUS_NULL_POINTER; }
+template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { return c ? cairo_region_status (c) : CAIRO_STATUS_NULL_POINTER; }
+
+#define RAPICORN_CHECK_CAIRO_STATUS(cairox)             do {    \
+    cairo_status_t ___s = cairo_status_from_any (cairox);       \
+    if (___s != CAIRO_STATUS_SUCCESS)                           \
+      RAPICORN_CRITICAL ("cairo status (%s): %s", #cairox,      \
+                         cairo_status_to_string (___s));        \
   } while (0)
+#define CHECK_CAIRO_STATUS(cairox)      RAPICORN_CHECK_CAIRO_STATUS (cairox)
 
 namespace { // Anon
 using namespace Rapicorn;
@@ -527,7 +542,7 @@ void
 ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
+  CHECK_CAIRO_STATUS (surface);
   if (!m_window)
     return;
   const Rect fullwindow = Rect (0, 0, m_state.width, m_state.height);
@@ -569,15 +584,14 @@ ScreenWindowX11::blit_expose_region()
       m_expose_region.clear();
       return;
     }
-  assert_return (m_expose_surface && CAIRO_STATUS_SUCCESS == cairo_surface_status (m_expose_surface));
+  CHECK_CAIRO_STATUS (m_expose_surface);
   const unsigned long blit_serial = XNextRequest (x11context.display) - 1;
   // surface for drawing on the X11 window
   cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_state.width, m_state.height);
-  assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
-  assert_return (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+  CHECK_CAIRO_STATUS (xsurface);
   // cairo context
   cairo_t *xcr = cairo_create (xsurface);
-  assert_return (xcr && CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  CHECK_CAIRO_STATUS (xcr);
   // clip to m_expose_region
   vector<Rect> rects;
   m_expose_region.list_rects (rects);
@@ -592,7 +606,7 @@ ScreenWindowX11::blit_expose_region()
   cairo_set_source_surface (xcr, m_expose_surface, 0, 0);
   cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
   cairo_paint (xcr);
-  assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  CHECK_CAIRO_STATUS (xcr);
   XFlush (x11context.display);
   // debugging info
   EDEBUG ("BlitS: S=%lu nrects=%zu coverage=%.1f%%", blit_serial, rects.size(), coverage * 100.0 / (m_state.width * m_state.height));
@@ -658,7 +672,7 @@ create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable,
   const int bw = tile_size * 2, bh = tile_size * 2;
   Pixmap xpixmap = XCreatePixmap (display, drawable, bw, bh, depth);
   cairo_surface_t *xsurface = cairo_xlib_surface_create (display, xpixmap, visual, bw, bh);
-  assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS, 0);
+  CHECK_CAIRO_STATUS (xsurface);
   cairo_t *cr = cairo_create (xsurface);
   cairo_set_source_color (cr, c1);
   cairo_rectangle (cr,         0,         0, tile_size, tile_size);
