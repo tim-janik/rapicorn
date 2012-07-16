@@ -169,7 +169,8 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_mapped, m_focussed;
   EventContext          m_event_context;
-  std::vector<Rect>     m_expose_rectangles;
+  Rapicorn::Region      m_expose_region;
+  cairo_surface_t      *m_expose_surface;
   explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual State         get_state               ();
@@ -184,6 +185,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   virtual void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
+  void                  blit_expose_region      ();
 };
 
 ScreenWindow*
@@ -196,7 +198,7 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, ScreenW
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
   m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
-  m_override_redirect (false), m_mapped (false), m_focussed (false)
+  m_override_redirect (false), m_mapped (false), m_focussed (false), m_expose_surface (NULL)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
@@ -328,9 +330,14 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
       if (m_state.width != xev.width || m_state.height != xev.height)
         {
-          m_expose_rectangles.push_back (Rect (Point (0, 0), xev.width, xev.height));
           m_state.width = xev.width;
           m_state.height = xev.height;
+          if (m_expose_surface)
+            {
+              cairo_surface_destroy (m_expose_surface);
+              m_expose_surface = NULL;
+            }
+          m_expose_region.clear();
         }
       if (m_pending_configures)
         m_pending_configures--;
@@ -359,12 +366,13 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XExposeEvent &xev = xevent.xexpose;
       EDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count);
       std::vector<Rect> rectangles;
-      m_expose_rectangles.push_back (Rect (Point (xev.x, xev.y), xev.width, xev.height));
-      if (xev.count == 0)
-        {
-          enqueue_locked (create_event_win_draw (m_event_context, 0, m_expose_rectangles));
-          m_expose_rectangles.clear();
-        }
+      m_expose_region.add (Rect (Point (xev.x, xev.y), xev.width, xev.height));
+      if (m_pending_exposes)
+        m_pending_exposes--;
+      if (!m_pending_exposes && xev.count == 0)
+        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
+      if (!m_pending_exposes && xev.count == 0)
+        blit_expose_region();
       consumed = true;
       break; }
     case EnterNotify: case LeaveNotify: {
@@ -438,27 +446,74 @@ ScreenWindowX11::process_event (const XEvent &xevent)
   return consumed;
 }
 
+static Rect
+cairo_image_surface_coverage (cairo_surface_t *surface)
+{
+  int w = cairo_image_surface_get_width (surface);
+  int h = cairo_image_surface_get_height (surface);
+  double x_offset = 0, y_offset = 0;
+  cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
+  return Rect (Point (x_offset, y_offset), w, h);
+}
+
 void
 ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
   if (!m_window)
     return;
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
+  const Rect fullwindow = Rect (0, 0, m_state.width, m_state.height);
+  if (region.count_rects() == 1 && fullwindow == region.extents() && fullwindow == cairo_image_surface_coverage (surface))
+    {
+      // special case, surface matches exactly the entire window
+      if (m_expose_surface)
+        cairo_surface_destroy (m_expose_surface);
+      m_expose_surface = cairo_surface_reference (surface);
+    }
+  else
+    {
+      if (!m_expose_surface)
+        m_expose_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, m_state.width, m_state.height);
+      cairo_t *cr = cairo_create (m_expose_surface);
+      // clip to region
+      vector<Rect> rects;
+      region.list_rects (rects);
+      for (size_t i = 0; i < rects.size(); i++)
+        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      cairo_clip (cr);
+      // render onto m_expose_surface
+      cairo_set_source_surface (cr, surface, 0, 0);
+      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+      cairo_paint (cr);
+      // cleanup
+      cairo_destroy (cr);
+    }
+  // redraw expose region
+  m_expose_region.add (region);
+  blit_expose_region();
+}
+
+void
+ScreenWindowX11::blit_expose_region()
+{
+  if (!m_expose_surface)
+    {
+      m_expose_region.clear();
+      return;
+    }
+  assert_return (m_expose_surface && CAIRO_STATUS_SUCCESS == cairo_surface_status (m_expose_surface));
   const unsigned long blit_serial = XNextRequest (x11context.display) - 1;
   // surface for drawing on the X11 window
   cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_state.width, m_state.height);
   assert_return (xsurface && cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
-  cairo_xlib_surface_set_size (xsurface, m_state.width, m_state.height);
   assert_return (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
   // cairo context
   cairo_t *xcr = cairo_create (xsurface);
-  assert_return (xcr);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-  // actual drawing
-  cairo_save (xcr);
+  assert_return (xcr && CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  // clip to m_expose_region
   vector<Rect> rects;
-  region.list_rects (rects);
+  m_expose_region.list_rects (rects);
   uint coverage = 0;
   for (size_t i = 0; i < rects.size(); i++)
     {
@@ -466,25 +521,18 @@ ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
       coverage += rects[i].width * rects[i].height;
     }
   cairo_clip (xcr);
-  cairo_set_source_surface (xcr, surface, 0, 0);
+  // paint m_expose_region
+  cairo_set_source_surface (xcr, m_expose_surface, 0, 0);
   cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
   cairo_paint (xcr);
-  cairo_restore (xcr);
+  assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  XFlush (x11context.display);
   // debugging info
   EDEBUG ("BlitS: S=%lu nrects=%zu coverage=%.1f%%", blit_serial, rects.size(), coverage * 100.0 / (m_state.width * m_state.height));
   // cleanup
-  assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-  if (xcr)
-    {
-      cairo_destroy (xcr);
-      xcr = NULL;
-    }
-  if (xsurface)
-    {
-      cairo_surface_destroy (xsurface);
-      xsurface = NULL;
-    }
-  XFlush (x11context.display);
+  m_expose_region.clear();
+  cairo_destroy (xcr);
+  cairo_surface_destroy (xsurface);
 }
 
 void
