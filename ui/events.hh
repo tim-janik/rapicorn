@@ -56,7 +56,6 @@ typedef enum {
   SCROLL_RIGHT,       /* button7 */
   CANCEL_EVENTS,
   WIN_SIZE,
-  WIN_DRAW,
   WIN_DELETE,
   EVENT_LAST
 } EventType;
@@ -103,15 +102,6 @@ public:
   double          width, height;
   bool            intermediate;
 };
-struct EventWinDraw : public Event {
-protected:
-  explicit          EventWinDraw (EventType, const EventContext&, uint, const std::vector<Rect> &);
-public:
-  virtual          ~EventWinDraw();
-  uint              draw_stamp;
-  Rect              bbox; /* bounding box */
-  std::vector<Rect> rectangles;
-};
 typedef Event EventWinDelete;
 struct EventContext {
   uint32        time;
@@ -143,9 +133,6 @@ EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,
                                            bool                intermediate);
-EventWinDraw*   create_event_win_draw     (const EventContext &econtext,
-                                           uint                draw_stamp,
-                                           const std::vector<Rect> &rects);
 EventWinDelete* create_event_win_delete   (const EventContext &econtext);
 
 } // Rapicorn

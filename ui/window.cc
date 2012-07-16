@@ -194,12 +194,12 @@ WindowImpl::resize_screen_window()
       m_config.request_width = rsize.width;
       m_config.request_height = rsize.height;
       m_pending_win_size = true;
-      discard_expose_region(); // we'll get a new WIN_DRAW event
       if (m_config.title.empty())
         {
           user_warning (this->user_source(), "window title is unset");
           m_config.title = "Foo - fröbenbaz - (日本人, Nihonjin, Nipponjin)"; // FIXME
         }
+      discard_expose_region(); // configure will send a new WIN_SIZE event
       m_screen_window->configure (m_config);
       return;
     }
@@ -566,22 +566,6 @@ WindowImpl::dispatch_win_size_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_win_draw_event (const Event &event)
-{
-  bool handled = false;
-  const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
-  if (devent)
-    {
-      Region r;
-      for (uint i = 0; i < devent->rectangles.size(); i++)
-        r.add (devent->rectangles[i]);
-      expose (r);
-      handled = true;
-    }
-  return handled;
-}
-
-bool
 WindowImpl::dispatch_win_delete_event (const Event &event)
 {
   bool handled = false;
@@ -593,40 +577,6 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
       handled = true;
     }
   return handled;
-}
-
-void
-WindowImpl::expose_now ()
-{
-  if (m_screen_window)
-    {
-      /* collect all WIN_DRAW events */
-      m_async_mutex.lock();
-      std::list<Event*> events;
-      std::list<Event*>::iterator it = m_async_event_queue.begin();
-      while (it != m_async_event_queue.end())
-        {
-          if ((*it)->type == WIN_DRAW)
-            {
-              std::list<Event*>::iterator current = it++;
-              events.push_back (*current);
-              m_async_event_queue.erase (current);
-            }
-          else
-            it++;
-        }
-      m_async_mutex.unlock();
-      /* invalidate areas from all collected WIN_DRAW events */
-      while (!events.empty())
-        {
-          Event *event = events.front();
-          events.pop_front();
-          dispatch_event (*event);
-          delete event;
-        }
-    }
-  else
-    discard_expose_region(); // nuke stale exposes
 }
 
 void
@@ -643,8 +593,6 @@ WindowImpl::draw_now ()
   assert_return (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
-      // force delivery of any pending exposes
-      expose_now();
       // determine invalidated rendering region
       Region region = area;
       region.intersect (peek_expose_region());
@@ -837,7 +785,6 @@ WindowImpl::dispatch_event (const Event &event)
       /**/                    return dispatch_scroll_event (event);
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
     case WIN_SIZE:            return dispatch_win_size_event (event);
-    case WIN_DRAW:            return has_pending_win_size() ? true : dispatch_win_draw_event (event);
     case WIN_DELETE:          return dispatch_win_delete_event (event);
     }
   return false;
@@ -973,9 +920,9 @@ WindowImpl::idle_show()
 {
   if (m_screen_window)
     {
-      /* request size, WIN_SIZE and WIN_DRAW */
+      // request size, WIN_SIZE
       resize_screen_window();
-      /* size requested, show up */
+      // size requested, show up
       m_screen_window->show();
     }
 }

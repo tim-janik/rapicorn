@@ -55,7 +55,6 @@ string_from_event_type (EventType etype)
     case SCROLL_RIGHT:          return "ScrollRight";
     case CANCEL_EVENTS:         return "CancelEvents";
     case WIN_SIZE:              return "WinSize";
-    case WIN_DRAW:              return "WinDraw";
     case WIN_DELETE:            return "WinDelete";
     case EVENT_NONE:
     case EVENT_LAST:
@@ -125,14 +124,6 @@ create_event_transformed (const Event  &source_event,
       {
         const EventWinSize *source = dynamic_cast<const EventWinSize*> (&source_event);
         return create_event_win_size (dcontext, affine.hexpansion() * source->width, affine.vexpansion() * source->height, source->intermediate);
-      }
-    case WIN_DRAW:
-      {
-        const EventWinDraw *source = dynamic_cast<const EventWinDraw*> (&source_event);
-        std::vector<Rect> rects;
-        for (uint i = 0; i < source->rectangles.size(); i++)
-          rects.push_back (Rect (affine.point (source->rectangles[i].lower_left()), affine.point (source->rectangles[i].upper_right()))); // FIXME: transform 4 points
-        return create_event_win_draw (dcontext, source->draw_stamp, rects);
       }
     case WIN_DELETE:            return create_event_win_delete (dcontext);
     case EVENT_NONE:
@@ -263,38 +254,6 @@ create_event_win_size (const EventContext &econtext,
     {}
   };
   EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, width, height, intermediate);
-  return wevent;
-}
-
-EventWinDraw::~EventWinDraw()
-{}
-
-EventWinDraw::EventWinDraw (EventType                etype,
-                            const EventContext      &econtext,
-                            uint                     _draw_stamp,
-                            const std::vector<Rect> &_rects) :
-  Event (etype, econtext),
-  draw_stamp (_draw_stamp),
-  rectangles (_rects)
-{
-  for (uint i = 0; i < rectangles.size(); i++)
-    bbox.rect_union (rectangles[i]);
-}
-
-EventWinDraw*
-create_event_win_draw (const EventContext      &econtext,
-                       uint                     draw_stamp,
-                       const std::vector<Rect> &rects)
-{
-  struct EventWinDrawImpl : public EventWinDraw {
-    EventWinDrawImpl (EventType                etype,
-                      const EventContext      &econtext,
-                      uint                     _draw_stamp,
-                      const std::vector<Rect> &_rects) :
-      EventWinDraw (etype, econtext, _draw_stamp, _rects)
-    {}
-  };
-  EventWinDraw *wevent = new EventWinDrawImpl (WIN_DRAW, econtext, draw_stamp, rects);
   return wevent;
 }
 

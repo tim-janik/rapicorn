@@ -73,7 +73,6 @@ private:
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  void                  expose_now                              ();
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
   /* screen_window ops */
@@ -109,7 +108,6 @@ private:
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
-  bool                  dispatch_win_draw_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
   virtual bool          dispatch_event                          (const Event            &event);
   bool                  has_pending_win_size                    ();
