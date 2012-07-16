@@ -487,7 +487,21 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         break;
       EDEBUG ("BUT%s: %c=%lu w=%lu c=%lu p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_button (xevent.type == ButtonPress ? BUTTON_PRESS : BUTTON_RELEASE, m_event_context, xev.button));
+      if (xevent.type == ButtonPress)
+        switch (xev.button)
+          {
+          case 4:  enqueue_locked (create_event_scroll (SCROLL_UP, m_event_context));                break;
+          case 5:  enqueue_locked (create_event_scroll (SCROLL_DOWN, m_event_context));              break;
+          case 6:  enqueue_locked (create_event_scroll (SCROLL_LEFT, m_event_context));              break;
+          case 7:  enqueue_locked (create_event_scroll (SCROLL_RIGHT, m_event_context));             break;
+          default: enqueue_locked (create_event_button (BUTTON_PRESS, m_event_context, xev.button)); break;
+          }
+      else // ButtonRelease
+        switch (xev.button)
+          {
+          case 4: case 5: case 6: case 7: break; // scrolling
+          default: enqueue_locked (create_event_button (BUTTON_RELEASE, m_event_context, xev.button)); break;
+          }
       consumed = true;
       break; }
     case MotionNotify: {
