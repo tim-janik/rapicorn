@@ -247,7 +247,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   Color                 m_average_background;
   Window                m_window;
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
-  bool                  m_override_redirect, m_mapped, m_focussed;
+  bool                  m_override_redirect, m_mapped, m_crossing_focus, m_win_focus;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
@@ -278,7 +278,7 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, ScreenW
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
   m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
-  m_override_redirect (false), m_mapped (false), m_focussed (false), m_expose_surface (NULL)
+  m_override_redirect (false), m_mapped (false), m_crossing_focus (false), m_win_focus (false), m_expose_surface (NULL)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
@@ -291,7 +291,7 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
                          setup.window_type == WINDOW_TYPE_COMBO ||
                          setup.window_type == WINDOW_TYPE_DND);
   XSetWindowAttributes attributes;
-  attributes.event_mask        = ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask |
+  attributes.event_mask        = ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask |
                                  KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
                                  PointerMotionMask | PointerMotionHintMask | ButtonMotionMask |
                                  Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask;
@@ -360,6 +360,9 @@ notify_detail (int notify_type)
     case NotifyInferior:         return "Inferior";
     case NotifyNonlinear:        return "Nonlinear";
     case NotifyNonlinearVirtual: return "NonlinearVirtual";
+    case NotifyPointer:          return "NotifyPointer";
+    case NotifyPointerRoot:      return "NotifyPointerRoot";
+    case NotifyDetailNone:       return "NotifyDetailNone";
     default:                     return "Unknown";
     }
 }
@@ -457,19 +460,6 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         blit_expose_region();
       consumed = true;
       break; }
-    case EnterNotify: case LeaveNotify: {
-      const XCrossingEvent &xev = xevent.xcrossing;
-      const EventType etype = xevent.type == EnterNotify ? MOUSE_ENTER : MOUSE_LEAVE;
-      const char  *kind = xevent.type == EnterNotify ? "Enter" : "Leave";
-      EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d Notify:%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
-              notify_mode (xev.mode), notify_detail (xev.detail));
-      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      m_focussed = xev.focus;
-      enqueue_locked (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
-      if (xev.detail != NotifyInferior)
-        m_last_motion_time = xev.time;
-      consumed = true;
-      break; }
     case KeyPress: case KeyRelease: {
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "dn" : "up";
@@ -535,6 +525,37 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       enqueue_locked (create_event_mouse (MOUSE_MOVE, m_event_context));
       m_last_motion_time = xev.time;
+      consumed = true;
+      break; }
+    case EnterNotify: case LeaveNotify: {
+      const XCrossingEvent &xev = xevent.xcrossing;
+      const EventType etype = xevent.type == EnterNotify ? MOUSE_ENTER : MOUSE_LEAVE;
+      const char *kind = xevent.type == EnterNotify ? "Enter" : "Leave";
+      EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d Notify:%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
+              notify_mode (xev.mode), notify_detail (xev.detail));
+      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
+      enqueue_locked (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
+      if (xev.detail != NotifyInferior)
+        {
+          m_crossing_focus = xev.focus;
+          m_last_motion_time = xev.time;
+        }
+      consumed = true;
+      break; }
+    case FocusIn: case FocusOut: {
+      const XFocusChangeEvent &xev = xevent.xfocus;
+      const char *kind = xevent.type == FocusIn ? "FocIn" : "FcOut";
+      EDEBUG ("%s: %c=%lu w=%lu Notify:%s+%s", kind, ss, xev.serial, xev.window, notify_mode (xev.mode), notify_detail (xev.detail));
+      if (!(xev.detail == NotifyInferior ||     // subwindow focus changed
+            xev.detail == NotifyPointer ||      // pointer focus changed
+            xev.detail == NotifyPointerRoot ||  // root focus changed
+            xev.detail == NotifyDetailNone))    // root focus is discarded
+        {
+          const bool last_focus = m_win_focus;
+          m_win_focus = xevent.type == FocusIn;
+          if (last_focus != m_win_focus)
+            enqueue_locked (create_event_focus (m_win_focus ? FOCUS_IN : FOCUS_OUT, m_event_context));
+        }
       consumed = true;
       break; }
     default: ;
