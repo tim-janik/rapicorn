@@ -291,10 +291,10 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
                          setup.window_type == WINDOW_TYPE_COMBO ||
                          setup.window_type == WINDOW_TYPE_DND);
   XSetWindowAttributes attributes;
-  attributes.event_mask        = ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask |
-                                 KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
-                                 PointerMotionMask | PointerMotionHintMask | ButtonMotionMask |
-                                 Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask;
+  attributes.event_mask        = ExposureMask | StructureNotifyMask | VisibilityChangeMask | PropertyChangeMask |
+                                 FocusChangeMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | PointerMotionHintMask |
+                                 KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | ButtonMotionMask |
+                                 0 * OwnerGrabButtonMask; // owner_events for automatic grabs
   attributes.background_pixel  = XWhitePixel (x11context.display, x11context.screen);
   attributes.border_pixel      = XBlackPixel (x11context.display, x11context.screen);
   attributes.override_redirect = m_override_redirect;
@@ -364,6 +364,18 @@ notify_detail (int notify_type)
     case NotifyPointerRoot:      return "NotifyPointerRoot";
     case NotifyDetailNone:       return "NotifyDetailNone";
     default:                     return "Unknown";
+    }
+}
+
+static const char*
+visibility_state (int visibility_type)
+{
+  switch (visibility_type)
+    {
+    case VisibilityUnobscured:          return "VisibilityUnobscured";
+    case VisibilityPartiallyObscured:   return "VisibilityPartiallyObscured";
+    case VisibilityFullyObscured:       return "VisibilityFullyObscured";
+    default:                            return "Unknown";
     }
 }
 
@@ -445,6 +457,24 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         break;
       EDEBUG ("Unmap: %c=%lu w=%lu", ss, xev.serial, xev.window);
       m_mapped = false;
+      enqueue_locked (create_event_cancellation (m_event_context));
+      consumed = true;
+      break; }
+    case ReparentNotify:  {
+      const XReparentEvent &xev = xevent.xreparent;
+      EDEBUG ("Rprnt: %c=%lu w=%lu p=%lu @=%+d%+d ovr=%d", ss, xev.serial, xev.window, xev.parent, xev.x, xev.y, xev.override_redirect);
+      consumed = true;
+      break; }
+    case VisibilityNotify: {
+      const XVisibilityEvent &xev = xevent.xvisibility;
+      EDEBUG ("Visbl: %c=%lu w=%lu notify=%s", ss, xev.serial, xev.window, visibility_state (xev.state));
+      consumed = true;
+      break; }
+    case PropertyNotify: {
+      const XPropertyEvent &xev = xevent.xproperty;
+      const bool deleted = xev.state == PropertyDelete;
+      EDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
+      m_event_context.time = xev.time;
       consumed = true;
       break; }
     case Expose: {
@@ -531,7 +561,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XCrossingEvent &xev = xevent.xcrossing;
       const EventType etype = xevent.type == EnterNotify ? MOUSE_ENTER : MOUSE_LEAVE;
       const char *kind = xevent.type == EnterNotify ? "Enter" : "Leave";
-      EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d Notify:%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
+      EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d notify=%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
               notify_mode (xev.mode), notify_detail (xev.detail));
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       enqueue_locked (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
@@ -545,7 +575,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     case FocusIn: case FocusOut: {
       const XFocusChangeEvent &xev = xevent.xfocus;
       const char *kind = xevent.type == FocusIn ? "FocIn" : "FcOut";
-      EDEBUG ("%s: %c=%lu w=%lu Notify:%s+%s", kind, ss, xev.serial, xev.window, notify_mode (xev.mode), notify_detail (xev.detail));
+      EDEBUG ("%s: %c=%lu w=%lu notify=%s+%s", kind, ss, xev.serial, xev.window, notify_mode (xev.mode), notify_detail (xev.detail));
       if (!(xev.detail == NotifyInferior ||     // subwindow focus changed
             xev.detail == NotifyPointer ||      // pointer focus changed
             xev.detail == NotifyPointerRoot ||  // root focus changed
