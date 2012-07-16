@@ -309,6 +309,10 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
     dnl # --- check for Rapicorn GUI dependencies ---
     PKG_CHECK_MODULES(RAPICORN_GUI, cairo glib-2.0 gthread-2.0 pangoft2 gtk+-2.0)
+    dnl # == X11 Extensions ==
+    AC_CHECK_LIB(Xext, XShmAttach,
+      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lXext" ],
+      [ AC_MSG_ERROR([missing X11 shared memory extension]) ])
     # libtool doesn't automatically figure that -pthread implies -lpthread
     RAPICORN_GUI_LIBS=`echo " $RAPICORN_GUI_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
     RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $LIBZ"
