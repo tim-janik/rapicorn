@@ -89,6 +89,18 @@ x11_check_shared_image (Display *display, Visual *visual, int depth)
 }
 
 static const char*
+window_state (int wm_state)
+{
+  switch (wm_state)
+    {
+    case WithdrawnState:        return "WithdrawnState";
+    case NormalState:           return "NormalState";
+    case IconicState:           return "IconicState";
+    default:                    return "Unknown";
+    }
+}
+
+static const char*
 notify_mode (int notify_type)
 {
   switch (notify_type)
@@ -128,6 +140,90 @@ visibility_state (int visibility_type)
     case VisibilityFullyObscured:       return "VisibilityFullyObscured";
     default:                            return "Unknown";
     }
+}
+
+template<class Data, class X11Context> static vector<Data>
+x11_get_property_data (X11Context &x11context, Window window, const String &property_name, Atom *property_type = NULL)
+{
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  int format_returned = 0;
+  Atom type_returned = 0;
+  unsigned long nitems_return = 0, bytes_after_return = 0;
+  uint8 *prop_data = NULL;
+  int abort = XGetWindowProperty (x11context.display, window, x11context.atom (property_name), 0, 8 * 1024, False,
+                                  AnyPropertyType, &type_returned, &format_returned, &nitems_return,
+                                  &bytes_after_return, &prop_data) != Success;
+  if (x11_untrap_errors() || type_returned == None)
+    abort++;
+  if (!abort && bytes_after_return)
+    {
+      XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %lu bytes", CQUOTE (property_name), bytes_after_return);
+      abort++;
+    }
+  if (!abort && sizeof (Data) * 8 != format_returned)
+    {
+      XDEBUG ("XGetWindowProperty(%s): property format mismatch: expected=%zu returned=%u", CQUOTE (property_name), sizeof (Data) * 8, format_returned);
+      abort++;
+    }
+  vector<Data> datav;
+  if (!abort && prop_data && nitems_return && format_returned)
+    {
+      if (format_returned == 32)
+        {
+          const unsigned long *pulong = (const unsigned long*) prop_data;
+          for (uint i = 0; i < nitems_return; i++)
+            datav.push_back (pulong[i]);
+        }
+      else if (format_returned == 16)
+        {
+          const uint16 *puint16 = (const uint16*) prop_data;
+          for (uint i = 0; i < nitems_return; i++)
+            datav.push_back (puint16[i]);
+        }
+      else if (format_returned == 8)
+        {
+          const uint8 *puint8 = (const uint8*) prop_data;
+          for (uint i = 0; i < nitems_return; i++)
+            datav.push_back (puint8[i]);
+        }
+      else
+        XDEBUG ("XGetWindowProperty(%s): unknown property data format with %d bits", CQUOTE (property_name), format_returned);
+    }
+  if (prop_data)
+    XFree (prop_data);
+  if (property_type)
+    *property_type = type_returned;
+  return datav;
+}
+
+template<class X11Context> static String
+x11_get_string_property (X11Context &x11context, Window window, const String &property_name, Atom *property_type = NULL)
+{
+  Atom ptype = 0;
+  vector<char> datav = x11_get_property_data<char> (x11context, window, property_name, &ptype);
+  String rstring;
+  if (datav.size() && (ptype == x11context.atom ("STRING") || ptype == x11context.atom ("COMPOUND_TEXT")))
+    {
+      XTextProperty xtp;
+      xtp.format = 8;
+      xtp.nitems = datav.size();
+      xtp.value = (uint8*) datav.data();
+      xtp.encoding = ptype;
+      char **tlist = NULL;
+      int count = 0, res = Xutf8TextPropertyToTextList (x11context.display, &xtp, &tlist, &count);
+      if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist && tlist[0])
+        rstring = String (tlist[0]);
+      if (tlist)
+        XFreeStringList (tlist);
+    }
+  else if (datav.size() && ptype == x11context.atom ("UTF8_STRING"))
+    rstring = String (datav.data(), datav.size());
+  else
+    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (property_name), x11context.atom (ptype).c_str());
+  if (property_type)
+    *property_type = ptype;
+  return rstring;
 }
 
 enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
