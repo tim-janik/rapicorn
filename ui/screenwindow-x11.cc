@@ -5,6 +5,8 @@
 #include <fcntl.h> // for wakeup pipe
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/XShm.h>
+#include <sys/shm.h>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define XDEBUG(...)     RAPICORN_KEY_DEBUG ("X11", __VA_ARGS__)
@@ -33,9 +35,15 @@ struct X11Item {
 
 // == X11 Error Handling ==
 static XErrorHandler xlib_error_handler = NULL;
+static XErrorEvent *xlib_error_trap = NULL;
 static int
 x11_error (Display *error_display, XErrorEvent *error_event)
 {
+  if (xlib_error_trap)
+    {
+      *xlib_error_trap = *error_event;
+      return 0;
+    }
   int result = -1;
   try
     {
@@ -50,6 +58,23 @@ x11_error (Display *error_display, XErrorEvent *error_event)
   return result;
 }
 
+static void
+x11_trap_errors (XErrorEvent *trapped_event)
+{
+  assert_return (xlib_error_trap == NULL);
+  xlib_error_trap = trapped_event;
+  trapped_event->error_code = 0;
+}
+
+static int
+x11_untrap_errors()
+{
+  assert_return (xlib_error_trap != NULL, -1);
+  const int error_code = xlib_error_trap->error_code;
+  xlib_error_trap = NULL;
+  return error_code;
+}
+
 // == X11Context ==
 struct X11Context {
   X11Thread            *x11_thread;
@@ -58,15 +83,17 @@ struct X11Context {
   Visual               *visual;
   int                   depth;
   Window                root_window;
+  int8                  m_shared_mem;
   map<size_t, X11Item*> x11ids;
   explicit              X11Context (const String &x11display);
   Atom                  atom       (const String &text, bool force_create = true);
   String                atom       (Atom atom) const;
+  bool                  local_x11 ();
   /*dtor*/             ~X11Context ();
 };
 
 X11Context::X11Context (const String &x11display) :
-  x11_thread (NULL), display (NULL), screen (0), visual (NULL), depth (0)
+  x11_thread (NULL), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
@@ -116,6 +143,44 @@ X11Context::atom (Atom atom) const
   if (res)
     XFree (res);
   return result;
+}
+
+bool
+X11Context::local_x11()
+{
+  if (m_shared_mem >= 0)
+    return m_shared_mem;
+  m_shared_mem = 0;
+  XShmSegmentInfo shminfo = { 0 /*shmseg*/, -1 /*shmid*/, (char*) -1 /*shmaddr*/, True /*readOnly*/ };
+  XImage *ximage = XShmCreateImage (display, visual, depth, ZPixmap, NULL, &shminfo, 1, 1);
+  if (ximage)
+    {
+      shminfo.shmid = shmget (IPC_PRIVATE, ximage->bytes_per_line * ximage->height, IPC_CREAT | 0600);
+      if (shminfo.shmid != -1)
+        {
+          shminfo.shmaddr = (char*) shmat (shminfo.shmid, NULL, SHM_RDONLY);
+          if (ptrdiff_t (shminfo.shmaddr) != -1)
+            {
+              XErrorEvent dummy = { 0, };
+              x11_trap_errors (&dummy);
+              Bool result = XShmAttach (display, &shminfo);
+              XSync (display, False); // forces error delivery
+              if (!x11_untrap_errors())
+                {
+                  // if we got here, shared memory works
+                  m_shared_mem = result != 0;
+                }
+            }
+          shmctl (shminfo.shmid, IPC_RMID, NULL); // delete the shm segment upon last detaching process
+          // cleanup
+          if (m_shared_mem)
+            XShmDetach (display, &shminfo);
+          if (ptrdiff_t (shminfo.shmaddr) != -1)
+            shmdt (shminfo.shmaddr);
+        }
+      XDestroyImage (ximage);
+    }
+  return m_shared_mem;
 }
 
 // == ScreenDriverX11 ==
@@ -220,8 +285,10 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   attributes.override_redirect = m_override_redirect;
   attributes.win_gravity       = StaticGravity;
   attributes.bit_gravity       = StaticGravity;
-  unsigned long attribute_mask = CWWinGravity | CWBitGravity |
-                                 /*CWBackPixel |*/ CWBorderPixel | CWOverrideRedirect | CWEventMask;
+  attributes.save_under        = m_override_redirect;
+  attributes.backing_store     = x11context.local_x11() ? NotUseful : WhenMapped;
+  unsigned long attribute_mask = CWWinGravity | CWBitGravity | CWBackingStore | CWSaveUnder |
+                                 CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
   const int border = 3, request_width = 33, request_height = 33;
   m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
