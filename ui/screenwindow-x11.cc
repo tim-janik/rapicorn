@@ -757,10 +757,18 @@ ScreenWindowX11::configure (const Config &config)
 }
 
 bool
-ScreenWindowX11::viewable (void) { /*FIXME*/ return false; }
+ScreenWindowX11::viewable (void)
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  return m_mapped;
+}
 
 void
-ScreenWindowX11::beep() { /*FIXME*/ }
+ScreenWindowX11::beep()
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  XBell (x11context.display, 0);
+}
 
 void
 ScreenWindowX11::present () { /*FIXME*/ }
