@@ -5,6 +5,8 @@
 #include "uithread.hh"
 #include <string.h> // memcpy
 
+#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+
 namespace Rapicorn {
 
 struct ClassDoctor {
@@ -747,8 +749,7 @@ WindowImpl::dispatch_event (const Event &event)
 {
   if (!m_screen_window)
     return false;       // we can only handle events on a screen_window
-  if (0)
-    DEBUG ("Window: event: %s", string_from_event_type (event.type));
+  EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
     {
     case EVENT_LAST:
