@@ -2,7 +2,7 @@
 #include "screenwindow.hh"
 #include <ui/utilities.hh>
 #include <cairo/cairo-xlib.h>
-#include <fcntl.h> // for wakeup pipe
+#include <sys/poll.h>
 #include "screenwindow-xaux.cc"
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
@@ -157,7 +157,9 @@ struct ScreenDriverX11 : ScreenDriver {
         delete x11context;
       }
   }
-  virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup, ScreenWindow::EventReceiver &receiver);
+  virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup,
+                                              const ScreenWindow::Config &config,
+                                              ScreenWindow::EventReceiver &receiver);
   ScreenDriverX11() : ScreenDriver ("X11Window", -1), m_x11context (NULL), m_open_count (0) {}
 };
 static ScreenDriverX11 screen_driver_x11;
@@ -175,7 +177,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
-  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual State         get_state               ();
   virtual void          configure               (const Config &config);
@@ -195,13 +197,13 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
 };
 
 ScreenWindow*
-ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, ScreenWindow::EventReceiver &receiver)
+ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, ScreenWindow::EventReceiver &receiver)
 {
   assert_return (m_open_count > 0, NULL);
-  return new ScreenWindowX11 (*this, setup, receiver);
+  return new ScreenWindowX11 (*this, setup, config, receiver);
 }
 
-ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, EventReceiver &receiver) :
+ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
   m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_mapped (false), m_crossing_focus (false), m_win_focus (false), m_expose_surface (NULL)
@@ -230,8 +232,9 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   attributes.backing_store     = x11context.local_x11() ? NotUseful : WhenMapped;
   unsigned long attribute_mask = CWWinGravity | CWBitGravity | CWBackingStore | CWSaveUnder |
                                  CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
-  const int border = 3, request_width = 33, request_height = 33;
+  const int border = 0, request_width = MAX (1, config.request_width), request_height = MAX (1, config.request_height);
   // create and register window
+  const ulong create_serial = NextRequest (x11context.display);
   m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   assert (m_window != 0);
@@ -247,7 +250,7 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   this->setup (setup);
   // configure state for this window
   {
-    XConfigureEvent xev = { ConfigureNotify, /*serial*/ 0, true, x11context.display, m_window, m_window,
+    XConfigureEvent xev = { ConfigureNotify, create_serial, true, x11context.display, m_window, m_window,
                             0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect };
     XEvent xevent;
     xevent.xconfigure = xev;
@@ -776,6 +779,9 @@ ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, A
 // == X11 thread ==
 class X11Thread {
   X11Context &x11context;
+  EventFd     m_wakeup;
+  Atomic<int> m_running;
+  std::thread m_thread_handle;
   bool
   filter_event (const XEvent &xevent)
   {
@@ -814,33 +820,59 @@ class X11Thread {
   run()
   {
     ScopedLock<Mutex> x11locker (x11_rmutex);
-    const bool running = true;
-    while (running)
+    for (;;)
       {
         process_x11();
-        fd_set rfds;
-        FD_ZERO (&rfds);
-        FD_SET (ConnectionNumber (x11context.display), &rfds);
-        int maxfd = ConnectionNumber (x11context.display);
-        struct timeval tv;
-        tv.tv_sec = 9999, tv.tv_usec = 0;
-        x11locker.unlock();
-        // XDEBUG ("Xpoll: nfds=%d", maxfd + 1);
-        int retval = select (maxfd + 1, &rfds, NULL, NULL, &tv);
-        x11locker.lock();
-        if (retval < 0)
-          XDEBUG ("select(%d): %s", ConnectionNumber (x11context.display), strerror (errno));
+        struct pollfd pfds[] = {
+          { m_wakeup.inputfd(), PollFD::IN, 0 },
+          { ConnectionNumber (x11context.display), PollFD::IN, 0 },
+        };
+        int presult;
+        do
+          {
+            x11locker.unlock();
+            presult = poll (pfds, ARRAY_SIZE (pfds), -1);
+            x11locker.lock();
+          }
+        while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+        if (pfds[0].revents != 0)
+          {
+            m_wakeup.flush();
+            if (!m_running.load())
+              break;
+            critical ("X11Thread: seen wakeup without stop-notification, m_running=%d (addr=%p)", int (m_running), &m_running);
+          }
+        if (pfds[1].revents != 0)
+          process_x11();
       }
   }
-  std::thread m_thread_handle;
 public:
-  X11Thread (X11Context &ix11context) : x11context (ix11context) {}
+  X11Thread (X11Context &ix11context) :
+    x11context (ix11context), m_running (0)
+  {
+    int err = m_wakeup.open();
+    if (err)
+      fatal ("failed to open wakeup file descriptor: %s", strerror (err));
+  }
   void
   start()
   {
     ScopedLock<Mutex> x11locker (x11_rmutex);
     assert_return (std::thread::id() == m_thread_handle.get_id());
+    m_running.store (true);
     m_thread_handle = std::thread (&X11Thread::run, this);
+  }
+  void
+  stop()
+  {
+    assert_return (m_thread_handle.joinable());
+    m_running.store (false);
+    m_wakeup.wakeup();
+    m_thread_handle.join();
+  }
+  ~X11Thread()
+  {
+    assert_return (!m_thread_handle.joinable());
   }
 };
 
@@ -857,9 +889,9 @@ static void
 stop_x11_thread (X11Thread *x11_thread)
 {
   assert_return (x11_thread != NULL);
+  x11_thread->stop();
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  FIXME ("stop and join X11Thread");
-  assert_unreached();
+  delete x11_thread;
 }
 
 } // Rapicorn

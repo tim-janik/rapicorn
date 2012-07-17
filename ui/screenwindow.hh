@@ -86,7 +86,9 @@ protected:
 public:
   explicit              ScreenDriver            (const String &name, int priority = 0);
   virtual bool          open                    () = 0;
-  virtual ScreenWindow* create_screen_window    (const ScreenWindow::Setup &setup, ScreenWindow::EventReceiver &receiver) = 0;
+  virtual ScreenWindow* create_screen_window    (const ScreenWindow::Setup &setup,
+                                                 const ScreenWindow::Config &config,
+                                                 ScreenWindow::EventReceiver &receiver) = 0;
   virtual void          close                   () = 0;
   static ScreenDriver*  open_screen_driver      (const String &backend_name);
   static bool           driver_priority_lesser  (ScreenDriver *d1, ScreenDriver *d2);

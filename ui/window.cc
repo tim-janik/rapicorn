@@ -196,11 +196,6 @@ WindowImpl::resize_screen_window()
       m_config.request_width = rsize.width;
       m_config.request_height = rsize.height;
       m_pending_win_size = true;
-      if (m_config.title.empty())
-        {
-          user_warning (this->user_source(), "window title is unset");
-          m_config.title = "Foo - fröbenbaz - (日本人, Nihonjin, Nipponjin)"; // FIXME
-        }
       discard_expose_region(); // configure will send a new WIN_SIZE event
       m_screen_window->configure (m_config);
       return;
@@ -605,7 +600,7 @@ WindowImpl::draw_now ()
       cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
       cairo_surface_set_device_offset (surface, -x1, -y1);
       if (0)
-        printerr ("render-sruface: %+d%+d%+dx%d coverage=%.1f%%\n", x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height));
+        printerr ("render-surface: %+d%+d%+dx%d coverage=%.1f%%\n", x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height));
       critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
@@ -613,7 +608,7 @@ WindowImpl::draw_now ()
       m_screen_window->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
-      if (!has_pending_win_size() && !m_notify_displayed_id)
+      if (!m_notify_displayed_id)
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
@@ -935,6 +930,7 @@ WindowImpl::create_screen_window ()
     {
       if (!m_screen_window)
         {
+          resize_screen_window(); // ensure initial size requisition
           ScreenDriver *sdriver = ScreenDriver::open_screen_driver ("auto");
           if (sdriver)
             {
@@ -946,9 +942,17 @@ WindowImpl::create_screen_window ()
                 prg = program_file();
               setup.session_role = "RAPICORN :: " + prg;
               setup.bg_average = background();
-              m_screen_window = sdriver->create_screen_window (setup, *this);
+              const Requisition rsize = requisition();
+              m_config.request_width = rsize.width;
+              m_config.request_height = rsize.height;
+              m_pending_win_size = true;
+              if (m_config.title.empty())
+                {
+                  user_warning (this->user_source(), "window title is unset");
+                  m_config.title = setup.session_role;
+                }
+              m_screen_window = sdriver->create_screen_window (setup, m_config, *this);
               sdriver->close();
-              resize_screen_window();
             }
           else
             fatal ("failed to find and open any screen driver");
