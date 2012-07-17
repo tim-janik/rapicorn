@@ -648,7 +648,7 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
 {
   // window is not yet mapped
   m_state.setup.window_type = setup.window_type;
-  m_state.setup.window_flags = Flags (setup.window_flags | ICONIFY);
+  m_state.setup.window_flags = setup.window_flags;
   vector<unsigned long> longs;
   const uint64 f = m_state.setup.window_flags;
   if (f & MODAL)        longs.push_back (x11context.atom ("_NET_WM_STATE_MODAL"));

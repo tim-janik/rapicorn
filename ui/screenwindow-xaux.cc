@@ -79,7 +79,7 @@ x11_check_shared_image (Display *display, Visual *visual, int depth)
             }
           shmctl (shminfo.shmid, IPC_RMID, NULL); // delete the shm segment upon last detaching process
           // cleanup
-          if (has_shared_mem) // FIXME: test
+          if (has_shared_mem)
             XShmDetach (display, &shminfo);
           if (ptrdiff_t (shminfo.shmaddr) != -1)
             shmdt (shminfo.shmaddr);
