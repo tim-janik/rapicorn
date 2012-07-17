@@ -702,9 +702,9 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
 {
   // window is not yet mapped
   m_state.setup.window_type = setup.window_type;
-  m_state.setup.window_flags = setup.window_flags;
+  m_state.setup.request_flags = setup.request_flags;
   vector<unsigned long> longs;
-  const uint64 f = m_state.setup.window_flags;
+  const uint64 f = m_state.setup.request_flags;
   if (f & MODAL)        longs.push_back (x11context.atom ("_NET_WM_STATE_MODAL"));
   if (f & STICKY)       longs.push_back (x11context.atom ("_NET_WM_STATE_STICKY"));
   if (f & VMAXIMIZED)   longs.push_back (x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"));

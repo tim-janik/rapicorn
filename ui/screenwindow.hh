@@ -36,7 +36,7 @@ public:
   /// Structure requesting the initial window setup.
   struct Setup {
     WindowType  window_type;    ///< Requested window type.
-    Flags       window_flags;   ///< Requested window hints.
+    Flags       request_flags;  ///< Requested window hints.
     String      session_role;   ///< String to uniquely identify this window.
     Color       bg_average;
     inline      Setup();
@@ -96,7 +96,7 @@ public:
 
 // == Implementations ==
 ScreenWindow::Setup::Setup() :
-  window_type (WindowType (0)), window_flags (ScreenWindow::Flags (0))
+  window_type (WindowType (0)), request_flags (ScreenWindow::Flags (0))
 {}
 
 ScreenWindow::Config::Config() :

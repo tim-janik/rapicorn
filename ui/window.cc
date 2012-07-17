@@ -936,7 +936,7 @@ WindowImpl::create_screen_window ()
             {
               ScreenWindow::Setup setup;
               setup.window_type = WINDOW_TYPE_NORMAL;
-              setup.window_flags = ScreenWindow::Flags (ScreenWindow::DELETABLE | ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DECORATED);
+              setup.request_flags = ScreenWindow::Flags (ScreenWindow::DELETABLE | ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DECORATED);
               String prg = program_ident();
               if (prg.empty())
                 prg = program_file();
