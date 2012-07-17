@@ -170,8 +170,27 @@ load_atom_cache (Display *display)
   XInternAtoms (display, const_cast<char**> (cached_atoms), ARRAY_SIZE (cached_atoms), !force_create, atoms);
 }
 
-template<class Data, class X11Context> static vector<Data>
-x11_get_property_data (X11Context &x11context, Window window, const String &property_name, Atom *property_type = NULL)
+static Atom
+x11_atom (Display *display, const String &text)
+{
+  return XInternAtom (display, text.c_str(), False);
+}
+
+static String
+x11_atom_name (Display *display, Atom atom)
+{
+  char *res = XGetAtomName (display, atom);
+  if (res)
+    {
+      String result = res;
+      XFree (res);
+      return result;
+    }
+  return "";
+}
+
+template<class Data> static vector<Data>
+x11_get_property_data (Display *display, Window window, Atom property_atom, Atom *property_type = NULL)
 {
   XErrorEvent dummy = { 0, };
   x11_trap_errors (&dummy);
@@ -179,19 +198,19 @@ x11_get_property_data (X11Context &x11context, Window window, const String &prop
   Atom type_returned = 0;
   unsigned long nitems_return = 0, bytes_after_return = 0;
   uint8 *prop_data = NULL;
-  int abort = XGetWindowProperty (x11context.display, window, x11context.atom (property_name), 0, 8 * 1024, False,
+  int abort = XGetWindowProperty (display, window, property_atom, 0, 8 * 1024, False,
                                   AnyPropertyType, &type_returned, &format_returned, &nitems_return,
                                   &bytes_after_return, &prop_data) != Success;
   if (x11_untrap_errors() || type_returned == None)
     abort++;
   if (!abort && bytes_after_return)
     {
-      XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %lu bytes", CQUOTE (property_name), bytes_after_return);
+      XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %lu bytes", CQUOTE (x11_atom_name (display, property_atom)), bytes_after_return);
       abort++;
     }
   if (!abort && sizeof (Data) * 8 != format_returned)
     {
-      XDEBUG ("XGetWindowProperty(%s): property format mismatch: expected=%zu returned=%u", CQUOTE (property_name), sizeof (Data) * 8, format_returned);
+      XDEBUG ("XGetWindowProperty(%s): property format mismatch: expected=%zu returned=%u", CQUOTE (x11_atom_name (display, property_atom)), sizeof (Data) * 8, format_returned);
       abort++;
     }
   vector<Data> datav;
@@ -216,7 +235,7 @@ x11_get_property_data (X11Context &x11context, Window window, const String &prop
             datav.push_back (puint8[i]);
         }
       else
-        XDEBUG ("XGetWindowProperty(%s): unknown property data format with %d bits", CQUOTE (property_name), format_returned);
+        XDEBUG ("XGetWindowProperty(%s): unknown property data format with %d bits", CQUOTE (x11_atom_name (display, property_atom)), format_returned);
     }
   if (prop_data)
     XFree (prop_data);
@@ -225,13 +244,13 @@ x11_get_property_data (X11Context &x11context, Window window, const String &prop
   return datav;
 }
 
-template<class X11Context> static String
-x11_get_string_property (X11Context &x11context, Window window, const String &property_name, Atom *property_type = NULL)
+static String
+x11_get_string_property (Display *display, Window window, Atom property_atom, Atom *property_type = NULL)
 {
   Atom ptype = 0;
-  vector<char> datav = x11_get_property_data<char> (x11context, window, property_name, &ptype);
+  vector<char> datav = x11_get_property_data<char> (display, window, property_atom, &ptype);
   String rstring;
-  if (datav.size() && (ptype == x11context.atom ("STRING") || ptype == x11context.atom ("COMPOUND_TEXT")))
+  if (datav.size() && (ptype == XA_STRING || ptype == x11_atom (display, "COMPOUND_TEXT")))
     {
       XTextProperty xtp;
       xtp.format = 8;
@@ -239,16 +258,16 @@ x11_get_string_property (X11Context &x11context, Window window, const String &pr
       xtp.value = (uint8*) datav.data();
       xtp.encoding = ptype;
       char **tlist = NULL;
-      int count = 0, res = Xutf8TextPropertyToTextList (x11context.display, &xtp, &tlist, &count);
+      int count = 0, res = Xutf8TextPropertyToTextList (display, &xtp, &tlist, &count);
       if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist && tlist[0])
         rstring = String (tlist[0]);
       if (tlist)
         XFreeStringList (tlist);
     }
-  else if (datav.size() && ptype == x11context.atom ("UTF8_STRING"))
+  else if (datav.size() && ptype == x11_atom (display, "UTF8_STRING"))
     rstring = String (datav.data(), datav.size());
   else
-    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (property_name), x11context.atom (ptype).c_str());
+    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (x11_atom_name (display, property_atom)), x11_atom_name (display, ptype).c_str());
   if (property_type)
     *property_type = ptype;
   return rstring;
@@ -256,25 +275,25 @@ x11_get_string_property (X11Context &x11context, Window window, const String &pr
 
 enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
 
-template<class X11Context> static bool
-set_text_property (X11Context &x11context, Window window, const String &property, XICCEncodingStyle ecstyle,
+static bool
+set_text_property (Display *display, Window window, Atom property_atom, XICCEncodingStyle ecstyle,
                    const String &value, XPEmpty when_empty = KEEP_EMPTY)
 {
   bool success = true;
   if (when_empty == DELETE_EMPTY && value.empty())
-    XDeleteProperty (x11context.display, window, x11context.atom (property));
+    XDeleteProperty (display, window, property_atom);
   else if (ecstyle == XUTF8StringStyle)
-    XChangeProperty (x11context.display, window, x11context.atom (property), x11context.atom ("UTF8_STRING"), 8,
+    XChangeProperty (display, window, property_atom, x11_atom (display, "UTF8_STRING"), 8,
                      PropModeReplace, (uint8*) value.c_str(), value.size());
   else
     {
       char *text = const_cast<char*> (value.c_str());
       XTextProperty xtp = { 0, };
-      const int result = Xutf8TextListToTextProperty (x11context.display, &text, 1, ecstyle, &xtp);
+      const int result = Xutf8TextListToTextProperty (display, &text, 1, ecstyle, &xtp);
       if (0)
-        printerr ("XUTF8CONVERT: target=%s len=%zd result=%d: %s -> %s\n", x11context.atom(xtp.encoding).c_str(), value.size(), result, text, xtp.value);
+        printerr ("XUTF8CONVERT: target=%s len=%zd result=%d: %s -> %s\n", x11_atom_name (display, xtp.encoding).c_str(), value.size(), result, text, xtp.value);
       if (result >= 0 && xtp.nitems && xtp.value)
-        XChangeProperty (x11context.display, window, x11context.atom (property), xtp.encoding, xtp.format,
+        XChangeProperty (display, window, property_atom, xtp.encoding, xtp.format,
                          PropModeReplace, xtp.value, xtp.nitems);
       else
         success = false;

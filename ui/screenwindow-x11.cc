@@ -498,15 +498,20 @@ void
 ScreenWindowX11::property_changed (Atom atom, bool deleted)
 {
   State old_state = m_state;
-  if (x11context.atom (atom) == "WM_STATE")
+  if (debug_enabled() && (x11context.atom (atom) == "WM_NAME" || x11context.atom (atom) == "_NET_WM_NAME"))
     {
-      vector<uint32> datav = x11_get_property_data<uint32> (x11context, m_window, x11context.atom (atom));
+      String text = x11_get_string_property (x11context.display, m_window, atom);
+      EDEBUG ("State: %s: %s", x11context.atom (atom).c_str(), text.c_str());
+    }
+  else if (x11context.atom (atom) == "WM_STATE")
+    {
+      vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, atom);
       if (datav.size())
         m_state.window_flags = Flags ((m_state.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
     }
   else if (x11context.atom (atom) == "_NET_WM_STATE")
     {
-      vector<uint32> datav = x11_get_property_data<uint32> (x11context, m_window, x11context.atom (atom));
+      vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, atom);
       uint32 f = 0;
       for (size_t i = 0; i < datav.size(); i++)
         if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
@@ -720,7 +725,8 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
                        32, PropModeReplace, (uint8*) longs.data(), longs.size());
     }
   m_state.setup.bg_average = setup.bg_average;
-  set_text_property (x11context, m_window, "WM_WINDOW_ROLE", XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
+  set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),
+                     XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
   m_state.setup.session_role = setup.session_role;
   m_state.setup.bg_average = setup.bg_average;
   Color c1 = setup.bg_average, c2 = setup.bg_average;
@@ -737,8 +743,8 @@ ScreenWindowX11::configure (const Config &config)
   ScopedLock<Mutex> x11locker (x11_rmutex);
   if (config.title != m_state.config.title)
     {
-      set_text_property (x11context, m_window, "WM_NAME", XStdICCTextStyle, config.title);                      // ICCCM
-      set_text_property (x11context, m_window, "_NET_WM_NAME", XUTF8StringStyle, config.title);                 // EWMH
+      set_text_property (x11context.display, m_window, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
+      set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
       m_state.config.title = config.title;
     }
   enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
