@@ -7,6 +7,45 @@
 
 namespace Rapicorn {
 
+// == ScreenWindow ==
+static const char*
+flag_name (uint64 flag)
+{
+  switch (flag)
+    {
+    case ScreenWindow::MODAL:		return "MODAL";
+    case ScreenWindow::STICKY:	        return "STICKY";
+    case ScreenWindow::VMAXIMIZED:	return "VMAXIMIZED";
+    case ScreenWindow::HMAXIMIZED:	return "HMAXIMIZED";
+    case ScreenWindow::SHADED:	        return "SHADED";
+    case ScreenWindow::SKIP_TASKBAR:	return "SKIP_TASKBAR";
+    case ScreenWindow::SKIP_PAGER:	return "SKIP_PAGER";
+    case ScreenWindow::HIDDEN:	        return "HIDDEN";
+    case ScreenWindow::FULLSCREEN:	return "FULLSCREEN";
+    case ScreenWindow::ABOVE_ALL:	return "ABOVE_ALL";
+    case ScreenWindow::BELOW_ALL:	return "BELOW_ALL";
+    case ScreenWindow::ATTENTION:	return "ATTENTION";
+    case ScreenWindow::FOCUS_DECO:	return "FOCUS_DECO";
+    case ScreenWindow::DECORATED:	return "DECORATED";
+    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
+    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
+    case ScreenWindow::ICONIFY:	        return "ICONIFY";
+    case ScreenWindow::DELETABLE:	return "DELETABLE";
+    default:                            return "UNKNOWN";
+    }
+}
+
+String
+ScreenWindow::flags_name (uint64 flags, String combo)
+{
+  const uint64 I = 1;
+  String result;
+  for (size_t i = 0; i < 64; i++)
+    if (flags & (I << i))
+      result += (result.empty() ? "" : combo) + flag_name (I << i);
+  return result;
+}
+
 // == ScreenDriver ==
 static Mutex                 screen_driver_mutex;
 static ScreenDriver         *screen_driver_chain = NULL;

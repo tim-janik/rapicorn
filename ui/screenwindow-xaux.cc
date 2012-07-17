@@ -2,6 +2,7 @@
 #include <ui/utilities.hh>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
 #include <sys/shm.h>
 
@@ -88,7 +89,7 @@ x11_check_shared_image (Display *display, Visual *visual, int depth)
   return has_shared_mem;
 }
 
-static const char*
+static __attribute__ ((unused)) const char*
 window_state (int wm_state)
 {
   switch (wm_state)

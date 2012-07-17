@@ -12,26 +12,31 @@ protected:
   explicit              ScreenWindow () {}
 public:
   enum Flags {
-    DELETABLE      = 1 <<  0,   ///< Requests a [X] delete button or menu item on this window.
-    UNFOCUSED      = 1 <<  1,   ///< Requests the window to not get automatic keyboard focus when shown.
-    ACCEPT_FOCUS   = 1 <<  2,   ///< Requests to enter keyboard focus mode when selected by the user.
-    FULLSCREEN     = 1 <<  3,   ///< Requests covering the entire screen, no decoration, for presentation mode.
-    HMAXIMIZED     = 1 <<  4,   ///< Requests horizontal maximization for the window.
-    VMAXIMIZED     = 1 <<  5,   ///< Requests vertical maximization for the window.
-    ICONIFY        = 1 <<  6,   ///< Requests the window to be temporarily hidden (minimized).
-    STICKY         = 1 <<  7,   ///< Requests to keep window fixed and on screen when virtual desktops change.
-    SHADED         = 1 <<  8,   ///< Requests to only show the window decoration bar.
-    DECORATED      = 1 <<  9,   ///< Requests window decorations.
-    ABOVE_ALL      = 1 << 10,   ///< Requests the window to be shown on top of most other windows.
-    BELOW_ALL      = 1 << 11,   ///< Requests the window to be shown below most other windows.
-    SKIP_TASKBAR   = 1 << 12,   ///< Requests the window to be exempt from taskbar listings.
-    SKIP_PAGER     = 1 << 13,   ///< Requests the window to be exempt from virtual desktop pager display.
+    MODAL          = 1 <<  0,   ///< Hint to the window manager that window receives input exclusively.
+    STICKY         = 1 <<  1,   ///< Window is fixed and kept on screen when virtual desktops change.
+    VMAXIMIZED     = 1 <<  2,   ///< Window is vertically maximized.
+    HMAXIMIZED     = 1 <<  3,   ///< Window is horizontally maximized.
+    SHADED         = 1 <<  4,   ///< Only the decoration bar for this window is shown.
+    SKIP_TASKBAR   = 1 <<  5,   ///< The window is exempt from taskbar listings.
+    SKIP_PAGER     = 1 <<  6,   ///< The window is exempt from virtual desktop pager display.
+    HIDDEN         = 1 <<  7,   ///< Window manager indication for non-visible window state.
+    FULLSCREEN     = 1 <<  8,   ///< Window covers the entire screen, no decoration, for presentation mode.
+    ABOVE_ALL      = 1 <<  9,   ///< The window is shown on top of most other windows.
+    BELOW_ALL      = 1 << 10,   ///< The window is shown below most other windows.
+    ATTENTION      = 1 << 11,   ///< The window indicates need for user attention.
+    FOCUS_DECO     = 1 << 12,   ///< Window decoration indicates active focus state.
+    _NET_WM_STATE_MASK = 0x3fff,
+    DECORATED      = 1 << 26,   ///< The window is decorated by window managers.
+    UNFOCUSED      = 1 << 27,   ///< The window does not get automatic keyboard focus when initially shown.
+    ACCEPT_FOCUS   = 1 << 28,   ///< The window enters keyboard focus mode when selected by the user.
+    ICONIFY        = 1 << 29,   ///< The window is in iconified state, (minimized, but icon shown).
+    DELETABLE      = 1 << 30,   ///< The window manager offers the deletion action for this window.
   };
+  static String flags_name (uint64 flags, String combo = ",");
   /// Structure requesting the initial window setup.
   struct Setup {
     WindowType  window_type;    ///< Requested window type.
     Flags       window_flags;   ///< Requested window hints.
-    bool        modal;          ///< Requests the window to receive input exclusively.
     String      session_role;   ///< String to uniquely identify this window.
     Color       bg_average;
     inline      Setup();
@@ -46,9 +51,8 @@ public:
   };
   /// Structure describing the current window state.
   struct State {
-    Flags       window_flags;
-    bool        visible;
-    bool        active;         ///< Indicates that the window currently receives user input.
+    Flags       window_flags;           ///< Actual state of the backend window.
+    bool        visible, active;
     int         width, height;
     int         root_x, root_y;
     int         deco_x, deco_y;
@@ -90,7 +94,7 @@ public:
 
 // == Implementations ==
 ScreenWindow::Setup::Setup() :
-  window_type (WindowType (0)), window_flags (ScreenWindow::Flags (0)), modal (0)
+  window_type (WindowType (0)), window_flags (ScreenWindow::Flags (0))
 {}
 
 ScreenWindow::Config::Config() :
@@ -98,8 +102,8 @@ ScreenWindow::Config::Config() :
 {}
 
 ScreenWindow::State::State() :
-  window_flags (ScreenWindow::Flags (0)), visible (0), active (0), width (0), height (0),
-  root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN)
+  window_flags (ScreenWindow::Flags (0)), visible (0), active (0),
+  width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN)
 {}
 
 // internal

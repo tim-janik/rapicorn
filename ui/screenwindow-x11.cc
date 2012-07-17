@@ -304,7 +304,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ConfigureNotify: {
       const XConfigureEvent &xev = xevent.xconfigure;
-      if (xev.event != xev.window)
+      if (xev.window != m_window)
         break;
       EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
       if (m_state.width != xev.width || m_state.height != xev.height)
@@ -327,17 +327,17 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case MapNotify: {
       const XMapEvent &xev = xevent.xmap;
-      if (xev.event != xev.window)
+      if (xev.window != m_window)
         break;
-      EDEBUG ("Map  : %c=%lu w=%lu", ss, xev.serial, xev.window);
+      EDEBUG ("Map  : %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
       m_mapped = true;
       consumed = true;
       break; }
     case UnmapNotify: {
       const XUnmapEvent &xev = xevent.xunmap;
-      if (xev.event != xev.window)
+      if (xev.window != m_window)
         break;
-      EDEBUG ("Unmap: %c=%lu w=%lu", ss, xev.serial, xev.window);
+      EDEBUG ("Unmap: %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
       m_mapped = false;
       enqueue_locked (create_event_cancellation (m_event_context));
       consumed = true;
@@ -479,7 +479,38 @@ ScreenWindowX11::process_event (const XEvent &xevent)
 void
 ScreenWindowX11::property_changed (Atom atom, bool deleted)
 {
-  // FIXME
+  State old_state = m_state;
+  if (x11context.atom (atom) == "WM_STATE")
+    {
+      vector<uint32> datav = x11_get_property_data<uint32> (x11context, m_window, x11context.atom (atom));
+      if (datav.size())
+        m_state.window_flags = Flags ((m_state.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
+    }
+  else if (x11context.atom (atom) == "_NET_WM_STATE")
+    {
+      vector<uint32> datav = x11_get_property_data<uint32> (x11context, m_window, x11context.atom (atom));
+      uint32 f = 0;
+      for (size_t i = 0; i < datav.size(); i++)
+        if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_STICKY"))          f += STICKY;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"))  f += VMAXIMIZED;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_HORZ"))  f += HMAXIMIZED;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SHADED"))          f += SHADED;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_TASKBAR"))    f += SKIP_TASKBAR;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_PAGER"))      f += SKIP_PAGER;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_HIDDEN"))          f += HIDDEN;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_FULLSCREEN"))      f += FULLSCREEN;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_ABOVE"))           f += ABOVE_ALL;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_BELOW"))           f += BELOW_ALL;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION")) f += ATTENTION;
+        else if (datav[i] == x11context.atom ("_NET_WM_STATE_FOCUSED"))         f += FOCUS_DECO;
+      m_state.window_flags = Flags ((m_state.window_flags & ~_NET_WM_STATE_MASK) | f);
+    }
+  if (debug_enabled())
+    {
+      if (old_state.window_flags != m_state.window_flags)
+        EDEBUG ("State: flags=%s", flags_name (m_state.window_flags).c_str());
+    }
 }
 
 static Rect
@@ -617,10 +648,31 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
 {
   // window is not yet mapped
   m_state.setup.window_type = setup.window_type;
-  m_state.setup.window_flags = setup.window_flags;
-  if (setup.modal)
-    FIXME ("modal window's unimplemented");
-  m_state.setup.modal = setup.modal;
+  m_state.setup.window_flags = Flags (setup.window_flags | ICONIFY);
+  vector<unsigned long> longs;
+  const uint64 f = m_state.setup.window_flags;
+  if (f & MODAL)        longs.push_back (x11context.atom ("_NET_WM_STATE_MODAL"));
+  if (f & STICKY)       longs.push_back (x11context.atom ("_NET_WM_STATE_STICKY"));
+  if (f & VMAXIMIZED)   longs.push_back (x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"));
+  if (f & HMAXIMIZED)   longs.push_back (x11context.atom ("_NET_WM_STATE_MAXIMIZED_HORZ"));
+  if (f & SHADED)       longs.push_back (x11context.atom ("_NET_WM_STATE_SHADED"));
+  if (f & SKIP_TASKBAR) longs.push_back (x11context.atom ("_NET_WM_STATE_SKIP_TASKBAR"));
+  if (f & SKIP_PAGER)   longs.push_back (x11context.atom ("_NET_WM_STATE_SKIP_PAGER"));
+  if (f & FULLSCREEN)   longs.push_back (x11context.atom ("_NET_WM_STATE_FULLSCREEN"));
+  if (f & ABOVE_ALL)    longs.push_back (x11context.atom ("_NET_WM_STATE_ABOVE"));
+  if (f & BELOW_ALL)    longs.push_back (x11context.atom ("_NET_WM_STATE_BELOW"));
+  if (f & ATTENTION)    longs.push_back (x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION"));
+  if (f & (HIDDEN | ICONIFY)) longs.push_back (x11context.atom ("_NET_WM_STATE_HIDDEN"));
+  XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_STATE"),
+                   XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
+  if (f & (HIDDEN | ICONIFY))
+    {
+      longs.clear();
+      longs.push_back (IconicState);    // wm_state
+      longs.push_back (None);           // icon
+      XChangeProperty (x11context.display, m_window, x11context.atom ("WM_STATE"), x11context.atom ("WM_STATE"),
+                       32, PropModeReplace, (uint8*) longs.data(), longs.size());
+    }
   m_state.setup.bg_average = setup.bg_average;
   set_text_property (x11context, m_window, "WM_WINDOW_ROLE", XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
   m_state.setup.session_role = setup.session_role;
