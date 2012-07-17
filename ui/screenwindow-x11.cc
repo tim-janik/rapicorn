@@ -190,6 +190,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
   void                  property_changed        (Atom atom, bool deleted);
+  void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
 };
 
@@ -230,13 +231,20 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   unsigned long attribute_mask = CWWinGravity | CWBitGravity | CWBackingStore | CWSaveUnder |
                                  CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
   const int border = 3, request_width = 33, request_height = 33;
+  // create and register window
   m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
-  if (m_window)
-    x11context.x11ids[m_window] = this;
+  assert (m_window != 0);
+  x11context.x11ids[m_window] = this;
+  // adjust X hints & settings
+  vector<Atom> atoms;
+  atoms.push_back (x11context.atom ("WM_DELETE_WINDOW")); // request client messages instead of XKillClient
+  atoms.push_back (x11context.atom ("WM_TAKE_FOCUS"));
+  atoms.push_back (x11context.atom ("_NET_WM_PING"));
+  XSetWMProtocols (x11context.display, m_window, atoms.data(), atoms.size());
+  // FIXME: set Window hints
   // window setup
   this->setup (setup);
-  // FIXME:  set Window hints & focus
   // configure state for this window
   {
     XConfigureEvent xev = { ConfigureNotify, /*serial*/ 0, true, x11context.display, m_window, m_window,
@@ -471,6 +479,16 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         }
       consumed = true;
       break; }
+    case ClientMessage: {
+      const XClientMessageEvent &xev = xevent.xclient;
+      if (debug_enabled()) // avoid atom() round-trips
+        {
+          const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
+          EDEBUG ("ClMsg: %c=%lu w=%lu t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
+        }
+      client_message (xev);
+      consumed = true;
+      break; }
     default: ;
     }
   return consumed;
@@ -510,6 +528,34 @@ ScreenWindowX11::property_changed (Atom atom, bool deleted)
     {
       if (old_state.window_flags != m_state.window_flags)
         EDEBUG ("State: flags=%s", flags_name (m_state.window_flags).c_str());
+    }
+}
+
+void
+ScreenWindowX11::client_message (const XClientMessageEvent &xev)
+{
+  const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
+  if      (mtype == x11context.atom ("WM_DELETE_WINDOW"))
+    {
+      const uint32 saved_time = m_event_context.time;
+      m_event_context.time = xev.data.l[1];
+      enqueue_locked (create_event_win_delete (m_event_context));
+      m_event_context.time = saved_time; // avoid time warps from client messages
+    }
+  else if (mtype == x11context.atom ("WM_TAKE_FOCUS"))
+    {
+      XErrorEvent dummy = { 0, };
+      x11_trap_errors (&dummy); // guard against being unmapped
+      XSetInputFocus (x11context.display, m_window, RevertToPointerRoot, xev.data.l[1]);
+      XSync (x11context.display, False);
+      x11_untrap_errors();
+    }
+  else if (mtype == x11context.atom ("_NET_WM_PING"))
+    {
+      XEvent xevent = *(XEvent*) &xev;
+      xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0; // [0]=_PING, [1]=time, [2]=m_window
+      xevent.xclient.window = x11context.root_window;
+      XSendEvent (x11context.display, xevent.xclient.window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
     }
 }
 
