@@ -56,7 +56,7 @@ struct X11Context {
   explicit              X11Context (const String &x11display);
   Atom                  atom       (const String &text, bool force_create = true);
   String                atom       (Atom atom) const;
-  bool                  local_x11 ();
+  bool                  local_x11  ();
   /*dtor*/             ~X11Context ();
 };
 
@@ -71,6 +71,7 @@ X11Context::X11Context (const String &x11display) :
   if (!display)
     return;
   x11_thread = start_x11_thread (*this);
+  load_atom_cache (display);
   if (1) // FIXME: toggle sync
     XSynchronize (display, true);
   screen = DefaultScreen (display);
@@ -97,16 +98,15 @@ X11Context::~X11Context ()
 Atom
 X11Context::atom (const String &text, bool force_create)
 {
-  Atom a = XInternAtom (display, text.c_str(), !force_create);
-  // FIXME: optimize roundtrips
-  return a;
+  // XLib caches atoms well
+  return XInternAtom (display, text.c_str(), !force_create);
 }
 
 String
 X11Context::atom (Atom atom) const
 {
+  // XLib caches atoms well
   char *res = XGetAtomName (display, atom);
-  // FIXME: optimize roundtrips
   String result (res ? res : "");
   if (res)
     XFree (res);
