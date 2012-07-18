@@ -134,7 +134,8 @@ struct UserSource {
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
-extern bool _debug_flag;
+extern bool _debug_flag, _devel_flag;
+inline bool devel_enabled     () { return RAPICORN_UNLIKELY (_devel_flag); }
 bool        debug_key_enabled (const char *key);
 inline bool debug_enabled     () { return RAPICORN_UNLIKELY (_debug_flag); }
 inline bool debug_enabled     (const char *key) { return RAPICORN_UNLIKELY (_debug_flag) && debug_key_enabled (key); }

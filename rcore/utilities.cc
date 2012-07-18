@@ -199,6 +199,7 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 
 // === Logging ===
 bool                        _debug_flag = true; // bootup default before _init()
+bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
 static Atomic<char>         conftest_general_debugging = false;
 static Atomic<char>         conftest_key_debugging = false;
 static Atomic<KeyConfig*>   conftest_map = NULL;
@@ -237,6 +238,7 @@ debug_configure (const String &options)
     conftest_key_debugging.store (true);
   conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
   Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
+  Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
   if (debug_confbool ("help"))
     do_once { printerr ("%s", debug_help().c_str()); }
 }
@@ -253,6 +255,7 @@ debug_help ()
   s += "  :debug:           Enable general debugging messages, similar to :verbose:.\n";
   s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
   s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
+  s += "  :devel:           Enable development version behavior.\n";
   s += "  :verbose:         Enable general information and diagnostic messages.\n";
   s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
   s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
