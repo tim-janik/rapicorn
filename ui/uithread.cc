@@ -292,7 +292,7 @@ uithread_main_loop ()
 void
 uithread_shutdown (void)
 {
-  rapicorn_gtk_threads_shutdown();
+  WindowImpl::forcefully_close_all();
   if (the_uithread && the_uithread->running())
     {
       the_uithread->queue_stop(); // stops ui thread main loop

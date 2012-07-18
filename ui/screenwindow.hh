@@ -108,11 +108,6 @@ ScreenWindow::State::State() :
   width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN)
 {}
 
-// internal
-void rapicorn_gtk_threads_enter         ();
-void rapicorn_gtk_threads_leave         ();
-void rapicorn_gtk_threads_shutdown      ();
-
 } // Rapicorn
 
 #endif  /* __RAPICORN_SCREEN_WINDOW_HH__ */
