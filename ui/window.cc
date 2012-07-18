@@ -4,6 +4,7 @@
 #include "factory.hh"
 #include "uithread.hh"
 #include <string.h> // memcpy
+#include <algorithm>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 
@@ -122,12 +123,35 @@ WindowImpl::create_snapshot (const Rect &subarea)
   return surface;
 }
 
+namespace WindowTrail {
+static Mutex               wmutex;
+static vector<WindowImpl*> windows;
+static vector<WindowImpl*> wlist  ()               { ScopedLock<Mutex> slock (wmutex); return windows; }
+static void wenter (WindowImpl *wi) { ScopedLock<Mutex> slock (wmutex); windows.push_back (wi); }
+static void wleave (WindowImpl *wi)
+{
+  ScopedLock<Mutex> slock (wmutex);
+  auto it = find (windows.begin(), windows.end(), wi);
+  assert_return (it != windows.end());
+  windows.erase (it);
+};
+} // WindowTrail
+
+void
+WindowImpl::forcefully_close_all ()
+{
+  vector<WindowImpl*> wl = WindowTrail::wlist();
+  for (auto it : wl)
+    it->close();
+}
+
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_screen_window (NULL),
   m_entered (false), m_auto_close (false), m_pending_win_size (false),
   m_notify_displayed_id (0)
 {
+  WindowTrail::wenter (this);
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
   ClassDoctor::set_window_heritage (*this, hr);
@@ -151,6 +175,7 @@ WindowImpl::dispose ()
 
 WindowImpl::~WindowImpl()
 {
+  WindowTrail::wleave (this);
   if (m_notify_displayed_id)
     {
       m_loop.try_remove (m_notify_displayed_id);

@@ -32,6 +32,7 @@ public:
   explicit              WindowImpl              ();
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
+  static  void          forcefully_close_all    ();
   // grab handling
   virtual void          add_grab                                (ItemImpl &child, bool unconfined = false);
   void                  add_grab                                (ItemImpl *child, bool unconfined = false);
@@ -62,7 +63,7 @@ private:
   void                  notify_displayed                        (void);
   virtual void          remove_grab_item                        (ItemImpl               &child);
   void                  grab_stack_changed                      ();
-  /*Des*/               ~WindowImpl                             ();
+  virtual              ~WindowImpl                              ();
   virtual void          dispose_item                            (ItemImpl               &item);
   virtual bool          self_visible                            () const;
   /* misc */
