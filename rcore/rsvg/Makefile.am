@@ -33,8 +33,8 @@ noinst_LTLIBRARIES = librcore_rsvg@RAPICORN_RELEASE@.la # hardcoded -release $(R
 librcore_rsvg@RAPICORN_RELEASE@_la_SOURCES      = $(rcore_rsvg_sources)
 librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES = 
 librcore_rsvg@RAPICORN_RELEASE@_la_CXXFLAGS     = $(librcore_rsvg@RAPICORN_RELEASE@_la_CFLAGS)
-librcore_rsvg@RAPICORN_RELEASE@_la_CFLAGS       = $(PANGO_CFLAGS) $(GDKPIXBUF_CFLAGS) $(LIBXML_CFLAGS) $(CAIRO_CFLAGS)
-librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD       = $(PANGO_LIBS)   $(GDKPIXBUF_LIBS)   $(LIBXML_LIBS)   $(CAIRO_LIBS) $(RAPICORN_CORE_LIBS) -lm
+librcore_rsvg@RAPICORN_RELEASE@_la_CFLAGS       = $(RAPICORN_RSVG_CFLAGS)
+librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
 librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
