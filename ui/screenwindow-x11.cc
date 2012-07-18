@@ -756,8 +756,11 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
   m_state.setup.session_role = setup.session_role;
   m_state.setup.bg_average = setup.bg_average;
   Color c1 = setup.bg_average, c2 = setup.bg_average;
-  c1.tint (0, 0.96, 0.96);
-  c2.tint (0, 1.03, 1.03);
+  if (devel_enabled())
+    {
+      c1.tint (0, 0.96, 0.96);
+      c2.tint (0, 1.03, 1.03);
+    }
   Pixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
   XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap); // m_state.setup.bg_average ?
   XFreePixmap (x11context.display, xpixmap);
