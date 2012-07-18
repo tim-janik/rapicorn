@@ -82,9 +82,12 @@ X11Context::X11Context (const String &x11display) :
 
 X11Context::~X11Context ()
 {
+  ScopedLock<Mutex> x11locker (x11_rmutex);
   if (x11_thread)
     {
+      x11locker.unlock();
       stop_x11_thread (x11_thread);
+      x11locker.lock();
       x11_thread = NULL;
     }
   x11ids.clear();
@@ -260,8 +263,19 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
 
 ScreenWindowX11::~ScreenWindowX11()
 {
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  if (m_expose_surface)
+    {
+      cairo_surface_destroy (m_expose_surface);
+      m_expose_surface = NULL;
+    }
   if (m_window)
-    x11context.x11ids.erase (m_window);
+    {
+      XDestroyWindow (x11context.display, m_window);
+      x11context.x11ids.erase (m_window);
+      m_window = 0;
+    }
+  x11locker.unlock();
   m_x11driver.close();
 }
 
@@ -490,6 +504,15 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           EDEBUG ("ClMsg: %c=%lu w=%lu t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
         }
       client_message (xev);
+      consumed = true;
+      break; }
+    case DestroyNotify: {
+      const XDestroyWindowEvent &xev = xevent.xdestroywindow;
+      if (xev.window != m_window)
+        break;
+      EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
+      x11context.x11ids.erase (m_window);
+      m_window = 0;
       consumed = true;
       break; }
     default: ;
@@ -812,7 +835,7 @@ class X11Thread {
         if (!consumed)
           {
             const char ss = xevent.xany.send_event ? 'S' : 's';
-            EDEBUG ("Extra: %c=%lu w=%lu event_type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.type);
+            EDEBUG ("Spare: %c=%lu event_type=%d w=%lu", ss, xevent.xany.serial, xevent.type, xevent.xany.window);
           }
       }
   }
