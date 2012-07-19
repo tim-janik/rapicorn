@@ -967,7 +967,9 @@ WindowImpl::create_screen_window ()
               String prg = program_ident();
               if (prg.empty())
                 prg = program_file();
-              setup.session_role = "RAPICORN :: " + prg;
+              setup.session_role = "RAPICORN:" + prg;
+              if (!name().empty())
+                setup.session_role += ":" + name();
               setup.bg_average = background();
               const Requisition rsize = requisition();
               m_config.request_width = rsize.width;
