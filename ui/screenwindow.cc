@@ -27,10 +27,12 @@ flag_name (uint64 flag)
     case ScreenWindow::ATTENTION:	return "ATTENTION";
     case ScreenWindow::FOCUS_DECO:	return "FOCUS_DECO";
     case ScreenWindow::DECORATED:	return "DECORATED";
-    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
-    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
-    case ScreenWindow::ICONIFY:	        return "ICONIFY";
+    case ScreenWindow::MINIMIZABLE:	return "MINIMIZABLE";
+    case ScreenWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
     case ScreenWindow::DELETABLE:	return "DELETABLE";
+    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
+    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
+    case ScreenWindow::ICONIFY:	        return "ICONIFY";
     default:                            return "UNKNOWN";
     }
 }

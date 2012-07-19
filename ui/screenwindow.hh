@@ -25,12 +25,15 @@ public:
     BELOW_ALL      = 1 << 10,   ///< The window is shown below most other windows.
     ATTENTION      = 1 << 11,   ///< The window indicates need for user attention.
     FOCUS_DECO     = 1 << 12,   ///< Window decoration indicates active focus state.
-    _NET_WM_STATE_MASK = 0x3fff,
-    DECORATED      = 1 << 26,   ///< The window is decorated by window managers.
-    UNFOCUSED      = 1 << 27,   ///< The window does not get automatic keyboard focus when initially shown.
+    _WM_STATE_MASK = 0x00003fff,
+    DECORATED      = 1 << 24,   ///< The window is decorated by window managers.
+    MINIMIZABLE    = 1 << 25,   ///< The window manager offers the maximization action for this window.
+    MAXIMIZABLE    = 1 << 26,   ///< The window manager offers the maximization action for this window.
+    DELETABLE      = 1 << 27,   ///< The window manager offers the deletion action for this window.
+    _DECO_MASK = 0x0f000000,
     ACCEPT_FOCUS   = 1 << 28,   ///< The window enters keyboard focus mode when selected by the user.
-    ICONIFY        = 1 << 29,   ///< The window is in iconified state, (minimized, but icon shown).
-    DELETABLE      = 1 << 30,   ///< The window manager offers the deletion action for this window.
+    UNFOCUSED      = 1 << 29,   ///< The window does not get automatic keyboard focus when initially shown.
+    ICONIFY        = 1 << 30,   ///< The window is in iconified state, (minimized, but icon shown).
   };
   static String flags_name (uint64 flags, String combo = ",");
   /// Structure requesting the initial window setup.

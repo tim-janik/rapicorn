@@ -554,7 +554,18 @@ ScreenWindowX11::property_changed (Atom atom, bool deleted)
         else if (datav[i] == x11context.atom ("_NET_WM_STATE_BELOW"))           f += BELOW_ALL;
         else if (datav[i] == x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION")) f += ATTENTION;
         else if (datav[i] == x11context.atom ("_NET_WM_STATE_FOCUSED"))         f += FOCUS_DECO;
-      m_state.window_flags = Flags ((m_state.window_flags & ~_NET_WM_STATE_MASK) | f);
+      m_state.window_flags = Flags ((m_state.window_flags & ~_WM_STATE_MASK) | f);
+    }
+  else if (atom_name == "_MOTIF_WM_HINTS")
+    {
+      Mwm funcs = Mwm (FUNC_CLOSE | FUNC_MINIMIZE | FUNC_MAXIMIZE), deco = DECOR_ALL;
+      get_mwm_hints (x11context.display, m_window, &funcs, &deco);
+      uint32 f = 0;
+      if (funcs & FUNC_CLOSE)                                                   f += DELETABLE;
+      if (funcs & FUNC_MINIMIZE || deco & DECOR_MINIMIZE)                       f += MINIMIZABLE;
+      if (funcs & FUNC_MAXIMIZE || deco & DECOR_MAXIMIZE)                       f += MAXIMIZABLE;
+      if (deco & (DECOR_ALL | DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE))      f += DECORATED;
+      m_state.window_flags = Flags ((m_state.window_flags & ~_DECO_MASK) | f);
     }
   if (debug_enabled())
     {
@@ -750,6 +761,13 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
   if (f & (HIDDEN | ICONIFY))
     wmhints.initial_state = IconicState;
   XSetWMHints (x11context.display, m_window, &wmhints);
+  // _MOTIF_WM_HINTS
+  uint32 funcs = FUNC_RESIZE | FUNC_MOVE, deco = 0;
+  if (f & DECORATED)    { deco |= DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE | DECOR_MENU; }
+  if (f & MINIMIZABLE)  { funcs |= FUNC_MINIMIZE; deco |= DECOR_MINIMIZE; }
+  if (f & MAXIMIZABLE)  { funcs |= FUNC_MAXIMIZE; deco |= DECOR_MAXIMIZE; }
+  if (f & DELETABLE)    { funcs |= FUNC_CLOSE; deco |= DECOR_CLOSE; }
+  adjust_mwm_hints (x11context.display, m_window, Mwm (funcs), Mwm (deco));
   // title, name and role
   m_state.setup.session_role = setup.session_role;
   set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),

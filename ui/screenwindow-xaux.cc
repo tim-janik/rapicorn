@@ -303,4 +303,61 @@ set_text_property (Display *display, Window window, Atom property_atom, XICCEnco
   return success;
 }
 
+enum Mwm {
+  MWM_UNSPECIFIED = -1, // leaves FUNC/DECOR unset
+  FUNC_ALL = 0x01,      // combining ALL with other flags has adverse effects with mwm
+  FUNC_RESIZE = 0x02, FUNC_MOVE = 0x04, FUNC_MINIMIZE = 0x08, FUNC_MAXIMIZE = 0x10, FUNC_CLOSE = 0x20,
+  DECOR_ALL = 0x01,     // combining ALL with other flags has adverse effects with mwm
+  DECOR_BORDER = 0x02, DECOR_RESIZEH = 0x04, DECOR_TITLE = 0x08, DECOR_MENU = 0x10, DECOR_MINIMIZE = 0x20, DECOR_MAXIMIZE = 0x40,
+  DECOR_CLOSE = 0x80,   // CLOSE is fvwm specific
+};
+struct MwmHints { unsigned long flags, functions, decorations, input_mode, status; };
+
+static bool
+get_mwm_hints (Display *display, Window window, Mwm *funcs, Mwm *deco)
+{
+  const Atom xa_mwm_hints = x11_atom (display, "_MOTIF_WM_HINTS");
+  unsigned long nitems = 0, bytes_left = 0;
+  uint8 *data = NULL;
+  int format = 0;
+  Atom type = 0;
+  XGetWindowProperty (display, window, xa_mwm_hints, 0, 5, False, xa_mwm_hints, &type, &format, &nitems, &bytes_left, &data);
+  const MwmHints dummy = { 0, }, &mwm_hints = data ? *(MwmHints*) data : dummy;
+  if (data)
+    {
+      if (funcs)
+        *funcs = Mwm (mwm_hints.flags & 1 ? mwm_hints.functions : 0);
+      if (deco)
+        *deco = Mwm (mwm_hints.flags & 2 ? mwm_hints.decorations : 0);
+      XFree (data);
+    }
+  return data != NULL;
+}
+
+static void
+adjust_mwm_hints (Display *display, Window window, Mwm funcs, Mwm deco)
+{
+  const Atom xa_mwm_hints = x11_atom (display, "_MOTIF_WM_HINTS");
+  unsigned long nitems = 0, bytes_left = 0;
+  uint8 *data = NULL;
+  int format = 0;
+  Atom type = 0;
+  XGetWindowProperty (display, window, xa_mwm_hints, 0, 5, False, xa_mwm_hints, &type, &format, &nitems, &bytes_left, &data);
+  MwmHints dummy = { 0, }, &mwm_hints = data ? *(MwmHints*) data : dummy;
+  const int mwm_funcs = int (funcs), mwm_deco = int (deco);
+  if (mwm_funcs >= 0)
+    {
+      mwm_hints.flags |= 1; // MWM-FUNCTIONS
+      mwm_hints.functions = mwm_funcs;
+    }
+  if (mwm_deco >= 0)
+    {
+      mwm_hints.flags |= 2; // MWM-DECORATIONS
+      mwm_hints.decorations = mwm_deco;
+    }
+  XChangeProperty (display, window, xa_mwm_hints, xa_mwm_hints, 32, PropModeReplace, (uint8*) &mwm_hints, 5);
+  if (data)
+    XFree (data);
+}
+
 } // Anon
