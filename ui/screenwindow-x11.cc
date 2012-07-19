@@ -251,6 +251,7 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   // FIXME: set Window hints
   // window setup
   this->setup (setup);
+  configure (config);
   // configure state for this window
   {
     XConfigureEvent xev = { ConfigureNotify, create_serial, true, x11context.display, m_window, m_window,
