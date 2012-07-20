@@ -891,7 +891,7 @@ bool
 WindowImpl::drawing_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return !m_pending_win_size && exposes_pending();
+    return exposes_pending();
   else if (state.phase == state.DISPATCH)
     {
       ref (this);
@@ -959,9 +959,7 @@ WindowImpl::idle_show()
 {
   if (m_screen_window)
     {
-      // request size, WIN_SIZE
-      resize_window();
-      // size requested, show up
+      // size request & show up
       m_screen_window->show();
     }
 }
@@ -992,7 +990,6 @@ WindowImpl::create_screen_window ()
               const Requisition rsize = requisition();
               m_config.request_width = rsize.width;
               m_config.request_height = rsize.height;
-              m_pending_win_size = true;
               if (m_config.title.empty())
                 {
                   user_warning (this->user_source(), "window title is unset");
@@ -1000,6 +997,7 @@ WindowImpl::create_screen_window ()
                 }
               if (m_config.alias.empty())
                 m_config.alias = program_alias();
+              m_pending_win_size = true;
               m_screen_window = sdriver->create_screen_window (setup, m_config, *this);
               sdriver->close();
             }
