@@ -294,17 +294,6 @@ debug_key_enabled (const char *key)
   return keycheck;
 }
 
-static String
-program_name ()
-{
-#ifdef  _GNU_SOURCE
-  return program_invocation_short_name;
-#else
-#error Missing program_invocation_short_name
-  return "";
-#endif
-}
-
 static int
 thread_pid()
 {
@@ -397,7 +386,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     do_once {
       printerr ("[%s] %s[%u]: program started at: %.6f\n",
                 timestamp_format (delta).c_str(),
-                program_name().c_str(), thread_pid(),
+                program_alias().c_str(), thread_pid(),
                 start / 1000000.0);
     }
   if (f & DO_DEBUG)
@@ -415,7 +404,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     }
   if (f & DO_STDERR)
     {
-      printerr ("%s[%u]:%s%s%s", program_name().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), emsg.c_str());
+      printerr ("%s[%u]:%s%s%s", program_alias().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         printerr ("Aborting...\n");
     }
@@ -454,12 +443,12 @@ debug_handler (const char dkind, const String &file_line, const String &message,
               close (0);
             }
           out = string_printf ("[%s] %s[%u]: program started at: %s\n",
-                               timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
+                               timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
                                timestamp_format (start).c_str());
           conftest_logfd = fd;
         }
       out += string_printf ("[%s] %s[%u]:%s%s%s",
-                            timestamp_format (delta).c_str(), program_name().c_str(), thread_pid(),
+                            timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
                             wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         out += "aborting...\n";
@@ -608,7 +597,7 @@ UserSource::UserSource (String _filename, int _lineno) :
 static void
 user_message (const UserSource &source, const String &kind, const String &message)
 {
-  String fname, mkind, pname = program_name();
+  String fname, mkind, pname = program_alias();
   if (!pname.empty())
     pname += ":";
   if (!kind.empty())

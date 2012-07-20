@@ -243,6 +243,21 @@ program_file ()
 }
 
 /**
+ * Provides a short name for the current process, usually the last part of argv[0].
+ * See also GNU Libc program_invocation_short_name.
+ */
+String
+program_alias ()
+{
+#ifdef  _GNU_SOURCE
+  return program_invocation_short_name;
+#else
+  const char *last = strrchr (program_argv0.c_str(), '/');
+  return last ? last + 1 : "";
+#endif
+}
+
+/**
  * The program identifier @a app_ident as specified during initialization of Rapicorn.
  */
 String

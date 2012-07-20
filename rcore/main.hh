@@ -41,6 +41,7 @@ String  rapicorn_buildid        ();
 
 // === process info ===
 String       program_file       ();
+String       program_alias      ();
 String       program_ident      ();
 String       program_cwd        ();
 
