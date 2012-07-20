@@ -388,13 +388,14 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case Expose: {
       const XExposeEvent &xev = xevent.xexpose;
-      EDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count);
       std::vector<Rect> rectangles;
       m_expose_region.add (Rect (Point (xev.x, xev.y), xev.width, xev.height));
       if (m_pending_exposes)
         m_pending_exposes--;
       if (!m_pending_exposes && xev.count == 0)
         check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
+      String hint = m_pending_exposes ? " (E+)" : m_expose_surface ? "" : " (nodata)";
+      EDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
       if (!m_pending_exposes && xev.count == 0)
         blit_expose_region();
       consumed = true;
