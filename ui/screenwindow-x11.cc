@@ -229,11 +229,11 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   attributes.background_pixel  = XWhitePixel (x11context.display, x11context.screen);
   attributes.border_pixel      = XBlackPixel (x11context.display, x11context.screen);
   attributes.override_redirect = m_override_redirect;
-  attributes.win_gravity       = StaticGravity;
+  // CWWinGravity: attributes.win_gravity - many WMs are buggy if this is not the default NorthWestGravity
   attributes.bit_gravity       = StaticGravity;
   attributes.save_under        = m_override_redirect;
   attributes.backing_store     = x11context.local_x11() ? NotUseful : WhenMapped;
-  unsigned long attribute_mask = CWWinGravity | CWBitGravity | CWBackingStore | CWSaveUnder |
+  unsigned long attribute_mask = CWBitGravity | CWBackingStore | CWSaveUnder |
                                  CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
   const int border = 0, request_width = MAX (1, config.request_width), request_height = MAX (1, config.request_height);
   // create and register window
