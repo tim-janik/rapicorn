@@ -770,7 +770,7 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
   if (f & MAXIMIZABLE)  { funcs |= FUNC_MAXIMIZE; deco |= DECOR_MAXIMIZE; }
   if (f & DELETABLE)    { funcs |= FUNC_CLOSE; deco |= DECOR_CLOSE; }
   adjust_mwm_hints (x11context.display, m_window, Mwm (funcs), Mwm (deco));
-  // title, name and role
+  // session role
   m_state.setup.session_role = setup.session_role;
   set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),
                      XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
@@ -791,11 +791,22 @@ void
 ScreenWindowX11::configure (const Config &config)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  // WM size & gravity hints
+  XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
+  XSetWMNormalHints (x11context.display, m_window, &szhint);
+  // title
   if (config.title != m_state.config.title)
     {
       set_text_property (x11context.display, m_window, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
       set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
       m_state.config.title = config.title;
+    }
+  // iconified title
+  if (config.alias != m_state.config.alias)
+    {
+      set_text_property (x11context.display, m_window, x11context.atom ("WM_ICON_NAME"), XStdICCTextStyle, config.alias, DELETE_EMPTY);
+      set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_ICON_NAME"), XUTF8StringStyle, config.alias, DELETE_EMPTY);
+      m_state.config.alias = config.alias;
     }
   enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
 }

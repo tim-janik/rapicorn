@@ -981,6 +981,8 @@ WindowImpl::create_screen_window ()
                   user_warning (this->user_source(), "window title is unset");
                   m_config.title = setup.session_role;
                 }
+              if (m_config.alias.empty())
+                m_config.alias = program_alias();
               m_screen_window = sdriver->create_screen_window (setup, m_config, *this);
               sdriver->close();
             }

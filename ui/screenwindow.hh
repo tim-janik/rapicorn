@@ -47,6 +47,7 @@ public:
   /// Structure requesting window configuration changes.
   struct Config {
     String      title;                          ///< User visible title of this window.
+    String      alias;                          ///< Brief title alias as e.g. icon subtitle.
     int         root_x, root_y;                 ///< Requested window position.
     int         request_width, request_height;  ///< Requested window size.
     int         width_inc, height_inc;          ///< Requests grid aligned resizing.
