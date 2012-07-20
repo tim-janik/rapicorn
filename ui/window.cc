@@ -148,7 +148,7 @@ WindowImpl::forcefully_close_all ()
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_screen_window (NULL),
-  m_entered (false), m_auto_close (false), m_pending_win_size (false),
+  m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true),
   m_notify_displayed_id (0)
 {
   WindowTrail::wenter (this);
@@ -214,6 +214,7 @@ WindowImpl::resize_window (const Allocation *new_area)
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
   negotiate_size (new_area);
+  m_pending_expose = true;
   if (new_area)
     goto done;  // only called for reallocating
   rsize = requisition();
@@ -577,26 +578,23 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      m_pending_win_size = wevent->intermediate;
-      if (!m_pending_win_size)
-        m_pending_win_size = has_pending_win_size();
+      m_pending_win_size = wevent->intermediate || has_queued_win_size();
       const Allocation area = allocation();
-      bool need_resize = false;
       if (wevent->width != area.width || wevent->height != area.height)
         {
           Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
           if (!m_pending_win_size)
             resize_window (&new_area);
-          if (m_pending_win_size)
-            discard_expose_region(); // we'll get more WIN_SIZE events
           else
-            expose ();
-          need_resize = true;
+            discard_expose_region(); // we'll get more WIN_SIZE events
         }
-      else
-        expose(); // FIXME
-      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d resize=%d", string_from_event_type (event.type),
-              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size, need_resize);
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d expose=%d", string_from_event_type (event.type),
+              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size, m_pending_expose);
+      if (!m_pending_win_size && m_pending_expose)
+        {
+          expose();
+          m_pending_expose = false;
+        }
       handled = true;
     }
   return handled;
@@ -764,10 +762,8 @@ WindowImpl::dispose_item (ItemImpl &item)
 }
 
 bool
-WindowImpl::has_pending_win_size ()
+WindowImpl::has_queued_win_size ()
 {
-  if (m_pending_win_size)
-    return true;
   bool found_one = false;
   m_async_mutex.lock();
   for (std::list<Event*>::iterator it = m_async_event_queue.begin();

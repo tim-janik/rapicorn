@@ -18,6 +18,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   uint                  m_pending_win_size : 1;
+  uint                  m_pending_expose : 1;
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
   ScreenWindow::Config  m_config;
@@ -111,7 +112,7 @@ private:
   bool                  dispatch_win_size_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
   virtual bool          dispatch_event                          (const Event            &event);
-  bool                  has_pending_win_size                    ();
+  bool                  has_queued_win_size                     ();
   /* --- GrabEntry --- */
   struct GrabEntry {
     ItemImpl *item;
