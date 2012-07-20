@@ -80,7 +80,7 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES,[
 
 # setup DEBUG defaults
 if test "x$enable_debug" = "xyes"; then
-  ADDON_CFLAGS="-g -DG_ENABLE_DEBUG"
+  ADDON_CFLAGS="-g -DG_ENABLE_DEBUG -fno-omit-frame-pointer"
 else if test "x$enable_debug" = "xno"; then
   ADDON_CFLAGS="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
 else
@@ -88,18 +88,13 @@ else
 fi fi
 # setup CFLAGS
 AC_PROG_CC
-if test -z "$CFLAGS"; then
-  CFLAGS="$ADDON_CFLAGS"
-else
-  CFLAGS="$CFLAGS $ADDON_CFLAGS"
-fi
-if test -z "$CXXFLAGS"; then
-  CXXFLAGS="$ADDON_CFLAGS"
-else
-  CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
-fi
+CFLAGS="$CFLAGS $ADDON_CFLAGS"
 # setup LDFLAGS
+AC_PROG_LD
+LDFLAGS="$LDFLAGS $ADDON_LDFLAGS"
+# setup CXXFLAGS
 AC_PROG_CXX
+CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 if ${CC} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\)' && \
    ${CC} -dumpspecs | grep -q -- '--as-needed' ; then
   LDFLAGS="$LDFLAGS -Wl,--hash-style=both -Wl,--as-needed -Wl,-O1"
