@@ -14,7 +14,6 @@ HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 noinst_PROGRAMS      = cxxrapicorn
 cxxrapicorn_SOURCES  = cxx-rope.cc
 cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-cxxrapicorn_CXXFLAGS = -D__RAPICORN_BUILD__	# needed for direct <ui/utilities.hh> inclusion
 
 # === PyRapicorn ===
 pyrapicorn_cc_sources = py-rope.cc
