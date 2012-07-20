@@ -204,18 +204,24 @@ WindowImpl::self_visible () const
 }
 
 void
-WindowImpl::resize_screen_window()
+WindowImpl::resize_window (const Allocation *new_area)
 {
+  const uint64 start = timestamp_realtime();
   assert_return (requisitions_tunable() == false);
+  Requisition rsize;
+  ScreenWindow::State state;
+  bool allocated = false;
 
-  // negotiate size and ensure window is allocated
-  negotiate_size (NULL);
-  const Requisition rsize = requisition();
+  // negotiate sizes (new_area==NULL) and ensures window is allocated
+  negotiate_size (new_area);
+  if (new_area)
+    goto done;  // only called for reallocating
+  rsize = requisition();
 
   // grow screen window if needed
   if (!m_screen_window)
-    return;
-  ScreenWindow::State state = m_screen_window->get_state();
+    goto done;
+  state = m_screen_window->get_state();
   if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
     {
       m_config.request_width = rsize.width;
@@ -223,14 +229,22 @@ WindowImpl::resize_screen_window()
       m_pending_win_size = true;
       discard_expose_region(); // configure will send a new WIN_SIZE event
       m_screen_window->configure (m_config);
-      return;
+      goto done;
     }
   // screen window size is good, allocate it
   if (rsize.width != state.width || rsize.height != state.height)
     {
       Allocation area = Allocation (0, 0, state.width, state.height);
       negotiate_size (&area);
+      allocated = true;
     }
+ done:
+  const uint64 stop = timestamp_realtime();
+  Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
+  EDEBUG ("RESIZE: request=%s allocate=%s elapsed=%.3fms",
+          new_area ? "-" : string_printf ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
+          string_printf ("%.0fx%.0f", area.width, area.height).c_str(),
+          (stop - start) / 1000.0);
 }
 
 void
@@ -572,7 +586,7 @@ WindowImpl::dispatch_win_size_event (const Event &event)
         {
           Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
           if (!m_pending_win_size)
-            negotiate_size (&new_area);
+            resize_window (&new_area);
           if (m_pending_win_size)
             discard_expose_region(); // we'll get more WIN_SIZE events
           else
@@ -581,7 +595,7 @@ WindowImpl::dispatch_win_size_event (const Event &event)
         }
       else
         expose(); // FIXME
-      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d resize=%d\n", string_from_event_type (event.type),
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d resize=%d", string_from_event_type (event.type),
               wevent->width, wevent->height, wevent->intermediate, m_pending_win_size, need_resize);
       handled = true;
     }
@@ -612,10 +626,11 @@ WindowImpl::notify_displayed()
 void
 WindowImpl::draw_now ()
 {
-  Rect area = allocation();
-  assert_return (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
+      const uint64 start = timestamp_realtime();
+      Rect area = allocation();
+      assert_return (area.x == 0 && area.y == 0);
       // determine invalidated rendering region
       Region region = area;
       region.intersect (peek_expose_region());
@@ -625,8 +640,6 @@ WindowImpl::draw_now ()
       const int x1 = ifloor (rrect.x), y1 = ifloor (rrect.y), x2 = iceil (rrect.x + rrect.width), y2 = iceil (rrect.y + rrect.height);
       cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
       cairo_surface_set_device_offset (surface, -x1, -y1);
-      if (0)
-        printerr ("render-surface: %+d%+d%+dx%d coverage=%.1f%%\n", x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height));
       critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
@@ -636,6 +649,10 @@ WindowImpl::draw_now ()
       cairo_surface_destroy (surface);
       if (!m_notify_displayed_id)
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
+      const uint64 stop = timestamp_realtime();
+      EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
+              x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
+              (stop - start) / 1000.0);
     }
   else
     discard_expose_region(); // nuke stale exposes
@@ -857,7 +874,7 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
     {
       ref (this);
       if (need_resize)
-        resize_screen_window();
+        resize_window();
       unref (this);
       return true;
     }
@@ -943,7 +960,7 @@ WindowImpl::idle_show()
   if (m_screen_window)
     {
       // request size, WIN_SIZE
-      resize_screen_window();
+      resize_window();
       // size requested, show up
       m_screen_window->show();
     }
@@ -956,7 +973,7 @@ WindowImpl::create_screen_window ()
     {
       if (!m_screen_window)
         {
-          resize_screen_window(); // ensure initial size requisition
+          resize_window(); // ensure initial size requisition
           ScreenDriver *sdriver = ScreenDriver::open_screen_driver ("auto");
           if (sdriver)
             {

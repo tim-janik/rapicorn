@@ -70,7 +70,7 @@ private:
   vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
                                                                  const vector<ItemImpl*>    &cminus);
   /* sizing */
-  void                  resize_screen_window                    ();
+  void                  resize_window                           (const Allocation *new_area = NULL);
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
