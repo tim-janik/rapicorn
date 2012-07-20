@@ -99,7 +99,7 @@ class ScrollPortImpl : public virtual ViewportImpl {
     if (m_vadjustment)
       m_vadjustment->sig_value_changed -= slot (*this, &ScrollPortImpl::adjustment_changed);
     m_vadjustment = NULL;
-    this->SingleContainerImpl::hierarchy_changed (old_toplevel);
+    this->ViewportImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
         find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &m_hadjustment,
@@ -187,7 +187,7 @@ class ScrollPortImpl : public virtual ViewportImpl {
   virtual void
   set_focus_child (ItemImpl *item)
   {
-    SingleContainerImpl::set_focus_child (item);
+    ViewportImpl::set_focus_child (item);
     ItemImpl *fchild = get_focus_child();
     if (!fchild)
       return;

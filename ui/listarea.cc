@@ -110,7 +110,7 @@ ItemListImpl::constructed ()
 void
 ItemListImpl::hierarchy_changed (ItemImpl *old_toplevel)
 {
-  ItemImpl::hierarchy_changed (old_toplevel);
+  MultiContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     queue_visual_update();
 }
