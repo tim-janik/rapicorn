@@ -20,20 +20,18 @@ main (int   argc,
   // init test application
   init_core_test (argv[0], &argc, argv, iargs);
   ApplicationH app = init_app (argv[0], &argc, argv, iargs);
-  const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
   double calls = 0, slowest = 0, fastest = 9e+9;
   for (uint j = 0; j < 29; j++)
     {
       app.test_counter_set (0);
-      struct timespec ts0, ts1;
       const int count = 7000;
-      clock_gettime (clockid, &ts0);
+      const uint64 ts0 = timestamp_benchmark();
       for (int i = 0; i < count; i++)
         app.test_counter_inc_fetch ();
-      clock_gettime (clockid, &ts1);
+      const uint64 ts1 = timestamp_benchmark();
       assert (app.test_counter_get() == count);
-      double t0 = ts0.tv_sec + ts0.tv_nsec / 1000000000.;
-      double t1 = ts1.tv_sec + ts1.tv_nsec / 1000000000.;
+      double t0 = ts0 / 1000000000.;
+      double t1 = ts1 / 1000000000.;
       double call1 = (t1 - t0) / count;
       slowest = MAX (slowest, call1 * 1000000.);
       fastest = MIN (fastest, call1 * 1000000.);
