@@ -579,6 +579,8 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   if (wevent)
     {
       m_pending_win_size = wevent->intermediate || has_queued_win_size();
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
+              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size);
       const Allocation area = allocation();
       if (wevent->width != area.width || wevent->height != area.height)
         {
@@ -588,8 +590,6 @@ WindowImpl::dispatch_win_size_event (const Event &event)
           else
             discard_expose_region(); // we'll get more WIN_SIZE events
         }
-      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d expose=%d", string_from_event_type (event.type),
-              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size, m_pending_expose);
       if (!m_pending_win_size && m_pending_expose)
         {
           expose();
