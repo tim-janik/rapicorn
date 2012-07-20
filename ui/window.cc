@@ -151,6 +151,7 @@ WindowImpl::WindowImpl() :
   m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true),
   m_notify_displayed_id (0)
 {
+  const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
@@ -195,6 +196,7 @@ WindowImpl::~WindowImpl()
   m_loop.kill_sources();
   /* this should be done last */
   unref (&m_loop);
+  const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
 }
 
 bool

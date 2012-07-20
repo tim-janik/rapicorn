@@ -6,6 +6,8 @@
 
 namespace Rapicorn {
 
+class ResizeContainerImpl;
+
 // == Container ==
 struct ContainerImpl : public virtual ItemImpl, public virtual ContainerIface {
   friend              class ItemImpl;
@@ -85,18 +87,30 @@ protected:
   explicit              SingleContainerImpl     ();
 };
 
+// == AnchorInfo ==
+struct AnchorInfo {
+  ResizeContainerImpl *resize_container;
+  ViewportImpl        *viewport;
+  WindowImpl          *window;
+  constexpr AnchorInfo() : resize_container (NULL), viewport (NULL), window (NULL) {}
+};
+
 // == Resize Container ==
 class ResizeContainerImpl : public virtual SingleContainerImpl {
   uint                  m_tunable_requisition_counter;
   uint                  m_resizer;
+  AnchorInfo            m_anchor_info;
   void                  idle_sizing             ();
+  void                  update_anchor_info      ();
 protected:
   virtual void          invalidate_parent       ();
+  virtual void          hierarchy_changed       (ItemImpl *old_toplevel);
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();
 public:
   bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
+  AnchorInfo*           container_anchor_info   () { return &m_anchor_info; }
 };
 
 // == Multi Child Container ==
