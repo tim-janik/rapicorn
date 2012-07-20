@@ -579,9 +579,10 @@ WindowImpl::dispatch_win_size_event (const Event &event)
             expose ();
           need_resize = true;
         }
-      if (0)
-        printerr ("win-size: width=%f height=%f intermediate=%d pending=%d resize=%d\n", wevent->width, wevent->height,
-                  wevent->intermediate, m_pending_win_size, need_resize);
+      else
+        expose(); // FIXME
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d resize=%d\n", string_from_event_type (event.type),
+              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size, need_resize);
       handled = true;
     }
   return handled;
