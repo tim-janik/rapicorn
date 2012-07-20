@@ -586,7 +586,20 @@ WindowImpl::dispatch_win_size_event (const Event &event)
         {
           Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
           if (!m_pending_win_size)
-            resize_window (&new_area);
+            {
+#if 0 // excessive resizing costs
+              Allocation zzz = new_area;
+              resize_window (&zzz);
+              for (int i = 0; i < 37; i++)
+                {
+                  zzz.width += 1;
+                  resize_window (&zzz);
+                  zzz.height += 1;
+                  resize_window (&zzz);
+                }
+#endif
+              resize_window (&new_area);
+            }
           else
             discard_expose_region(); // we'll get more WIN_SIZE events
         }
