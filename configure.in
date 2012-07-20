@@ -319,6 +319,10 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
     dnl # --- check for Rapicorn GUI dependencies ---
     PKG_CHECK_MODULES(RAPICORN_GUI, cairo pangoft2 pangocairo)
+    dnl # == X11 System ==
+    AC_CHECK_LIB(X11, XOpenDisplay,
+      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lX11" ],
+      [ AC_MSG_ERROR([missing X11 library]) ])
     dnl # == X11 Extensions ==
     AC_CHECK_LIB(Xext, XShmAttach,
       [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lXext" ],
