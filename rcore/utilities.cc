@@ -243,6 +243,21 @@ debug_configure (const String &options)
     do_once { printerr ("%s", debug_help().c_str()); }
 }
 
+static std::list<DebugEntry*> *debug_entries;
+
+void
+DebugEntry::dbe_list (DebugEntry *e, int what)
+{
+  do_once {
+    static uint64 space[sizeof (*debug_entries) / sizeof (uint64)];
+    debug_entries = new (space) std::list<DebugEntry*>();
+  }
+  if (what > 0)
+    debug_entries->push_back (e);
+  else if (what < 0)
+    debug_entries->remove (e);
+}
+
 String
 debug_help ()
 {
@@ -260,6 +275,16 @@ debug_help ()
   s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
   s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
   s += "  :fatal-warnings:  Cast all warning messages into fatal conditions.\n";
+  for (auto it : *debug_entries)
+    {
+      String k = string_printf ("  :%s:", it->key);
+      if (!it->blurb)
+        s += k + "\n";
+      else if (k.size() >= 20)
+        s += k + "\n" + string_multiply (" ", 20) + it->blurb + "\n";
+      else
+        s += k + string_multiply (" ", 20 - k.size()) + it->blurb + "\n";
+    }
   return s;
 }
 

@@ -146,6 +146,19 @@ int64       debug_confnum     (const String &option, int64 vdefault = 0);
 String      debug_help        ();
 const char* strerror    (void);         // simple wrapper for strerror (errno)
 const char* strerror    (int errnum);   // wrapper for ::strerror
+class DebugEntry {
+  static void dbe_list  (DebugEntry*, int);
+public:
+  const char *const key, *const blurb;
+  String      confstring  (const String &vdefault = "") { return debug_confstring (key, vdefault); }
+  bool        confbool    (bool vdefault = false)       { return debug_confbool (key, vdefault); }
+  int64       confnum     (int64 vdefault = 0)          { return debug_confnum (key, vdefault); }
+  /*dtor*/   ~DebugEntry  ()                            { dbe_list (this, -1); }
+  explicit    DebugEntry  (const char *const dkey, const char *const dblurb = NULL) :
+    key (dkey), blurb (dblurb)
+  { dbe_list (this, +1); }
+};
+
 // implementation prototypes
 void        debug_assert     (const char*, int, const char*);
 void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
