@@ -5,6 +5,7 @@
 #include <rcore/utilities.hh>
 #include <rcore/threadlib.hh>
 #include <thread>
+#include <list>
 
 namespace Rapicorn {
 
@@ -230,7 +231,53 @@ public:
   void     push_link (V*volatile *nextp, V *newv) { do { *nextp = load(); } while (!cas (*nextp, newv)); }
 };
 
+// == AsyncBlockingQueue ==
+/**
+ * This is a thread-safe asyncronous queue which blocks in pop() until data is provided through push().
+ */
+template<class Value>
+class AsyncBlockingQueue {
+  Mutex            m_mutex;
+  Cond             m_cond;
+  std::list<Value> m_list;
+public:
+  void  push (const Value &v);
+  Value pop  ();
+  void  swap (std::list<Value> &list);
+};
+
 // == Implementation Bits ==
+template<class Value> void
+AsyncBlockingQueue<Value>::push (const Value &v)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  const bool notify = m_list.empty();
+  m_list.push_back (v);
+  if (RAPICORN_UNLIKELY (notify))
+    m_cond.broadcast();
+}
+
+template<class Value> Value
+AsyncBlockingQueue<Value>::pop ()
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  while (m_list.empty())
+    m_cond.wait (m_mutex);
+  Value v = m_list.front();
+  m_list.pop_front();
+  return v;
+}
+
+template<class Value> void
+AsyncBlockingQueue<Value>::swap (std::list<Value> &list)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  const bool notify = m_list.empty();
+  m_list.swap (list);
+  if (notify && !m_list.empty())
+    m_cond.broadcast();
+}
+
 inline ThreadInfo&
 ThreadInfo::self()
 {
