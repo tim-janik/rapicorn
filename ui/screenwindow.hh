@@ -71,14 +71,33 @@ public:
   };
   // == public API ==
   virtual State         get_state               () = 0;                         ///< Retrieve the current window state.
-  virtual void          configure               (const Config &config) = 0;     ///< Change window configuration.
-  virtual void          beep                    () = 0;                         ///< Issue an audible bell.
-  virtual void          show                    () = 0;                         ///< Show window on screen.
-  virtual void          present                 () = 0;                         ///< Demand user attention for this window.
+  void          configure               (const Config &config);     ///< Change window configuration.
+  void          beep                    ();                             ///< Issue an audible bell.
+  void          show                    ();                         ///< Show window on screen.
+  void          present                 ();                         ///< Demand user attention for this window.
   virtual bool          viewable                () = 0; ///< Check if the window is viewable, i.e. not minimized/iconified/etc.
-  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region) = 0;
-  virtual void          start_user_move         (uint button, double root_x, double root_y) = 0;
-  virtual void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge) = 0;
+  void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);
+  void          start_user_move         (uint button, double root_x, double root_y);
+  void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
+protected:
+  enum CommandType {
+    CMD_CREATE = 1, CMD_CONFIGURE, CMD_BEEP, CMD_SHOW, CMD_PRESENT, CMD_BLIT, CMD_MOVE, CMD_RESIZE,
+  };
+  struct Command {
+    CommandType       type;
+    union {
+      struct { Config          *config; Setup *setup; EventReceiver *receiver; };
+      struct { cairo_surface_t *surface; Rapicorn::Region *region; };
+      struct { int              button, root_x, root_y; };
+    };
+    Command (CommandType type);
+    Command (CommandType type, const Config &cfg);
+    Command (CommandType type, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg, ScreenWindow::EventReceiver &rc);
+    Command (CommandType type, cairo_surface_t *surface, const Rapicorn::Region &region);
+    Command (CommandType type, int button, int root_x, int root_y);
+    ~Command();
+  };
+  virtual void  queue_command   (Command *command) = 0;
 };
 
 // == ScreenDriver ==

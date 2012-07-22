@@ -126,16 +126,12 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   cairo_surface_t      *m_expose_surface;
   explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
+  virtual void          queue_command           (Command *command);
   virtual State         get_state               ();
-  virtual void          configure               (const Config &config);
-  void                  setup                   (const ScreenWindow::Setup &setup);
-  virtual void          beep                    ();
-  virtual void          show                    ();
-  virtual void          present                 ();
   virtual bool          viewable                ();
-  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region);
-  virtual void          start_user_move         (uint button, double root_x, double root_y);
-  virtual void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
+  void                  setup_window            (const ScreenWindow::Setup &setup);
+  void                  configure_window        (const Config &config);
+  void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
   void                  property_changed        (Atom atom, bool deleted);
@@ -194,8 +190,8 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   XSetWMProtocols (x11context.display, m_window, atoms.data(), atoms.size());
   // FIXME: set Window hints
   // window setup
-  this->setup (setup);
-  configure (config);
+  setup_window (setup);
+  configure_window (config);
   // configure state for this window
   {
     XConfigureEvent xev = { ConfigureNotify, create_serial, true, x11context.display, m_window, m_window,
@@ -222,13 +218,6 @@ ScreenWindowX11::~ScreenWindowX11()
     }
   x11locker.unlock();
   m_x11driver.close();
-}
-
-void
-ScreenWindowX11::show (void)
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  XMapWindow (x11context.display, m_window);
 }
 
 struct PendingSensor {
@@ -559,7 +548,7 @@ cairo_image_surface_coverage (cairo_surface_t *surface)
 }
 
 void
-ScreenWindowX11::blit_surface (cairo_surface_t *surface, Rapicorn::Region region)
+ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   CHECK_CAIRO_STATUS (surface);
@@ -679,7 +668,7 @@ create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable,
 }
 
 void
-ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
+ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 {
   // window is not yet mapped
   m_state.setup.window_type = setup.window_type;
@@ -732,7 +721,7 @@ ScreenWindowX11::setup (const ScreenWindow::Setup &setup)
 }
 
 void
-ScreenWindowX11::configure (const Config &config)
+ScreenWindowX11::configure_window (const Config &config)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   // WM size & gravity hints
@@ -763,20 +752,30 @@ ScreenWindowX11::viewable (void)
 }
 
 void
-ScreenWindowX11::beep()
+ScreenWindowX11::queue_command (Command *command)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  XBell (x11context.display, 0);
+  switch (command->type)
+    {
+    case CMD_CREATE:    break; // FIXME
+    case CMD_CONFIGURE:
+      configure (*command->config);
+      break;
+    case CMD_BEEP:
+      XBell (x11context.display, 0);
+      break;
+    case CMD_SHOW:
+      XMapWindow (x11context.display, m_window);
+      break;
+    case CMD_PRESENT:   break;  // FIXME
+    case CMD_BLIT:
+      blit (command->surface, *command->region);
+      break;
+    case CMD_MOVE:      break;  // FIXME
+    case CMD_RESIZE:    break;  // FIXME
+    }
+  delete command;
 }
-
-void
-ScreenWindowX11::present () { /*FIXME*/ }
-
-void
-ScreenWindowX11::start_user_move (uint button, double root_x, double root_y) { /*FIXME*/ }
-
-void
-ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, AnchorType edge) { /*FIXME*/ }
 
 // == X11Context ==
 X11Context::X11Context() :

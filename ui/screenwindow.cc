@@ -7,7 +7,116 @@
 
 namespace Rapicorn {
 
+// == ScreenWindow::Command ==
+ScreenWindow::Command::Command (CommandType ctype) :
+  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+{
+  assert (type == CMD_BEEP || type == CMD_SHOW || type == CMD_PRESENT);
+}
+
+ScreenWindow::Command::Command (CommandType ctype, const Config &cfg) :
+  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+{
+  assert (type == CMD_CONFIGURE);
+  config = new Config (cfg);
+}
+
+ScreenWindow::Command::Command (CommandType ctype, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg, ScreenWindow::EventReceiver &rc) :
+  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+{
+  assert (type == CMD_CREATE);
+  setup = new Setup (cs);
+  config = new Config (cfg);
+  receiver = &rc;
+}
+
+ScreenWindow::Command::Command (CommandType ctype, cairo_surface_t *csurface, const Rapicorn::Region &cregion) :
+  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+{
+  assert (type == CMD_BLIT);
+  surface = cairo_surface_reference (csurface);
+  region = new Rapicorn::Region (cregion);
+}
+
+ScreenWindow::Command::Command (CommandType ctype, int cbutton, int croot_x, int croot_y) :
+  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+{
+  assert (type == CMD_MOVE || type == CMD_RESIZE);
+  cbutton = button;
+  croot_x = root_x;
+  croot_y = root_y;
+}
+
+ScreenWindow::Command::~Command()
+{
+  switch (type)
+    {
+    case CMD_CREATE:
+      delete setup;
+      delete config;
+      // rc = NULL;
+      break;
+    case CMD_CONFIGURE:
+      delete config;
+      assert (!setup && !receiver);
+      break;
+    case CMD_BLIT:
+      cairo_surface_destroy (surface);
+      delete region;
+      assert (!receiver);
+      break;
+    case CMD_MOVE: case CMD_RESIZE:
+      button = root_x = root_y = 0;
+      break;
+    case CMD_BEEP: case CMD_SHOW: case CMD_PRESENT:
+      assert (!config && !setup && !receiver);
+      break;
+    }
+}
+
 // == ScreenWindow ==
+void
+ScreenWindow::configure (const Config &config)
+{
+  queue_command (new Command (CMD_CONFIGURE, config));
+}
+
+void
+ScreenWindow::beep ()
+{
+  queue_command (new Command (CMD_BEEP));
+}
+
+void
+ScreenWindow::show ()
+{
+  queue_command (new Command (CMD_SHOW));
+}
+
+void
+ScreenWindow::present ()
+{
+  queue_command (new Command (CMD_PRESENT));
+}
+
+void
+ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
+{
+  queue_command (new Command (CMD_BLIT, surface, region));
+}
+
+void
+ScreenWindow::start_user_move (uint button, double root_x, double root_y)
+{
+  queue_command (new Command (CMD_MOVE, button, root_x, root_y));
+}
+
+void
+ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
+{
+  queue_command (new Command (CMD_RESIZE, button, root_x, root_y));
+}
+
 static const char*
 flag_name (uint64 flag)
 {
