@@ -31,10 +31,7 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 namespace Rapicorn {
 
 // == declarations ==
-class X11Thread;
 class X11Context;
-static X11Thread*       start_x11_thread (X11Context &x11context);
-static void             stop_x11_thread  (X11Thread *x11_thread);
 static Mutex x11_rmutex (RECURSIVE_LOCK);
 
 // == X11Item ==
@@ -44,8 +41,14 @@ struct X11Item {
 };
 
 // == X11Context ==
-struct X11Context {
-  X11Thread            *x11_thread;
+class X11Context {
+  EventFd               m_wakeup;
+  Atomic<int>           m_running;
+  std::thread           m_thread_handle;
+  void                  x11_thread ();
+  void                  process_x11();
+  bool                  filter_event(const XEvent&);
+public:
   Display              *display;
   int                   screen;
   Visual               *visual;
@@ -53,77 +56,16 @@ struct X11Context {
   Window                root_window;
   int8                  m_shared_mem;
   map<size_t, X11Item*> x11ids;
-  explicit              X11Context (const String &x11display);
+  bool                  connect    (const String &x11display);
   Atom                  atom       (const String &text, bool force_create = true);
   String                atom       (Atom atom) const;
   bool                  local_x11  ();
+  // executed outside X11 thread
+  explicit              X11Context ();
   /*dtor*/             ~X11Context ();
+  void                  start_x11_thread();
+  void                  stop_x11_thread();
 };
-
-X11Context::X11Context (const String &x11display) :
-  x11_thread (NULL), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
-  const char *s = x11display.c_str();
-  display = XOpenDisplay (s[0] ? s : NULL);
-  XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
-  if (!display)
-    return;
-  x11_thread = start_x11_thread (*this);
-  load_atom_cache (display);
-  if (1) // FIXME: toggle sync
-    XSynchronize (display, true);
-  screen = DefaultScreen (display);
-  visual = DefaultVisual (display, screen);
-  depth = DefaultDepth (display, screen);
-  root_window = XRootWindow (display, screen);
-}
-
-X11Context::~X11Context ()
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  if (x11_thread)
-    {
-      x11locker.unlock();
-      stop_x11_thread (x11_thread);
-      x11locker.lock();
-      x11_thread = NULL;
-    }
-  x11ids.clear();
-  if (display)
-    {
-      XCloseDisplay (display);
-      display = NULL;
-    }
-}
-
-Atom
-X11Context::atom (const String &text, bool force_create)
-{
-  // XLib caches atoms well
-  return XInternAtom (display, text.c_str(), !force_create);
-}
-
-String
-X11Context::atom (Atom atom) const
-{
-  // XLib caches atoms well
-  char *res = XGetAtomName (display, atom);
-  String result (res ? res : "");
-  if (res)
-    XFree (res);
-  return result;
-}
-
-bool
-X11Context::local_x11()
-{
-  if (m_shared_mem < 0)
-    m_shared_mem = x11_check_shared_image (display, visual, depth);
-  XDEBUG ("XShmCreateImage: %s", m_shared_mem ? "ok" : "failed to attach");
-  return m_shared_mem;
-}
 
 // == ScreenDriverX11 ==
 struct ScreenDriverX11 : ScreenDriver {
@@ -137,8 +79,8 @@ struct ScreenDriverX11 : ScreenDriver {
         assert_return (m_open_count == 0, false);
         const char *s = getenv ("DISPLAY");
         String ds = s ? s : "";
-        X11Context *x11context = new X11Context (ds);
-        if (!x11context->display)
+        X11Context *x11context = new X11Context ();
+        if (!x11context->connect (ds)) // FIXME: in x11 thread
           {
             delete x11context;
             return false;
@@ -153,10 +95,11 @@ struct ScreenDriverX11 : ScreenDriver {
   {
     assert_return (m_open_count > 0);
     m_open_count--;
-    if (!m_open_count)
+    if (!m_open_count && m_x11context)
       {
         X11Context *x11context = m_x11context;
         m_x11context = NULL;
+        x11context->stop_x11_thread();
         delete x11context;
       }
   }
@@ -834,122 +777,162 @@ ScreenWindowX11::start_user_move (uint button, double root_x, double root_y) { /
 void
 ScreenWindowX11::start_user_resize (uint button, double root_x, double root_y, AnchorType edge) { /*FIXME*/ }
 
-// == X11 thread ==
-class X11Thread {
-  X11Context &x11context;
-  EventFd     m_wakeup;
-  Atomic<int> m_running;
-  std::thread m_thread_handle;
-  bool
-  filter_event (const XEvent &xevent)
-  {
-    switch (xevent.type)
-      {
-      case MappingNotify:
-        XRefreshKeyboardMapping (const_cast<XMappingEvent*> (&xevent.xmapping));
-        return true;
-      default:
-        return false;
-      }
-  }
-  void
-  process_x11()
-  {
-    while (XPending (x11context.display))
-      {
-        XEvent xevent = { 0, };
-        XNextEvent (x11context.display, &xevent);
-        bool consumed = filter_event (xevent);
-        X11Item *xitem = x11context.x11ids[xevent.xany.window];
-        if (xitem)
-          {
-            ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
-            if (scw)
-              consumed = scw->process_event (xevent);
-          }
-        if (!consumed)
-          {
-            const char ss = xevent.xany.send_event ? 'S' : 's';
-            EDEBUG ("Spare: %c=%lu event_type=%d w=%lu", ss, xevent.xany.serial, xevent.type, xevent.xany.window);
-          }
-      }
-  }
-  void
-  run()
-  {
-    ScopedLock<Mutex> x11locker (x11_rmutex);
-    for (;;)
-      {
-        process_x11();
-        struct pollfd pfds[] = {
-          { m_wakeup.inputfd(), PollFD::IN, 0 },
-          { ConnectionNumber (x11context.display), PollFD::IN, 0 },
-        };
-        int presult;
-        do
-          {
-            x11locker.unlock();
-            presult = poll (pfds, ARRAY_SIZE (pfds), -1);
-            x11locker.lock();
-          }
-        while (presult < 0 && (errno == EAGAIN || errno == EINTR));
-        if (pfds[0].revents != 0)
-          {
-            m_wakeup.flush();
-            if (!m_running.load())
-              break;
-            critical ("X11Thread: seen wakeup without stop-notification, m_running=%d (addr=%p)", int (m_running), &m_running);
-          }
-        if (pfds[1].revents != 0)
-          process_x11();
-      }
-  }
-public:
-  X11Thread (X11Context &ix11context) :
-    x11context (ix11context), m_running (0)
-  {
-    int err = m_wakeup.open();
-    if (err)
-      fatal ("failed to open wakeup file descriptor: %s", strerror (err));
-  }
-  void
-  start()
-  {
-    ScopedLock<Mutex> x11locker (x11_rmutex);
-    assert_return (std::thread::id() == m_thread_handle.get_id());
-    m_running.store (true);
-    m_thread_handle = std::thread (&X11Thread::run, this);
-  }
-  void
-  stop()
-  {
-    assert_return (m_thread_handle.joinable());
-    m_running.store (false);
-    m_wakeup.wakeup();
-    m_thread_handle.join();
-  }
-  ~X11Thread()
-  {
-    assert_return (!m_thread_handle.joinable());
-  }
-};
-
-static X11Thread*
-start_x11_thread (X11Context &x11context)
+// == X11Context ==
+X11Context::X11Context() :
+  m_running (0), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  X11Thread *x11_thread = new X11Thread (x11context);
-  x11_thread->start();
-  return x11_thread;
+  // X11 thread not yet started
 }
 
-static void
-stop_x11_thread (X11Thread *x11_thread)
+X11Context::~X11Context ()
 {
-  assert_return (x11_thread != NULL);
-  x11_thread->stop();
+  // executed outside of X11 thread
+  assert_return (!m_thread_handle.joinable());
+  x11ids.clear();
+  assert_return (!display);
+}
+
+bool
+X11Context::connect (const String &x11display)
+{
+  assert_return (!display && !screen && !visual && !depth && !root_window && m_shared_mem < 0, false);
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  delete x11_thread;
+  do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
+  const char *s = x11display.c_str();
+  display = XOpenDisplay (s[0] ? s : NULL);
+  XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
+  if (!display)
+    return false;
+  start_x11_thread();
+  load_atom_cache (display);
+  if (1) // FIXME: toggle sync
+    XSynchronize (display, true);
+  screen = DefaultScreen (display);
+  visual = DefaultVisual (display, screen);
+  depth = DefaultDepth (display, screen);
+  root_window = XRootWindow (display, screen);
+  return true;
+}
+
+void
+X11Context::start_x11_thread()
+{
+  assert_return (m_running == false && m_wakeup.opened() == false);
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  assert_return (std::thread::id() == m_thread_handle.get_id());
+  m_running.store (true);
+  int err = m_wakeup.open();
+  if (err)
+    fatal ("failed to open wakeup file descriptor: %s", strerror (err));
+  m_thread_handle = std::thread (&X11Context::x11_thread, this);
+}
+
+void
+X11Context::stop_x11_thread()
+{
+  assert_return (m_thread_handle.joinable());
+  m_running.store (false);
+  m_wakeup.wakeup();
+  m_thread_handle.join();
+}
+
+void
+X11Context::x11_thread()
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  for (;;)
+    {
+      process_x11();
+      struct pollfd pfds[] = {
+        { m_wakeup.inputfd(), PollFD::IN, 0 },
+        { ConnectionNumber (display), PollFD::IN, 0 },
+      };
+      int presult;
+      do
+        {
+          x11locker.unlock();
+          presult = poll (pfds, ARRAY_SIZE (pfds), -1);
+          x11locker.lock();
+        }
+      while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+      if (pfds[0].revents != 0)
+        {
+          m_wakeup.flush();
+          if (!m_running.load())
+            break;
+          critical ("X11Thread: seen wakeup without stop-notification, m_running=%d (addr=%p)", int (m_running), &m_running);
+        }
+      if (pfds[1].revents != 0)
+        process_x11();
+    }
+  if (display)
+    {
+      XCloseDisplay (display);
+      display = NULL;
+    }
+}
+
+void
+X11Context::process_x11()
+{
+  while (XPending (display))
+    {
+      XEvent xevent = { 0, };
+      XNextEvent (display, &xevent);
+      bool consumed = filter_event (xevent);
+      X11Item *xitem = x11ids[xevent.xany.window];
+      if (xitem)
+        {
+          ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
+          if (scw)
+            consumed = scw->process_event (xevent);
+        }
+      if (!consumed)
+        {
+          const char ss = xevent.xany.send_event ? 'S' : 's';
+          EDEBUG ("Spare: %c=%lu event_type=%d w=%lu", ss, xevent.xany.serial, xevent.type, xevent.xany.window);
+        }
+    }
+}
+
+bool
+X11Context::filter_event (const XEvent &xevent)
+{
+  switch (xevent.type)
+    {
+    case MappingNotify:
+      XRefreshKeyboardMapping (const_cast<XMappingEvent*> (&xevent.xmapping));
+      return true;
+    default:
+      return false;
+    }
+}
+
+Atom
+X11Context::atom (const String &text, bool force_create)
+{
+  // XLib caches atoms well
+  return XInternAtom (display, text.c_str(), !force_create);
+}
+
+String
+X11Context::atom (Atom atom) const
+{
+  // XLib caches atoms well
+  char *res = XGetAtomName (display, atom);
+  String result (res ? res : "");
+  if (res)
+    XFree (res);
+  return result;
+}
+
+bool
+X11Context::local_x11()
+{
+  if (m_shared_mem < 0)
+    m_shared_mem = x11_check_shared_image (display, visual, depth);
+  XDEBUG ("XShmCreateImage: %s", m_shared_mem ? "ok" : "failed to attach");
+  return m_shared_mem;
 }
 
 } // Rapicorn
