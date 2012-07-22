@@ -6,6 +6,7 @@
 #include "screenwindow-xaux.cc"
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
+static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
 
 template<class T> cairo_status_t cairo_status_from_any (T t);
 template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
@@ -45,9 +46,10 @@ class X11Context {
   EventFd               m_wakeup;
   Atomic<int>           m_running;
   std::thread           m_thread_handle;
-  void                  x11_thread ();
-  void                  process_x11();
-  bool                  filter_event(const XEvent&);
+  void                  x11_thread   (String x11display, AsyncBlockingQueue<bool> *rqueue);
+  bool                  connect      (const String &x11display);
+  void                  process_x11  ();
+  bool                  filter_event (const XEvent&);
 public:
   Display              *display;
   int                   screen;
@@ -56,14 +58,13 @@ public:
   Window                root_window;
   int8                  m_shared_mem;
   map<size_t, X11Item*> x11ids;
-  bool                  connect    (const String &x11display);
   Atom                  atom       (const String &text, bool force_create = true);
   String                atom       (Atom atom) const;
   bool                  local_x11  ();
   // executed outside X11 thread
   explicit              X11Context ();
   /*dtor*/             ~X11Context ();
-  void                  start_x11_thread();
+  bool                  start_x11_thread (const String &x11display);
   void                  stop_x11_thread();
 };
 
@@ -80,7 +81,7 @@ struct ScreenDriverX11 : ScreenDriver {
         const char *s = getenv ("DISPLAY");
         String ds = s ? s : "";
         X11Context *x11context = new X11Context ();
-        if (!x11context->connect (ds)) // FIXME: in x11 thread
+        if (!x11context->start_x11_thread (ds))
           {
             delete x11context;
             return false;
@@ -793,38 +794,23 @@ X11Context::~X11Context ()
 }
 
 bool
-X11Context::connect (const String &x11display)
+X11Context::start_x11_thread (const String &x11display)
 {
-  assert_return (!display && !screen && !visual && !depth && !root_window && m_shared_mem < 0, false);
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
-  const char *s = x11display.c_str();
-  display = XOpenDisplay (s[0] ? s : NULL);
-  XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
-  if (!display)
-    return false;
-  start_x11_thread();
-  load_atom_cache (display);
-  if (1) // FIXME: toggle sync
-    XSynchronize (display, true);
-  screen = DefaultScreen (display);
-  visual = DefaultVisual (display, screen);
-  depth = DefaultDepth (display, screen);
-  root_window = XRootWindow (display, screen);
-  return true;
-}
-
-void
-X11Context::start_x11_thread()
-{
-  assert_return (m_running == false && m_wakeup.opened() == false);
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  assert_return (std::thread::id() == m_thread_handle.get_id());
-  m_running.store (true);
-  int err = m_wakeup.open();
-  if (err)
-    fatal ("failed to open wakeup file descriptor: %s", strerror (err));
-  m_thread_handle = std::thread (&X11Context::x11_thread, this);
+  assert_return (m_running == false && m_wakeup.opened() == false, false);
+  AsyncBlockingQueue<bool> rqueue;
+  {
+    ScopedLock<Mutex> x11locker (x11_rmutex);
+    assert_return (std::thread::id() == m_thread_handle.get_id(), false);
+    int err = m_wakeup.open();
+    if (err)
+      return false;     // cannot open fd...
+    m_running.store (true);
+    m_thread_handle = std::thread (&X11Context::x11_thread, this, x11display, &rqueue);
+  }
+  const bool opened = rqueue.pop();
+  if (!opened)
+    stop_x11_thread();
+  return opened;
 }
 
 void
@@ -836,10 +822,36 @@ X11Context::stop_x11_thread()
   m_thread_handle.join();
 }
 
+bool
+X11Context::connect (const String &x11display)
+{
+  assert_return (!display && !screen && !visual && !depth && !root_window && m_shared_mem < 0, false);
+  do_once { xlib_error_handler = XSetErrorHandler (x11_error); }
+  const char *s = x11display.c_str();
+  display = XOpenDisplay (s[0] ? s : NULL);
+  XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
+  if (!display)
+    return false;
+  XSynchronize (display, dbe_x11sync.confbool());
+  screen = DefaultScreen (display);
+  visual = DefaultVisual (display, screen);
+  depth = DefaultDepth (display, screen);
+  root_window = XRootWindow (display, screen);
+  load_atom_cache (display);
+  return true;
+}
+
 void
-X11Context::x11_thread()
+X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  {
+    const bool opened = connect (x11display);
+    rqueue->push (opened ? true : false);
+    rqueue = NULL;
+    if (!opened)
+      return;
+  }
   for (;;)
     {
       process_x11();
