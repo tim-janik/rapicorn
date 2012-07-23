@@ -36,12 +36,13 @@ x11_error (Display *error_display, XErrorEvent *error_event)
   return result;
 }
 
-static void
+static bool
 x11_trap_errors (XErrorEvent *trapped_event)
 {
-  assert_return (xlib_error_trap == NULL);
+  assert_return (xlib_error_trap == NULL, false);
   xlib_error_trap = trapped_event;
   trapped_event->error_code = 0;
+  return true;
 }
 
 static int
@@ -358,6 +359,83 @@ adjust_mwm_hints (Display *display, Window window, Mwm funcs, Mwm deco)
   XChangeProperty (display, window, xa_mwm_hints, xa_mwm_hints, 32, PropModeReplace, (uint8*) &mwm_hints, 5);
   if (data)
     XFree (data);
+}
+
+static bool
+_window_net_frame_extents (Display *display, Window window, int *dx, int *dy, int *dw, int *dh, int *fx, int *fy, int *fw, int *fh)
+{
+  bool success = false;
+  Atom type = 0;
+  int format = 0;
+  unsigned long nitems = 0, remains = 0;
+  uint8 *data = NULL;
+  if (XGetWindowProperty (display, window, x11_atom (display, "_NET_FRAME_EXTENTS"), 0, 4, False,
+                          XA_CARDINAL, &type, &format, &nitems, &remains, &data) == Success &&
+      type == XA_CARDINAL && format == 32 && nitems == 4 && data)
+    {
+      struct FrameExtents { unsigned long left, right, top, bottom; };
+      FrameExtents &frame = *(FrameExtents*) data;
+      Window root = 0, child = 0;
+      int gx = 0, gy = 0, tx = 0, ty = 0;
+      uint gw = 0, gh = 0, gb = 0, gd = 0;
+      if (XGetGeometry (display, window, &root, &gx, &gy, &gw, &gh, &gb, &gd) != 0 &&
+          XTranslateCoordinates (display, window, root, 0, 0, &tx, &ty, &child))
+        {
+          *dx = tx; *dy = ty; *dw = gw; *dh = gh;
+          *fx = tx - frame.left;
+          *fy = ty - frame.top;
+          *fw = gw + frame.left + frame.right;
+          *fh = gh + frame.top + frame.bottom;
+          success = true;
+        }
+    }
+  if (data)
+    XFree (data);
+  return success;
+}
+
+static bool
+_window_frame_origin (Display *display, Window window, int *dx, int *dy, int *fx, int *fy)
+{
+  const Atom ENLIGHTENMENT_DESKTOP = x11_atom (display, "ENLIGHTENMENT_DESKTOP");
+  Window root = 0, *children = NULL, ancestor, vparent = window;
+  uint nchildren = 0;
+  do
+    {
+      ancestor = vparent;
+      if (!XQueryTree (display, ancestor, &root, &vparent /*parent*/, &children, &nchildren))
+        return false;
+      if (children)
+        XFree (children);
+      Atom type = 0; int format = 0; unsigned long nitems = 0, remains = 0; uint8 *data = NULL;
+      if (XGetWindowProperty (display, vparent, ENLIGHTENMENT_DESKTOP, 0, 1, False,
+                              XA_CARDINAL, &type, &format, &nitems, &remains, &data) == Success && type == XA_CARDINAL)
+        {
+          if (data)
+            XFree (data);
+          break;
+        }
+    }
+  while (vparent != root);
+  Window child = 0;
+  if (vparent != window && // vparent is virtual-root, ancestor is its sibling and an ancestor of window
+      XTranslateCoordinates (display, ancestor, vparent, 0, 0, fx, fy, &child) &&
+      XTranslateCoordinates (display, window, root, 0, 0, dx, dy, &child))
+    return true;
+  return false;
+}
+
+static bool
+window_deco_origin (Display *display, Window window, int *dx, int *dy, int *fx, int *fy)
+{
+  XErrorEvent errevent;
+  int dw, dh, fw, fh;
+  *dx = 0; *dy = 0; *fx = 0; *fy = 0;
+  x11_trap_errors (&errevent);  // guard against destroyed windows
+  bool good = _window_net_frame_extents (display, window, dx, dy, &dw, &dh, fx, fy, &fw, &fh);
+  good = good || _window_frame_origin (display, window, dx, dy, fx, fy);
+  x11_untrap_errors();
+  return good; // tell solid from falback info
 }
 
 } // Anon

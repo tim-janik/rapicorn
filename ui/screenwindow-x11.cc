@@ -265,7 +265,6 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XConfigureEvent &xev = xevent.xconfigure;
       if (xev.window != m_window)
         break;
-      EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
       if (m_state.width != xev.width || m_state.height != xev.height)
         {
           m_state.width = xev.width;
@@ -280,9 +279,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (m_pending_configures)
         m_pending_configures--;
       if (!m_pending_configures)
-        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
+        window_deco_origin (x11context.display, m_window, &m_state.root_x, &m_state.root_y, &m_state.deco_x, &m_state.deco_y);
       update_state (m_state);
+      if (!m_pending_configures)
+        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
       enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
+      EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d o=%+d%+d b=%d", ss, xev.serial, xev.window, m_state.root_x, m_state.root_y, xev.width, xev.height, m_state.deco_x, m_state.deco_y, xev.border_width);
       consumed = true;
       break; }
     case MapNotify: {
