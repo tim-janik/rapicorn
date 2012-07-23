@@ -28,7 +28,7 @@ public:
     MINIMIZABLE    = 1 << 25,   ///< The window manager offers the maximization action for this window.
     MAXIMIZABLE    = 1 << 26,   ///< The window manager offers the maximization action for this window.
     DELETABLE      = 1 << 27,   ///< The window manager offers the deletion action for this window.
-    _DECO_MASK = 0x0f000000,
+    _DECO_MASK     = 0x0f000000,
     ACCEPT_FOCUS   = 1 << 28,   ///< The window enters keyboard focus mode when selected by the user.
     UNFOCUSED      = 1 << 29,   ///< The window does not get automatic keyboard focus when initially shown.
     ICONIFY        = 1 << 30,   ///< The window is in iconified state, (minimized, but icon shown).
@@ -55,10 +55,11 @@ public:
   struct State {
     WindowType  window_type;            ///< Window type at creation.
     Flags       window_flags;           ///< Actual state of the backend window.
-    bool        visible, active;
-    int         width, height;
-    int         root_x, root_y;
-    int         deco_x, deco_y;
+    bool        visible;                ///< Visibility state, usuall true after show().
+    bool        active;                 ///< Indicator for keyboard input focus.
+    int         width, height;          ///< Size of the window.
+    int         root_x, root_y;         ///< Root position of the window.
+    int         deco_x, deco_y;         ///< Position of window decorations.
     inline      State();
   };
   /// Widget interface for receiving events.
