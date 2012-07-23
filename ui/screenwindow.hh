@@ -8,8 +8,6 @@
 namespace Rapicorn {
 
 class ScreenWindow : public virtual Deletable, protected NonCopyable {
-protected:
-  explicit              ScreenWindow () {}
 public:
   enum Flags {
     MODAL          = 1 <<  0,   ///< Hint to the window manager that window receives input exclusively.
@@ -55,13 +53,12 @@ public:
   };
   /// Structure describing the current window state.
   struct State {
+    WindowType  window_type;            ///< Window type at creation.
     Flags       window_flags;           ///< Actual state of the backend window.
     bool        visible, active;
     int         width, height;
     int         root_x, root_y;
     int         deco_x, deco_y;
-    Setup       setup;
-    Config      config;
     inline      State();
   };
   /// Widget interface for receiving events.
@@ -70,12 +67,12 @@ public:
     virtual void        enqueue_async           (Event              *event) = 0;
   };
   // == public API ==
-  virtual State         get_state               () = 0;                         ///< Retrieve the current window state.
-  void          configure               (const Config &config);     ///< Change window configuration.
-  void          beep                    ();                             ///< Issue an audible bell.
-  void          show                    ();                         ///< Show window on screen.
-  void          present                 ();                         ///< Demand user attention for this window.
-  virtual bool          viewable                () = 0; ///< Check if the window is viewable, i.e. not minimized/iconified/etc.
+  State         get_state               ();                     ///< Retrieve the current window state.
+  void          configure               (const Config &config); ///< Change window configuration.
+  void          beep                    ();                     ///< Issue an audible bell.
+  void          show                    ();                     ///< Show window on screen.
+  void          present                 ();                     ///< Demand user attention for this window.
+  bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);
   void          start_user_move         (uint button, double root_x, double root_y);
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
@@ -97,7 +94,13 @@ protected:
     Command (CommandType type, int button, int root_x, int root_y);
     ~Command();
   };
+  explicit      ScreenWindow    ();
   virtual void  queue_command   (Command *command) = 0;
+  bool          update_state    (const State &state);
+private:
+  Spinlock      m_spin;
+  State         m_state;
+  bool          m_accessed;
 };
 
 // == ScreenDriver ==

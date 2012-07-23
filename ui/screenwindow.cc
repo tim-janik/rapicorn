@@ -7,6 +7,122 @@
 
 namespace Rapicorn {
 
+// == ScreenWindow ==
+ScreenWindow::ScreenWindow () :
+  m_accessed (0)
+{}
+
+bool
+ScreenWindow::update_state (const State &state)
+{
+  ScopedLock<Spinlock> sl (m_spin);
+  const bool accessed = m_accessed;
+  m_accessed = false;
+  m_state = state;
+  return accessed;
+}
+
+ScreenWindow::State
+ScreenWindow::get_state ()
+{
+  ScopedLock<Spinlock> sl (m_spin);
+  return m_state;
+}
+
+bool
+ScreenWindow::viewable ()
+{
+  ScopedLock<Spinlock> sl (m_spin);
+  bool viewable = m_state.visible;
+  viewable = viewable && !(m_state.window_flags & (ICONIFY | HIDDEN | SHADED));
+  return viewable;
+}
+
+void
+ScreenWindow::configure (const Config &config)
+{
+  queue_command (new Command (CMD_CONFIGURE, config));
+}
+
+void
+ScreenWindow::beep ()
+{
+  queue_command (new Command (CMD_BEEP));
+}
+
+void
+ScreenWindow::show ()
+{
+  queue_command (new Command (CMD_SHOW));
+}
+
+void
+ScreenWindow::present ()
+{
+  queue_command (new Command (CMD_PRESENT));
+}
+
+void
+ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
+{
+  queue_command (new Command (CMD_BLIT, surface, region));
+}
+
+void
+ScreenWindow::start_user_move (uint button, double root_x, double root_y)
+{
+  queue_command (new Command (CMD_MOVE, button, root_x, root_y));
+}
+
+void
+ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
+{
+  queue_command (new Command (CMD_RESIZE, button, root_x, root_y));
+}
+
+static const char*
+flag_name (uint64 flag)
+{
+  switch (ScreenWindow::Flags (flag))
+    {
+    case ScreenWindow::MODAL:		return "MODAL";
+    case ScreenWindow::STICKY:	        return "STICKY";
+    case ScreenWindow::VMAXIMIZED:	return "VMAXIMIZED";
+    case ScreenWindow::HMAXIMIZED:	return "HMAXIMIZED";
+    case ScreenWindow::SHADED:	        return "SHADED";
+    case ScreenWindow::SKIP_TASKBAR:	return "SKIP_TASKBAR";
+    case ScreenWindow::SKIP_PAGER:	return "SKIP_PAGER";
+    case ScreenWindow::HIDDEN:	        return "HIDDEN";
+    case ScreenWindow::FULLSCREEN:	return "FULLSCREEN";
+    case ScreenWindow::ABOVE_ALL:	return "ABOVE_ALL";
+    case ScreenWindow::BELOW_ALL:	return "BELOW_ALL";
+    case ScreenWindow::ATTENTION:	return "ATTENTION";
+    case ScreenWindow::FOCUS_DECO:	return "FOCUS_DECO";
+    case ScreenWindow::DECORATED:	return "DECORATED";
+    case ScreenWindow::MINIMIZABLE:	return "MINIMIZABLE";
+    case ScreenWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
+    case ScreenWindow::DELETABLE:	return "DELETABLE";
+    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
+    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
+    case ScreenWindow::ICONIFY:	        return "ICONIFY";
+    case ScreenWindow::_WM_STATE_MASK:
+    case ScreenWindow::_DECO_MASK:
+      ; // pass
+    }
+ return "UNKNOWN";
+}
+
+String
+ScreenWindow::flags_name (uint64 flags, String combo)
+{
+  const uint64 I = 1;
+  String result;
+  for (size_t i = 0; i < 64; i++)
+    if (flags & (I << i))
+      result += (result.empty() ? "" : combo) + flag_name (I << i);
+  return result;
+}
+
 // == ScreenWindow::Command ==
 ScreenWindow::Command::Command (CommandType ctype) :
   type (ctype), config (NULL), setup (NULL), receiver (NULL)
@@ -72,89 +188,6 @@ ScreenWindow::Command::~Command()
       assert (!config && !setup && !receiver);
       break;
     }
-}
-
-// == ScreenWindow ==
-void
-ScreenWindow::configure (const Config &config)
-{
-  queue_command (new Command (CMD_CONFIGURE, config));
-}
-
-void
-ScreenWindow::beep ()
-{
-  queue_command (new Command (CMD_BEEP));
-}
-
-void
-ScreenWindow::show ()
-{
-  queue_command (new Command (CMD_SHOW));
-}
-
-void
-ScreenWindow::present ()
-{
-  queue_command (new Command (CMD_PRESENT));
-}
-
-void
-ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
-{
-  queue_command (new Command (CMD_BLIT, surface, region));
-}
-
-void
-ScreenWindow::start_user_move (uint button, double root_x, double root_y)
-{
-  queue_command (new Command (CMD_MOVE, button, root_x, root_y));
-}
-
-void
-ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
-{
-  queue_command (new Command (CMD_RESIZE, button, root_x, root_y));
-}
-
-static const char*
-flag_name (uint64 flag)
-{
-  switch (flag)
-    {
-    case ScreenWindow::MODAL:		return "MODAL";
-    case ScreenWindow::STICKY:	        return "STICKY";
-    case ScreenWindow::VMAXIMIZED:	return "VMAXIMIZED";
-    case ScreenWindow::HMAXIMIZED:	return "HMAXIMIZED";
-    case ScreenWindow::SHADED:	        return "SHADED";
-    case ScreenWindow::SKIP_TASKBAR:	return "SKIP_TASKBAR";
-    case ScreenWindow::SKIP_PAGER:	return "SKIP_PAGER";
-    case ScreenWindow::HIDDEN:	        return "HIDDEN";
-    case ScreenWindow::FULLSCREEN:	return "FULLSCREEN";
-    case ScreenWindow::ABOVE_ALL:	return "ABOVE_ALL";
-    case ScreenWindow::BELOW_ALL:	return "BELOW_ALL";
-    case ScreenWindow::ATTENTION:	return "ATTENTION";
-    case ScreenWindow::FOCUS_DECO:	return "FOCUS_DECO";
-    case ScreenWindow::DECORATED:	return "DECORATED";
-    case ScreenWindow::MINIMIZABLE:	return "MINIMIZABLE";
-    case ScreenWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
-    case ScreenWindow::DELETABLE:	return "DELETABLE";
-    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
-    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
-    case ScreenWindow::ICONIFY:	        return "ICONIFY";
-    default:                            return "UNKNOWN";
-    }
-}
-
-String
-ScreenWindow::flags_name (uint64 flags, String combo)
-{
-  const uint64 I = 1;
-  String result;
-  for (size_t i = 0; i < 64; i++)
-    if (flags & (I << i))
-      result += (result.empty() ? "" : combo) + flag_name (I << i);
-  return result;
 }
 
 // == ScreenDriver ==

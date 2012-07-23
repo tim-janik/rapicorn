@@ -116,19 +116,18 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
   ScreenDriverX11      &m_x11driver;
   EventReceiver        &m_receiver;
+  Config                m_config;
   State                 m_state;
   Color                 m_average_background;
   Window                m_window;
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
-  bool                  m_override_redirect, m_mapped, m_crossing_focus, m_win_focus;
+  bool                  m_override_redirect, m_crossing_focus;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
   explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual void          queue_command           (Command *command);
-  virtual State         get_state               ();
-  virtual bool          viewable                ();
   void                  setup_window            (const ScreenWindow::Setup &setup);
   void                  configure_window        (const Config &config);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
@@ -149,11 +148,12 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const S
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
   m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
-  m_override_redirect (false), m_mapped (false), m_crossing_focus (false), m_win_focus (false), m_expose_surface (NULL)
+  m_override_redirect (false), m_crossing_focus (false), m_expose_surface (NULL)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
-  m_state.setup.window_type = setup.window_type;
+  m_state.window_type = setup.window_type;
+  update_state (m_state);
   m_override_redirect = (setup.window_type == WINDOW_TYPE_DESKTOP ||
                          setup.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
                          setup.window_type == WINDOW_TYPE_POPUP_MENU ||
@@ -281,6 +281,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         m_pending_configures--;
       if (!m_pending_configures)
         check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
+      update_state (m_state);
       enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
       consumed = true;
       break; }
@@ -289,7 +290,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (xev.window != m_window)
         break;
       EDEBUG ("Map  : %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
-      m_mapped = true;
+      m_state.visible = true;
+      update_state (m_state);
       consumed = true;
       break; }
     case UnmapNotify: {
@@ -297,7 +299,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (xev.window != m_window)
         break;
       EDEBUG ("Unmap: %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
-      m_mapped = false;
+      m_state.visible = false;
+      update_state (m_state);
       enqueue_locked (create_event_cancellation (m_event_context));
       consumed = true;
       break; }
@@ -424,10 +427,13 @@ ScreenWindowX11::process_event (const XEvent &xevent)
             xev.detail == NotifyPointerRoot ||  // root focus changed
             xev.detail == NotifyDetailNone))    // root focus is discarded
         {
-          const bool last_focus = m_win_focus;
-          m_win_focus = xevent.type == FocusIn;
-          if (last_focus != m_win_focus)
-            enqueue_locked (create_event_focus (m_win_focus ? FOCUS_IN : FOCUS_OUT, m_event_context));
+          const bool now_focus = xevent.type == FocusIn;
+          if (now_focus != m_state.active)
+            {
+              m_state.active = now_focus;
+              update_state (m_state);
+              enqueue_locked (create_event_focus (m_state.active ? FOCUS_IN : FOCUS_OUT, m_event_context));
+            }
         }
       consumed = true;
       break; }
@@ -459,7 +465,7 @@ void
 ScreenWindowX11::property_changed (Atom atom, bool deleted)
 {
   const String atom_name = x11context.atom (atom);
-  State old_state = m_state;
+  const Flags old_window_flags = m_state.window_flags;
   if (debug_enabled() && (atom_name == "WM_NAME" || atom_name == "_NET_WM_NAME"))
     {
       String text = x11_get_string_property (x11context.display, m_window, atom);
@@ -502,10 +508,10 @@ ScreenWindowX11::property_changed (Atom atom, bool deleted)
       if (deco & (DECOR_ALL | DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE))      f += DECORATED;
       m_state.window_flags = Flags ((m_state.window_flags & ~_DECO_MASK) | f);
     }
-  if (debug_enabled())
+  if (old_window_flags != m_state.window_flags)
     {
-      if (old_state.window_flags != m_state.window_flags)
-        EDEBUG ("State: flags=%s", flags_name (m_state.window_flags).c_str());
+      update_state (m_state);
+      EDEBUG ("State: flags=%s", flags_name (m_state.window_flags).c_str());
     }
 }
 
@@ -632,13 +638,6 @@ ScreenWindowX11::enqueue_locked (Event *event)
   m_receiver.enqueue_async (event);
 }
 
-ScreenWindow::State
-ScreenWindowX11::get_state ()
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  return m_state;
-}
-
 static void
 cairo_set_source_color (cairo_t *cr, Color c)
 {
@@ -670,12 +669,10 @@ create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable,
 void
 ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 {
-  // window is not yet mapped
-  m_state.setup.window_type = setup.window_type;
+  assert_return (m_state.window_type == setup.window_type);
   // _NET_WM_STATE
-  m_state.setup.request_flags = setup.request_flags;
+  const uint64 f = setup.request_flags;
   vector<unsigned long> longs;
-  const uint64 f = m_state.setup.request_flags;
   if (f & MODAL)        longs.push_back (x11context.atom ("_NET_WM_STATE_MODAL"));
   if (f & STICKY)       longs.push_back (x11context.atom ("_NET_WM_STATE_STICKY"));
   if (f & VMAXIMIZED)   longs.push_back (x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"));
@@ -704,11 +701,9 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & DELETABLE)    { funcs |= FUNC_CLOSE; deco |= DECOR_CLOSE; }
   adjust_mwm_hints (x11context.display, m_window, Mwm (funcs), Mwm (deco));
   // session role
-  m_state.setup.session_role = setup.session_role;
   set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),
                      XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
   // background
-  m_state.setup.bg_average = setup.bg_average;
   Color c1 = setup.bg_average, c2 = setup.bg_average;
   if (devel_enabled())
     {
@@ -716,7 +711,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
       c2.tint (0, 1.03, 1.03);
     }
   Pixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
-  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap); // m_state.setup.bg_average ?
+  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap);
   XFreePixmap (x11context.display, xpixmap);
 }
 
@@ -728,27 +723,20 @@ ScreenWindowX11::configure_window (const Config &config)
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
   XSetWMNormalHints (x11context.display, m_window, &szhint);
   // title
-  if (config.title != m_state.config.title)
+  if (config.title != m_config.title)
     {
       set_text_property (x11context.display, m_window, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
       set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
-      m_state.config.title = config.title;
+      m_config.title = config.title;
     }
   // iconified title
-  if (config.alias != m_state.config.alias)
+  if (config.alias != m_config.alias)
     {
       set_text_property (x11context.display, m_window, x11context.atom ("WM_ICON_NAME"), XStdICCTextStyle, config.alias, DELETE_EMPTY);
       set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_ICON_NAME"), XUTF8StringStyle, config.alias, DELETE_EMPTY);
-      m_state.config.alias = config.alias;
+      m_config.alias = config.alias;
     }
   enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
-}
-
-bool
-ScreenWindowX11::viewable (void)
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  return m_mapped;
 }
 
 void
