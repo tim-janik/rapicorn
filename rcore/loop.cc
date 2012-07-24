@@ -1039,7 +1039,8 @@ EventLoop::TimedSource::~TimedSource ()
  * @li @c "w" - poll writable
  * @li @c "r" - poll readable
  * @li @c "p" - poll urgent redable
- * @li @c "b" - blocking
+ * @li @c "b" - set fd blocking
+ * @li @c "B" - set fd non-blocking
  * @li @c "E" - ignore erros (or auto destroy)
  * @li @c "H" - ignore hangup (or auto destroy)
  * @li @c "C" - prevent auto close on destroy
@@ -1080,8 +1081,8 @@ EventLoop::PollFDSource::construct (const String &mode)
       const long lflags = fcntl (m_pfd.fd, F_GETFL, 0);
       long nflags = lflags;
       if (strchr (mode.c_str(), 'b'))
-        nflags &= ~(long) O_NONBLOCK;
-      else
+        nflags &= ~long (O_NONBLOCK);
+      else if (strchr (mode.c_str(), 'B'))
         nflags |= O_NONBLOCK;
       if (nflags != lflags)
         {
