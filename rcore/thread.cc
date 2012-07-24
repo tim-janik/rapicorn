@@ -143,7 +143,8 @@ ThreadInfo::collect_hazards()
           ptrs.push_back (cptr);
       }
   stable_sort (ptrs.begin(), ptrs.end());
-  unique (ptrs.begin(), ptrs.end());
+  auto it = unique (ptrs.begin(), ptrs.end());
+  ptrs.resize (it - ptrs.begin());
   return ptrs;
 }
 
