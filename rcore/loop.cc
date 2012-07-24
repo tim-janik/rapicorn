@@ -374,13 +374,11 @@ EventLoop::wakeup ()
 }
 
 // === MainLoop ===
-MainLoop::LookHooksBase::~LookHooksBase() {}
-
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  m_rr_index (0), m_running (true), m_quit_code (0),
-  m_lock_hooks (new LockHooksImpl<bool(*)(), void(*)(), void(*)()> ([] () { return false; }, [] () {}, [] () {}))
+  m_rr_index (0), m_running (true), m_quit_code (0), m_lock_hooks_locked (false)
 {
+  set_lock_hooks ([] () { return false; }, [] () {}, [] () {});
   ScopedLock<Mutex> locker (m_main_loop.mutex());
   add_loop_L (*this);
   int err = m_eventfd.open();
@@ -395,20 +393,18 @@ MainLoop::~MainLoop()
   ScopedLock<Mutex> locker (m_mutex);
   remove_loop_L (*this);
   assert_return (m_loops.empty() == true);
-  LookHooksBase *old_lock_hooks = m_lock_hooks;
-  m_lock_hooks = NULL;
-  delete old_lock_hooks;
+  assert_return (m_lock_hooks_locked == false);
 }
 
 void
-MainLoop::set_lock_hooks (LookHooksBase *lhooks)
+MainLoop::set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock)
 {
   ScopedLock<Mutex> locker (m_mutex);
-  assert_return (m_lock_hooks != NULL);
-  assert_return (lhooks != NULL);
-  LookHooksBase *old_lock_hooks = m_lock_hooks;
-  m_lock_hooks = lhooks;
-  delete old_lock_hooks;
+  assert_return (m_lock_hooks_locked == false);
+  assert_return (sense && lock && unlock);
+  m_lock_hooks.sense  = sense;
+  m_lock_hooks.lock   = lock;
+  m_lock_hooks.unlock = unlock;
 }
 
 void
@@ -751,20 +747,20 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     timeout_msecs = 1;
   if (!may_block || any_dispatchable)
     timeout_msecs = 0;
-  LookHooksBase *lock_hooks = m_lock_hooks;
-  m_lock_hooks = NULL; // protect member from alterations
-  int presult;
+  LookHooks lock_hooks = m_lock_hooks;
+  m_lock_hooks_locked = true; // protect hooks from alterations
   main_mutex.unlock();
-  const bool needs_locking = lock_hooks->sense();
+  int presult;
+  const bool needs_locking = lock_hooks.sense();
   if (needs_locking)
-    lock_hooks->unlock();
+    lock_hooks.unlock();
   do
     presult = poll ((struct pollfd*) &pfda[0], pfda.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
   if (needs_locking)
-    lock_hooks->lock();
+    lock_hooks.lock();
   main_mutex.lock();
-  m_lock_hooks = lock_hooks;
+  m_lock_hooks_locked = false;
   if (presult < 0)
     critical ("MainLoop: poll() failed: %s", strerror());
   else if (pfda[wakeup_idx].revents)

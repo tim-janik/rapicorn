@@ -163,19 +163,10 @@ public:
   static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
   inline Mutex&     mutex    () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
   ///@cond
-  struct LookHooksBase { virtual ~LookHooksBase(); virtual bool sense() = 0; virtual void lock() = 0; virtual void unlock() = 0; };
-  template<class Sense, class Locker, class Unlocker> class LockHooksImpl : public LookHooksBase {
-    Sense m_s; Locker m_l; Unlocker m_u;
-  public:        LockHooksImpl (Sense s, Locker l, Unlocker u) : m_s (s), m_l (l), m_u (u) {}
-    virtual bool sense  () { return m_s(); }
-    virtual void lock   () { m_l(); }
-    virtual void unlock () { m_u(); }
-  };
-  template<class Sense, class Locker, class Unlocker>
-  void set_lock_hooks (Sense s, Locker l, Unlocker u) { set_lock_hooks (new LockHooksImpl<Sense, Locker, Unlocker> (s, l, u)); }
+  void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:
-  LookHooksBase *m_lock_hooks;
-  void set_lock_hooks (LookHooksBase *lhooks);
+  struct LookHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
+  LookHooks m_lock_hooks; bool m_lock_hooks_locked;
   ///@endcond
 };
 
