@@ -32,7 +32,7 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 namespace Rapicorn {
 
 // == declarations ==
-class X11Context;
+class ScreenWindowX11;
 static Mutex x11_rmutex (RECURSIVE_LOCK);
 
 // == X11Item ==
@@ -43,16 +43,19 @@ struct X11Item {
 
 // == X11Context ==
 class X11Context {
+  struct Cmd { ScreenWindowX11 *scw; ScreenWindow::Command *cmd; };
   std::thread           m_thread_handle;
   MainLoop             &m_loop;
   vector<size_t>        m_queued_updates; // XIDs
-  void                  x11_thread   (String x11display, AsyncBlockingQueue<bool> *rqueue);
-  bool                  connect      (const String &x11display);
-  bool                  x11_dispatcher (const EventLoop::State &state);
-  bool                  x11_io_handler (PollFD &pfd);
-  void                  process_x11    ();
-  bool                  filter_event (const XEvent&);
+  std::list<Cmd>        m_cmd_queue;
+  void                  x11_thread      (String x11display, AsyncBlockingQueue<bool> *rqueue);
+  bool                  connect         (const String &x11display);
+  bool                  x11_dispatcher  (const EventLoop::State &state);
+  bool                  x11_io_handler  (PollFD &pfd);
+  void                  process_x11     ();
+  bool                  filter_event    (const XEvent&);
   void                  process_updates ();
+  bool                  cmd_dispatcher  (const EventLoop::State &state);
 public:
   Display              *display;
   int                   screen;
@@ -66,10 +69,11 @@ public:
   bool                  local_x11    ();
   void                  queue_update (size_t xid);
   // executed outside X11 thread
-  explicit              X11Context   ();
-  /*dtor*/             ~X11Context   ();
-  bool                  start_x11_thread (const String &x11display);
-  void                  stop_x11_thread();
+  explicit              X11Context       ();
+  /*dtor*/             ~X11Context       ();
+  bool                  start_thread_async (const String &x11display);
+  void                  stop_thread_async  ();
+  void                  queue_cmd_async    (ScreenWindowX11 *scw, ScreenWindow::Command *cmd);
 };
 
 // == ScreenDriverX11 ==
@@ -90,7 +94,7 @@ struct ScreenDriverX11 : ScreenDriver {
         const char *s = getenv ("DISPLAY");
         String ds = s ? s : "";
         X11Context *x11context = new X11Context ();
-        if (!x11context->start_x11_thread (ds))
+        if (!x11context->start_thread_async (ds))
           {
             delete x11context;
             return false;
@@ -109,7 +113,7 @@ struct ScreenDriverX11 : ScreenDriver {
       {
         X11Context *x11context = m_x11context;
         m_x11context = NULL;
-        x11context->stop_x11_thread();
+        x11context->stop_thread_async();
         delete x11context;
       }
   }
@@ -822,7 +826,7 @@ void
 ScreenWindowX11::queue_command (Command *command)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  handle_command (command);
+  x11context.queue_cmd_async (this, command);
 }
 
 void
@@ -846,10 +850,11 @@ X11Context::~X11Context ()
   assert_return (!display);
   m_loop.kill_sources();
   unref (&m_loop);
+  assert_return (m_cmd_queue.empty());
 }
 
 bool
-X11Context::start_x11_thread (const String &x11display)
+X11Context::start_thread_async (const String &x11display)
 {
   AsyncBlockingQueue<bool> rqueue;
   {
@@ -860,16 +865,50 @@ X11Context::start_x11_thread (const String &x11display)
   }
   const bool opened = rqueue.pop();
   if (!opened)
-    stop_x11_thread();
+    stop_thread_async();
   return opened;
 }
 
 void
-X11Context::stop_x11_thread()
+X11Context::stop_thread_async()
 {
   assert_return (m_thread_handle.joinable());
   m_loop.quit (0);
   m_thread_handle.join();
+}
+
+void
+X11Context::queue_cmd_async (ScreenWindowX11 *scw, ScreenWindow::Command *scmd)
+{
+  bool notify;
+  {
+    ScopedLock<Mutex> x11locker (x11_rmutex);
+    Cmd cmd = { scw, scmd };
+    notify = m_cmd_queue.empty();
+    m_cmd_queue.push_back (cmd);
+  }
+  if (notify)
+    m_loop.wakeup();
+}
+
+bool
+X11Context::cmd_dispatcher (const EventLoop::State &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return !m_cmd_queue.empty();
+  else if (state.phase == state.DISPATCH)
+    {
+      while (!m_cmd_queue.empty())
+        {
+          Cmd cmd = m_cmd_queue.front();
+          m_cmd_queue.pop_front();
+          cmd.scw->handle_command (cmd.cmd);
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    ;
+  return false;
 }
 
 bool
@@ -907,6 +946,8 @@ X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
   m_loop.exec_io_handler (slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
   m_loop.exec_dispatcher (slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  // ensure enqueued user commands are processed
+  m_loop.exec_dispatcher (slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // process X11 events
   m_loop.run();
   // close down

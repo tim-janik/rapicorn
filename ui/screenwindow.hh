@@ -102,6 +102,7 @@ private:
   Spinlock      m_spin;
   State         m_state;
   bool          m_accessed;
+public: typedef struct Command Command;
 };
 
 // == ScreenDriver ==
