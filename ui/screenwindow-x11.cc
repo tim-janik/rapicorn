@@ -127,17 +127,19 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   EventReceiver        &m_receiver;
   Config                m_config;
   State                 m_state;
-  Color                 m_average_background;
   Window                m_window;
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_crossing_focus;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
-  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
+  virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   virtual void          queue_command           (Command *command);
+  void                  handle_command          (Command *command);
   void                  setup_window            (const ScreenWindow::Setup &setup);
+  void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   void                  configure_window        (const Config &config);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   void                  enqueue_locked          (Event *event);
@@ -152,16 +154,42 @@ ScreenWindow*
 ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, ScreenWindow::EventReceiver &receiver)
 {
   assert_return (m_open_count > 0, NULL);
-  return new ScreenWindowX11 (*this, setup, config, receiver);
+  ScreenWindowX11 *screen_window = new ScreenWindowX11 (*this, receiver);
+  screen_window->queue_create (setup, config);
+  return screen_window;
 }
 
-ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, EventReceiver &receiver) :
-  x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver), m_average_background (0xff808080),
+ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &receiver) :
+  x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver),
   m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_crossing_focus (false), m_expose_surface (NULL)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
+}
+
+ScreenWindowX11::~ScreenWindowX11()
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  if (m_expose_surface)
+    {
+      cairo_surface_destroy (m_expose_surface);
+      m_expose_surface = NULL;
+    }
+  if (m_window)
+    {
+      XDestroyWindow (x11context.display, m_window); // FIXME: in X11 thread?
+      x11context.x11ids.erase (m_window);
+      m_window = 0;
+    }
+  x11locker.unlock();
+  m_x11driver.close();
+}
+
+void
+ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
+{
+  assert_return (!m_window && !m_expose_surface);
   m_state.window_type = setup.window_type;
   update_state (m_state);
   m_override_redirect = (setup.window_type == WINDOW_TYPE_DESKTOP ||
@@ -198,36 +226,15 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, const ScreenWindow
   atoms.push_back (x11context.atom ("WM_TAKE_FOCUS"));
   atoms.push_back (x11context.atom ("_NET_WM_PING"));
   XSetWMProtocols (x11context.display, m_window, atoms.data(), atoms.size());
-  // FIXME: set Window hints
   // window setup
   setup_window (setup);
   configure_window (config);
-  // configure state for this window
-  {
-    XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, m_window, m_window,
-                            0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect, };
-    XEvent xevent;
-    xevent.xconfigure = xev;
-    process_event (xevent);
-  }
-}
-
-ScreenWindowX11::~ScreenWindowX11()
-{
-  ScopedLock<Mutex> x11locker (x11_rmutex);
-  if (m_expose_surface)
-    {
-      cairo_surface_destroy (m_expose_surface);
-      m_expose_surface = NULL;
-    }
-  if (m_window)
-    {
-      XDestroyWindow (x11context.display, m_window);
-      x11context.x11ids.erase (m_window);
-      m_window = 0;
-    }
-  x11locker.unlock();
-  m_x11driver.close();
+  // configure initial state for this window
+  XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, m_window, m_window,
+                          0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect, };
+  XEvent xevent;
+  xevent.xconfigure = xev;
+  process_event (xevent);
 }
 
 struct PendingSensor {
@@ -785,12 +792,13 @@ ScreenWindowX11::configure_window (const Config &config)
 }
 
 void
-ScreenWindowX11::queue_command (Command *command)
+ScreenWindowX11::handle_command (Command *command)
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
   switch (command->type)
     {
-    case CMD_CREATE:    break; // FIXME
+    case CMD_CREATE:
+      create_window (*command->setup, *command->config);
+      break;
     case CMD_CONFIGURE:
       configure_window (*command->config);
       break;
@@ -800,14 +808,27 @@ ScreenWindowX11::queue_command (Command *command)
     case CMD_SHOW:
       XMapWindow (x11context.display, m_window);
       break;
-    case CMD_PRESENT:   break;  // FIXME
     case CMD_BLIT:
       blit (command->surface, *command->region);
       break;
+    case CMD_PRESENT:   break;  // FIXME
     case CMD_MOVE:      break;  // FIXME
     case CMD_RESIZE:    break;  // FIXME
     }
   delete command;
+}
+
+void
+ScreenWindowX11::queue_command (Command *command)
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  handle_command (command);
+}
+
+void
+ScreenWindowX11::queue_create (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
+{
+  queue_command (new Command (CMD_CREATE, setup, config));
 }
 
 // == X11Context ==

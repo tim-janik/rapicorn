@@ -84,13 +84,13 @@ protected:
   struct Command {
     CommandType       type;
     union {
-      struct { Config          *config; Setup *setup; EventReceiver *receiver; };
+      struct { Config          *config; Setup *setup; };
       struct { cairo_surface_t *surface; Rapicorn::Region *region; };
       struct { int              button, root_x, root_y; };
     };
     Command (CommandType type);
     Command (CommandType type, const Config &cfg);
-    Command (CommandType type, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg, ScreenWindow::EventReceiver &rc);
+    Command (CommandType type, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
     Command (CommandType type, cairo_surface_t *surface, const Rapicorn::Region &region);
     Command (CommandType type, int button, int root_x, int root_y);
     ~Command();

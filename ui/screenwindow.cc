@@ -125,29 +125,28 @@ ScreenWindow::flags_name (uint64 flags, String combo)
 
 // == ScreenWindow::Command ==
 ScreenWindow::Command::Command (CommandType ctype) :
-  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+  type (ctype), config (NULL), setup (NULL)
 {
   assert (type == CMD_BEEP || type == CMD_SHOW || type == CMD_PRESENT);
 }
 
 ScreenWindow::Command::Command (CommandType ctype, const Config &cfg) :
-  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+  type (ctype), config (NULL), setup (NULL)
 {
   assert (type == CMD_CONFIGURE);
   config = new Config (cfg);
 }
 
-ScreenWindow::Command::Command (CommandType ctype, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg, ScreenWindow::EventReceiver &rc) :
-  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+ScreenWindow::Command::Command (CommandType ctype, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg) :
+  type (ctype), config (NULL), setup (NULL)
 {
   assert (type == CMD_CREATE);
   setup = new Setup (cs);
   config = new Config (cfg);
-  receiver = &rc;
 }
 
 ScreenWindow::Command::Command (CommandType ctype, cairo_surface_t *csurface, const Rapicorn::Region &cregion) :
-  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+  type (ctype), config (NULL), setup (NULL)
 {
   assert (type == CMD_BLIT);
   surface = cairo_surface_reference (csurface);
@@ -155,7 +154,7 @@ ScreenWindow::Command::Command (CommandType ctype, cairo_surface_t *csurface, co
 }
 
 ScreenWindow::Command::Command (CommandType ctype, int cbutton, int croot_x, int croot_y) :
-  type (ctype), config (NULL), setup (NULL), receiver (NULL)
+  type (ctype), config (NULL), setup (NULL)
 {
   assert (type == CMD_MOVE || type == CMD_RESIZE);
   cbutton = button;
@@ -174,18 +173,17 @@ ScreenWindow::Command::~Command()
       break;
     case CMD_CONFIGURE:
       delete config;
-      assert (!setup && !receiver);
+      assert (!setup);
       break;
     case CMD_BLIT:
       cairo_surface_destroy (surface);
       delete region;
-      assert (!receiver);
       break;
     case CMD_MOVE: case CMD_RESIZE:
       button = root_x = root_y = 0;
       break;
     case CMD_BEEP: case CMD_SHOW: case CMD_PRESENT:
-      assert (!config && !setup && !receiver);
+      assert (!config && !setup);
       break;
     }
 }
