@@ -85,7 +85,7 @@ protected:
   typedef Signals::Slot1<bool,const State&> DispatcherSlot;
 public:
   static const int PRIORITY_NOW        = -1073741824;   ///< Most important, used for immediate async execution (MAXINT/2)
-  static const int PRIORITY_HIGH       = -100 - 10;     ///< Very important, used for io handlers (G*HIGH)
+  static const int PRIORITY_HIGH       = -100 - 10;     ///< Very important, used for e.g. io handlers (G*HIGH)
   static const int PRIORITY_NEXT       = -100 - 5;      ///< Still very important, used for need-to-be-async operations (G*HIGH)
   static const int PRIORITY_NOTIFY     =    0 - 1;      ///< Important, delivers async signals (G*DEFAULT)
   static const int PRIORITY_NORMAL     =    0;          ///< Normal importantance, interfaces to all layers (G*DEFAULT)
@@ -94,8 +94,8 @@ public:
   static const int PRIORITY_BACKGROUND = +300 + 500;    ///< Unimportant, used when everything else done (G*LOW)
   void wakeup   ();                                     ///< Wakeup loop from polling.
   // source handling
-  uint add      (Source *loop_source,
-                 int priority = PRIORITY_IDLE); ///< Adds a new source to the loop with custom priority.
+  uint add             (Source *loop_source, int priority
+                        = PRIORITY_NORMAL);     ///< Adds a new source to the loop with custom priority.
   void remove          (uint            id);    ///< Removes a source from loop, the source must be present.
   bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
   void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
@@ -117,11 +117,11 @@ public:
                         int    priority = PRIORITY_NORMAL); ///< Execute a single dispatcher callback for prepare, check, dispatch.
   uint exec_timer      (uint            timeout_ms,
                         const VoidSlot &sl,
-                        int             priority = PRIORITY_NEXT); ///< Execute a callback after a specified timeout.
+                        int             priority = PRIORITY_NORMAL); ///< Execute a callback after a specified timeout.
   uint exec_timer      (uint            initial_timeout_ms,
                         uint            repeat_timeout_ms,
                         const BoolSlot &sl,
-                        int             priority = PRIORITY_NEXT); ///< Add exec_timer() callback, returning true repeats callback.
+                        int             priority = PRIORITY_NORMAL); ///< Add exec_timer() callback, returning true repeats callback.
   uint exec_io_handler (const VPfdSlot &sl,
                         int             fd,
                         const String   &mode,
@@ -130,7 +130,7 @@ public:
                         int             fd,
                         const String   &mode,
                         int             priority = PRIORITY_NORMAL); ///< Add exec_io_handler() callback, returning true repeats callback.
-  MainLoop* main_loop  () const { return &m_main_loop; } ///< Get the main loop for this loop.
+  MainLoop* main_loop  () const { return &m_main_loop; }             ///< Get the main loop for this loop.
 };
 
 // === MainLoop ===

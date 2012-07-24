@@ -334,7 +334,7 @@ ItemImpl::exec_slow_repeater (const BoolSlot &sl)
     {
       EventLoop *loop = ritem->get_loop();
       if (loop)
-        return loop->exec_timer (250, 50, sl);
+        return loop->exec_timer (250, 50, sl, EventLoop::PRIORITY_NOW);
     }
   return 0;
 }
@@ -347,7 +347,7 @@ ItemImpl::exec_fast_repeater (const BoolSlot &sl)
     {
       EventLoop *loop = ritem->get_loop();
       if (loop)
-        return loop->exec_timer (200, 20, sl);
+        return loop->exec_timer (200, 20, sl, EventLoop::PRIORITY_NOW);
     }
   return 0;
 }
@@ -360,7 +360,7 @@ ItemImpl::exec_key_repeater (const BoolSlot &sl)
     {
       EventLoop *loop = ritem->get_loop();
       if (loop)
-        return loop->exec_timer (250, 33, sl);
+        return loop->exec_timer (250, 33, sl, EventLoop::PRIORITY_NOW);
     }
   return 0;
 }
