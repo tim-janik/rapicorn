@@ -182,6 +182,7 @@ public:
     m_thread_mutex (PTHREAD_MUTEX_INITIALIZER), m_running (0), m_idata (idata),
     m_main_loop (*ref_sink (MainLoop::_new()))
   {
+    m_main_loop.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
     m_server_connection = ServerConnection::create_threaded();
     m_client_connection = ClientConnection (m_server_connection);
   }
@@ -226,8 +227,6 @@ private:
     assert_return (m_idata != NULL);
     // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
     assert (rapicorn_thread_entered() == true);
-    MainLoop::LockHooks lock_hooks = { rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave };
-    m_main_loop.set_lock_hooks (lock_hooks);
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find (*m_idata->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
