@@ -14,6 +14,8 @@ using namespace Rapicorn;
 static void
 drawable_redraw (DrawableH &drawable, int x, int y, int w, int h)
 {
+  if (!w || !h)
+    return;
   // boilerplate
   Pixbuf pixbuf;
   int px = x, py = y;
