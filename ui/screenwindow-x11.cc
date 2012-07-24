@@ -2,7 +2,6 @@
 #include "screenwindow.hh"
 #include <ui/utilities.hh>
 #include <cairo/cairo-xlib.h>
-#include <sys/poll.h>
 #include "screenwindow-xaux.cc"
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
@@ -43,12 +42,11 @@ struct X11Item {
 
 // == X11Context ==
 class X11Context {
-  EventFd               m_wakeup;
-  Atomic<int>           m_running;
   std::thread           m_thread_handle;
+  MainLoop             &m_loop;
   void                  x11_thread   (String x11display, AsyncBlockingQueue<bool> *rqueue);
   bool                  connect      (const String &x11display);
-  void                  process_x11  ();
+  bool                  process_x11  (PollFD&);
   bool                  filter_event (const XEvent&);
 public:
   Display              *display;
@@ -769,7 +767,7 @@ ScreenWindowX11::queue_command (Command *command)
 
 // == X11Context ==
 X11Context::X11Context() :
-  m_running (0), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
+  m_loop (*ref_sink (MainLoop::_new())), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
 {
   // X11 thread not yet started
 }
@@ -780,20 +778,17 @@ X11Context::~X11Context ()
   assert_return (!m_thread_handle.joinable());
   x11ids.clear();
   assert_return (!display);
+  unref (&m_loop);
 }
 
 bool
 X11Context::start_x11_thread (const String &x11display)
 {
-  assert_return (m_running == false && m_wakeup.opened() == false, false);
   AsyncBlockingQueue<bool> rqueue;
   {
     ScopedLock<Mutex> x11locker (x11_rmutex);
     assert_return (std::thread::id() == m_thread_handle.get_id(), false);
-    int err = m_wakeup.open();
-    if (err)
-      return false;     // cannot open fd...
-    m_running.store (true);
+    assert_return (m_loop.running() == true, false);
     m_thread_handle = std::thread (&X11Context::x11_thread, this, x11display, &rqueue);
   }
   const bool opened = rqueue.pop();
@@ -806,8 +801,7 @@ void
 X11Context::stop_x11_thread()
 {
   assert_return (m_thread_handle.joinable());
-  m_running.store (false);
-  m_wakeup.wakeup();
+  m_loop.quit (0);
   m_thread_handle.join();
 }
 
@@ -841,31 +835,9 @@ X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
     if (!opened)
       return;
   }
-  for (;;)
-    {
-      process_x11();
-      struct pollfd pfds[] = {
-        { m_wakeup.inputfd(), PollFD::IN, 0 },
-        { ConnectionNumber (display), PollFD::IN, 0 },
-      };
-      int presult;
-      do
-        {
-          x11locker.unlock();
-          presult = poll (pfds, ARRAY_SIZE (pfds), -1);
-          x11locker.lock();
-        }
-      while (presult < 0 && (errno == EAGAIN || errno == EINTR));
-      if (pfds[0].revents != 0)
-        {
-          m_wakeup.flush();
-          if (!m_running.load())
-            break;
-          critical ("X11Thread: seen wakeup without stop-notification, m_running=%d (addr=%p)", int (m_running), &m_running);
-        }
-      if (pfds[1].revents != 0)
-        process_x11();
-    }
+  m_loop.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
+  m_loop.exec_io_handler (slot (*this, &X11Context::process_x11), ConnectionNumber (display), "r");
+  m_loop.run();
   if (display)
     {
       XCloseDisplay (display);
@@ -873,8 +845,8 @@ X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
     }
 }
 
-void
-X11Context::process_x11()
+bool
+X11Context::process_x11 (PollFD&)
 {
   while (XPending (display))
     {
@@ -894,6 +866,7 @@ X11Context::process_x11()
           EDEBUG ("Spare: %c=%lu event_type=%d w=%lu", ss, xevent.xany.serial, xevent.type, xevent.xany.window);
         }
     }
+  return true;
 }
 
 bool
