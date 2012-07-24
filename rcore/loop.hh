@@ -153,6 +153,7 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
 public:
   virtual   ~MainLoop        ();
   int        run             (); ///< Run loop iterations until a call to quit() or finishable becomes true.
+  bool       running         (); ///< Indicates if quit() has been called already.
   void       quit            (int quit_code = 0); ///< Cause run() to return with @a quit_code.
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.

@@ -478,6 +478,13 @@ MainLoop::run ()
   return m_quit_code;
 }
 
+bool
+MainLoop::running ()
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  return m_running;
+}
+
 void
 MainLoop::quit (int quit_code)
 {
