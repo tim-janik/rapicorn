@@ -373,14 +373,15 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     case KeyPress: case KeyRelease: {
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "dn" : "up";
-      char buffer[512];
-      KeySym ksym = 0;
-      const int n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &ksym, NULL);
+      KeySym keysym = 0;
+      char buffer[16]; // dummy
+      const int n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
       buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
-      String keystr (buffer);
-      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d k=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, keystr.c_str());
+      char str[8];
+      utf8_from_unichar (key_value_to_unichar (keysym), str);
+      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str);
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (ksym), keystr.c_str()));
+      enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
