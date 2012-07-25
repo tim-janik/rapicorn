@@ -132,11 +132,11 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   Config                m_config;
   State                 m_state;
   Window                m_window;
-  int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
-  bool                  m_override_redirect, m_crossing_focus;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
+  int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
+  bool                  m_override_redirect, m_crossing_focus;
   explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
@@ -165,8 +165,9 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const S
 
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver),
-  m_window (0), m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
-  m_override_redirect (false), m_crossing_focus (false), m_expose_surface (NULL)
+  m_window (0), m_expose_surface (NULL),
+  m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
+  m_override_redirect (false), m_crossing_focus (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   m_x11driver.open();
@@ -372,11 +373,14 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     case KeyPress: case KeyRelease: {
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "dn" : "up";
-      const KeySym ksym = XKeycodeToKeysym (x11context.display, xev.keycode, 0);
-      const char  *kstr = XKeysymToString (ksym);
-      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d k=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, kstr);
+      char buffer[512];
+      KeySym ksym = 0;
+      const int n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &ksym, NULL);
+      buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
+      String keystr (buffer);
+      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d k=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, keystr.c_str());
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (ksym), kstr));
+      enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (ksym), keystr.c_str()));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
