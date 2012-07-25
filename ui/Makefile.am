@@ -52,7 +52,7 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
 	regionimpl.h			\
-	key2utf8.cc			\
+	key2ucs4.cc			\
 	clientapi.cc			\
 	screenwindow-xaux.cc		\
 	serverapi.cc			\

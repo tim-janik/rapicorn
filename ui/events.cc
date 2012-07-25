@@ -234,8 +234,8 @@ EventWinSize::EventWinSize (EventType           etype,
                             double              _height,
                             bool                _intermediate) :
   Event (etype, econtext),
-  intermediate (_intermediate),
-  width (_width), height (_height)
+  width (_width), height (_height),
+  intermediate (_intermediate)
 {}
 
 EventWinSize*
@@ -328,5 +328,41 @@ key_value_is_focus_dir (uint32 keysym)
 
 } // Rapicorn
 
-/* implement key_value_to_unichar() */
-#include "key2utf8.cc"
+// implements XLib's KeySymToUcs4
+typedef uint KeySym;
+#include "key2ucs4.cc"
+
+namespace Rapicorn {
+
+unichar
+key_value_to_unichar (uint32 keysym)
+{
+  // first check for Latin-1 characters (1:1 mapping)
+  if ((keysym >= 0x0020 && keysym <= 0x007e) || (keysym >= 0x00a0 && keysym <= 0x00ff))
+    return keysym;
+
+  // also check for directly encoded 24-bit UCS characters
+  if ((keysym & 0xff000000) == 0x01000000)
+    return keysym & 0x00ffffff;
+
+  // lookup symbol like XLib
+  const uint u = KeySymToUcs4 (keysym);
+  if (u)
+    return u;
+
+  // handle miscellaneous keys
+  static const struct { uint keysym, ucs4; } key_list[] = {
+    // keypad codes
+    { 0xff80, ' ' }, { 0xffaa, '*' }, { 0xffab, '+' }, { 0xffac, ',' }, { 0xffad, '-' }, { 0xffae, '.' }, { 0xffaf, '/' },
+    { 0xffb0, '0' }, { 0xffb1, '1' }, { 0xffb2, '2' }, { 0xffb3, '3' }, { 0xffb4, '4' }, { 0xffb5, '5' }, { 0xffb6, '6' },
+    { 0xffb7, '7' }, { 0xffb8, '8' }, { 0xffb9, '9' }, { 0xffbd, '=' },
+  };
+  for (size_t i = 0; i < ARRAY_SIZE (key_list); i++)
+    if (key_list[i].keysym == keysym)
+      return key_list[i].ucs4;
+
+  // no match
+  return 0;
+}
+
+} // Rapicorn
