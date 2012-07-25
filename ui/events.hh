@@ -25,7 +25,7 @@ enum ModifierState {
 };
 
 enum KeyValue {
-#include <ui/keycodes.hh>
+#include <ui/keysymbols.hh>
 };
 unichar      key_value_to_unichar     (uint32 keysym);
 bool         key_value_is_modifier    (uint32 keysym);

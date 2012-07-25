@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
 	cmdlib.hh	coffer.hh	commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	item.hh	keycodes.hh	\
+	image.hh	item.hh		keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh	\
