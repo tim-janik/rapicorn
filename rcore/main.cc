@@ -284,6 +284,13 @@ static struct __StaticCTorTest {
   }
 } __staticctortest;
 
+static const char*
+sgetenv (const char *var)
+{
+  const char *str = getenv (var);
+  return str ? str : "";
+}
+
 /**
  * @param app_ident     Application identifier, used to associate persistent resources
  * @param argcp         location of the 'argc' argument to main()
@@ -352,6 +359,17 @@ init_core (const String       &app_ident,
   debug_configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
   RAPICORN_DEBUG ("Startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
+
+  // full locale initialization is needed by X11, etc
+  if (!setlocale (LC_ALL,""))
+    {
+      String lv = string_printf ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
+                                 sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
+                                 sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
+      DEBUG ("environment: %s", lv.c_str());
+      setlocale (LC_ALL, "C");
+      DEBUG ("failed to initialize locale, falling back to \"C\"");
+    }
 
   // setup init settings
   parse_settings_and_args (vinit_settings, args, argcp, argv);
