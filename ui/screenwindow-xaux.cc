@@ -438,4 +438,64 @@ window_deco_origin (Display *display, Window window, int *dx, int *dy, int *fx, 
   return good; // tell solid from falback info
 }
 
+static String
+x11_input_method (Display *display, XIM *ximp, XIMStyle *bestp, const char *locale_modifiers = "")
+{
+  *ximp = NULL;
+  *bestp = 0;
+  if (!XSupportsLocale() ||                     // checks if locale is supported
+      !XSetLocaleModifiers (locale_modifiers))  // set X11 locale for XIM
+    return string_printf ("locale not supported: %s", setlocale (LC_ALL, NULL));
+  XIM xim = XOpenIM (display, NULL, NULL, NULL);
+  if (!xim)
+    return "failed to find input method";
+  XIMStyles *xim_styles = NULL;
+  if (XGetIMValues (xim, XNQueryInputStyle, &xim_styles, NULL) == NULL && xim_styles && xim_styles->count_styles)
+    {
+      XIMStyle xs[4] { 0, };
+      for (uint i = 0; i < xim_styles->count_styles; i++)
+        {
+          const XIMStyle s = xim_styles->supported_styles[i];
+          if      (s & XIMPreeditNothing && s & XIMStatusNothing)
+            xs[0] = s;
+          else if (s & XIMPreeditNothing && s & XIMStatusNone)
+            xs[1] = s;
+          else if (s & XIMPreeditNone    && s & XIMStatusNothing)
+            xs[2] = s;
+          else if (s & XIMPreeditNone    && s & XIMStatusNone)
+            xs[3] = s;
+        }
+      for (uint i = 0; i < ARRAY_SIZE (xs); i++)
+        if (xs[i])
+          {
+            *bestp = xs[i];
+            break;
+          }
+    }
+  if (xim_styles)
+    XFree (xim_styles);
+  if (!*bestp)
+    {
+      XCloseIM (xim);
+      return "failed to find input style";
+    }
+  *ximp = xim;
+  return "";
+}
+
+static String
+x11_input_context (Display *display, Window window, unsigned long events, XIM xim, XIMStyle imstyle, XIC *xicp)
+{
+  *xicp = 0;
+  XIC xic = xim ? XCreateIC (xim, XNInputStyle, imstyle, XNClientWindow, window, XNFocusWindow, window, nullptr) : NULL;
+  if (!xic)
+    return "failed to create input context";
+  // extend window event mask as needed
+  unsigned long imevents = 0;
+  if (XGetICValues (xic, XNFilterEvents, &imevents, nullptr) == NULL && imevents != (events & imevents))
+    XSelectInput (display, window, events | imevents);
+  *xicp = xic;
+  return "";
+}
+
 } // Anon

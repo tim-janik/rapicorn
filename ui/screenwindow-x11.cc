@@ -62,6 +62,8 @@ public:
   Visual               *visual;
   int                   depth;
   Window                root_window;
+  XIM                   input_method;
+  XIMStyle              input_style;
   int8                  m_shared_mem;
   map<size_t, X11Item*> x11ids;
   Atom                  atom         (const String &text, bool force_create = true);
@@ -132,6 +134,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   Config                m_config;
   State                 m_state;
   Window                m_window;
+  XIC                   m_input_context;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
@@ -165,7 +168,7 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const S
 
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver),
-  m_window (0), m_expose_surface (NULL),
+  m_window (0), m_input_context (NULL), m_expose_surface (NULL),
   m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_crossing_focus (false)
 {
@@ -180,6 +183,11 @@ ScreenWindowX11::~ScreenWindowX11()
     {
       cairo_surface_destroy (m_expose_surface);
       m_expose_surface = NULL;
+    }
+  if (m_input_context)
+    {
+      XDestroyIC (m_input_context);
+      m_input_context = NULL;
     }
   if (m_window)
     {
@@ -234,6 +242,11 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   // window setup
   setup_window (setup);
   configure_window (config);
+  // create input context if possible
+  String imerr = x11_input_context (x11context.display, m_window, attributes.event_mask,
+                                    x11context.input_method, x11context.input_style, &m_input_context);
+  if (!imerr.empty())
+    XDEBUG ("XIM: window=%lu: %s", m_window, imerr.c_str());
   // configure initial state for this window
   XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, m_window, m_window,
                           0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect, };
@@ -274,8 +287,9 @@ bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
   m_event_context.synthesized = xevent.xany.send_event;
+  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), m_window);
   const char ss = m_event_context.synthesized ? 'S' : 's';
-  bool consumed = false;
+  const char sf = !consumed ? ss : m_event_context.synthesized ? 'F' : 'f';
   switch (xevent.type)
     {
     case CreateNotify: {
@@ -374,14 +388,24 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "dn" : "up";
       KeySym keysym = 0;
-      char buffer[16]; // dummy
-      const int n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
+      char buffer[512]; // dummy
+      int n = 0;
+      Status ximstatus = XBufferOverflow;
+      if (m_input_context && xevent.type == KeyPress)
+        n = Xutf8LookupString (m_input_context, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+      if (ximstatus != XLookupKeySym && ximstatus != XLookupBoth)
+        {
+          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
+          ximstatus = XLookupKeySym;
+        }
       buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
       char str[8];
       utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str);
+      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
+      if (!consumed && // might have been processed by input context already
+          (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
+        enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
@@ -471,6 +495,13 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               m_state.active = now_focus;
               update_state (m_state);
               enqueue_locked (create_event_focus (m_state.active ? FOCUS_IN : FOCUS_OUT, m_event_context));
+              if (m_input_context)
+                {
+                  if (m_state.active)
+                    XSetICFocus (m_input_context);
+                  else
+                    XUnsetICFocus (m_input_context);
+                }
             }
         }
       consumed = true;
@@ -842,7 +873,8 @@ ScreenWindowX11::queue_create (const ScreenWindow::Setup &setup, const ScreenWin
 
 // == X11Context ==
 X11Context::X11Context() :
-  m_loop (*ref_sink (MainLoop::_new())), display (NULL), screen (0), visual (NULL), depth (0), root_window (0), m_shared_mem (-1)
+  m_loop (*ref_sink (MainLoop::_new())), display (NULL), screen (0), visual (NULL), depth (0),
+  root_window (0), input_method (NULL), m_shared_mem (-1)
 {
   // X11 thread not yet started
 }
@@ -919,7 +951,7 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
 bool
 X11Context::connect (const String &x11display)
 {
-  assert_return (!display && !screen && !visual && !depth && !root_window && m_shared_mem < 0, false);
+  assert_return (!display && !screen && !visual && !depth && !root_window && !input_method && m_shared_mem < 0, false);
   const char *s = x11display.c_str();
   display = XOpenDisplay (s[0] ? s : NULL);
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (x11display.c_str()), display ? "success" : "failed to connect");
@@ -931,6 +963,10 @@ X11Context::connect (const String &x11display)
   depth = DefaultDepth (display, screen);
   root_window = XRootWindow (display, screen);
   load_atom_cache (display);
+  String imerr = x11_input_method (display, &input_method, &input_style);
+  if (!imerr.empty() && x11_input_method (display, &input_method, &input_style, "@im=none") == "")
+    imerr = ""; // @im=none gets us at least a working compose key
+  XDEBUG ("XIM: %s", !imerr.empty() ? imerr.c_str() : string_printf ("selected input method style 0x%04lx", input_style).c_str());
   return true;
 }
 
@@ -956,6 +992,12 @@ X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
   // process X11 events
   m_loop.run();
   // close down
+  if (input_method)
+    {
+      XCloseIM (input_method);
+      input_method = NULL;
+      input_style = 0;
+    }
   if (display)
     {
       XCloseDisplay (display); // XLib hangs if connection fd is closed prematurely
