@@ -386,7 +386,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case KeyPress: case KeyRelease: {
       const XKeyEvent &xev = xevent.xkey;
-      const char  *kind = xevent.type == KeyPress ? "dn" : "up";
+      const char  *kind = xevent.type == KeyPress ? "DN" : "UP";
       KeySym keysym = 0;
       char buffer[512]; // dummy
       int n = 0;
@@ -401,7 +401,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
       char str[8];
       utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("KEY%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
+      EDEBUG ("Key%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       if (!consumed && // might have been processed by input context already
           (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
@@ -410,10 +410,10 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ButtonPress: case ButtonRelease: {
       const XButtonEvent &xev = xevent.xbutton;
-      const char  *kind = xevent.type == ButtonPress ? "dn" : "up";
+      const char  *kind = xevent.type == ButtonPress ? "DN" : "UP";
       if (xev.window != m_window)
         break;
-      EDEBUG ("BUT%s: %c=%lu w=%lu c=%lu p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
+      EDEBUG ("But%s: %c=%lu w=%lu c=%lu p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       if (xevent.type == ButtonPress)
         switch (xev.button)
