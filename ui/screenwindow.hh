@@ -7,6 +7,7 @@
 
 namespace Rapicorn {
 
+/// Interface class for managing window contents on screens and display devices.
 class ScreenWindow : public virtual Deletable, protected NonCopyable {
 public:
   enum Flags {
@@ -33,7 +34,7 @@ public:
     UNFOCUSED      = 1 << 29,   ///< The window does not get automatic keyboard focus when initially shown.
     ICONIFY        = 1 << 30,   ///< The window is in iconified state, (minimized, but icon shown).
   };
-  static String flags_name (uint64 flags, String combo = ",");
+  static String flags_name (uint64 flags, String combo = ","); ///< Convert flags to string.
   /// Structure requesting the initial window setup.
   struct Setup {
     WindowType  window_type;    ///< Requested window type.
@@ -74,14 +75,15 @@ public:
   void          show                    ();                     ///< Show window on screen.
   void          present                 ();                     ///< Demand user attention for this window.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
-  void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);
-  void          start_user_move         (uint button, double root_x, double root_y);
-  void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);
+  void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);     ///< Blit/paint window region.
+  void          start_user_move         (uint button, double root_x, double root_y);                    ///< Trigger window movement.
+  void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);   ///< Trigger window resizing.
 protected:
   enum CommandType {
     CMD_CREATE = 1, CMD_CONFIGURE, CMD_BEEP, CMD_SHOW, CMD_PRESENT, CMD_BLIT, CMD_MOVE, CMD_RESIZE,
   };
-  struct Command {
+  struct Command        /// Structure for internal asynchronous operations.
+  {
     CommandType       type;
     union {
       struct { Config          *config; Setup *setup; };
@@ -105,20 +107,26 @@ private:
 public: typedef struct Command Command;
 };
 
-// == ScreenDriver ==
+/// Management class for ScreenWindow driver implementations.
 class ScreenDriver : protected NonCopyable {
 protected:
   ScreenDriver         *m_sibling;
   String                m_name;
   int                   m_priority;
-public:
+  /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
   explicit              ScreenDriver            (const String &name, int priority = 0);
+public:
+  /// Open a driver or increase opening reference count.
   virtual bool          open                    () = 0;
+  /// Create a new ScreenWindow from an opened driver.
   virtual ScreenWindow* create_screen_window    (const ScreenWindow::Setup &setup,
                                                  const ScreenWindow::Config &config,
                                                  ScreenWindow::EventReceiver &receiver) = 0;
+  /// Decrease opening reference count, closes down driver resources if the last count drops.
   virtual void          close                   () = 0;
+  /// Open a specific named driver, "auto" will try to find the best match.
   static ScreenDriver*  open_screen_driver      (const String &backend_name);
+  /// Comparator for "auto" scoring.
   static bool           driver_priority_lesser  (ScreenDriver *d1, ScreenDriver *d2);
 };
 
