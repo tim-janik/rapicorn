@@ -807,13 +807,16 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & ATTENTION)    longs.push_back (x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION"));
   XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_STATE"),
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
-  // WM_HINTS
+  // WM_COMMAND WM_CLIENT_MACHINE WM_LOCALE_NAME WM_HINTS WM_CLASS
   XWMHints wmhints = { InputHint | StateHint, False, NormalState, 0, 0, 0, 0, 0, 0, };
   if (f & ATTENTION)
     wmhints.flags |= XUrgencyHint;
   if (f & (HIDDEN | ICONIFY))
     wmhints.initial_state = IconicState;
-  XSetWMHints (x11context.display, m_window, &wmhints);
+  const char *cmdv[2] = { program_file().c_str(), NULL };
+  XClassHint class_hint = { const_cast<char*> (program_alias().c_str()), const_cast<char*> (program_ident().c_str()) };
+  Xutf8SetWMProperties (x11context.display, m_window, NULL, NULL, const_cast<char**> (cmdv), ARRAY_SIZE (cmdv) - 1,
+                        NULL, &wmhints, &class_hint);
   // _MOTIF_WM_HINTS
   uint32 funcs = FUNC_RESIZE | FUNC_MOVE, deco = 0;
   if (f & DECORATED)    { deco |= DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE | DECOR_MENU; }
@@ -821,10 +824,18 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & MAXIMIZABLE)  { funcs |= FUNC_MAXIMIZE; deco |= DECOR_MAXIMIZE; }
   if (f & DELETABLE)    { funcs |= FUNC_CLOSE; deco |= DECOR_CLOSE; }
   adjust_mwm_hints (x11context.display, m_window, Mwm (funcs), Mwm (deco));
-  // session role
+  // WM_WINDOW_ROLE
   set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),
-                     XStringStyle, setup.session_role, DELETE_EMPTY);   // ICCCM
-  // background
+                     XStringStyle, setup.session_role, DELETE_EMPTY);
+  // _NET_WM_PID
+  longs.clear();
+  longs.push_back (getpid());
+  if (false)
+    XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_PID"),
+                     XA_CARDINAL, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
+  else // _NET_WM_PID is used for killing, we prefer an XKillClient() call however
+    XDeleteProperty (x11context.display, m_window, x11context.atom ("_NET_WM_PID"));
+  // Background
   Color c1 = setup.bg_average, c2 = setup.bg_average;
   if (devel_enabled())
     {
