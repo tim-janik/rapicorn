@@ -757,13 +757,43 @@ create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable,
   return xpixmap;
 }
 
+static const char*
+window_type_atom_name (WindowType window_type)
+{
+  switch (window_type)
+    {
+    case WINDOW_TYPE_DESKTOP:   	return "_NET_WM_WINDOW_TYPE_DESKTOP";
+    case WINDOW_TYPE_DOCK:      	return "_NET_WM_WINDOW_TYPE_DOCK";
+    case WINDOW_TYPE_TOOLBAR:   	return "_NET_WM_WINDOW_TYPE_TOOLBAR";
+    case WINDOW_TYPE_MENU:      	return "_NET_WM_WINDOW_TYPE_MENU";
+    case WINDOW_TYPE_UTILITY:   	return "_NET_WM_WINDOW_TYPE_UTILITY";
+    case WINDOW_TYPE_SPLASH:    	return "_NET_WM_WINDOW_TYPE_SPLASH";
+    case WINDOW_TYPE_DIALOG:    	return "_NET_WM_WINDOW_TYPE_DIALOG";
+    case WINDOW_TYPE_DROPDOWN_MENU:	return "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU";
+    case WINDOW_TYPE_POPUP_MENU:	return "_NET_WM_WINDOW_TYPE_POPUP_MENU";
+    case WINDOW_TYPE_TOOLTIP:	        return "_NET_WM_WINDOW_TYPE_TOOLTIP";
+    case WINDOW_TYPE_NOTIFICATION:	return "_NET_WM_WINDOW_TYPE_NOTIFICATION";
+    case WINDOW_TYPE_COMBO:	        return "_NET_WM_WINDOW_TYPE_COMBO";
+    case WINDOW_TYPE_DND:       	return "_NET_WM_WINDOW_TYPE_DND";
+    default: ;
+    case WINDOW_TYPE_NORMAL:	        return "_NET_WM_WINDOW_TYPE_NORMAL";
+    }
+}
+
 void
 ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 {
+  assert_return (m_state.visible == false);
   assert_return (m_state.window_type == setup.window_type);
-  // _NET_WM_STATE
-  const uint64 f = setup.request_flags;
   vector<unsigned long> longs;
+  // _NET_WM_WINDOW_TYPE
+  longs.clear();
+  longs.push_back (x11context.atom (window_type_atom_name (setup.window_type)));
+  XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_WINDOW_TYPE"),
+                   XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
+  // _NET_WM_STATE
+  longs.clear();
+  const uint64 f = setup.request_flags;
   if (f & MODAL)        longs.push_back (x11context.atom ("_NET_WM_STATE_MODAL"));
   if (f & STICKY)       longs.push_back (x11context.atom ("_NET_WM_STATE_STICKY"));
   if (f & VMAXIMIZED)   longs.push_back (x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"));
