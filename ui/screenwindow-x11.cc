@@ -810,7 +810,7 @@ void
 ScreenWindowX11::configure_window (const Config &config)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  // WM size & gravity hints
+  // WM_NORMAL_HINTS, size & gravity
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
   XSetWMNormalHints (x11context.display, m_window, &szhint);
   // title

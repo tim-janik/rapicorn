@@ -39,7 +39,7 @@ public:
   struct Setup {
     WindowType  window_type;    ///< Requested window type.
     Flags       request_flags;  ///< Requested window hints.
-    String      session_role;   ///< String to uniquely identify this window.
+    String      session_role;   ///< String to uniquely identify this window, despite similar titles.
     Color       bg_average;
     inline      Setup();
   };
