@@ -694,7 +694,7 @@ ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 void
 ScreenWindowX11::blit_expose_region()
 {
-  if (!m_expose_surface)
+  if (!m_expose_surface || !m_state.visible)
     {
       m_expose_region.clear();
       return;
