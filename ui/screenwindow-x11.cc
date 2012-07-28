@@ -227,9 +227,10 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   unsigned long attribute_mask = CWBitGravity | CWBackingStore | CWSaveUnder |
                                  CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
   const int border = 0, request_width = MAX (1, config.request_width), request_height = MAX (1, config.request_height);
+  const int request_x = 0, request_y = 0;
   // create and register window
   const ulong create_serial = NextRequest (x11context.display);
-  m_window = XCreateWindow (x11context.display, x11context.root_window, 0, 0, request_width, request_height, border,
+  m_window = XCreateWindow (x11context.display, x11context.root_window, request_x, request_y, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   assert (m_window != 0);
   x11context.x11ids[m_window] = this;
@@ -239,6 +240,12 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   atoms.push_back (x11context.atom ("WM_TAKE_FOCUS"));
   atoms.push_back (x11context.atom ("_NET_WM_PING"));
   XSetWMProtocols (x11context.display, m_window, atoms.data(), atoms.size());
+  // initialize state
+  m_state.root_x = m_state.deco_x = request_x;
+  m_state.root_y = m_state.deco_y = request_y;
+  m_state.width = request_width;
+  m_state.height = request_height;
+  update_state (m_state);
   // window setup
   setup_window (setup);
   configure_window (config);
