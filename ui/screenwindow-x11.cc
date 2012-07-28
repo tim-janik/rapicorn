@@ -77,6 +77,7 @@ public:
   bool                  start_thread_async (const String &x11display);
   void                  stop_thread_async  ();
   void                  queue_cmd_async    (ScreenWindowX11 *scw, ScreenWindow::Command *cmd);
+  void                  unlink_screen_window (ScreenWindowX11 *scw);
 };
 
 // == ScreenDriverX11 ==
@@ -180,6 +181,7 @@ ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &rec
 ScreenWindowX11::~ScreenWindowX11()
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
+  x11context.unlink_screen_window (this);
   if (m_expose_surface)
     {
       cairo_surface_destroy (m_expose_surface);
@@ -987,6 +989,15 @@ X11Context::queue_cmd_async (ScreenWindowX11 *scw, ScreenWindow::Command *scmd)
     m_loop.wakeup();
 }
 
+void
+X11Context::unlink_screen_window (ScreenWindowX11 *scw)
+{
+  ScopedLock<Mutex> x11locker (x11_rmutex);
+  for (auto &it : m_cmd_queue)
+    if (it.scw == scw)
+      it.scw = NULL;
+}
+
 bool
 X11Context::cmd_dispatcher (const EventLoop::State &state)
 {
@@ -998,7 +1009,10 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
         {
           Cmd cmd = m_cmd_queue.front();
           m_cmd_queue.pop_front();
-          cmd.scw->handle_command (cmd.cmd);
+          if (cmd.scw)
+            cmd.scw->handle_command (cmd.cmd);
+          else
+            delete cmd.cmd;
         }
       return true;
     }
