@@ -14,6 +14,7 @@ using namespace Rapicorn;
 // == X11 Error Handling ==
 static XErrorHandler xlib_error_handler = NULL;
 static XErrorEvent *xlib_error_trap = NULL;
+
 static int
 x11_error (Display *error_display, XErrorEvent *error_event)
 {
@@ -22,18 +23,18 @@ x11_error (Display *error_display, XErrorEvent *error_event)
       *xlib_error_trap = *error_event;
       return 0;
     }
-  int result = -1;
-  try
-    {
-      atexit (abort);
-      result = xlib_error_handler (error_display, error_event);
-    }
-  catch (...)
-    {
-      // ignore C++ exceptions from atexit handlers
-    }
-  abort();
-  return result;
+  size_t addr;
+  const vector<String> syms = pretty_backtrace (0, &addr);
+  String btmsg = string_printf ("%s:%d: Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", __FILE__, __LINE__,
+                                addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
+  for (size_t i = 0; i < syms.size(); i++)
+    btmsg += string_printf ("  %s\n", syms[i].c_str());
+  printerr ("X11: received an XErrorEvent (RAPICORN=%s), aborting...\n%s",
+            CQUOTE (String (dbe_x11sync.confbool() ? "" : "no-") + dbe_x11sync.key), btmsg.c_str());
+  atexit (abort); // prevents other atexit() handlers from complaining about improper shutdown
+  xlib_error_handler (error_display, error_event);
+  abort(); // usually _XPrintDefaultError already aborted
+  return -1;
 }
 
 static bool

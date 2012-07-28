@@ -3,10 +3,11 @@
 #include <ui/utilities.hh>
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
-#include "screenwindow-xaux.cc"
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
+
+#include "screenwindow-xaux.cc" // helpers, need dbe_x11sync
 
 template<class T> cairo_status_t cairo_status_from_any (T t);
 template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
