@@ -140,6 +140,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   cairo_surface_t      *m_expose_surface;
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_crossing_focus;
+  vector<uint32>        m_queued_updates;       // "atoms" not yet updated
   explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
@@ -151,7 +152,6 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
-  void                  property_changed        (Atom atom, bool deleted);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
@@ -328,7 +328,10 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
       enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
       if (!m_pending_configures)
-        x11context.queue_update (m_window);
+        {
+          m_queued_updates.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
+          x11context.queue_update (m_window);
+        }
       EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d c=%d", ss, xev.serial, xev.window, m_state.root_x, m_state.root_y,
               m_state.width, m_state.height, xev.border_width, m_pending_configures);
       consumed = true;
@@ -339,7 +342,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         break;
       EDEBUG ("Map  : %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
       m_state.visible = true;
-      force_update (xev.window); // figure deco and root position
+      m_queued_updates.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
+      force_update (xev.window); // immediately figure deco and root position
       consumed = true;
       break; }
     case UnmapNotify: {
@@ -367,7 +371,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const bool deleted = xev.state == PropertyDelete;
       EDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       m_event_context.time = xev.time;
-      property_changed (xev.atom, deleted);
+      m_queued_updates.push_back (xev.atom);
+      x11context.queue_update (m_window);
       consumed = true;
       break; }
     case Expose: {
@@ -531,61 +536,6 @@ ScreenWindowX11::process_event (const XEvent &xevent)
 }
 
 void
-ScreenWindowX11::property_changed (Atom atom, bool deleted)
-{
-  const String atom_name = x11context.atom (atom);
-  const Flags old_window_flags = m_state.window_flags;
-  if (debug_enabled() && (atom_name == "WM_NAME" || atom_name == "_NET_WM_NAME"))
-    {
-      String text = x11_get_string_property (x11context.display, m_window, atom);
-      EDEBUG ("State: %s: %s", atom_name.c_str(), text.c_str());
-    }
-  else if (atom_name == "WM_STATE")
-    {
-      vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, atom);
-      if (datav.size())
-        m_state.window_flags = Flags ((m_state.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
-    }
-  else if (atom_name == "_NET_WM_STATE")
-    {
-      vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, atom);
-      uint32 f = 0;
-      for (size_t i = 0; i < datav.size(); i++)
-        if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_STICKY"))          f += STICKY;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"))  f += VMAXIMIZED;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_HORZ"))  f += HMAXIMIZED;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SHADED"))          f += SHADED;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_TASKBAR"))    f += SKIP_TASKBAR;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_PAGER"))      f += SKIP_PAGER;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_HIDDEN"))          f += HIDDEN;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_FULLSCREEN"))      f += FULLSCREEN;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_ABOVE"))           f += ABOVE_ALL;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_BELOW"))           f += BELOW_ALL;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION")) f += ATTENTION;
-        else if (datav[i] == x11context.atom ("_NET_WM_STATE_FOCUSED"))         f += FOCUS_DECO;
-      m_state.window_flags = Flags ((m_state.window_flags & ~_WM_STATE_MASK) | f);
-    }
-  else if (atom_name == "_MOTIF_WM_HINTS")
-    {
-      Mwm funcs = Mwm (FUNC_CLOSE | FUNC_MINIMIZE | FUNC_MAXIMIZE), deco = DECOR_ALL;
-      get_mwm_hints (x11context.display, m_window, &funcs, &deco);
-      uint32 f = 0;
-      if (funcs & FUNC_CLOSE)                                                   f += DELETABLE;
-      if (funcs & FUNC_MINIMIZE || deco & DECOR_MINIMIZE)                       f += MINIMIZABLE;
-      if (funcs & FUNC_MAXIMIZE || deco & DECOR_MAXIMIZE)                       f += MAXIMIZABLE;
-      if (deco & (DECOR_ALL | DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE))      f += DECORATED;
-      m_state.window_flags = Flags ((m_state.window_flags & ~_DECO_MASK) | f);
-    }
-  // FIXME: merge with force_update
-  if (old_window_flags != m_state.window_flags)
-    {
-      update_state (m_state);
-      EDEBUG ("State: flags=%s", flags_name (m_state.window_flags).c_str());
-    }
-}
-
-void
 ScreenWindowX11::client_message (const XClientMessageEvent &xev)
 {
   const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
@@ -616,15 +566,73 @@ ScreenWindowX11::client_message (const XClientMessageEvent &xev)
 void
 ScreenWindowX11::force_update (Window window)
 {
-  const int rx = m_state.root_x, ry = m_state.root_y, dx = m_state.deco_x, dy = m_state.deco_y;
-  window_deco_origin (x11context.display, m_window, &m_state.root_x, &m_state.root_y, &m_state.deco_x, &m_state.deco_y);
-  // FIXME: handle property updates here
-  update_state (m_state);
-  if (debug_enabled() && (rx != m_state.root_x || ry != m_state.root_y || dx != m_state.deco_x || dy != m_state.deco_y))
+  const State old_state = m_state;
+  std::stable_sort (m_queued_updates.begin(), m_queued_updates.end());
+  auto qend = std::unique (m_queued_updates.begin(), m_queued_updates.end());
+  m_queued_updates.resize (qend - m_queued_updates.begin());
+  vector<String> updates;
+  for (auto it : m_queued_updates)
+    updates.push_back (x11context.atom (it));
+  uint ignored = 0;
+  for (auto aname : updates)
+    if (aname == "_NET_FRAME_EXTENTS")
+      window_deco_origin (x11context.display, m_window, &m_state.root_x, &m_state.root_y, &m_state.deco_x, &m_state.deco_y);
+    else if (aname == "_NET_WM_VISIBLE_NAME")
+      m_state.visible_title = x11_get_string_property (x11context.display, m_window, x11context.atom (aname));
+    else if (aname == "_NET_WM_VISIBLE_ICON_NAME")
+      m_state.visible_alias = x11_get_string_property (x11context.display, m_window, x11context.atom (aname));
+    else if (aname == "WM_STATE")
+      {
+        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, x11context.atom (aname));
+        if (datav.size())
+          m_state.window_flags = Flags ((m_state.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
+      }
+    else if (aname == "_NET_WM_STATE")
+      {
+        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, x11context.atom (aname));
+        uint32 f = 0;
+        for (size_t i = 0; i < datav.size(); i++)
+          if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_STICKY"))          f += STICKY;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_VERT"))  f += VMAXIMIZED;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_MAXIMIZED_HORZ"))  f += HMAXIMIZED;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_SHADED"))          f += SHADED;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_TASKBAR"))    f += SKIP_TASKBAR;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_SKIP_PAGER"))      f += SKIP_PAGER;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_HIDDEN"))          f += HIDDEN;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_FULLSCREEN"))      f += FULLSCREEN;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_ABOVE"))           f += ABOVE_ALL;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_BELOW"))           f += BELOW_ALL;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION")) f += ATTENTION;
+          else if (datav[i] == x11context.atom ("_NET_WM_STATE_FOCUSED"))         f += FOCUS_DECO;
+        m_state.window_flags = Flags ((m_state.window_flags & ~_WM_STATE_MASK) | f);
+      }
+    else if (aname == "_MOTIF_WM_HINTS")
+      {
+        Mwm funcs = Mwm (FUNC_CLOSE | FUNC_MINIMIZE | FUNC_MAXIMIZE), deco = DECOR_ALL;
+        get_mwm_hints (x11context.display, m_window, &funcs, &deco);
+        uint32 f = 0;
+        if (funcs & FUNC_CLOSE)                                                   f += DELETABLE;
+        if (funcs & FUNC_MINIMIZE || deco & DECOR_MINIMIZE)                       f += MINIMIZABLE;
+        if (funcs & FUNC_MAXIMIZE || deco & DECOR_MAXIMIZE)                       f += MAXIMIZABLE;
+        if (deco & (DECOR_ALL | DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE))      f += DECORATED;
+        m_state.window_flags = Flags ((m_state.window_flags & ~_DECO_MASK) | f);
+      }
+    else
+      ignored++;
+  if (ignored < updates.size())
     {
-      const unsigned long update_serial = XNextRequest (x11context.display) - 1;
-      EDEBUG ("State: S=%lu w=%lu r=%+d%+d o=%+d%+d flags=%s", update_serial, m_window, m_state.root_x, m_state.root_y,
-              m_state.deco_x, m_state.deco_y, flags_name (m_state.window_flags).c_str());
+      update_state (m_state);
+      if (debug_enabled())
+        {
+          const unsigned long update_serial = XNextRequest (x11context.display) - 1;
+          if (old_state.visible_title != m_state.visible_title)
+            EDEBUG ("State: S=%lu w=%lu title=%s", update_serial, m_window, CQUOTE (m_state.visible_title));
+          if (old_state.visible_alias != m_state.visible_alias)
+            EDEBUG ("State: S=%lu w=%lu alias=%s", update_serial, m_window, CQUOTE (m_state.visible_alias));
+          EDEBUG ("State: S=%lu w=%lu r=%+d%+d o=%+d%+d flags=%s", update_serial, m_window, m_state.root_x, m_state.root_y,
+                  m_state.deco_x, m_state.deco_y, flags_name (m_state.window_flags).c_str());
+        }
     }
 }
 
@@ -860,6 +868,7 @@ ScreenWindowX11::configure_window (const Config &config)
       set_text_property (x11context.display, m_window, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
       set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
       m_config.title = config.title;
+      m_state.visible_title = m_config.title;   // compensate for WMs not supporting _NET_WM_VISIBLE_NAME
     }
   // iconified title
   if (config.alias != m_config.alias)
@@ -867,6 +876,7 @@ ScreenWindowX11::configure_window (const Config &config)
       set_text_property (x11context.display, m_window, x11context.atom ("WM_ICON_NAME"), XStdICCTextStyle, config.alias, DELETE_EMPTY);
       set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_ICON_NAME"), XUTF8StringStyle, config.alias, DELETE_EMPTY);
       m_config.alias = config.alias;
+      m_state.visible_alias = m_config.alias;   // compensate for WMs not supporting _NET_WM_VISIBLE_ICON_NAME
     }
   force_update (m_window);
   enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));

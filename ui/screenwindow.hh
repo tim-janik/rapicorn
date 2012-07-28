@@ -45,7 +45,7 @@ public:
   };
   /// Structure requesting window configuration changes.
   struct Config {
-    String      title;                          ///< User visible title of this window.
+    String      title;                          ///< Window decoration title for this window.
     String      alias;                          ///< Brief title alias as e.g. icon subtitle.
     int         root_x, root_y;                 ///< Requested window position.
     int         request_width, request_height;  ///< Requested window size.
@@ -56,12 +56,16 @@ public:
   struct State {
     WindowType  window_type;            ///< Window type at creation.
     Flags       window_flags;           ///< Actual state of the backend window.
-    bool        visible;                ///< Visibility state, usuall true after show().
-    bool        active;                 ///< Indicator for keyboard input focus.
+    String      visible_title;          ///< User visible title, as displayed by window manager.
+    String      visible_alias;          ///< User visible alias, as displayed by window manager.
     int         width, height;          ///< Size of the window.
     int         root_x, root_y;         ///< Root position of the window.
     int         deco_x, deco_y;         ///< Position of window decorations.
+    bool        visible;                ///< Visibility state, usuall true after show().
+    bool        active;                 ///< Indicator for keyboard input focus.
     inline      State();
+    inline bool operator== (const State &o) const;
+    inline bool operator!= (const State &o) const { return !operator== (o); }
   };
   /// Widget interface for receiving events.
   struct EventReceiver {
@@ -140,9 +144,18 @@ ScreenWindow::Config::Config() :
 {}
 
 ScreenWindow::State::State() :
-  window_flags (ScreenWindow::Flags (0)), visible (0), active (0),
-  width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN)
+  window_flags (ScreenWindow::Flags (0)),
+  width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN),
+  visible (0), active (0)
 {}
+
+bool
+ScreenWindow::State::operator== (const State &o) const
+{
+  return window_type == o.window_type && window_flags == o.window_flags && width == o.width && height == o.height &&
+    root_x == o.root_x && root_y == o.root_y && deco_x == o.deco_x && deco_y == o.deco_y &&
+    visible == o.visible && active == o.active && visible_title == o.visible_title && visible_alias == o.visible_alias;
+}
 
 } // Rapicorn
 
