@@ -1334,6 +1334,94 @@ memfree (char *memread_mem)
 } // Path
 
 /**
+ * @class ResourceBlob
+ * A ResourceBlob provides access to binary data (BLOB = Binary Large OBject) which may be
+ * preassembled and compiled into a program or located in a resource path directory.
+ * Locators for resources should generally adhere to the form: @code
+ *      res: [relative_path/] resource_name
+ * @endcode
+ * See also: RAPICORN_STATIC_RESOURCE_DATA(), RAPICORN_STATIC_RESOURCE_ENTRY().
+ * Example: @SNIPPET{rcore/tests/multitest.cc, ResourceBlob-EXAMPLE}
+ */
+ResourceBlob::ResourceBlob (const String &name, size_t dsize, std::shared_ptr<const uint8> shdata) :
+  m_name (name), m_size (dsize), m_data (shdata)
+{}
+
+static ResourceBlob::Entry *res_head = NULL;
+static Mutex                res_mutex;
+
+void
+ResourceBlob::Entry::reg_add (ResourceBlob::Entry *entry)
+{
+  assert_return (entry && !entry->next);
+  ScopedLock<Mutex> sl (res_mutex);
+  entry->next = res_head;
+  res_head = entry;
+}
+
+ResourceBlob::Entry::~Entry()
+{
+  ScopedLock<Mutex> sl (res_mutex);
+  Entry **ptr = &res_head;
+  while (*ptr != this)
+    ptr = &(*ptr)->next;
+  *ptr = next;
+}
+
+const ResourceBlob::Entry*
+ResourceBlob::Entry::find_entry (const String &res_name)
+{
+  ScopedLock<Mutex> sl (res_mutex);
+  for (const Entry *e = res_head; e; e = e->next)
+    if (res_name == e->name)
+      return e;
+  return NULL;
+}
+
+ResourceBlob
+ResourceBlob::load (const String &path)
+{
+  struct BBlob : ResourceBlob {
+    BBlob (const String &name, size_t dsize, std::shared_ptr<const uint8> ddata) :
+      ResourceBlob (name, dsize, ddata)
+    {}
+  };
+  const Entry *entry = Entry::find_entry (path);
+  struct NopDeleter { void operator() (const uint8*) {} }; // prevent delete on const data
+  if (entry && (entry->dsize == entry->psize || entry->dsize + 1 == entry->psize))
+    {
+      if (entry->dsize + 1 == entry->psize)
+        assert (entry->pdata[entry->dsize] == 0);       // 0-terminated char array
+      else
+        assert (entry->dsize == entry->psize);
+      const uint8 *data = reinterpret_cast<const uint8*> (entry->pdata);
+      return BBlob (path, entry->dsize, std::shared_ptr<const uint8> (data, NopDeleter()));
+    }
+  else if (entry && entry->psize && entry->dsize == 0)  // variable length array
+    {
+      const uint8 *data = reinterpret_cast<const uint8*> (entry->pdata);
+      return BBlob (path, entry->psize, std::shared_ptr<const uint8> (data, NopDeleter()));
+    }
+  else if (entry && entry->psize < entry->dsize)        // compressed
+    {
+      const uint8 *data = zintern_decompress (entry->dsize, reinterpret_cast<const uint8*> (entry->pdata), entry->psize);
+      struct ZinternDeleter { void operator() (const uint8 *d) { zintern_free (const_cast<uint8*> (d)); } };
+      return BBlob (path, entry->dsize, std::shared_ptr<const uint8> (data, ZinternDeleter()));
+    }
+  // FIXME: handle file system lookups for ResourceBlob
+  return BBlob (path, 0, std::shared_ptr<const uint8> (nullptr));
+}
+
+String
+ResourceBlob::string () const
+{
+  size_t l = size();
+  if (l && data()[l - 1] == 0)
+    l--; // std::string automatically 0-terminates its contents.
+  return std::string ((char*) data(), l);
+}
+
+/**
  * @class Deletable
  * Classes derived from @a Deletable need to have a virtual destructor.
  * Handlers can be registered with class instances that are called during

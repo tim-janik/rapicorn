@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <stdio.h>
 #include <string.h>
@@ -665,6 +650,32 @@ binary_lookup_tests()
   TCMP (seen_inexact, ==, true);
 }
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
+
+/// [ResourceBlob-EXAMPLE]
+// Declare text resources for later use in a program.
+RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
+RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "res:tests/text_resource.txt");
+// If a resource data length is given, it must be correct (and may or may not include the trailing zero).
+RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
+RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "res:tests/digit_resource.txt", 10);
+
+static void // Access a previously declared resource from anywhere within a program.
+access_text_resources ()
+{
+  // Load a Blob from "tests/text_resource.txt"
+  ResourceBlob blob = ResourceBlob::load ("res:tests/text_resource.txt");
+  assert (blob.size() > 0); // Verify lookup success.
+  // Access the Blob as string (automatically strips the trailing 0).
+  std::string text = blob.string();
+  assert (text == "Alpha Beta Gamma\0"); // Verify its contents.
+
+  // Load the other defined "tests/digit_resource.txt" blob.
+  blob = ResourceBlob::load ("res:tests/digit_resource.txt");
+  // Check the blobs size and data,
+  assert (10 == blob.size() && 0 == strcmp ((const char*) blob.data(), "0123456789"));
+}
+/// [ResourceBlob-EXAMPLE]
+REGISTER_TEST ("Resource/Test Example", access_text_resources);
 
 static void // Test Mutextes before g_thread_init()
 test_before_thread_init()
