@@ -14,6 +14,7 @@ public:
   explicit      PixmapT         ();                     ///< Construct Pixmap with 0x0 pixesl.
   explicit      PixmapT         (uint w, uint h);       ///< Construct Pixmap at given width and height.
   explicit      PixmapT         (const Pixbuf &source); ///< Copy-construct Pixmap from a Pixbuf structure.
+  explicit      PixmapT         (const String &res_png); ///< Construct Pixmap from a PNG resource blob.
   PixmapT&      operator=       (const Pixbuf &source); ///< Re-initialize the Pixmap from a Pixbuf structure.
   int           width           () const { return m_pixbuf->width(); }  ///< Get the width of the Pixmap.
   int           height          () const { return m_pixbuf->height(); } ///< Get the height of the Pixmap.
@@ -23,7 +24,8 @@ public:
   uint32*       row             (uint y) { return m_pixbuf->row (y); } ///< Access row as endian dependant ARGB integers.
   uint32&       pixel           (uint x, uint y) { return m_pixbuf->row (y)[x]; }       ///< Retrieve an ARGB pixel value reference.
   uint32        pixel           (uint x, uint y) const { return m_pixbuf->row (y)[x]; } ///< Retrieve an ARGB pixel value.
-  bool          load_png        (const String &filename, bool tryrepair = false); ///< Load from PNG, assigns errno on failure.
+  bool          load_png        (const String &filename, bool tryrepair = false); ///< Load from PNG file, assigns errno on failure.
+  bool          load_png        (size_t nbytes, const uint8 *bytes, bool tryrepair = false); ///< Load PNG data, sets errno.
   bool          save_png        (const String &filename); ///< Save to PNG, assigns errno on failure.
   bool          load_pixstream  (const uint8 *pixstream); ///< Decode and load from pixel stream, assigns errno on failure.
   void          set_attribute   (const String &name, const String &value); ///< Set string attribute, e.g. "comment".

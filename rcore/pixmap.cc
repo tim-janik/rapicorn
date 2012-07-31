@@ -3,6 +3,7 @@
 #include "clientapi.hh" // includes pixmap.hh
 #endif
 #include "strings.hh"
+#include "utilities.hh"
 #include <errno.h>
 #include <math.h>
 #include <cstring>
@@ -13,7 +14,7 @@
 namespace {
 using namespace Rapicorn;
 
-static bool anon_load_png (Pixmap pixmap, const String &filename); /* assigns errno */
+static bool anon_load_png (Pixmap pixmap, size_t nbytes, const char *bytes); /* assigns errno */
 
 } // Anon
 
@@ -38,6 +39,18 @@ PixmapT<Pixbuf>::PixmapT (const Pixbuf &source) :
   m_pixbuf (new Pixbuf())
 {
   *m_pixbuf = source;
+}
+
+template<class Pixbuf>
+PixmapT<Pixbuf>::PixmapT (const String &res_png) :
+  m_pixbuf (new Pixbuf())
+{
+  errno = ENOENT;
+  ResourceBlob blob = ResourceBlob::load (res_png);
+  if (blob.size() && load_png (blob.size(), blob.data()))
+    errno = 0;
+  if (errno)
+    DEBUG ("PixmapT: failed to load %s: %s", CQUOTE (res_png), strerror (errno));
 }
 
 template<class Pixbuf>
@@ -130,7 +143,19 @@ PixmapT<Pixbuf>::compare (const Pixbuf &source,
 template<class Pixbuf> bool
 PixmapT<Pixbuf>::load_png (const String &filename, bool tryrepair)
 {
-  return anon_load_png (*this, filename) || tryrepair;
+  size_t nbytes = 0;
+  char *bytes = Path::memread (filename, &nbytes);
+  const bool success = anon_load_png (*this, nbytes, bytes) || tryrepair;
+  Path::memfree (bytes);
+  return success;
+}
+
+template<class Pixbuf> bool
+PixmapT<Pixbuf>::load_png (size_t nbytes, const uint8 *bytes, bool tryrepair)
+{
+  if (!bytes)
+    return false;
+  return anon_load_png (*this, nbytes, (const char*) bytes) || tryrepair;
 }
 
 template<class Pixbuf> void
@@ -391,11 +416,13 @@ argb_pre_2_rgba (png_structp png, png_row_infop row_info, png_bytep data)
 }
 
 struct PngContext {
-  Pixmap     pixmap;
-  int        error;
-  FILE      *fp;
-  png_byte **rows;
-  PngContext (Pixmap pxm) : pixmap (pxm), error (0), fp (NULL), rows (NULL) {}
+  Pixmap      pixmap;
+  int         error;
+  png_byte  **rows;
+  FILE       *fp;
+  const char *fbytes;
+  size_t      fsize, foffset;
+  PngContext (Pixmap pxm) : pixmap (pxm), error (0), rows (NULL), fp (NULL), fbytes (NULL), fsize (0), foffset (0) {}
 };
 
 static int /* returns errno; longjmp() may jump out of this function */
@@ -449,6 +476,18 @@ pngcontext_configure_4argb (png_structp  png_ptr,
   return 0;
 }
 
+static void
+pngcontext_read_bytes (png_structp png_ptr, png_bytep data, png_size_t length)
+{
+  PngContext &pcontext = *(PngContext*) png_get_io_ptr (png_ptr);
+  const size_t l = pcontext.foffset >= pcontext.fsize ? 0 : MIN (length, pcontext.fsize - pcontext.foffset);
+  memcpy (data, pcontext.fbytes + pcontext.foffset, l);
+  memset (data + l, 0, length - l); // PNG provides no (!!) way to return length of short reads...
+  pcontext.foffset += l;
+  if (l == 0)
+    png_error (png_ptr, "End Of File");
+}
+
 static void /* longjmp() may jump out of this function */
 pngcontext_read_image (PngContext &pcontext,
                        png_structp png_ptr,
@@ -456,6 +495,8 @@ pngcontext_read_image (PngContext &pcontext,
 {
   /* setup PNG io */
   png_init_io (png_ptr, pcontext.fp);
+  if (pcontext.fbytes)
+    png_set_read_fn (png_ptr, &pcontext, pngcontext_read_bytes);
   png_set_sig_bytes (png_ptr, 8);                       /* advance by the 8 signature bytes we read earlier */
   png_set_user_limits (png_ptr, 0x7ffffff, 0x7ffffff);  /* we check the size ourselves */
   /* setup from meta data */
@@ -518,18 +559,25 @@ pngcontext_nop (png_structp     png_ptr,
 {}
 
 static bool
-anon_load_png (Pixmap pixmap, const String &filename)
+anon_load_png (Pixmap pixmap, size_t nbytes, const char *bytes)
 {
   PngContext pcontext (pixmap);
-  /* open image */
-  pcontext.fp = fopen (filename.c_str(), "rb");
-  if (!pcontext.fp)
-    return NULL; // errno set by fopen()
-  /* read and check PNG signature */
+  // open image
+  pcontext.fp = NULL; // fopen (filename.c_str(), "rb");
+  pcontext.fbytes = bytes;
+  pcontext.fsize = nbytes;
+  pcontext.foffset = 0;
+  if (!pcontext.fp && !pcontext.fbytes)
+    return NULL; // errno set by fopen/memread
+  // read and check PNG signature
   uint8 sigbuffer[8];
-  if (fread (sigbuffer, 1, 8, pcontext.fp) != 8 || png_sig_cmp (sigbuffer, 0, 8) != 0)
+  if ((pcontext.fp && fread (sigbuffer, 1, 8, pcontext.fp) != 8) ||
+      (pcontext.fbytes && !memcpy (sigbuffer, pcontext.fbytes, 8)) ||
+      (pcontext.fbytes && !(pcontext.foffset = 8)) ||
+      png_sig_cmp (sigbuffer, 0, 8) != 0)
     {
-      fclose (pcontext.fp);
+      if (pcontext.fp)
+        fclose (pcontext.fp);
       errno = ENODATA; // not a PNG
       return NULL;
     }
@@ -541,7 +589,8 @@ anon_load_png (Pixmap pixmap, const String &filename)
     {
       if (png_ptr)
         png_destroy_read_struct (&png_ptr, NULL, NULL);
-      fclose (pcontext.fp);
+      if (pcontext.fp)
+        fclose (pcontext.fp);
       errno = pcontext.error;
       return NULL;
     }
@@ -549,13 +598,13 @@ anon_load_png (Pixmap pixmap, const String &filename)
   if (setjmp (png_ptr->jmpbuf) == 0)
     {
       /* read pixel image */
-      pcontext.fp = pcontext.fp;
       pcontext.error = EINVAL;
       pngcontext_read_image (pcontext, png_ptr, info_ptr);
     }
   /* cleanup */
   png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
-  fclose (pcontext.fp);
+  if (pcontext.fp)
+    fclose (pcontext.fp);
   if (pcontext.rows)
     delete[] pcontext.rows;
   errno = pcontext.error; // maybe set even if pcontext.pixmap!=NULL
