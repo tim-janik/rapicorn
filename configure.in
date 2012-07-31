@@ -509,6 +509,7 @@ data/Makefile
 rcore/Makefile
 rcore/rsvg/Makefile
 rcore/tests/Makefile
+res/Makefile
 aidacc/Makefile
 aidacc/tests/Makefile
 ui/Makefile
