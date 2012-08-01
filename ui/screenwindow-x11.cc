@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
+#define VDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvent2", __VA_ARGS__) // verbose event debugging
 static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
 
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
@@ -224,10 +225,10 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
                          setup.window_type == WINDOW_TYPE_COMBO ||
                          setup.window_type == WINDOW_TYPE_DND);
   XSetWindowAttributes attributes;
-  attributes.event_mask        = ExposureMask | StructureNotifyMask | VisibilityChangeMask | PropertyChangeMask |
+  attributes.event_mask        = ExposureMask | StructureNotifyMask | SubstructureNotifyMask | VisibilityChangeMask | PropertyChangeMask |
                                  FocusChangeMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | PointerMotionHintMask |
                                  KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | ButtonMotionMask |
-                                 0 * OwnerGrabButtonMask; // owner_events for automatic grabs
+                                 0 * OwnerGrabButtonMask; // don't use owner_events for automatic grabs
   attributes.background_pixel  = XWhitePixel (x11context.display, x11context.screen);
   attributes.border_pixel      = XBlackPixel (x11context.display, x11context.screen);
   attributes.override_redirect = m_override_redirect;
@@ -354,6 +355,11 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               m_state.width, m_state.height, xev.border_width, m_pending_configures);
       consumed = true;
       break; }
+    case GravityNotify: {
+      const XGravityEvent &xev = xevent.xgravity;
+      VDEBUG ("Gravt: %c=%lu w=%lu p=%+d%+d", ss, xev.serial, xev.window, xev.x, xev.y);
+      consumed = true;
+      break; }
     case MapNotify: {
       const XMapEvent &xev = xevent.xmap;
       if (xev.window != m_window)
@@ -387,7 +393,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     case PropertyNotify: {
       const XPropertyEvent &xev = xevent.xproperty;
       const bool deleted = xev.state == PropertyDelete;
-      EDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
+      VDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       m_event_context.time = xev.time;
       m_queued_updates.push_back (xev.atom);
       x11context.queue_update (m_window);
@@ -402,7 +408,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (!m_pending_exposes && xev.count == 0)
         check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
       String hint = m_pending_exposes ? " (E+)" : m_expose_surface ? "" : " (nodata)";
-      EDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
+      VDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
       if (!m_pending_exposes && xev.count == 0)
         blit_expose_region();
       consumed = true;
@@ -471,18 +477,18 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                     /* xserver-xorg-1:7.6+7ubuntu7 + libx11-6:amd64-2:1.4.4-2ubuntu1 may generate buggy motion
                      * history events with x=0 for X220t trackpoints.
                      */
-                    EDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d (discarding)", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
+                    VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d (discarding)", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
                 else
                   {
                     m_event_context.time = xcoords[i].time; m_event_context.x = xcoords[i].x; m_event_context.y = xcoords[i].y;
                     enqueue_locked (create_event_mouse (MOUSE_MOVE, m_event_context));
-                    EDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
+                    VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
               XFree (xcoords);
             }
         }
-      EDEBUG ("Mtion: %c=%lu w=%lu c=%lu p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
+      VDEBUG ("Mtion: %c=%lu w=%lu c=%lu p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       enqueue_locked (create_event_mouse (MOUSE_MOVE, m_event_context));
       m_last_motion_time = xev.time;
@@ -738,7 +744,7 @@ ScreenWindowX11::blit_expose_region()
   if (debug_enabled())
     {
       const Rect extents = m_expose_region.extents();
-      EDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, m_window,
+      VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, m_window,
               int (extents.x), int (extents.y), int (extents.width), int (extents.height),
               rects.size(), coverage * 100.0 / (m_state.width * m_state.height));
     }
@@ -1162,7 +1168,7 @@ X11Context::process_x11()
       if (!consumed)
         {
           const char ss = xevent.xany.send_event ? 'S' : 's';
-          EDEBUG ("Spare: %c=%lu w=%lu event_type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.type);
+          XDEBUG ("Ev: %c=%lu w=%lu event_type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.type);
         }
     }
 }
