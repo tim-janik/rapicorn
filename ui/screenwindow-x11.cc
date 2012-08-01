@@ -1,11 +1,13 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "screenwindow.hh"
-#include <ui/utilities.hh>
+#include "item.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
+
+typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
 #include "screenwindow-xaux.cc" // helpers, need dbe_x11sync
 
@@ -137,6 +139,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   State                 m_state;
   Window                m_window;
   XIC                   m_input_context;
+  XPixmap               m_wm_icon;
   EventContext          m_event_context;
   Rapicorn::Region      m_expose_region;
   cairo_surface_t      *m_expose_surface;
@@ -170,7 +173,7 @@ ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const S
 
 ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &receiver) :
   x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver),
-  m_window (0), m_input_context (NULL), m_expose_surface (NULL),
+  m_window (None), m_input_context (NULL), m_wm_icon (None), m_expose_surface (NULL),
   m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_crossing_focus (false)
 {
@@ -186,6 +189,11 @@ ScreenWindowX11::~ScreenWindowX11()
     {
       cairo_surface_destroy (m_expose_surface);
       m_expose_surface = NULL;
+    }
+  if (m_wm_icon)
+    {
+      XFreePixmap (x11context.display, m_wm_icon);
+      m_wm_icon = None;
     }
   if (m_input_context)
     {
@@ -753,12 +761,12 @@ cairo_set_source_color (cairo_t *cr, Color c)
   cairo_set_source_rgba (cr, c.red() / 255., c.green() / 255., c.blue() / 255., c.alpha() / 255.);
 }
 
-static Pixmap
+static XPixmap
 create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable, uint depth,
                             int tile_size, Color c1, Color c2)
 {
   const int bw = tile_size * 2, bh = tile_size * 2;
-  Pixmap xpixmap = XCreatePixmap (display, drawable, bw, bh, depth);
+  XPixmap xpixmap = XCreatePixmap (display, drawable, bw, bh, depth);
   cairo_surface_t *xsurface = cairo_xlib_surface_create (display, xpixmap, visual, bw, bh);
   CHECK_CAIRO_STATUS (xsurface);
   cairo_t *cr = cairo_create (xsurface);
@@ -798,10 +806,26 @@ window_type_atom_name (WindowType window_type)
     }
 }
 
+static cairo_surface_t*
+cairo_surface_from_pixmap (Rapicorn::Pixmap pixmap)
+{
+  const int stride = pixmap.width() * 4;
+  uint32 *data = pixmap.row (0);
+  cairo_surface_t *isurface =
+    cairo_image_surface_create_for_data ((unsigned char*) data,
+                                         CAIRO_FORMAT_ARGB32,
+                                         pixmap.width(),
+                                         pixmap.height(),
+                                         stride);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  return isurface;
+}
+
 void
 ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 {
   assert_return (m_state.visible == false);
+  assert_return (m_wm_icon == 0);
   assert_return (m_state.window_type == setup.window_type);
   vector<unsigned long> longs;
   // _NET_WM_WINDOW_TYPE
@@ -825,8 +849,36 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & ATTENTION)    longs.push_back (x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION"));
   XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_STATE"),
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
+  // Background
+  Color c1 = setup.bg_average, c2 = setup.bg_average;
+  if (devel_enabled())
+    {
+      c1.tint (0, 0.96, 0.96);
+      c2.tint (0, 1.03, 1.03);
+    }
+  XPixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
+  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap);
+  XFreePixmap (x11context.display, xpixmap);
+  // WM Icon
+  if (!m_wm_icon)
+    {
+      Rapicorn::Pixmap iconpixmap ("res:icons/wm-gears.png");
+      m_wm_icon = XCreatePixmap (x11context.display, m_window, iconpixmap.width(), iconpixmap.height(), x11context.depth);
+      cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_wm_icon, x11context.visual, iconpixmap.width(), iconpixmap.height());
+      CHECK_CAIRO_STATUS (xsurface);
+      cairo_t *xcr = cairo_create (xsurface);
+      CHECK_CAIRO_STATUS (xcr);
+      cairo_surface_t *isurface = cairo_surface_from_pixmap (iconpixmap);
+      CHECK_CAIRO_STATUS (isurface);
+      cairo_set_source_surface (xcr, isurface, 0, 0);
+      cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
+      cairo_paint (xcr);
+      cairo_destroy (xcr);
+      cairo_surface_destroy (isurface);
+      cairo_surface_destroy (xsurface);
+    }
   // WM_COMMAND WM_CLIENT_MACHINE WM_LOCALE_NAME WM_HINTS WM_CLASS
-  XWMHints wmhints = { InputHint | StateHint, False, NormalState, 0, 0, 0, 0, 0, 0, };
+  XWMHints wmhints = { InputHint | StateHint | IconPixmapHint, False, NormalState, m_wm_icon, 0, 0, 0, 0, 0, };
   if (f & ATTENTION)
     wmhints.flags |= XUrgencyHint;
   if (f & (HIDDEN | ICONIFY))
@@ -853,16 +905,6 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
                      XA_CARDINAL, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   else // _NET_WM_PID is used for killing, we prefer an XKillClient() call however
     XDeleteProperty (x11context.display, m_window, x11context.atom ("_NET_WM_PID"));
-  // Background
-  Color c1 = setup.bg_average, c2 = setup.bg_average;
-  if (devel_enabled())
-    {
-      c1.tint (0, 0.96, 0.96);
-      c2.tint (0, 1.03, 1.03);
-    }
-  Pixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
-  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap);
-  XFreePixmap (x11context.display, xpixmap);
 }
 
 void
