@@ -36,6 +36,7 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 namespace Rapicorn {
 
 // == declarations ==
+class ScreenDriverX11;
 class ScreenWindowX11;
 static Mutex x11_rmutex (RECURSIVE_LOCK);
 
@@ -61,6 +62,7 @@ class X11Context {
   void                  process_updates ();
   bool                  cmd_dispatcher  (const EventLoop::State &state);
 public:
+  ScreenDriverX11      &x11driver;
   Display              *display;
   int                   screen;
   Visual               *visual;
@@ -75,7 +77,7 @@ public:
   bool                  local_x11    ();
   void                  queue_update (size_t xid);
   // executed outside X11 thread
-  explicit              X11Context       ();
+  explicit              X11Context       (ScreenDriverX11 &_x11driver);
   /*dtor*/             ~X11Context       ();
   bool                  start_thread_async (const String &x11display);
   void                  stop_thread_async  ();
@@ -84,57 +86,27 @@ public:
 };
 
 // == ScreenDriverX11 ==
-struct ScreenDriverX11 : ScreenDriver {
+class ScreenDriverX11 : ScreenDriver {
   X11Context *m_x11context;
-  uint        m_open_count;
-  virtual bool
-  open ()
-  {
-    do_once {
-      const bool x11_initialized_for_threads = XInitThreads ();
-      assert (x11_initialized_for_threads == true);
-      xlib_error_handler = XSetErrorHandler (x11_error);
-    }
-    if (!m_x11context)
-      {
-        assert_return (m_open_count == 0, false);
-        const char *s = getenv ("DISPLAY");
-        String ds = s ? s : "";
-        X11Context *x11context = new X11Context ();
-        if (!x11context->start_thread_async (ds))
-          {
-            delete x11context;
-            return false;
-          }
-        m_x11context = x11context;
-      }
-    m_open_count++;
-    return true;
-  }
-  virtual void
-  close ()
-  {
-    assert_return (m_open_count > 0);
-    m_open_count--;
-    if (!m_open_count && m_x11context)
-      {
-        X11Context *x11context = m_x11context;
-        m_x11context = NULL;
-        x11context->stop_thread_async();
-        delete x11context;
-      }
-  }
+  uint        m_use_count;
+  virtual bool          open                 ();
+  virtual void          close                ();
+public:
+  X11Context*           x11context           () const   { return m_x11context; }
+  void                  use                  ()         { open(); }
+  void                  unuse                ()         { close(); }
   virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup,
                                               const ScreenWindow::Config &config,
                                               ScreenWindow::EventReceiver &receiver);
-  ScreenDriverX11() : ScreenDriver ("X11Window", -1), m_x11context (NULL), m_open_count (0) {}
+  explicit              ScreenDriverX11      (const String &name, int prio) :
+    ScreenDriver (name, prio), m_x11context (NULL), m_use_count (0)
+  {}
 };
-static ScreenDriverX11 screen_driver_x11;
+static ScreenDriverX11 screen_driver_x11 ("X11Window", -1);
 
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
-  ScreenDriverX11      &m_x11driver;
   EventReceiver        &m_receiver;
   Config                m_config;
   State                 m_state;
@@ -147,7 +119,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_crossing_focus;
   vector<uint32>        m_queued_updates;       // "atoms" not yet updated
-  explicit              ScreenWindowX11         (ScreenDriverX11 &x11driver, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (X11Context &_x11context, EventReceiver &receiver);
   virtual              ~ScreenWindowX11         ();
   virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   virtual void          queue_command           (Command *command);
@@ -166,20 +138,20 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
 ScreenWindow*
 ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, ScreenWindow::EventReceiver &receiver)
 {
-  assert_return (m_open_count > 0, NULL);
-  ScreenWindowX11 *screen_window = new ScreenWindowX11 (*this, receiver);
+  assert_return (m_use_count > 0, NULL);
+  ScreenWindowX11 *screen_window = new ScreenWindowX11 (*m_x11context, receiver);
   screen_window->queue_create (setup, config);
   return screen_window;
 }
 
-ScreenWindowX11::ScreenWindowX11 (ScreenDriverX11 &x11driver, EventReceiver &receiver) :
-  x11context (*x11driver.m_x11context), m_x11driver (x11driver), m_receiver (receiver),
+ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context, EventReceiver &receiver) :
+  x11context (_x11context), m_receiver (receiver),
   m_window (None), m_input_context (NULL), m_wm_icon (None), m_expose_surface (NULL),
   m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_crossing_focus (false)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  m_x11driver.open();
+  x11context.x11driver.use();
 }
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -208,7 +180,7 @@ ScreenWindowX11::~ScreenWindowX11()
       m_window = 0;
     }
   x11locker.unlock();
-  m_x11driver.close();
+  x11context.x11driver.unuse();
 }
 
 void
@@ -981,8 +953,8 @@ ScreenWindowX11::queue_create (const ScreenWindow::Setup &setup, const ScreenWin
 }
 
 // == X11Context ==
-X11Context::X11Context() :
-  m_loop (*ref_sink (MainLoop::_new())), display (NULL), screen (0), visual (NULL), depth (0),
+X11Context::X11Context (ScreenDriverX11 &_x11driver) :
+  m_loop (*ref_sink (MainLoop::_new())), x11driver (_x11driver), display (NULL), screen (0), visual (NULL), depth (0),
   root_window (0), input_method (NULL), m_shared_mem (-1)
 {
   // X11 thread not yet started
@@ -1237,6 +1209,46 @@ X11Context::queue_update (size_t xid)
   m_queued_updates.push_back (xid);
   if (need_handler)
     m_loop.exec_timer (50, slot (*this, &X11Context::process_updates));
+}
+
+// == ScreenDriverX11 ==
+bool
+ScreenDriverX11::open ()
+{
+  do_once {
+    const bool x11_initialized_for_threads = XInitThreads ();
+    assert (x11_initialized_for_threads == true);
+    xlib_error_handler = XSetErrorHandler (x11_error);
+  }
+  if (!m_x11context)
+    {
+      assert_return (m_use_count == 0, false);
+      const char *s = getenv ("DISPLAY");
+      String ds = s ? s : "";
+      X11Context *x11context = new X11Context (*this);
+      if (!x11context->start_thread_async (ds))
+        {
+          delete x11context;
+          return false;
+        }
+      m_x11context = x11context;
+    }
+  m_use_count++;
+  return true;
+}
+
+void
+ScreenDriverX11::close ()
+{
+  assert_return (m_use_count > 0);
+  m_use_count--;
+  if (!m_use_count && m_x11context)
+    {
+      X11Context *x11context = m_x11context;
+      m_x11context = NULL;
+      x11context->stop_thread_async();
+      delete x11context;
+    }
 }
 
 } // Rapicorn
