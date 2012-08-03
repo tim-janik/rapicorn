@@ -133,12 +133,14 @@ private:
   virtual bool
   prepare (const EventLoop::State &state, int64*)
   {
+    if (UNLIKELY (last_seen_primary && !state.seen_primary))
+      need_check_primary = true;
     return need_check_primary || m_connection.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
   {
-    if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
+    if (UNLIKELY (last_seen_primary && !state.seen_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
     return need_check_primary || m_connection.pending();
@@ -158,7 +160,8 @@ private:
   check_primaries()
   {
     // seen_primary is merely a hint, this handler checks the real loop state
-    if (uithread_main_loop()->finishable())
+    const bool uithread_finishable = uithread_main_loop()->finishable();
+    if (uithread_finishable)
       ApplicationImpl::the().lost_primaries();
   }
 };
