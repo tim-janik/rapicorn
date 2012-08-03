@@ -621,12 +621,16 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
   bool handled = false;
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
-    {
-      destroy_screen_window();
-      dispose();
-      handled = true;
-    }
+    handled = dispatch_win_destroy();
   return handled;
+}
+
+bool
+WindowImpl::dispatch_win_destroy ()
+{
+  destroy_screen_window();
+  dispose();
+  return true;
 }
 
 void
@@ -828,14 +832,15 @@ WindowImpl::dispatch_event (const Event &event)
     case KEY_PRESS:
     case KEY_CANCELED:
     case KEY_RELEASE:         return dispatch_key_event (event);
-    case SCROLL_UP:          /* button4 */
-    case SCROLL_DOWN:        /* button5 */
-    case SCROLL_LEFT:        /* button6 */
-    case SCROLL_RIGHT:       /* button7 */
-      /**/                    return dispatch_scroll_event (event);
+    case SCROLL_UP:          // button4
+    case SCROLL_DOWN:        // button5
+    case SCROLL_LEFT:        // button6
+    case SCROLL_RIGHT:       // button7
+      ;                       return dispatch_scroll_event (event);
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
     case WIN_SIZE:            return dispatch_win_size_event (event);
     case WIN_DELETE:          return dispatch_win_delete_event (event);
+    case WIN_DESTROY:         return dispatch_win_destroy();
     }
   return false;
 }
