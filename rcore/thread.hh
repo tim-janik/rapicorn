@@ -23,6 +23,7 @@ public:
   void      lock        ()      { pthread_mutex_lock (&m_mutex); }
   void      unlock      ()      { pthread_mutex_unlock (&m_mutex); }
   bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&m_mutex); }
+  bool      debug_locked();
   typedef pthread_mutex_t* native_handle_type;
   native_handle_type native_handle() { return &m_mutex; }
   /*ctor*/  Mutex       (const Mutex&) = delete;

@@ -3,6 +3,7 @@
 #include "strings.hh"
 #include <sys/time.h>
 #include <sys/types.h>
+#include <string.h>
 #include <algorithm>
 #include <sys/syscall.h>        // SYS_gettid
 #include <list>
@@ -12,6 +13,16 @@
 #define fixalloc_aligned(sz, align)     ({ void *__m_ = NULL; if (posix_memalign (&__m_, (align), (sz)) != 0) __m_ = NULL; __m_; })
 
 namespace Rapicorn {
+
+/// Debugging hook, returns if the Mutex is currently locked, might not work with all threading implementations.
+bool
+Mutex::debug_locked()
+{
+  const pthread_mutex_t unlocked_mutex1 = PTHREAD_MUTEX_INITIALIZER;
+  const pthread_mutex_t unlocked_mutex2 = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  return !(memcmp (&m_mutex, &unlocked_mutex1, sizeof (m_mutex)) == 0 ||
+           memcmp (&m_mutex, &unlocked_mutex2, sizeof (m_mutex)) == 0);
+}
 
 static ThreadInfo *volatile     list_head = NULL;
 static size_t volatile          thread_counter = 0;
