@@ -24,8 +24,7 @@ public:
     assert ((etype >= MOUSE_ENTER && etype <= MOUSE_LEAVE) ||
             (etype >= FOCUS_IN    && etype <= FOCUS_OUT) ||
             (etype >= SCROLL_UP   && etype <= SCROLL_RIGHT) ||
-            etype == CANCEL_EVENTS ||
-            etype == WIN_DELETE);
+            etype == CANCEL_EVENTS || etype == WIN_DELETE || etype == WIN_DESTROY);
   }
 };
 
@@ -56,6 +55,7 @@ string_from_event_type (EventType etype)
     case CANCEL_EVENTS:         return "CancelEvents";
     case WIN_SIZE:              return "WinSize";
     case WIN_DELETE:            return "WinDelete";
+    case WIN_DESTROY:           return "WinDestroy";
     case EVENT_NONE:
     case EVENT_LAST:
     default:                    return "<unknown>";
@@ -126,6 +126,7 @@ create_event_transformed (const Event  &source_event,
         return create_event_win_size (dcontext, affine.hexpansion() * source->width, affine.vexpansion() * source->height, source->intermediate);
       }
     case WIN_DELETE:            return create_event_win_delete (dcontext);
+    case WIN_DESTROY:           return create_event_win_destroy (dcontext);
     case EVENT_NONE:
     case EVENT_LAST:
     default:                    fatal ("uncopyable event type: %s", string_from_event_type (source_event.type));
@@ -261,6 +262,13 @@ EventWinDelete*
 create_event_win_delete (const EventContext &econtext)
 {
   EventMouse *event = new EventImpl (WIN_DELETE, econtext);
+  return event;
+}
+
+EventWinDestroy*
+create_event_win_destroy (const EventContext &econtext)
+{
+  EventMouse *event = new EventImpl (WIN_DESTROY, econtext);
   return event;
 }
 

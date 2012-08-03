@@ -57,6 +57,7 @@ typedef enum {
   CANCEL_EVENTS,
   WIN_SIZE,
   WIN_DELETE,
+  WIN_DESTROY,
   EVENT_LAST
 } EventType;
 const char* string_from_event_type (EventType etype);
@@ -103,6 +104,7 @@ public:
   bool            intermediate;
 };
 typedef Event EventWinDelete;
+typedef Event EventWinDestroy;
 struct EventContext {
   uint32        time;
   bool          synthesized;
@@ -134,6 +136,7 @@ EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              height,
                                            bool                intermediate);
 EventWinDelete* create_event_win_delete   (const EventContext &econtext);
+EventWinDestroy* create_event_win_destroy (const EventContext &econtext);
 
 } // Rapicorn
 
