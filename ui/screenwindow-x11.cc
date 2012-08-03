@@ -521,9 +521,10 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XDestroyWindowEvent &xev = xevent.xdestroywindow;
       if (xev.window != m_window)
         break;
-      EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
       x11context.x11ids.erase (m_window);
       m_window = 0;
+      enqueue_locked (create_event_win_destroy (m_event_context));
+      EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
       consumed = true;
       break; }
     default: ;
