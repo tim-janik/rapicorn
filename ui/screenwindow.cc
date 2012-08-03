@@ -12,6 +12,79 @@ ScreenWindow::ScreenWindow () :
   m_accessed (0)
 {}
 
+ScreenWindow::~ScreenWindow ()
+{
+  std::list<Event*> events;
+  {
+    ScopedLock<Mutex> sl (m_async_mutex);
+    events.swap (m_async_event_queue);
+  }
+  while (!events.empty())
+    {
+      Event *e = events.front ();
+      events.pop_front();
+      delete e;
+    }
+  critical_unless (m_async_event_queue.empty()); // this queue must not be accessed at this point
+}
+
+void
+ScreenWindow::enqueue_event (Event *event)
+{
+  critical_unless (event);
+  ScopedLock<Mutex> sl (m_async_mutex);
+  const bool notify = m_async_event_queue.empty();
+  m_async_event_queue.push_back (event);
+  if (notify && m_async_wakeup)
+    m_async_wakeup();
+}
+
+void
+ScreenWindow::push_event (Event *event)
+{
+  critical_unless (event);
+  ScopedLock<Mutex> sl (m_async_mutex);
+  const bool notify = m_async_event_queue.empty();
+  m_async_event_queue.push_front (event);
+  if (notify && m_async_wakeup)
+    m_async_wakeup();
+}
+
+Event*
+ScreenWindow::pop_event ()
+{
+  ScopedLock<Mutex> sl (m_async_mutex);
+  if (m_async_event_queue.empty())
+    return NULL;
+  Event *event = m_async_event_queue.front();
+  m_async_event_queue.pop_front();
+  return event;
+}
+
+bool
+ScreenWindow::has_event ()
+{
+  ScopedLock<Mutex> sl (m_async_mutex);
+  return !m_async_event_queue.empty();
+}
+
+bool
+ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
+{
+  ScopedLock<Mutex> sl (m_async_mutex);
+  for (auto ep : m_async_event_queue)
+    if (pred (ep))
+      return true;
+  return false;
+}
+
+void
+ScreenWindow::set_event_wakeup (const std::function<void()> &wakeup)
+{
+  ScopedLock<Mutex> sl (m_async_mutex);
+  m_async_wakeup = wakeup;
+}
+
 bool
 ScreenWindow::update_state (const State &state)
 {

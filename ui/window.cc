@@ -783,18 +783,7 @@ WindowImpl::dispose_item (ItemImpl &item)
 bool
 WindowImpl::has_queued_win_size ()
 {
-  bool found_one = false;
-  m_async_mutex.lock();
-  for (std::list<Event*>::iterator it = m_async_event_queue.begin();
-       it != m_async_event_queue.end();
-       it++)
-    if ((*it)->type == WIN_SIZE)
-      {
-        found_one = true;
-        break;
-      }
-  m_async_mutex.unlock();
-  return found_one;
+  return m_screen_window && m_screen_window->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
@@ -809,16 +798,10 @@ WindowImpl::dispatch_event (const Event &event)
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
     case MOUSE_MOVE:
-      if (true) // coalesce multiple motion events
-        {
-          m_async_mutex.lock();
-          std::list<Event*>::iterator it = m_async_event_queue.begin();
-          bool found_event = it != m_async_event_queue.end() && (*it)->type == MOUSE_MOVE;
-          m_async_mutex.unlock();
-          if (found_event)
-            return true;
-        }
-      return dispatch_move_event (event);
+      if (m_screen_window->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
+        return true; // coalesce multiple motion events
+      else
+        return dispatch_move_event (event);
     case MOUSE_LEAVE:         return dispatch_leave_event (event);
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
@@ -849,23 +832,11 @@ bool
 WindowImpl::event_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    {
-      ScopedLock<Mutex> aelocker (m_async_mutex);
-      const bool has_events = !m_async_event_queue.empty();
-      return has_events;
-    }
+    return m_screen_window && m_screen_window->has_event();
   else if (state.phase == state.DISPATCH)
     {
       ref (this);
-      Event *event = NULL;
-      {
-        ScopedLock<Mutex> aelocker (m_async_mutex);
-        if (!m_async_event_queue.empty())
-          {
-            event = m_async_event_queue.front();
-            m_async_event_queue.pop_front();
-          }
-      }
+      Event *event = m_screen_window ? m_screen_window->pop_event() : NULL;
       if (event)
         {
           dispatch_event (*event);
@@ -952,16 +923,7 @@ WindowImpl::dispatch (const EventLoop::State &state)
 EventLoop*
 WindowImpl::get_loop ()
 {
-  ScopedLock<Mutex> aelocker (m_async_mutex);
   return &m_loop;
-}
-
-void
-WindowImpl::enqueue_async (Event *event)
-{
-  ScopedLock<Mutex> aelocker (m_async_mutex);
-  m_async_event_queue.push_back (event);
-  m_loop.wakeup(); /* thread safe */
 }
 
 bool
@@ -1014,7 +976,8 @@ WindowImpl::create_screen_window ()
               if (m_config.alias.empty())
                 m_config.alias = program_alias();
               m_pending_win_size = true;
-              m_screen_window = sdriver->create_screen_window (setup, m_config, *this);
+              m_screen_window = sdriver->create_screen_window (setup, m_config);
+              m_screen_window->set_event_wakeup ([this] () { m_loop.wakeup(); /* thread safe */ });
               sdriver->close();
             }
           else
@@ -1096,7 +1059,7 @@ WindowImpl::synthesize_enter (double xalign,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  enqueue_async (create_event_mouse (MOUSE_ENTER, ec));
+  m_screen_window->push_event (create_event_mouse (MOUSE_ENTER, ec));
   return true;
 }
 
@@ -1106,7 +1069,7 @@ WindowImpl::synthesize_leave ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  enqueue_async (create_event_mouse (MOUSE_LEAVE, ec));
+  m_screen_window->push_event (create_event_mouse (MOUSE_LEAVE, ec));
   return true;
 }
 
@@ -1126,8 +1089,8 @@ WindowImpl::synthesize_click (ItemIface &itemi,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  enqueue_async (create_event_button (BUTTON_PRESS, ec, button));
-  enqueue_async (create_event_button (BUTTON_RELEASE, ec, button));
+  m_screen_window->push_event (create_event_button (BUTTON_RELEASE, ec, button));
+  m_screen_window->push_event (create_event_button (BUTTON_PRESS, ec, button));
   return true;
 }
 
@@ -1137,7 +1100,7 @@ WindowImpl::synthesize_delete ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  enqueue_async (create_event_win_delete (ec));
+  m_screen_window->push_event (create_event_win_delete (ec));
   return true;
 }
 

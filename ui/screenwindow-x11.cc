@@ -77,11 +77,11 @@ public:
   bool                  local_x11    ();
   void                  queue_update (size_t xid);
   // executed outside X11 thread
-  explicit              X11Context       (ScreenDriverX11 &_x11driver);
-  /*dtor*/             ~X11Context       ();
-  bool                  start_thread_async (const String &x11display);
-  void                  stop_thread_async  ();
-  void                  queue_cmd_async    (ScreenWindowX11 *scw, ScreenWindow::Command *cmd);
+  explicit              X11Context           (ScreenDriverX11 &_x11driver);
+  virtual              ~X11Context           ();
+  bool                  start_thread_async   (const String &x11display);
+  void                  stop_thread_async    ();
+  void                  queue_cmd_async      (ScreenWindowX11 *scw, ScreenWindow::Command *cmd);
   void                  unlink_screen_window (ScreenWindowX11 *scw);
 };
 
@@ -96,8 +96,7 @@ public:
   void                  use                  ()         { open(); }
   void                  unuse                ()         { close(); }
   virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup,
-                                              const ScreenWindow::Config &config,
-                                              ScreenWindow::EventReceiver &receiver);
+                                              const ScreenWindow::Config &config);
   explicit              ScreenDriverX11      (const String &name, int prio) :
     ScreenDriver (name, prio), m_x11context (NULL), m_use_count (0)
   {}
@@ -107,7 +106,6 @@ static ScreenDriverX11 screen_driver_x11 ("X11Window", -1);
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
-  EventReceiver        &m_receiver;
   Config                m_config;
   State                 m_state;
   Window                m_window;
@@ -119,7 +117,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
   bool                  m_override_redirect, m_crossing_focus;
   vector<uint32>        m_queued_updates;       // "atoms" not yet updated
-  explicit              ScreenWindowX11         (X11Context &_x11context, EventReceiver &receiver);
+  explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   virtual void          queue_command           (Command *command);
@@ -128,7 +126,6 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   void                  configure_window        (const Config &config);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
-  void                  enqueue_locked          (Event *event);
   bool                  process_event           (const XEvent &xevent);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
@@ -136,16 +133,16 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
 };
 
 ScreenWindow*
-ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config, ScreenWindow::EventReceiver &receiver)
+ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
 {
   assert_return (m_use_count > 0, NULL);
-  ScreenWindowX11 *screen_window = new ScreenWindowX11 (*m_x11context, receiver);
+  ScreenWindowX11 *screen_window = new ScreenWindowX11 (*m_x11context);
   screen_window->queue_create (setup, config);
   return screen_window;
 }
 
-ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context, EventReceiver &receiver) :
-  x11context (_x11context), m_receiver (receiver),
+ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
+  x11context (_x11context),
   m_window (None), m_input_context (NULL), m_wm_icon (None), m_expose_surface (NULL),
   m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
   m_override_redirect (false), m_crossing_focus (false)
@@ -317,7 +314,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         m_pending_configures--;
       if (!m_pending_configures)
         check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
-      enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
+      enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
       if (!m_pending_configures)
         {
           m_queued_updates.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
@@ -349,7 +346,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("Unmap: %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
       m_state.visible = false;
       update_state (m_state);
-      enqueue_locked (create_event_cancellation (m_event_context));
+      enqueue_event (create_event_cancellation (m_event_context));
       consumed = true;
       break; }
     case ReparentNotify:  {
@@ -406,7 +403,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
       if (!consumed && // might have been processed by input context already
           (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
-        enqueue_locked (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
+        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
@@ -419,17 +416,17 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (xevent.type == ButtonPress)
         switch (xev.button)
           {
-          case 4:  enqueue_locked (create_event_scroll (SCROLL_UP, m_event_context));                break;
-          case 5:  enqueue_locked (create_event_scroll (SCROLL_DOWN, m_event_context));              break;
-          case 6:  enqueue_locked (create_event_scroll (SCROLL_LEFT, m_event_context));              break;
-          case 7:  enqueue_locked (create_event_scroll (SCROLL_RIGHT, m_event_context));             break;
-          default: enqueue_locked (create_event_button (BUTTON_PRESS, m_event_context, xev.button)); break;
+          case 4:  enqueue_event (create_event_scroll (SCROLL_UP, m_event_context));                break;
+          case 5:  enqueue_event (create_event_scroll (SCROLL_DOWN, m_event_context));              break;
+          case 6:  enqueue_event (create_event_scroll (SCROLL_LEFT, m_event_context));              break;
+          case 7:  enqueue_event (create_event_scroll (SCROLL_RIGHT, m_event_context));             break;
+          default: enqueue_event (create_event_button (BUTTON_PRESS, m_event_context, xev.button)); break;
           }
       else // ButtonRelease
         switch (xev.button)
           {
           case 4: case 5: case 6: case 7: break; // scrolling
-          default: enqueue_locked (create_event_button (BUTTON_RELEASE, m_event_context, xev.button)); break;
+          default: enqueue_event (create_event_button (BUTTON_RELEASE, m_event_context, xev.button)); break;
           }
       consumed = true;
       break; }
@@ -454,7 +451,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                 else
                   {
                     m_event_context.time = xcoords[i].time; m_event_context.x = xcoords[i].x; m_event_context.y = xcoords[i].y;
-                    enqueue_locked (create_event_mouse (MOUSE_MOVE, m_event_context));
+                    enqueue_event (create_event_mouse (MOUSE_MOVE, m_event_context));
                     VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
               XFree (xcoords);
@@ -462,7 +459,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         }
       VDEBUG ("Mtion: %c=%lu w=%lu c=%lu p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_mouse (MOUSE_MOVE, m_event_context));
+      enqueue_event (create_event_mouse (MOUSE_MOVE, m_event_context));
       m_last_motion_time = xev.time;
       consumed = true;
       break; }
@@ -473,7 +470,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d notify=%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
               notify_mode (xev.mode), notify_detail (xev.detail));
       m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_locked (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
+      enqueue_event (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
       if (xev.detail != NotifyInferior)
         {
           m_crossing_focus = xev.focus;
@@ -495,7 +492,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
             {
               m_state.active = now_focus;
               update_state (m_state);
-              enqueue_locked (create_event_focus (m_state.active ? FOCUS_IN : FOCUS_OUT, m_event_context));
+              enqueue_event (create_event_focus (m_state.active ? FOCUS_IN : FOCUS_OUT, m_event_context));
               if (m_input_context)
                 {
                   if (m_state.active)
@@ -523,7 +520,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         break;
       x11context.x11ids.erase (m_window);
       m_window = 0;
-      enqueue_locked (create_event_win_destroy (m_event_context));
+      enqueue_event (create_event_win_destroy (m_event_context));
       EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
       consumed = true;
       break; }
@@ -540,7 +537,7 @@ ScreenWindowX11::client_message (const XClientMessageEvent &xev)
     {
       const uint32 saved_time = m_event_context.time;
       m_event_context.time = xev.data.l[1];
-      enqueue_locked (create_event_win_delete (m_event_context));
+      enqueue_event (create_event_win_delete (m_event_context));
       m_event_context.time = saved_time; // avoid time warps from client messages
     }
   else if (mtype == x11context.atom ("WM_TAKE_FOCUS"))
@@ -727,13 +724,6 @@ ScreenWindowX11::blit_expose_region()
   cairo_surface_destroy (xsurface);
 }
 
-void
-ScreenWindowX11::enqueue_locked (Event *event)
-{
-  // ScopedLock<Mutex> x11locker (x11_rmutex);
-  m_receiver.enqueue_async (event);
-}
-
 static void
 cairo_set_source_color (cairo_t *cr, Color c)
 {
@@ -910,7 +900,7 @@ ScreenWindowX11::configure_window (const Config &config)
       m_state.visible_alias = m_config.alias;   // compensate for WMs not supporting _NET_WM_VISIBLE_ICON_NAME
     }
   force_update (m_window);
-  enqueue_locked (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
+  enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
 }
 
 void

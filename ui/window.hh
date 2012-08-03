@@ -8,12 +8,9 @@
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
-                   public virtual ScreenWindow::EventReceiver {
+class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   friend class  ItemImpl;
   EventLoop            &m_loop;
-  Mutex                 m_async_mutex;
-  std::list<Event*>     m_async_event_queue;
   ScreenWindow         *m_screen_window;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
@@ -93,7 +90,6 @@ private:
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringSeq    &command_args);
   /* event handling */
-  virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (ItemImpl               *item);
   void                  cancel_item_events                      (ItemImpl &item) { cancel_item_events (&item); }
   bool                  dispatch_mouse_movement                 (const Event            &event);

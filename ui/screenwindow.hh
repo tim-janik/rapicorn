@@ -9,7 +9,18 @@ namespace Rapicorn {
 
 /// Interface class for managing window contents on screens and display devices.
 class ScreenWindow : public virtual Deletable, protected NonCopyable {
+  Mutex                 m_async_mutex;
+  std::list<Event*>     m_async_event_queue;
+  std::function<void()> m_async_wakeup;
+protected:
+  void                  enqueue_event    (Event *event);
 public:
+  virtual              ~ScreenWindow     ();
+  Event*                pop_event        ();
+  void                  push_event       (Event *event);
+  bool                  has_event        ();
+  bool                  peek_events      (const std::function<bool (Event*)> &pred);
+  void                  set_event_wakeup (const std::function<void()> &wakeup);
   enum Flags {
     MODAL          = 1 <<  0,   ///< Hint to the window manager that window receives input exclusively.
     STICKY         = 1 <<  1,   ///< Window is fixed and kept on screen when virtual desktops change.
@@ -67,11 +78,6 @@ public:
     inline bool operator== (const State &o) const;
     inline bool operator!= (const State &o) const { return !operator== (o); }
   };
-  /// Widget interface for receiving events.
-  struct EventReceiver {
-    virtual            ~EventReceiver           () {}
-    virtual void        enqueue_async           (Event              *event) = 0;
-  };
   // == public API ==
   State         get_state               ();                     ///< Retrieve the current window state.
   void          configure               (const Config &config); ///< Change window configuration.
@@ -124,8 +130,7 @@ public:
   virtual bool          open                    () = 0;
   /// Create a new ScreenWindow from an opened driver.
   virtual ScreenWindow* create_screen_window    (const ScreenWindow::Setup &setup,
-                                                 const ScreenWindow::Config &config,
-                                                 ScreenWindow::EventReceiver &receiver) = 0;
+                                                 const ScreenWindow::Config &config) = 0;
   /// Decrease opening reference count, closes down driver resources if the last count drops.
   virtual void          close                   () = 0;
   /// Open a specific named driver, "auto" will try to find the best match.
