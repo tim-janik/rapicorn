@@ -8,14 +8,14 @@
 namespace Rapicorn {
 
 /// Interface class for managing window contents on screens and display devices.
-class ScreenWindow : public virtual Deletable, protected NonCopyable {
+class ScreenWindow : public virtual Deletable, protected NonCopyable, public virtual std::enable_shared_from_this<ScreenWindow> {
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   std::function<void()> m_async_wakeup;
 protected:
+  virtual              ~ScreenWindow     ();
   void                  enqueue_event    (Event *event);
 public:
-  virtual              ~ScreenWindow     ();
   Event*                pop_event        ();
   void                  push_event       (Event *event);
   bool                  has_event        ();
@@ -88,9 +88,10 @@ public:
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);     ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                    ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);   ///< Trigger window resizing.
+  void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
 protected:
   enum CommandType {
-    CMD_CREATE = 1, CMD_CONFIGURE, CMD_BEEP, CMD_SHOW, CMD_PRESENT, CMD_BLIT, CMD_MOVE, CMD_RESIZE,
+    CMD_CREATE = 1, CMD_CONFIGURE, CMD_BEEP, CMD_SHOW, CMD_PRESENT, CMD_BLIT, CMD_MOVE, CMD_RESIZE, CMD_DESTROY,
   };
   struct Command        /// Structure for internal asynchronous operations.
   {
@@ -116,6 +117,7 @@ private:
   bool          m_accessed;
 public: typedef struct Command Command;
 };
+typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
 /// Management class for ScreenWindow driver implementations.
 class ScreenDriver : protected NonCopyable {
@@ -129,7 +131,7 @@ public:
   /// Open a driver or increase opening reference count.
   virtual bool          open                    () = 0;
   /// Create a new ScreenWindow from an opened driver.
-  virtual ScreenWindow* create_screen_window    (const ScreenWindow::Setup &setup,
+  virtual ScreenWindowP create_screen_window    (const ScreenWindow::Setup &setup,
                                                  const ScreenWindow::Config &config) = 0;
   /// Decrease opening reference count, closes down driver resources if the last count drops.
   virtual void          close                   () = 0;

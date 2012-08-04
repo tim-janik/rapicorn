@@ -184,7 +184,7 @@ WindowImpl::~WindowImpl()
     }
   if (m_screen_window)
     {
-      delete m_screen_window;
+      m_screen_window->destroy();
       m_screen_window = NULL;
     }
   /* make sure all children are removed while this is still of type WindowImpl.
@@ -993,7 +993,7 @@ WindowImpl::create_screen_window ()
 bool
 WindowImpl::has_screen_window ()
 {
-  return m_screen_window;
+  return !!m_screen_window;
 }
 
 void
@@ -1002,7 +1002,7 @@ WindowImpl::destroy_screen_window ()
   if (!m_screen_window)
     return; // during destruction, ref_count == 0
   ref (this);
-  delete m_screen_window;
+  m_screen_window->destroy();
   m_screen_window = NULL;
   m_loop.flag_primary (false);
   m_loop.kill_sources();

@@ -153,6 +153,12 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
   queue_command (new Command (CMD_RESIZE, button, root_x, root_y));
 }
 
+void
+ScreenWindow::destroy ()
+{
+  queue_command (new Command (CMD_DESTROY));
+}
+
 static const char*
 flag_name (uint64 flag)
 {
@@ -200,7 +206,7 @@ ScreenWindow::flags_name (uint64 flags, String combo)
 ScreenWindow::Command::Command (CommandType ctype) :
   type (ctype), config (NULL), setup (NULL)
 {
-  assert (type == CMD_BEEP || type == CMD_SHOW || type == CMD_PRESENT);
+  assert (type == CMD_BEEP || type == CMD_SHOW || type == CMD_PRESENT || type == CMD_DESTROY);
 }
 
 ScreenWindow::Command::Command (CommandType ctype, const Config &cfg) :
@@ -255,7 +261,7 @@ ScreenWindow::Command::~Command()
     case CMD_MOVE: case CMD_RESIZE:
       button = root_x = root_y = 0;
       break;
-    case CMD_BEEP: case CMD_SHOW: case CMD_PRESENT:
+    case CMD_BEEP: case CMD_SHOW: case CMD_PRESENT: case CMD_DESTROY:
       assert (!config && !setup);
       break;
     }

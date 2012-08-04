@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "screenwindow.hh"
-#include "item.hh"
+#include "uithread.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
 
@@ -48,11 +48,12 @@ struct X11Item {
 
 // == X11Context ==
 class X11Context {
-  struct Cmd { ScreenWindowX11 *scw; ScreenWindow::Command *cmd; };
+  struct ScwCmd { std::shared_ptr<ScreenWindowX11> scw; ScreenWindow::Command *cmd; };
   std::thread           m_thread_handle;
   MainLoop             &m_loop;
   vector<size_t>        m_queued_updates; // XIDs
-  std::list<Cmd>        m_cmd_queue;
+  std::list<ScwCmd>     m_cmd_queue;
+  map<size_t, X11Item*> m_x11ids;
   void                  x11_thread      (String x11display, AsyncBlockingQueue<bool> *rqueue);
   bool                  connect         (const String &x11display);
   bool                  x11_dispatcher  (const EventLoop::State &state);
@@ -71,7 +72,8 @@ public:
   XIM                   input_method;
   XIMStyle              input_style;
   int8                  m_shared_mem;
-  map<size_t, X11Item*> x11ids;
+  X11Item*              x11id_get   (size_t xid);
+  void                  x11id_set   (size_t xid, X11Item *x11item);
   Atom                  atom         (const String &text, bool force_create = true);
   String                atom         (Atom atom) const;
   bool                  local_x11    ();
@@ -87,15 +89,15 @@ public:
 
 // == ScreenDriverX11 ==
 class ScreenDriverX11 : ScreenDriver {
-  X11Context *m_x11context;
-  uint        m_use_count;
+  X11Context  *m_x11context;
+  Atomic<uint> m_use_count;
   virtual bool          open                 ();
   virtual void          close                ();
 public:
   X11Context*           x11context           () const   { return m_x11context; }
   void                  use                  ()         { open(); }
   void                  unuse                ()         { close(); }
-  virtual ScreenWindow* create_screen_window (const ScreenWindow::Setup &setup,
+  virtual ScreenWindowP create_screen_window (const ScreenWindow::Setup &setup,
                                               const ScreenWindow::Config &config);
   explicit              ScreenDriverX11      (const String &name, int prio) :
     ScreenDriver (name, prio), m_x11context (NULL), m_use_count (0)
@@ -119,6 +121,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   vector<uint32>        m_queued_updates;       // "atoms" not yet updated
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
+  void                  destroy_x11_resources   ();
   virtual void          queue_create            (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   virtual void          queue_command           (Command *command);
   void                  handle_command          (Command *command);
@@ -132,13 +135,14 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  force_update            (Window window);
 };
 
-ScreenWindow*
+ScreenWindowP
 ScreenDriverX11::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
 {
   assert_return (m_use_count > 0, NULL);
   ScreenWindowX11 *screen_window = new ScreenWindowX11 (*m_x11context);
-  screen_window->queue_create (setup, config);
-  return screen_window;
+  ScreenWindowP shared_ptr_scw = ScreenWindowP (screen_window);
+  screen_window->queue_create (setup, config); // ScwCmd uses shared_from_this, which only works *after* shared_ptr_scw exists
+  return shared_ptr_scw;
 }
 
 ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
@@ -152,6 +156,18 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
 }
 
 ScreenWindowX11::~ScreenWindowX11()
+{
+  x11context.unlink_screen_window (this);
+  if (m_expose_surface || m_wm_icon || m_input_context || m_window)
+    {
+      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%lx im=%p w=0x%lx", STRFUNC, m_expose_surface, m_wm_icon, m_input_context, m_window);
+      destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
+    }
+  x11context.x11driver.unuse();
+}
+
+void
+ScreenWindowX11::destroy_x11_resources()
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
   x11context.unlink_screen_window (this);
@@ -172,12 +188,11 @@ ScreenWindowX11::~ScreenWindowX11()
     }
   if (m_window)
     {
-      XDestroyWindow (x11context.display, m_window); // FIXME: in X11 thread?
-      x11context.x11ids.erase (m_window);
+      XDestroyWindow (x11context.display, m_window);
+      x11context.x11id_set (m_window, NULL);
       m_window = 0;
     }
   x11locker.unlock();
-  x11context.x11driver.unuse();
 }
 
 void
@@ -214,7 +229,7 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   m_window = XCreateWindow (x11context.display, x11context.root_window, request_x, request_y, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
   assert (m_window != 0);
-  x11context.x11ids[m_window] = this;
+  x11context.x11id_set (m_window, this);
   // adjust X hints & settings
   vector<Atom> atoms;
   atoms.push_back (x11context.atom ("WM_DELETE_WINDOW")); // request client messages instead of XKillClient
@@ -518,7 +533,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XDestroyWindowEvent &xev = xevent.xdestroywindow;
       if (xev.window != m_window)
         break;
-      x11context.x11ids.erase (m_window);
+      x11context.x11id_set (m_window, NULL);
       m_window = 0;
       enqueue_event (create_event_win_destroy (m_event_context));
       EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
@@ -926,6 +941,10 @@ ScreenWindowX11::handle_command (Command *command)
     case CMD_PRESENT:   break;  // FIXME
     case CMD_MOVE:      break;  // FIXME
     case CMD_RESIZE:    break;  // FIXME
+    case CMD_DESTROY:
+      if (m_window)
+        destroy_x11_resources();
+      break;
     }
   delete command;
 }
@@ -954,12 +973,12 @@ X11Context::X11Context (ScreenDriverX11 &_x11driver) :
 X11Context::~X11Context ()
 {
   // executed outside of X11 thread
-  assert_return (!m_thread_handle.joinable());
-  x11ids.clear();
   assert_return (!display);
+  assert_return (m_x11ids.empty());
+  assert_return (m_cmd_queue.empty());
+  assert_return (!m_thread_handle.joinable());
   m_loop.kill_sources();
   unref (&m_loop);
-  assert_return (m_cmd_queue.empty());
 }
 
 bool
@@ -992,7 +1011,7 @@ X11Context::queue_cmd_async (ScreenWindowX11 *scw, ScreenWindow::Command *scmd)
   bool notify;
   {
     ScopedLock<Mutex> x11locker (x11_rmutex);
-    Cmd cmd = { scw, scmd };
+    ScwCmd cmd = { std::dynamic_pointer_cast<ScreenWindowX11> (scw->shared_from_this()), scmd };
     notify = m_cmd_queue.empty();
     m_cmd_queue.push_back (cmd);
   }
@@ -1004,9 +1023,9 @@ void
 X11Context::unlink_screen_window (ScreenWindowX11 *scw)
 {
   ScopedLock<Mutex> x11locker (x11_rmutex);
-  for (auto &it : m_cmd_queue)
-    if (it.scw == scw)
-      it.scw = NULL;
+  for (auto &cmd : m_cmd_queue)
+    if (cmd.scw.get() == scw)
+      cmd.scw = NULL;
 }
 
 bool
@@ -1018,7 +1037,7 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
     {
       while (!m_cmd_queue.empty())
         {
-          Cmd cmd = m_cmd_queue.front();
+          ScwCmd cmd = m_cmd_queue.front();
           m_cmd_queue.pop_front();
           if (cmd.scw)
             cmd.scw->handle_command (cmd.cmd);
@@ -1057,6 +1076,7 @@ X11Context::connect (const String &x11display)
 void
 X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
 {
+  XDEBUG ("%s: X11 thread starting", STRFUNC);
   ScopedLock<Mutex> x11locker (x11_rmutex);
   {
     const bool opened = connect (x11display);
@@ -1089,6 +1109,9 @@ X11Context::x11_thread (String x11display, AsyncBlockingQueue<bool> *rqueue)
     }
   // remove sources and close Pfd file descriptor
   m_loop.kill_sources();
+  if (!m_x11ids.empty()) // ScreenWindowX11s unconditionally reference X11Context
+    fatal ("%s: destroying X11 thread with %zd active windows", STRFUNC, m_x11ids.size());
+  XDEBUG ("%s: X11 thread stoping", STRFUNC);
 }
 
 bool
@@ -1121,7 +1144,7 @@ X11Context::process_x11()
       XEvent xevent = { 0, };
       XNextEvent (display, &xevent); // blocks if !XPending
       bool consumed = filter_event (xevent);
-      X11Item *xitem = x11ids[xevent.xany.window];
+      X11Item *xitem = x11id_get (xevent.xany.window);
       if (xitem)
         {
           ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
@@ -1146,7 +1169,7 @@ X11Context::process_updates ()
   xids.resize (it - xids.begin());
   for (auto id : xids)
     {
-      X11Item *xitem = x11ids[id];
+      X11Item *xitem = x11id_get (id);
       ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
       if (scw)
         scw->force_update (id);
@@ -1164,6 +1187,29 @@ X11Context::filter_event (const XEvent &xevent)
     default:
       return false;
     }
+}
+
+void
+X11Context::x11id_set (size_t xid, X11Item *x11item)
+{
+  auto it = m_x11ids.find (xid);
+  if (!x11item)
+    {
+      if (m_x11ids.end() != it)
+        m_x11ids.erase (it);
+      return;
+    }
+  if (m_x11ids.end() != it)
+    fatal ("%s: x11id=%ld already in use for %p while setting to %p", STRFUNC, xid, it->second, x11item);
+  m_x11ids[xid] = x11item;
+}
+
+X11Item*
+X11Context::x11id_get (size_t xid)
+{
+  // do lookup without modifying x11ids
+  auto it = m_x11ids.find (xid);
+  return m_x11ids.end() != it ? it->second : NULL;
 }
 
 Atom
@@ -1232,9 +1278,16 @@ void
 ScreenDriverX11::close ()
 {
   assert_return (m_use_count > 0);
+  if (!uithread_is_current())
+    {
+      // ensure X11 thread joining happens from UIThread
+      uithread_main_loop()->exec_now (slot (*this, &ScreenDriverX11::close));
+      return;
+    }
   m_use_count--;
   if (!m_use_count && m_x11context)
     {
+      assert (uithread_is_current());
       X11Context *x11context = m_x11context;
       m_x11context = NULL;
       x11context->stop_thread_async();
