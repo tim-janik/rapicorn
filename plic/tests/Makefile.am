@@ -7,7 +7,7 @@ PLICEXT = PATH="$(bindir):$$PATH" plic-@PLIC_VERSION@
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 ptptest_LDFLAGS = -pthread -lpthread
-ptptest.cc: typecodetests.typ
+$(srcdir)/ptptest.cc: typecodetests.typ
 EXTRA_DIST += typecodetests.idl
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl

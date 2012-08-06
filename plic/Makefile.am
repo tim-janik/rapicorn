@@ -62,6 +62,7 @@ runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(Q) echo "#endif // __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)
+EXTRA_DIST += xmanifold.py
 runtime.cc: runtypes.cc loadmap.cc Makefile.am
 	$(AM_V_GEN)
 	$(Q) cat $< $(srcdir)/loadmap.cc > xtmp-$(@F)
