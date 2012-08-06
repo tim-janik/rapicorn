@@ -221,21 +221,6 @@ RELAUX_CHL_ADD   = $(strip $(RELEASE_CHL_ADD))
 # --- ChangeLog ---
 RELAUX_GITSTAMPS = $(shell ls "$${GIT_DIR:-.git}/`git symbolic-ref -q HEAD || echo HEAD`" \
 			   "$${GIT_DIR:-.git}/packed-refs"  "$${GIT_DIR:-.git}/HEAD" 2>/dev/null )
-${RELAUX_CHANGELOG}:	${RELAUX_CHL_ADD} ${RELAUX_GITSTAMPS} Makefile.am
-	@ # Generate ChangeLog with -prefixed records
-	git log ${RELAUX_CHL_RANGE} > xgen-0$(@F) \
-	   --pretty='tformat:%ai  %an 	# %h%n%n%s%n%n%b' --abbrev=11
-	@ # Append old style ChangeLog
-	cat xgen-0$(@F) ${RELAUX_CHL_ADD} > xgen-1$(@F)
-	@ # Tab-indent ChangeLog, except for record start
-	sed 's/^/	/; s/^	//; /^[ 	]*<unknown>$$/d' < xgen-1$(@F) > xgen-0$(@F)
-	@ # Kill trailing whitespaces
-	sed 's/[[:space:]]\+$$//' < xgen-0$(@F) > xgen-1$(@F)
-	@ # Compress multiple newlines
-	sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }' < xgen-1$(@F) > xgen-0$(@F)
-	@ # Cleanup, replace atomically
-	rm -f xgen-1$(@F)
-	mv xgen-0$(@F) $@
 all-am: ${RELAUX_CHANGELOG}
 EXTRA_DIST  += ${RELAUX_CHANGELOG}
 # --- release-upload ---

@@ -4,9 +4,10 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . po plic rcore ui rope tools tests pytests examples docs web
+SUBDIRS     = . po plic rcore ui rope tools tests pytests examples docs web
 
-docdir  = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
@@ -117,3 +118,10 @@ RELEASE_DESTPATH  = dist/rapicorn
 RELEASE_CHANGELOG = ChangeLog
 RELEASE_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
 # Makefile.decl introduced rules: ChangeLog release-upload
+
+
+# == ChangeLog ==
+ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
+	$(srcdir)/mkrelease.sh ChangeLog -R 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+noinst_DATA += ChangeLog
+EXTRA_DIST  += ChangeLog mkrelease.sh
