@@ -35,10 +35,6 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 
 namespace Rapicorn {
 
-// == declarations ==
-class ScreenWindowX11;
-static Mutex x11_rmutex (RECURSIVE_LOCK); // FIXME
-
 // == X11Item ==
 struct X11Item {
   explicit X11Item() {}
@@ -130,7 +126,6 @@ ScreenWindowX11::~ScreenWindowX11()
 void
 ScreenWindowX11::destroy_x11_resources()
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
   if (m_expose_surface)
     {
       cairo_surface_destroy (m_expose_surface);
@@ -152,7 +147,6 @@ ScreenWindowX11::destroy_x11_resources()
       x11context.x11id_set (m_window, NULL);
       m_window = 0;
     }
-  x11locker.unlock();
 }
 
 void
@@ -618,7 +612,6 @@ cairo_image_surface_coverage (cairo_surface_t *surface)
 void
 ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
   CHECK_CAIRO_STATUS (surface);
   if (!m_window)
     return;
@@ -854,7 +847,6 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 void
 ScreenWindowX11::configure_window (const Config &config)
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
   // WM_NORMAL_HINTS, size & gravity
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
   XSetWMNormalHints (x11context.display, m_window, &szhint);
@@ -999,9 +991,8 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
 void
 X11Context::run()
 {
-  ScopedLock<Mutex> x11locker (x11_rmutex);
   // perform unlock/lock around poll() calls
-  m_loop.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
+  // m_loop.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
   // ensure X11 file descriptor changes are handled
   m_loop.exec_io_handler (slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
