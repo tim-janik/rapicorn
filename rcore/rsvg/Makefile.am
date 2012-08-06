@@ -14,12 +14,14 @@ rcore_rsvg_sources = $(sort		\
 	rsvg-shapes.c rsvg-shapes.h rsvg-structure.c rsvg-structure.h rsvg-styles.c rsvg-styles.h rsvg-text.c rsvg-text.h \
 	rsvg-cairo-draw.c rsvg-cairo-draw.h rsvg-cairo-render.c rsvg-cairo-render.h rsvg-cairo-clip.h rsvg-cairo-clip.c \
 	rsvg-cond.c rsvg-base.c rsvg.c rsvg-gobject.c rsvg-file-util.c rsvg-xml.c rsvg-xml.h \
-	svg.hh svg.cc librsvg-enum-types.c \
+	svg.hh svg.cc svg-tweak.h librsvg-enum-types.c \
 )
 rcore_rsvg_headers = $(sort rsvg.h rsvg-cairo.h )
 rcore_rsvg_generated_headers = $(strip	\
 )
 rcore_rsvg_private_files = $(strip	\
+	config.h			\
+	librsvg-features.h		\
 )
 
 # === CPU flags ===
@@ -37,7 +39,7 @@ librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rcore_rsvg_private_files) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rcore_rsvg_private_files) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES) $(rcore_rsvg_headers)
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librcore_rsvg@RAPICORN_RELEASE@.o: $(librcore_rsvg@RAPICORN_RELEASE@_la_OBJECTS) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES)
