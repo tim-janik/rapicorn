@@ -59,9 +59,12 @@ X11TEST_SERVER := \
     && until xset -display :$$D q >/dev/null 2>&1 ; do sleep 0.1 ; done && DISPLAY=:$$D ; \
   else DISPLAY="$$X11TEST_DISPLAY" ; \
   fi && export DISPLAY
-XLIBSTDERREXTFIX = 2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2)
 CLEANFILES += $(if $(filter $(top_builddir), . ), $(x11test_log))
 
+# == Error Filter ==
+FIX_STDERR_FILTER = grep -v -E \
+  -e '^Xlib: *extension "[^"]*" missing on display ":[^"]*"'
+# Use grep to filter bogus messages from test results
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
 # listed as DISTFILES. this asserts a writable file named $DISTFILE_LIST.
@@ -128,7 +131,8 @@ define check_logtest_TEMPLATE
 check_logtest--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
-	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) >"$$$$tstout" 2>&1 \
+	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) 2>&1 \
+	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
 check: check_logtest--$(1)
