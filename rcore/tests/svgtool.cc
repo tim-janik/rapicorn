@@ -21,6 +21,8 @@
 
 #include "../rsvg/svg.hh"
 
+#include "resources.cc"
+
 namespace Rapicorn { namespace Cairo {
 
 #define CHECK_CAIRO_STATUS(status)      do {    \
@@ -197,7 +199,7 @@ using namespace Rapicorn;
 static void
 test_convert_svg2png()
 {
-  Svg::Library::add_library ("sample1.svg");
+  Svg::Library::add_resource ("res:test-files/sample1.svg");
   Svg::Element e = Svg::Library::lookup_element ("#test-box");
   assert (e);
   Svg::Allocation a = e.allocation();

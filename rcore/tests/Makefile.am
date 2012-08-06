@@ -15,7 +15,7 @@ NOINSTPRGS        += imgcheck
 imgcheck_SOURCES   = imgcheck.cc
 imgcheck_LDADD     = $(LDADDS)
 
-# test programs
+# == test programs ==
 LOGTEST_PROGS     += testrcore1
 TEST_PROGS        += testrcore1
 testrcore1_SOURCES = multitest.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
@@ -30,6 +30,19 @@ testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 EXTRA_DIST        += testpixs.c testpixs.png
 
+# == test resources ==
+ZINTERN     = ../rapicorn-zintern
+RES_FILES   = sample1.svg
+RES_PAIRS   = $(foreach file, $(RES_FILES), test-files/$(notdir $(file)) $(file))
+EXTRA_DIST += $(RES_FILES)
+resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
+	$(AM_V_GEN)
+	$(Q) $(ZINTERN) -r $(RES_PAIRS) >xgen-$(@F)
+	$(Q) mv xgen-$(@F) $@
+EXTRA_DIST  += resources.cc
+CLEANFILES  += resources.cc
+noinst_DATA  = resources.cc
+svgtool.cc: resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting
