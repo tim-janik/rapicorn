@@ -1,6 +1,8 @@
 # PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
+INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
+
 PLICINT = ../plic-intern $(DEBUG:%=--plic-debug)
 PLICEXT = PATH="$(bindir):$$PATH" plic-@PLIC_VERSION@
 

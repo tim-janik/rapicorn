@@ -16,8 +16,8 @@
  */
 
 // include PLIC TypeMap Parser
-#include "../runtime.hh"
-#include "../runtime.cc"
+#include "plic/runtime.hh"
+#include "plic/runtime.cc"
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
