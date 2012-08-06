@@ -272,6 +272,11 @@ public:
     initialize();
     assert_return (m_idata == NULL);
     m_main_loop.run();
+    WindowImpl::forcefully_close_all();
+    ScreenDriver::forcefully_close_all();
+    while (!m_main_loop.finishable())
+      if (!m_main_loop.iterate (false))
+        break;  // handle primary idle handlers like exec_now
     m_main_loop.kill_loops();
     rapicorn_thread_leave();
 
@@ -307,7 +312,6 @@ uithread_is_current ()
 void
 uithread_shutdown (void)
 {
-  WindowImpl::forcefully_close_all();
   if (the_uithread && the_uithread->running())
     {
       the_uithread->queue_stop(); // stops ui thread main loop

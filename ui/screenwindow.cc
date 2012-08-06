@@ -114,49 +114,55 @@ ScreenWindow::viewable ()
 void
 ScreenWindow::configure (const Config &config)
 {
-  queue_command (new Command (CMD_CONFIGURE, config));
+  queue_command (new ScreenCommand (ScreenCommand::CONFIGURE, this, config));
 }
 
 void
 ScreenWindow::beep ()
 {
-  queue_command (new Command (CMD_BEEP));
+  queue_command (new ScreenCommand (ScreenCommand::BEEP, this));
 }
 
 void
 ScreenWindow::show ()
 {
-  queue_command (new Command (CMD_SHOW));
+  queue_command (new ScreenCommand (ScreenCommand::SHOW, this));
 }
 
 void
 ScreenWindow::present ()
 {
-  queue_command (new Command (CMD_PRESENT));
+  queue_command (new ScreenCommand (ScreenCommand::PRESENT, this));
 }
 
 void
 ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
-  queue_command (new Command (CMD_BLIT, surface, region));
+  queue_command (new ScreenCommand (ScreenCommand::BLIT, this, surface, region));
 }
 
 void
 ScreenWindow::start_user_move (uint button, double root_x, double root_y)
 {
-  queue_command (new Command (CMD_MOVE, button, root_x, root_y));
+  queue_command (new ScreenCommand (ScreenCommand::MOVE, this, button, root_x, root_y));
 }
 
 void
 ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
 {
-  queue_command (new Command (CMD_RESIZE, button, root_x, root_y));
+  queue_command (new ScreenCommand (ScreenCommand::RESIZE, this, button, root_x, root_y));
 }
 
 void
 ScreenWindow::destroy ()
 {
-  queue_command (new Command (CMD_DESTROY));
+  queue_command (new ScreenCommand (ScreenCommand::DESTROY, this));
+}
+
+void
+ScreenWindow::queue_command (ScreenCommand *command)
+{
+  ScreenDriver::Friends::queue_command (screen_driver_async(), command);
 }
 
 static const char*
@@ -202,74 +208,102 @@ ScreenWindow::flags_name (uint64 flags, String combo)
   return result;
 }
 
-// == ScreenWindow::Command ==
-ScreenWindow::Command::Command (CommandType ctype) :
-  type (ctype), config (NULL), setup (NULL)
+// == ScreenCommand ==
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window) :
+  type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == CMD_BEEP || type == CMD_SHOW || type == CMD_PRESENT || type == CMD_DESTROY);
+  assert (type == OK || type == BEEP || type == SHOW || type == PRESENT || type == DESTROY || type == SHUTDOWN);
 }
 
-ScreenWindow::Command::Command (CommandType ctype, const Config &cfg) :
-  type (ctype), config (NULL), setup (NULL)
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Config &cfg) :
+  type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == CMD_CONFIGURE);
-  config = new Config (cfg);
+  assert (type == CONFIGURE);
+  config = new ScreenWindow::Config (cfg);
 }
 
-ScreenWindow::Command::Command (CommandType ctype, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg) :
-  type (ctype), config (NULL), setup (NULL)
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg) :
+  type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == CMD_CREATE);
-  setup = new Setup (cs);
-  config = new Config (cfg);
+  assert (type == CREATE);
+  setup = new ScreenWindow::Setup (cs);
+  config = new ScreenWindow::Config (cfg);
 }
 
-ScreenWindow::Command::Command (CommandType ctype, cairo_surface_t *csurface, const Rapicorn::Region &cregion) :
-  type (ctype), config (NULL), setup (NULL)
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, cairo_surface_t *csurface, const Rapicorn::Region &cregion) :
+  type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == CMD_BLIT);
+  assert (type == BLIT);
   surface = cairo_surface_reference (csurface);
   region = new Rapicorn::Region (cregion);
 }
 
-ScreenWindow::Command::Command (CommandType ctype, int cbutton, int croot_x, int croot_y) :
-  type (ctype), config (NULL), setup (NULL)
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int croot_x, int croot_y) :
+  type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == CMD_MOVE || type == CMD_RESIZE);
+  assert (type == MOVE || type == RESIZE);
   cbutton = button;
   croot_x = root_x;
   croot_y = root_y;
 }
 
-ScreenWindow::Command::~Command()
+ScreenCommand::ScreenCommand (Type type, ScreenWindow *window, const String &result) :
+  type (type), screen_window (window), config (NULL), setup (NULL)
+{
+  assert (type == ERROR);
+  result_msg  = new String (result);
+}
+
+ScreenCommand::~ScreenCommand()
 {
   switch (type)
     {
-    case CMD_CREATE:
+    case CREATE:
       delete setup;
       delete config;
-      // rc = NULL;
       break;
-    case CMD_CONFIGURE:
+    case CONFIGURE:
       delete config;
       assert (!setup);
       break;
-    case CMD_BLIT:
+    case BLIT:
       cairo_surface_destroy (surface);
       delete region;
       break;
-    case CMD_MOVE: case CMD_RESIZE:
+    case MOVE: case RESIZE:
       button = root_x = root_y = 0;
       break;
-    case CMD_BEEP: case CMD_SHOW: case CMD_PRESENT: case CMD_DESTROY:
+    case BEEP: case SHOW: case PRESENT: case DESTROY: case SHUTDOWN:
       assert (!config && !setup);
+      break;
+    case OK:
+      assert (!config && !setup);
+      break;
+    case ERROR:
+      delete result_msg;
+      assert (!setup);
       break;
     }
 }
 
+bool
+ScreenCommand::reply_type (Type type)
+{
+  switch (type)
+    {
+    case CREATE: case SHUTDOWN: return true; // has reply
+    case CONFIGURE: case BLIT:  return false;
+    case MOVE: case RESIZE:     return false;
+    case BEEP: case SHOW:       return false;
+    case PRESENT: case DESTROY: return false;
+    case OK: case ERROR:        return true; // is reply
+    }
+  return false; // silence compiler
+}
+
 // == ScreenDriver ==
-static Mutex                 screen_driver_mutex;
-static ScreenDriver         *screen_driver_chain = NULL;
+static Mutex                    screen_driver_mutex;
+static ScreenDriver            *screen_driver_chain = NULL;
 
 ScreenDriver::ScreenDriver (const String &name, int priority) :
   m_sibling (NULL), m_name (name), m_priority (priority)
@@ -279,14 +313,51 @@ ScreenDriver::ScreenDriver (const String &name, int priority) :
   screen_driver_chain = this;
 }
 
-bool
-ScreenDriver::driver_priority_lesser (ScreenDriver *d1, ScreenDriver *d2)
+ScreenDriver::~ScreenDriver ()
 {
-  return d1->m_priority < d2->m_priority;
+  assert_return (m_command_queue.pending() == false);
+  assert_return (m_reply_queue.pending() == false);
+  assert_return (m_thread_handle.get_id() == std::thread::id());
+}
+
+bool
+ScreenDriver::open_L ()
+{
+  assert_return (screen_driver_mutex.debug_locked(), false);
+  assert_return (m_thread_handle.get_id() == std::thread::id(), false);
+  assert_return (m_reply_queue.pending() == false, false);
+  m_thread_handle = std::thread (&ScreenDriver::run, this, std::ref (m_command_queue), std::ref (m_reply_queue));
+  ScreenCommand *reply = m_reply_queue.pop();
+  if (reply->type == ScreenCommand::OK)
+    {
+      delete reply;
+      return true;
+    }
+  else if (reply->type == ScreenCommand::ERROR)
+    {
+      delete reply;
+      m_thread_handle.join();
+      return false;
+    }
+  else
+    assert_unreached();
+}
+
+void
+ScreenDriver::close_L ()
+{
+  assert_return (screen_driver_mutex.debug_locked());
+  assert_return (m_thread_handle.joinable());
+  assert_return (m_reply_queue.pending() == false);
+  m_command_queue.push (new ScreenCommand (ScreenCommand::SHUTDOWN, NULL));
+  ScreenCommand *reply = m_reply_queue.pop();
+  assert (reply->type == ScreenCommand::OK);
+  delete reply;
+  m_thread_handle.join();
 }
 
 ScreenDriver*
-ScreenDriver::open_screen_driver (const String &backend_name)
+ScreenDriver::retrieve_screen_driver (const String &backend_name)
 {
   ScopedLock<Mutex> locker (screen_driver_mutex);
   vector<ScreenDriver*> screen_driver_array;
@@ -299,7 +370,7 @@ ScreenDriver::open_screen_driver (const String &backend_name)
       const char *r;
       if (it->m_name != backend_name && backend_name != "auto")
         r = "not selected";
-      else if (it->open())
+      else if (it->m_thread_handle.joinable() || it->open_L())
         r = NULL;
       else
         r = "failed to open";
@@ -308,6 +379,43 @@ ScreenDriver::open_screen_driver (const String &backend_name)
         return it;
     }
   return NULL;
+}
+
+void
+ScreenDriver::forcefully_close_all ()
+{
+  ScopedLock<Mutex> locker (screen_driver_mutex);
+  for (ScreenDriver *screen_driver = screen_driver_chain; screen_driver; screen_driver = screen_driver->m_sibling)
+    if (screen_driver->m_thread_handle.joinable())
+      screen_driver->close_L();
+}
+
+bool
+ScreenDriver::driver_priority_lesser (const ScreenDriver *d1, const ScreenDriver *d2)
+{
+  return d1->m_priority < d2->m_priority;
+}
+
+void
+ScreenDriver::queue_command (ScreenCommand *screen_command)
+{
+  assert_return (m_thread_handle.joinable());
+  assert_return (screen_command->screen_window != NULL);
+  assert_return (ScreenCommand::reply_type (screen_command->type) == false);
+  m_command_queue.push (screen_command);
+}
+
+ScreenWindow*
+ScreenDriver::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
+{
+  assert_return (m_thread_handle.joinable(), NULL);
+  assert_return (m_reply_queue.pending() == false, NULL);
+  m_command_queue.push (new ScreenCommand (ScreenCommand::CREATE, NULL, setup, config));
+  ScreenCommand *reply = m_reply_queue.pop();
+  assert (reply->type == ScreenCommand::OK && reply->screen_window);
+  ScreenWindow *screen_window = reply->screen_window;
+  delete reply;
+  return screen_window;
 }
 
 } // Rapicorn

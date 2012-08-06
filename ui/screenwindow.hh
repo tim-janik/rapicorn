@@ -6,6 +6,8 @@
 #include <ui/region.hh>
 
 namespace Rapicorn {
+class ScreenDriver;
+class ScreenCommand;
 
 /// Interface class for managing window contents on screens and display devices.
 class ScreenWindow : public virtual Deletable, protected NonCopyable, public virtual std::enable_shared_from_this<ScreenWindow> {
@@ -90,55 +92,92 @@ public:
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);   ///< Trigger window resizing.
   void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
 protected:
-  enum CommandType {
-    CMD_CREATE = 1, CMD_CONFIGURE, CMD_BEEP, CMD_SHOW, CMD_PRESENT, CMD_BLIT, CMD_MOVE, CMD_RESIZE, CMD_DESTROY,
-  };
-  struct Command        /// Structure for internal asynchronous operations.
-  {
-    CommandType       type;
-    union {
-      struct { Config          *config; Setup *setup; };
-      struct { cairo_surface_t *surface; Rapicorn::Region *region; };
-      struct { int              button, root_x, root_y; };
-    };
-    Command (CommandType type);
-    Command (CommandType type, const Config &cfg);
-    Command (CommandType type, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
-    Command (CommandType type, cairo_surface_t *surface, const Rapicorn::Region &region);
-    Command (CommandType type, int button, int root_x, int root_y);
-    ~Command();
-  };
-  explicit      ScreenWindow    ();
-  virtual void  queue_command   (Command *command) = 0;
-  bool          update_state    (const State &state);
+  explicit              ScreenWindow    ();
+  bool                  update_state    (const State &state);
+  void                  queue_command   (ScreenCommand *command);
+  virtual ScreenDriver& screen_driver_async () const = 0; // called from any thread
 private:
   Spinlock      m_spin;
   State         m_state;
   bool          m_accessed;
-public: typedef struct Command Command;
 };
 typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
+struct ScreenCommand    /// Structure for internal asynchronous operations.
+{
+  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, MOVE, RESIZE, DESTROY, SHUTDOWN, OK, ERROR, };
+  Type          type;
+  ScreenWindow *screen_window;
+  union {
+    struct { ScreenWindow::Config *config; ScreenWindow::Setup *setup; };
+    struct { cairo_surface_t      *surface;   Rapicorn::Region *region; };
+    struct { int                   button, root_x, root_y; };
+    struct { String               *result_msg; };
+  };
+  ScreenCommand (Type type, ScreenWindow *window);
+  ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Config &cfg);
+  ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
+  ScreenCommand (Type type, ScreenWindow *window, cairo_surface_t *surface, const Rapicorn::Region &region);
+  ScreenCommand (Type type, ScreenWindow *window, int button, int root_x, int root_y);
+  ScreenCommand (Type type, ScreenWindow *window, const String &result);
+  ~ScreenCommand();
+  static bool reply_type (Type type);
+};
+
 /// Management class for ScreenWindow driver implementations.
 class ScreenDriver : protected NonCopyable {
+  AsyncNotifyingQueue<ScreenCommand*> m_command_queue;
+  AsyncBlockingQueue<ScreenCommand*>  m_reply_queue;
+  std::thread                         m_thread_handle;
 protected:
   ScreenDriver         *m_sibling;
   String                m_name;
   int                   m_priority;
+  virtual void          run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue) = 0;
   /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
   explicit              ScreenDriver            (const String &name, int priority = 0);
+  virtual              ~ScreenDriver            ();
+  void                  queue_command           (ScreenCommand *screen_command);
+  bool                  open_L                  ();
+  void                  close_L                 ();
 public:
-  /// Open a driver or increase opening reference count.
-  virtual bool          open                    () = 0;
   /// Create a new ScreenWindow from an opened driver.
-  virtual ScreenWindowP create_screen_window    (const ScreenWindow::Setup &setup,
-                                                 const ScreenWindow::Config &config) = 0;
-  /// Decrease opening reference count, closes down driver resources if the last count drops.
-  virtual void          close                   () = 0;
+  ScreenWindow*         create_screen_window    (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   /// Open a specific named driver, "auto" will try to find the best match.
-  static ScreenDriver*  open_screen_driver      (const String &backend_name);
+  static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
   /// Comparator for "auto" scoring.
-  static bool           driver_priority_lesser  (ScreenDriver *d1, ScreenDriver *d2);
+  static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
+  ///@cond
+  static void           forcefully_close_all    ();
+  class Friends { friend class ScreenWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
+  ///@endcond
+};
+
+template<class DriverImpl>
+struct ScreenDriverFactory : public ScreenDriver {
+  Atomic<int> running;
+  ScreenDriverFactory (const String &name, int priority = 0) :
+    ScreenDriver (name, priority), running (false)
+  {}
+  virtual void
+  run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue)
+  {
+    running = true;
+    DriverImpl driver (*this, command_queue, reply_queue);
+    if (driver.connect())
+      {
+        reply_queue.push (new ScreenCommand (ScreenCommand::OK, NULL));
+        driver.run();
+      }
+    else
+      reply_queue.push (new ScreenCommand (ScreenCommand::ERROR, NULL, ""));
+    running = false;
+  }
+  virtual
+  ~ScreenDriverFactory()
+  {
+    assert (running == false);
+  }
 };
 
 // == Implementations ==

@@ -950,7 +950,7 @@ WindowImpl::create_screen_window ()
       if (!m_screen_window)
         {
           resize_window(); // ensure initial size requisition
-          ScreenDriver *sdriver = ScreenDriver::open_screen_driver ("auto");
+          ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
           if (sdriver)
             {
               ScreenWindow::Setup setup;
@@ -978,7 +978,6 @@ WindowImpl::create_screen_window ()
               m_pending_win_size = true;
               m_screen_window = sdriver->create_screen_window (setup, m_config);
               m_screen_window->set_event_wakeup ([this] () { m_loop.wakeup(); /* thread safe */ });
-              sdriver->close();
             }
           else
             fatal ("failed to find and open any screen driver");

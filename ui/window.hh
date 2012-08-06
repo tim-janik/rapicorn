@@ -11,7 +11,7 @@ namespace Rapicorn {
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   friend class  ItemImpl;
   EventLoop            &m_loop;
-  ScreenWindowP         m_screen_window;
+  ScreenWindow*         m_screen_window;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   uint                  m_pending_win_size : 1;
