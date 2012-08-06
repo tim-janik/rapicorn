@@ -36,10 +36,13 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
         rapicornsignaltemplate.hh	\
-        configbits.cc			\
 	mksignals.sh			\
 	pixmap.cc			\
 )
+rapicorn_generated_files = $(strip    	\
+	configbits.cc			\
+)
+# rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === CPU flags ===
 AM_CXXFLAGS = @FPU_FLAGS@
@@ -108,6 +111,7 @@ BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
 	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
 BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
 configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
+	$(AM_V_GEN)
 	$(Q) cd . \
 	&& echo "// Generated data from $< (by make $@)" 					 > xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
@@ -117,7 +121,7 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 	&& (cmp -s xgen-$(@F) $@ || cp xgen-$(@F) $@)
 	$(Q) rm -f xgen-$(@F)
 CLEANFILES += xgen-configbits.cc configbits.cc
-$(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): configbits.cc
+$(srcdir)/main.cc: configbits.cc
 .PHONY: PHONY_REBUILDS
 
 # === Rapicorn Basics IDL ===
