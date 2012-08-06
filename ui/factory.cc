@@ -821,9 +821,14 @@ parse_ui_file (const String   &uinamespace,
 {
   size_t flen = 0;
   char *fdata = Path::memread (file_name, &flen);
-  String result = parse_ui_data (uinamespace, file_name, flen, fdata, i18n_domain, definitions);
-  Path::memfree (fdata);
-  return result;
+  if (fdata)
+    {
+      String result = parse_ui_data (uinamespace, file_name, flen, fdata, i18n_domain, definitions);
+      Path::memfree (fdata);
+      return result;
+    }
+  else
+    return strerror (ENOENT);
 }
 
 } // Factory
