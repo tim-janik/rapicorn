@@ -242,9 +242,27 @@ class AsyncBlockingQueue {
   Cond             m_cond;
   std::list<Value> m_list;
 public:
-  void  push (const Value &v);
-  Value pop  ();
-  void  swap (std::list<Value> &list);
+  void  push    (const Value &v);
+  Value pop     ();
+  bool  pending ();
+  void  swap    (std::list<Value> &list);
+};
+
+// == AsyncNotifyingQueue ==
+/**
+ * This is a thread-safe asyncronous queue which returns 0 from pop() until data is provided through push().
+ */
+template<class Value>
+class AsyncNotifyingQueue {
+  Mutex                 m_mutex;
+  std::function<void()> m_notifier;
+  std::list<Value>      m_list;
+public:
+  void  push     (const Value &v);
+  Value pop      (Value fallback = 0);
+  bool  pending  ();
+  void  swap     (std::list<Value> &list);
+  void  notifier (const std::function<void()> &notifier);
 };
 
 // == Implementation Bits ==
@@ -269,6 +287,13 @@ AsyncBlockingQueue<Value>::pop ()
   return v;
 }
 
+template<class Value> bool
+AsyncBlockingQueue<Value>::pending()
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  return !m_list.empty();
+}
+
 template<class Value> void
 AsyncBlockingQueue<Value>::swap (std::list<Value> &list)
 {
@@ -277,6 +302,51 @@ AsyncBlockingQueue<Value>::swap (std::list<Value> &list)
   m_list.swap (list);
   if (notify && !m_list.empty())
     m_cond.broadcast();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::push (const Value &v)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  const bool notify = m_list.empty();
+  m_list.push_back (v);
+  if (RAPICORN_UNLIKELY (notify) && m_notifier)
+    m_notifier();
+}
+
+template<class Value> Value
+AsyncNotifyingQueue<Value>::pop (Value fallback)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  if (RAPICORN_UNLIKELY (m_list.empty()))
+    return fallback;
+  Value v = m_list.front();
+  m_list.pop_front();
+  return v;
+}
+
+template<class Value> bool
+AsyncNotifyingQueue<Value>::pending()
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  return !m_list.empty();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::swap (std::list<Value> &list)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  const bool notify = m_list.empty();
+  m_list.swap (list);
+  if (notify && !m_list.empty() && m_notifier)
+    m_notifier();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::notifier (const std::function<void()> &notifier)
+{
+  ScopedLock<Mutex> sl (m_mutex);
+  m_notifier = notifier;
 }
 
 inline ThreadInfo&
