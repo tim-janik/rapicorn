@@ -20,7 +20,7 @@ LOGTEST_PROGS     += testrcore1
 TEST_PROGS        += testrcore1
 testrcore1_SOURCES = multitest.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
-EXTRA_DIST        += data.cc
+EXTRA_DIST        += data.cc testrcore1.ref
 
 LOGTEST_PROGS     += testrcore2
 TEST_PROGS        += testrcore2
@@ -28,7 +28,9 @@ testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal.cc pixm
 testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
-EXTRA_DIST        += testpixs.c testpixs.png
+EXTRA_DIST        += testpixs.c testpixs.png testrcore2.ref
+
+export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
 ZINTERN     = $(abs_builddir)/../rapicorn-zintern

@@ -1256,8 +1256,17 @@ searchpath_find (const String &searchpath, const String &file, const String &mod
 String
 vpath_find (const String &file, const String &mode)
 {
+  String result = searchpath_find (".", file, mode);
+  if (!result.empty())
+    return result;
   const char *vpath = getenv ("VPATH");
-  return searchpath_find (vpath ? vpath : ".", file, mode);
+  if (vpath)
+    {
+      result = searchpath_find (vpath, file, mode);
+      if (!result.empty())
+        return result;
+    }
+  return file;
 }
 
 const String dir_separator = RAPICORN_DIR_SEPARATOR_S;
