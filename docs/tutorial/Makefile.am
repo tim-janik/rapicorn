@@ -3,25 +3,19 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
+DOX_FILES	= pyhello.dox
+PY_TARGETS	= pyhello.py
 
-docdir        = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+docdir        	= ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+tutorialdir   	= ${docdir}/tutorial
+tutorial_DATA	= $(DOX_FILES) $(PY_TARGETS)
+CLEANFILES  	= $(PY_TARGETS) xtmp-*
+EXTRA_DIST  	= $(DOX_FILES)
 
-tutorialdir   = ${docdir}/tutorial
-tutorial_DATA = $(HTML_TARGETS) $(PY_TARGETS)
-EXTRA_DIST   += $(tutorial_DATA)
+# sed: enter @code, print empty newline, print and loop lines unil @endcode
+EXTRACT_CODE_ENDCODE = sed -n '/@code/{ s/.*//; :MORE p; n; /@endcode/!bMORE; }'
 
-HTML_TARGETS = html/pyhello.html
-PY_TARGETS   = html/pyhello.py
-CLEANFILES   += $(HTML_TARGETS) $(PY_TARGETS)
-
-html/%.html: %.txt
-	@mkdir -p html/
-	doxer.py markup2html $< > $@
-
-html/%.py: %.txt
-	@mkdir -p html/
-	sed -n '/^\t/{s/^\t//;p}' < $< > $@
-
-clean-html:
-	[ ! -d html ] || rm -r html/
-clean-local: clean-html
+%.py: %.dox
+	$(AM_V_GEN)
+	$(Q) $(EXTRACT_CODE_ENDCODE) < $< > xtmp-$(@F)
+	$(Q) cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
