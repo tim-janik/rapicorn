@@ -165,10 +165,12 @@ ApplicationImpl::auto_path (const String  &file_name,
         bpath = Path::dirname (bpath);
     }
   /* construct search path list */
-  const char *gvp = getenv ("RAPICORN_VPATH");
   StringVector spl;
   if (search_vpath)
-    spl = Path::searchpath_split (gvp ? gvp : "");
+    {
+      const char *vpath = getenv ("VPATH");
+      spl = Path::searchpath_split (vpath ? vpath : "");
+    }
   spl.insert (spl.begin(), bpath);
   /* pick first existing file_name */
   for (uint i = 0; i < spl.size(); i++)

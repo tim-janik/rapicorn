@@ -12,7 +12,7 @@ XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 
 # environment
-TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
+export VPATH   # needed by test programs to find builddir relative input files
 
 # test programs
 LOGTEST_PROGS       += servertests
