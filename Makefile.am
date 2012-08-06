@@ -120,7 +120,9 @@ RELEASE_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
 # Makefile.decl introduced rules: ChangeLog release-upload
 
 
-# == ChangeLog ==
+# == ChangeLog & Release Rules ==
+release-news:
+	@$(srcdir)/mkrelease.sh news
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
 	$(srcdir)/mkrelease.sh ChangeLog -R 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
 noinst_DATA += ChangeLog
