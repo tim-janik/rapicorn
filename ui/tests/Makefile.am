@@ -20,8 +20,8 @@ TEST_PROGS          += servertests
 servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
 		       items.cc primitives.cc testitems.cc sinfextest.cc stores.cc testselector.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
-EXTRA_DIST          += servertests.hh
 XML_FILES    	    += factory.xml testitems.xml
+EXTRA_DIST          += servertests.hh $(XML_FILES)
 TEST_PROGS	    += clienttests
 clienttests_SOURCES  = clienttests.cc
 clienttests_LDADD    = $(LDADDS)
