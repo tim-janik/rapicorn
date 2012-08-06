@@ -1,5 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include "svg.hh"
+#include "../strings.hh"
 #include "rsvg.h"
 #include "rsvg-cairo.h"
 #include "rsvg-private.h"
@@ -231,6 +232,30 @@ find_library_file (const String &filename)
 }
 
 static vector<RsvgHandle*> library_handles;
+
+void
+Library::add_resource (const String &res_svg)
+{
+  errno = ENOENT;
+  ResourceBlob blob = ResourceBlob::load (res_svg);
+  if (blob.size())
+    {
+      errno = ENODATA;
+      RsvgHandle *handle = rsvg_handle_new();
+      g_object_ref_sink (handle);
+      bool success = rsvg_handle_write (handle, blob.data(), blob.size(), NULL);
+      success = success && rsvg_handle_close (handle, NULL);
+      if (success)
+        {
+          library_handles.push_back (handle);
+          errno = 0;
+        }
+      else
+        g_object_unref (handle);
+    }
+  if (errno)
+    DEBUG ("SVG: failed to load %s: %s", CQUOTE (res_svg), strerror (errno));
+}
 
 /**
  * Add @filename to the list of SVG libraries used for looking up UI graphics.

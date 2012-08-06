@@ -47,6 +47,7 @@ class Library {
 public:
   static void           add_search_dir  (const String   &absdir);
   static void           add_library     (const String   &filename);
+  static void           add_resource    (const String   &res_svg);
   static Element        lookup_element  (const String   &id);
   static void           dump_tree       (const String   &id);
 };
