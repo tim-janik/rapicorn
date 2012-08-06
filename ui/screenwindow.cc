@@ -9,14 +9,14 @@ namespace Rapicorn {
 
 // == ScreenWindow ==
 ScreenWindow::ScreenWindow () :
-  m_accessed (0)
+  m_async_state_accessed (0)
 {}
 
 ScreenWindow::~ScreenWindow ()
 {
   std::list<Event*> events;
   {
-    ScopedLock<Mutex> sl (m_async_mutex);
+    ScopedLock<Spinlock> sl (m_async_spin);
     events.swap (m_async_event_queue);
   }
   while (!events.empty())
@@ -32,7 +32,7 @@ void
 ScreenWindow::enqueue_event (Event *event)
 {
   critical_unless (event);
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   const bool notify = m_async_event_queue.empty();
   m_async_event_queue.push_back (event);
   if (notify && m_async_wakeup)
@@ -43,7 +43,7 @@ void
 ScreenWindow::push_event (Event *event)
 {
   critical_unless (event);
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   const bool notify = m_async_event_queue.empty();
   m_async_event_queue.push_front (event);
   if (notify && m_async_wakeup)
@@ -53,7 +53,7 @@ ScreenWindow::push_event (Event *event)
 Event*
 ScreenWindow::pop_event ()
 {
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   if (m_async_event_queue.empty())
     return NULL;
   Event *event = m_async_event_queue.front();
@@ -64,14 +64,14 @@ ScreenWindow::pop_event ()
 bool
 ScreenWindow::has_event ()
 {
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   return !m_async_event_queue.empty();
 }
 
 bool
 ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
 {
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   for (auto ep : m_async_event_queue)
     if (pred (ep))
       return true;
@@ -81,33 +81,33 @@ ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
 void
 ScreenWindow::set_event_wakeup (const std::function<void()> &wakeup)
 {
-  ScopedLock<Mutex> sl (m_async_mutex);
+  ScopedLock<Spinlock> sl (m_async_spin);
   m_async_wakeup = wakeup;
 }
 
 bool
 ScreenWindow::update_state (const State &state)
 {
-  ScopedLock<Spinlock> sl (m_spin);
-  const bool accessed = m_accessed;
-  m_accessed = false;
-  m_state = state;
+  ScopedLock<Spinlock> sl (m_async_spin);
+  const bool accessed = m_async_state_accessed;
+  m_async_state_accessed = false;
+  m_async_state = state;
   return accessed;
 }
 
 ScreenWindow::State
 ScreenWindow::get_state ()
 {
-  ScopedLock<Spinlock> sl (m_spin);
-  return m_state;
+  ScopedLock<Spinlock> sl (m_async_spin);
+  return m_async_state;
 }
 
 bool
 ScreenWindow::viewable ()
 {
-  ScopedLock<Spinlock> sl (m_spin);
-  bool viewable = m_state.visible;
-  viewable = viewable && !(m_state.window_flags & (ICONIFY | HIDDEN | SHADED));
+  ScopedLock<Spinlock> sl (m_async_spin);
+  bool viewable = m_async_state.visible;
+  viewable = viewable && !(m_async_state.window_flags & (ICONIFY | HIDDEN | SHADED));
   return viewable;
 }
 

@@ -11,18 +11,8 @@ class ScreenCommand;
 
 /// Interface class for managing window contents on screens and display devices.
 class ScreenWindow : public virtual Deletable, protected NonCopyable, public virtual std::enable_shared_from_this<ScreenWindow> {
-  Mutex                 m_async_mutex;
-  std::list<Event*>     m_async_event_queue;
-  std::function<void()> m_async_wakeup;
-protected:
-  virtual              ~ScreenWindow     ();
-  void                  enqueue_event    (Event *event);
 public:
-  Event*                pop_event        ();
-  void                  push_event       (Event *event);
-  bool                  has_event        ();
-  bool                  peek_events      (const std::function<bool (Event*)> &pred);
-  void                  set_event_wakeup (const std::function<void()> &wakeup);
+  /// Flags used to request and reflect certain window operations and states.
   enum Flags {
     MODAL          = 1 <<  0,   ///< Hint to the window manager that window receives input exclusively.
     STICKY         = 1 <<  1,   ///< Window is fixed and kept on screen when virtual desktops change.
@@ -82,28 +72,37 @@ public:
   };
   // == public API ==
   State         get_state               ();                     ///< Retrieve the current window state.
-  void          configure               (const Config &config); ///< Change window configuration.
   void          beep                    ();                     ///< Issue an audible bell.
   void          show                    ();                     ///< Show window on screen.
   void          present                 ();                     ///< Demand user attention for this window.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
+  void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
+  void          configure               (const Config &config); ///< Change window configuration.
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);     ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                    ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);   ///< Trigger window resizing.
-  void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
+  Event*        pop_event               ();                     ///< Fetch the next event for this Window.
+  void          push_event              (Event *event);         ///< Push back an event, so it's the next event returned by pop().
+  bool          has_event               ();                     ///< Indicates if pop_event() will return non-NULL.
+  void          set_event_wakeup        (const std::function<void()> &wakeup);  ///< Callback used to notify new event arrival.
+  bool          peek_events             (const std::function<bool (Event*)> &pred);     ///< Peek/find events via callback.
 protected:
-  explicit              ScreenWindow    ();
-  bool                  update_state    (const State &state);
-  void                  queue_command   (ScreenCommand *command);
-  virtual ScreenDriver& screen_driver_async () const = 0; // called from any thread
+  explicit              ScreenWindow            ();
+  virtual              ~ScreenWindow            ();
+  virtual ScreenDriver& screen_driver_async     () const = 0;                   ///< Acces ScreenDriver, called from any thread.
+  void                  enqueue_event           (Event *event);                 ///< Add an event to the back of the event queue.
+  bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
+  void                  queue_command           (ScreenCommand *command);       ///< Helper to queue commands on ScreenDriver.
 private:
-  Spinlock      m_spin;
-  State         m_state;
-  bool          m_accessed;
+  State                 m_async_state;
+  bool                  m_async_state_accessed;
+  Spinlock              m_async_spin;
+  std::list<Event*>     m_async_event_queue;
+  std::function<void()> m_async_wakeup;
 };
 typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
-struct ScreenCommand    /// Structure for internal asynchronous operations.
+struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
 {
   enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, MOVE, RESIZE, DESTROY, SHUTDOWN, OK, ERROR, };
   Type          type;
@@ -153,6 +152,7 @@ public:
   ///@endcond
 };
 
+/// Template for factory registration of ScreenDriver implementations.
 template<class DriverImpl>
 struct ScreenDriverFactory : public ScreenDriver {
   Atomic<int> running;
