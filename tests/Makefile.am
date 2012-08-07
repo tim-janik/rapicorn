@@ -24,6 +24,7 @@ XML_FILES       += fileview.xml
 # === test rules ===
 
 # ui XML parsing and evaluation tests
+XML_FILES += uitests.xml
 ui-xml-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/uitests.xml ; eval "$$TSTDIAGNOSE"
 check: ui-xml-test
