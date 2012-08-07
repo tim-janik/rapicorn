@@ -1,4 +1,36 @@
-Rapicorn 10.08.0: - Fri Aug 20 23:01:20 CEST 2010
+Rapicorn 12.08.0:	(2012-08-08)
+
+* Started publicizing widget interfaces in IDL.
+* Moved all UI handling into a separate UIThread.
+* Split client and server code generation from IDL.
+* Introduced client API smart handles and threading-separation.
+* Greatly improved IDL code generation, support client API signals.
+* Added IDL type generator for mmap-able type information.
+* Highly optimized generated glue code for method calls.
+* Use 128bit hashes for remote method lookups.
+* Include IDL files in documentation builds.
+* Optimized main profiling hot spots.
+* Rewrote event loop for high performance, allowing ~360k/s remote calls.
+* Optimized remote API calls by using a lock-free queue (ca. 10% faster).
+* Ported all rendering over to cairo.
+* Streamlined the rendering pipeline.
+* Added snapshots to, use: rapidrun --snapshot <PNGFILE>
+* Ported to g++-4.6, C++11 and std::thread.
+* Fixed container/viewport/window hierarchy.
+* Unified XML parsing logic with XmlNode API.
+* Implemented CSS selector matches on widget trees.
+* Added accurate time handling and benchmarking.
+* Greatly improved debugging output, added backtraces.
+* Switched to silent autotool builds.
+* Improved and cleaned up parallel builds.
+* Added debugging options, see: $RAPICORN=help
+* Scripted and streamlined release builds and uploads.
+* Rewrote X11 based unit tests, use Xephyr if available.
+* Various bug fixes, code cleanups and dead code removal.
+* Greatly extended the test suite, added more test automation means.
+* Documentation & example updates, see: http://dev.testbit.eu/rapicorn/latest/
+
+Rapicorn 10.08.0:	(2010-08-20)
 
 * Introduced Cairo dependency.
 * Introduced C++ TR1 dependency (for shared_ptr, etc).
@@ -37,7 +69,7 @@ Rapicorn 10.08.0: - Fri Aug 20 23:01:20 CEST 2010
 * Linker optimizations to improve ELF relocations.
 * Loads of other cleanups and bug fixes.
 
-Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
+Rapicorn 8.4.0:		(2008-04-24)
 
 * Changed versioning scheme to YEAR.MONTH.REVISION.
 * License update to GNU LGPL 2.1.
@@ -63,7 +95,7 @@ Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
 * Misc compiler and threading fixes, depend on g++-3.4.6.
 * Lots of bug fixes, cleanups and improved test coverage.
 
-Rapicorn 0.1.2: - Mon Jan 22 20:20:14 2007
+Rapicorn 0.1.2:		(2007-01-22)
 
 * added Image support for PNG images.
 * added HSlider, VSlider, Arrow, dot-grid.
@@ -91,7 +123,7 @@ Known Issues:
 + instabilities upon main loop exit.
 + possible build issues with g++ versions other than 3.4.
 
-Rapicorn 0.1.1: - Sun Jul 31 14:25:36 2005
+Rapicorn 0.1.1:		(2005-07-31)
 
 * overhaul of rendering logic.
 * added Arrangement.
@@ -100,7 +132,7 @@ Rapicorn 0.1.1: - Sun Jul 31 14:25:36 2005
 * added Image item displaying GdkPixbuf pixstreams.
 * speed ups and many fixes.
 
-Rapicorn 0.1.0: - Tue Apr 19 14:32:48 2005
+Rapicorn 0.1.0:		(2005-04-19)
 
 * added basic class hierarchy, properties.
 * added Affine transforms.
