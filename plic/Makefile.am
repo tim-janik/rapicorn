@@ -80,7 +80,7 @@ builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
 	$(Q) rm -f $(@F).typ xtmp-$(@F)
 $(srcdir)/../rcore/plicutypes.cc: builtins.cc
 noinst_DATA = builtins.cc
-EXTRA_DIST += builtins.cc
+EXTRA_DIST += builtins.cc builtins.idl
 CLEANFILES += builtins.cc
 
 # == Plic Dependencies ==
