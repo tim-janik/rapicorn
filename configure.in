@@ -290,7 +290,7 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     dnl # (AM_GLIB_DEFINE_LOCALEDIR() could do this if it would do AC_SUBST())
     saved_prefix="$prefix" ; saved_exec_prefix="$exec_prefix"
     test "x$prefix" = xNONE && prefix="$ac_default_prefix"
-    if [ "x$CATOBJEXT" = "x.mo" ] ; then
+    if test "x$CATOBJEXT" = "x.mo" ; then
       test "x$exec_prefix" = xNONE && exec_prefix="$prefix" # needs $prefix
       pkglocaledir=`eval echo "${libdir}/locale"` # needs $exec_prefix
     else
