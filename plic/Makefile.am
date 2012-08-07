@@ -48,7 +48,6 @@ ${PLICV}: plic.py Parser.py
 	$(Q) cp -p xgen-$(@F) $@
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
-EXTRA_DIST += plic.idl
 
 # == Build runtime.hh runtime.cc ==
 runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
@@ -72,7 +71,6 @@ EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc
 CLEANFILES += runtime.hh runtime.cc
 
 # == Plic Builtins ==
-EXTRA_DIST += builtins.typ
 builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
 	$(AM_V_GEN)
 	$(Q) ${PLICINT} --system-typedefs $< -G TypeMap -o $(@F).typ
@@ -80,8 +78,9 @@ builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
 	$(Q) cp -p xtmp-$(@F) $@
 	$(Q) rm -f $(@F).typ xtmp-$(@F)
 $(srcdir)/../rcore/plicutypes.cc: builtins.cc
-CLEANFILES += builtins.cc
 noinst_DATA = builtins.cc
+EXTRA_DIST += builtins.cc
+CLEANFILES += builtins.cc
 
 # == Plic Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${PLICV})/pyutils

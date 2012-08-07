@@ -30,8 +30,6 @@ testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 EXTRA_DIST        += testpixs.c testpixs.png
 
-EXTRA_DIST        += testtypes.idl
-
 
 # === test rules ===
 # validate failing assertions and fatal aborting
