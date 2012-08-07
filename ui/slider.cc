@@ -448,6 +448,7 @@ protected:
             m_coffset = 0;
             handled = true;
           }
+        (void) proper_release; // silence compiler
         break;
       default: break;
       }

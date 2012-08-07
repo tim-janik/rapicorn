@@ -92,7 +92,7 @@ ArrangementImpl::size_request (Requisition &requisition)
     {
       ItemImpl &child = *cw;
       /* size request all children */
-      Requisition rq = child.requisition();
+      // Requisition rq = child.requisition();
       if (!child.allocatable())
         continue;
       chspread |= child.hspread();
