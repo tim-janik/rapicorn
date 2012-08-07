@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS	     = . rsvg tests
+SUBDIRS	     = . tests
 
 INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
 DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
@@ -199,7 +199,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
-	&& echo	'#define RAPICORN_SVGDIR		"${rapicornsvgdir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DATADIR       	"${rapicorndatadir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
