@@ -6,8 +6,8 @@ PyRapicorn Loop Test
 """
 
 import sys
-import Rapicorn1008 as Rapicorn  # Rapicorn modules are versioned
-import Rapicorn1008.main as Main # FIXME: provide by default?
+import Rapicorn1208 as Rapicorn  # Rapicorn modules are versioned
+import Rapicorn1208.main as Main # FIXME: provide by default?
 
 # initialize application
 app = Rapicorn.app_init ("PyRapicorn-Loop-Test")  # unique application name
