@@ -9,8 +9,8 @@ PY_TARGETS	= pyhello.py
 docdir        	= ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 tutorialdir   	= ${docdir}/tutorial
 tutorial_DATA	= $(DOX_FILES) $(PY_TARGETS)
-CLEANFILES  	= $(PY_TARGETS) xtmp-*
-EXTRA_DIST  	= $(DOX_FILES)
+CLEANFILES     += $(PY_TARGETS) xtmp-*
+EXTRA_DIST     += $(DOX_FILES)
 
 # sed: enter @code, print empty newline, print and loop lines unil @endcode
 EXTRACT_CODE_ENDCODE = sed -n '/@code/{ s/.*//; :MORE p; n; /@endcode/!bMORE; }'

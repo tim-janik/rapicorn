@@ -7,9 +7,8 @@ DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEA
 # variables
 noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
-EXTRA_DIST       = $(TEST_PYPROGS)
 XML_FILES        =
-EXTRA_DIST      += $(XML_FILES)
+EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
 X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
@@ -17,10 +16,7 @@ X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREX
 # === tests ===
 TEST_PYPROGS =
 TEST_PYPROGS     += simple.py
-simple_py_SOURCES = simple.py
 TEST_PYPROGS     += loop.py
-loop_py_SOURCES   = loop.py
-
 
 # === python-call-info ===
 python-call-info:

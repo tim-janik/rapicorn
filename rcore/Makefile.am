@@ -6,7 +6,6 @@ SUBDIRS	     = . rsvg tests
 INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
 DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
 	       -D__RAPICORN_BUILD__
-PLICINT	     = $(top_builddir)/plic/plic-intern
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
@@ -62,7 +61,7 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_D
 
 # == Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc
-CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
