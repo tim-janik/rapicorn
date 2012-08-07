@@ -4,9 +4,10 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . po plic rcore ui rope tools tests pytests examples docs web
+SUBDIRS     = . po plic rcore ui rope tools tests pytests examples docs web
 
-docdir  = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
@@ -109,11 +110,16 @@ check-am: check-dynamic_cast check-list_properties # run source code checks befo
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
 
-# === Release Rule Configuration ===
-RELEASE_VERSION   = $(RAPICORN_VERSION)
-RELEASE_REVNAME   = RAPICORN_REVISION_VERSION
-RELEASE_DESTHOST  = testbit.eu
-RELEASE_DESTPATH  = dist/rapicorn
-RELEASE_CHANGELOG = ChangeLog
-RELEASE_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
-# Makefile.decl introduced rules: ChangeLog release-upload
+# == ChangeLog & Release Rules ==
+ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
+	$(srcdir)/mkrelease.sh ChangeLog -R 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+noinst_DATA += ChangeLog
+EXTRA_DIST  += ChangeLog mkrelease.sh
+release-news:
+	@$(srcdir)/mkrelease.sh news
+release-check:
+	@echo "Checking for unlisted contributors..."
+	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
+release-upload: ChangeLog
+	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.in:RAPICORN_REVISION_VERSION
+.PHONY: release-news release-check release-upload
