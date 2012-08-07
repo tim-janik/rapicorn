@@ -1,54 +1,50 @@
 The Rapicorn Toolkit
 ====================
 
-We believe most things in a toolkit implementation will benefit from
-proper application of modern technologies (e.g. pthreads, XCB, Cairo,
-compositing, IDL, XML notation, path evaluation, DSLs, unit tests, SVG).
-Based on this, Rapicorn is developed and aims to significantly improve
-developer efficiency and user experience.
+Rapicorn is a toolkit for rapid development of user interfaces for C++ and
+python development. Much is still in prototype/alpha development stage, but
+a strong set of foundation technologies has already been established.
+Everybody is free to participate with ideas, code or wiki contributions,
+and artwork (we still need a logo, and always need icons and SVG themes).
 
-Rapicorn brings UI-design, UI-notation and UI-programming as close
-together as possible. To accomplish this, it provides conscise ways
-for UI notation, usable also throughout design phases.
-Simple but powerful programming mechanisms are provided to automate
-binding of programming and GUI logic and to minimize manual work.
+Rapicorn brings UI-design, UI-notation and UI-programming as close together
+as possible. To accomplish this, it provides conscise ways for UI notation,
+usable also throughout design phases.
+Simple but powerful programming mechanisms are provided to automate binding
+of programming and GUI logic and to minimize manual work.
 
-Cairo is planned to be used for rendering tasks, and Pango is currently
-used for text rendering. A more extensive overview is provided online:
+Cairo is used for all rendering tasks, and Pango is currently used for text
+rendering. A more extensive overview is provided online:
   http://rapicorn.org/introduction.html
 
+Web pages and further resources can be found at:
+
+  http://rapicorn.org
+
+A mailing list for Rapicorn development and feedback:
+
+  https://groups.google.com/d/forum/rapicorn
+  rapicorn@googlegroups.com
+
 A programming tutorial can be found under:
-  ${prefix}/doc/rapicorn<VERSION>/tutorial/
+  http://dev.testbit.eu/rapicorn/12.08/rapicorn-pyhello.html
   http://rapicorn.org/tutorial.html
-
-Existing Features
------------------
-
-Rapicorn supports an item hierarchy with cross-references, type safe
-per-object signal emissions, a Gtk+ based blitting backend, a Pango
-based text rendering backend, event processing and focus handling.
-It comes with a set of core widgets such as buttons, sliders, a scroll
-area, table based layout containers and widgets to paint foreground
-or background elements.
-It provides an XML markup parser that allows full GUI specifications
-to be written in XML, more of which is detailed here:
-  http://blogs.gnome.org/view/timj/2005/07/31/0
-
 
 Dependencies
 ============
 
 In order to build Rapicorn from release tarballs, a recent version of
-libpng, Pango and Gtk+ as well as Python 2.5 are currently needed.
+libpng, Cairo, Pango and Gtk+ as well as Python 2.5 are currently needed.
 The sources for the required packages can be found here:
 
-	http://gtk.org/download.html
-	http://sourceforge.net/projects/libpng/
-	http://www.python.org/download/releases/
+  http://gtk.org/download.html
+  http://cairographics.org/download/
+  http://sourceforge.net/projects/libpng/
+  http://www.python.org/download/releases/
 
 As Debian package list:
 
-	libgtk2.0-dev libpango1.0-dev libpng12-dev python2.5-dev
+  libpng12-dev libcairo2-dev libpango1.0-dev libgtk2.0-dev python2.5-dev
 
 Rapicorn tends to hit GNU C++ compiler bugs fairly frequently, so if you
 have problems compiling the code, or get segfaults in STL source files,
@@ -58,24 +54,10 @@ Compiling with a different compiler version than the default on your
 system and running all checks Rapicorn offers (they should all succeed)
 can be done with commands like:
 
-  export CC=gcc-4.2 CXX=g++-4.2 CPP=gcc-4.2\ -E CPPCXX=g++-4.2\ -E
+  export CC=gcc-4.6 CXX=g++-4.6 "CPP=gcc-4.6 -E" "CPPCXX=g++-4.6 -E"
   ./configure
   make all install
-  make report # report runs fast tests, slow tests and performance tests
-
-Web pages and further resources can be found at:
-
-  http://rapicorn.org
-
-A mailing list for Rapicorn development and feedback:
-
-  http://rapicorn.org/pipermail/rapicorn-list/
-  http://rapicorn.org/mailman/listinfo/rapicorn-list
-
-Roadmap and planning of steps ahead:
-
-  http://rapicorn.org/roadmap.html
-
+  make report # execute fast tests, performance tests and slow tests
 
 Installation
 ============
