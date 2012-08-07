@@ -416,15 +416,15 @@ struct LesserItemByHBand {
   {
     const Allocation &a1 = i1->allocation();
     const Allocation &a2 = i2->allocation();
-    /* sort items by horizontal bands first */
-    if (a1.y >= a2.y + a2.height)
-      return true;
+    // sort items by horizontal bands first
     if (a1.y + a1.height <= a2.y)
+      return true;
+    if (a1.y >= a2.y + a2.height)
       return false;
-    /* sort items with overlapping horizontal bands by vertical position */
+    // sort vertically overlapping items by horizontal position
     if (a1.x != a2.x)
       return a1.x < a2.x;
-    /* resort to center */
+    // resort to center
     Point m1 (a1.x + a1.width * 0.5, a1.y + a1.height * 0.5);
     Point m2 (a2.x + a2.width * 0.5, a2.y + a2.height * 0.5);
     if (m1.y != m2.y)
@@ -436,10 +436,10 @@ struct LesserItemByHBand {
 
 struct LesserItemByDirection {
   FocusDirType dir;
-  Point        middle;
+  Point        anchor;
   LesserItemByDirection (FocusDirType d,
                          const Point &p) :
-    dir (d), middle (p)
+    dir (d), anchor (p)
   {}
   double
   directional_distance (const Allocation &a) const
@@ -447,37 +447,37 @@ struct LesserItemByDirection {
     switch (dir)
       {
       case FOCUS_RIGHT:
-        return a.x - middle.x;
+        return a.x - anchor.x;
       case FOCUS_UP:
-        return middle.y - (a.y + a.height);
+        return anchor.y - (a.y + a.height);
       case FOCUS_LEFT:
-        return middle.x - (a.x + a.width);
+        return anchor.x - (a.x + a.width);
       case FOCUS_DOWN:
-        return a.y - middle.y;
+        return a.y - anchor.y;
       default:
-        return -1;      /* unused */
+        return -1;      // unused
       }
   }
   bool
   operator() (ItemImpl *const &i1,
               ItemImpl *const &i2) const
   {
-    /* calculate item distances along dir, dist >= 0 lies ahead */
+    // calculate item distances along dir, dist >= 0 lies ahead
     const Allocation &a1 = i1->allocation();
     const Allocation &a2 = i2->allocation();
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
-    /* sort items along dir */
+    // sort items along dir
     if (dd1 != dd2)
       return dd1 < dd2;
-    /* same horizontal/vertical band distance, sort by closest edge distance */
-    dd1 = a1.dist (middle);
-    dd2 = a2.dist (middle);
+    // same horizontal/vertical band distance, sort by closest edge distance
+    dd1 = a1.dist (anchor);
+    dd2 = a2.dist (anchor);
     if (dd1 != dd2)
       return dd1 < dd2;
-    /* same edge distance, resort to center distance */
-    dd1 = middle.dist (Point (a1.x + a1.width * 0.5, a1.y + a1.height * 0.5));
-    dd2 = middle.dist (Point (a2.x + a2.width * 0.5, a2.y + a2.height * 0.5));
+    // same edge distance, resort to center distance
+    dd1 = anchor.dist (Point (a1.x + a1.width * 0.5, a1.y + a1.height * 0.5));
+    dd2 = anchor.dist (Point (a2.x + a2.width * 0.5, a2.y + a2.height * 0.5));
     return dd1 < dd2;
   }
 };
