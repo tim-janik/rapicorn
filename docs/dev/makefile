@@ -53,7 +53,9 @@ $(SRCTREE):
 
 STRIP_SNIPPET_MARKS = \
 	-e '/^ *<span class="comment"> *\/\/\/ *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *$$/d' \
-	-e   's,<span class="comment"> */// *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *</span>\n\?,,'
+	-e   's,<span class="comment"> */// *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *</span>\n\?,,' \
+	-e '/^ *\(<span class="preprocessor"> *\)\?\#  *\[[A-Za-z0-9+_-]\+-EXAMPLE\]\( *<\/span>\)\? *$$/d' \
+	-e 's, *<span class="preprocessor"> *\#  *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *\n\?,,'
 
 all-docs: $(git_stamp) doxygen.cfg
 	rm -rf html.tmp/ && mkdir -p html.tmp/
