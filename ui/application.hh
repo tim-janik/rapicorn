@@ -25,6 +25,7 @@ public:
                                               const StringSeq &arguments = StringSeq());
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
+  virtual void        close_all              ();
   virtual WindowIface*query_window           (const String &selector);
   virtual WindowList  query_windows          (const String &selector);
   virtual WindowList  list_windows           ();

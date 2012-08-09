@@ -214,8 +214,16 @@ ApplicationIface::finishable ()
 }
 
 void
-ApplicationIface::close ()
+ApplicationImpl::close_all ()
 {
+  vector<WindowIface*> candidates = m_windows;
+  for (auto wip : candidates)
+    {
+      auto alive = find (m_windows.begin(), m_windows.end(), wip);
+      if (alive != m_windows.end())
+        wip->close();
+    }
+  // FIXME: use WindowImpl::close_all
 }
 
 WindowIface*

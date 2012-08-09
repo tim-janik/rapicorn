@@ -144,7 +144,7 @@ interface Application {
   Window        create_window   (string window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
   bool          finishable      ();                     ///< Indicates whether all windows and other primary event sources are gone.
   signal void   missing_primary ();                     ///< Indicates the Application entering finishable() state.
-  void          close           ();
+  void          close_all       () = 0;                 ///< Forces closing of all windows.
   Window        query_window    (string selector) = 0;  ///< Returns first Window match for @a selector.
   WindowList    query_windows   (string selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
