@@ -547,13 +547,18 @@ string_to_cescape (const String &str)
   String buffer;
   for (String::const_iterator it = str.begin(); it != str.end(); it++)
     {
-      uint8 d = *it;
-      if (d < 32 || d > 126 || d == '?')
-        buffer += string_cprintf ("\\%03o", d);
-      else if (d == '\\')
-        buffer += "\\\\";
-      else if (d == '"')
-        buffer += "\\\"";
+      const uint8 d = *it;
+      if      (d == '\a')       buffer +=  "\\a";
+      else if (d == '\b')       buffer +=  "\\b";
+      else if (d == '\t')       buffer +=  "\\t";
+      else if (d == '\n')       buffer +=  "\\n";
+      else if (d == '\v')       buffer +=  "\\v";
+      else if (d == '\f')       buffer +=  "\\f";
+      else if (d == '\r')       buffer +=  "\\r";
+      else if (d == '"')        buffer += "\\\"";
+      else if (d == '\\')       buffer += "\\\\";
+      else if (d < 32 || d > 126)
+        buffer += string_printf ("\\%03o", d);
       else
         buffer += d;
     }
@@ -595,6 +600,7 @@ string_from_cquote (const String &input)
                     out += char (oc);
                     i--;
                     break;
+                  case 'a':     out += '\a';            break;
                   case 'n':     out += '\n';            break;
                   case 'r':     out += '\r';            break;
                   case 't':     out += '\t';            break;
