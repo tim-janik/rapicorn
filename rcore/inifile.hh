@@ -15,8 +15,8 @@ class IniFile : protected NonCopyable {
   //bool        value           (const String &dotpath, const String &value);
   const StringVector& section   (const String &name) const;
 public:
-  explicit      IniFile         (const String &res_ini);        ///< Construct IniFile from Ini resource blob.
-  explicit      IniFile         (const String &ini_string,int); ///< Construct IniFile from Ini string.
+  explicit      IniFile         (const String &res_ini);        ///< Construct IniFile from INI resource blob.
+  explicit      IniFile         (const String &ini_string,int); ///< Construct IniFile from INI string.
   //String      get             (const String &section, const String &key, const String &locale = "") const;
   StringVector  sections        () const;                       ///< List all sections.
   bool          has_section     (const String &section) const;  ///< Check presence of a section.

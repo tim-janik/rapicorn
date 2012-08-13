@@ -28,6 +28,7 @@ namespace Rapicorn {
 
 /* FIXME: possible IniFile improvements
    - support \xUUUU unicode escapes in strings
+   - support \s for space (desktop-entry-spec)
    - support value list parsing, using ';' as delimiters
    - support current locale matching, including locale aliases
    - support merging of duplicates
