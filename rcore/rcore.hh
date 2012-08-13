@@ -4,6 +4,7 @@
 
 #include <rcore/rapicornconfig.h>
 #include <rcore/enumdefs.hh>
+#include <rcore/inifile.hh>
 #include <rcore/platform.hh>
 #include <rcore/debugtools.hh>
 #include <rcore/loop.hh>
