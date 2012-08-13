@@ -22,3 +22,16 @@
   TEST   DataList/Mixed:                                                 OK
 # Test:  DataList/END ...
   TEST   DataList/END:                                                   OK
+# Test:  IniFiles/Content Check ...
+  Section With Spaces And Comment.longvalue1="value contains line continuation"
+  Section With Spaces And Comment.longvalue2="value contains line continuation"
+  Section With Spaces And Comment.spacings=" \tspacing@start and spacing@end\f\t "
+  simple-section.key1="1"
+  simple-section.indented="value"
+  simple-section.empty=""
+  simple-section.colon="assignment"
+  simple-section.simple-key="simple-value"
+  simple-section.string-key="string with # Hash"
+  simple-section.name[de]="DE localized key"
+  simple-section.name["en_US.UTF-8"]="US localized key"
+  TEST   IniFiles/Content Check:                                         OK
