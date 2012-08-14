@@ -3,7 +3,7 @@
 #include "clientapi.hh" // includes pixmap.hh
 #endif
 #include "strings.hh"
-#include "utilities.hh"
+#include "blobres.hh"
 #include <errno.h>
 #include <math.h>
 #include <cstring>
@@ -46,7 +46,7 @@ PixmapT<Pixbuf>::PixmapT (const String &res_png) :
   m_pixbuf (new Pixbuf())
 {
   errno = ENOENT;
-  ResourceBlob blob = ResourceBlob::load (res_png);
+  Blob blob = Blob::load (res_png);
   if (blob.size() && load_png (blob.size(), blob.data()))
     errno = 0;
   if (errno)
@@ -151,11 +151,11 @@ PixmapT<Pixbuf>::load_png (const String &filename, bool tryrepair)
 }
 
 template<class Pixbuf> bool
-PixmapT<Pixbuf>::load_png (size_t nbytes, const uint8 *bytes, bool tryrepair)
+PixmapT<Pixbuf>::load_png (size_t nbytes, const char *bytes, bool tryrepair)
 {
   if (!bytes)
     return false;
-  return anon_load_png (*this, nbytes, (const char*) bytes) || tryrepair;
+  return anon_load_png (*this, nbytes, bytes) || tryrepair;
 }
 
 template<class Pixbuf> void

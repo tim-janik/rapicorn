@@ -652,11 +652,12 @@ binary_lookup_tests()
 }
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
-/// [ResourceBlob-EXAMPLE]
+/// [Blob-EXAMPLE]
 // Declare text resources for later use in a program.
 RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
 RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "res:tests/text_resource.txt");
-// If a resource data length is given, it must be correct (and may or may not include the trailing zero).
+
+// If a resource data length is given, it must match the initializer size (it may omit the trailing zero).
 RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
 RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "res:tests/digit_resource.txt", 10);
 
@@ -664,18 +665,20 @@ static void // Access a previously declared resource from anywhere within a prog
 access_text_resources ()
 {
   // Load a Blob from "tests/text_resource.txt"
-  ResourceBlob blob = ResourceBlob::load ("res:tests/text_resource.txt");
+  Blob blob = Blob::load ("res:tests/text_resource.txt");
   assert (blob.size() > 0); // Verify lookup success.
-  // Access the Blob as string (automatically strips the trailing 0).
+
+  // Access the Blob as string (automatically strips trailing 0s).
   std::string text = blob.string();
-  assert (text == "Alpha Beta Gamma\0"); // Verify its contents.
+  assert (text == "Alpha Beta Gamma"); // Verify its contents.
 
   // Load the other defined "tests/digit_resource.txt" blob.
-  blob = ResourceBlob::load ("res:tests/digit_resource.txt");
-  // Check the blobs size and data,
-  assert (10 == blob.size() && 0 == strcmp ((const char*) blob.data(), "0123456789"));
+  blob = Blob::load ("res:tests/digit_resource.txt");
+
+  // Access Blob size and data,
+  assert (10 == blob.size() && 0 == strcmp (blob.data(), "0123456789"));
 }
-/// [ResourceBlob-EXAMPLE]
+/// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
 
 static void // Test Mutextes before g_thread_init()

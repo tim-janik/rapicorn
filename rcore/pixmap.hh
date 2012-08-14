@@ -25,7 +25,7 @@ public:
   uint32&       pixel           (uint x, uint y) { return m_pixbuf->row (y)[x]; }       ///< Retrieve an ARGB pixel value reference.
   uint32        pixel           (uint x, uint y) const { return m_pixbuf->row (y)[x]; } ///< Retrieve an ARGB pixel value.
   bool          load_png        (const String &filename, bool tryrepair = false); ///< Load from PNG file, assigns errno on failure.
-  bool          load_png        (size_t nbytes, const uint8 *bytes, bool tryrepair = false); ///< Load PNG data, sets errno.
+  bool          load_png        (size_t nbytes, const char *bytes, bool tryrepair = false); ///< Load PNG data, sets errno.
   bool          save_png        (const String &filename); ///< Save to PNG, assigns errno on failure.
   bool          load_pixstream  (const uint8 *pixstream); ///< Decode and load from pixel stream, assigns errno on failure.
   void          set_attribute   (const String &name, const String &value); ///< Set string attribute, e.g. "comment".

@@ -2,6 +2,7 @@
 #include "inifile.hh"
 #include "unicode.hh"
 #include "strings.hh"
+#include "blobres.hh"
 #include "thread.hh"
 #include <cstring>
 
@@ -313,8 +314,8 @@ IniFile::IniFile (const String &res_ini)
 {
   String input;
   errno = ENOENT;
-  ResourceBlob blob = ResourceBlob::load (res_ini);
-  if (blob.size())
+  Blob blob = Blob::load (res_ini);
+  if (blob)
     input = blob.string();
   else
     {
