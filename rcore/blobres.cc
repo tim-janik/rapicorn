@@ -1,6 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "blobres.hh"
 #include "thread.hh"
+#include <fcntl.h>
+#include <sys/stat.h>
 
 namespace Rapicorn {
 
@@ -90,6 +92,44 @@ ResourceEntry::find_entry (const String &res_name)
   return NULL;
 }
 
+// == StringBlob ==
+struct StringBlob : public BlobResource {
+  String                m_name;
+  String                m_string;
+  explicit              StringBlob      (const String &name, const String &data) : m_name (name), m_string (data) {}
+  virtual String        name            ()      { return m_name; }
+  virtual size_t        size            ()      { return m_string.size(); }
+  virtual const char*   data            ()      { return m_string.c_str(); }
+  virtual String        string          ()      { return m_string; }
+  virtual              ~StringBlob      ()      {}
+};
+
+static String // provides errno on error
+string_read (const String &filename, const int fd, size_t guess)
+{
+  String data;
+  if (guess)
+    data.resize (guess + 1);            // pad by +1 to detect EOF reads
+  else
+    data.resize (4096);                 // default buffering for unknown sizes
+  size_t stored = 0;
+  for (ssize_t l = 1; l > 0; )
+    {
+      if (stored >= data.size())        // only triggered for unknown sizes
+        data.resize (2 * data.size());
+      do
+        l = read (fd, &data[stored], data.size() - stored);
+      while (l < 0 && (errno == EAGAIN || errno == EINTR));
+      stored += MAX (0, l);
+      if (l < 0)
+        DEBUG ("%s: read: %s", filename.c_str(), strerror (errno));
+      else
+        errno = 0;
+    }
+  data.resize (stored);
+  return data;
+}
+
 // == Blob ==
 String          Blob::name   () const { return m_blob->name(); }
 size_t          Blob::size   () const { return m_blob->size(); }
@@ -122,9 +162,25 @@ Blob::load (const String &res_path)
       struct ZinternDeleter { void operator() (const char *d) { zintern_free ((uint8*) d); } };
       return Blob (std::make_shared<ByteBlob<ZinternDeleter>> (res_path, entry->dsize, data, ZinternDeleter()));
     }
-  // FIXME: handle file system lookups for ByteBlob
   errno = 0;
-  return Blob (std::shared_ptr<BlobResource> (nullptr));
+  const int fd = open (res_path.c_str(), O_RDONLY | O_NOCTTY, 0);
+  if (fd < 0)
+    {
+      DEBUG ("%s: open: %s", res_path.c_str(), strerror (errno));
+      return Blob (std::shared_ptr<BlobResource> (nullptr));
+    }
+  struct stat sbuf = { 0, };
+  size_t guess = 0;
+  if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
+    guess = sbuf.st_size;
+  String iodata = string_read (res_path, fd, guess);
+  const int e = errno;
+  close (fd);
+  errno = e;
+  if (errno)
+    return Blob (std::shared_ptr<BlobResource> (nullptr));
+  else // errno == 0
+    return Blob (std::make_shared<StringBlob> (res_path, iodata));
 }
 
 /**

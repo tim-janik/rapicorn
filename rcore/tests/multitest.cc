@@ -681,6 +681,19 @@ access_text_resources ()
 /// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
 
+static void
+more_blob_tests ()
+{
+  Blob fblob = Blob::load (Path::vpath_find (__FILE__));
+  assert (!!fblob);
+  assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos); // random string from this source file
+  fblob = Blob::load ("/proc/cpuinfo");
+  assert (fblob || errno == ENOENT);
+  if (fblob)
+    assert (fblob.string().find ("cpu") != String::npos);
+}
+REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
+
 static void // Test Mutextes before g_thread_init()
 test_before_thread_init()
 {
