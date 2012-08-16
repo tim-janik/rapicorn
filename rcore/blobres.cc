@@ -3,6 +3,7 @@
 #include "thread.hh"
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 
 namespace Rapicorn {
 
@@ -144,43 +145,62 @@ Blob::Blob (const std::shared_ptr<BlobResource> &initblob) :
 Blob
 Blob::load (const String &res_path)
 {
+  // blob from builtin resources
   const ResourceEntry *entry = ResourceEntry::find_entry (res_path);
-  struct NopDeleter { void operator() (const char*) {} }; // prevent delete on const data
+  struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
   if (entry && (entry->dsize == entry->psize ||         // uint8[] array
                 entry->dsize + 1 == entry->psize))      // string initilization with 0-termination
     {
       if (entry->dsize + 1 == entry->psize)
         assert (entry->pdata[entry->dsize] == 0);
-      return Blob (std::make_shared<ByteBlob<NopDeleter>> (res_path, entry->dsize, entry->pdata, NopDeleter()));
+      return Blob (std::make_shared<ByteBlob<NoDelete>> (res_path, entry->dsize, entry->pdata, NoDelete()));
     }
   else if (entry && entry->psize && entry->dsize == 0)  // variable length array with automatic size
-    return Blob (std::make_shared<ByteBlob<NopDeleter>> (res_path, entry->psize, entry->pdata, NopDeleter()));
-  else if (entry && entry->psize < entry->dsize)        // compressed
+    return Blob (std::make_shared<ByteBlob<NoDelete>> (res_path, entry->psize, entry->pdata, NoDelete()));
+  // blob from compressed resources
+  if (entry && entry->psize < entry->dsize)
     {
       const uint8 *u8data = zintern_decompress (entry->dsize, reinterpret_cast<const uint8*> (entry->pdata), entry->psize);
       const char *data = reinterpret_cast<const char*> (u8data);
       struct ZinternDeleter { void operator() (const char *d) { zintern_free ((uint8*) d); } };
       return Blob (std::make_shared<ByteBlob<ZinternDeleter>> (res_path, entry->dsize, data, ZinternDeleter()));
     }
+  // blob from file
   errno = 0;
-  const int fd = open (res_path.c_str(), O_RDONLY | O_NOCTTY, 0);
+  const int fd = open (res_path.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0);
   if (fd < 0)
     {
       DEBUG ("%s: open: %s", res_path.c_str(), strerror (errno));
       return Blob (std::shared_ptr<BlobResource> (nullptr));
     }
   struct stat sbuf = { 0, };
-  size_t guess = 0;
+  size_t file_size = 0;
   if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
-    guess = sbuf.st_size;
-  String iodata = string_read (res_path, fd, guess);
-  const int e = errno;
+    file_size = sbuf.st_size;
+  // blob via mmap
+  void *maddr;
+  if (file_size >= 128 * 1024 &&
+      MAP_FAILED != (maddr = mmap (NULL, file_size, PROT_READ, MAP_SHARED | MAP_DENYWRITE | MAP_POPULATE, fd, 0)))
+    {
+      close (fd); // mmap keeps its own file reference
+      struct MunmapDeleter {
+        const size_t length; MunmapDeleter (size_t l) : length (l) {}
+        void operator() (const char *d) { munmap ((void*) d, length); }
+      };
+      return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (res_path, file_size, (const char*) maddr, MunmapDeleter (file_size)));
+    }
+  // blob via read
+  String iodata = string_read (res_path, fd, file_size);
+  int e = errno;
   close (fd);
   errno = e;
-  if (errno)
-    return Blob (std::shared_ptr<BlobResource> (nullptr));
-  else // errno == 0
+  if (!errno)
     return Blob (std::make_shared<StringBlob> (res_path, iodata));
+  // blob loading error
+  e = errno;
+  Blob errb = Blob (std::shared_ptr<BlobResource> (nullptr));
+  errno = e ? e : ENOENT;
+  return errb;
 }
 
 /**

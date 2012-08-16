@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <errno.h>
 #include <algorithm>
+#include <fcntl.h>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
@@ -684,9 +685,34 @@ REGISTER_TEST ("Resource/Test Example", access_text_resources);
 static void
 more_blob_tests ()
 {
+  // load this source file and check for a random string
   Blob fblob = Blob::load (Path::vpath_find (__FILE__));
   assert (!!fblob);
-  assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos); // random string from this source file
+  assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
+  // create a big example file aceeding internal mmap thresholds
+  String temporary_filename; {
+    char tmp_buffer[L_tmpnam + 1], *tmp_filename = tmpnam (tmp_buffer);
+    assert (tmp_filename);
+    temporary_filename = tmp_filename;
+  }
+  int temporary_fd = open (temporary_filename.c_str(), O_WRONLY | O_EXCL | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 0600);
+  assert (temporary_fd >= 0);
+  String string_data =
+    string_multiply (string_multiply ("blub", 1024), 128) +
+    "LONGshot" +
+    string_multiply (string_multiply ("COOL", 1024), 128) +
+    String ("\0\0\0\0", 4); // 0-termination
+  ssize_t result = write (temporary_fd, string_data.c_str(), string_data.size());
+  assert (result > 0);
+  result = close (temporary_fd);
+  assert (result == 0);
+  // load big example file to excercise mmap() code path
+  fblob = Blob::load (temporary_filename);
+  assert (fblob && fblob.size());
+  assert (fblob.data()[fblob.size() - 1] == 0); // ensure 0-termination for strstr
+  assert (strstr (fblob.data(), "blubblubLONGshotCOOLCOOL") != NULL); // accessing data() avoids string copy
+  unlink (temporary_filename.c_str()); // cleanup example file
+  // load a file with unknown size
   fblob = Blob::load ("/proc/cpuinfo");
   assert (fblob || errno == ENOENT);
   if (fblob)
