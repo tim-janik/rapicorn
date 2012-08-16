@@ -656,11 +656,11 @@ REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 /// [Blob-EXAMPLE]
 // Declare text resources for later use in a program.
 RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
-RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "res:tests/text_resource.txt");
+RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "tests/text_resource.txt");
 
 // If a resource data length is given, it must match the initializer size (it may omit the trailing zero).
 RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
-RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "res:tests/digit_resource.txt", 10);
+RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
 
 static void // Access a previously declared resource from anywhere within a program.
 access_text_resources ()
@@ -686,7 +686,7 @@ static void
 more_blob_tests ()
 {
   // load this source file and check for a random string
-  Blob fblob = Blob::load (Path::vpath_find (__FILE__));
+  Blob fblob = Blob::load ("file:" + Path::vpath_find (__FILE__));
   assert (!!fblob);
   assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
   // create a big example file aceeding internal mmap thresholds
@@ -707,13 +707,13 @@ more_blob_tests ()
   result = close (temporary_fd);
   assert (result == 0);
   // load big example file to excercise mmap() code path
-  fblob = Blob::load (temporary_filename);
+  fblob = Blob::load ("file:" + temporary_filename);
   assert (fblob && fblob.size());
   assert (fblob.data()[fblob.size() - 1] == 0); // ensure 0-termination for strstr
   assert (strstr (fblob.data(), "blubblubLONGshotCOOLCOOL") != NULL); // accessing data() avoids string copy
   unlink (temporary_filename.c_str()); // cleanup example file
   // load a file with unknown size
-  fblob = Blob::load ("/proc/cpuinfo");
+  fblob = Blob::load ("file:///proc/cpuinfo");
   assert (fblob || errno == ENOENT);
   if (fblob)
     assert (fblob.string().find ("cpu") != String::npos);

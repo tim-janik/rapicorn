@@ -1,6 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "blobres.hh"
 #include "thread.hh"
+#include "strings.hh"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -142,11 +143,49 @@ Blob::Blob (const std::shared_ptr<BlobResource> &initblob) :
   m_blob (initblob)
 {}
 
+#define ISASCIIWHITESPACE(c)    (c == ' ' || c == '\t' || (c >= 11 && c <= 13))    // ' \t\v\f\r'
+#define ISALPHA(c)              ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+#define ISDIGIT(c)              ((c >= '0' && c <= '9'))
+#define ISALNUM(c)              (ISALPHA (c) || ISDIGIT (c))
+
+static bool
+split_uri_scheme (const String &uri, String *scheme, String *specificpart)
+{ // parse URI scheme, see: http://tools.ietf.org/html/rfc3986
+  size_t i = 0;
+  // skip spaces before URI
+  while (ISASCIIWHITESPACE (uri[i]))
+    i++;
+  const size_t sstart = i;
+  // schemes start with an ALPHA
+  if (ISALPHA (uri[i]))
+    i++;
+  else
+    return false;
+  // schemes contain ALPHA, DIGIT, or "+-."
+  while (ISALNUM (uri[i]) || uri[i] == '+' || uri[i] == '-' || uri[i] == '.')
+    i++;
+  // schemes are always separated by a colon
+  if (uri[i] == ':')
+    i++;
+  else
+    return false;
+  // actual splitting
+  *scheme = string_tolower (uri.substr (sstart, i - sstart));
+  *specificpart = uri.substr (i);
+  return true;
+}
+
 Blob
 Blob::load (const String &res_path)
 {
+  String scheme, specificpart;
+  if (!split_uri_scheme (res_path, &scheme, &specificpart))
+    { // fallback to file paths
+      scheme = "file:";
+      specificpart = res_path;
+    }
   // blob from builtin resources
-  const ResourceEntry *entry = ResourceEntry::find_entry (res_path);
+  const ResourceEntry *entry = scheme == "res:" ? ResourceEntry::find_entry (specificpart) : NULL;
   struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
   if (entry && (entry->dsize == entry->psize ||         // uint8[] array
                 entry->dsize + 1 == entry->psize))      // string initilization with 0-termination
@@ -167,7 +206,7 @@ Blob::load (const String &res_path)
     }
   // blob from file
   errno = 0;
-  const int fd = open (res_path.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0);
+  const int fd = scheme == "file:" ? open (specificpart.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0) : -1;
   if (fd < 0)
     {
       DEBUG ("%s: open: %s", res_path.c_str(), strerror (errno));
