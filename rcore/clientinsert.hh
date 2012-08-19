@@ -14,7 +14,7 @@ class_scope:StringSeq:
 
 class_scope:Pixbuf:
   /// Construct Pixbuf at given width and height.
-  explicit        PixbufStruct (uint w, uint h) : row_length (0) { pixels.resize (row_length, h); }
+  explicit        PixbufStruct (uint w, uint h) : row_length (0) { pixels.resize (w, h); }
   /// Reset width and height and resize pixel sequence.
   void            resize       (uint w, uint h) { row_length = w; pixels.resize (row_length * h); }
   /// Access row as endian dependant ARGB integers.
@@ -24,7 +24,7 @@ class_scope:Pixbuf:
   /// Width of the Pixbuf.
   int             width        () const         { return row_length; }
   /// Height of the Pixbuf.
-  int             height       () const         { return pixels.size() / row_length; }
+  int             height       () const         { return row_length ? pixels.size() / row_length : 0; }
 
 IGNORE: // close last _scope
 }; // close dummy class scope
