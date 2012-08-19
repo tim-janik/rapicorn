@@ -5,14 +5,17 @@ EXTRA_DIST =
 CLEANFILES =
 noinst_DATA =
 
-# == Bitmaps ==
-RES_BITMAPS = $(strip \
+# == Images ==
+RES_IMAGES = $(strip 		\
+	image-broken.svg	\
+)
+OTHER = $(strip			\
 )
 
 # == Resource Pairs (Name, File) ==
-RES_PAIRS   = $(foreach file, $(RES_BITMAPS), icons/$(notdir $(file)) $(file))
-RES_FILES   = $(RES_BITMAPS)
-EXTRA_DIST += $(RES_FILES)
+RES_PAIRS   = $(foreach file, $(RES_IMAGES), icons/$(notdir $(file)) $(file))
+RES_FILES   = $(RES_IMAGES)
+EXTRA_DIST += $(RES_FILES) $(OTHER)
 
 # == Rules ==
 resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
