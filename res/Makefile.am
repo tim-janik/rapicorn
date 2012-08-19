@@ -1,27 +1,30 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
-ZINTERN    = ../rcore/rapicorn-zintern
-EXTRA_DIST =
-CLEANFILES =
+ZINTERN     = ../rcore/rapicorn-zintern
+EXTRA_DIST  =
+CLEANFILES  =
 noinst_DATA =
 
-# == Images ==
+# == Resource Files ==
 RES_IMAGES = $(strip 		\
 	image-broken.svg	\
-)
-OTHER = $(strip			\
 	rapicorn.svg		\
 )
+RES_ROOT = $(strip		\
+	stock.ini		\
+)
+RES_FILES   = $(RES_IMAGES) $(RES_ROOT)
+EXTRA_DIST += $(RES_FILES)
 
 # == Resource Pairs (Name, File) ==
-RES_PAIRS   = $(foreach file, $(RES_IMAGES), icons/$(notdir $(file)) $(file))
-RES_FILES   = $(RES_IMAGES)
-EXTRA_DIST += $(RES_FILES) $(OTHER)
+IMAGE_PAIRS = $(foreach file, $(RES_IMAGES), images/$(notdir $(file)) $(file))
+ROOT_PAIRS  = $(foreach file, $(RES_ROOT), $(notdir $(file)) $(file))
 
 # == Rules ==
-resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
-	$(ZINTERN) -r $(RES_PAIRS) >xgen-$(@F)
-	mv xgen-$(@F) $@
-EXTRA_DIST += resources.cc
-CLEANFILES += resources.cc
 noinst_DATA += resources.cc
+CLEANFILES  += resources.cc
+resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
+	$(AM_V_GEN)
+	$(Q) $(ZINTERN) -r $(ROOT_PAIRS)	 > xgen-$(@F)
+	$(Q) $(ZINTERN) -r $(IMAGE_PAIRS)	>> xgen-$(@F)
+	$(Q) mv xgen-$(@F) $@
