@@ -10,6 +10,7 @@ RES_IMAGES = $(strip 		\
 	image-broken.svg	\
 )
 OTHER = $(strip			\
+	rapicorn.svg		\
 )
 
 # == Resource Pairs (Name, File) ==
