@@ -717,6 +717,15 @@ more_blob_tests ()
   assert (fblob || errno == ENOENT);
   if (fblob)
     assert (fblob.string().find ("cpu") != String::npos);
+  // test string blobs
+  const String foo = "foo";
+  fblob = Blob::from (foo);
+  Blob bblob = Blob::from ("bar");
+  assert (fblob && bblob);
+  assert (fblob.string() == foo);
+  assert (bblob.string() == "bar");
+  assert (fblob.string() != bblob.string());
+  assert (fblob.name() != bblob.name());
 }
 REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
 

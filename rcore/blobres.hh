@@ -25,6 +25,8 @@ public:
   static Blob  from   (const String &blob_string);      ///< Create a Blob containing @a blob_string.
 };
 
+// == Resource Macros ==
+
 /// Statically declare a ResourceBlob data variable.
 #define RAPICORN_STATIC_RESOURCE_DATA(IDENT)            \
   static const char __Rapicorn_static_resourceD__##IDENT[] __attribute__ ((__aligned__ (2 * sizeof (size_t))))

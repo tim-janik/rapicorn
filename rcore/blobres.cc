@@ -242,6 +242,19 @@ Blob::load (const String &res_path)
   return errb;
 }
 
+static constexpr uint64
+consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
+{
+  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
+}
+
+Blob
+Blob::from (const String &blob_string)
+{
+  String res_url = string_printf ("res:/.tmp/%016llx", consthash_fnv64a (blob_string.c_str()));
+  return Blob (std::make_shared<StringBlob> (res_url, blob_string));
+}
+
 /**
  * @class Blob
  * Binary data access for builtin resources and files.
