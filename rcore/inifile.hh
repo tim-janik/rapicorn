@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_INIFILE_HH__
 #define __RAPICORN_INIFILE_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/blobres.hh>
 
 namespace Rapicorn {
 
@@ -16,8 +16,11 @@ class IniFile : protected NonCopyable {
   const StringVector& section   (const String &name) const;
 public:
   explicit      IniFile         (const String &res_ini);        ///< Construct IniFile from INI resource blob.
-  explicit      IniFile         (const String &ini_string,int); ///< Construct IniFile from INI string.
+  explicit      IniFile         (Blob blob);                    ///< Construct IniFile from Blob.
+  explicit      IniFile         (const IniFile &source);        ///< Copy constructor.
+  IniFile&      operator=       (const IniFile &source);        ///< Assignment operator.
   //String      get             (const String &section, const String &key, const String &locale = "") const;
+  bool          has_sections    () const;                       ///< Checks if IniFile is non-empty.
   StringVector  sections        () const;                       ///< List all sections.
   bool          has_section     (const String &section) const;  ///< Check presence of a section.
   StringVector  attributes      (const String &section) const;  ///< List all attributes available in @a section.

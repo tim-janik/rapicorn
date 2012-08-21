@@ -2,7 +2,6 @@
 #include "inifile.hh"
 #include "unicode.hh"
 #include "strings.hh"
-#include "blobres.hh"
 #include "thread.hh"
 #include <cstring>
 
@@ -312,30 +311,38 @@ IniFile::load_ini (const String &inputname, const String &data)
 
 IniFile::IniFile (const String &res_ini)
 {
-  String input;
   errno = ENOENT;
   Blob blob = Blob::load (res_ini);
   if (blob)
-    input = blob.string();
-  else
-    {
-      size_t length = 0;
-      char *fmem = Path::memread (res_ini, &length);
-      if (fmem)
-        {
-          input = String (fmem, length);
-          Path::memfree (fmem);
-        }
-      else
-        DEBUG ("IniFile: failed to locate %s: %s", CQUOTE (res_ini), strerror (errno));
-    }
-  if (input.size())
-    load_ini (res_ini, input);
+    load_ini (blob.name(), blob.string());
+  if (m_sections.empty())
+    DEBUG ("empty INI file %s: %s", CQUOTE (res_ini), strerror (errno));
 }
 
-IniFile::IniFile (const String &ini_string, int) // FIXME: use Blob construction instead
+IniFile::IniFile (Blob blob)
 {
-  load_ini ("<string>", ini_string);
+  if (blob)
+    load_ini (blob.name(), blob.string());
+  if (m_sections.empty())
+    DEBUG ("empty INI file %s: %s", CQUOTE (blob ? blob.name() : "<NULL>"), strerror (errno));
+}
+
+IniFile::IniFile (const IniFile &source)
+{
+  *this = source;
+}
+
+IniFile&
+IniFile::operator= (const IniFile &source)
+{
+  m_sections  = source.m_sections;
+  return *this;
+}
+
+bool
+IniFile::has_sections () const
+{
+  return !m_sections.empty();
 }
 
 const StringVector&

@@ -77,7 +77,7 @@ static const char ini_testfile[] = {
 static void
 test_ini_files()
 {
-  IniFile inifile (ini_testfile, 1);
+  IniFile inifile (Blob::from (ini_testfile));
   StringVector rv = inifile.raw_values();
   TASSERT (rv.size() == 11);
   if (Test::logging())
