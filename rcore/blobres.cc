@@ -133,11 +133,11 @@ string_read (const String &filename, const int fd, size_t guess)
 }
 
 // == Blob ==
-String          Blob::name   () const { return m_blob->name(); }
-size_t          Blob::size   () const { return m_blob->size(); }
-const char*     Blob::data   () const { return m_blob->data(); }
-const uint8*    Blob::bytes  () const { return reinterpret_cast<const uint8*> (m_blob->data()); }
-String          Blob::string () const { return m_blob->string(); }
+String          Blob::name   () const { return m_blob ? m_blob->name() : ""; }
+size_t          Blob::size   () const { return m_blob ? m_blob->size() : 0; }
+const char*     Blob::data   () const { return m_blob ? m_blob->data() : NULL; }
+const uint8*    Blob::bytes  () const { return reinterpret_cast<const uint8*> (data()); }
+String          Blob::string () const { return m_blob ? m_blob->string() : ""; }
 
 Blob::Blob (const std::shared_ptr<BlobResource> &initblob) :
   m_blob (initblob)
