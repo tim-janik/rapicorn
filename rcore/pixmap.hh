@@ -6,7 +6,13 @@
 
 namespace Rapicorn {
 
-/// A Pixmap (i.e. PixmapT<Pixbuf>) conveniently wraps a Pixbuf and provides various pixel operations.
+/** Pixmap (PixmapT) is a Pixbuf wrapper template which provides various pixel operations.
+ * A Pixmap really is defined as PixmapT<Pixbuf>, a template class around Pixbuf which
+ * provides automatic memory management, pixel operations and IO functions.
+ * This class stores ARGB pixels of size @a width * @a height. The pixels are stored as unsigned
+ * 32-bit values in native endian format with premultiplied alpha (compatible with libcairo).
+ * The @a comment attribute is preserved during saving and loading by some file formats, such as PNG.
+ */
 template<class Pixbuf>
 class PixmapT {
   std::shared_ptr<Pixbuf> m_pixbuf;
