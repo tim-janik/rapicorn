@@ -17,6 +17,7 @@ rapicorn_public_headers = $(strip	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh	\
 	scrollitems.hh	selector.hh	sinfex.hh	sizegroup.hh	slider.hh	\
+	stock.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
 	screenwindow.hh	\
@@ -32,6 +33,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
 	region.cc	regionimpl.c	\
 	scrollitems.cc	selector.cc	sinfex.cc	sizegroup.cc	slider.cc	\
+	stock.cc	\
 	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
 	screenwindow-gtk.cc	screenwindow.cc	\
