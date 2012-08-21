@@ -17,8 +17,8 @@ RES_FILES   = $(RES_IMAGES) $(RES_ROOT)
 EXTRA_DIST += $(RES_FILES)
 
 # == Resource Pairs (Name, File) ==
-IMAGE_PAIRS = $(foreach file, $(RES_IMAGES), images/$(notdir $(file)) $(file))
-ROOT_PAIRS  = $(foreach file, $(RES_ROOT), $(notdir $(file)) $(file))
+IMAGE_PAIRS = $(foreach file, $(RES_IMAGES), rapicorn/images/$(notdir $(file)) $(file))
+ROOT_PAIRS  = $(foreach file, $(RES_ROOT), rapicorn/$(notdir $(file)) $(file))
 
 # == Rules ==
 noinst_DATA += resources.cc
