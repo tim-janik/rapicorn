@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "image.hh"
+#include "stock.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include <errno.h>
@@ -10,8 +11,8 @@ const PropertyList&
 Image::__aida_properties__()
 {
   static Property *properties[] = {
-    MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "w"),
-    MakeProperty (Image, stock_pixmap, _("Stock Image"), _("Load an image from stock, providing a stock name."), "w"),
+    MakeProperty (Image, stock,  _("Stock Image"), _("Stock id to load a stock image from."), "rw"),
+    MakeProperty (Image, source, _("Image URL"), _("Load an image from a resource or file URL."), "rw"),
   };
   static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
   return property_list;
@@ -35,7 +36,8 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 }
 
 class ImageImpl : public virtual WidgetImpl, public virtual Image {
-  Pixmap           pixmap_;
+  Pixmap        m_pixmap;
+  String        m_image_url, m_stock_id;
 public:
   explicit ImageImpl()
   {}
@@ -58,39 +60,43 @@ public:
   {
     return pixmap_;
   }
-  virtual void
-  stock_pixmap (const String &stock_name)
+  void
+  load_pixmap()
   {
-#if 0 // FIXME
-    P1xmap *pixmap = P1xmap::stock (stock_name);
-    int saved = errno;
-    if (!pixmap)
+    Blob blob = Blob::load ("");
+    if (!m_image_url.empty())
+      blob = Blob::load (m_image_url);
+    if (!blob && !m_stock_id.empty())
+      blob = Stock::stock_image (m_stock_id);
+    m_pixmap = Pixmap (blob);
+    if (m_pixmap.width() * m_pixmap.height() == 0)
       {
-        pixmap = P1xmap::pixstream (get_broken16_pixdata());
-        assert (pixmap);
+        // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
+        m_pixmap = Pixmap();
+        m_pixmap.load_pixstream (get_broken16_pixdata());
       }
-    ref_sink (pixmap);
-    this->pixmap (pixmap);
-    unref (pixmap);
-    errno = saved;
-#endif
   }
   virtual void
-  image_file (const String &filename)
+  source (const String &image_url)
   {
-#if 0 // FIXME
-    P1xmap *pixmap = P1xmap::load_png (filename, true);
-    int saved = errno;
-    if (!pixmap)
-      {
-        pixmap = P1xmap::pixstream (get_broken16_pixdata());
-        assert (pixmap);
-      }
-    ref_sink (pixmap);
-    this->pixmap (pixmap);
-    unref (pixmap);
-    errno = saved;
-#endif
+    m_image_url = image_url;
+    load_pixmap();
+  }
+  virtual String
+  source() const
+  {
+    return m_image_url;
+  }
+  virtual void
+  stock (const String &stock_id)
+  {
+    m_stock_id = stock_id;
+    load_pixmap();
+  }
+  virtual String
+  stock() const
+  {
+    return m_stock_id;
   }
 protected:
   virtual void

@@ -7,17 +7,17 @@
 namespace Rapicorn {
 
 class Image : public virtual WidgetImpl {
-  virtual String        image_file      () const { RAPICORN_ASSERT_UNREACHED(); }
-  virtual String        stock_pixmap    () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
   const PropertyList&   __aida_properties__ ();
 public:
-  virtual void             pixbuf       (const Pixbuf &pixbuf) = 0;
-  virtual Pixbuf           pixbuf       (void) = 0;
-  virtual void /*errno*/   stock_pixmap (const String &stock_name) = 0;
-  virtual void /*errno*/   image_file   (const String &filename) = 0;
+  virtual void          pixbuf  (const Pixbuf &pixbuf) = 0;
+  virtual Pixbuf        pixbuf  () = 0;
+  virtual void          source  (const String &uri) = 0;
+  virtual String        source  () const = 0;
+  virtual void          stock   (const String &stock_id) = 0;
+  virtual String        stock   () const = 0;
 };
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_IMAGE_HH__ */
+#endif  // __RAPICORN_IMAGE_HH__
