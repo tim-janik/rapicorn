@@ -238,7 +238,8 @@ protected:
       }
   }
 public:
-  explicit TestBoxImpl()
+  explicit TestBoxImpl() :
+    m_handler_id (0)
   {}
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
