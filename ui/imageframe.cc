@@ -19,7 +19,7 @@ static const vector<Svg::FileP>&
 list_library_files ()
 {
   static vector<Svg::FileP> *lib_list = NULL;
-  if (once_enter (&lib_list))
+  do_once
     {
       static vector<Svg::FileP> lv;
       const char *rp = getenv ("RAPICORN_SVG");
@@ -31,7 +31,7 @@ list_library_files ()
             if (fp)
               lv.push_back (fp);
           }
-      once_leave (&lib_list, &lv);
+      lib_list = &lv;
     }
   return *lib_list;
 }
