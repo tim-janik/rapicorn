@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_PIXMAP_HH__
 #define __RAPICORN_PIXMAP_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/blobres.hh>
 
 namespace Rapicorn {
 
@@ -20,6 +20,7 @@ public:
   explicit      PixmapT         ();                     ///< Construct Pixmap with 0x0 pixesl.
   explicit      PixmapT         (uint w, uint h);       ///< Construct Pixmap at given width and height.
   explicit      PixmapT         (const Pixbuf &source); ///< Copy-construct Pixmap from a Pixbuf structure.
+  explicit      PixmapT         (Blob &png_blob);       ///< Construct Pixmap from a PNG resource blob.
   explicit      PixmapT         (const String &res_png); ///< Construct Pixmap from a PNG resource blob.
   PixmapT&      operator=       (const Pixbuf &source); ///< Re-initialize the Pixmap from a Pixbuf structure.
   int           width           () const { return m_pixbuf->width(); }  ///< Get the width of the Pixmap.

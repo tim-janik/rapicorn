@@ -42,6 +42,17 @@ PixmapT<Pixbuf>::PixmapT (const Pixbuf &source) :
 }
 
 template<class Pixbuf>
+PixmapT<Pixbuf>::PixmapT (Blob &blob) :
+  m_pixbuf (new Pixbuf())
+{
+  errno = ENOENT;
+  if (blob.size() && load_png (blob.size(), blob.data()))
+    errno = 0;
+  if (errno)
+    DEBUG ("PixmapT: failed to load %s: %s", CQUOTE (blob.name()), strerror (errno));
+}
+
+template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT (const String &res_png) :
   m_pixbuf (new Pixbuf())
 {
