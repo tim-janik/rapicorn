@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
+#define BDEBUG(...)     RAPICORN_KEY_DEBUG ("Blob", __VA_ARGS__)
+
 namespace Rapicorn {
 
 // == BlobResource ==
@@ -124,7 +126,7 @@ string_read (const String &filename, const int fd, size_t guess)
       while (l < 0 && (errno == EAGAIN || errno == EINTR));
       stored += MAX (0, l);
       if (l < 0)
-        DEBUG ("%s: read: %s", filename.c_str(), strerror (errno));
+        BDEBUG ("%s: read: %s", filename.c_str(), strerror (errno));
       else
         errno = 0;
     }
@@ -184,6 +186,7 @@ Blob::load (const String &res_path)
       scheme = "file:";
       specificpart = res_path;
     }
+  int saved_errno;
   // blob from builtin resources
   const ResourceEntry *entry = scheme == "res:" ? ResourceEntry::find_entry (specificpart) : NULL;
   struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
@@ -204,16 +207,20 @@ Blob::load (const String &res_path)
       struct ZinternDeleter { void operator() (const char *d) { zintern_free ((uint8*) d); } };
       return Blob (std::make_shared<ByteBlob<ZinternDeleter>> (res_path, entry->dsize, data, ZinternDeleter()));
     }
+  // handle resource errors
+  if (scheme == "res:")
+    {
+      BDEBUG ("%s resource entry: %s", entry ? "invalid" : "unknown", res_path.c_str());
+      errno = ENOENT;
+      return Blob (std::shared_ptr<BlobResource> (nullptr));
+    }
   // blob from file
   errno = 0;
   const int fd = scheme == "file:" ? open (specificpart.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0) : -1;
-  if (fd < 0)
-    {
-      DEBUG ("%s: open: %s", res_path.c_str(), strerror (errno));
-      return Blob (std::shared_ptr<BlobResource> (nullptr));
-    }
   struct stat sbuf = { 0, };
   size_t file_size = 0;
+  if (fd < 0)
+    goto error;
   if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
     file_size = sbuf.st_size;
   // blob via mmap
@@ -229,16 +236,20 @@ Blob::load (const String &res_path)
       return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (res_path, file_size, (const char*) maddr, MunmapDeleter (file_size)));
     }
   // blob via read
-  String iodata = string_read (res_path, fd, file_size);
-  int e = errno;
-  close (fd);
-  errno = e;
-  if (!errno)
-    return Blob (std::make_shared<StringBlob> (res_path, iodata));
+  {
+    String iodata = string_read (res_path, fd, file_size);
+    saved_errno = errno;
+    close (fd);
+    errno = saved_errno;
+    if (!errno)
+      return Blob (std::make_shared<StringBlob> (res_path, iodata));
+  }
   // blob loading error
-  e = errno;
+ error:
+  saved_errno = errno;
   Blob errb = Blob (std::shared_ptr<BlobResource> (nullptr));
-  errno = e ? e : ENOENT;
+  BDEBUG ("failed to load %s: %s", CQUOTE (res_path), strerror (errno));
+  errno = saved_errno ? saved_errno : ENOENT;
   return errb;
 }
 
