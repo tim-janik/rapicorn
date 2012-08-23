@@ -145,6 +145,10 @@ Blob::Blob (const std::shared_ptr<BlobResource> &initblob) :
   m_blob (initblob)
 {}
 
+Blob::Blob() :
+  m_blob (std::shared_ptr<BlobResource> (nullptr))
+{}
+
 #define ISASCIIWHITESPACE(c)    (c == ' ' || c == '\t' || (c >= 11 && c <= 13))    // ' \t\v\f\r'
 #define ISALPHA(c)              ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
 #define ISDIGIT(c)              ((c >= '0' && c <= '9'))
@@ -177,6 +181,15 @@ split_uri_scheme (const String &uri, String *scheme, String *specificpart)
   return true;
 }
 
+static Blob
+error_result (String url, int fallback_errno = EINVAL, String msg = "failed to load")
+{
+  const int saved_errno = errno ? errno : fallback_errno;
+  BDEBUG ("%s %s: %s", msg.c_str(), CQUOTE (url), strerror (saved_errno));
+  errno = saved_errno;
+  return Blob();
+}
+
 Blob
 Blob::load (const String &res_path)
 {
@@ -186,7 +199,6 @@ Blob::load (const String &res_path)
       scheme = "file:";
       specificpart = res_path;
     }
-  int saved_errno;
   // blob from builtin resources
   const ResourceEntry *entry = scheme == "res:" ? ResourceEntry::find_entry (specificpart) : NULL;
   struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
@@ -209,48 +221,44 @@ Blob::load (const String &res_path)
     }
   // handle resource errors
   if (scheme == "res:")
-    {
-      BDEBUG ("%s resource entry: %s", entry ? "invalid" : "unknown", res_path.c_str());
-      errno = ENOENT;
-      return Blob (std::shared_ptr<BlobResource> (nullptr));
-    }
+    return error_result (res_path, ENOENT, String (entry ? "invalid" : "unknown") + "resource entry");
   // blob from file
-  errno = 0;
-  const int fd = scheme == "file:" ? open (specificpart.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0) : -1;
-  struct stat sbuf = { 0, };
-  size_t file_size = 0;
-  if (fd < 0)
-    goto error;
-  if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
-    file_size = sbuf.st_size;
-  // blob via mmap
-  void *maddr;
-  if (file_size >= 128 * 1024 &&
-      MAP_FAILED != (maddr = mmap (NULL, file_size, PROT_READ, MAP_SHARED | MAP_DENYWRITE | MAP_POPULATE, fd, 0)))
+  if (scheme == "file:")
     {
-      close (fd); // mmap keeps its own file reference
-      struct MunmapDeleter {
-        const size_t length; MunmapDeleter (size_t l) : length (l) {}
-        void operator() (const char *d) { munmap ((void*) d, length); }
-      };
-      return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (res_path, file_size, (const char*) maddr, MunmapDeleter (file_size)));
+      errno = 0;
+      const int fd = open (specificpart.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0);
+      struct stat sbuf = { 0, };
+      size_t file_size = 0;
+      if (fd < 0)
+        return error_result (res_path, ENOENT);
+      if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
+        file_size = sbuf.st_size;
+      // blob via mmap
+      void *maddr;
+      if (file_size >= 128 * 1024 &&
+          MAP_FAILED != (maddr = mmap (NULL, file_size, PROT_READ, MAP_SHARED | MAP_DENYWRITE | MAP_POPULATE, fd, 0)))
+        {
+          close (fd); // mmap keeps its own file reference
+          struct MunmapDeleter {
+            const size_t length; MunmapDeleter (size_t l) : length (l) {}
+            void operator() (const char *d) { munmap ((void*) d, length); }
+          };
+          return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (res_path, file_size, (const char*) maddr, MunmapDeleter (file_size)));
+        }
+      // blob via read
+      errno = 0;
+      String iodata = string_read (res_path, fd, file_size);
+      const int saved_errno = errno;
+      close (fd);
+      errno = saved_errno;
+      if (!errno)
+        return Blob (std::make_shared<StringBlob> (res_path, iodata));
+      // handle file errors
+      return error_result (res_path, ENOENT);
     }
-  // blob via read
-  {
-    String iodata = string_read (res_path, fd, file_size);
-    saved_errno = errno;
-    close (fd);
-    errno = saved_errno;
-    if (!errno)
-      return Blob (std::make_shared<StringBlob> (res_path, iodata));
-  }
-  // blob loading error
- error:
-  saved_errno = errno;
-  Blob errb = Blob (std::shared_ptr<BlobResource> (nullptr));
-  BDEBUG ("failed to load %s: %s", CQUOTE (res_path), strerror (errno));
-  errno = saved_errno ? saved_errno : ENOENT;
-  return errb;
+  // handle URI scheme errors
+  errno = EPROTONOSUPPORT;
+  return error_result (res_path, errno, "unknown resource scheme");
 }
 
 static constexpr uint64

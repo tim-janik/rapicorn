@@ -15,6 +15,7 @@ class Blob {
   _UBool        _bool () const { return m_blob && size() ? _ubool1() : 0; }
   explicit     Blob   (const std::shared_ptr<BlobResource> &initblob);
 public:
+  explicit     Blob   ();                               ///< Default construct a NULL blob.
   String       name   () const;                         ///< Provide the name of this resource Blob.
   size_t       size   () const;                         ///< Retrieve the size of a Blob in bytes, this may be 0.
   const char*  data   () const;                         ///< Access the data of a Blob.
