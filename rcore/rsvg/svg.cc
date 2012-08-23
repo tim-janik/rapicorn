@@ -247,33 +247,34 @@ find_library_file (const String &filename)
 FileP
 File::load (const String &svgfilename)
 {
-  FILE *file = fopen (find_library_file (svgfilename).c_str(), "rb");
-  if (file)
+  Blob blob = Blob::load ("file:///" + find_library_file (svgfilename));
+  const int saved_errno = errno;
+  if (!blob)
     {
-      int errsaved = 0;
-      bool success = false;
-      RsvgHandle *handle = rsvg_handle_new();
-      g_object_ref_sink (handle);
-      uint8 buffer[8192];
-      ssize_t len;
-      while ((len = fread (buffer, 1, sizeof (buffer), file)) > 0)
-        if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
-          break;
-      if (len < 0)
-        errsaved = errno ? errno : EIO;
-      fclose (file);
-      success = success && rsvg_handle_close (handle, NULL);
-      if (success)
-        {
-          FileP fp (new FileImpl (handle));
-          errno = 0;
-          return fp;
-        }
+      FileP fp = FileP();
+      errno = saved_errno ? saved_errno : ENOENT;
+      return fp;
+    }
+  return load (blob);
+}
+
+FileP
+File::load (Blob svg_blob)
+{
+  RsvgHandle *handle = rsvg_handle_new();
+  g_object_ref_sink (handle);
+  const bool success = rsvg_handle_write (handle, svg_blob.bytes(), svg_blob.size(), NULL) && rsvg_handle_close (handle, NULL);
+  if (!success)
+    {
       g_object_unref (handle);
       handle = NULL;
-      errno = errsaved ? errsaved : EINVAL;
+      FileP fp = FileP();
+      errno = ENODATA;
+      return fp;
     }
-  return FileP(); // NULL, errno is set
+  FileP fp (new FileImpl (handle));
+  errno = 0;
+  return fp;
 }
 
 static void

@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_SVG_HH__
 #define __RAPICORN_SVG_HH__
 
-#include <rcore/objects.hh>
+#include <rcore/blobres.hh>
 #include <cairo.h>
 #include <math.h>
 
@@ -56,6 +56,7 @@ public:
   virtual ElementP      lookup          (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
   static  void          add_search_dir  (const String &absdir);         ///< Adds a directory for relative Svg::File::load() calls.
   static  FileP         load            (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
+  static  FileP         load            (Blob svg_blob);        ///< Load an SVG file from a binary SVG resource blob.
 protected: // Impl details
   ~File() {}                            ///< Internal destructor, Svg::FileP automatically manages the File class lifetime.
 };
