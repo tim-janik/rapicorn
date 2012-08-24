@@ -3,7 +3,14 @@
 #include "stock.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include "../rcore/rsvg/svg.hh"
 #include <errno.h>
+
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);        \
+  } while (0)
 
 namespace Rapicorn {
 
@@ -36,8 +43,10 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 }
 
 class ImageImpl : public virtual WidgetImpl, public virtual Image {
-  Pixmap        m_pixmap;
   String        m_image_url, m_stock_id;
+  Pixmap        m_pixmap;
+  Svg::FileP    m_svgf;
+  Svg::ElementP m_svge;
 public:
   explicit ImageImpl()
   {}
@@ -68,8 +77,21 @@ public:
       blob = Blob::load (m_image_url);
     if (!blob && !m_stock_id.empty())
       blob = Stock::stock_image (m_stock_id);
-    m_pixmap = Pixmap (blob);
-    if (m_pixmap.width() * m_pixmap.height() == 0)
+    if (string_endswith (blob.name(), ".svg"))
+      {
+        m_svgf = Svg::File::load (blob);
+        m_svge = m_svgf ? m_svgf->lookup ("") : Svg::Element::none();
+        if (m_svgf && !m_svge)
+          m_svgf = Svg::File::load (Blob());
+        m_pixmap = Pixmap();
+      }
+    else
+      {
+        m_svgf = Svg::File::load (Blob());
+        m_svge = Svg::Element::none();
+        m_pixmap = Pixmap (blob);
+      }
+    if (!m_svge && m_pixmap.width() * m_pixmap.height() == 0)
       {
         // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
         m_pixmap = Pixmap();
@@ -102,8 +124,16 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width += pixmap_.width();
-    requisition.height += pixmap_.height();
+    if (m_svge)
+      {
+        requisition.width += m_svge->bbox().width;
+        requisition.height += m_svge->bbox().height;
+      }
+    else
+      {
+        requisition.width += m_pixmap.width();
+        requisition.height += m_pixmap.height();
+      }
   }
   virtual void
   size_allocate (Allocation area, bool changed)
@@ -134,11 +164,42 @@ protected:
     view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
     return view;
   }
+  void
+  render_svg (RenderContext &rcontext, const Rect &render_rect)
+  {
+    const Allocation &area = allocation();
+    Rect rect = area;
+    rect.intersect (render_rect);
+    if (rect.width > 0 && rect.height > 0)
+      {
+        const uint npixels = rect.width * rect.height;
+        uint8 *pixels = new uint8[int (npixels * 4)];
+        std::fill (pixels, pixels + npixels * 4, 0);
+        cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
+                                                                        rect.width, rect.height, 4 * rect.width);
+        CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+        cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
+        Svg::BBox bbox = m_svge->bbox();
+        const bool rendered = m_svge->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
+        if (rendered)
+          {
+            cairo_t *cr = cairo_context (rcontext, rect);
+            cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
+            cairo_paint (cr);
+          }
+        else
+          critical ("failed to render SVG file");
+        cairo_surface_destroy (surface);
+        delete[] pixels;
+      }
+  }
 public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (pixmap_.width() > 0 && pixmap_.height() > 0)
+    if (m_svge)
+      render_svg (rcontext, rect);
+    else if (m_pixmap.width() > 0 && m_pixmap.height() > 0)
       {
         const Allocation &area = allocation();
         PixView view = adjust_view();
