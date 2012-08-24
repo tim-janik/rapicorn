@@ -42,8 +42,7 @@ StringVector 			string_split             (const String       &string,
                                                           const String       &splitter = "");
 String  			string_join              (const String       &junctor,
                                                           const StringVector &strvec);
-bool    			string_to_bool           (const String &string,
-                                                          bool          empty_default = false);
+bool    			string_to_bool           (const String &string, bool fallback = false);
 String  			string_from_bool         (bool value);
 uint64  			string_to_uint           (const String &string, uint base = 10);
 String  			string_from_uint         (uint64 value);
@@ -86,6 +85,8 @@ String  			string_from_errno        (int         errno_val);
 bool                            string_is_uuid           (const String &uuid_string); /* check uuid formatting */
 int                             string_cmp_uuid          (const String &uuid_string1,
                                                           const String &uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
+bool                            string_startswith        (const String &string, const String &fragment);
+bool                            string_endswith          (const String &string, const String &fragment);
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cescape                                (const String &str);
 String  string_to_cquote                                 (const String &str);
@@ -93,16 +94,10 @@ String  string_from_cquote                               (const String &input);
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);
-String  string_substitute_char                           (const String &input,
-                                                          const char    match,
-                                                          const char    subst);
-void    memset4		   (uint32              *mem,
-                            uint32               filler,
-                            uint                 length);
-String  string_vector_find (const StringVector  &svector,
-                            const String        &key,
-                            const String        &fallback);
+String  string_substitute_char                           (const String &input, const char match, const char subst);
+String  string_vector_find (const StringVector &svector, const String &key, const String &fallback);
 StringVector cstrings_to_vector (const char*, ...) RAPICORN_SENTINEL;
+void         memset4		(uint32 *mem, uint32 filler, uint length);
 
 // == String Options ==
 bool    string_option_check     (const String   &option_string,
@@ -115,7 +110,8 @@ void    string_options_split    (const String   &option_string,
                                  const String   &empty_default = "");
 
 // == Strings ==
-class Strings : public std::vector<std::string> /// Convenience Constructor for StringSeq or std::vector<std::string>
+/// Convenience Constructor for StringSeq or std::vector<std::string>
+class Strings : public std::vector<std::string>
 {
   typedef const std::string CS;
 public:

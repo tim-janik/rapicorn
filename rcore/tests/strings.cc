@@ -426,6 +426,18 @@ test_string_options (void)
 }
 REGISTER_TEST ("Strings/String Options", test_string_options);
 
+static void
+test_string_functions (void)
+{
+  TASSERT (string_startswith ("foo", "fo") == true);
+  TASSERT (string_startswith ("foo", "o") == false);
+  TASSERT (string_endswith ("foo", "o") == true);
+  TASSERT (string_endswith ("foo", "oo") == true);
+  TASSERT (string_endswith ("foo", "foo") == true);
+  TASSERT (string_endswith ("foo", "loo") == false);
+}
+REGISTER_TEST ("Strings/String Functions", test_string_functions);
+
 } // Anon
 
 /* vim:set ts=8 sts=2 sw=2: */
