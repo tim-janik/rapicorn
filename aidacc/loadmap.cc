@@ -669,7 +669,7 @@ TypeMap::load_local (std::string filename)
   return type_map;
 }
 
-#include "../plic/builtins.cc" // defines intern_builtins_cc_typ
+#include "./builtins.cc" // defines intern_builtins_cc_typ
 
 TypeMap
 TypeMap::builtins ()

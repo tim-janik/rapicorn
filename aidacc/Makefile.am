@@ -6,7 +6,7 @@ SUBDIRS = . tests
 
 bin_SCRIPTS         = ${PLICV}
 noinst_SCRIPTS      = ${PLICINT}
-cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/plic
+cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/aidacc
 cxxruntime_HEADERS  = runtime.hh runtime.cc cxxstubaux.hh
 PLICLINK	    = plic			## user visible excutable name
 PLICV	            = plic-@PLIC_VERSION@	## installed executable name
@@ -52,7 +52,7 @@ EXTRA_DIST += plic.py
 # == Build runtime.hh runtime.cc ==
 runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(AM_V_GEN)
-	$(Q) echo "// plic/runtime.hh - Plic C++ Runtime API" 		>  xtmp-$(@F)
+	$(Q) echo "// aidacc/runtime.hh - Plic C++ Runtime API"		 > xtmp-$(@F)
 	$(Q) echo "#ifndef __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo "#define __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.hh"' 			>> xtmp-$(@F)
@@ -65,7 +65,10 @@ runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 EXTRA_DIST += xmanifold.py
 runtime.cc: runtypes.cc loadmap.cc Makefile.am
 	$(AM_V_GEN)
-	$(Q) cat $< $(srcdir)/loadmap.cc > xtmp-$(@F)
+	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.cc"'	 > xtmp-$(@F)
+	$(Q) cat $(abs_srcdir)/runtypes.cc		>> xtmp-$(@F)
+	$(Q) echo '# 1 "$(abs_srcdir)/loadmap.cc"'	>> xtmp-$(@F)
+	$(Q) cat $(abs_srcdir)/loadmap.cc		>> xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)
 EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc

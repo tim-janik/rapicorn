@@ -7,12 +7,12 @@ import Decls, GenUtils, re
 
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
-#include <plic/runtime.hh>
+#include <aidacc/runtime.hh>
 """
 
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
-#include <plic/runtime.hh>
+#include <aidacc/runtime.hh>
 """
 
 rapicornsignal_boilerplate = r"""
@@ -46,7 +46,7 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
 
-#include <plic/cxxstubaux.hh>
+#include <aidacc/cxxstubaux.hh>
 """
 
 servercc_boilerplate = r"""

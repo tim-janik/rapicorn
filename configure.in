@@ -360,7 +360,7 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
-# PLIC requirements
+# Aida requirements
 AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
 [
     # Check for working $PYTHON and pythondir
@@ -506,16 +506,16 @@ AC_SUBST(LDFLAGS)
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
-data/Makefile
 po/Makefile.in
-plic/Makefile
-plic/tests/Makefile
-rope/Makefile
+data/Makefile
 rcore/Makefile
 rcore/rsvg/Makefile
 rcore/tests/Makefile
+aidacc/Makefile
+aidacc/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
+rope/Makefile
 tools/Makefile
 tests/Makefile
 pytests/Makefile

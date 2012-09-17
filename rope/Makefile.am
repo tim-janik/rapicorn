@@ -6,7 +6,7 @@ SUBDIRS = . # tests
 INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
-PLICINT   = $(top_builddir)/plic/plic-intern
+PLICINT   = $(top_builddir)/aidacc/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
@@ -51,7 +51,7 @@ CLEANFILES += xgen-py2cpy.py py2cpy.py
 EXTRA_DIST += testpystub.ref PyStub.py
 CLEANFILES += testpystub.pyc
 check-PyStub-gen: $(srcdir)/testpystub.ref
-	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testpystub.ref'"
 check-PyStub-syntax: $(srcdir)/testpystub.ref
 	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
@@ -60,7 +60,7 @@ check-local: check-PyStub-gen check-PyStub-syntax
 # test CxxPyStub
 EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
 check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) \
+	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) \
 	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"

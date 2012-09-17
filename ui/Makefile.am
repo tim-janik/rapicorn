@@ -87,8 +87,8 @@ librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
-PLICINT     = $(top_builddir)/plic/plic-intern
-CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
+PLICINT     = $(top_builddir)/aidacc/plic-intern
+CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
 EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh

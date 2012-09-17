@@ -125,8 +125,8 @@ $(srcdir)/main.cc: configbits.cc
 .PHONY: PHONY_REBUILDS
 
 # === Rapicorn Basics IDL ===
-PLICINT     = $(top_builddir)/plic/plic-intern
-CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
+PLICINT     = $(top_builddir)/aidacc/plic-intern
+CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
 EXTRA_DIST += basics.idl serverinsert.hh
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from basics.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
@@ -137,7 +137,7 @@ serverapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/serverinsert.hh
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl serverapi.hh
 	${PLICINT} -G CxxStub -g servercc --inclusions '"serverapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
+	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.hh
@@ -148,7 +148,7 @@ clientapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/clientinsert.hh
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl clientapi.hh
 	${PLICINT} -G CxxStub -g clientcc --inclusions '"clientapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
+	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
 
