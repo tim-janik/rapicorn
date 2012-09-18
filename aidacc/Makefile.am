@@ -4,15 +4,15 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS = . tests
 
 
-bin_SCRIPTS         = ${PLICV}
-noinst_SCRIPTS      = ${PLICINT}
+bin_SCRIPTS         = ${AIDACCV}
+noinst_SCRIPTS      = ${AIDACC_INTERN}
 cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/aidacc
 cxxruntime_HEADERS  = runtime.hh runtime.cc cxxstubaux.hh
-PLICLINK	    = plic			## user visible excutable name
-PLICV	            = plic-@PLIC_VERSION@	## installed executable name
-PLICINT	            = ./plic-intern		## internal version used during build time
+AIDACCLNK	    = aidacc			## user visible excutable name
+AIDACCV	            = aidacc-@PLIC_VERSION@	## installed executable name
+AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
 CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
-CLEANFILES         += ${PLICINT} ${PLICV}
+CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
 # extra docs
@@ -31,7 +31,7 @@ MAINTAINERCLEANFILES += Parser.py
 # == Build Plic Executables ==
 CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"PLIC_VERSION" : "${VERSION}", "INTERN" : 1
 CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"PLIC_VERSION" : "${VERSION}"
-${PLICINT}: plic.py Parser.py
+${AIDACC_INTERN}: plic.py Parser.py
 	$(AM_V_GEN)
 	$(Q) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
@@ -39,7 +39,7 @@ ${PLICINT}: plic.py Parser.py
 	$(Q) chmod +x xgen-$(@F)
 	$(Q) cp -p xgen-$(@F) $@
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
-${PLICV}: plic.py Parser.py
+${AIDACCV}: plic.py Parser.py
 	$(AM_V_GEN)
 	$(Q) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
@@ -75,10 +75,10 @@ EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc
 CLEANFILES += runtime.hh runtime.cc
 
 # == Plic Builtins ==
-builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
+builtins.cc: $(srcdir)/builtins.idl ${AIDACC_INTERN} plic.py
 	$(AM_V_GEN)
-	$(Q) ${PLICINT} --system-typedefs $< -G TypeMap -o $(@F).typ
-	$(Q) ${PLICINT} --cc-intern-file $(@F).typ > xtmp-$(@F)
+	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o $(@F).typ
+	$(Q) ${AIDACC_INTERN} --cc-intern-file $(@F).typ > xtmp-$(@F)
 	$(Q) cp -p xtmp-$(@F) $@
 	$(Q) rm -f $(@F).typ xtmp-$(@F)
 $(srcdir)/../rcore/plicutypes.cc: builtins.cc
@@ -87,29 +87,29 @@ EXTRA_DIST += builtins.cc builtins.idl
 CLEANFILES += builtins.cc
 
 # == Plic Dependencies ==
-pyutilsdir     = $(libdir)/$(strip ${PLICV})/pyutils
-plicbackends   = PrettyDump.py TypeMap.py Rapicorn.py GType.py CxxStub.py
-pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${plicbackends}
+pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
+aidaccbackends = PrettyDump.py TypeMap.py Rapicorn.py GType.py CxxStub.py
+pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${aidaccbackends}
 
-# == Basic Plic Test ==
-check-plic-intern-list-formats:
-	$(Q) ${PLICINT} --list-formats | grep -q PLIC ; eval "$$TSTDIAGNOSE"
-check-local: check-plic-intern-list-formats
+# == Basic Aidacc Test ==
+check-aidacc-intern-list-formats:
+	$(Q) ${AIDACC_INTERN} --list-formats | grep -q PLIC ; eval "$$TSTDIAGNOSE"
+check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
-test-plic-installation:
-	$(Q) PATH="$(bindir):$$PATH" ${PLICV} --list-formats | fgrep -q CxxStub ; eval "$$TSTDIAGNOSE"
-installcheck-local: test-plic-installation
+test-aidacc-installation:
+	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} --list-formats | fgrep -q CxxStub ; eval "$$TSTDIAGNOSE"
+installcheck-local: test-aidacc-installation
 
-# == 'plic' executable link ==
+# == 'aidacc' executable link ==
 install-exec-hook:
-	@echo "  LINK  " $(bindir)/$(PLICLINK)
+	@echo "  LINK  " $(bindir)/$(AIDACCLNK)
 	$(Q) cd $(DESTDIR)$(bindir)			\
-	  && test -x ${PLICLINK}			\
-	  || (rm -f ${PLICLINK} && $(LN_S) ${PLICV} ${PLICLINK} )
-DESTDIRbinLINK = $(DESTDIR)$(bindir)/$(PLICLINK)
-uninstall-hook:	# runs after ${PLICV} was uninstalled
-	@    test ! -L $(DESTDIRbinLINK) -o -x $(DESTDIRbinLINK) || echo "  UNLINK" $(bindir)/$(PLICLINK)
+	  && test -x ${AIDACCLNK}			\
+	  || (rm -f ${AIDACCLNK} && $(LN_S) ${AIDACCV} ${AIDACCLNK} )
+DESTDIRbinLINK = $(DESTDIR)$(bindir)/$(AIDACCLNK)
+uninstall-hook:	# runs after ${AIDACCV} was uninstalled
+	@    test ! -L $(DESTDIRbinLINK) -o -x $(DESTDIRbinLINK) || echo "  UNLINK" $(bindir)/$(AIDACCLNK)
 	$(Q) test ! -L $(DESTDIRbinLINK) -o -x $(DESTDIRbinLINK) || rm -f $(DESTDIRbinLINK)
 
 clean-local:

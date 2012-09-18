@@ -3,8 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
-PLICINT = ../plic-intern $(DEBUG:%=--plic-debug)
-PLICEXT = PATH="$(bindir):$$PATH" plic-@PLIC_VERSION@
+AIDACC = ../aidacc-intern $(DEBUG:%=--plic-debug)
+
+AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@PLIC_VERSION@
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
@@ -23,30 +24,30 @@ TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test aux
 ### Plic build rule for binary type maps
 %.typ: %.idl
 	$(AM_V_GEN)
-	$(Q) ${PLICINT} $< -G TypeMap -o xtmp-$(@F)
+	$(Q) ${AIDACC} $< -G TypeMap -o xtmp-$(@F)
 	$(Q) rm -f $@ && mv xtmp-$(@F) $@
 
 ### PLIC installcheck
 bin-plic-cc-type-package-parser:
-	$(Q) ${PLICEXT} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_INSTALLED} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
 installcheck-local: #bin-plic-cc-type-package-parser
 bin-plic-list-formats:
-	$(Q) ${PLICEXT} --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_INSTALLED} --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
 installcheck-local: bin-plic-list-formats
 bin-plic-testpass: $(srcdir)/testpass.idl
-	$(Q) ${PLICEXT} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_INSTALLED} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 installcheck-local: bin-plic-testpass
 
 # == IDL Parsing Tests ==
 check-testpass: $(srcdir)/testpass.idl
-	$(Q) ${PLICINT} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 check-include-p1: $(srcdir)/include-p1.idl
-	$(Q) ${PLICINT} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 check-local: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${PLICINT} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${AIDACC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
 
@@ -57,28 +58,28 @@ check-local: check-plic-standard-types
 
 # == Test TypeMap ==
 check-plic-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
+	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
 	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
 check-local: check-plic-format-TypeMap
 
 # == Test Rapicorn ==
 check-plic-format-Rapicorn: $(srcdir)/testpass.idl
-	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
 check-local: check-plic-format-Rapicorn
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
