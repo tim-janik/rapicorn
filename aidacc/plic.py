@@ -181,7 +181,7 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
       if line.startswith ("include"):
         code = '\n' * (n-1) + line
       else:
-        code = '\n' * (n-2) + 'namespace PlicFailTest {\n' + line + '\n}'
+        code = '\n' * (n-2) + 'namespace AidaFailTest {\n' + line + '\n}'
       nslist, impltypes, error, caret, inclist = parse_main (config, [ (filename, code) ])
       if error:
         import re

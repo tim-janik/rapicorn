@@ -460,7 +460,7 @@ FieldBuffer::reset()
 
 } // Aida
 
-/// @weakgroup PlicManifoldTypes Plic manifold generated types
+/// @weakgroup AidaManifoldTypes Aida manifold generated types
 /// @{
 namespace Aida {
 
