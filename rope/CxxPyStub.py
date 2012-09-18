@@ -108,23 +108,23 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
 }
 
 static inline Aida::Any
-__plic_pyany_to_any (PyObject *pyany)
+__aida_pyany_to_any (PyObject *pyany)
 {
   return Aida::Any(); // FIXME: pyany to Any
 }
 
 static inline PyObject*
-__plic_pyany_from_any (const Aida::Any &any)
+__aida_pyany_from_any (const Aida::Any &any)
 {
   return None_INCREF(); // FIXME: Any to pyany
 }
 
-static PyObject *_plic_object_factory_callable = NULL;
+static PyObject *_aida_object_factory_callable = NULL;
 
 static PyObject*
-_plic___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
+_aida___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
 {
-  if (_plic_object_factory_callable)
+  if (_aida_object_factory_callable)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
   if (PyTuple_Size (pyargs) != 1)
     return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
@@ -132,14 +132,14 @@ _plic___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
   if (!PyCallable_Check (item))
     return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
   Py_INCREF (item);
-  _plic_object_factory_callable = item;
+  _aida_object_factory_callable = item;
   return None_INCREF();
 }
 
 static inline PyObject*
-plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
+aida_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 {
-  if (!_plic_object_factory_callable)
+  if (!_aida_object_factory_callable)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
   PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (rpc_id);
   if (pyid) {
@@ -147,7 +147,7 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
     if (tuple) {
       PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name));
       PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
-      result = PyObject_Call (_plic_object_factory_callable, tuple, NULL);
+      result = PyObject_Call (_aida_object_factory_callable, tuple, NULL);
       Py_DECREF (tuple);
     }
     Py_XDECREF (pyid);
@@ -194,11 +194,11 @@ class Generator:
     elif type.storage == Decls.STRING:
       s += '  %s.add_string (PyString_As_std_string (%s)); ERRORifpy();\n' % (fb, var)
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  if (!plic_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
+      s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__plic__object__")); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida__object__")); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ANY:
-      s += '  %s.add_any (__plic_pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_any (__aida_pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -213,11 +213,11 @@ class Generator:
     elif type.storage == Decls.STRING:
       s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
+      s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s = plic_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
+      s += '  %s = aida_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
     elif type.storage == Decls.ANY:
-      s += '  %s = __plic_pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __aida_pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -225,7 +225,7 @@ class Generator:
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)\n' % type_info.name
+    s += 'aida_py%s_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
     s += '  Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += '  bool success = false;\n'
@@ -241,7 +241,7 @@ class Generator:
     s += '}\n'
     # record proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
+    s += 'aida_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
     s += '  Aida::FieldReader fbr (src.pop_rec());\n'
@@ -265,7 +265,7 @@ class Generator:
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)\n' % type_info.name
+    s += 'aida_py%s_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;\n'
     s += '  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;\n'
@@ -281,7 +281,7 @@ class Generator:
     s += '}\n'
     # sequence proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
+    s += 'aida_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
     s += '  Aida::FieldReader fbr (src.pop_seq());\n'
@@ -301,7 +301,7 @@ class Generator:
     return s
   def generate_rpc_signal_call (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_AIDA_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
+    mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     evd_class = '_EventHandler_%s' % mtype.ident_digest()
     s += 'class %s : public Aida::ClientConnection::EventHandler {\n' % evd_class
@@ -332,7 +332,7 @@ class Generator:
     s += '  }\n'
     s += '};\n'
     s += 'static PyObject*\n'
-    s += '_plic_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
@@ -369,11 +369,11 @@ class Generator:
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_AIDA_%s", _plic_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
+    mdefs += [ '{ "_AIDA_%s", _aida_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
-    s += '_plic_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '_aida_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self args
@@ -457,7 +457,7 @@ class Generator:
           s += self.generate_rpc_signal_call (tp, sg, mdefs)
     # method def array
     if mdefs:
-      aux = '{ "_AIDA___register_object_factory_callable", _plic___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
+      aux = '{ "_AIDA___register_object_factory_callable", _aida___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
       s += '#define AIDA_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
 

@@ -50,8 +50,8 @@ def reindent (prefix, lines):
 
 base_code = """
 
-def __plic_module_init_once__ (cpy_module):
-  del globals()['__plic_module_init_once__'] # run once only
+def __aida_module_init_once__ (cpy_module):
+  del globals()['__aida_module_init_once__'] # run once only
   global _CPY
   _CPY = cpy_module
 
@@ -63,9 +63,9 @@ class _BaseClass_ (object):
     def __init__ (self, _aidaid):
       assert isinstance (_aidaid, (int, long))
       self.id = _aidaid
-  def __init__ (self, _plic_id):
-    assert isinstance (_plic_id, _BaseClass_._AidaID_)
-    self.__plic__object__ = _plic_id.id
+  def __init__ (self, _aida_id):
+    assert isinstance (_aida_id, _BaseClass_._AidaID_)
+    self.__aida__object__ = _aida_id.id
 class __Signal__:
   def __init__ (self, signame):
     self.name = signame
@@ -152,10 +152,10 @@ class Generator:
     s += '    else: raise RuntimeError ("invalid or missing record initializers")\n'
     s += '    return self\n'
     s += '  @staticmethod\n'
-    s += '  def to_proto (self, _plic_rec):\n' # FIXME: broken, staticmethod with self?
+    s += '  def to_proto (self, _aida_rec):\n' # FIXME: broken, staticmethod with self?
     for a in type_info.fields:
-      s += '    _plic_field = _plic_rp.fields.add()\n'
-      s += reindent ('  ', self.generate_to_proto ('_plic_field', a[1], 'self.' + a[0])) + '\n'
+      s += '    _aida_field = _aida_rp.fields.add()\n'
+      s += reindent ('  ', self.generate_to_proto ('_aida_field', a[1], 'self.' + a[0])) + '\n'
     return s
   def generate_sighandler (self, ftype, ctype):
     s = ''
@@ -235,8 +235,8 @@ class Generator:
     if not l:
       l = [ '_BaseClass_' ]
     s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
-    s += '  def __init__ (self, _plic_id):\n'
-    s += '    super (%s, self).__init__ (_plic_id)\n' % type_info.name
+    s += '  def __init__ (self, _aida_id):\n'
+    s += '    super (%s, self).__init__ (_aida_id)\n' % type_info.name
     for sg in type_info.signals:
       s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
     for m in type_info.methods:

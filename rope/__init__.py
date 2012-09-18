@@ -33,7 +33,7 @@ def app_init (application_name = None):
     application_name = os.path.abspath (sys.argv[0] or '-')
   if cmdline_args == None:
     cmdline_args = sys.argv
-  plic_id = _CPY._init_dispatcher (application_name, cmdline_args)
+  aida_id = _CPY._init_dispatcher (application_name, cmdline_args)
   # integrate Rapicorn dispatching with main loop
   class RapicornSource (main.Source):
     def __init__ (self):
@@ -51,7 +51,7 @@ def app_init (application_name = None):
       return True
   main.RapicornSource = RapicornSource
   # setup global Application
-  app = Application (_PY._BaseClass_._AidaID_ (plic_id))
+  app = Application (_PY._BaseClass_._AidaID_ (aida_id))
   def iterate (self, may_block, may_dispatch):
     if hasattr (self, "main_loop"):
       loop = self.main_loop
@@ -89,7 +89,7 @@ def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
   import pyRapicorn     # generated _AIDA_... cpy methods
   import py2cpy         # generated Python classes, Application, etc
-  py2cpy.__plic_module_init_once__ (pyRapicorn)
+  py2cpy.__aida_module_init_once__ (pyRapicorn)
   pyRapicorn._AIDA___register_object_factory_callable (AidaObjectFactory (py2cpy))
   del globals()['AidaObjectFactory']
   app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
