@@ -1,4 +1,4 @@
-# PLIC - Pluggable IDL Compiler
+# Aida - Abstract Interface Definition Architecture
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
@@ -28,16 +28,16 @@ TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test aux
 	$(Q) ${AIDACC} $< -G TypeMap -o xtmp-$(@F)
 	$(Q) rm -f $@ && mv xtmp-$(@F) $@
 
-### PLIC installcheck
-bin-plic-cc-type-package-parser:
+### Aida installcheck
+bin-aida-cc-type-package-parser:
 	$(Q) ${AIDACC_INSTALLED} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
-installcheck-local: #bin-plic-cc-type-package-parser
-bin-plic-list-formats:
+installcheck-local: #bin-aida-cc-type-package-parser
+bin-aida-list-formats:
 	$(Q) ${AIDACC_INSTALLED} --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
-installcheck-local: bin-plic-list-formats
-bin-plic-testpass: $(srcdir)/testpass.idl
+installcheck-local: bin-aida-list-formats
+bin-aida-testpass: $(srcdir)/testpass.idl
 	$(Q) ${AIDACC_INSTALLED} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
-installcheck-local: bin-plic-testpass
+installcheck-local: bin-aida-testpass
 
 # == IDL Parsing Tests ==
 check-testpass: $(srcdir)/testpass.idl
@@ -53,22 +53,22 @@ check-testfail: $(srcdir)/testfail.idl
 check-local: check-testfail
 
 # == Aida Unit Tests ==
-check-plic-standard-types: ptptest
+check-aida-standard-types: ptptest
 	$(Q) ./ptptest --tests
-check-local: check-plic-standard-types
+check-local: check-aida-standard-types
 
 # == Test TypeMap ==
-check-plic-format-TypeMap: ptptest $(srcdir)/testpass.idl
+check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
 	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
 	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
-check-local: check-plic-format-TypeMap
+check-local: check-aida-format-TypeMap
 
 # == Test Rapicorn ==
-check-plic-format-Rapicorn: $(srcdir)/testpass.idl
+check-aida-format-Rapicorn: $(srcdir)/testpass.idl
 	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
-check-local: check-plic-format-Rapicorn
+check-local: check-aida-format-Rapicorn
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
