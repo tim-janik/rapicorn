@@ -51,7 +51,7 @@ def app_init (application_name = None):
       return True
   main.RapicornSource = RapicornSource
   # setup global Application
-  app = Application (_PY._BaseClass_._PlicID_ (plic_id))
+  app = Application (_PY._BaseClass_._AidaID_ (plic_id))
   def iterate (self, may_block, may_dispatch):
     if hasattr (self, "main_loop"):
       loop = self.main_loop
@@ -78,12 +78,12 @@ def app_init (application_name = None):
 class PlicObjectFactory:
   def __init__ (self, _PY):
     self._PY = _PY
-    self.PlicID = _PY._BaseClass_._PlicID_
+    self.AidaID = _PY._BaseClass_._AidaID_
   def __call__ (self, type_name, rpc_id):
     klass = getattr (self._PY, type_name)
     if not klass or not rpc_id:
       return None
-    return klass (self.PlicID (rpc_id))
+    return klass (self.AidaID (rpc_id))
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_

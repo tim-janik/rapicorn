@@ -10,12 +10,12 @@ class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
 class _BaseClass_ (object):
-  class _PlicID_:
-    def __init__ (self, _plicid):
-      assert isinstance (_plicid, (int, long))
-      self.id = _plicid
+  class _AidaID_:
+    def __init__ (self, _aidaid):
+      assert isinstance (_aidaid, (int, long))
+      self.id = _aidaid
   def __init__ (self, _plic_id):
-    assert isinstance (_plic_id, _BaseClass_._PlicID_)
+    assert isinstance (_plic_id, _BaseClass_._AidaID_)
     self.__plic__object__ = _plic_id.id
 class __Signal__:
   def __init__ (self, signame):
