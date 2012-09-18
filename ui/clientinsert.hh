@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-// PLIC insertion file for Client stubs
+// C++ interface code insertions for client stubs
 
 includes:
 #include <ui/utilities.hh>

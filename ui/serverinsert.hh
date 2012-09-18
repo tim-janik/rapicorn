@@ -1,8 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-// PLIC insertion file
-// Here we provide insertion snippets to be included in struct
-// definitions when generating serverapi.hh from interfaces.idl
+// C++ interface code insertions for server stubs
 
 includes:
 #include <ui/utilities.hh>
