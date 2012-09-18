@@ -1,4 +1,4 @@
-# PLIC - Pluggable IDL Compiler
+# Aida - Abstract Interface Definition Architecture
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . tests
