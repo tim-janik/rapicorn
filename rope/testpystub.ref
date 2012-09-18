@@ -66,11 +66,11 @@ class XFooRecord (_BaseRecord_):
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
       self.any1 = args[14]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any1.vany, args[14])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any1.vany, args[14])
       self.any2 = args[15]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any2.vany, args[15])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any2.vany, args[15])
       self.any3 = args[16]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any3.vany, args[16])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -122,11 +122,11 @@ class XFooRecord (_BaseRecord_):
     _plic_field = _plic_rp.fields.add()
     _plic_field.vstring (Instance2StringCast (self.iface3))
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any1)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any1)
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any2)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any2)
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any3)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any3)
 
 class NestedTypesRec (_BaseRecord_):
   def __init__ (self, **entries):
@@ -191,11 +191,11 @@ class AliasRecord (_BaseRecord_):
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
       self.any1 = args[14]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any1.vany, args[14])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any1.vany, args[14])
       self.any2 = args[15]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any2.vany, args[15])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any2.vany, args[15])
       self.any3 = args[16]
-      #  # FIXME: support PLIC::Any with any.to_proto (self.any3.vany, args[16])
+      #  # FIXME: support Aida::Any with any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -247,11 +247,11 @@ class AliasRecord (_BaseRecord_):
     _plic_field = _plic_rp.fields.add()
     _plic_field.vstring (Instance2StringCast (self.iface3))
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any1)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any1)
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any2)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any2)
     _plic_field = _plic_rp.fields.add()
-    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any3)
+    # FIXME: support Aida::Any with any.to_proto (_plic_field.vany, self.any3)
 
 class NewRecord (_BaseRecord_):
   def __init__ (self, **entries):

@@ -24,7 +24,7 @@ static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
-    return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
+    return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
@@ -35,7 +35,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
     }
-  return PyErr_Format (PyExc_RuntimeError, "PLIC: garbage return: 0x%s", fr->first_id_str().c_str());
+  return PyErr_Format (PyExc_RuntimeError, "Aida: garbage return: 0x%s", fr->first_id_str().c_str());
 }
 
 static inline PY_LONG_LONG
@@ -290,7 +290,7 @@ plic_pyXFooRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 17) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 17) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -663,7 +663,7 @@ plic_pyNestedTypesRec_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = plic_pyXFooRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -738,7 +738,7 @@ plic_pyNewRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -781,7 +781,7 @@ plic_pyInnerRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 3) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 3) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -818,7 +818,7 @@ plic_pyRefer2Inner_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 1) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 1) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = plic_pyInnerRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -857,7 +857,7 @@ plic_pySomeRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = plic_pyNewRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -898,7 +898,7 @@ plic_pyQuickRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -954,7 +954,7 @@ _plic_rpc_MandatoryNamespace__FirstInterface__void_func_void (PyObject *pyself, 
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL);
-  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -971,7 +971,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__simple_method_float (PyObject *pyself, P
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x39a122b559d15903ULL, 0x0a95fe35b7a1de33ULL);
-  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -996,7 +996,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__single_arg_float_int (PyObject *pyself, 
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3910395d202c93c2ULL, 0x9206a89acaaf2086ULL);
-  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1023,7 +1023,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__single_arg2_float_int (PyObject *pyself,
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3b5ae84b86dfa59cULL, 0x5d2ef3880b1fa360ULL);
-  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1050,7 +1050,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__two_args_float_int_float (PyObject *pyse
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x359c33f1677a63ebULL, 0x3a05748016992575ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1079,7 +1079,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__two_args2_float_int_float (PyObject *pys
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3291a584ff9121b3ULL, 0xbd14f4bbc47fb2ccULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1108,7 +1108,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__multi_args_float_int_float_int_string_fl
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 5), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3501ef84b7c1d9ffULL, 0x564566ab8a5e1b8bULL);
-  if (PyTuple_Size (pyargs) != 1 + 5) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 5) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1143,7 +1143,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__self_method_float_InterfaceTests__UIWidg
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x316521a2bcc037d0ULL, 0x43987053dab0c3c0ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // ba1
@@ -1172,7 +1172,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__void_method_void (PyObject *pyself, PyOb
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL);
-  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1189,7 +1189,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__on_click2out_string (PyObject *pyself, P
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3e4f2ff4e1424783ULL, 0x439ed3d602e3946eULL);
-  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1214,7 +1214,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__on_click2in_void_string (PyObject *pysel
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x2294f15cd15e9458ULL, 0x5e0ac9b493bb4f17ULL);
-  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // command
@@ -1340,7 +1340,7 @@ _plic_rpc_InterfaceTests__QuickIface__simple_function_void_int (PyObject *pyself
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x2446078b004b9aabULL, 0x37d6c73a34ac7070ULL);
-  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // i
@@ -1359,7 +1359,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_void_void (PyObject *
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL);
-  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1376,7 +1376,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool 
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1405,7 +1405,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_ints_int_int_int (PyO
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x39555e79a31047bfULL, 0x0f06b4f122a81e1dULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1434,7 +1434,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_floats_float_float_fl
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x391dd7c671dada38ULL, 0x32ca18bc1bd39689ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1463,7 +1463,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_string_string_string_
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3ad5eafe588b965aULL, 0x38c04145925d2963ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1492,7 +1492,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1521,7 +1521,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1550,7 +1550,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTes
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1579,7 +1579,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTe
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x34619983babcee5bULL, 0x9875f78f28f381b7ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1608,7 +1608,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any (PyO
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x37b8d8ed63487319ULL, 0xb18dc7a6d35529d5ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1637,7 +1637,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -2981,7 +2981,7 @@ _plic_rpc_RapicornAidaTest__PureMethods__pure_method_int_float (PyObject *pyself
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
   fb.add_msgid (0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL);
-  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // f

@@ -182,7 +182,7 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
     elif type_info.storage == Decls.ANY:
-      s += '  # FIXME: support PLIC::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
+      s += '  # FIXME: support Aida::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
     else: # FUNC
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s

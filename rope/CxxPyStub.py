@@ -48,7 +48,7 @@ static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
-    return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
+    return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
@@ -59,7 +59,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
     }
-  return PyErr_Format (PyExc_RuntimeError, "PLIC: garbage return: 0x%s", fr->first_id_str().c_str());
+  return PyErr_Format (PyExc_RuntimeError, "Aida: garbage return: 0x%s", fr->first_id_str().c_str());
 }
 
 static inline PY_LONG_LONG
@@ -245,7 +245,7 @@ class Generator:
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
     s += '  Aida::FieldReader fbr (src.pop_rec());\n'
-    s += '  if (fbr.remaining() != %u) ERRORpy ("PLIC: marshalling error: invalid record length");\n' % len (type_info.fields)
+    s += '  if (fbr.remaining() != %u) ERRORpy ("Aida: marshalling error: invalid record length");\n' % len (type_info.fields)
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
     for fl in type_info.fields:
@@ -378,7 +378,7 @@ class Generator:
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self args
     s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # self args
+    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += self.generate_proto_add_py ('fb', class_info, 'item')

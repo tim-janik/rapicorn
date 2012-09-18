@@ -69,7 +69,7 @@ check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
 check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
-# test interfaces.idl with PLIC
+# test interfaces.idl with Aida
 check-rapicorn-idl:
 	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
 check-local: check-rapicorn-idl
