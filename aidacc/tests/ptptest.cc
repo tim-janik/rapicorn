@@ -181,24 +181,24 @@ type_code_tests ()
     error ("%s: open failed: %s", filename.c_str(), strerror (tp.error_status()));
   {
     // simple int lookup
-    TypeCode t1 = tp.lookup_local ("PlicTests::IntWithFooAsLabel");
+    TypeCode t1 = tp.lookup_local ("AidaTests::IntWithFooAsLabel");
     assert (t1.kind() == INT);
-    assert (t1.name() == "PlicTests::IntWithFooAsLabel");
+    assert (t1.name() == "AidaTests::IntWithFooAsLabel");
     assert (t1.aux_value ("label") == "Foo");
     assert (t1.hints() == ":");
     // simple float lookup
-    TypeCode t2 = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    TypeCode t2 = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
     assert (t2.kind() == FLOAT);
-    assert (t2.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t2.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t2.aux_value ("blurb") == "Float Blurb");
     // check that type memory used above is still valid
-    assert (t1.name() + "-postfix" == String ("PlicTests::IntWithFooAsLabel-postfix"));
-    assert (t2.name() == String ("PlicTests::FloatWithBlurbBlurb"));
+    assert (t1.name() + "-postfix" == String ("AidaTests::IntWithFooAsLabel-postfix"));
+    assert (t2.name() == String ("AidaTests::FloatWithBlurbBlurb"));
   }
   { // INT
-    TypeCode t = tp.lookup_local ("PlicTests::ExtendIntWithAux");
+    TypeCode t = tp.lookup_local ("AidaTests::ExtendIntWithAux");
     assert (t.kind() == INT);
-    assert (t.name() == "PlicTests::ExtendIntWithAux");
+    assert (t.name() == "AidaTests::ExtendIntWithAux");
     assert (t.aux_value ("label") == "Extended int");
     assert (t.aux_value ("blurb") == "This int demonstrates extensive auxillary data use");
     assert (t.aux_value ("default") == "33");
@@ -206,28 +206,28 @@ type_code_tests ()
     assert (t.hints().find (":extra-option:") != String().npos);
   }
   { // FLOAT
-    TypeCode t = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    TypeCode t = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
     assert (t.kind() == FLOAT);
-    assert (t.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t.aux_value ("label") == "Float Label");
     assert (t.aux_value ("blurb") == "Float Blurb");
     assert (t.aux_value ("default") == "97.97");
     assert (t.hints() == ":");
   }
   { // STRING
-    TypeCode t = tp.lookup_local ("PlicTests::ExtendedString");
+    TypeCode t = tp.lookup_local ("AidaTests::ExtendedString");
     assert (t.kind() == STRING);
-    assert (t.name() == "PlicTests::ExtendedString");
+    assert (t.name() == "AidaTests::ExtendedString");
     assert (t.aux_value ("label") == "Extended String");
     assert (t.aux_value ("blurb") == "Demonstrate full string specification");
     assert (t.aux_value ("default") == "Default-String-Value");
     assert (t.hints().find (":ro:") != String().npos);
   }
   { // ENUM
-    TypeCode t = tp.lookup_local ("PlicTests::Enum1");
+    TypeCode t = tp.lookup_local ("AidaTests::Enum1");
     assert (t.kind() == ENUM);
     assert (t.kind_name () == "ENUM");
-    assert (t.name() == "PlicTests::Enum1");
+    assert (t.name() == "AidaTests::Enum1");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
@@ -236,10 +236,10 @@ type_code_tests ()
     assert (t.enum_value (1)[0] == "ENUM_VALUE1");
   }
   { // SEQUENCE
-    TypeCode t = tp.lookup_local ("PlicTests::SimpleSequence");
+    TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");
     assert (t.kind() == SEQUENCE);
     assert (t.kind_name () == "SEQUENCE");
-    assert (t.name() == "PlicTests::SimpleSequence");
+    assert (t.name() == "AidaTests::SimpleSequence");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
@@ -249,10 +249,10 @@ type_code_tests ()
     assert (f.name() == "sample_integer");
   }
   { // RECORD
-    TypeCode t = tp.lookup_local ("PlicTests::SimpleRecord");
+    TypeCode t = tp.lookup_local ("AidaTests::SimpleRecord");
     assert (t.kind() == RECORD);
     assert (t.kind_name () == "RECORD");
-    assert (t.name() == "PlicTests::SimpleRecord");
+    assert (t.name() == "AidaTests::SimpleRecord");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");

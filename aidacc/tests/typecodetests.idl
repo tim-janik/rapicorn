@@ -1,5 +1,5 @@
 
-namespace PlicTests {
+namespace AidaTests {
 
   typedef string SimpleString;
 
