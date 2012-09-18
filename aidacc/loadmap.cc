@@ -33,7 +33,7 @@ type_kind_name (TypeKind type_kind)
     }
 }
 
-// == PlicTypeMap classes ==
+// == AidaTypeMap classes ==
 struct InternalList {
   uint32_t      length;         // in members
   uint32_t      items[];        // flexible array member
@@ -55,7 +55,7 @@ struct TypeCode::InternalType {
 };
 typedef TypeCode::InternalType InternalType;
 struct InternalMap {
-  uint32_t      magic[4];       // "PlicTypeMap\0\0\0\0\0"
+  uint32_t      magic[4];       // "AidaTypeMap\0\0\0\0\0"
   uint32_t      length;         // typemap length (excludes tail)
   uint32_t      pad0, pad1, pad2;
   uint32_t      seg_types;      // type code segment offset
@@ -65,7 +65,7 @@ struct InternalMap {
   uint32_t      types;          // list[type index] index; public types
   uint32_t      pad4, pad5, pad6;
   bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
-  bool          check_magic     () { return (magic[0] == 0x63696c50 && magic[1] == 0x65707954 &&
+  bool          check_magic     () { return (magic[0] == 0x61646941 && magic[1] == 0x65707954 &&
                                              magic[2] == 0x0070614d && magic[3] == 0x00000000); }
   bool          check_lengths   (size_t memlength)
   {
