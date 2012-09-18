@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 import sys, os
 pkginstall_configvars = {
-  'PLIC_VERSION' : '0.0-uninstalled',
+  'AIDA_VERSION' : '0.0-uninstalled',
   'pyutilsdir'   : '.',
   #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
 }
@@ -87,7 +87,7 @@ def main():
   module_import (config['backend']).generate (nslist, implementation_types = impltypes, **config)
 
 def print_help (with_help = True):
-  print "plic version", pkginstall_configvars["PLIC_VERSION"]
+  print "plic version", pkginstall_configvars["AIDA_VERSION"]
   if not with_help:
     return
   print "Usage: %s [options] <idlfiles...>" % os.path.basename (sys.argv[0])

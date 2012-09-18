@@ -5,7 +5,7 @@ INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
 AIDACC = ../aidacc-intern $(DEBUG:%=--plic-debug)
 
-AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@PLIC_VERSION@
+AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc

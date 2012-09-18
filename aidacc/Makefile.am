@@ -9,7 +9,7 @@ noinst_SCRIPTS      = ${AIDACC_INTERN}
 cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/aidacc
 cxxruntime_HEADERS  = runtime.hh runtime.cc cxxstubaux.hh
 AIDACCLNK	    = aidacc			## user visible excutable name
-AIDACCV	            = aidacc-@PLIC_VERSION@	## installed executable name
+AIDACCV	            = aidacc-@RAPICORN_RELEASE@	## installed executable name
 AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
 CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
 CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
@@ -29,8 +29,8 @@ EXTRA_DIST += Parser.g Parser.py
 MAINTAINERCLEANFILES += Parser.py
 
 # == Build Plic Executables ==
-CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"PLIC_VERSION" : "${VERSION}", "INTERN" : 1
-CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"PLIC_VERSION" : "${VERSION}"
+CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"AIDA_VERSION" : "${VERSION}",	"INTERN" : 1
+CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"AIDA_VERSION" : "${VERSION}"
 ${AIDACC_INTERN}: plic.py Parser.py
 	$(AM_V_GEN)
 	$(Q) sed <$< >xgen-$(@F)			\
