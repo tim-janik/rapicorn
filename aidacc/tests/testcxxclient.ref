@@ -860,7 +860,7 @@ FirstInterface_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3e0c8f5da9110ad8ULL, 0xea565508333a9035ULL);
+    fb.add_msgid (0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1344,7 +1344,7 @@ UIWidgetArea_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3b205dd851cb8a1dULL, 0x5bcddc39beffee0dULL);
+    fb.add_msgid (0x3ced16bab1c08fe8ULL, 0xd1fa4cb922b6d7deULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1635,7 +1635,7 @@ Parent_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x358122a8447018eaULL, 0xf27025a07a51a48aULL);
+    fb.add_msgid (0x364b25c79aef2195ULL, 0x61e123d5c1b02ffeULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1717,7 +1717,7 @@ Child_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3d9ee6a844c60394ULL, 0xd2cee7633ad091d5ULL);
+    fb.add_msgid (0x3c8323457768deefULL, 0x3d61b2123c42c46bULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1794,7 +1794,7 @@ Descendant_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3a8b819b364228b8ULL, 0x9dce3529210a7700ULL);
+    fb.add_msgid (0x32d59697075869a1ULL, 0x9f10f279be69b4e2ULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1871,7 +1871,7 @@ GrandChild_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3aa9daa434261f37ULL, 0xa848862e429bf919ULL);
+    fb.add_msgid (0x320a324ec480c060ULL, 0x86f1af86bd39afc2ULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1988,7 +1988,7 @@ QuickIface_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3ceafdc3043b707dULL, 0xf30106bb4338c235ULL);
+    fb.add_msgid (0x3bfdb92d01f4df38ULL, 0x09c3ffac5658b30eULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2080,7 +2080,7 @@ MethodTestInterface_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x363e0b9e750bbbe2ULL, 0x8b5953ab5fb23a59ULL);
+    fb.add_msgid (0x38887fce34a056a1ULL, 0xdfafd7692069f2bcULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2407,7 +2407,7 @@ SignalTestInterface_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3b2248e8e9d4ff05ULL, 0xda71e710449d85dfULL);
+    fb.add_msgid (0x3b8444b272305b05ULL, 0xeeb938b589d70b8cULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2602,7 +2602,7 @@ ChildInheritingSignals_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3d6b68fa4d6a3c76ULL, 0xc9f1e8332c98049bULL);
+    fb.add_msgid (0x3e2ad0e03001d9acULL, 0x29b504a5e59d6c5fULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2684,7 +2684,7 @@ AnotherChild_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x300b6f8565bd0732ULL, 0x164c7a93dffad03bULL);
+    fb.add_msgid (0x3d193e12c75ef8cdULL, 0x583552525e108c61ULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2761,7 +2761,7 @@ PropertyTester_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
+    fb.add_msgid (0x342f93a48aa12aebULL, 0x06c2ed978db9d30eULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3092,7 +3092,7 @@ ButtonArea_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3c7a7b6713106c4fULL, 0x28353101a6c8666eULL);
+    fb.add_msgid (0x3ba079ca93d55fb3ULL, 0xf9944831dc1fc726ULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3280,7 +3280,7 @@ PureMethods_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3c2ddacc8bd26538ULL, 0x016488acad99e60bULL);
+    fb.add_msgid (0x34692a915fe47960ULL, 0x86e3694656f6f9afULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");

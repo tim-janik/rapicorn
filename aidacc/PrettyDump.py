@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Aida - Abstract Interface Definition Architecture
 # Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
-"""PLIC-PrettyDump - Pretty printing of Plic type information
+"""PLIC-PrettyDump - Pretty printing of Aida type information
 """
 
 def generate (namespace_list, **args):

@@ -308,7 +308,7 @@ class Generator:
   def class_digest (self, class_info):
     return self.digest2cbytes (class_info.type_hash())
   def list_types_digest (self, class_info):
-    return self.digest2cbytes (class_info.twoway_hash ('Plic:list_types()'))
+    return self.digest2cbytes (class_info.twoway_hash ('Aida:list_types()'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
