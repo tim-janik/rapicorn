@@ -360,7 +360,7 @@ interface PropertyTester {
 
 include "include-p1.idl"; // test includes
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 enum ClickType {
   CLICK_ON_PRESS        = 1,
@@ -390,4 +390,4 @@ interface PureMethods {
 
 interface PureMethods; // interface prototyping
 
-} // RapicornPlicTest
+} // RapicornAidaTest

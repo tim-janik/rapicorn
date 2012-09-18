@@ -771,7 +771,7 @@ void operator<<= (Aida::FieldBuffer&, const PropertyTesterHandle&);
 void operator>>= (Aida::FieldReader&, PropertyTesterHandle&);
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 enum ClickType {
   CLICK_ON_PRESS = 1,
@@ -835,7 +835,7 @@ public:
 };
 void operator<<= (Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Aida::FieldReader&, PureMethodsHandle&);
-} // RapicornPlicTest
+} // RapicornAidaTest
 
 // --- Implementations ---
 
@@ -3065,7 +3065,7 @@ PropertyTesterHandle::any_prop (const Aida::Any &value)
 }
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 // === ButtonArea ===
 static inline void ref   (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
@@ -3080,8 +3080,8 @@ struct ButtonArea_Context$ : public Aida::NonCopyable {
   SignalHandler__activate activate;
   ButtonArea_Context$ (Aida::uint64_t ipcid) :
     handle$ (ipcid),
-    check_activate (handle$, 0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL),
-    activate (handle$, 0x567351a83995c46eULL, 0xcd153a5a755401f6ULL),
+    check_activate (handle$, 0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL),
+    activate (handle$, 0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL),
     m_cached_types (NULL)
   {}
   Aida::TypeHashList *m_cached_types;
@@ -3092,7 +3092,7 @@ ButtonArea_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL);
+    fb.add_msgid (0x3c7a7b6713106c4fULL, 0x28353101a6c8666eULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3134,7 +3134,7 @@ operator>>= (Aida::FieldReader &fbr, ButtonAreaHandle &handle)
 const Aida::TypeHash&
 ButtonAreaHandle::_type()
 {
-  static const Aida::TypeHash type_hash = Aida::TypeHash (0x0dcb7c084481f495ULL, 0x58f43abd0dd694eaULL);
+  static const Aida::TypeHash type_hash = Aida::TypeHash (0x0eb6bcdae9e87fe7ULL, 0xb2f16c34cdc20188ULL);
   return type_hash;
 }
 ButtonAreaHandle
@@ -3168,7 +3168,7 @@ std::string
 ButtonAreaHandle::on_click () const
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
+  fb.add_msgid (0x3f6e2e244632537cULL, 0xfd0507d0d775d378ULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
@@ -3182,7 +3182,7 @@ void
 ButtonAreaHandle::on_click (const std::string &value)
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
+  fb.add_msgid (0x21deec11706d9e22ULL, 0xe49764529e2818caULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -3192,7 +3192,7 @@ std::string
 ButtonAreaHandle::on_click2 () const
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
+  fb.add_msgid (0x3fc6f6ef4e1ab204ULL, 0x4790604ab2ffd999ULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
@@ -3206,7 +3206,7 @@ void
 ButtonAreaHandle::on_click2 (const std::string &value)
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
+  fb.add_msgid (0x29fb5831619e59b2ULL, 0x3ad2cb6ee3214d2fULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -3216,7 +3216,7 @@ std::string
 ButtonAreaHandle::on_click3 () const
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
+  fb.add_msgid (0x387a3b53e25004c1ULL, 0xafe6289a8ef446fdULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
@@ -3230,7 +3230,7 @@ void
 ButtonAreaHandle::on_click3 (const std::string &value)
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
+  fb.add_msgid (0x2e609af16c0176daULL, 0x17c7ea8ce9fcf874ULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -3240,7 +3240,7 @@ ClickType
 ButtonAreaHandle::click_type () const
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
+  fb.add_msgid (0x33032db41e62e30fULL, 0x92d90ac8cf899010ULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
@@ -3254,7 +3254,7 @@ void
 ButtonAreaHandle::click_type (ClickType value)
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
+  fb.add_msgid (0x21058465dc0b1d3fULL, 0x7e683383d0024c74ULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -3280,7 +3280,7 @@ PureMethods_Context$::list_types ()
 {
   if (!m_cached_types) {
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL);
+    fb.add_msgid (0x3c2ddacc8bd26538ULL, 0x016488acad99e60bULL);
     fb <<= handle$;
     Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
     AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3322,7 +3322,7 @@ operator>>= (Aida::FieldReader &fbr, PureMethodsHandle &handle)
 const Aida::TypeHash&
 PureMethodsHandle::_type()
 {
-  static const Aida::TypeHash type_hash = Aida::TypeHash (0x0364646bccfb6bbcULL, 0x37b842dacad68d00ULL);
+  static const Aida::TypeHash type_hash = Aida::TypeHash (0x0e0bc42228fe9334ULL, 0x66dcee20d071f835ULL);
   return type_hash;
 }
 PureMethodsHandle
@@ -3346,7 +3346,7 @@ int
 PureMethodsHandle::pure_method (double arg_f)
 {
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL); // msgid
+  fb.add_msgid (0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL); // msgid
   fb <<= (*this);
   fb <<= arg_f;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -3357,5 +3357,5 @@ PureMethodsHandle::pure_method (double arg_f)
   delete fr;
   return retval;
 }
-} // RapicornPlicTest
+} // RapicornAidaTest
 

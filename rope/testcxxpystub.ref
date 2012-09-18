@@ -2875,11 +2875,11 @@ _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool : public Aida::ClientConnection::EventHandler {
+class _EventHandler_RapicornAidaTest__ButtonArea__check_activate_bool : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
-  ~_EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool() { Py_DECREF (m_callable); }
-  _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
+  ~_EventHandler_RapicornAidaTest__ButtonArea__check_activate_bool() { Py_DECREF (m_callable); }
+  _EventHandler_RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
   handle_event (Aida::FieldBuffer &fb)
   {
@@ -2894,11 +2894,11 @@ public:
   }
 };
 static PyObject*
-_plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyself, PyObject *pyargs)
+_plic_marshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL);
+  fb.add_msgid (0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL);
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -2906,7 +2906,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornAidaTest__ButtonArea__check_activate_bool (item);
     uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2925,11 +2925,11 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__activate_void : public Aida::ClientConnection::EventHandler {
+class _EventHandler_RapicornAidaTest__ButtonArea__activate_void : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
-  ~_EventHandler_RapicornPlicTest__ButtonArea__activate_void() { Py_DECREF (m_callable); }
-  _EventHandler_RapicornPlicTest__ButtonArea__activate_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
+  ~_EventHandler_RapicornAidaTest__ButtonArea__activate_void() { Py_DECREF (m_callable); }
+  _EventHandler_RapicornAidaTest__ButtonArea__activate_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
   handle_event (Aida::FieldBuffer &fb)
   {
@@ -2944,11 +2944,11 @@ public:
   }
 };
 static PyObject*
-_plic_marshal__RapicornPlicTest__ButtonArea__activate_void (PyObject *pyself, PyObject *pyargs)
+_plic_marshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x567351a83995c46eULL, 0xcd153a5a755401f6ULL);
+  fb.add_msgid (0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL);
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -2956,7 +2956,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__activate_void (PyObject *pyself, Py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__activate_void (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornAidaTest__ButtonArea__activate_void (item);
     uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2976,11 +2976,11 @@ _plic_marshal__RapicornPlicTest__ButtonArea__activate_void (PyObject *pyself, Py
   return pyfoR;
 }
 static PyObject*
-_plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_RapicornAidaTest__PureMethods__pure_method_int_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL);
+  fb.add_msgid (0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL);
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -3052,7 +3052,7 @@ _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself
   { "_AIDA_InterfaceTests__SignalTestInterface__any_arg_void_any", _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface", _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence", _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn signal call" },\
-  { "_AIDA_RapicornPlicTest__ButtonArea__check_activate_bool", _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
-  { "_AIDA_RapicornPlicTest__ButtonArea__activate_void", _plic_marshal__RapicornPlicTest__ButtonArea__activate_void, METH_VARARGS, "pyRapicorn signal call" },\
-  { "_AIDA_RapicornPlicTest__PureMethods__pure_method_int_float", _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float, METH_VARARGS, "pyRapicorn rpc call" }
+  { "_AIDA_RapicornAidaTest__ButtonArea__check_activate_bool", _plic_marshal__RapicornAidaTest__ButtonArea__check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_AIDA_RapicornAidaTest__ButtonArea__activate_void", _plic_marshal__RapicornAidaTest__ButtonArea__activate_void, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_AIDA_RapicornAidaTest__PureMethods__pure_method_int_float", _plic_rpc_RapicornAidaTest__PureMethods__pure_method_int_float, METH_VARARGS, "pyRapicorn rpc call" }
 static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };

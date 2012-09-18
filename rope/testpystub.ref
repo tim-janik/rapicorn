@@ -665,19 +665,19 @@ class ButtonArea (_BaseClass_):
     self.sig_activate = __Signal__ ('activate')
   def __sig_check_activate__ (self): pass # default handler
   def sig_check_activate_connect (self, func):
-    return _CPY._AIDA_RapicornPlicTest__ButtonArea__check_activate_bool (self, func, 0)
+    return _CPY._AIDA_RapicornAidaTest__ButtonArea__check_activate_bool (self, func, 0)
   def sig_check_activate_disconnect (self, connection_id):
-    return _CPY._AIDA_RapicornPlicTest__ButtonArea__check_activate_bool (self, None, connection_id)
+    return _CPY._AIDA_RapicornAidaTest__ButtonArea__check_activate_bool (self, None, connection_id)
   def __sig_activate__ (self): pass # default handler
   def sig_activate_connect (self, func):
-    return _CPY._AIDA_RapicornPlicTest__ButtonArea__activate_void (self, func, 0)
+    return _CPY._AIDA_RapicornAidaTest__ButtonArea__activate_void (self, func, 0)
   def sig_activate_disconnect (self, connection_id):
-    return _CPY._AIDA_RapicornPlicTest__ButtonArea__activate_void (self, None, connection_id)
+    return _CPY._AIDA_RapicornAidaTest__ButtonArea__activate_void (self, None, connection_id)
 
 class PureMethods (_BaseClass_):
   def __init__ (self, _plic_id):
     super (PureMethods, self).__init__ (_plic_id)
   def pure_method (self, f): # int
-    ___ret = _CPY._AIDA_RapicornPlicTest__PureMethods__pure_method_int_float (self, f)
+    ___ret = _CPY._AIDA_RapicornAidaTest__PureMethods__pure_method_int_float (self, f)
     return ___ret
 

@@ -728,7 +728,7 @@ void operator<<= (Aida::FieldBuffer&, I_PropertyTester_Interface*);
 void operator>>= (Aida::FieldReader&, I_PropertyTester_Interface*&);
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 enum ClickType {
   CLICK_ON_PRESS = 1,
@@ -784,7 +784,7 @@ public:
 void operator<<= (Aida::FieldBuffer&, I_PureMethods_Interface&);
 void operator<<= (Aida::FieldBuffer&, I_PureMethods_Interface*);
 void operator>>= (Aida::FieldReader&, I_PureMethods_Interface*&);
-} // RapicornPlicTest
+} // RapicornAidaTest
 
 // --- Implementations ---
 
@@ -1517,7 +1517,7 @@ I_PropertyTester_Interface::_list_types (Aida::TypeHashList &thl) const
 }
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 I_ButtonArea_Interface::I_ButtonArea_Interface () :
   sig_check_activate (*this), sig_activate (*this)
@@ -1541,7 +1541,7 @@ operator>>= (Aida::FieldReader &fbr, I_ButtonArea_Interface* &obj)
 void
 I_ButtonArea_Interface::_list_types (Aida::TypeHashList &thl) const
 {
-  thl.push_back (Aida::TypeHash (0x0dcb7c084481f495ULL, 0x58f43abd0dd694eaULL)); // ButtonArea
+  thl.push_back (Aida::TypeHash (0x0eb6bcdae9e87fe7ULL, 0xb2f16c34cdc20188ULL)); // ButtonArea
 }
 
 I_PureMethods_Interface::I_PureMethods_Interface ()
@@ -1565,11 +1565,11 @@ operator>>= (Aida::FieldReader &fbr, I_PureMethods_Interface* &obj)
 void
 I_PureMethods_Interface::_list_types (Aida::TypeHashList &thl) const
 {
-  thl.push_back (Aida::TypeHash (0x0364646bccfb6bbcULL, 0x37b842dacad68d00ULL)); // PureMethods
+  thl.push_back (Aida::TypeHash (0x0e0bc42228fe9334ULL, 0x66dcee20d071f835ULL)); // PureMethods
 }
 
 // --- Method Dispatchers & Registry ---
-} // RapicornPlicTest
+} // RapicornAidaTest
 
 namespace MandatoryNamespace {
 static Aida::FieldBuffer*
@@ -3421,7 +3421,7 @@ _$setter__PropertyTester__any_prop (Aida::FieldReader &fbr)
 
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 static Aida::FieldBuffer*
 _$lsttyp__ButtonArea__ (Aida::FieldReader &fbr)
 {
@@ -3728,21 +3728,21 @@ static const Aida::ServerConnection::MethodEntry _plic_stub_entries[] = {
   { 0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL, InterfaceTests::_$setter__PropertyTester__self_prop, },
   { 0x331c2730c160062aULL, 0xaabfaeca6649ae46ULL, InterfaceTests::_$getter__PropertyTester__any_prop, },
   { 0x28a440900d170de2ULL, 0x69e43a111fa9fb39ULL, InterfaceTests::_$setter__PropertyTester__any_prop, },
-  { 0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL, RapicornPlicTest::_$lsttyp__ButtonArea__, },
-  { 0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL, RapicornPlicTest::_$getter__ButtonArea__on_click, },
-  { 0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL, RapicornPlicTest::_$setter__ButtonArea__on_click, },
-  { 0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL, RapicornPlicTest::_$getter__ButtonArea__on_click2, },
-  { 0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL, RapicornPlicTest::_$setter__ButtonArea__on_click2, },
-  { 0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL, RapicornPlicTest::_$getter__ButtonArea__on_click3, },
-  { 0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL, RapicornPlicTest::_$setter__ButtonArea__on_click3, },
-  { 0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL, RapicornPlicTest::_$getter__ButtonArea__click_type, },
-  { 0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL, RapicornPlicTest::_$setter__ButtonArea__click_type, },
-  { 0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL, RapicornPlicTest::_$sigcon__ButtonArea__check_activate, },
-  { 0x567351a83995c46eULL, 0xcd153a5a755401f6ULL, RapicornPlicTest::_$sigcon__ButtonArea__activate, },
-  { 0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL, RapicornPlicTest::_$lsttyp__PureMethods__, },
-  { 0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL, RapicornPlicTest::_$caller__PureMethods__pure_method, },
+  { 0x3c7a7b6713106c4fULL, 0x28353101a6c8666eULL, RapicornAidaTest::_$lsttyp__ButtonArea__, },
+  { 0x3f6e2e244632537cULL, 0xfd0507d0d775d378ULL, RapicornAidaTest::_$getter__ButtonArea__on_click, },
+  { 0x21deec11706d9e22ULL, 0xe49764529e2818caULL, RapicornAidaTest::_$setter__ButtonArea__on_click, },
+  { 0x3fc6f6ef4e1ab204ULL, 0x4790604ab2ffd999ULL, RapicornAidaTest::_$getter__ButtonArea__on_click2, },
+  { 0x29fb5831619e59b2ULL, 0x3ad2cb6ee3214d2fULL, RapicornAidaTest::_$setter__ButtonArea__on_click2, },
+  { 0x387a3b53e25004c1ULL, 0xafe6289a8ef446fdULL, RapicornAidaTest::_$getter__ButtonArea__on_click3, },
+  { 0x2e609af16c0176daULL, 0x17c7ea8ce9fcf874ULL, RapicornAidaTest::_$setter__ButtonArea__on_click3, },
+  { 0x33032db41e62e30fULL, 0x92d90ac8cf899010ULL, RapicornAidaTest::_$getter__ButtonArea__click_type, },
+  { 0x21058465dc0b1d3fULL, 0x7e683383d0024c74ULL, RapicornAidaTest::_$setter__ButtonArea__click_type, },
+  { 0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL, RapicornAidaTest::_$sigcon__ButtonArea__check_activate, },
+  { 0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, RapicornAidaTest::_$sigcon__ButtonArea__activate, },
+  { 0x3c2ddacc8bd26538ULL, 0x016488acad99e60bULL, RapicornAidaTest::_$lsttyp__PureMethods__, },
+  { 0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL, RapicornAidaTest::_$caller__PureMethods__pure_method, },
 };
 static Aida::ServerConnection::MethodRegistry _plic_stub_registry (_plic_stub_entries);
 
-} // RapicornPlicTest
+} // RapicornAidaTest
 

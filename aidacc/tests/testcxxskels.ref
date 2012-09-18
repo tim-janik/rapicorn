@@ -692,7 +692,7 @@ void operator<<= (Aida::FieldBuffer&, I_PropertyTester_Interface*);
 void operator>>= (Aida::FieldReader&, I_PropertyTester_Interface*&);
 } // InterfaceTests
 
-namespace RapicornPlicTest {
+namespace RapicornAidaTest {
 
 enum ClickType {
   CLICK_ON_PRESS = 1,
@@ -748,7 +748,7 @@ public:
 void operator<<= (Aida::FieldBuffer&, I_PureMethods_Interface&);
 void operator<<= (Aida::FieldBuffer&, I_PureMethods_Interface*);
 void operator>>= (Aida::FieldReader&, I_PureMethods_Interface*&);
-} // RapicornPlicTest
+} // RapicornAidaTest
 
 // --- Interface Skeletons ---
 
