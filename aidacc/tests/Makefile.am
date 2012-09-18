@@ -22,7 +22,7 @@ DEBUG	    =
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
 		    --aux-test default=10007 --aux-test hints=rw
 
-### Plic build rule for binary type maps
+### Aida build rule for binary type maps
 %.typ: %.idl
 	$(AM_V_GEN)
 	$(Q) ${AIDACC} $< -G TypeMap -o xtmp-$(@F)
@@ -52,7 +52,7 @@ check-testfail: $(srcdir)/testfail.idl
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
 
-# == Plic Unit Tests ==
+# == Aida Unit Tests ==
 check-plic-standard-types: ptptest
 	$(Q) ./ptptest --tests
 check-local: check-plic-standard-types

@@ -169,7 +169,7 @@ standard_tests ()
   assert (OneHandle()._rpc_id() == 1);
   assert (OneHandle()._null_handle()._is_null() == true);
   assert (OneHandle()._null_handle()._rpc_id() == 0);
-  printf ("  TEST   Plic standard types                                             OK\n");
+  printf ("  TEST   Aida standard types                                             OK\n");
 }
 
 static void
@@ -271,7 +271,7 @@ type_code_tests ()
     assert (f.name() == "anyfield");
   }
   // done
-  printf ("  TEST   Plic type code IDL tests                                        OK\n");
+  printf ("  TEST   Aida type code IDL tests                                        OK\n");
 }
 
 static const double test_double_value = 7.76576e-306;
@@ -348,7 +348,7 @@ test_any()
             assert (any_assignment_successfull == true);
           }
       }
-  printf ("  TEST   Plic Any storage                                                OK\n");
+  printf ("  TEST   Aida Any storage                                                OK\n");
   a <<= 1.;             assert (a.kind() == FLOAT && a.as_float() == +1.0);
   a <<= -1.;            assert (a.kind() == FLOAT && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
@@ -359,7 +359,7 @@ test_any()
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);
-  printf ("  TEST   Plic Any conversions                                            OK\n");
+  printf ("  TEST   Aida Any conversions                                            OK\n");
   Any b, c, d;
   a <<= -3;              assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= Any();           assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
@@ -372,7 +372,7 @@ test_any()
   a <<= "1"; b <<= 1;    assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= 1.4; b <<= 1.5;  assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= 1.6; b <<= 1.6;  assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  printf ("  TEST   Plic Any equality                                               OK\n");
+  printf ("  TEST   Aida Any equality                                               OK\n");
 }
 
 } // Anon
