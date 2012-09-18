@@ -42,7 +42,7 @@
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
-using namespace Plic;
+using namespace Aida;
 
 /* --- short integer types --- */
 typedef RapicornUInt8   uint8;          ///< An 8-bit unsigned integer.

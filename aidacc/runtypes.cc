@@ -27,14 +27,14 @@
 #endif
 #define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
-#define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
+#define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Aida_StaticAssertion_LINE, __LINE__)
 #define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
 #define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
 #define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
-/// @namespace Plic The Plic namespace provides all PLIC functionality exported to C++.
-namespace Plic {
+/// @namespace Aida The Aida namespace provides all IDL functionality exported to C++.
+namespace Aida {
 
 // == FieldUnion ==
 PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
@@ -70,7 +70,7 @@ void
 error_vprintf (const char *format, va_list args)
 {
   std::string s = string_vprintf (format, args, true);
-  fprintf (stderr, "Plic: error: %s", s.c_str());
+  fprintf (stderr, "Aida: error: %s", s.c_str());
   fflush (stderr);
   abort();
 }
@@ -91,7 +91,7 @@ warning_printf (const char *format, ...)
   va_start (args, format);
   std::string s = string_vprintf (format, args, true);
   va_end (args);
-  fprintf (stderr, "Plic: warning: %s", s.c_str());
+  fprintf (stderr, "Aida: warning: %s", s.c_str());
   fflush (stderr);
 }
 
@@ -155,18 +155,18 @@ Any::rekind (TypeKind _kind)
     case FLOAT:       type = "float";                                   break;
     case STRING:      type = "string";          new (&u) String();      break;
     case ENUM:        type = "int";                                     break;
-    case SEQUENCE:    type = "Plic::AnySeq";    new (&u) AnyVector();   break;
-    case RECORD:      type = "Plic::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
-    case INSTANCE:    type = "Plic::Instance";                          break; // FIXME: missing details
+    case SEQUENCE:    type = "Aida::AnySeq";    new (&u) AnyVector();   break;
+    case RECORD:      type = "Aida::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
+    case INSTANCE:    type = "Aida::Instance";                          break; // FIXME: missing details
     case ANY:         type = "any";             u.vany = new Any();     break;
     default:
-      error_printf ("Plic::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+      error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
     }
   type_code = TypeMap::lookup (type);
   if (type_code.untyped() && type != NULL)
-    error_printf ("Plic::Any:rekind: invalid type name: %s", type);
+    error_printf ("Aida::Any:rekind: invalid type name: %s", type);
   if (kind() != _kind)
-    error_printf ("Plic::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
+    error_printf ("Aida::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
 }
 
 bool
@@ -188,7 +188,7 @@ Any::operator== (const Any &clone) const
     case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME
     case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
     default:
-      error_printf ("Plic::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
+      error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
     }
   return true;
 }
@@ -528,7 +528,7 @@ FieldBuffer::type_name (int field_type)
 std::string
 FieldBuffer::to_string() const
 {
-  String s = string_printf ("Plic::FieldBuffer(%p)={", this);
+  String s = string_printf ("Aida::FieldBuffer(%p)={", this);
   s += string_printf ("size=%u, capacity=%u", size(), capacity());
   FieldReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
@@ -866,17 +866,17 @@ ConnectionTransport::client_call_remote (FieldBuffer *fb)
 {
   PLIC_THROW_IF_FAIL (fb != NULL);
   // enqueue method call message
-  const Plic::MessageId msgid = Plic::MessageId (fb->first_id());
+  const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
   server_queue.send_msg (fb, true);
   // wait for result
-  const bool needsresult = Plic::msgid_has_result (msgid);
+  const bool needsresult = Aida::msgid_has_result (msgid);
   if (needsresult)
     block_for_result ();
   while (needsresult)
     {
       FieldBuffer *fr = client_queue.pop_msg();
-      Plic::MessageId retid = Plic::MessageId (fr->first_id());
-      if (Plic::msgid_is_error (retid))
+      Aida::MessageId retid = Aida::MessageId (fr->first_id());
+      if (Aida::msgid_is_error (retid))
         {
           FieldReader fbr (*fr);
           fbr.skip_msgid();
@@ -885,7 +885,7 @@ ConnectionTransport::client_call_remote (FieldBuffer *fb)
           warning_printf ("%s: %s", dom.c_str(), msg.c_str());
           delete fr;
         }
-      else if (Plic::msgid_is_result (retid))
+      else if (Aida::msgid_is_result (retid))
         return fr;
       else
         client_events.push_back (fr);
@@ -1134,11 +1134,11 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
   if (PLIC_UNLIKELY (size_before == size_after))
     {
       errno = EKEYREJECTED;
-      perror (string_printf ("%s:%u: Plic::ServerConnection::MethodRegistry::register_method: "
+      perror (string_printf ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
                              "duplicate hash registration (%016llx%016llx)",
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
 }
 
-} // Plic
+} // Aida

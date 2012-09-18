@@ -11,14 +11,14 @@
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
 #define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \
-                                   PLIC_UNLIKELY (!Plic::msgid_is_result (Plic::MessageId (fr->first_id())))) { \
+                                   PLIC_UNLIKELY (!Aida::msgid_is_result (Aida::MessageId (fr->first_id())))) { \
                                  PyErr_Format_from_PLIC_error (fr); \
                                  goto error; } } while (0)
 
-// using Plic::uint64_t;
+// using Aida::uint64_t;
 using ::uint64_t;
-using Plic::FieldBuffer;
-using Plic::FieldReader;
+using Aida::FieldBuffer;
+using Aida::FieldReader;
 
 static PyObject*
 PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
@@ -28,7 +28,7 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
-  if (Plic::msgid_is_error (Plic::MessageId (msgid)))
+  if (Aida::msgid_is_error (Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
       if (domain.size()) domain += ": ";
@@ -56,7 +56,7 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline Plic::uint64_t
+static inline Aida::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
@@ -83,14 +83,14 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline Plic::Any
+static inline Aida::Any
 __plic_pyany_to_any (PyObject *pyany)
 {
-  return Plic::Any(); // FIXME: pyany to Any
+  return Aida::Any(); // FIXME: pyany to Any
 }
 
 static inline PyObject*
-__plic_pyany_from_any (const Plic::Any &any)
+__plic_pyany_from_any (const Aida::Any &any)
 {
   return None_INCREF(); // FIXME: Any to pyany
 }
@@ -132,7 +132,7 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 }
 
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
+#define PLIC_CONNECTION()       (*(Aida::ClientConnection*)NULL)
 #endif
 
 enum Empty {
@@ -240,9 +240,9 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 static RAPICORN_UNUSED bool
-plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyXFooRecord_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (17);
+  Aida::FieldBuffer &fb = dst.add_rec (17);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -286,10 +286,10 @@ plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyXFooRecord_proto_pop (Plic::FieldReader &src)
+plic_pyXFooRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 17) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -337,11 +337,11 @@ plic_pyXFooRecord_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyXFooSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyXFooSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -352,10 +352,10 @@ plic_pyXFooSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyXFooSequence_proto_pop (Plic::FieldReader &src)
+plic_pyXFooSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -371,11 +371,11 @@ plic_pyXFooSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyIntSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyIntSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -386,10 +386,10 @@ plic_pyIntSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyIntSequence_proto_pop (Plic::FieldReader &src)
+plic_pyIntSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -405,11 +405,11 @@ plic_pyIntSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyFloatSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyFloatSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -420,10 +420,10 @@ plic_pyFloatSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyFloatSequence_proto_pop (Plic::FieldReader &src)
+plic_pyFloatSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -439,11 +439,11 @@ plic_pyFloatSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyStringSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyStringSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -454,10 +454,10 @@ plic_pyStringSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyStringSequence_proto_pop (Plic::FieldReader &src)
+plic_pyStringSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -473,11 +473,11 @@ plic_pyStringSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyExtensiveEnumSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyExtensiveEnumSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -488,10 +488,10 @@ plic_pyExtensiveEnumSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &ds
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldReader &src)
+plic_pyExtensiveEnumSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -507,11 +507,11 @@ plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyRecordSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyRecordSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -522,10 +522,10 @@ plic_pyRecordSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyRecordSequence_proto_pop (Plic::FieldReader &src)
+plic_pyRecordSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -541,11 +541,11 @@ plic_pyRecordSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pySequenceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pySequenceSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -556,10 +556,10 @@ plic_pySequenceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pySequenceSequence_proto_pop (Plic::FieldReader &src)
+plic_pySequenceSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -575,11 +575,11 @@ plic_pySequenceSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyInterfaceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyInterfaceSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -590,10 +590,10 @@ plic_pyInterfaceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyInterfaceSequence_proto_pop (Plic::FieldReader &src)
+plic_pyInterfaceSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -609,11 +609,11 @@ plic_pyInterfaceSequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyAnySequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyAnySequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -624,10 +624,10 @@ plic_pyAnySequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyAnySequence_proto_pop (Plic::FieldReader &src)
+plic_pyAnySequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -643,9 +643,9 @@ plic_pyAnySequence_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (2);
+  Aida::FieldBuffer &fb = dst.add_rec (2);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -659,10 +659,10 @@ plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNestedTypesRec_proto_pop (Plic::FieldReader &src)
+plic_pyNestedTypesRec_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -680,11 +680,11 @@ plic_pyNestedTypesRec_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNestedTypesSeq_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyNestedTypesSeq_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -695,10 +695,10 @@ plic_pyNestedTypesSeq_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNestedTypesSeq_proto_pop (Plic::FieldReader &src)
+plic_pyNestedTypesSeq_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -714,9 +714,9 @@ plic_pyNestedTypesSeq_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNewRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyNewRecord_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (4);
+  Aida::FieldBuffer &fb = dst.add_rec (4);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -734,10 +734,10 @@ plic_pyNewRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNewRecord_proto_pop (Plic::FieldReader &src)
+plic_pyNewRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -759,9 +759,9 @@ plic_pyNewRecord_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyInnerRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyInnerRecord_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (3);
+  Aida::FieldBuffer &fb = dst.add_rec (3);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -777,10 +777,10 @@ plic_pyInnerRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyInnerRecord_proto_pop (Plic::FieldReader &src)
+plic_pyInnerRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 3) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -800,9 +800,9 @@ plic_pyInnerRecord_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyRefer2Inner_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyRefer2Inner_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (1);
+  Aida::FieldBuffer &fb = dst.add_rec (1);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -814,10 +814,10 @@ plic_pyRefer2Inner_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyRefer2Inner_proto_pop (Plic::FieldReader &src)
+plic_pyRefer2Inner_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 1) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -833,9 +833,9 @@ plic_pyRefer2Inner_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pySomeRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pySomeRecord_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (4);
+  Aida::FieldBuffer &fb = dst.add_rec (4);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -853,10 +853,10 @@ plic_pySomeRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pySomeRecord_proto_pop (Plic::FieldReader &src)
+plic_pySomeRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -878,9 +878,9 @@ plic_pySomeRecord_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyQuickRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
+plic_pyQuickRecord_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (2);
+  Aida::FieldBuffer &fb = dst.add_rec (2);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -894,10 +894,10 @@ plic_pyQuickRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyQuickRecord_proto_pop (Plic::FieldReader &src)
+plic_pyQuickRecord_proto_pop (Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_rec());
+  Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -915,11 +915,11 @@ plic_pyQuickRecord_proto_pop (Plic::FieldReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyQuickSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+plic_pyQuickSequence_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)
 {
   PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
   const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
-  Plic::FieldBuffer &fb = dst.add_seq (len);
+  Aida::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
@@ -930,10 +930,10 @@ plic_pyQuickSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyQuickSequence_proto_pop (Plic::FieldReader &src)
+plic_pyQuickSequence_proto_pop (Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Plic::FieldReader fbr (src.pop_seq());
+  Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -977,7 +977,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__simple_method_float (PyObject *pyself, P
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1004,7 +1004,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__single_arg_float_int (PyObject *pyself, 
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1031,7 +1031,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__single_arg2_float_int (PyObject *pyself,
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1060,7 +1060,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__two_args_float_int_float (PyObject *pyse
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1089,7 +1089,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__two_args2_float_int_float (PyObject *pys
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1124,7 +1124,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__multi_args_float_int_float_int_string_fl
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1153,7 +1153,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__self_method_float_InterfaceTests__UIWidg
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1195,7 +1195,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__on_click2out_string (PyObject *pyself, P
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1227,13 +1227,13 @@ _plic_rpc_InterfaceTests__UIWidgetArea__on_click2in_void_string (PyObject *pysel
   if (fm) delete fm;
   return NULL;
 }
-class _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__UIWidgetArea__void_signal_void() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1258,7 +1258,7 @@ _plic_marshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself,
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1277,13 +1277,13 @@ _plic_marshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself,
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -1315,7 +1315,7 @@ _plic_marshal__InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests_
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1386,7 +1386,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool 
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1415,7 +1415,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_ints_int_int_int (PyO
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1444,7 +1444,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_floats_float_float_fl
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1473,7 +1473,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_string_string_string_
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1502,7 +1502,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
@@ -1531,7 +1531,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = plic_pyQuickRecord_proto_pop (frr); ERRORif (!pyfoR);
@@ -1560,7 +1560,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTes
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = plic_pyQuickSequence_proto_pop (frr); ERRORif (!pyfoR);
@@ -1589,7 +1589,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTe
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = plic_PyObject_4uint64 ("GrandChild", frr.pop_object()); ERRORifpy();
@@ -1618,7 +1618,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any (PyO
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = __plic_pyany_from_any (frr.pop_any()); ERRORifpy();
@@ -1647,7 +1647,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = plic_PyObject_4uint64 ("QuickIface", frr.pop_object()); ERRORifpy();
@@ -1660,13 +1660,13 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   if (fm) delete fm;
   return NULL;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__void_result_void : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__void_result_void : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__void_result_void() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__void_result_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1691,7 +1691,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_result_void (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_result_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1710,13 +1710,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1741,7 +1741,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1760,13 +1760,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__int_result_int : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__int_result_int : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__int_result_int() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__int_result_int (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1791,7 +1791,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_result_int (PyObject *py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_result_int (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_result_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1810,13 +1810,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_result_int (PyObject *py
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__float_result_float : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__float_result_float : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__float_result_float() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__float_result_float (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1841,7 +1841,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_result_float (PyObject
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_result_float (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_result_float (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1860,13 +1860,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_result_float (PyObject
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__string_result_string : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__string_result_string : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__string_result_string() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__string_result_string (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1891,7 +1891,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_result_string (PyObje
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_result_string (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_result_string (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1910,13 +1910,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_result_string (PyObje
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1941,7 +1941,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1960,13 +1960,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -1991,7 +1991,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2010,13 +2010,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2041,7 +2041,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTes
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2060,13 +2060,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTes
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2091,7 +2091,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2110,13 +2110,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__any_result_any : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__any_result_any : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__any_result_any() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2141,7 +2141,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_result_any (PyObject *py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2160,13 +2160,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_result_any (PyObject *py
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2191,7 +2191,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2210,13 +2210,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__void_arg_void() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2241,7 +2241,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pys
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2260,13 +2260,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pys
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2296,7 +2296,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2315,13 +2315,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2351,7 +2351,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_arg_void_int (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2370,13 +2370,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_arg_void_int (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2406,7 +2406,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_arg_void_float (PyObje
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2425,13 +2425,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_arg_void_float (PyObje
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2461,7 +2461,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_arg_void_string (PyOb
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2480,13 +2480,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_arg_void_string (PyOb
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2516,7 +2516,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2535,13 +2535,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2571,7 +2571,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTes
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2590,13 +2590,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTes
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2626,7 +2626,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceT
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2645,13 +2645,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceT
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2681,7 +2681,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2700,13 +2700,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2736,7 +2736,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2755,13 +2755,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2791,7 +2791,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTest
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2810,13 +2810,13 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTest
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
+class _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
   _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
@@ -2856,7 +2856,7 @@ _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2875,13 +2875,13 @@ _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool : public Plic::ClientConnection::EventHandler {
+class _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool() { Py_DECREF (m_callable); }
   _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2906,7 +2906,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2925,13 +2925,13 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__activate_void : public Plic::ClientConnection::EventHandler {
+class _EventHandler_RapicornPlicTest__ButtonArea__activate_void : public Aida::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_RapicornPlicTest__ButtonArea__activate_void() { Py_DECREF (m_callable); }
   _EventHandler_RapicornPlicTest__ButtonArea__activate_void (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
   virtual FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  handle_event (Aida::FieldBuffer &fb)
   {
     const uint length = 0;
     PyObject *result, *tuple = PyTuple_New (length);
@@ -2956,7 +2956,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__activate_void (PyObject *pyself, Py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__activate_void (item);
+    Aida::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__activate_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2989,7 +2989,7 @@ _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself
   fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Plic::FieldReader frr (*fr);
+    Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();

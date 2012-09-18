@@ -165,7 +165,7 @@ private:
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Plic::ServerConnection server_connection;
+  Aida::ServerConnection server_connection;
   Mutex mutex; Cond cond; uint64 app_id;
 };
 
@@ -173,7 +173,7 @@ class UIThread {
   std::thread           m_thread;
   pthread_mutex_t       m_thread_mutex;
   volatile bool         m_running;
-  Plic::ServerConnection m_server_connection;
+  Aida::ServerConnection m_server_connection;
   Initializer      *m_idata;
   MainLoop         &m_main_loop; // FIXME: non-NULL only while running
 public:
@@ -357,10 +357,10 @@ struct Callable {
 static std::deque<Callable*> syscall_queue;
 static Mutex                 syscall_mutex;
 
-static Plic::FieldBuffer*
-ui_thread_syscall_twoway (Plic::FieldReader &fbr)
+static Aida::FieldBuffer*
+ui_thread_syscall_twoway (Aida::FieldReader &fbr)
 {
-  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result();
   int64 result = -1;
   syscall_mutex.lock();
   while (syscall_queue.size())
@@ -378,24 +378,24 @@ ui_thread_syscall_twoway (Plic::FieldReader &fbr)
 }
 
 static const ServerConnection::MethodEntry ui_thread_call_entries[] = {
-  { Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
+  { Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
 };
 static ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
 
 static int64
 ui_thread_syscall (Callable *callable)
 {
-  Plic::FieldBuffer *fb = Plic::FieldBuffer::_new (2);
-  fb->add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
+  Aida::FieldBuffer *fb = Aida::FieldBuffer::_new (2);
+  fb->add_msgid (Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
   FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  const Plic::MessageId msgid = Plic::MessageId (frr.pop_int64());
+  Aida::FieldReader frr (*fr);
+  const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
   frr.skip(); // FIXME: check full msgid
   int64 result = 0;
-  if (Plic::msgid_is_result (msgid))
+  if (Aida::msgid_is_result (msgid))
     result = frr.pop_int64();
   delete fr;
   return result;

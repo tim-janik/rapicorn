@@ -4,7 +4,7 @@
  * @brief PLIC builtin type definitions.
  */
 
-namespace Plic {
+namespace Aida {
   namespace __system_typedefs__ {
     // special namespace, containing definitions for the builtin TypeMap
     typedef string __builtin__string;

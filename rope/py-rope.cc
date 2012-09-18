@@ -25,7 +25,7 @@
 // --- Anonymous namespacing
 namespace {
 
-static Plic::ClientConnection pyrope_connection;
+static Aida::ClientConnection pyrope_connection;
 #define PLIC_CONNECTION()    (pyrope_connection)
 
 // --- cpy2rope stubs (generated) ---

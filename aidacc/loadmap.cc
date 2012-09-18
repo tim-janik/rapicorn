@@ -10,7 +10,7 @@
 #define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
 #define __PLIC_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
 
-namespace Plic {
+namespace Aida {
 
 const char*
 type_kind_name (TypeKind type_kind)
@@ -215,7 +215,7 @@ TypeMap::type (size_t index) const
   InternalList *il = m_handle->internal_list (m_handle->imap->types);
   if (il && index < il->length)
     {
-      Plic::InternalType *it = m_handle->internal_type (il->items[index]);
+      Aida::InternalType *it = m_handle->internal_type (il->items[index]);
       if (it)
         return TypeCode (m_handle, it);
     }
@@ -693,4 +693,4 @@ TypeMap::builtins ()
   return type_map;
 }
 
-} // Plic
+} // Aida

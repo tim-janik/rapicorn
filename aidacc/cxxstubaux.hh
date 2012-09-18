@@ -4,15 +4,15 @@
 
 #include "runtime.hh"
 
-namespace Plic {
+namespace Aida {
 namespace CxxStub /// Internal types, used by the CxxStub code generator.
 {
 
 /// Handles remote (dis-)connection and client side dispatching of events via Rapicorn signals.
 template<class Handle, typename SignalSignature>
-class SignalHandler : Plic::ClientConnection::EventHandler
+class SignalHandler : Aida::ClientConnection::EventHandler
 {
-  static inline Plic::ClientConnection
+  static inline Aida::ClientConnection
   __client_connection__ (void)
   {
     struct _Handle : Handle { using Handle::__client_connection__; };
@@ -25,7 +25,7 @@ public:
     Rapicorn::Signals::CollectorDefault<typename Rapicorn::Signals::Signature<SignalSignature>::result_type>,
     Rapicorn::Signals::SignalConnectionRelay<SignalHandler>
     > RelaySignal;
-  Plic::uint64_t m_handler_id, m_connection_id;
+  Aida::uint64_t m_handler_id, m_connection_id;
   RelaySignal rsignal;
   ProxySignal psignal;
   const long long unsigned hhi;
@@ -46,7 +46,7 @@ public:
   void
   connections_changed (bool hasconnections)
   {
-    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
+    Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
     fb.add_msgid (hhi, hlo);
     fb <<= *rsignal.emitter();
     if (hasconnections)
@@ -64,18 +64,18 @@ public:
         fb <<= m_connection_id; // disconnection request
         m_connection_id = 0;
       }
-    Plic::FieldBuffer *fr = __client_connection__().call_remote (&fb); // deletes fb
+    Aida::FieldBuffer *fr = __client_connection__().call_remote (&fb); // deletes fb
     if (fr)
       { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
-        Plic::FieldReader frr (*fr);
+        Aida::FieldReader frr (*fr);
         frr.skip_msgid();       // FIXME: msgid for return?
         if (frr.remaining() && m_handler_id)
           frr >>= m_connection_id;
         delete fr;
       }
   }
-  virtual Plic::FieldBuffer*
-  handle_event (Plic::FieldBuffer &fb)
+  virtual Aida::FieldBuffer*
+  handle_event (Aida::FieldBuffer &fb)
   {
     FieldTools<SignalSignature>::emit (fb, rsignal);
     return NULL;
@@ -83,6 +83,6 @@ public:
 };
 
 } // CxxStub
-} // Plic
+} // Aida
 
 #endif // __PLIC_CXXSTUBAUX_HH__

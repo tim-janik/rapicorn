@@ -16,7 +16,7 @@ using std::tr1::weak_ptr;
 }
 #endif  // !_SHARED_PTR_H
 
-namespace Plic {
+namespace Aida {
 
 // == Auxillary macros ==
 #define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
@@ -241,7 +241,7 @@ class SmartHandle {
   typedef NullSmartHandle<SmartHandle> NullHandle;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
-  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Plic::SmartHandle::_is_null; }
+  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
   typedef uint64_t RpcId;
   explicit                  SmartHandle (uint64_t ipcid);
   void                      _reset      ();
@@ -423,7 +423,7 @@ public: /// @name API for event handler bookkeeping
   struct EventHandler                        /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler ();
-    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
+    virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
   };
   uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
   EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
@@ -458,15 +458,15 @@ FieldBuffer::reset()
     }
 }
 
-} // Plic
+} // Aida
 
 /// @weakgroup PlicManifoldTypes Plic manifold generated types
 /// @{
-namespace Plic {
+namespace Aida {
 
 /// Tools to pack/unpack and use FieldBuffer contents.
 template<class Signature> struct FieldTools;
 
-} // Plic
+} // Aida
 /// @}
 

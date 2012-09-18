@@ -35,14 +35,14 @@ base_code = """
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
 #define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \\
-                                   PLIC_UNLIKELY (!Plic::msgid_is_result (Plic::MessageId (fr->first_id())))) { \\
+                                   PLIC_UNLIKELY (!Aida::msgid_is_result (Aida::MessageId (fr->first_id())))) { \\
                                  PyErr_Format_from_PLIC_error (fr); \\
                                  goto error; } } while (0)
 
-// using Plic::uint64_t;
+// using Aida::uint64_t;
 using ::uint64_t;
-using Plic::FieldBuffer;
-using Plic::FieldReader;
+using Aida::FieldBuffer;
+using Aida::FieldReader;
 
 static PyObject*
 PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
@@ -52,7 +52,7 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
-  if (Plic::msgid_is_error (Plic::MessageId (msgid)))
+  if (Aida::msgid_is_error (Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
       if (domain.size()) domain += ": ";
@@ -80,7 +80,7 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline Plic::uint64_t
+static inline Aida::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
@@ -107,14 +107,14 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline Plic::Any
+static inline Aida::Any
 __plic_pyany_to_any (PyObject *pyany)
 {
-  return Plic::Any(); // FIXME: pyany to Any
+  return Aida::Any(); // FIXME: pyany to Any
 }
 
 static inline PyObject*
-__plic_pyany_from_any (const Plic::Any &any)
+__plic_pyany_from_any (const Aida::Any &any)
 {
   return None_INCREF(); // FIXME: Any to pyany
 }
@@ -156,7 +156,7 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 }
 
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
+#define PLIC_CONNECTION()       (*(Aida::ClientConnection*)NULL)
 #endif
 """
 
@@ -225,9 +225,9 @@ class Generator:
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)\n' % type_info.name
+    s += 'plic_py%s_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
-    s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
+    s += '  Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += '  bool success = false;\n'
     s += '  PyObject *dictR = NULL, *item = NULL;\n'
     s += '  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);\n'
@@ -241,10 +241,10 @@ class Generator:
     s += '}\n'
     # record proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (Plic::FieldReader &src)\n' % type_info.name
+    s += 'plic_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Plic::FieldReader fbr (src.pop_rec());\n'
+    s += '  Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("PLIC: marshalling error: invalid record length");\n' % len (type_info.fields)
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
@@ -265,11 +265,11 @@ class Generator:
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)\n' % type_info.name
+    s += 'plic_py%s_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;\n'
     s += '  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;\n'
-    s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
+    s += '  Aida::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  bool success = false;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);\n'
@@ -281,10 +281,10 @@ class Generator:
     s += '}\n'
     # sequence proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (Plic::FieldReader &src)\n' % type_info.name
+    s += 'plic_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Plic::FieldReader fbr (src.pop_seq());\n'
+    s += '  Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -304,13 +304,13 @@ class Generator:
     mdefs += [ '{ "_PLIC_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     evd_class = '_EventHandler_%s' % mtype.ident_digest()
-    s += 'class %s : public Plic::ClientConnection::EventHandler {\n' % evd_class
+    s += 'class %s : public Aida::ClientConnection::EventHandler {\n' % evd_class
     s += '  PyObject *m_callable;\n'
     s += 'public:\n'
     s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
     s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
     s += '  virtual FieldBuffer*\n'
-    s += '  handle_event (Plic::FieldBuffer &fb)\n'
+    s += '  handle_event (Aida::FieldBuffer &fb)\n'
     s += '  {\n'
     if mtype.args:
       s += '    FieldReader fbr (fb);\n'
@@ -344,7 +344,7 @@ class Generator:
     s += '  if (item == Py_None) fb.add_int64 (0);\n'
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    Plic::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
+    s += '    Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
     s += '    uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
@@ -395,7 +395,7 @@ class Generator:
     else:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
-      s += '    Plic::FieldReader frr (*fr);\n'
+      s += '    Aida::FieldReader frr (*fr);\n'
       s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'

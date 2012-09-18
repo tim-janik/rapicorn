@@ -208,7 +208,7 @@ class Generator:
       otsl,tsl = tsl,[]
       for tp in otsl:
         tid,fqn,aux,memb = tp
-        fqn = re.sub (r'^Plic::__system_typedefs__::__builtin__', '', fqn)
+        fqn = re.sub (r'^Aida::__system_typedefs__::__builtin__', '', fqn)
         tsl += [ (tid, fqn, aux, memb) ]
     # encode type map from serialized types
     return encode_type_map (tsl)

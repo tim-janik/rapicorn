@@ -4,13 +4,13 @@
 #include "internal.hh"
 
 namespace { // Anon
-static Plic::ServerConnection _serverglue_connection;
+static Aida::ServerConnection _serverglue_connection;
 };
 
 namespace Rapicorn {
 
 void
-uithread_serverglue (Plic::ServerConnection connection)
+uithread_serverglue (Aida::ServerConnection connection)
 {
  _serverglue_connection = connection;
 }
