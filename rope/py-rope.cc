@@ -26,7 +26,7 @@
 namespace {
 
 static Aida::ClientConnection pyrope_connection;
-#define PLIC_CONNECTION()    (pyrope_connection)
+#define AIDA_CONNECTION()    (pyrope_connection)
 
 // --- cpy2rope stubs (generated) ---
 #include "cpy2rope.cc"
@@ -102,7 +102,7 @@ static PyObject*
 rope_event_fd (PyObject *self, PyObject *args)
 {
   PyObject *tuple = PyTuple_New (2);
-  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (PLIC_CONNECTION().notify_fd()));
+  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (AIDA_CONNECTION().notify_fd()));
   PyTuple_SET_ITEM (tuple, 1, PyString_FromString ("i")); // POLLIN
   if (PyErr_Occurred())
     {
@@ -117,7 +117,7 @@ rope_event_check (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  bool hasevent = PLIC_CONNECTION().pending();
+  bool hasevent = AIDA_CONNECTION().pending();
   PyObject *pybool = hasevent ? Py_True : Py_False;
   Py_INCREF (pybool);
   return pybool;
@@ -128,7 +128,7 @@ rope_event_dispatch (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  PLIC_CONNECTION().dispatch();
+  AIDA_CONNECTION().dispatch();
   return PyErr_Occurred() ? NULL : None_INCREF();
 }
 
@@ -146,7 +146,7 @@ static PyMethodDef rope_vtable[] = {
     "Dispatch pending Rapicorn events." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },
-  PLIC_PYSTUB_METHOD_DEFS(),
+  AIDA_PYSTUB_METHOD_DEFS(),
   { NULL, } // sentinel
 };
 static const char rapicorn_doc[] = "Rapicorn Python Language Binding Module.";

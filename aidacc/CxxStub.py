@@ -25,10 +25,10 @@ gencc_boilerplate = r"""
 #include <string>
 #include <vector>
 #include <stdexcept>
-#ifndef __PLIC_GENERIC_CC_BOILERPLATE__
-#define __PLIC_GENERIC_CC_BOILERPLATE__
+#ifndef __AIDA_GENERIC_CC_BOILERPLATE__
+#define __AIDA_GENERIC_CC_BOILERPLATE__
 
-#define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
 using Aida::uint64_t;
@@ -44,27 +44,27 @@ Aida::FieldBuffer* plic$_error (const char *format, ...)
 }
 
 } // Anonymous
-#endif // __PLIC_GENERIC_CC_BOILERPLATE__
+#endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
 #include <aidacc/cxxstubaux.hh>
 """
 
 servercc_boilerplate = r"""
-#ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Aida::ServerConnection*)NULL)
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Aida::ServerConnection*)NULL)
 template<class O> O*  connection_id2object (Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Aida::SimpleServer*> (oid)); }
 inline Aida::uint64_t connection_object2id (const Aida::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
 inline Aida::uint64_t connection_object2id (const Aida::SimpleServer &obj) { return connection_object2id (&obj); }
-#endif // !PLIC_CONNECTION
+#endif // !AIDA_CONNECTION
 """
 
 clientcc_boilerplate = r"""
-#ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Aida::ClientConnection*)NULL)
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Aida::ClientConnection*)NULL)
 Aida::uint64_t       connection_handle2id  (const Aida::SmartHandle &h) { return h._rpc_id(); }
 static inline void   connection_context4id (Aida::uint64_t ipcid, Aida::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Aida::uint64_t oid) { return (C*) NULL; }
-#endif // !PLIC_CONNECTION
+#endif // !AIDA_CONNECTION
 """
 
 identifiers = {
@@ -518,13 +518,13 @@ class Generator:
     s += '    Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);\n' # msgid self
     s += '    fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
     s += '  ' + self.generate_proto_add_args ('fb', class_info, '', [('handle$', class_info)], '')
-    s += '    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '    PLIC_CHECK (fr != NULL, "missing result from 2-way call");\n'
+    s += '    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '    AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '    Aida::FieldReader frr (*fr);\n'
     s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
     s += '    size_t len;\n'
     s += '    frr >>= len;\n'
-    s += '    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");\n'
+    s += '    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");\n'
     s += '    Aida::TypeHashList *thv = new Aida::TypeHashList();\n'
     s += '    Aida::TypeHash thash;\n'
     s += '    for (size_t i = 0; i < len; i++) {\n'
@@ -552,7 +552,7 @@ class Generator:
     s += '\n{}\n'
     if ddc:
       s += 'Aida::ClientConnection\n%s::__client_connection__ (void)\n{\n' % classH
-      s += '  return PLIC_CONNECTION();\n}\n'
+      s += '  return AIDA_CONNECTION();\n}\n'
     s += 'void\n'
     s += 'operator<<= (Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'
@@ -560,7 +560,7 @@ class Generator:
     s += 'void\n'
     s += 'operator>>= (Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
     s += '  const Aida::uint64_t ipcid = fbr.pop_object();\n'
-    s += '  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
+    s += '  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
     s += '}\n'
     s += 'const Aida::TypeHash&\n'
     s += '%s::_type()\n{\n' % classH
@@ -578,7 +578,7 @@ class Generator:
     s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
     s += '  static Aida::TypeHashList notypes;\n'
     s += '  const Aida::uint64_t ipcid = connection_handle2id (*this);\n'
-    s += '  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle\n'
+    s += '  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle\n'
     s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
     for sg in class_info.signals:
@@ -634,7 +634,7 @@ class Generator:
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     # call out
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
@@ -646,7 +646,7 @@ class Generator:
       s += '  delete fr;\n'
       s += '  return retval;\n'
     else:
-      s += '  if (PLIC_UNLIKELY (fr != NULL)) delete fr;\n' # FIXME: check return error
+      s += '  if (AIDA_UNLIKELY (fr != NULL)) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
   def generate_server_method_stub (self, class_info, mtype, reglines):
@@ -661,7 +661,7 @@ class Generator:
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
       s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
@@ -712,7 +712,7 @@ class Generator:
     s += '  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
     s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Aida::FieldReader frr (*fr);\n'
@@ -734,7 +734,7 @@ class Generator:
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
     s += '  if (fr) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
@@ -751,7 +751,7 @@ class Generator:
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # fetch property
     s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
     s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
@@ -774,7 +774,7 @@ class Generator:
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # return var
     s += '  '
     s += self.V ('', ftype) + 'rval = '
@@ -798,7 +798,7 @@ class Generator:
     s += '  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Aida::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     s += '  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
@@ -896,13 +896,13 @@ class Generator:
     s += '  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Aida::uint64_t handler_id, con_id, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
     s += '  fbr >>= con_id;\n'
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (AIDA_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result();\n'
     s += '  rb <<= cid;\n'
@@ -1012,7 +1012,7 @@ class Generator:
     if self.gen_inclusions:
       s += '\n// --- Custom Includes ---\n'
     if self.gen_inclusions and (self.gen_clientcc or self.gen_servercc):
-      s += '#ifndef __PLIC_UTILITIES_HH__\n'
+      s += '#ifndef __AIDA_UTILITIES_HH__\n'
     for i in self.gen_inclusions:
       s += '#include %s\n' % i
     if self.gen_inclusions and (self.gen_clientcc or self.gen_servercc):

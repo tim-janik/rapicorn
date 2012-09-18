@@ -53,13 +53,13 @@ EXTRA_DIST += plic.py
 runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(AM_V_GEN)
 	$(Q) echo "// aidacc/runtime.hh - Aida C++ Runtime API"		 > xtmp-$(@F)
-	$(Q) echo "#ifndef __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
-	$(Q) echo "#define __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
+	$(Q) echo "#ifndef __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
+	$(Q) echo "#define __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.hh"' 			>> xtmp-$(@F)
 	$(Q) cat $(srcdir)/runtypes.hh					>> xtmp-$(@F)
 	$(Q) echo '# 1 "$(abs_srcdir)/runproto.hh"' 			>> xtmp-$(@F)
 	$(Q) $(srcdir)/xmanifold.py $(srcdir)/runproto.hh 18		>> xtmp-$(@F)
-	$(Q) echo "#endif // __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
+	$(Q) echo "#endif // __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)
 EXTRA_DIST += xmanifold.py

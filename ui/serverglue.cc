@@ -17,6 +17,6 @@ uithread_serverglue (Aida::ServerConnection connection)
 
 } // Rapicorn
 
-#define PLIC_CONNECTION()       (_serverglue_connection)
+#define AIDA_CONNECTION()       (_serverglue_connection)
 
 #include "serverapi.cc"

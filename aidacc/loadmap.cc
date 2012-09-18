@@ -8,7 +8,7 @@
 #include <assert.h>
 
 #define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
-#define __PLIC_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
+#define __AIDA_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
 
 namespace Aida {
 
@@ -94,7 +94,7 @@ public:
   simple_string (uint32_t offset)
   {
     InternalString *is = internal_string (offset);
-    return PLIC_LIKELY (is) ? std::string (is->chars, is->length) : "";
+    return AIDA_LIKELY (is) ? std::string (is->chars, is->length) : "";
   }
   MapHandle*
   ref()
@@ -146,30 +146,30 @@ private:
 InternalType*
 InternalMap::internal_type (uint32_t offset) const
 {
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists))
-    __PLIC_return_EFAULT (NULL);
+  if (AIDA_UNLIKELY (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists))
+    __AIDA_return_EFAULT (NULL);
   return (InternalType*) (((char*) this) + offset);
 }
 
 InternalList*
 InternalMap::internal_list (uint32_t offset) const
 {
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
-    __PLIC_return_EFAULT (NULL);
+  if (AIDA_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
+    __AIDA_return_EFAULT (NULL);
   InternalList *il = (InternalList*) (((char*) this) + offset);
-  if (PLIC_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
-    __PLIC_return_EFAULT (NULL);
+  if (AIDA_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
+    __AIDA_return_EFAULT (NULL);
   return il;
 }
 
 InternalString*
 InternalMap::internal_string (uint32_t offset) const
 {
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length))
-    __PLIC_return_EFAULT (NULL);
+  if (AIDA_UNLIKELY (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length))
+    __AIDA_return_EFAULT (NULL);
   InternalString *is = (InternalString*) (((char*) this) + offset);
-  if (PLIC_UNLIKELY (offset + sizeof (*is) + is->length > length))
-    __PLIC_return_EFAULT (NULL);
+  if (AIDA_UNLIKELY (offset + sizeof (*is) + is->length > length))
+    __AIDA_return_EFAULT (NULL);
   return is;
 }
 
@@ -219,7 +219,7 @@ TypeMap::type (size_t index) const
       if (it)
         return TypeCode (m_handle, it);
     }
-  __PLIC_return_EFAULT (TypeCode::notype (m_handle));
+  __AIDA_return_EFAULT (TypeCode::notype (m_handle));
 }
 
 struct TypeRegistry {
@@ -243,7 +243,7 @@ static TypeRegistry *type_registry = NULL;
 static inline void
 type_registry_initialize()
 {
-  if (PLIC_UNLIKELY (!type_registry))
+  if (AIDA_UNLIKELY (!type_registry))
     {
       TypeRegistry *tr = new TypeRegistry();
       __sync_synchronize();
@@ -260,10 +260,10 @@ TypeMap::lookup (std::string name)
   for (size_t i = 0; i < sz; i++)
     {
       TypeMap tp = type_registry->nth (i);
-      if (PLIC_UNLIKELY (tp.error_status()))
+      if (AIDA_UNLIKELY (tp.error_status()))
         break;
       TypeCode tc = tp.lookup_local (name);
-      if (PLIC_UNLIKELY (!tc.untyped()))
+      if (AIDA_UNLIKELY (!tc.untyped()))
         return tc;
     }
   return type_registry->standard().lookup_local (name);
@@ -275,12 +275,12 @@ TypeMap::lookup_local (std::string name) const
   InternalList *il = m_handle->internal_list (m_handle->imap->types);
   const size_t clen = name.size();
   const char* cname = name.data(); // not 0-terminated
-  if (PLIC_LIKELY (il))
-    for (size_t i = 0; PLIC_LIKELY (i < il->length); i++)
+  if (AIDA_LIKELY (il))
+    for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
       {
         InternalType *it = m_handle->internal_type (il->items[i]);
-        InternalString *is = PLIC_LIKELY (it) ? m_handle->internal_string (it->name) : NULL;
-        if (PLIC_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
+        InternalString *is = AIDA_LIKELY (it) ? m_handle->internal_string (it->name) : NULL;
+        if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
           return TypeCode (m_handle, it);
       }
   return TypeCode::notype (m_handle);
@@ -349,7 +349,7 @@ TypeCode::operator!= (const TypeCode &o) const
 TypeKind
 TypeCode::kind () const
 {
-  return PLIC_LIKELY (m_type) ? TypeKind (m_type->tkind) : UNTYPED;
+  return AIDA_LIKELY (m_type) ? TypeKind (m_type->tkind) : UNTYPED;
 }
 
 std::string
@@ -361,13 +361,13 @@ TypeCode::kind_name () const
 std::string
 TypeCode::name () const
 {
-  return PLIC_LIKELY (m_handle) ? m_handle->simple_string (m_type->name) : "<broken>";
+  return AIDA_LIKELY (m_handle) ? m_handle->simple_string (m_type->name) : "<broken>";
 }
 
 size_t
 TypeCode::aux_count () const
 {
-  if (PLIC_UNLIKELY (!m_handle) || PLIC_UNLIKELY (!m_type))
+  if (AIDA_UNLIKELY (!m_handle) || AIDA_UNLIKELY (!m_type))
     return 0;
   InternalList *il = m_handle->internal_list (m_type->aux_strings);
   return il ? il->length : 0;
@@ -378,7 +378,7 @@ TypeCode::aux_data (size_t index) const // name=utf8data string
 {
   InternalList *il = m_handle->internal_list (m_type->aux_strings);
   if (!il || index > il->length)
-    __PLIC_return_EFAULT ("");
+    __AIDA_return_EFAULT ("");
   return m_handle->simple_string (il->items[index]);
 }
 
@@ -426,7 +426,7 @@ TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
     return sv;
   InternalList *il = m_handle->internal_list (m_type->custom);
   if (!il || index * 3 > il->length)
-    __PLIC_return_EFAULT (sv);
+    __AIDA_return_EFAULT (sv);
   sv.push_back (m_handle->simple_string (il->items[index * 3 + 0]));   // ident
   sv.push_back (m_handle->simple_string (il->items[index * 3 + 1]));   // label
   sv.push_back (m_handle->simple_string (il->items[index * 3 + 2]));   // blurb
@@ -450,7 +450,7 @@ TypeCode::prerequisite (size_t index) const
     return s;
   InternalList *il = m_handle->internal_list (m_type->custom);
   if (!il || index > il->length)
-    __PLIC_return_EFAULT (s);
+    __AIDA_return_EFAULT (s);
   return m_handle->simple_string (il->items[index]);
 }
 
@@ -477,7 +477,7 @@ TypeCode::field (size_t index) const // RECORD or SEQUENCE
     {
       InternalList *il = m_handle->internal_list (m_type->custom);
       if (!il || index > il->length)
-        __PLIC_return_EFAULT (TypeCode::notype (m_handle));
+        __AIDA_return_EFAULT (TypeCode::notype (m_handle));
       field_offset = il->items[index];
     }
   else

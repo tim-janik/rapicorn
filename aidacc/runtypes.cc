@@ -25,23 +25,23 @@
 #ifndef __GNUC__
 #define __PRETTY_FUNCTION__                     __func__
 #endif
-#define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
-#define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
-#define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Aida_StaticAssertion_LINE, __LINE__)
-#define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
+#define AIDA_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
+#define AIDA_CPP_PASTE2(a,b)                    AIDA_CPP_PASTE2i (a,b)
+#define AIDA_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } AIDA_CPP_PASTE2 (Aida_StaticAssertion_LINE, __LINE__)
+#define AIDA_STATIC_ASSERT(expr)                AIDA_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
-#define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
-#define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
+#define AIDA_THROW_IF_FAIL(expr)                do { if (AIDA_LIKELY (expr)) break; AIDA_THROW ("failed to assert (" + #expr + ")"); } while (0)
+#define AIDA_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
 /// @namespace Aida The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
 // == FieldUnion ==
-PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
-PLIC_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
+AIDA_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
+AIDA_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
 
 /* === Prototypes === */
-static std::string string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+static std::string string_printf (const char *format, ...) AIDA_PRINTF (1, 2);
 
 // === Utilities ===
 static std::string
@@ -433,7 +433,7 @@ SimpleServer::_rpc_id () const
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
 {
-  PLIC_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
+  AIDA_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
   // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
   const uint _offs = 1 + (_ntypes + 7) / 8;
   buffermem = new FieldUnion[_offs + _ntypes];
@@ -698,7 +698,7 @@ protected:
   Node*
   pop_node()
   {
-    if (PLIC_UNLIKELY (!m_local))
+    if (AIDA_UNLIKELY (!m_local))
       {
         Node *prev, *next, *node;
         do
@@ -864,7 +864,7 @@ public: // client
 FieldBuffer*
 ConnectionTransport::client_call_remote (FieldBuffer *fb)
 {
-  PLIC_THROW_IF_FAIL (fb != NULL);
+  AIDA_THROW_IF_FAIL (fb != NULL);
   // enqueue method call message
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
   server_queue.send_msg (fb, true);
@@ -1083,7 +1083,7 @@ ServerConnection::create_threaded ()
 static inline bool
 operator< (const TypeHash &a, const TypeHash &b)
 {
-  return PLIC_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
+  return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
 }
 typedef std::map<TypeHash, DispatchFunc> DispatcherMap;
 static DispatcherMap                    *dispatcher_map = NULL;
@@ -1093,7 +1093,7 @@ static bool                              dispatcher_map_frozen = false;
 static inline void
 ensure_dispatcher_map()
 {
-  if (PLIC_UNLIKELY (dispatcher_map == NULL))
+  if (AIDA_UNLIKELY (dispatcher_map == NULL))
     {
       pthread_mutex_lock (&dispatcher_mutex);
       if (!dispatcher_map)
@@ -1108,7 +1108,7 @@ ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
   TypeHash typehash (hashhi, hashlo);
   ensure_dispatcher_map();
 #if 1 // avoid costly mutex locking
-  if (PLIC_UNLIKELY (dispatcher_map_frozen == false))
+  if (AIDA_UNLIKELY (dispatcher_map_frozen == false))
     dispatcher_map_frozen = true;
   return (*dispatcher_map)[typehash];
 #else
@@ -1123,7 +1123,7 @@ void
 ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
   ensure_dispatcher_map();
-  PLIC_THROW_IF_FAIL (dispatcher_map_frozen == false);
+  AIDA_THROW_IF_FAIL (dispatcher_map_frozen == false);
   pthread_mutex_lock (&dispatcher_mutex);
   DispatcherMap::size_type size_before = dispatcher_map->size();
   TypeHash typehash (mentry.hashhi, mentry.hashlo);
@@ -1131,7 +1131,7 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
   DispatcherMap::size_type size_after = dispatcher_map->size();
   pthread_mutex_unlock (&dispatcher_mutex);
   // simple hash collision check (sanity check, see below)
-  if (PLIC_UNLIKELY (size_before == size_after))
+  if (AIDA_UNLIKELY (size_before == size_after))
     {
       errno = EKEYREJECTED;
       perror (string_printf ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "

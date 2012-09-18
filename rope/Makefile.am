@@ -61,7 +61,7 @@ check-local: check-PyStub-gen check-PyStub-syntax
 EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
 check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
 	$(Q) ${AIDACC} -G $(srcdir)/CxxPyStub $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) \
-	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
+	&& echo "static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
 check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref

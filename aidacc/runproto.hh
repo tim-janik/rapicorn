@@ -14,7 +14,7 @@ public:
     Aida::FieldReader fbr (fb);
     fbr.skip_msgid(); // FIXME: check msgid
     fbr.skip();       // skip m_handler_id
-    if (PLIC_UNLIKELY (fbr.remaining() != NARGS))
+    if (AIDA_UNLIKELY (fbr.remaining() != NARGS))
       Aida::error_printf ("invalid number of signal arguments");
     typename Type<A1>::T a1; typename Type<A2>::T a2;
     fbr >>= a1; fbr >>= a2;

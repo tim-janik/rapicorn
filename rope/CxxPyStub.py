@@ -34,9 +34,9 @@ base_code = """
 #define ERRORif(cond)   if (cond) goto error
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
-#define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \\
-                                   PLIC_UNLIKELY (!Aida::msgid_is_result (Aida::MessageId (fr->first_id())))) { \\
-                                 PyErr_Format_from_PLIC_error (fr); \\
+#define ERRORifnotret(fr) do { if (AIDA_UNLIKELY (!fr) || \\
+                                   AIDA_UNLIKELY (!Aida::msgid_is_result (Aida::MessageId (fr->first_id())))) { \\
+                                 PyErr_Format_from_AIDA_error (fr); \\
                                  goto error; } } while (0)
 
 // using Aida::uint64_t;
@@ -45,7 +45,7 @@ using Aida::FieldBuffer;
 using Aida::FieldReader;
 
 static PyObject*
-PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
+PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
@@ -155,8 +155,8 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
   return result;
 }
 
-#ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Aida::ClientConnection*)NULL)
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Aida::ClientConnection*)NULL)
 #endif
 """
 
@@ -301,7 +301,7 @@ class Generator:
     return s
   def generate_rpc_signal_call (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_PLIC_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
+    mdefs += [ '{ "_AIDA_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     evd_class = '_EventHandler_%s' % mtype.ident_digest()
     s += 'class %s : public Aida::ClientConnection::EventHandler {\n' % evd_class
@@ -345,11 +345,11 @@ class Generator:
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
     s += '    Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
-    s += '    uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
+    s += '    uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
     s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
-    s += '  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
     s += '    FieldReader frr (*fr);\n'
@@ -369,7 +369,7 @@ class Generator:
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_PLIC_%s", _plic_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
+    mdefs += [ '{ "_AIDA_%s", _plic_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
@@ -388,7 +388,7 @@ class Generator:
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
-    s += '  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
@@ -457,8 +457,8 @@ class Generator:
           s += self.generate_rpc_signal_call (tp, sg, mdefs)
     # method def array
     if mdefs:
-      aux = '{ "_PLIC___register_object_factory_callable", _plic___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
-      s += '#define PLIC_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
+      aux = '{ "_AIDA___register_object_factory_callable", _plic___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
+      s += '#define AIDA_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
 
 def error (msg):

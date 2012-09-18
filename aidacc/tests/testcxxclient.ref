@@ -10,10 +10,10 @@ using Rapicorn::Signals::slot;
 #include <string>
 #include <vector>
 #include <stdexcept>
-#ifndef __PLIC_GENERIC_CC_BOILERPLATE__
-#define __PLIC_GENERIC_CC_BOILERPLATE__
+#ifndef __AIDA_GENERIC_CC_BOILERPLATE__
+#define __AIDA_GENERIC_CC_BOILERPLATE__
 
-#define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
 using Aida::uint64_t;
@@ -29,17 +29,17 @@ Aida::FieldBuffer* plic$_error (const char *format, ...)
 }
 
 } // Anonymous
-#endif // __PLIC_GENERIC_CC_BOILERPLATE__
+#endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
 #include <aidacc/cxxstubaux.hh>
 
 
-#ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Aida::ClientConnection*)NULL)
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Aida::ClientConnection*)NULL)
 Aida::uint64_t       connection_handle2id  (const Aida::SmartHandle &h) { return h._rpc_id(); }
 static inline void   connection_context4id (Aida::uint64_t ipcid, Aida::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Aida::uint64_t oid) { return (C*) NULL; }
-#endif // !PLIC_CONNECTION
+#endif // !AIDA_CONNECTION
 
 
 // --- Interfaces (class declarations) ---
@@ -862,13 +862,13 @@ FirstInterface_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3e0c8f5da9110ad8ULL, 0xea565508333a9035ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -886,7 +886,7 @@ FirstInterfaceHandle::FirstInterfaceHandle ()
 Aida::ClientConnection
 FirstInterfaceHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const FirstInterfaceHandle &handle)
@@ -897,7 +897,7 @@ void
 operator>>= (Aida::FieldReader &fbr, FirstInterfaceHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterfaceHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterfaceHandle();
 }
 const Aida::TypeHash&
 FirstInterfaceHandle::_type()
@@ -919,7 +919,7 @@ FirstInterfaceHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<FirstInterface_Context$> (ipcid)->list_types();
 }
 void
@@ -928,8 +928,8 @@ FirstInterfaceHandle::void_func ()
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL); // msgid
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 inline void __attribute__ ((used))
 operator<<= (Aida::FieldBuffer &dst, const XFooRecordStruct &self)
@@ -1346,13 +1346,13 @@ UIWidgetArea_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3b205dd851cb8a1dULL, 0x5bcddc39beffee0dULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -1370,7 +1370,7 @@ UIWidgetAreaHandle::UIWidgetAreaHandle ()
 Aida::ClientConnection
 UIWidgetAreaHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
@@ -1381,7 +1381,7 @@ void
 operator>>= (Aida::FieldReader &fbr, UIWidgetAreaHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetAreaHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetAreaHandle();
 }
 const Aida::TypeHash&
 UIWidgetAreaHandle::_type()
@@ -1403,7 +1403,7 @@ UIWidgetAreaHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<UIWidgetArea_Context$> (ipcid)->list_types();
 }
 UIWidgetAreaHandle::Signal_void_signal&
@@ -1422,7 +1422,7 @@ UIWidgetAreaHandle::dummy () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1437,7 +1437,7 @@ UIWidgetAreaHandle::dummy (double value)
   fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 std::string
@@ -1446,7 +1446,7 @@ UIWidgetAreaHandle::on_click () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -1461,7 +1461,7 @@ UIWidgetAreaHandle::on_click (const std::string &value)
   fb.add_msgid (0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 double
@@ -1470,7 +1470,7 @@ UIWidgetAreaHandle::simple_method ()
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x39a122b559d15903ULL, 0x0a95fe35b7a1de33ULL); // msgid
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1485,7 +1485,7 @@ UIWidgetAreaHandle::single_arg (int arg_n)
   fb.add_msgid (0x3910395d202c93c2ULL, 0x9206a89acaaf2086ULL); // msgid
   fb <<= (*this);
   fb <<= arg_n;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1500,7 +1500,7 @@ UIWidgetAreaHandle::single_arg2 (int arg_n)
   fb.add_msgid (0x3b5ae84b86dfa59cULL, 0x5d2ef3880b1fa360ULL); // msgid
   fb <<= (*this);
   fb <<= arg_n;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1517,7 +1517,7 @@ UIWidgetAreaHandle::two_args (int arg_n,
   fb <<= (*this);
   fb <<= arg_n;
   fb <<= arg_r;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1534,7 +1534,7 @@ UIWidgetAreaHandle::two_args2 (int arg_n,
   fb <<= (*this);
   fb <<= arg_n;
   fb <<= arg_r;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1557,7 +1557,7 @@ UIWidgetAreaHandle::multi_args (int arg_n,
   fb <<= arg_i;
   fb <<= arg_s;
   fb <<= arg_y;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1574,7 +1574,7 @@ UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
   fb <<= (*this);
   fb <<= arg_ba1;
   fb <<= arg_ba2;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -1588,8 +1588,8 @@ UIWidgetAreaHandle::void_method ()
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL); // msgid
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 std::string
 UIWidgetAreaHandle::on_click2out ()
@@ -1597,7 +1597,7 @@ UIWidgetAreaHandle::on_click2out ()
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x3e4f2ff4e1424783ULL, 0x439ed3d602e3946eULL); // msgid
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -1612,8 +1612,8 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
   fb.add_msgid (0x2294f15cd15e9458ULL, 0x5e0ac9b493bb4f17ULL); // msgid
   fb <<= (*this);
   fb <<= arg_command;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 
 // === Parent ===
@@ -1637,13 +1637,13 @@ Parent_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x358122a8447018eaULL, 0xf27025a07a51a48aULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -1661,7 +1661,7 @@ ParentHandle::ParentHandle ()
 Aida::ClientConnection
 ParentHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const ParentHandle &handle)
@@ -1672,7 +1672,7 @@ void
 operator>>= (Aida::FieldReader &fbr, ParentHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : ParentHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : ParentHandle();
 }
 const Aida::TypeHash&
 ParentHandle::_type()
@@ -1694,7 +1694,7 @@ ParentHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Parent_Context$> (ipcid)->list_types();
 }
 
@@ -1719,13 +1719,13 @@ Child_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3d9ee6a844c60394ULL, 0xd2cee7633ad091d5ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -1749,7 +1749,7 @@ void
 operator>>= (Aida::FieldReader &fbr, ChildHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : ChildHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : ChildHandle();
 }
 const Aida::TypeHash&
 ChildHandle::_type()
@@ -1771,7 +1771,7 @@ ChildHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Child_Context$> (ipcid)->list_types();
 }
 
@@ -1796,13 +1796,13 @@ Descendant_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3a8b819b364228b8ULL, 0x9dce3529210a7700ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -1826,7 +1826,7 @@ void
 operator>>= (Aida::FieldReader &fbr, DescendantHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : DescendantHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : DescendantHandle();
 }
 const Aida::TypeHash&
 DescendantHandle::_type()
@@ -1848,7 +1848,7 @@ DescendantHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Descendant_Context$> (ipcid)->list_types();
 }
 
@@ -1873,13 +1873,13 @@ GrandChild_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3aa9daa434261f37ULL, 0xa848862e429bf919ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -1903,7 +1903,7 @@ void
 operator>>= (Aida::FieldReader &fbr, GrandChildHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChildHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChildHandle();
 }
 const Aida::TypeHash&
 GrandChildHandle::_type()
@@ -1925,7 +1925,7 @@ GrandChildHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<GrandChild_Context$> (ipcid)->list_types();
 }
 inline void __attribute__ ((used))
@@ -1990,13 +1990,13 @@ QuickIface_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3ceafdc3043b707dULL, 0xf30106bb4338c235ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2014,7 +2014,7 @@ QuickIfaceHandle::QuickIfaceHandle ()
 Aida::ClientConnection
 QuickIfaceHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const QuickIfaceHandle &handle)
@@ -2025,7 +2025,7 @@ void
 operator>>= (Aida::FieldReader &fbr, QuickIfaceHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIfaceHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIfaceHandle();
 }
 const Aida::TypeHash&
 QuickIfaceHandle::_type()
@@ -2047,7 +2047,7 @@ QuickIfaceHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<QuickIface_Context$> (ipcid)->list_types();
 }
 void
@@ -2057,8 +2057,8 @@ QuickIfaceHandle::simple_function (int arg_i)
   fb.add_msgid (0x2446078b004b9aabULL, 0x37d6c73a34ac7070ULL); // msgid
   fb <<= (*this);
   fb <<= arg_i;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 
 // === MethodTestInterface ===
@@ -2082,13 +2082,13 @@ MethodTestInterface_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x363e0b9e750bbbe2ULL, 0x8b5953ab5fb23a59ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2106,7 +2106,7 @@ MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 Aida::ClientConnection
 MethodTestInterfaceHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const MethodTestInterfaceHandle &handle)
@@ -2117,7 +2117,7 @@ void
 operator>>= (Aida::FieldReader &fbr, MethodTestInterfaceHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterfaceHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterfaceHandle();
 }
 const Aida::TypeHash&
 MethodTestInterfaceHandle::_type()
@@ -2139,7 +2139,7 @@ MethodTestInterfaceHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<MethodTestInterface_Context$> (ipcid)->list_types();
 }
 void
@@ -2148,8 +2148,8 @@ MethodTestInterfaceHandle::method_with_void ()
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL); // msgid
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (PLIC_UNLIKELY (fr != NULL)) delete fr;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 bool
 MethodTestInterfaceHandle::method_with_bools (bool arg_input,
@@ -2160,7 +2160,7 @@ MethodTestInterfaceHandle::method_with_bools (bool arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   bool  retval;
@@ -2177,7 +2177,7 @@ MethodTestInterfaceHandle::method_with_ints (int arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   int  retval;
@@ -2194,7 +2194,7 @@ MethodTestInterfaceHandle::method_with_floats (double arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -2211,7 +2211,7 @@ MethodTestInterfaceHandle::method_with_string (const std::string &arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -2228,7 +2228,7 @@ MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickEnum  retval;
@@ -2245,7 +2245,7 @@ MethodTestInterfaceHandle::method_with_record (const QuickRecordStruct &arg_inpu
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickRecordStruct  retval;
@@ -2262,7 +2262,7 @@ MethodTestInterfaceHandle::method_with_sequence (const QuickSequenceStruct &arg_
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickSequenceStruct  retval;
@@ -2279,7 +2279,7 @@ MethodTestInterfaceHandle::method_with_interface (GrandChildHandle &arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   GrandChildHandle  retval;
@@ -2296,7 +2296,7 @@ MethodTestInterfaceHandle::method_with_anys (const Aida::Any &arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   Aida::Any  retval;
@@ -2313,7 +2313,7 @@ MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_iface0;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickIfaceHandle  retval;
@@ -2409,13 +2409,13 @@ SignalTestInterface_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3b2248e8e9d4ff05ULL, 0xda71e710449d85dfULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2433,7 +2433,7 @@ SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 Aida::ClientConnection
 SignalTestInterfaceHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const SignalTestInterfaceHandle &handle)
@@ -2444,7 +2444,7 @@ void
 operator>>= (Aida::FieldReader &fbr, SignalTestInterfaceHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterfaceHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterfaceHandle();
 }
 const Aida::TypeHash&
 SignalTestInterfaceHandle::_type()
@@ -2466,7 +2466,7 @@ SignalTestInterfaceHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<SignalTestInterface_Context$> (ipcid)->list_types();
 }
 SignalTestInterfaceHandle::Signal_void_result&
@@ -2604,13 +2604,13 @@ ChildInheritingSignals_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3d6b68fa4d6a3c76ULL, 0xc9f1e8332c98049bULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2634,7 +2634,7 @@ void
 operator>>= (Aida::FieldReader &fbr, ChildInheritingSignalsHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignalsHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignalsHandle();
 }
 const Aida::TypeHash&
 ChildInheritingSignalsHandle::_type()
@@ -2656,7 +2656,7 @@ ChildInheritingSignalsHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ChildInheritingSignals_Context$> (ipcid)->list_types();
 }
 ChildInheritingSignalsHandle::Signal_child_signal&
@@ -2686,13 +2686,13 @@ AnotherChild_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x300b6f8565bd0732ULL, 0x164c7a93dffad03bULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2716,7 +2716,7 @@ void
 operator>>= (Aida::FieldReader &fbr, AnotherChildHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChildHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChildHandle();
 }
 const Aida::TypeHash&
 AnotherChildHandle::_type()
@@ -2738,7 +2738,7 @@ AnotherChildHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<AnotherChild_Context$> (ipcid)->list_types();
 }
 
@@ -2763,13 +2763,13 @@ PropertyTester_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -2787,7 +2787,7 @@ PropertyTesterHandle::PropertyTesterHandle ()
 Aida::ClientConnection
 PropertyTesterHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const PropertyTesterHandle &handle)
@@ -2798,7 +2798,7 @@ void
 operator>>= (Aida::FieldReader &fbr, PropertyTesterHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTesterHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTesterHandle();
 }
 const Aida::TypeHash&
 PropertyTesterHandle::_type()
@@ -2820,7 +2820,7 @@ PropertyTesterHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<PropertyTester_Context$> (ipcid)->list_types();
 }
 bool
@@ -2829,7 +2829,7 @@ PropertyTesterHandle::bool_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   bool  retval;
@@ -2844,7 +2844,7 @@ PropertyTesterHandle::bool_prop (bool value)
   fb.add_msgid (0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 int
@@ -2853,7 +2853,7 @@ PropertyTesterHandle::int_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x369c402f00bbf1e2ULL, 0x515a4131e4516216ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   int  retval;
@@ -2868,7 +2868,7 @@ PropertyTesterHandle::int_prop (int value)
   fb.add_msgid (0x2a015ad6b813701dULL, 0x62fa674331e78289ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 double
@@ -2877,7 +2877,7 @@ PropertyTesterHandle::float_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3b2c96526265c4baULL, 0xc1f4b15d96504a08ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   double  retval;
@@ -2892,7 +2892,7 @@ PropertyTesterHandle::float_prop (double value)
   fb.add_msgid (0x25ae78062c0435cdULL, 0x1d21f473f7647360ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 std::string
@@ -2901,7 +2901,7 @@ PropertyTesterHandle::string_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x385771786e6432dbULL, 0xcb19bfb3aa9a26feULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -2916,7 +2916,7 @@ PropertyTesterHandle::string_prop (const std::string &value)
   fb.add_msgid (0x206d200c92ba7e41ULL, 0x857975e0304c85f3ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 QuickEnum
@@ -2925,7 +2925,7 @@ PropertyTesterHandle::enum_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d09e074f5d2f8edULL, 0x38e8a275e29c3fc2ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickEnum  retval;
@@ -2940,7 +2940,7 @@ PropertyTesterHandle::enum_prop (QuickEnum value)
   fb.add_msgid (0x2b77a2f3a3c4d5b4ULL, 0x4d5b96d1adf5f7ccULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 QuickRecordStruct
@@ -2949,7 +2949,7 @@ PropertyTesterHandle::record_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x31443949c61d0fecULL, 0xeb221638d6ffd3cfULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickRecordStruct  retval;
@@ -2964,7 +2964,7 @@ PropertyTesterHandle::record_prop (const QuickRecordStruct &value)
   fb.add_msgid (0x2a5f5c212625f446ULL, 0x30d24123307269ceULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 QuickSequenceStruct
@@ -2973,7 +2973,7 @@ PropertyTesterHandle::sequence_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3f323c929c803ea8ULL, 0x6ebf49e977bfb699ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   QuickSequenceStruct  retval;
@@ -2988,7 +2988,7 @@ PropertyTesterHandle::sequence_prop (const QuickSequenceStruct &value)
   fb.add_msgid (0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 GrandChildHandle
@@ -2997,7 +2997,7 @@ PropertyTesterHandle::interface_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x33a8b72ea92bb600ULL, 0x3837c1118556aaedULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   GrandChildHandle  retval;
@@ -3012,7 +3012,7 @@ PropertyTesterHandle::interface_prop (GrandChildHandle value)
   fb.add_msgid (0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 PropertyTesterHandle
@@ -3021,7 +3021,7 @@ PropertyTesterHandle::self_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   PropertyTesterHandle  retval;
@@ -3036,7 +3036,7 @@ PropertyTesterHandle::self_prop (PropertyTesterHandle value)
   fb.add_msgid (0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 Aida::Any
@@ -3045,7 +3045,7 @@ PropertyTesterHandle::any_prop () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x331c2730c160062aULL, 0xaabfaeca6649ae46ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   Aida::Any  retval;
@@ -3060,7 +3060,7 @@ PropertyTesterHandle::any_prop (const Aida::Any &value)
   fb.add_msgid (0x28a440900d170de2ULL, 0x69e43a111fa9fb39ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 } // InterfaceTests
@@ -3094,13 +3094,13 @@ ButtonArea_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -3118,7 +3118,7 @@ ButtonAreaHandle::ButtonAreaHandle ()
 Aida::ClientConnection
 ButtonAreaHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const ButtonAreaHandle &handle)
@@ -3129,7 +3129,7 @@ void
 operator>>= (Aida::FieldReader &fbr, ButtonAreaHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonAreaHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonAreaHandle();
 }
 const Aida::TypeHash&
 ButtonAreaHandle::_type()
@@ -3151,7 +3151,7 @@ ButtonAreaHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ButtonArea_Context$> (ipcid)->list_types();
 }
 ButtonAreaHandle::Signal_check_activate&
@@ -3170,7 +3170,7 @@ ButtonAreaHandle::on_click () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -3185,7 +3185,7 @@ ButtonAreaHandle::on_click (const std::string &value)
   fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 std::string
@@ -3194,7 +3194,7 @@ ButtonAreaHandle::on_click2 () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -3209,7 +3209,7 @@ ButtonAreaHandle::on_click2 (const std::string &value)
   fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 std::string
@@ -3218,7 +3218,7 @@ ButtonAreaHandle::on_click3 () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   std::string  retval;
@@ -3233,7 +3233,7 @@ ButtonAreaHandle::on_click3 (const std::string &value)
   fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 ClickType
@@ -3242,7 +3242,7 @@ ButtonAreaHandle::click_type () const
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
   fb <<= (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   ClickType  retval;
@@ -3257,7 +3257,7 @@ ButtonAreaHandle::click_type (ClickType value)
   fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
   fb <<= (*this);
   fb <<= value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 
@@ -3282,13 +3282,13 @@ PureMethods_Context$::list_types ()
     Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL);
     fb <<= handle$;
-    Aida::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
     Aida::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     size_t len;
     frr >>= len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
     Aida::TypeHashList *thv = new Aida::TypeHashList();
     Aida::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
@@ -3306,7 +3306,7 @@ PureMethodsHandle::PureMethodsHandle ()
 Aida::ClientConnection
 PureMethodsHandle::__client_connection__ (void)
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 void
 operator<<= (Aida::FieldBuffer &fb, const PureMethodsHandle &handle)
@@ -3317,7 +3317,7 @@ void
 operator>>= (Aida::FieldReader &fbr, PureMethodsHandle &handle)
 {
   const Aida::uint64_t ipcid = fbr.pop_object();
-  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethodsHandle();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethodsHandle();
 }
 const Aida::TypeHash&
 PureMethodsHandle::_type()
@@ -3339,7 +3339,7 @@ PureMethodsHandle::cast_types()
 {
   static Aida::TypeHashList notypes;
   const Aida::uint64_t ipcid = connection_handle2id (*this);
-  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<PureMethods_Context$> (ipcid)->list_types();
 }
 int
@@ -3349,7 +3349,7 @@ PureMethodsHandle::pure_method (double arg_f)
   fb.add_msgid (0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL); // msgid
   fb <<= (*this);
   fb <<= arg_f;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   int  retval;

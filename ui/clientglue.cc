@@ -170,7 +170,7 @@ connection_handle2id (const Aida::SmartHandle &h)
   return h._rpc_id();
 }
 
-#define PLIC_CONNECTION()       (_clientglue_connection)
+#define AIDA_CONNECTION()       (_clientglue_connection)
 } // Anon
 #include "clientapi.cc"
 
@@ -180,7 +180,7 @@ namespace Rapicorn {
 ClientConnection
 ApplicationH::ipc_connection()
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 
 MainLoop*

@@ -87,10 +87,10 @@ class PlicObjectFactory:
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
-  import pyRapicorn     # generated _PLIC_... cpy methods
+  import pyRapicorn     # generated _AIDA_... cpy methods
   import py2cpy         # generated Python classes, Application, etc
   py2cpy.__plic_module_init_once__ (pyRapicorn)
-  pyRapicorn._PLIC___register_object_factory_callable (PlicObjectFactory (py2cpy))
+  pyRapicorn._AIDA___register_object_factory_callable (PlicObjectFactory (py2cpy))
   del globals()['PlicObjectFactory']
   app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
   del globals()['pyRapicorn']

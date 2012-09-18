@@ -1,6 +1,6 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#ifndef __PLIC_CXXSTUBAUX_HH__
-#define __PLIC_CXXSTUBAUX_HH__
+#ifndef __AIDA_CXXSTUBAUX_HH__
+#define __AIDA_CXXSTUBAUX_HH__
 
 #include "runtime.hh"
 
@@ -59,7 +59,7 @@ public:
     else
       {                         // signal disconnected
         if (m_handler_id)
-          ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
+          ; // FIXME: deletion! AIDA_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
         fb <<= 0;               // no handler connection
         fb <<= m_connection_id; // disconnection request
         m_connection_id = 0;
@@ -85,4 +85,4 @@ public:
 } // CxxStub
 } // Aida
 
-#endif // __PLIC_CXXSTUBAUX_HH__
+#endif // __AIDA_CXXSTUBAUX_HH__
