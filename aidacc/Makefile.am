@@ -88,7 +88,7 @@ CLEANFILES += builtins.cc
 
 # == Aida Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
-aidaccbackends = PrettyDump.py TypeMap.py Rapicorn.py GType.py CxxStub.py
+aidaccbackends = PrettyDump.py TypeMap.py CxxStub.py
 pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${aidaccbackends}
 
 # == Basic Aidacc Test ==

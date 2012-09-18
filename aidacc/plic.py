@@ -12,7 +12,7 @@ import yapps2runtime as runtime
 import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
 
-backends = [ 'TypeMap', 'CxxStub', 'GType', 'Rapicorn' ]
+backends = [ 'TypeMap', 'CxxStub', ]
 
 class ParseError (Exception):
   def __init__ (self, msg = "Parse Error", kind = "ParseError"):

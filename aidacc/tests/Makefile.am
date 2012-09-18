@@ -64,12 +64,6 @@ check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
 	$(Q) rm -f plic.out
 check-local: check-aida-format-TypeMap
 
-# == Test Rapicorn ==
-check-aida-format-Rapicorn: $(srcdir)/testpass.idl
-	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
-check-local: check-aida-format-Rapicorn
-
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc -g RapicornSignal \
