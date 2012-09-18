@@ -1,7 +1,7 @@
 # Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 """AidaTypeMap - Binary Type Map generator for Aida
 
-More details at http://www.testbit.eu/plic
+More details at http://www.rapicorn.org/
 """
 import Decls, struct
 
@@ -220,7 +220,7 @@ def error (msg):
 
 def generate (namespace_list, **args):
   import sys, tempfile, os
-  config = { 'output' : 'plic.out' }
+  config = { 'output' : 'idltypes.map' }
   config.update (args)
   gg = Generator()
   packdata = gg.generate_pack (namespace_list, config['system-typedefs'])

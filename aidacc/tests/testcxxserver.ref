@@ -19,7 +19,7 @@ namespace { // Anonymous
 using Aida::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
-Aida::FieldBuffer* plic$_error (const char *format, ...)
+Aida::FieldBuffer* aida$_error (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
@@ -1575,7 +1575,7 @@ namespace MandatoryNamespace {
 static Aida::FieldBuffer*
 _$lsttyp__FirstInterface__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1590,7 +1590,7 @@ _$lsttyp__FirstInterface__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__FirstInterface__void_func (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1610,7 +1610,7 @@ namespace InterfaceTests {
 static Aida::FieldBuffer*
 _$lsttyp__UIWidgetArea__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1625,7 +1625,7 @@ _$lsttyp__UIWidgetArea__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__UIWidgetArea__dummy (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1637,7 +1637,7 @@ _$getter__UIWidgetArea__dummy (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__UIWidgetArea__dummy (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1649,7 +1649,7 @@ _$setter__UIWidgetArea__dummy (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__UIWidgetArea__on_click (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1661,7 +1661,7 @@ _$getter__UIWidgetArea__on_click (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__UIWidgetArea__on_click (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1673,7 +1673,7 @@ _$setter__UIWidgetArea__on_click (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__simple_method (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1685,7 +1685,7 @@ _$caller__UIWidgetArea__simple_method (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__single_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1699,7 +1699,7 @@ _$caller__UIWidgetArea__single_arg (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__single_arg2 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1713,7 +1713,7 @@ _$caller__UIWidgetArea__single_arg2 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__two_args (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1729,7 +1729,7 @@ _$caller__UIWidgetArea__two_args (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__two_args2 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1745,7 +1745,7 @@ _$caller__UIWidgetArea__two_args2 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__multi_args (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 5) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 5) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1767,7 +1767,7 @@ _$caller__UIWidgetArea__multi_args (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__self_method (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1783,7 +1783,7 @@ _$caller__UIWidgetArea__self_method (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__void_method (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1793,7 +1793,7 @@ _$caller__UIWidgetArea__void_method (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__on_click2out (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1805,7 +1805,7 @@ _$caller__UIWidgetArea__on_click2out (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__UIWidgetArea__on_click2in (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1838,7 +1838,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__UIWidgetArea__void_signal (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1882,7 +1882,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__UIWidgetArea__sample_signal (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1901,7 +1901,7 @@ _$sigcon__UIWidgetArea__sample_signal (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__Parent__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Parent_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1917,7 +1917,7 @@ _$lsttyp__Parent__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__Child__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Child_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1933,7 +1933,7 @@ _$lsttyp__Child__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__Descendant__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Descendant_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1949,7 +1949,7 @@ _$lsttyp__Descendant__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__GrandChild__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_GrandChild_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1965,7 +1965,7 @@ _$lsttyp__GrandChild__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__QuickIface__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1980,7 +1980,7 @@ _$lsttyp__QuickIface__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__QuickIface__simple_function (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -1993,7 +1993,7 @@ _$caller__QuickIface__simple_function (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__MethodTestInterface__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2008,7 +2008,7 @@ _$lsttyp__MethodTestInterface__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_void (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2018,7 +2018,7 @@ _$caller__MethodTestInterface__method_with_void (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_bools (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2034,7 +2034,7 @@ _$caller__MethodTestInterface__method_with_bools (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_ints (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2050,7 +2050,7 @@ _$caller__MethodTestInterface__method_with_ints (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_floats (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2066,7 +2066,7 @@ _$caller__MethodTestInterface__method_with_floats (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_string (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2082,7 +2082,7 @@ _$caller__MethodTestInterface__method_with_string (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_enum (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2098,7 +2098,7 @@ _$caller__MethodTestInterface__method_with_enum (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_record (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2114,7 +2114,7 @@ _$caller__MethodTestInterface__method_with_record (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_sequence (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2130,7 +2130,7 @@ _$caller__MethodTestInterface__method_with_sequence (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_interface (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2146,7 +2146,7 @@ _$caller__MethodTestInterface__method_with_interface (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_anys (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2162,7 +2162,7 @@ _$caller__MethodTestInterface__method_with_anys (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_quickiface (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2179,7 +2179,7 @@ _$caller__MethodTestInterface__method_with_quickiface (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__SignalTestInterface__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2215,7 +2215,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__void_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2255,7 +2255,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2295,7 +2295,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2335,7 +2335,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__float_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2375,7 +2375,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__string_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2415,7 +2415,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2455,7 +2455,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__record_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2495,7 +2495,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2535,7 +2535,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2575,7 +2575,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__any_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2615,7 +2615,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__self_result (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2654,7 +2654,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__void_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2695,7 +2695,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2736,7 +2736,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2777,7 +2777,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__float_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2818,7 +2818,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__string_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2859,7 +2859,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2900,7 +2900,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__record_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2941,7 +2941,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2982,7 +2982,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3023,7 +3023,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__any_arg (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3064,7 +3064,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__self_args (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3083,7 +3083,7 @@ _$sigcon__SignalTestInterface__self_args (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__ChildInheritingSignals__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ChildInheritingSignals_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3131,7 +3131,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__ChildInheritingSignals__child_signal (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_ChildInheritingSignals_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3150,7 +3150,7 @@ _$sigcon__ChildInheritingSignals__child_signal (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__AnotherChild__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_AnotherChild_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3166,7 +3166,7 @@ _$lsttyp__AnotherChild__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__PropertyTester__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3181,7 +3181,7 @@ _$lsttyp__PropertyTester__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__bool_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3193,7 +3193,7 @@ _$getter__PropertyTester__bool_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__bool_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3205,7 +3205,7 @@ _$setter__PropertyTester__bool_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__int_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3217,7 +3217,7 @@ _$getter__PropertyTester__int_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__int_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3229,7 +3229,7 @@ _$setter__PropertyTester__int_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__float_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3241,7 +3241,7 @@ _$getter__PropertyTester__float_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__float_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3253,7 +3253,7 @@ _$setter__PropertyTester__float_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__string_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3265,7 +3265,7 @@ _$getter__PropertyTester__string_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__string_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3277,7 +3277,7 @@ _$setter__PropertyTester__string_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__enum_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3289,7 +3289,7 @@ _$getter__PropertyTester__enum_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__enum_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3301,7 +3301,7 @@ _$setter__PropertyTester__enum_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__record_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3313,7 +3313,7 @@ _$getter__PropertyTester__record_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__record_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3325,7 +3325,7 @@ _$setter__PropertyTester__record_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__sequence_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3337,7 +3337,7 @@ _$getter__PropertyTester__sequence_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__sequence_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3349,7 +3349,7 @@ _$setter__PropertyTester__sequence_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__interface_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3361,7 +3361,7 @@ _$getter__PropertyTester__interface_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__interface_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3373,7 +3373,7 @@ _$setter__PropertyTester__interface_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__self_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3385,7 +3385,7 @@ _$getter__PropertyTester__self_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__self_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3397,7 +3397,7 @@ _$setter__PropertyTester__self_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__PropertyTester__any_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3409,7 +3409,7 @@ _$getter__PropertyTester__any_prop (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__PropertyTester__any_prop (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3425,7 +3425,7 @@ namespace RapicornAidaTest {
 static Aida::FieldBuffer*
 _$lsttyp__ButtonArea__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3440,7 +3440,7 @@ _$lsttyp__ButtonArea__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__ButtonArea__on_click (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3452,7 +3452,7 @@ _$getter__ButtonArea__on_click (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__ButtonArea__on_click (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3464,7 +3464,7 @@ _$setter__ButtonArea__on_click (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__ButtonArea__on_click2 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3476,7 +3476,7 @@ _$getter__ButtonArea__on_click2 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__ButtonArea__on_click2 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3488,7 +3488,7 @@ _$setter__ButtonArea__on_click2 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__ButtonArea__on_click3 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3500,7 +3500,7 @@ _$getter__ButtonArea__on_click3 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__ButtonArea__on_click3 (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3512,7 +3512,7 @@ _$setter__ButtonArea__on_click3 (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$getter__ButtonArea__click_type (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3524,7 +3524,7 @@ _$getter__ButtonArea__click_type (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$setter__ButtonArea__click_type (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3558,7 +3558,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__ButtonArea__check_activate (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3597,7 +3597,7 @@ public:
 static Aida::FieldBuffer*
 _$sigcon__ButtonArea__activate (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3616,7 +3616,7 @@ _$sigcon__ButtonArea__activate (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$lsttyp__PureMethods__ (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3631,7 +3631,7 @@ _$lsttyp__PureMethods__ (Aida::FieldReader &fbr)
 static Aida::FieldBuffer*
 _$caller__PureMethods__pure_method (Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3643,7 +3643,7 @@ _$caller__PureMethods__pure_method (Aida::FieldReader &fbr)
   return &rb;
 }
 
-static const Aida::ServerConnection::MethodEntry _plic_stub_entries[] = {
+static const Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {
   { 0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
   { 0x3ced16bab1c08fe8ULL, 0xd1fa4cb922b6d7deULL, InterfaceTests::_$lsttyp__UIWidgetArea__, },
@@ -3742,7 +3742,7 @@ static const Aida::ServerConnection::MethodEntry _plic_stub_entries[] = {
   { 0x34692a915fe47960ULL, 0x86e3694656f6f9afULL, RapicornAidaTest::_$lsttyp__PureMethods__, },
   { 0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL, RapicornAidaTest::_$caller__PureMethods__pure_method, },
 };
-static Aida::ServerConnection::MethodRegistry _plic_stub_registry (_plic_stub_entries);
+static Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
 } // RapicornAidaTest
 

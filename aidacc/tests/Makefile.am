@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
-AIDACC = ../aidacc-intern $(DEBUG:%=--plic-debug)
+AIDACC = ../aidacc-intern $(DEBUG:%=--aida-debug)
 
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 
@@ -48,7 +48,7 @@ check-local: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${AIDACC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${AIDACC} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
 
@@ -59,9 +59,9 @@ check-local: check-aida-standard-types
 
 # == Test TypeMap ==
 check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
-	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
-	$(Q) rm -f plic.out
+	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'aidacc -G TypeMap'"
+	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
+	$(Q) rm -f idltypes.map
 check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==

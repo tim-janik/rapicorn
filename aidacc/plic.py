@@ -98,7 +98,7 @@ def parse_files_and_args():
              'insertions' : [], 'inclusions' : [], 'skip-skels' : [], 'system-typedefs' : False }
   sop = 'vhG:g:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
-         'plic-debug', 'cc-intern-file=',
+         'aida-debug', 'cc-intern-file=',
          'insertions=', 'inclusions=', 'skip-skels=']
   if pkginstall_configvars.get ('INTERN', 0):
     lop += [ 'system-typedefs' ]
@@ -110,7 +110,7 @@ def parse_files_and_args():
   for arg,val in options:
     if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
-    if arg == '--plic-debug': config['pass-exceptions'] = 1
+    if arg == '--aida-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
     if arg == '--insertions': config['insertions'] += [ val ]
     if arg == '--inclusions': config['inclusions'] += [ val ]
@@ -161,10 +161,10 @@ def parse_files_and_args():
   config['files'] += list (args)
   return config
 
-failtestoption = '--plic-fail-file-test'
+failtestoption = '--aida-fail-file-test'
 if len (sys.argv) > 2 and failtestoption in sys.argv:
   import tempfile, os
-  sys.argv.remove (failtestoption) # remove --plic-fail-file-test
+  sys.argv.remove (failtestoption) # remove --aida-fail-file-test
   config = parse_files_and_args()
   config['anonimize-filepaths'] = true # anonimize paths for varying builddirs (../a/b/c.idl -> .../c.idl)
   files = config['files']

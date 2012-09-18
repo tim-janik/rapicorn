@@ -19,7 +19,7 @@ namespace { // Anonymous
 using Aida::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
-Aida::FieldBuffer* plic$_error (const char *format, ...)
+Aida::FieldBuffer* aida$_error (const char *format, ...)
 {
   va_list args;
   va_start (args, format);

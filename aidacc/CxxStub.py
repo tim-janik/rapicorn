@@ -34,7 +34,7 @@ namespace { // Anonymous
 using Aida::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
-Aida::FieldBuffer* plic$_error (const char *format, ...)
+Aida::FieldBuffer* aida$_error (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
@@ -354,7 +354,7 @@ class Generator:
     l = self.inherit_reduce (l)
     return l
   def interface_class_inheritance (self, type_info):
-    plic_smarthandle, ddc = 'Aida::SmartHandle', False
+    aida_smarthandle, ddc = 'Aida::SmartHandle', False
     l = self.interface_class_ancestors (type_info)
     l = [self.C (pr) for pr in l] # types -> names
     if   self.gen_mode == G4SERVER and l:
@@ -365,10 +365,10 @@ class Generator:
     elif self.gen_mode == G4CLIENT and l:
       heritage = 'public'
     elif self.gen_mode == G4CLIENT and not l:
-      l, ddc = [plic_smarthandle], True
+      l, ddc = [aida_smarthandle], True
       heritage = 'public virtual'
     if self.gen_mode == G4CLIENT:
-      cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
+      cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
     else:
       cl = []
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
@@ -657,7 +657,7 @@ class Generator:
     s += 'static Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + %u) return plic$_error ("invalid number of arguments");\n' % len (mtype.args)
+    s += '  if (fbr.remaining() != 1 + %u) return aida$_error ("invalid number of arguments");\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -747,7 +747,7 @@ class Generator:
     s += 'static Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -770,7 +770,7 @@ class Generator:
     s += 'static Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -795,7 +795,7 @@ class Generator:
     s += 'static Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
@@ -893,7 +893,7 @@ class Generator:
     s += 'static Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
@@ -913,13 +913,13 @@ class Generator:
     s = ''
     if len (reglines) == 0:
       return '// Skipping empty MethodRegistry\n'
-    s += 'static const Aida::ServerConnection::MethodEntry _plic_stub_entries[] = {\n'
+    s += 'static const Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
       s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static Aida::ServerConnection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
+    s += 'static Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVER
