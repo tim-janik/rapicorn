@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-// PLIC insertion file
+// C++ interface code insertions for server stubs
 
 includes:
 #include <rcore/rapicornconfig.h>
