@@ -28,7 +28,7 @@ Parser.py: Parser.g
 EXTRA_DIST += Parser.g Parser.py
 MAINTAINERCLEANFILES += Parser.py
 
-# == Build Plic Executables ==
+# == Build Aida Executables ==
 CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"AIDA_VERSION" : "${VERSION}",	"INTERN" : 1
 CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"AIDA_VERSION" : "${VERSION}"
 ${AIDACC_INTERN}: plic.py Parser.py
@@ -52,7 +52,7 @@ EXTRA_DIST += plic.py
 # == Build runtime.hh runtime.cc ==
 runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(AM_V_GEN)
-	$(Q) echo "// aidacc/runtime.hh - Plic C++ Runtime API"		 > xtmp-$(@F)
+	$(Q) echo "// aidacc/runtime.hh - Aida C++ Runtime API"		 > xtmp-$(@F)
 	$(Q) echo "#ifndef __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo "#define __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.hh"' 			>> xtmp-$(@F)
@@ -74,7 +74,7 @@ runtime.cc: runtypes.cc loadmap.cc Makefile.am
 EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc
 CLEANFILES += runtime.hh runtime.cc
 
-# == Plic Builtins ==
+# == Aida Builtins ==
 builtins.cc: $(srcdir)/builtins.idl ${AIDACC_INTERN} plic.py
 	$(AM_V_GEN)
 	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o $(@F).typ
@@ -86,7 +86,7 @@ noinst_DATA = builtins.cc
 EXTRA_DIST += builtins.cc builtins.idl
 CLEANFILES += builtins.cc
 
-# == Plic Dependencies ==
+# == Aida Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
 aidaccbackends = PrettyDump.py TypeMap.py Rapicorn.py GType.py CxxStub.py
 pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${aidaccbackends}
