@@ -16,7 +16,7 @@ CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
 # extra docs
-EXTRA_DIST         += about-plic.dox
+EXTRA_DIST         += about-aida.dox
 
 # == Build Parser ==
 Parser.py: Parser.g
