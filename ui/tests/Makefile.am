@@ -28,7 +28,7 @@ clienttests_LDADD    = $(LDADDS)
 
 SINFEX_SHELL=./servertests --shell
 check: sinfex-expressions
-sinfex-expressions: $(srcdir)/expressions.ref
+sinfex-expressions: $(srcdir)/expressions.ref ./servertests
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
 	&& $(X11TEST_SERVER) && \
 	  COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
