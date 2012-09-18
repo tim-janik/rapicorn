@@ -75,7 +75,7 @@ def app_init (application_name = None):
   main.app = app # integrate main loop with app
   return app
 
-class PlicObjectFactory:
+class AidaObjectFactory:
   def __init__ (self, _PY):
     self._PY = _PY
     self.AidaID = _PY._BaseClass_._AidaID_
@@ -90,8 +90,8 @@ def _module_init_once_():
   import pyRapicorn     # generated _AIDA_... cpy methods
   import py2cpy         # generated Python classes, Application, etc
   py2cpy.__plic_module_init_once__ (pyRapicorn)
-  pyRapicorn._AIDA___register_object_factory_callable (PlicObjectFactory (py2cpy))
-  del globals()['PlicObjectFactory']
+  pyRapicorn._AIDA___register_object_factory_callable (AidaObjectFactory (py2cpy))
+  del globals()['AidaObjectFactory']
   app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
   del globals()['pyRapicorn']
   del globals()['py2cpy']
