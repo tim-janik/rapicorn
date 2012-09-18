@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Aida - Abstract Interface Definition Architecture
 # Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
-"""PLIC-Rapicorn - C++ Rapicorn glue code generator for PLIC
+"""AidaRapicorn - Aida C++ Rapicorn glue code generator
 
 More details at http://www.testbit.eu/plic
 """

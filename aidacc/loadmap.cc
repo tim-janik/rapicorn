@@ -679,13 +679,13 @@ TypeMap::builtins ()
   if (!imap || sizeof (intern_builtins_cc_typ) < sizeof (*imap) + 4)
     {
       errno = ENODATA;
-      perror ("ERROR: accessing builtin PLIC types");
+      perror ("ERROR: accessing builtin Aida types");
       abort();
     }
   if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
     {
       errno = ELIBBAD;
-      perror ("ERROR: accessing builtin PLIC types");
+      perror ("ERROR: accessing builtin Aida types");
       abort();
     }
   TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);

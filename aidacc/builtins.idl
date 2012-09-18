@@ -1,7 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 /**
  * @file
- * @brief PLIC builtin type definitions.
+ * @brief Aida builtin type definitions.
  */
 
 namespace Aida {

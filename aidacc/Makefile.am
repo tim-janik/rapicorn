@@ -93,7 +93,7 @@ pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${ai
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
-	$(Q) ${AIDACC_INTERN} --list-formats | grep -q PLIC ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_INTERN} --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
 check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
