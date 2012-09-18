@@ -81,7 +81,7 @@ builtins.cc: $(srcdir)/builtins.idl ${AIDACC_INTERN} plic.py
 	$(Q) ${AIDACC_INTERN} --cc-intern-file $(@F).typ > xtmp-$(@F)
 	$(Q) cp -p xtmp-$(@F) $@
 	$(Q) rm -f $(@F).typ xtmp-$(@F)
-$(srcdir)/../rcore/plicutypes.cc: builtins.cc
+$(srcdir)/../loadmap.cc $(srcdir)/../runtime.cc: builtins.cc
 noinst_DATA = builtins.cc
 EXTRA_DIST += builtins.cc builtins.idl
 CLEANFILES += builtins.cc
