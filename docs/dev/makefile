@@ -51,6 +51,8 @@ $(SRCTREE):
 	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
 	| xargs -0 python enumdoc.py
 
+LINK_PROJECT_NAME = \
+	-e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 STRIP_SNIPPET_MARKS = \
 	-e '/^ *<span class="comment"> *\/\/\/ *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *$$/d' \
 	-e   's,<span class="comment"> */// *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *</span>\n\?,,' \
@@ -69,7 +71,7 @@ all-docs: $(git_stamp) doxygen.cfg
 	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
 	) | nice $(DOXYGEN) -
 	rm -rf $(SRCTREE)/
-	sed $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
+	sed $(LINK_PROJECT_NAME) $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
 	mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
 	test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
 	rsync -aH --del html.tmp/ html/
