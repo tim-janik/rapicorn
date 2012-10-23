@@ -318,6 +318,7 @@ template<typename Value> class Walker {
     virtual AdapterBase* clone   () const = 0;
     virtual void*        element () const = 0;
     virtual bool         equals  (const AdapterBase &eb) const = 0;
+    virtual             ~AdapterBase () {}
   };
   AdapterBase *adapter;
 public:
@@ -327,10 +328,10 @@ public:
     explicit Adapter (const Iterator &cbegin, const Iterator &cend) :
       ibegin (cbegin), iend (cend)
     {}
-    virtual bool         done    ()              { return ibegin == iend; }
-    virtual void         inc     ()              { ibegin.operator++(); }
-    virtual AdapterBase* clone   () const        { return new Adapter (ibegin, iend); }
-    virtual void*        element () const        { return (void*) ibegin.operator->(); }
+    virtual bool         done    ()             { return ibegin == iend; }
+    virtual void         inc     ()             { ibegin.operator++(); }
+    virtual AdapterBase* clone   () const       { return new Adapter (ibegin, iend); }
+    virtual void*        element () const       { return (void*) ibegin.operator->(); }
     virtual bool         equals  (const AdapterBase &eb) const
     {
       const Adapter *we = dynamic_cast<const Adapter*> (&eb);

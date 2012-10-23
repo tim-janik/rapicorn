@@ -13,7 +13,7 @@ test_any_seq ()
   aseq.append_back() <<= "second";      assert (aseq.size() == 2);
   aseq.resize (5);                      assert (aseq.size() == 5);
   aseq[2] <<= 7;                        assert (aseq[2].as_int() == 7);  assert (aseq[2].as_string() == "7");
-  aseq[3] <<= 17.5;                     assert (aseq[3].as_int() == 17); assert (aseq[3].as_string() == "17.5");
+  aseq[3] <<= 17.5;                     TCMP (aseq[3].as_int(), ==, 17); TCMP (aseq[3].as_string(), ==, "17.5");
   aseq[4] <<= "fifth";                  assert (aseq[4].as_string() == "fifth");
   aseq.append_back() <<= Any();         assert (aseq.size() == 6);
   assert (aseq[1].as_string() == "second");

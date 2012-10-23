@@ -18,6 +18,7 @@
 #include <ui/uithread.hh>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 using namespace Rapicorn;
 
 #include "../../configure.h"    // for HAVE_READLINE_AND_HISTORY

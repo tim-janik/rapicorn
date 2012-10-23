@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <stdlib.h>
+#include <unistd.h>
 #include <cstring>
 #include "sinfeximpl.hh"
 #include <stdio.h>      // needed by sinfex.lgen or sinfex.ygen
