@@ -1,6 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <errno.h>
+#include <unistd.h>
 
 namespace {
 using namespace Rapicorn;

@@ -17,6 +17,7 @@
 #include <rcore/testutils.hh>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include <algorithm>
 
 #include "../rsvg/svg.hh"

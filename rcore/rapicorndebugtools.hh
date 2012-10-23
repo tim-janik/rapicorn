@@ -5,6 +5,7 @@
 #define __RAPICORN_DEBUG_TOOLS_HH__
 
 #include <rcore/utilities.hh>
+#include <rcore/strings.hh>
 
 namespace Rapicorn {
 

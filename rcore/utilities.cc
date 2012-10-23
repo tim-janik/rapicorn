@@ -8,6 +8,7 @@
 #include "rapicorncpu.hh"
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <fcntl.h>

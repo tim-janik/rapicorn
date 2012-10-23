@@ -17,6 +17,7 @@
 #include <rcore/testutils.hh>
 #include <rcore/clientapi.hh>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 
 namespace {

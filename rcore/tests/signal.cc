@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
+#include <unistd.h>
 
 namespace {
 using namespace Rapicorn;
