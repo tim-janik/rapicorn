@@ -195,18 +195,6 @@ RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 #define	RAPICORN_IS_DIR_SEPARATOR(c)    	  ((c) == RAPICORN_DIR_SEPARATOR)
 #define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) ((c) == RAPICORN_SEARCHPATH_SEPARATOR)
 
-/* --- CPU info --- */
-typedef struct {
-  /* architecture name */
-  const char *machine;
-  /* CPU Vendor ID */
-  const char *cpu_vendor;
-  /* CPU features on X86 */
-  uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
-  uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
-  uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_sse4     : 1;
-} RapicornCPUInfo;
-
 /* --- Thread info --- */
 typedef enum {
   RAPICORN_THREAD_UNKNOWN    = '?',

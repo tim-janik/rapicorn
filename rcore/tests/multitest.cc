@@ -109,7 +109,7 @@ REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 static void
 test_cpu_info (void)
 {
-  const RapicornCPUInfo cpi = cpu_info ();
+  const CPUInfo cpi = cpu_info ();
   TCMPS (cpi.machine, !=, NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);

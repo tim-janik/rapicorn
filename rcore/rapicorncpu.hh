@@ -1,19 +1,4 @@
-/* RapicornCPU
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_CPU_HH__
 #define __RAPICORN_CPU_HH__
 
@@ -21,13 +6,20 @@
 
 namespace Rapicorn {
 
-typedef RapicornCPUInfo CPUInfo;
+struct CPUInfo {
+  /* architecture name */
+  const char *machine;
+  /* CPU Vendor ID */
+  const char *cpu_vendor;
+  /* CPU features on X86 */
+  uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
+  uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
+  uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_sse4     : 1;
+};
 
-/* --- functions --- */
 CPUInfo cpu_info	(void);
 String  cpu_info_string	(const CPUInfo &cpu_info);
 
 } // Rapicorn
 
 #endif /* __RAPICORN_CPU_HH__ */
-/* vim:set ts=8 sts=2 sw=2: */
