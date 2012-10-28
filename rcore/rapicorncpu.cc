@@ -141,7 +141,13 @@ get_x86_cpu_features (CPUInfo *ci,
       if (ecx & (1 << 0))
         ci->x86_sse3 = true;
       if (ecx & (1 << 9))
-        ci->x86_sse4 = true;
+        ci->x86_ssse3 = true;
+      if (ecx & (1 << 13))
+        ci->x86_cx16 = true;
+      if (ecx & (1 << 19))
+        ci->x86_sse4_1 = true;
+      if (ecx & (1 << 20))
+        ci->x86_sse4_2 = true;
       if (edx & (1 << 0))
         ci->x86_fpu = true;
       if (edx & (1 << 4))
@@ -157,8 +163,8 @@ get_x86_cpu_features (CPUInfo *ci,
         ci->x86_sse2 = true;
       if (edx & (1 << 28))
         ci->x86_htt = true;
-      /* http://download.intel.com/design/Xeon/applnots/24161830.pdf
-       * "Intel Processor Identificaiton and the CPUID Instruction"
+      /* http://www.intel.com/content/www/us/en/processors/processor-identification-cpuid-instruction-note.html
+       * "Intel Processor Identification and the CPUID Instruction"
        */
     }
 
@@ -259,16 +265,22 @@ cpu_info_string (const CPUInfo &cpu_info)
     g_string_append_printf (mflags, " MMXEXT");
   /* SSE flags */
   GString *sflags = g_string_new ("");
+  if (cpu_info.x86_ssesys)
+    g_string_append_printf (sflags, " SSESYS");
   if (cpu_info.x86_sse)
     g_string_append_printf (sflags, " SSE");
   if (cpu_info.x86_sse2)
     g_string_append_printf (sflags, " SSE2");
   if (cpu_info.x86_sse3)
     g_string_append_printf (sflags, " SSE3");
-  if (cpu_info.x86_sse4)
-    g_string_append_printf (sflags, " SSE4");
-  if (cpu_info.x86_ssesys)
-    g_string_append_printf (sflags, " SSESYS");
+  if (cpu_info.x86_ssse3)
+    g_string_append_printf (sflags, " SSSE3");
+  if (cpu_info.x86_sse4_1)
+    g_string_append_printf (sflags, " SSE4.1");
+  if (cpu_info.x86_sse4_2)
+    g_string_append_printf (sflags, " SSE4.2");
+  if (cpu_info.x86_cx16)
+    g_string_append_printf (sflags, " CMPXCHG16B");
   /* 3DNOW flags */
   GString *nflags = g_string_new ("");
   if (cpu_info.x86_3dnow)
