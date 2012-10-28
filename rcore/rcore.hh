@@ -16,7 +16,7 @@
 #include <rcore/signal.hh>
 #include <rcore/unicode.hh>
 #include <rcore/utilities.hh>
-#include <rcore/rapicornxml.hh>
+#include <rcore/xmlnode.hh>
 #include <rcore/regex.hh>
 #include <rcore/strings.hh>
 
