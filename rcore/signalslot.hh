@@ -1,21 +1,6 @@
-/* RapicornSignal
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-/* this file is used to generate rapicornsignalvariants.hh by mksignals.sh.
+/* this file is used to generate signalvariants.hh by mksignals.sh.
  * therein, certain phrases like "typename A1, typename A2, typename A3" are
  * rewritten into 0, 1, 2, ... 16 argument variants. so make sure all phrases
  * involving the signal argument count match those from mksignals.sh.

@@ -13,7 +13,7 @@
 #include <rcore/thread.hh>
 #include <rcore/rapicornmath.hh>
 #include <rcore/rapicornmsg.hh>
-#include <rcore/rapicornsignal.hh>
+#include <rcore/signal.hh>
 #include <rcore/rapicornutf8.hh>
 #include <rcore/utilities.hh>
 #include <rcore/rapicornxml.hh>

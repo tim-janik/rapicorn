@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-/* this file is used to generate rapicornsignalvariants.hh by mksignals.sh.
+/* this file is used to generate signalvariants.hh by mksignals.sh.
  * therein, certain phrases like "typename A1, typename A2, typename A3" are
  * rewritten into 0, 1, 2, ... 16 argument variants. so make sure all phrases
  * involving the signal argument count match those from mksignals.sh.

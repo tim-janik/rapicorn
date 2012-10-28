@@ -16,7 +16,7 @@ serverhh_boilerplate = r"""
 """
 
 rapicornsignal_boilerplate = r"""
-#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
+#include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
 """
 

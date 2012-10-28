@@ -21,8 +21,7 @@ SRCTREE     = srctree
 DOXYGENV    = doxygen-1.7.4
 DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 
-EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] \
-	rcore/rapicornsignalvariants.hh
+EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):

@@ -3,7 +3,7 @@
 // --- ClientHH Boilerplate ---
 #include <aidacc/runtime.hh>
 
-#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
+#include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
 
 // --- ClientCC/ServerCC Boilerplate ---

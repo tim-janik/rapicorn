@@ -10,7 +10,7 @@ GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh				utilities.hh  \
-        rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
+        rapicornmsg.hh	signal.hh		rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 )
 rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
         rapicorncpu.cc  rapicorndebugtools.cc				utilities.cc  \
-        rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
+        rapicornmsg.cc  signal.cc		rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
@@ -29,13 +29,13 @@ rapicorn_impl_headers = $(strip 	\
 	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        rapicornsignalvariants.hh	\
+        signalvariants.hh	\
 	rapicornconfig.h		\
 	clientapi.hh			\
 )
 rapicorn_private_files = $(strip	\
-        rapicornsignalslot.hh		\
-        rapicornsignaltemplate.hh	\
+        signalslot.hh		\
+        signaltemplate.hh	\
 	mksignals.sh			\
 	pixmap.cc			\
 )
@@ -238,14 +238,14 @@ CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
-# === rapicornsignalvariants.hh ===
-$(srcdir)/*.cc: rapicornsignalvariants.hh
-rapicornsignalvariants.hh: $(srcdir)/rapicornsignalslot.hh $(srcdir)/rapicornsignaltemplate.hh $(srcdir)/mksignals.sh
+# === signalvariants.hh ===
+$(srcdir)/*.cc: signalvariants.hh
+signalvariants.hh: $(srcdir)/signalslot.hh $(srcdir)/signaltemplate.hh $(srcdir)/mksignals.sh
 	cd . \
-	&& echo "/* Signal Variants -- Generated from: $(^F) */"	>xgen-sigs \
-	&& echo 						       >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignalslot.hh     17 >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignaltemplate.hh 16 >>xgen-sigs \
+	&& echo "/* Signal Variants -- Generated from: $(^F) */"	 >xgen-sigs \
+	&& echo 						       	>>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/signalslot.hh     17	>>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/signaltemplate.hh 16	>>xgen-sigs \
 	&& cp xgen-sigs $@ \
 	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs rapicornsignalvariants.hh xgen-signals.sed
+CLEANFILES += xgen-sigs signalvariants.hh xgen-signals.sed
