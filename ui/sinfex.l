@@ -43,12 +43,12 @@ IDENTIFIER              [a-z_A-Z][0-9a-z_A-Z]*
 {WHITESPACE}+           { /* return ANYSPACE; */ }
 \n                      { /* return '\n'; */ }
 
-{INTEGER}               { if (yyleng <= 17) { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
-			  else { yylval->df = strtold (yytext, NULL); return FLOAT; } }
+{INTEGER}               { if (yyleng <= 17) { yylval->li = string_to_uint (yytext, 0); return INTEGER; }
+			  else { yylval->df = string_to_double (yytext); return FLOAT; } }
 
-{HEXNUM}                { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
+{HEXNUM}                { yylval->li = string_to_uint (yytext, 0); return INTEGER; }
 
-{FLOAT}                 { yylval->df = strtold (yytext, NULL); return FLOAT; }
+{FLOAT}                 { yylval->df = string_to_double (yytext, NULL); return FLOAT; }
 
 {STRING}                { yylval->cs = new String (yytext); return STRING; }
 
