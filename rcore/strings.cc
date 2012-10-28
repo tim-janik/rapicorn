@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "strings.hh"
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include "main.hh"
 
 #include <cstring>

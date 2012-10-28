@@ -1,4 +1,4 @@
-/* RapicornUtf8 - UTF-8 utilities
+/* Unicode - UTF-8 utilities
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include <glib.h>
 
 namespace Rapicorn {

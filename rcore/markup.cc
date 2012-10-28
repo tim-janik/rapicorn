@@ -17,7 +17,7 @@
  * based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
  */
 #include "markup.hh"
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include "strings.hh"
 #include <stdio.h>
 #include <stdlib.h>

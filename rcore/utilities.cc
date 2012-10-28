@@ -2,7 +2,7 @@
 #include "utilities.hh"
 #include "main.hh"
 #include "strings.hh"
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include "thread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"

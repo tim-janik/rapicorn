@@ -10,7 +10,7 @@ GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh				utilities.hh  \
-        rapicornmsg.hh	signal.hh		rapicornmath.hh		rapicornutf8.hh   \
+        rapicornmsg.hh	signal.hh		rapicornmath.hh		unicode.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 )
 rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
         rapicorncpu.cc  rapicorndebugtools.cc				utilities.cc  \
-        rapicornmsg.cc  signal.cc		rapicornmath.cc		rapicornutf8.cc   \
+        rapicornmsg.cc  signal.cc		rapicornmath.cc		unicode.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
