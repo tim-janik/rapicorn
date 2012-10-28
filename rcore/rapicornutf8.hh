@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-namespace Unichar {
+namespace Unicode {
 inline bool isvalid      (unichar uc) RAPICORN_CONST;
 bool        isalnum      (unichar uc) RAPICORN_CONST;
 bool        isalpha      (unichar uc) RAPICORN_CONST;
@@ -72,7 +72,7 @@ typedef enum {
 } BreakType;
 BreakType get_break  (unichar uc) RAPICORN_CONST;
 
-} // Unichar
+} // Unicode
 
 /* --- UTF-8 movement --- */
 inline const char*    utf8_next         (const char     *c);
@@ -99,7 +99,7 @@ bool                  utf8_validate     (const String   &string,
                                          int            *bound = NULL);
 
 /* --- implementation bits --- */
-namespace Unichar {
+namespace Unicode {
 inline bool
 isvalid (unichar uc)
 {
@@ -113,7 +113,7 @@ isvalid (unichar uc)
     return false;
   return true;
 }
-} // Unichar
+} // Unicode
 
 extern const int8 utf8_skip_table[256];
 

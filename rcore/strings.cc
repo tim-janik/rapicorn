@@ -100,7 +100,7 @@ string_tolower (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::tolower (s[i]);
+    s[i] = Unicode::tolower (s[i]);
   return s;
 }
 
@@ -109,7 +109,7 @@ string_toupper (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::toupper (s[i]);
+    s[i] = Unicode::toupper (s[i]);
   return s;
 }
 
@@ -118,7 +118,7 @@ string_totitle (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::totitle (s[i]);
+    s[i] = Unicode::totitle (s[i]);
   return s;
 }
 

@@ -196,7 +196,7 @@ is_name_start_char (const char  *p)
       (!IS_COMMON_NAME_END_CHAR (*p) &&
        (*p == '_' || 
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
@@ -213,7 +213,7 @@ is_name_char (const char  *p)
 	*p == '-' ||
 	*p == '_' ||
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
