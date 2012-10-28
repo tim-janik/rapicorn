@@ -41,27 +41,51 @@ AIDA_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
 AIDA_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
 
 /* === Prototypes === */
-static std::string string_printf (const char *format, ...) AIDA_PRINTF (1, 2);
+static std::string string_cprintf (const char *format, ...) AIDA_PRINTF (1, 2);
 
 // === Utilities ===
 static std::string
-string_vprintf (const char *format, va_list args, bool force_newline = false)
+string_vcprintf (const char *format, va_list vargs, bool force_newline = false)
 {
-  char buffer[3 * 1024 + 1];
-  vsnprintf (buffer, sizeof (buffer) - 1, format, args);
-  buffer[sizeof (buffer) - 1] = 0; // force termination
-  std::string s (buffer);
-  if (force_newline && (s.empty() || s[s.size() - 1] != '\n'))
-    s += "\n";
-  return s;
+  static locale_t volatile clocale = NULL;
+  if (!clocale)
+    {
+      locale_t tmploc = newlocale (LC_ALL_MASK, "C", NULL);
+      if (!__sync_bool_compare_and_swap (&clocale, NULL, tmploc))
+        freelocale (tmploc);
+    }
+  locale_t olocale = uselocale (clocale);
+  va_list pargs;
+  char buffer[1024];
+  buffer[0] = 0;
+  va_copy (pargs, vargs);
+  const int l = vsnprintf (buffer, sizeof (buffer), format, pargs);
+  va_end (pargs);
+  std::string string;
+  if (l < 0)
+    string = format; // error?
+  else if (size_t (l) < sizeof (buffer))
+    string = std::string (buffer, l);
+  else
+    {
+      string.resize (l + 1);
+      va_copy (pargs, vargs);
+      const int j = vsnprintf (&string[0], string.size(), format, pargs);
+      va_end (pargs);
+      string.resize (std::min (l, std::max (j, 0)));
+    }
+  uselocale (olocale);
+  if (force_newline && (string.empty() || string[string.size() - 1] != '\n'))
+    string += "\n";
+  return string;
 }
 
 static std::string
-string_printf (const char *format, ...)
+string_cprintf (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
-  std::string s = string_vprintf (format, args);
+  std::string s = string_vcprintf (format, args);
   va_end (args);
   return s;
 }
@@ -69,7 +93,7 @@ string_printf (const char *format, ...)
 void
 error_vprintf (const char *format, va_list args)
 {
-  std::string s = string_vprintf (format, args, true);
+  std::string s = string_vcprintf (format, args, true);
   fprintf (stderr, "Aida: error: %s", s.c_str());
   fflush (stderr);
   abort();
@@ -89,7 +113,7 @@ warning_printf (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
-  std::string s = string_vprintf (format, args, true);
+  std::string s = string_vcprintf (format, args, true);
   va_end (args);
   fprintf (stderr, "Aida: warning: %s", s.c_str());
   fflush (stderr);
@@ -283,8 +307,8 @@ Any::as_string() const
   switch (kind())
     {
     case ENUM:
-    case INT:           return string_printf ("%lli", u.vint64);
-    case FLOAT:         return string_printf ("%.17g", u.vdouble);
+    case INT:           return string_cprintf ("%lli", u.vint64);
+    case FLOAT:         return string_cprintf ("%.17g", u.vdouble);
     case STRING:        return *(String*) &u;
     default:            return "";
     }
@@ -466,8 +490,8 @@ FieldBuffer::check_internal ()
 {
   if (size() > capacity())
     {
-      String msg = string_printf ("FieldBuffer(this=%p): capacity=%u size=%u",
-                                  this, capacity(), size());
+      String msg = string_cprintf ("FieldBuffer(this=%p): capacity=%u size=%u",
+                                   this, capacity(), size());
       throw std::out_of_range (msg);
     }
 }
@@ -477,14 +501,14 @@ FieldReader::check_request (int type)
 {
   if (m_nth >= n_types())
     {
-      String msg = string_printf ("FieldReader(this=%p): size=%u requested-index=%u",
-                                  this, n_types(), m_nth);
+      String msg = string_cprintf ("FieldReader(this=%p): size=%u requested-index=%u",
+                                   this, n_types(), m_nth);
       throw std::out_of_range (msg);
     }
   if (get_type() != type)
     {
-      String msg = string_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
-                                  this, n_types(), m_nth,
+      String msg = string_cprintf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+                                   this, n_types(), m_nth,
                                   FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
       throw std::invalid_argument (msg);
     }
@@ -494,7 +518,7 @@ std::string
 FieldBuffer::first_id_str() const
 {
   uint64_t fid = first_id();
-  return string_printf ("%016llx", fid);
+  return string_cprintf ("%016llx", fid);
 }
 
 static std::string
@@ -505,7 +529,7 @@ strescape (const std::string &str)
     {
       uint8_t d = *it;
       if (d < 32 || d > 126 || d == '?')
-        buffer += string_printf ("\\%03o", d);
+        buffer += string_cprintf ("\\%03o", d);
       else if (d == '\\')
         buffer += "\\\\";
       else if (d == '"')
@@ -522,14 +546,14 @@ FieldBuffer::type_name (int field_type)
   const char *tkn = type_kind_name (TypeKind (field_type));
   if (tkn)
     return tkn;
-  return string_printf ("<invalid:%d>", field_type);
+  return string_cprintf ("<invalid:%d>", field_type);
 }
 
 std::string
 FieldBuffer::to_string() const
 {
-  String s = string_printf ("Aida::FieldBuffer(%p)={", this);
-  s += string_printf ("size=%u, capacity=%u", size(), capacity());
+  String s = string_cprintf ("Aida::FieldBuffer(%p)={", this);
+  s += string_cprintf ("size=%u, capacity=%u", size(), capacity());
   FieldReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
     {
@@ -540,16 +564,16 @@ FieldBuffer::to_string() const
         case UNTYPED:
         case FUNC:
         case TYPE_REFERENCE:
-        case VOID:      s += string_printf (", %s", tn); fbr.skip();                               break;
-        case INT:       s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case FLOAT:     s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:    s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case ENUM:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case SEQUENCE:  s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case RECORD:    s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        case ANY:       s += string_printf (", %s: %p", tn, &fbr.pop_any());                       break;
-        default:        s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case VOID:      s += string_cprintf (", %s", tn); fbr.skip();                               break;
+        case INT:       s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case FLOAT:     s += string_cprintf (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:    s += string_cprintf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case ENUM:      s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case SEQUENCE:  s += string_cprintf (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:    s += string_cprintf (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case INSTANCE:  s += string_cprintf (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        case ANY:       s += string_cprintf (", %s: %p", tn, &fbr.pop_any());                       break;
+        default:        s += string_cprintf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
   s += '}';
@@ -1134,9 +1158,9 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
   if (AIDA_UNLIKELY (size_before == size_after))
     {
       errno = EKEYREJECTED;
-      perror (string_printf ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
-                             "duplicate hash registration (%016llx%016llx)",
-                             __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
+      perror (string_cprintf ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
+                              "duplicate hash registration (%016llx%016llx)",
+                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
 }
