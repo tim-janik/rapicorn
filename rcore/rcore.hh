@@ -11,7 +11,7 @@
 #include <rcore/markup.hh>
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
-#include <rcore/rapicornmath.hh>
+#include <rcore/math.hh>
 #include <rcore/rapicornmsg.hh>
 #include <rcore/signal.hh>
 #include <rcore/unicode.hh>
