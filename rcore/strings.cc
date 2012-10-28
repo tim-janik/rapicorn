@@ -122,31 +122,113 @@ string_totitle (const String &str)
   return s;
 }
 
-String
-string_printf (const char *format,
-               ...)
+static locale_t
+c_locale()
 {
-  String str;
+  static locale_t volatile clocale = NULL;
+  if (!clocale)
+    {
+      locale_t tmploc = newlocale (LC_ALL_MASK, "C", NULL);
+      if (!__sync_bool_compare_and_swap (&clocale, NULL, tmploc))
+        freelocale (tmploc);
+    }
+  return clocale;
+}
+
+#define STACK_BUFFER_SIZE       3072
+
+String
+string_printf (const char *format, ...)
+{
   va_list args;
+  int l;
+  {
+    char buffer[STACK_BUFFER_SIZE];
+    va_start (args, format);
+    l = vsnprintf (buffer, sizeof (buffer), format, args);
+    va_end (args);
+    if (l < 0)
+      return format; // error?
+    if (size_t (l) < sizeof (buffer))
+      return String (buffer, l);
+  }
+  String string;
+  string.resize (l + 1);
   va_start (args, format);
-  str = string_vprintf (format, args);
+  const int j = vsnprintf (&string[0], string.size(), format, args);
   va_end (args);
-  return str;
+  string.resize (std::min (l, std::max (j, 0)));
+  return string;
 }
 
 String
-string_vprintf (const char *format,
-                va_list     vargs)
+string_cprintf (const char *format, ...)
 {
-  char *str = NULL;
-  if (vasprintf (&str, format, vargs) >= 0 && str)
-    {
-      String s = str;
-      free (str);
-      return s;
-    }
+  va_list args;
+  int l;
+  {
+    char buffer[STACK_BUFFER_SIZE];
+    va_start (args, format);
+    locale_t olocale = uselocale (c_locale());
+    l = vsnprintf (buffer, sizeof (buffer), format, args);
+    uselocale (olocale);
+    va_end (args);
+    if (l < 0)
+      return format; // error?
+    if (size_t (l) < sizeof (buffer))
+      return String (buffer, l);
+  }
+  String string;
+  string.resize (l + 1);
+  va_start (args, format);
+  locale_t olocale = uselocale (c_locale());
+  const int j = vsnprintf (&string[0], string.size(), format, args);
+  uselocale (olocale);
+  va_end (args);
+  string.resize (std::min (l, std::max (j, 0)));
+  return string;
+}
+
+template<bool CLOCALE> static inline String
+local_vprintf (const char *format, va_list vargs)
+{
+  locale_t olocale;
+  if (CLOCALE)
+    olocale = uselocale (c_locale());
+  va_list pargs;
+  char buffer[STACK_BUFFER_SIZE];
+  buffer[0] = 0;
+  va_copy (pargs, vargs);
+  const int l = vsnprintf (buffer, sizeof (buffer), format, pargs);
+  va_end (pargs);
+  std::string string;
+  if (l < 0)
+    string = format; // error?
+  else if (size_t (l) < sizeof (buffer))
+    string = String (buffer, l);
   else
-    return format;
+    {
+      string.resize (l + 1);
+      va_copy (pargs, vargs);
+      const int j = vsnprintf (&string[0], string.size(), format, pargs);
+      va_end (pargs);
+      string.resize (std::min (l, std::max (j, 0)));
+    }
+  if (CLOCALE)
+    uselocale (olocale);
+  return string;
+}
+
+String
+string_vprintf (const char *format, va_list vargs)
+{
+  return local_vprintf<false> (format, vargs);
+}
+
+String
+string_vcprintf (const char *format, va_list vargs)
+{
+  return local_vprintf<true> (format, vargs);
 }
 
 static StringVector
@@ -262,7 +344,7 @@ string_to_uint (const String &string,
 String
 string_from_uint (uint64 value)
 {
-  return string_printf ("%llu", value);
+  return string_cprintf ("%llu", value);
 }
 
 bool
@@ -288,36 +370,55 @@ string_to_int (const String &string,
 String
 string_from_int (int64 value)
 {
-  return string_printf ("%lld", value);
+  return string_cprintf ("%lld", value);
+}
+
+static long double // try strtold in current and C locale
+locale_strtold (const char *nptr, char **endptr)
+{
+  char *fail_pos_1 = NULL;
+  const long double val_1 = strtold (nptr, &fail_pos_1);
+  if (fail_pos_1 && fail_pos_1[0] != 0)
+    {
+      char *fail_pos_2 = NULL;
+      locale_t olocale = uselocale (c_locale());
+      const long double val_2 = strtold (nptr, &fail_pos_2);
+      uselocale (olocale);
+      if (fail_pos_2 > fail_pos_1)
+        {
+          if (endptr)
+            *endptr = fail_pos_2;
+          return val_2;
+        }
+    }
+  if (endptr)
+    *endptr = fail_pos_1;
+  return val_1;
 }
 
 double
 string_to_double (const String &string)
 {
-  return g_ascii_strtod (string.c_str(), NULL);
+  return locale_strtold (string.c_str(), NULL);
 }
 
 double
 string_to_double (const char  *dblstring,
                   const char **endptr)
 {
-  return g_ascii_strtod (dblstring, (char**) endptr);
+  return locale_strtold (dblstring, (char**) endptr);
 }
 
 String
 string_from_float (float value)
 {
-  char numbuf[G_ASCII_DTOSTR_BUF_SIZE + 1] = { 0, };
-  g_ascii_formatd (numbuf, G_ASCII_DTOSTR_BUF_SIZE, "%.7g", value);
-  return String (numbuf);
+  return string_cprintf ("%.7g", value);
 }
 
 String
 string_from_double (double value)
 {
-  char numbuf[G_ASCII_DTOSTR_BUF_SIZE + 1] = { 0, };
-  g_ascii_formatd (numbuf, G_ASCII_DTOSTR_BUF_SIZE, "%.17g", value);
-  return String (numbuf);
+  return string_cprintf ("%.17g", value);
 }
 
 vector<double>
@@ -448,7 +549,7 @@ string_to_cescape (const String &str)
     {
       uint8 d = *it;
       if (d < 32 || d > 126 || d == '?')
-        buffer += string_printf ("\\%03o", d);
+        buffer += string_cprintf ("\\%03o", d);
       else if (d == '\\')
         buffer += "\\\\";
       else if (d == '"')
