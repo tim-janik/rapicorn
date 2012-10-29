@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_CORE_UTILITIES_HH__
 #define __RAPICORN_CORE_UTILITIES_HH__
 
-#include <rcore/rapicorncdefs.h>
+#include <rcore/cxxaux.hh>
 #include <string>
 #include <vector>
 #include <map>
@@ -24,7 +24,7 @@
 #define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
-//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in rapicorncdefs.h
+//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
 #define STRLOC()                        RAPICORN_STRLOC()
 #define return_if                       RAPICORN_RETURN_IF
 #define return_unless                   RAPICORN_RETURN_UNLESS

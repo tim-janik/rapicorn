@@ -161,7 +161,6 @@ typedef uint32_t                RapicornUInt32; // __attribute__ ((__mode__ (__S
 typedef unsigned long long int  RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
 // typedef uint64_t RapicornUInt64; // uint64_t is a long on AMD64 which breaks printf
 // Using stdint.h defines here for type compatibility with standard APIs (references, printf, ...)
-// provided by rapicorncdefs.h: uint;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);

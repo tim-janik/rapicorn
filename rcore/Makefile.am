@@ -15,7 +15,7 @@ rapicorn_public_headers = $(strip	\
         pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
-	rapicorncdefs.h	rcore.hh \
+	cxxaux.hh	rcore.hh \
 )
 rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
         platform.cc	rapicorndebugtools.cc				utilities.cc  \
