@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <glib.h>
-#include "rapicorncpu.hh"
+#include "platform.hh"
 #include "main.hh"
 #include <setjmp.h>
 #include <signal.h>
@@ -48,7 +48,7 @@ get_arch_name (void)
   return "i386";
 #else
   return "unknown-arch";
-#warning rapicorncpu.cc needs updating for this processor type
+#warning platform.cc needs updating for this processor type
 #endif
 }
 

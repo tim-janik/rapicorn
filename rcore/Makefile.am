@@ -9,7 +9,7 @@ DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RE
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-        rapicorncpu.hh	rapicorndebugtools.hh				utilities.hh  \
+        platform.hh	rapicorndebugtools.hh				utilities.hh  \
         rapicornmsg.hh	signal.hh		math.hh			unicode.hh   \
         xmlnode.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
@@ -18,7 +18,7 @@ rapicorn_public_headers = $(strip	\
 	rapicorncdefs.h	rcore.hh \
 )
 rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
-        rapicorncpu.cc  rapicorndebugtools.cc				utilities.cc  \
+        platform.cc	rapicorndebugtools.cc				utilities.cc  \
         rapicornmsg.cc  signal.cc		math.cc			unicode.cc   \
         xmlnode.cc	markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \

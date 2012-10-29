@@ -5,7 +5,6 @@
 #include "unicode.hh"
 #include "thread.hh"
 #include "rapicornmsg.hh"
-#include "rapicorncpu.hh"
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
