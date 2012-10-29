@@ -1,7 +1,7 @@
 /* Copyright (C) 2009 Tim Janik
  * GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
  */
-#include "rapicorndebugtools.hh"
+#include "debugtools.hh"
 #include "regex.hh"
 #include "markup.hh"
 #include <stdio.h>
