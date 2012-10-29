@@ -3,23 +3,6 @@
 ### ** +  testrcore2  + ** ###
 ### ** +--------------+ ** ###
 
-# Test:  Message/Dialog Message Types ...
-testrcore2[0]:Warning:0: Warning Title
-testrcore2[0]:Warning:1: Primary warning message.
-testrcore2[0]:Warning:2: Secondary warning message.
-Continuation of secondary warning message.
-testrcore2[0]:Warning:3: Message details: 1, 2, 3.
-And more message details: a, b, c.
-********************************************************************************
-** Warning: Warning Title
-** Primary warning message.
-**   Secondary warning message.
-**   Continuation of secondary warning message.
-** > Message details: 1, 2, 3.
-** > And more message details: a, b, c.
-** [X] Show this message again.
-********************************************************************************
-  TEST   Message/Dialog Message Types:                                   OK
 # Test:  SVG/svg2png ...
   ARGB:94x78:58d08c470ac62b89
   -----------------------------------------------

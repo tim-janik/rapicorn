@@ -4,7 +4,6 @@
 #include "strings.hh"
 #include "unicode.hh"
 #include "thread.hh"
-#include "rapicornmsg.hh"
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -1956,11 +1955,8 @@ url_test_show (const char *url)
 static void
 browser_launch_warning (const char *url)
 {
-  Msg::display (Msg::WARNING,
-                Msg::Title (_("Launch Web Browser")),
-                Msg::Text1 (_("Failed to launch a web browser executable")),
-                Msg::Text2 (_("No suitable web browser executable could be found to be executed and to display the URL: %s"), url),
-                Msg::Check (_("Show messages about web browser launch problems")));
+  // FIXME: turn browser_launch_warning into a dialog
+  user_warning (UserSource (__FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
 }
 
 void
