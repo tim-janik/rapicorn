@@ -1,21 +1,6 @@
-/* RapicornCDefs - C compatible definitions
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#ifndef __RAPICORN_CDEFS_H__
-#define __RAPICORN_CDEFS_H__
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_CXXAUX_HH__
+#define __RAPICORN_CXXAUX_HH__
 
 #include <rcore/rapicornconfig.h> /* _GNU_SOURCE */
 #include <stdbool.h>
@@ -213,6 +198,4 @@ extern inline void rapicorn_abort_noreturn (void) RAPICORN_NORETURN;
 extern inline void rapicorn_abort_noreturn (void) { while (1) *(void*volatile*)0; }
 RAPICORN_EXTERN_C_END();
 
-#endif /* __RAPICORN_CDEFS_H__ */
-
-/* vim:set ts=8 sts=2 sw=2: */
+#endif /* __RAPICORN_CXXAUX_HH__ */
