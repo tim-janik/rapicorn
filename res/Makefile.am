@@ -1,8 +1,6 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 ZINTERN     = ../rcore/rapicorn-zintern
-EXTRA_DIST  =
-CLEANFILES  =
 noinst_DATA =
 
 # == Resource Files ==
