@@ -112,9 +112,9 @@ ScreenWindow::viewable ()
 }
 
 void
-ScreenWindow::configure (const Config &config)
+ScreenWindow::configure (const Config &config, bool sizeevent)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONFIGURE, this, config));
+  queue_command (new ScreenCommand (ScreenCommand::CONFIGURE, this, config, sizeevent));
 }
 
 void
@@ -144,13 +144,13 @@ ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &re
 void
 ScreenWindow::start_user_move (uint button, double root_x, double root_y)
 {
-  queue_command (new ScreenCommand (ScreenCommand::MOVE, this, button, root_x, root_y));
+  queue_command (new ScreenCommand (ScreenCommand::UMOVE, this, button, root_x, root_y));
 }
 
 void
 ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
 {
-  queue_command (new ScreenCommand (ScreenCommand::RESIZE, this, button, root_x, root_y));
+  queue_command (new ScreenCommand (ScreenCommand::URESIZE, this, button, root_x, root_y));
 }
 
 void
@@ -215,11 +215,12 @@ ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window) :
   assert (type == OK || type == BEEP || type == SHOW || type == PRESENT || type == DESTROY || type == SHUTDOWN);
 }
 
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Config &cfg) :
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Config &cfg, bool sizeevent) :
   type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
   assert (type == CONFIGURE);
-  config = new ScreenWindow::Config (cfg);
+  dconfig = new ScreenWindow::Config (cfg);
+  dresize = sizeevent;
 }
 
 ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg) :
@@ -241,7 +242,7 @@ ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, cairo_surface_t 
 ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int croot_x, int croot_y) :
   type (ctype), screen_window (window), config (NULL), setup (NULL)
 {
-  assert (type == MOVE || type == RESIZE);
+  assert (type == UMOVE || type == URESIZE);
   cbutton = button;
   croot_x = root_x;
   croot_y = root_y;
@@ -263,14 +264,14 @@ ScreenCommand::~ScreenCommand()
       delete config;
       break;
     case CONFIGURE:
-      delete config;
-      assert (!setup);
+      dresize = 0;
+      delete dconfig;
       break;
     case BLIT:
       cairo_surface_destroy (surface);
       delete region;
       break;
-    case MOVE: case RESIZE:
+    case UMOVE: case URESIZE:
       button = root_x = root_y = 0;
       break;
     case BEEP: case SHOW: case PRESENT: case DESTROY: case SHUTDOWN:
@@ -293,7 +294,7 @@ ScreenCommand::reply_type (Type type)
     {
     case CREATE: case SHUTDOWN: return true; // has reply
     case CONFIGURE: case BLIT:  return false;
-    case MOVE: case RESIZE:     return false;
+    case UMOVE: case URESIZE:   return false;
     case BEEP: case SHOW:       return false;
     case PRESENT: case DESTROY: return false;
     case OK: case ERROR:        return true; // is reply

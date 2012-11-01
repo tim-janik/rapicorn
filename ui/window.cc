@@ -39,6 +39,33 @@ WindowIface::impl () const
   return *wimpl;
 }
 
+const PropertyList&
+WindowImpl::list_properties ()
+{
+  static Property *properties[] = {
+    MakeProperty (WindowImpl, title,   _("Title"),   _("User visible title to be displayed in the window title bar"), "rw"),
+  };
+  static const PropertyList property_list (properties, ViewportImpl::list_properties());
+  return property_list;
+}
+
+String
+WindowImpl::title () const
+{
+  return m_config.title;
+}
+
+void
+WindowImpl::title (const String &window_title)
+{
+  if (m_config.title != window_title)
+    {
+      m_config.title = window_title;
+      if (m_screen_window)
+        m_screen_window->configure (m_config, false);
+    }
+}
+
 void
 WindowImpl::set_parent (ContainerImpl *parent)
 {
@@ -230,8 +257,8 @@ WindowImpl::resize_window (const Allocation *new_area)
       m_config.request_width = rsize.width;
       m_config.request_height = rsize.height;
       m_pending_win_size = true;
-      discard_expose_region(); // configure will send a new WIN_SIZE event
-      m_screen_window->configure (m_config);
+      discard_expose_region(); // we request a new WIN_SIZE event in configure
+      m_screen_window->configure (m_config, true);
       goto done;
     }
   // screen window size is good, allocate it
@@ -970,7 +997,7 @@ WindowImpl::create_screen_window ()
               m_config.request_height = rsize.height;
               if (m_config.title.empty())
                 {
-                  user_warning (this->user_source(), "window title is unset");
+                  // user_warning (this->user_source(), "window title is unset");
                   m_config.title = setup.session_role;
                 }
               if (m_config.alias.empty())

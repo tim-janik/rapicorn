@@ -98,7 +98,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   void                  handle_command          (ScreenCommand *command);
   void                  setup_window            (const ScreenWindow::Setup &setup);
   void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
-  void                  configure_window        (const Config &config);
+  void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   bool                  process_event           (const XEvent &xevent);
   void                  client_message          (const XClientMessageEvent &xevent);
@@ -198,7 +198,7 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   update_state (m_state);
   // window setup
   setup_window (setup);
-  configure_window (config);
+  configure_window (config, true);
   // create input context if possible
   String imerr = x11_input_context (x11context.display, m_window, attributes.event_mask,
                                     x11context.input_method, x11context.input_style, &m_input_context);
@@ -845,7 +845,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 }
 
 void
-ScreenWindowX11::configure_window (const Config &config)
+ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
 {
   // WM_NORMAL_HINTS, size & gravity
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
@@ -867,7 +867,8 @@ ScreenWindowX11::configure_window (const Config &config)
       m_state.visible_alias = m_config.alias;   // compensate for WMs not supporting _NET_WM_VISIBLE_ICON_NAME
     }
   force_update (m_window);
-  enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
+  if (sizeevent)
+    enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
 }
 
 void
@@ -878,7 +879,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
       assert_unreached();
     case ScreenCommand::CONFIGURE:
-      configure_window (*command->config);
+      configure_window (*command->dconfig, command->dresize);
       break;
     case ScreenCommand::BEEP:
       XBell (x11context.display, 0);
@@ -890,8 +891,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       blit (command->surface, *command->region);
       break;
     case ScreenCommand::PRESENT:   break;  // FIXME
-    case ScreenCommand::MOVE:      break;  // FIXME
-    case ScreenCommand::RESIZE:    break;  // FIXME
+    case ScreenCommand::UMOVE:     break;  // FIXME
+    case ScreenCommand::URESIZE:   break;  // FIXME
     case ScreenCommand::DESTROY:
       destroy_x11_resources();
       delete this;

@@ -77,10 +77,10 @@ public:
   void          present                 ();                     ///< Demand user attention for this window.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
   void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
-  void          configure               (const Config &config); ///< Change window configuration.
-  void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);     ///< Blit/paint window region.
-  void          start_user_move         (uint button, double root_x, double root_y);                    ///< Trigger window movement.
-  void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge);   ///< Trigger window resizing.
+  void          configure               (const Config &config, bool sizeevent); ///< Change window configuration, requesting size event.
+  void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
+  void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
+  void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.
   void          push_event              (Event *event);         ///< Push back an event, so it's the next event returned by pop().
   bool          has_event               ();                     ///< Indicates if pop_event() will return non-NULL.
@@ -104,17 +104,18 @@ typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
 struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
 {
-  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, MOVE, RESIZE, DESTROY, SHUTDOWN, OK, ERROR, };
+  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, DESTROY, SHUTDOWN, OK, ERROR, };
   Type          type;
   ScreenWindow *screen_window;
   union {
-    struct { ScreenWindow::Config *config; ScreenWindow::Setup *setup; };
+    struct { ScreenWindow::Config *config;    ScreenWindow::Setup *setup; };
+    struct { ScreenWindow::Config *dconfig;   bool dresize; };
     struct { cairo_surface_t      *surface;   Rapicorn::Region *region; };
     struct { int                   button, root_x, root_y; };
     struct { String               *result_msg; };
   };
   ScreenCommand (Type type, ScreenWindow *window);
-  ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Config &cfg);
+  ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Config &cfg, bool sizeevent);
   ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
   ScreenCommand (Type type, ScreenWindow *window, cairo_surface_t *surface, const Rapicorn::Region &region);
   ScreenCommand (Type type, ScreenWindow *window, int button, int root_x, int root_y);

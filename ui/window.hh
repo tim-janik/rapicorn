@@ -28,6 +28,9 @@ protected:
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
+  virtual const PropertyList& list_properties   ();
+  virtual String        title                   () const;
+  virtual void          title                   (const String &window_title);
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   static  void          forcefully_close_all    ();
