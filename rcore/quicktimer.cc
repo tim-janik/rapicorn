@@ -158,7 +158,7 @@ QuickTimer::QuickTimer (uint64 usecs) :
   start (usecs);
 }
 
-#ifdef DOXYGEN
+#ifdef RAPICORN_DOXYGEN
 /**
  * The QuickTimer class allows fast timer expiration checks from inner loops.
  * On Unix the implementation uses CLOCK_PROCESS_CPUTIME_ID or CLOCK_REALTIME in
@@ -175,6 +175,6 @@ class QuickTimer;
  * @returns Whether the time period that QuickTimer was setup for has expired.
  */
 bool QuickTimer::expired();
-#endif // DOXYGEN
+#endif // RAPICORN_DOXYGEN
 
 } // Rapicorn

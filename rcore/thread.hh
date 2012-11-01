@@ -147,7 +147,7 @@ void    affinity        (int cpu);      ///< Set the current CPU affinity.
 int     thread_pid      ();             ///< Get the current threads's thread ID (TID). For further details, see gettid().
 int     process_pid     ();             ///< Get the process ID (PID). For further details, see getpid().
 
-#ifdef  DOXYGEN // parts reused from std::this_thread
+#ifdef  RAPICORN_DOXYGEN // parts reused from std::this_thread
 /// Relinquish the processor to allow execution of other threads. For further details, see std::this_thread::yield().
 void                                       yield       ();
 /// Returns the pthread_t id for the current thread. For further details, see std::this_thread::get_id().
@@ -156,9 +156,9 @@ std::thread::id                            get_id      ();
 template<class Rep, class Period>     void sleep_for   (std::chrono::duration<Rep,Period> sleep_duration);
 /// Sleep until @a sleep_time has been reached. For further details, see std::this_thread::sleep_until().
 template<class Clock, class Duration> void sleep_until (const std::chrono::time_point<Clock,Duration> &sleep_time);
-#else // !DOXYGEN
+#else // !RAPICORN_DOXYGEN
 using namespace std::this_thread;
-#endif // !DOXYGEN
+#endif // !RAPICORN_DOXYGEN
 
 } // ThisThread
 

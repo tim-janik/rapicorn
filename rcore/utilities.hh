@@ -25,20 +25,20 @@
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 //#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
-#define STRLOC()                        RAPICORN_STRLOC()
-#define return_if                       RAPICORN_RETURN_IF
-#define return_unless                   RAPICORN_RETURN_UNLESS
-#define assert                          RAPICORN_ASSERT
-#define assert_unreached                RAPICORN_ASSERT_UNREACHED
-#define assert_return                   RAPICORN_ASSERT_RETURN
-#define fatal                           RAPICORN_FATAL
-#define critical_unless                 RAPICORN_CRITICAL_UNLESS
-#define critical                        RAPICORN_CRITICAL
-#define FIXME                           RAPICORN_FIXME
-#define DEBUG                           RAPICORN_DEBUG
-#define KEY_DEBUG                       RAPICORN_KEY_DEBUG
-#define BREAKPOINT                      Rapicorn::breakpoint
-#define STARTUP_ASSERT                  RAPICORN_STARTUP_ASSERT
+#define STRLOC()         RAPICORN_STRLOC()          ///< Produces a const char C string, describing the current code location.
+#define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
+#define return_unless    RAPICORN_RETURN_UNLESS     ///< Return @a ... if @a condition is false.
+#define assert           RAPICORN_ASSERT            ///< Assert @a condition to be true at runtime.
+#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Assertion used to label unreachable code.
+#define assert_return    RAPICORN_ASSERT_RETURN     ///< Issue an assertion warning and return @a ... if @a condition is false.
+#define fatal            RAPICORN_FATAL             ///< Abort the program with a fatal error message.
+#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
+#define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
+#define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
+#define DEBUG            RAPICORN_DEBUG             ///< Conditionally issue a message if debugging is enabled.
+#define KEY_DEBUG        RAPICORN_KEY_DEBUG         ///< Conditionally issue a message if the debugging @a key is enabled.
+#define BREAKPOINT       Rapicorn::breakpoint       ///< Cause a debugging breakpoint, for development only.
+#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {

@@ -72,13 +72,23 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_ABORT_NORETURN()	 rapicorn_abort_noreturn()
 #endif
 
-/* --- convenient aliases --- */
+// == Convenience Macros ==
 #ifdef  RAPICORN_CONVENIENCE
-#define	ISLIKELY		RAPICORN_ISLIKELY
-#define	UNLIKELY		RAPICORN_UNLIKELY
-#define	LIKELY			RAPICORN_LIKELY
-#define	STRINGIFY               RAPICORN_CPP_STRINGIFY
+#define	ISLIKELY		RAPICORN_ISLIKELY       ///< Compiler hint that @a expression is likely to be true.
+#define	UNLIKELY		RAPICORN_UNLIKELY       ///< Compiler hint that @a expression is unlikely to be true.
+#define	LIKELY			RAPICORN_LIKELY         ///< Compiler hint that @a expression is likely to be true.
+#define	STRINGIFY               RAPICORN_CPP_STRINGIFY  ///< Produces a const char C string from the macro @a argument.
 #endif
+/**
+ * @def RAPICORN_CONVENIENCE
+ * Configuration macro to enable convenience macros.
+ * Defining this before inclusion of rapicorn.hh or rapicorn-core.hh enables several convenience
+ * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
+ * see e.g. critical_unless(), UNLIKELY().
+ */
+#ifdef  RAPICORN_DOXYGEN
+#  define RAPICORN_CONVENIENCE
+#endif // RAPICORN_DOXYGEN
 
 /* --- preprocessor pasting --- */
 #define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d
