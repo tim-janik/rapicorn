@@ -112,7 +112,7 @@ distcleancheck_listfiles = true # find . -type f -print
 
 # == ChangeLog & Release Rules ==
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
-	$(srcdir)/mkrelease.sh ChangeLog -R 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
 noinst_DATA += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
