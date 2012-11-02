@@ -4,7 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <rcore/thread.hh>
-#include <rcore/rapicornsignal.hh>
+#include <rcore/signal.hh>
 
 
 namespace Rapicorn {

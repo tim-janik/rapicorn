@@ -4,19 +4,18 @@
 
 #include <rcore/rapicornconfig.h>
 #include <rcore/enumdefs.hh>
-#include <rcore/rapicorncpu.hh>
-#include <rcore/rapicorndebugtools.hh>
+#include <rcore/platform.hh>
+#include <rcore/debugtools.hh>
 #include <rcore/loop.hh>
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
-#include <rcore/rapicornmath.hh>
-#include <rcore/rapicornmsg.hh>
-#include <rcore/rapicornsignal.hh>
-#include <rcore/rapicornutf8.hh>
+#include <rcore/math.hh>
+#include <rcore/signal.hh>
+#include <rcore/unicode.hh>
 #include <rcore/utilities.hh>
-#include <rcore/rapicornxml.hh>
+#include <rcore/xmlnode.hh>
 #include <rcore/regex.hh>
 #include <rcore/strings.hh>
 

@@ -1,21 +1,6 @@
-/* RapicornCDefs - C compatible definitions
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#ifndef __RAPICORN_CDEFS_H__
-#define __RAPICORN_CDEFS_H__
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_CXXAUX_HH__
+#define __RAPICORN_CXXAUX_HH__
 
 #include <rcore/rapicornconfig.h> /* _GNU_SOURCE */
 #include <stdbool.h>
@@ -161,7 +146,6 @@ typedef uint32_t                RapicornUInt32; // __attribute__ ((__mode__ (__S
 typedef unsigned long long int  RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
 // typedef uint64_t RapicornUInt64; // uint64_t is a long on AMD64 which breaks printf
 // Using stdint.h defines here for type compatibility with standard APIs (references, printf, ...)
-// provided by rapicorncdefs.h: uint;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);
@@ -195,88 +179,6 @@ RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 #define	RAPICORN_IS_DIR_SEPARATOR(c)    	  ((c) == RAPICORN_DIR_SEPARATOR)
 #define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) ((c) == RAPICORN_SEARCHPATH_SEPARATOR)
 
-/* --- Thread info --- */
-typedef enum {
-  RAPICORN_THREAD_UNKNOWN    = '?',
-  RAPICORN_THREAD_RUNNING    = 'R',
-  RAPICORN_THREAD_SLEEPING   = 'S',
-  RAPICORN_THREAD_DISKWAIT   = 'D',
-  RAPICORN_THREAD_TRACED     = 'T',
-  RAPICORN_THREAD_PAGING     = 'W',
-  RAPICORN_THREAD_ZOMBIE     = 'Z',
-  RAPICORN_THREAD_DEAD       = 'X',
-} RapicornThreadState;
-typedef struct {
-  int                	thread_id;
-  char                 *name;
-  uint                 	aborted : 1;
-  RapicornThreadState     state;
-  int                  	priority;      	/* nice value */
-  int                  	processor;     	/* running processor # */
-  RapicornUInt64         	utime;		/* user time */
-  RapicornUInt64         	stime;         	/* system time */
-  RapicornUInt64		cutime;        	/* user time of dead children */
-  RapicornUInt64		cstime;		/* system time of dead children */
-} RapicornThreadInfo;
-
-/* --- threading ABI --- */
-typedef struct _RapicornThread RapicornThread;
-typedef void (*RapicornThreadFunc)   (void *user_data);
-typedef void (*RapicornThreadWakeup) (void *wakeup_data);
-typedef union {
-  void	     *cond_pointer;
-  RapicornUInt8 cond_dummy[MAX (8, RAPICORN_SIZEOF_PTH_COND_T)];
-} RapicornCond;
-typedef union {
-  void	     *mutex_pointer;
-  RapicornUInt8 mutex_dummy[MAX (8, RAPICORN_SIZEOF_PTH_MUTEX_T)];
-} RapicornMutex;
-typedef struct {
-  RapicornMutex   mutex;
-  RapicornThread *owner;
-  uint 		depth;
-} RapicornRecMutex;
-typedef struct {
-  RapicornThread*     (*thread_new)           (const char        *name);
-  RapicornThread*     (*thread_ref)           (RapicornThread      *thread);
-  RapicornThread*     (*thread_ref_sink)      (RapicornThread      *thread);
-  void              (*thread_unref)         (RapicornThread      *thread);
-  bool              (*thread_start)         (RapicornThread      *thread,
-					     RapicornThreadFunc 	func,
-					     void              *user_data);
-  RapicornThread*     (*thread_self)          (void);
-  void*             (*thread_selfxx)        (void);
-  void*             (*thread_getxx)         (RapicornThread      *thread);
-  bool              (*thread_setxx)         (RapicornThread      *thread,
-					     void              *xxdata);
-  int               (*thread_pid)           (RapicornThread      *thread);
-  const char*       (*thread_name)          (RapicornThread      *thread);
-  void              (*thread_set_name)      (const char        *newname);
-  bool		    (*thread_sleep)	    (RapicornInt64        max_useconds);
-  void		    (*thread_wakeup)	    (RapicornThread      *thread);
-  void		    (*thread_awake_after)   (RapicornUInt64       stamp);
-  void		    (*thread_emit_wakeups)  (RapicornUInt64       wakeup_stamp);
-  void		    (*thread_set_wakeup)    (RapicornThreadWakeup wakeup_func,
-					     void              *wakeup_data,
-					     void             (*destroy_data) (void*));
-  void              (*thread_abort) 	    (RapicornThread      *thread);
-  void              (*thread_queue_abort)   (RapicornThread      *thread);
-  bool              (*thread_aborted)	    (void);
-  bool		    (*thread_get_aborted)   (RapicornThread      *thread);
-  bool	            (*thread_get_running)   (RapicornThread      *thread);
-  void		    (*thread_wait_for_exit) (RapicornThread      *thread);
-  void              (*thread_yield)         (void);
-  void              (*thread_exit)          (void              *retval) RAPICORN_NORETURN;
-  void              (*thread_set_handle)    (RapicornThread      *handle);
-  RapicornThread*     (*thread_get_handle)    (void);
-  RapicornThreadInfo* (*info_collect)         (RapicornThread      *thread);
-  void              (*info_free)            (RapicornThreadInfo  *info);
-  void*		    (*qdata_get)	    (uint               glib_quark);
-  void		    (*qdata_set)	    (uint               glib_quark,
-					     void              *data,
-                                             void             (*destroy_data) (void*));
-  void*		    (*qdata_steal)	    (uint		glib_quark);
-} RapicornThreadTable;
 
 // == X86 Architecture ==
 #if defined __i386__ || defined __x86_64__
@@ -296,6 +198,4 @@ extern inline void rapicorn_abort_noreturn (void) RAPICORN_NORETURN;
 extern inline void rapicorn_abort_noreturn (void) { while (1) *(void*volatile*)0; }
 RAPICORN_EXTERN_C_END();
 
-#endif /* __RAPICORN_CDEFS_H__ */
-
-/* vim:set ts=8 sts=2 sw=2: */
+#endif /* __RAPICORN_CXXAUX_HH__ */

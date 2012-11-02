@@ -1,23 +1,7 @@
-/* RapicornMarkup - simple XML parser
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- *
- * based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "markup.hh"
-#include "rapicornutf8.hh"
+// This file is based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
+#include "unicode.hh"
 #include "strings.hh"
 #include <stdio.h>
 #include <stdlib.h>
@@ -196,7 +180,7 @@ is_name_start_char (const char  *p)
       (!IS_COMMON_NAME_END_CHAR (*p) &&
        (*p == '_' || 
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
@@ -213,7 +197,7 @@ is_name_char (const char  *p)
 	*p == '-' ||
 	*p == '_' ||
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;

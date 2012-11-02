@@ -1,27 +1,12 @@
-/* RapicornUtf8 - UTF-8 utilities
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#ifndef __RAPICORN_UTF8_HH__
-#define __RAPICORN_UTF8_HH__
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_UNICODE_HH__
+#define __RAPICORN_UNICODE_HH__
 
 #include <rcore/utilities.hh>
 
 namespace Rapicorn {
 
-namespace Unichar {
+namespace Unicode {
 inline bool isvalid      (unichar uc) RAPICORN_CONST;
 bool        isalnum      (unichar uc) RAPICORN_CONST;
 bool        isalpha      (unichar uc) RAPICORN_CONST;
@@ -72,7 +57,7 @@ typedef enum {
 } BreakType;
 BreakType get_break  (unichar uc) RAPICORN_CONST;
 
-} // Unichar
+} // Unicode
 
 /* --- UTF-8 movement --- */
 inline const char*    utf8_next         (const char     *c);
@@ -99,7 +84,7 @@ bool                  utf8_validate     (const String   &string,
                                          int            *bound = NULL);
 
 /* --- implementation bits --- */
-namespace Unichar {
+namespace Unicode {
 inline bool
 isvalid (unichar uc)
 {
@@ -113,7 +98,7 @@ isvalid (unichar uc)
     return false;
   return true;
 }
-} // Unichar
+} // Unicode
 
 extern const int8 utf8_skip_table[256];
 
@@ -206,5 +191,4 @@ utf8_aligned (const char *c)
 
 } // Rapicorn
 
-#endif /* __RAPICORN_UTF8_HH__ */
-/* vim:set ts=8 sts=2 sw=2: */
+#endif /* __RAPICORN_UNICODE_HH__ */
