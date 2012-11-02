@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <string.h>
+#include <unistd.h>
 #include <algorithm>
 #include <sys/syscall.h>        // SYS_gettid
 #include <list>
@@ -35,7 +36,7 @@ ThreadInfo::~ThreadInfo ()
 }
 
 ThreadInfo::ThreadInfo () :
-  hp ({ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }),
+  hp { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
   next (NULL), pth_thread_id (pthread_self())
 {}
 

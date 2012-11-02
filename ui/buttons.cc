@@ -19,6 +19,7 @@
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
+#include <unistd.h>
 
 namespace Rapicorn {
 

@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <glib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>

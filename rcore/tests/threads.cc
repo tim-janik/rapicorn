@@ -2,6 +2,7 @@
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <thread>
 
 #if     __SIZEOF_POINTER__ == 8

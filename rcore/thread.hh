@@ -38,7 +38,7 @@ public:
 class Spinlock {
   pthread_spinlock_t m_spinlock;
 public:
-  constexpr Spinlock    () : m_spinlock (RAPICORN_SPINLOCK_INITIALIZER) {}
+  constexpr Spinlock    () : m_spinlock RAPICORN_SPINLOCK_INITIALIZER {}
   void      lock        ()      { pthread_spin_lock (&m_spinlock); }
   void      unlock      ()      { pthread_spin_unlock (&m_spinlock); }
   bool      try_lock    ()      { return 0 == pthread_spin_trylock (&m_spinlock); }

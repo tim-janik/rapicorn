@@ -108,10 +108,10 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
     RAPICORN_ASSERT (&emitter != NULL);
     connect (slot (emitter, method));
   }
-  inline ConId connect   (const Slot  &s) { return connect_link (s.get_trampoline_link()); }
-  inline ConId connect   (const SlotE &s) { return connect_link (s.get_trampoline_link(), true); }
-  inline uint disconnect (const Slot  &s) { return disconnect_equal_link (*s.get_trampoline_link()); }
-  inline uint disconnect (const SlotE &s) { return disconnect_equal_link (*s.get_trampoline_link(), true); }
+  inline ConId connect   (const Slot  &s) { return this->connect_link (s.get_trampoline_link()); }
+  inline ConId connect   (const SlotE &s) { return this->connect_link (s.get_trampoline_link(), true); }
+  inline uint disconnect (const Slot  &s) { return this->disconnect_equal_link (*s.get_trampoline_link()); }
+  inline uint disconnect (const SlotE &s) { return this->disconnect_equal_link (*s.get_trampoline_link(), true); }
   inline uint disconnect (ConId    conid) { return this->disconnect_link_id (conid); }
   Signal3&    operator+= (const Slot  &s) { connect (s); return *this; }
   Signal3&    operator+= (const SlotE &s) { connect (s); return *this; }
