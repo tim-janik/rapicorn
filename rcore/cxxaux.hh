@@ -81,13 +81,12 @@
 #  define RAPICORN_CONVENIENCE
 #endif // RAPICORN_DOXYGEN
 
-// == Preprocessor Pasting ==
+// == Preprocessor Convenience ==
 #define RAPICORN_CPP_PASTE2_(a,b)               a ## b  // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_PASTE2(a,b)                RAPICORN_CPP_PASTE2_ (a,b)
 #define RAPICORN_CPP_STRINGIFY_(s)              #s      // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_STRINGIFY(s)               RAPICORN_CPP_STRINGIFY_ (s)
-#define RAPICORN_STATIC_ASSERT_(expr, asname)   typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Rapicorn_StaticAssertion_LINE, __LINE__)
-#define RAPICORN_STATIC_ASSERT(expr)            RAPICORN_STATIC_ASSERT_ (expr, compile_time_assertion_failed)
+#define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr)
 
 // == GCC Attributes ==
 #if     __GNUC__ >= 4
