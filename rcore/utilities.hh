@@ -671,7 +671,7 @@ private:
 /**
  * By using a DataKey, DataListContainer objects allow storage and retrieval of custom data members in a typesafe fashion.
  * The custom data members will initially default to DataKey::fallback and are deleted by the DataListContainer destructor.
- * Example: @SNIPPET{rcore/tests/datalist.cc, DataListContainer-EXAMPLE}
+ * Example: @snippet rcore/tests/datalist.cc DataListContainer-EXAMPLE
  */
 class DataListContainer {
   DataList data_list;

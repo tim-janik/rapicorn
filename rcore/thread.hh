@@ -165,7 +165,7 @@ using namespace std::this_thread;
 #ifdef RAPICORN_CONVENIENCE
 
 /** The @e do_once statement preceeds code blocks to ensure that a critical section is executed atomically and at most once.
- *  Example: @SNIPPET{rcore/tests/threads.cc, do_once-EXAMPLE}
+ *  Example: @snippet rcore/tests/threads.cc do_once-EXAMPLE
  */
 #define do_once                         RAPICORN_DO_ONCE
 

@@ -283,7 +283,7 @@ Blob::from (const String &blob_string)
  *      res: [relative_path/] resource_name
  * @endcode
  * See also: RAPICORN_STATIC_RESOURCE_DATA(), RAPICORN_STATIC_RESOURCE_ENTRY().
- * <BR> Example: @SNIPPET{rcore/tests/multitest.cc, Blob-EXAMPLE}
+ * <BR> Example: @snippet rcore/tests/multitest.cc Blob-EXAMPLE
  */
 
 } // Rapicorn

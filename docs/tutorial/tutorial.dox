@@ -28,7 +28,7 @@ So in a nutshel, a Rapicorn program looks like this:
 
 So much for the theory, let's get started with the first application!
 
-@SNIPPET{docs/tutorial/tuthello.py, HelloRapicorn-EXAMPLE}
+@snippet docs/tutorial/tuthello.py HelloRapicorn-EXAMPLE
 
 @subsection hello-app-init 1. Application Startup
 

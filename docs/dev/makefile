@@ -69,11 +69,6 @@ $(SRCTREE):
 
 LINK_PROJECT_NAME = \
 	-e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
-STRIP_SNIPPET_MARKS = \
-	-e '/^ *<span class="comment"> *\/\/\/ *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *$$/d' \
-	-e   's,<span class="comment"> */// *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *</span>\n\?,,' \
-	-e '/^ *\(<span class="preprocessor"> *\)\?\#  *\[[A-Za-z0-9+_-]\+-EXAMPLE\]\( *<\/span>\)\? *$$/d' \
-	-e 's, *<span class="preprocessor"> *\#  *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *\n\?,,'
 R_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
 all-docs: $(git_stamp) doxygen.cfg
@@ -91,7 +86,7 @@ all-docs: $(git_stamp) doxygen.cfg
 	$(Q) test ! -s error.log && rm -f error.log \
 	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(QSTDOUT) ; }
 	$(GPRINT) "POLISH" "HTML Files..."
-	$(Q) sed $(LINK_PROJECT_NAME) $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
+	$(Q) sed $(LINK_PROJECT_NAME) -i html.tmp/html/*.html
 	$(Q) sed -r $(R_ACCESSKEY_AS_F) -i html.tmp/html/*.html
 	$(Q) mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
 	$(Q) test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
