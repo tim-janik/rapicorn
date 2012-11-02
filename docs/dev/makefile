@@ -20,13 +20,18 @@ DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 SRCTREE     = srctree
 DOXYGENV    = doxygen-1.7.4
 DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
+GPRINT	    = @printf '  %-7s%s\n'
+Q           = $(if $(findstring 1, $(V)) ,, @)
+QSTDOUT     = $(Q:@=1>/dev/null)
+QSTDERR	    = $(Q:@=2>/dev/null)
 
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):
-	rm -rf $(SRCTREE)/ && mkdir -p $(SRCTREE)/
-	@echo "### Copying Source..." \
+	$(GPRINT) "GEN" $(SRCTREE)/
+	$(Q) rm -rf $(SRCTREE)/ && mkdir -p $(SRCTREE)/
+	$(GPRINT) "COPY" "Source tree..." \
 	&& CWD=`pwd` \
 	&& for dir in $(DOC_DIRS) ; do \
 	  (mkdir -p $$CWD/$(SRCTREE)/$$dir/ \
@@ -36,17 +41,17 @@ $(SRCTREE):
 	  done \
 	$(foreach FILE, $(DOC_FILES), \
 	  && cp $(top_srcdir)/$(FILE) $(SRCTREE)/$(dir $(FILE)))
-	@echo "### Identifying Documentation files..." \
+	$(GPRINT) "ADD" "File docu commands..." \
 	&& cd $(SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
-	@echo "### Skipping generated Enums..." \
+	$(GPRINT) "PRUNE" "Generated IDL enums" \
 	&& cd $(SRCTREE)/ \
 	&& sed 's/^enum\b/#ifndef DOXYGEN\nenum/ ; s/\(operator>>=.*\.pop_evalue().*\)/\1\n#endif/' \
 	    */clientapi.hh */serverapi.hh --in-place
-	@echo "### Pruning excludes..." \
+	$(GPRINT) "PRUNE" "Exclude files..." \
 	&& rm -f $(patsubst %, $(SRCTREE)/%, $(EXCLUDES))
-	@echo "### Forcing enum value docs..." \
+	$(GPRINT) "ADD" "Enumeration docu commands..." \
 	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
 	| xargs -0 python enumdoc.py
 
@@ -59,22 +64,27 @@ STRIP_SNIPPET_MARKS = \
 	-e 's, *<span class="preprocessor"> *\#  *\[[A-Za-z0-9+_-]\+-EXAMPLE\] *<\/span> *\n\?,,'
 
 all-docs: $(git_stamp) doxygen.cfg
-	rm -rf html.tmp/ && mkdir -p html.tmp/
-	$(MAKE) $(SRCTREE)
-	@echo "### Doxygen..."
-	(cat doxygen.cfg \
+	$(GPRINT) "TIDY" "Temporaries..."
+	$(Q) rm -rf html.tmp/ && mkdir -p html.tmp/
+	$(Q) $(MAKE) $(SRCTREE)
+	$(GPRINT) "GEN" "HTML Documentation..."
+	$(Q) (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
 	&& echo "INPUT		  = $(SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
 	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
-	) | nice $(DOXYGEN) -
-	rm -rf $(SRCTREE)/
-	sed $(LINK_PROJECT_NAME) $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
-	mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
-	test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
-	rsync -aH --del html.tmp/ html/
-	rm -rf html.tmp/
+	) | nice $(DOXYGEN) - >error.log 2>&1
+	$(Q) test ! -s error.log && rm -f error.log \
+	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(QSTDOUT) ; }
+	$(GPRINT) "POLISH" "HTML Files..."
+	$(Q) sed $(LINK_PROJECT_NAME) $(STRIP_SNIPPET_MARKS) -i html.tmp/html/*.html
+	$(Q) mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
+	$(Q) test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
+	$(GPRINT) "RSYNC" "HTML Documentation..."
+	$(Q) rsync -aH --del html.tmp/ html/
+	$(GPRINT) "CLEAN" "Temporaries..."
+	$(Q) rm -rf $(SRCTREE)/ html.tmp/
 
 upload: all
 	rsync -zaHP --del '--filter=P /*/' html/  testbit:/srv/dev/html/rapicorn/
