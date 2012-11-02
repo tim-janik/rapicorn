@@ -28,7 +28,7 @@ QSTDERR     = $(Q:@=2>/dev/null)
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 
 CHANGELOG_PGT = "Rapicorn Development ChangeLog"
-CHANGELOG_SED = -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
+CHANGELOG_SED = -e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
 		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
