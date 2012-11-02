@@ -3,7 +3,9 @@
 #define __RAPICORN_CORE_HH__
 
 #include <rcore/rapicornconfig.h>
+#include <rcore/blobres.hh>
 #include <rcore/enumdefs.hh>
+#include <rcore/inifile.hh>
 #include <rcore/platform.hh>
 #include <rcore/debugtools.hh>
 #include <rcore/loop.hh>

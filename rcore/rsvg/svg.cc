@@ -1,6 +1,7 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include "svg.hh"
 #include "../strings.hh"
+#include "../blobres.hh"
 #include "rsvg.h"
 #include "rsvg-cairo.h"
 #include "rsvg-private.h"
@@ -237,13 +238,13 @@ void
 Library::add_resource (const String &res_svg)
 {
   errno = ENOENT;
-  ResourceBlob blob = ResourceBlob::load (res_svg);
-  if (blob.size())
+  Blob blob = Blob::load (res_svg);
+  if (blob)
     {
       errno = ENODATA;
       RsvgHandle *handle = rsvg_handle_new();
       g_object_ref_sink (handle);
-      bool success = rsvg_handle_write (handle, blob.data(), blob.size(), NULL);
+      bool success = rsvg_handle_write (handle, blob.bytes(), blob.size(), NULL);
       success = success && rsvg_handle_close (handle, NULL);
       if (success)
         {

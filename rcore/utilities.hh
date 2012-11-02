@@ -269,36 +269,6 @@ extern const String     dir_separator;         /* 1char */
 extern const String     searchpath_separator;  /* 1char */
 } // Path
 
-// == ResourceBlob ==
-class ResourceBlob {
-  String                       m_name;
-  size_t                       m_size;
-  std::shared_ptr<const uint8> m_data;
-  explicit            ResourceBlob (const String &name, size_t dsize, std::shared_ptr<const uint8> shdata);
-public:
-  String              name   () const { return m_name; }        ///< Provide the name of this resource Blob.
-  size_t              size   () const { return m_size; }        ///< Retrieve the size of a Blob in bytes, this may be 0.
-  const uint8*        data   () const { return m_data.get(); }  ///< Access the data of a Blob.
-  String              string () const;                          ///< Access data as string, automatically strips trailing 0.
-  static ResourceBlob load   (const String &res_path);          ///< Provide Blob access to the resource at @a res_path.
-  ///@cond
-  class Entry {
-    Entry            *next;
-    const char *const name;
-    const char       *const pdata;
-    const size_t      psize, dsize;
-    friend class ResourceBlob;
-    static const Entry* find_entry (const String &res_name);
-    static void         reg_add    (Entry*);
-  public:
-    template <size_t N> Entry (const char *res_name, const char (&idata) [N], size_t data_size = 0) :
-      next (NULL), name (res_name), pdata (idata), psize (N), dsize (data_size)
-    { reg_add (this); }
-    /*dtor*/           ~Entry();
-  };
-  ///@endcond
-};
-
 /* --- url handling --- */
 void url_show                   (const char           *url);
 void url_show_with_cookie       (const char           *url,
@@ -784,13 +754,5 @@ BaseObject::InterfaceMatch<C>::result (bool may_throw) const
 }
 
 } // Rapicorn
-
-// == Helper Macros ==
-/// Statically declare a ResourceBlob data variable.
-#define RAPICORN_STATIC_RESOURCE_DATA(IDENT)            \
-  static const char __Rapicorn_static_resourceD__##IDENT[] __attribute__ ((__aligned__ (2 * sizeof (size_t))))
-/// Statically register a ResourceBlob entry, referring a previously declared RAPICORN_STATIC_RESOURCE_DATA(IDENT) variable.
-#define RAPICORN_STATIC_RESOURCE_ENTRY(IDENT,PATH,...) \
-  static const Rapicorn::ResourceBlob::Entry __Rapicorn_static_resourceE__##IDENT = { PATH, __Rapicorn_static_resourceD__##IDENT, __VA_ARGS__ };
 
 #endif /* __RAPICORN_CORE_UTILITIES_HH__ */

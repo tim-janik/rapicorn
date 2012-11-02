@@ -52,4 +52,44 @@ quick_timer_test()
 }
 REGISTER_TEST ("QuickTimer/Test 20usec expiration", quick_timer_test);
 
+static const char ini_testfile[] = {
+  "\n"  // empty line
+  "# hash comment\n"
+  "; semicolon comment\n"
+  "\t# indented comment1\n"
+  "  ; indented comment2\n"
+  "~LINE-WITH-JUNK~\n"
+  "[simple-section]\n"
+  "key1=1\n"
+  "  indented = value\n"
+  "  empty =\r\n"
+  "  colon : assignment\n"
+  "  simple-key = simple-value # comment\n"
+  "  string-key = string 'with # Hash'\n"
+  "  name[de] = DE localized key\n"
+  "  name[\"en_US.UTF-8\"] = US localized key\n"
+  "[Section With Spaces And Comment] # comment\n"
+  "  longvalue1 = value contains\\\n line continuation\n"
+  "  longvalue2 = value contains\\\r\n line continuation\r\n"
+  "  spacings = ' \tspacing@start' and \"spacing@end\f\t \"\n"
+};
+
+static void
+test_ini_files()
+{
+  IniFile inifile (Blob::from (ini_testfile));
+  StringVector rv = inifile.raw_values();
+  TASSERT (rv.size() == 11);
+  if (Test::logging())
+    for (auto kv : rv)
+      {
+        ssize_t eq = kv.find ('=');
+        assert (eq >= 0);
+        printout ("  %s=%s\n", kv.substr (0, eq).c_str(), CQUOTE (IniFile::cook_string (kv.substr (eq + 1))));
+      }
+}
+REGISTER_TEST ("IniFiles/Parsing", test_ini_files);
+REGISTER_LOGTEST ("IniFiles/Content Check", test_ini_files);
+
+
 } // Anon

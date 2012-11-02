@@ -2,11 +2,17 @@
 #ifndef __RAPICORN_PIXMAP_HH__
 #define __RAPICORN_PIXMAP_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/blobres.hh>
 
 namespace Rapicorn {
 
-/// A Pixmap (i.e. PixmapT<Pixbuf>) conveniently wraps a Pixbuf and provides various pixel operations.
+/** Pixmap (PixmapT) is a Pixbuf wrapper template which provides various pixel operations.
+ * A Pixmap really is defined as PixmapT<Pixbuf>, a template class around Pixbuf which
+ * provides automatic memory management, pixel operations and IO functions.
+ * This class stores ARGB pixels of size @a width * @a height. The pixels are stored as unsigned
+ * 32-bit values in native endian format with premultiplied alpha (compatible with libcairo).
+ * The @a comment attribute is preserved during saving and loading by some file formats, such as PNG.
+ */
 template<class Pixbuf>
 class PixmapT {
   std::shared_ptr<Pixbuf> m_pixbuf;
@@ -14,6 +20,7 @@ public:
   explicit      PixmapT         ();                     ///< Construct Pixmap with 0x0 pixesl.
   explicit      PixmapT         (uint w, uint h);       ///< Construct Pixmap at given width and height.
   explicit      PixmapT         (const Pixbuf &source); ///< Copy-construct Pixmap from a Pixbuf structure.
+  explicit      PixmapT         (Blob &png_blob);       ///< Construct Pixmap from a PNG resource blob.
   explicit      PixmapT         (const String &res_png); ///< Construct Pixmap from a PNG resource blob.
   PixmapT&      operator=       (const Pixbuf &source); ///< Re-initialize the Pixmap from a Pixbuf structure.
   int           width           () const { return m_pixbuf->width(); }  ///< Get the width of the Pixmap.
@@ -25,7 +32,7 @@ public:
   uint32&       pixel           (uint x, uint y) { return m_pixbuf->row (y)[x]; }       ///< Retrieve an ARGB pixel value reference.
   uint32        pixel           (uint x, uint y) const { return m_pixbuf->row (y)[x]; } ///< Retrieve an ARGB pixel value.
   bool          load_png        (const String &filename, bool tryrepair = false); ///< Load from PNG file, assigns errno on failure.
-  bool          load_png        (size_t nbytes, const uint8 *bytes, bool tryrepair = false); ///< Load PNG data, sets errno.
+  bool          load_png        (size_t nbytes, const char *bytes, bool tryrepair = false); ///< Load PNG data, sets errno.
   bool          save_png        (const String &filename); ///< Save to PNG, assigns errno on failure.
   bool          load_pixstream  (const uint8 *pixstream); ///< Decode and load from pixel stream, assigns errno on failure.
   void          set_attribute   (const String &name, const String &value); ///< Set string attribute, e.g. "comment".

@@ -834,6 +834,7 @@ parse_ui_file (const String   &uinamespace,
 } // Factory
 
 namespace { // Anon
+#include "../res/resources.cc" // various resource files
 #include "gen-zintern.c" // compressed foundation.xml & standard.xml
 } // Anon
 
