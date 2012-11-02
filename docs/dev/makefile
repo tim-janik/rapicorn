@@ -23,14 +23,26 @@ DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 GPRINT	    = @printf '  %-7s%s\n'
 Q           = $(if $(findstring 1, $(V)) ,, @)
 QSTDOUT     = $(Q:@=1>/dev/null)
-QSTDERR	    = $(Q:@=2>/dev/null)
+QSTDERR     = $(Q:@=2>/dev/null)
 
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
+
+CHANGELOG_PGT = "Rapicorn Development ChangeLog"
+CHANGELOG_SED = -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
+		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
+		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
+		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
+		-e 's/^/ * /'
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):
 	$(GPRINT) "GEN" $(SRCTREE)/
 	$(Q) rm -rf $(SRCTREE)/ && mkdir -p $(SRCTREE)/
+	$(GPRINT) "GEN" "ChangeLog"
+	$(Q) test -f $(top_srcdir)/ChangeLog || { echo "Missing $(top_srcdir)/ChangeLog" >&2 ; false ; }
+	$(Q) echo '/*! @page ChangeLog' $(CHANGELOG_PGT)	 > $(SRCTREE)/ChangeLog
+	$(Q) sed -r $(CHANGELOG_SED) <$(top_srcdir)/ChangeLog	>> $(SRCTREE)/ChangeLog
+	$(Q) echo ' */' 					>> $(SRCTREE)/ChangeLog
 	$(GPRINT) "COPY" "Source tree..." \
 	&& CWD=`pwd` \
 	&& for dir in $(DOC_DIRS) ; do \
