@@ -8,7 +8,7 @@
 #include <zlib.h>
 #include <string>
 
-typedef RapicornUInt8 uint8;
+typedef Rapicorn::uint8 uint8;
 typedef std::string String;
 
 namespace {

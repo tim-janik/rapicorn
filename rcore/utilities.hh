@@ -12,12 +12,6 @@
 #error Only <rapicorn-core.hh> can be included directly.
 #endif
 
-// === Standard Macro Definitions ===
-#ifndef SIZE_T_MAX
-#define SIZE_T_MAX              (~size_t (0))
-#define SSIZE_T_MAX             (ssize_t (SIZE_T_MAX / 2))
-#endif
-
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
 #define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
@@ -43,17 +37,6 @@
 
 namespace Rapicorn {
 using namespace Aida;
-
-/* --- short integer types --- */
-typedef RapicornUInt8   uint8;          ///< An 8-bit unsigned integer.
-typedef RapicornUInt16  uint16;         ///< A 16-bit unsigned integer.
-typedef RapicornUInt32  uint32;         ///< A 32-bit unsigned integer.
-typedef RapicornUInt64  uint64;         ///< A 64-bit unsigned integer, use "%llu" in format strings.
-typedef RapicornInt8    int8;           ///< An 8-bit signed integer.
-typedef RapicornInt16   int16;          ///< A 16-bit signed integer.
-typedef RapicornInt32   int32;          ///< A 32-bit signed integer.
-typedef RapicornInt64   int64;          ///< A 64-bit unsigned integer, use "%lld" in format strings.
-typedef RapicornUnichar unichar;        ///< A 32-bit unsigned integer used in Unicode character contexts.
 
 /* --- convenient stdc++ types --- */
 using std::vector;

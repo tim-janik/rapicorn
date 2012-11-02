@@ -2,18 +2,16 @@
 #ifndef __RAPICORN_CXXAUX_HH__
 #define __RAPICORN_CXXAUX_HH__
 
-#include <rcore/rapicornconfig.h> /* _GNU_SOURCE */
+#include <rcore/rapicornconfig.h>       // _GNU_SOURCE
 #include <stdbool.h>
 #include <stdarg.h>
-#include <stddef.h>			/* NULL */
-#include <sys/types.h>			/* uint, ssize */
-#include <stdint.h>			/* uint64_t */
-#include <limits.h>                     /* {INT|CHAR|...}_{MIN|MAX} */
-#include <float.h>                      /* {FLT|DBL}_{MIN|MAX|EPSILON} */
+#include <stddef.h>			// NULL
+#include <sys/types.h>			// uint, ssize
+#include <stdint.h>			// uint64_t
+#include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
+#include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
 
-RAPICORN_EXTERN_C_BEGIN();
-
-/* --- standard macros --- */
+// == Standard Macros ==
 #ifndef FALSE
 #  define FALSE					false
 #endif
@@ -44,33 +42,26 @@ RAPICORN_EXTERN_C_BEGIN();
 #undef STRFUNC
 #define STRFUNC				        RAPICORN_SIMPLE_FUNCTION
 #if     !defined (INT64_MAX) || !defined (INT64_MIN) || !defined (UINT64_MAX)
-#ifdef  LLONG_MAX       /* some gcc versions ship limits.h that fail to define LLONG_MAX for C99 */
+#ifdef  LLONG_MAX       // some gcc versions ship limits.h that fail to define LLONG_MAX for C99
 #  define INT64_MAX     LLONG_MAX       // +9223372036854775807LL
 #  define INT64_MIN     LLONG_MIN       // -9223372036854775808LL
 #  define UINT64_MAX    ULLONG_MAX      // +18446744073709551615LLU
-#else /* !LLONG_MAX but gcc always has __LONG_LONG_MAX__ */
+#else   // !LLONG_MAX but gcc always has __LONG_LONG_MAX__
 #  define INT64_MAX     __LONG_LONG_MAX__
 #  define INT64_MIN     (-INT64_MAX - 1LL)
 #  define UINT64_MAX    (INT64_MAX * 2ULL + 1ULL)
 #endif
 #endif
+#ifndef SIZE_T_MAX
+#define SIZE_T_MAX              (~size_t (0))
+#define SSIZE_T_MAX             (ssize_t (SIZE_T_MAX / 2))
+#endif
 
-/* --- likelyness hinting --- */
+// == Likelyness Hinting ==
 #define	RAPICORN__BOOL(expr)		__extension__ ({ bool _rapicorn__bool; if (expr) _rapicorn__bool = 1; else _rapicorn__bool = 0; _rapicorn__bool; })
 #define	RAPICORN_ISLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 1)
 #define	RAPICORN_UNLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 0)
 #define	RAPICORN_LIKELY			RAPICORN_ISLIKELY
-
-/* --- assertions and runtime errors --- */
-#ifndef __cplusplus
-#define RAPICORN_RETURN_IF_FAIL(e)	 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return; } while (0)
-#define RAPICORN_RETURN_VAL_IF_FAIL(e,v) do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return v; } while (0)
-#define RAPICORN_ASSERT(e)		 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('A', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); while (1) *(void*volatile*)0; } while (0)
-#define RAPICORN_ASSERT_UNREACHED()	 do { RAPICORN__RUNTIME_PROBLEM ('N', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, NULL); RAPICORN_ABORT_NORETURN(); } while (0)
-#define RAPICORN_WARNING(...)		 do { RAPICORN__RUNTIME_PROBLEM ('W', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); } while (0)
-#define RAPICORN_ERROR(...)		 do { RAPICORN__RUNTIME_PROBLEM ('E', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); RAPICORN_ABORT_NORETURN(); } while (0)
-#define RAPICORN_ABORT_NORETURN()	 rapicorn_abort_noreturn()
-#endif
 
 // == Convenience Macros ==
 #ifdef  RAPICORN_CONVENIENCE
@@ -90,20 +81,16 @@ RAPICORN_EXTERN_C_BEGIN();
 #  define RAPICORN_CONVENIENCE
 #endif // RAPICORN_DOXYGEN
 
-/* --- preprocessor pasting --- */
-#define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d
-#define RAPICORN_CPP_PASTE4(a,b,c,d)              RAPICORN_CPP_PASTE4i (a,b,c,d)
-#define RAPICORN_CPP_PASTE3i(a,b,c)               a ## b ## c   /* indirection required to expand __LINE__ etc */
-#define RAPICORN_CPP_PASTE3(a,b,c)                RAPICORN_CPP_PASTE3i (a,b,c)
-#define RAPICORN_CPP_PASTE2i(a,b)                 a ## b        /* indirection required to expand __LINE__ etc */
-#define RAPICORN_CPP_PASTE2(a,b)                  RAPICORN_CPP_PASTE2i (a,b)
-#define RAPICORN_CPP_STRINGIFYi(s)                #s            /* indirection required to expand __LINE__ etc */
-#define RAPICORN_CPP_STRINGIFY(s)                 RAPICORN_CPP_STRINGIFYi (s)
-#define RAPICORN_STATIC_ASSERT_NAMED(expr,asname) typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Rapicorn_StaticAssertion_LINE, __LINE__)
-#define RAPICORN_STATIC_ASSERT(expr)              RAPICORN_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
+// == Preprocessor Pasting ==
+#define RAPICORN_CPP_PASTE2_(a,b)               a ## b  // indirection required to expand macros like __LINE__
+#define RAPICORN_CPP_PASTE2(a,b)                RAPICORN_CPP_PASTE2_ (a,b)
+#define RAPICORN_CPP_STRINGIFY_(s)              #s      // indirection required to expand macros like __LINE__
+#define RAPICORN_CPP_STRINGIFY(s)               RAPICORN_CPP_STRINGIFY_ (s)
+#define RAPICORN_STATIC_ASSERT_(expr, asname)   typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Rapicorn_StaticAssertion_LINE, __LINE__)
+#define RAPICORN_STATIC_ASSERT(expr)            RAPICORN_STATIC_ASSERT_ (expr, compile_time_assertion_failed)
 
-/* --- attributes --- */
-#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+// == GCC Attributes ==
+#if     __GNUC__ >= 4
 #define RAPICORN_PURE                           __attribute__ ((__pure__))
 #define RAPICORN_MALLOC                         __attribute__ ((__malloc__))
 #define RAPICORN_PRINTF(format_idx, arg_idx)    __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
@@ -117,9 +104,10 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_DEPRECATED                     __attribute__ ((__deprecated__))
 #define RAPICORN_ALWAYS_INLINE			__attribute__ ((always_inline))
 #define RAPICORN_NEVER_INLINE			__attribute__ ((noinline))
-#define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used)) /* gcc-3.3 also needs "used" to emit code */
+#define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used))      // gcc-3.3 also needs "used" to emit code
 #define RAPICORN_MAY_ALIAS                      __attribute__ ((may_alias))
-#else   /* !__GNUC__ */
+#define	RAPICORN_SIMPLE_FUNCTION	       (::Rapicorn::string_from_pretty_function_name (__PRETTY_FUNCTION__).c_str())
+#else   // !__GNUC__
 #define RAPICORN_PURE
 #define RAPICORN_MALLOC
 #define RAPICORN_PRINTF(format_idx, arg_idx)
@@ -135,77 +123,62 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_NEVER_INLINE
 #define RAPICORN_CONSTRUCTOR
 #define RAPICORN_MAY_ALIAS
-#error  Failed to detect a recent GCC version (>= 3.3)
-#endif  /* !__GNUC__ */
-#if     defined __GNUC__ && defined __cplusplus
-#define	RAPICORN_SIMPLE_FUNCTION			(::Rapicorn::string_from_pretty_function_name (__PRETTY_FUNCTION__).c_str())
-#else
-#define	RAPICORN_SIMPLE_FUNCTION			(__func__)
-#endif
+#define	RAPICORN_SIMPLE_FUNCTION	       (__func__)
+#error  Failed to detect a recent GCC version (>= 4)
+#endif  // !__GNUC__
 
-/* --- provide canonical integer types --- */
+// == Ensure 'uint' in global namespace ==
 #if 	RAPICORN_SIZEOF_SYS_TYPESH_UINT == 0
-typedef unsigned int		uint;	/* for systems that don't define uint in types.h */
+typedef unsigned int		uint;           // for systems that don't define uint in sys/types.h
 #else
 RAPICORN_STATIC_ASSERT (RAPICORN_SIZEOF_SYS_TYPESH_UINT == 4);
 #endif
 RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
-typedef uint8_t                 RapicornUInt8;  // __attribute__ ((__mode__ (__QI__)))
-typedef uint16_t                RapicornUInt16; // __attribute__ ((__mode__ (__HI__)))
-typedef uint32_t                RapicornUInt32; // __attribute__ ((__mode__ (__SI__)))
-typedef unsigned long long int  RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
-// typedef uint64_t RapicornUInt64; // uint64_t is a long on AMD64 which breaks printf
-// Using stdint.h defines here for type compatibility with standard APIs (references, printf, ...)
-RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt64) == 8);
-typedef int8_t                  RapicornInt8;  // __attribute__ ((__mode__ (__QI__)))
-typedef int16_t                 RapicornInt16; // __attribute__ ((__mode__ (__HI__)))
-typedef int32_t                 RapicornInt32; // __attribute__ ((__mode__ (__SI__)))
-typedef signed long long int    RapicornInt64; // __attribute__ ((__mode__ (__DI__)))
-// typedef int64_t RapicornInt64; // int64_t is a long on AMD64 which breaks printf
-// provided by compiler       int;
-RAPICORN_STATIC_ASSERT (sizeof (RapicornInt8)  == 1);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornInt16) == 2);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornInt32) == 4);
-RAPICORN_STATIC_ASSERT (sizeof (RapicornInt64) == 8);
-typedef RapicornUInt32		RapicornUnichar;
-RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 
+// == Rapicorn Namespace ==
+namespace Rapicorn {
 
-/* --- path handling --- */
+// == Provide Canonical Integer Types ==
+typedef uint8_t                 uint8;          ///< An 8-bit unsigned integer.
+typedef uint16_t                uint16;         ///< A 16-bit unsigned integer.
+typedef uint32_t                uint32;         ///< A 32-bit unsigned integer.
+typedef unsigned long long int  uint64;         ///< A 64-bit unsigned integer, use "%llu" in format strings.
+// typedef uint64_t             uint64;         // int64_t / uint64_t are longs on AMD64 which breaks printf
+typedef int8_t                  int8;           ///< An 8-bit signed integer.
+typedef int16_t                 int16;          ///< A 16-bit signed integer.
+typedef int32_t                 int32;          ///< A 32-bit signed integer.
+typedef signed long long int    int64;          ///< A 64-bit unsigned integer, use "%lld" in format strings.
+typedef uint32_t                unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
+RAPICORN_STATIC_ASSERT (sizeof (uint8) == 1 && sizeof (uint16) == 2 && sizeof (uint32) == 4 && sizeof (uint64) == 8);
+RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (int32)  == 4 && sizeof (int64)  == 8);
+RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);
+
+// == File Path Handling ==
 #ifdef	RAPICORN_OS_WIN32
 #define RAPICORN_DIR_SEPARATOR		  '\\'
-#define RAPICORN_DIR_SEPARATOR_S		  "\\"
+#define RAPICORN_DIR_SEPARATOR_S	  "\\"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ';'
 #define RAPICORN_SEARCHPATH_SEPARATOR_S	  ";"
-#else	/* !RAPICORN_OS_WIN32 */
+#else   // !RAPICORN_OS_WIN32
 #define RAPICORN_DIR_SEPARATOR		  '/'
-#define RAPICORN_DIR_SEPARATOR_S		  "/"
+#define RAPICORN_DIR_SEPARATOR_S	  "/"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ':'
 #define RAPICORN_SEARCHPATH_SEPARATOR_S	  ":"
-#endif	/* !RAPICORN_OS_WIN32 */
-#define	RAPICORN_IS_DIR_SEPARATOR(c)    	  ((c) == RAPICORN_DIR_SEPARATOR)
-#define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) ((c) == RAPICORN_SEARCHPATH_SEPARATOR)
-
+#endif  // !RAPICORN_OS_WIN32
+#define	RAPICORN_IS_DIR_SEPARATOR(c)        (RAPICORN_DIR_SEPARATOR == (c))
+#define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) (RAPICORN_SEARCHPATH_SEPARATOR == (c))
 
 // == X86 Architecture ==
 #if defined __i386__ || defined __x86_64__
 #define RAPICORN_HAVE_X86_RDTSC  1
-#define RAPICORN_X86_RDTSC()            ({ RapicornUInt32 __l_, __h_, __s_;                           \
-                                           __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_)); \
-                                           __s_ = __l_ + (RapicornUInt64 (__h_) << 32); __s_; })
+#define RAPICORN_X86_RDTSC()     ({ Rapicorn::uint32 __l_, __h_, __s_; \
+                                    __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_));  \
+                                    __s_ = __l_ + (Rapicorn::uint64 (__h_) << 32); __s_; })
 #else
 #define RAPICORN_HAVE_X86_RDTSC  0
 #define RAPICORN_X86_RDTSC()    (0)
 #endif
 
-/* --- implementation bits --- */
-/* the above macros rely on a problem handler macro: */
-// RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,exprformat,...); // noreturn cases: 'E', 'A', 'N'
-extern inline void rapicorn_abort_noreturn (void) RAPICORN_NORETURN;
-extern inline void rapicorn_abort_noreturn (void) { while (1) *(void*volatile*)0; }
-RAPICORN_EXTERN_C_END();
+} // Rapicorn
 
-#endif /* __RAPICORN_CXXAUX_HH__ */
+#endif // __RAPICORN_CXXAUX_HH__
