@@ -36,6 +36,8 @@ String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
 String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
 String  			string_vprintf           (const char *format, va_list vargs);
+String  			string_cprintf           (const char *format, ...) RAPICORN_PRINTF (1, 2);
+String  			string_vcprintf          (const char *format, va_list vargs);
 StringVector 			string_split             (const String       &string,
                                                           const String       &splitter = "");
 String  			string_join              (const String       &junctor,
