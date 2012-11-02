@@ -6,7 +6,7 @@
 namespace Rapicorn {
 
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-static void       clientglue_setup      (Plic::ClientConnection connection);
+static void       clientglue_setup      (Aida::ClientConnection connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
@@ -44,9 +44,9 @@ init_app (const String       &app_ident,
   // initialize clientglue bits
   clientglue_setup (uithread_connection());
   // construct smart handle
-  Plic::FieldBuffer8 fb (1);
+  Aida::FieldBuffer8 fb (1);
   fb.add_object (appid);
-  Plic::FieldReader fbr (fb);
+  Aida::FieldReader fbr (fb);
   fbr >>= app_cached;
   return app_cached;
 }
@@ -71,7 +71,7 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Plic::ClientConnection m_connection;
+  Aida::ClientConnection m_connection;
   PollFD            m_pfd;
   bool              last_seen_primary, need_check_primary;
   void
@@ -83,7 +83,7 @@ class AppSource : public EventLoop::Source {
       main_loop()->quit();
   }
 public:
-  AppSource (Plic::ClientConnection connection) :
+  AppSource (Aida::ClientConnection connection) :
     m_connection (connection), last_seen_primary (false), need_check_primary (false)
   {
     m_pfd.fd = m_connection.notify_fd();
@@ -130,47 +130,47 @@ public:
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Plic::ClientConnection _clientglue_connection;
+static Aida::ClientConnection _clientglue_connection;
 class ConnectionContext {
-  // this should one day be linked with the server side connection and implement Plic::ClientConnection itself
-  typedef std::map <Plic::uint64_t, Plic::NonCopyable*> ContextMap;
+  // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
+  typedef std::map <Aida::uint64_t, Aida::NonCopyable*> ContextMap;
   ContextMap context_map;
 public:
-  Plic::NonCopyable*
-  find_context (Plic::uint64_t ipcid)
+  Aida::NonCopyable*
+  find_context (Aida::uint64_t ipcid)
   {
     ContextMap::iterator it = context_map.find (ipcid);
     return LIKELY (it != context_map.end()) ? it->second : NULL;
   }
   void
-  add_context (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
+  add_context (Aida::uint64_t ipcid, Aida::NonCopyable *ctx)
   {
     context_map[ipcid] = ctx;
   }
 };
 static __thread ConnectionContext *ccontext = NULL;
 static inline void
-connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
+connection_context4id (Aida::uint64_t ipcid, Aida::NonCopyable *ctx)
 {
   if (!ccontext)
     ccontext = new ConnectionContext();
   ccontext->add_context (ipcid, ctx);
 }
 template<class Context> static inline Context*
-connection_id2context (Plic::uint64_t ipcid)
+connection_id2context (Aida::uint64_t ipcid)
 {
-  Plic::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
+  Aida::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
   if (UNLIKELY (!ctx))
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);
 }
-static inline Plic::uint64_t
-connection_handle2id (const Plic::SmartHandle &h)
+static inline Aida::uint64_t
+connection_handle2id (const Aida::SmartHandle &h)
 {
   return h._rpc_id();
 }
 
-#define PLIC_CONNECTION()       (_clientglue_connection)
+#define AIDA_CONNECTION()       (_clientglue_connection)
 } // Anon
 #include "clientapi.cc"
 
@@ -180,7 +180,7 @@ namespace Rapicorn {
 ClientConnection
 ApplicationH::ipc_connection()
 {
-  return PLIC_CONNECTION();
+  return AIDA_CONNECTION();
 }
 
 MainLoop*
@@ -221,7 +221,7 @@ init_test_app (const String       &app_ident,
 }
 
 static void
-clientglue_setup (Plic::ClientConnection connection)
+clientglue_setup (Aida::ClientConnection connection)
 {
   assert_return (_clientglue_connection.is_null() == true);
   _clientglue_connection = connection;

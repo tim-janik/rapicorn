@@ -16,28 +16,28 @@ using std::tr1::weak_ptr;
 }
 #endif  // !_SHARED_PTR_H
 
-namespace Plic {
+namespace Aida {
 
 // == Auxillary macros ==
-#define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
-#define PLIC_CPP_STRINGIFY(s)   PLIC_CPP_STRINGIFYi (s)
+#define AIDA_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
+#define AIDA_CPP_STRINGIFY(s)   AIDA_CPP_STRINGIFYi (s)
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
-#define PLIC_UNUSED             __attribute__ ((__unused__))
-#define PLIC_DEPRECATED         __attribute__ ((__deprecated__))
-#define PLIC_NORETURN           __attribute__ ((__noreturn__))
-#define PLIC_PRINTF(fix, arx)   __attribute__ ((__format__ (__printf__, fix, arx)))
-#define PLIC_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
-#define PLIC_ISLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 1)
-#define PLIC_UNLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 0)
+#define AIDA_UNUSED             __attribute__ ((__unused__))
+#define AIDA_DEPRECATED         __attribute__ ((__deprecated__))
+#define AIDA_NORETURN           __attribute__ ((__noreturn__))
+#define AIDA_PRINTF(fix, arx)   __attribute__ ((__format__ (__printf__, fix, arx)))
+#define AIDA_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
+#define AIDA_ISLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 1)
+#define AIDA_UNLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 0)
 #else   // !__GNUC__
-#define PLIC_UNUSED
-#define PLIC_DEPRECATED
-#define PLIC_NORETURN
-#define PLIC_PRINTF(fix, arx)
-#define PLIC_ISLIKELY(expr)     expr
-#define PLIC_UNLIKELY(expr)     expr
+#define AIDA_UNUSED
+#define AIDA_DEPRECATED
+#define AIDA_NORETURN
+#define AIDA_PRINTF(fix, arx)
+#define AIDA_ISLIKELY(expr)     expr
+#define AIDA_UNLIKELY(expr)     expr
 #endif
-#define PLIC_LIKELY             PLIC_ISLIKELY
+#define AIDA_LIKELY             AIDA_ISLIKELY
 
 // == Standard Types ==
 using std::vector;
@@ -124,7 +124,7 @@ class Any /// Generic value type that can hold values of all other types.
   typedef std::vector<Any> AnyVector;
   union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; uint64_t qmem[(sizeof (AnyVector) + 7) / 8];
     uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8]; } u;
-  void    ensure  (TypeKind _kind) { if (PLIC_LIKELY (kind() == _kind)) return; rekind (_kind); }
+  void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
   bool    to_int  (int64_t &v, char b) const;
@@ -202,9 +202,9 @@ typedef std::vector<TypeHash> TypeHashList;
 // == Utilities ==
 template<class V> inline
 bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
-void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2) PLIC_NORETURN;
-void    error_vprintf   (const char *format, va_list args) PLIC_NORETURN;
-void    warning_printf  (const char *format, ...) PLIC_PRINTF (1, 2);
+void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
+void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
+void    warning_printf  (const char *format, ...) AIDA_PRINTF (1, 2);
 
 // == Message IDs ==
 enum MessageId {
@@ -241,7 +241,7 @@ class SmartHandle {
   typedef NullSmartHandle<SmartHandle> NullHandle;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
-  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Plic::SmartHandle::_is_null; }
+  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
   typedef uint64_t RpcId;
   explicit                  SmartHandle (uint64_t ipcid);
   void                      _reset      ();
@@ -283,7 +283,7 @@ class FieldBuffer { // buffer for marshalling procedure calls
   inline FieldUnion& upeek (uint32_t n) const { return buffermem[offset() + n]; }
 protected:
   FieldUnion        *buffermem;
-  inline void        check ()      { if (PLIC_UNLIKELY (size() > capacity())) check_internal(); }
+  inline void        check ()      { if (AIDA_UNLIKELY (size() > capacity())) check_internal(); }
   inline uint32_t    offset () const { const uint32_t offs = 1 + (capacity() + 7) / 8; return offs; }
   inline TypeKind    type_at  (uint32_t n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
@@ -338,7 +338,7 @@ class FieldReader { // read field buffer contents
   const FieldBuffer *m_fb;
   uint32_t           m_nth;
   void               check_request (int type);
-  inline void        request (int t) { if (PLIC_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
+  inline void        request (int t) { if (AIDA_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
   inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
 public:
@@ -346,7 +346,7 @@ public:
   inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint32_t           remaining  () { return n_types() - m_nth; }
-  inline void               skip       () { if (PLIC_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
+  inline void               skip       () { if (AIDA_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
   inline void               skip_msgid () { skip(); skip(); }
   inline uint32_t           n_types    () { return m_fb->size(); }
   inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
@@ -423,7 +423,7 @@ public: /// @name API for event handler bookkeeping
   struct EventHandler                        /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler ();
-    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
+    virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
   };
   uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
   EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
@@ -458,15 +458,15 @@ FieldBuffer::reset()
     }
 }
 
-} // Plic
+} // Aida
 
-/// @weakgroup PlicManifoldTypes Plic manifold generated types
+/// @weakgroup AidaManifoldTypes Aida manifold generated types
 /// @{
-namespace Plic {
+namespace Aida {
 
 /// Tools to pack/unpack and use FieldBuffer contents.
 template<class Signature> struct FieldTools;
 
-} // Plic
+} // Aida
 /// @}
 

@@ -1,5 +1,5 @@
-/plic-[0-9][0-9][0-9][0-9]
-/plic-intern
+/aida-[0-9][0-9][0-9][0-9]
+/aida-intern
 /Parser.py
 /builtins.cc
 /runtime.cc

@@ -13,7 +13,7 @@ DOC_VERSION = $(or $(GBR_VERSION), $(PRJ_VERSION))
 SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
 
 DOC_FILES   = rapicorn-core.hh rapicorn.hh
-DOC_DIRS    = rcore/ plic/ rope/ tools/ ui/ docs/tutorial/
+DOC_DIRS    = rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOCU_GLOBS  = *.dox *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc

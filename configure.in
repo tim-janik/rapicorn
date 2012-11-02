@@ -321,8 +321,8 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 ])
 
-dnl # PYROPE_REQUIREMENTS() - rapicorn python binding checks
-AC_DEFUN([PYROPE_REQUIREMENTS],
+dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
+AC_DEFUN([RAPICORN_ROPE_REQUIREMENTS],
 [
     # Find Python execution and development environment
     saved_CPPFLAGS="$CPPFLAGS"
@@ -360,8 +360,8 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
-# PLIC requirements
-AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
+# Aida requirements
+AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 [
     # Check for working $PYTHON and pythondir
     dnl #ALREADYDONE# AM_PATH_PYTHON(2.4)
@@ -373,8 +373,6 @@ AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
       AC_MSG_RESULT(fail)
       AC_MSG_ERROR([failed to check \$PYTHON and \$pythondir])
     fi
-    PLIC_VERSION="$RAPICORN_RELEASE"
-    AC_SUBST(PLIC_VERSION)
 
     # XML linting check
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
@@ -487,11 +485,11 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_GCC_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
+RAPICORN_ROPE_REQUIREMENTS
+RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
-PYROPE_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
-RAPICORN_PLIC_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
@@ -506,16 +504,16 @@ AC_SUBST(LDFLAGS)
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
-data/Makefile
 po/Makefile.in
-plic/Makefile
-plic/tests/Makefile
-rope/Makefile
+data/Makefile
 rcore/Makefile
 rcore/rsvg/Makefile
 rcore/tests/Makefile
+aidacc/Makefile
+aidacc/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
+rope/Makefile
 tools/Makefile
 tests/Makefile
 pytests/Makefile

@@ -1,31 +1,16 @@
-/* ptptest.cc - PLIC Test Program
- * Copyright (C) 2008 Tim Janik
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this program; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-// include PLIC TypeMap Parser
-#include "plic/runtime.hh"
-#include "plic/runtime.cc"
+// include AidaTypeMap Parser
+#include "../runtime.hh"
+#include "../runtime.cc"
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
 namespace { // Anon
 
-using namespace Plic;
-using Plic::int64_t;
-using Plic::uint64_t;
+using namespace Aida;
+using Aida::int64_t;
+using Aida::uint64_t;
 typedef uint32_t uint;
 typedef std::string String;
 using std::vector;
@@ -169,7 +154,7 @@ standard_tests ()
   assert (OneHandle()._rpc_id() == 1);
   assert (OneHandle()._null_handle()._is_null() == true);
   assert (OneHandle()._null_handle()._rpc_id() == 0);
-  printf ("  TEST   Plic standard types                                             OK\n");
+  printf ("  TEST   Aida standard types                                             OK\n");
 }
 
 static void
@@ -181,24 +166,24 @@ type_code_tests ()
     error ("%s: open failed: %s", filename.c_str(), strerror (tp.error_status()));
   {
     // simple int lookup
-    TypeCode t1 = tp.lookup_local ("PlicTests::IntWithFooAsLabel");
+    TypeCode t1 = tp.lookup_local ("AidaTests::IntWithFooAsLabel");
     assert (t1.kind() == INT);
-    assert (t1.name() == "PlicTests::IntWithFooAsLabel");
+    assert (t1.name() == "AidaTests::IntWithFooAsLabel");
     assert (t1.aux_value ("label") == "Foo");
     assert (t1.hints() == ":");
     // simple float lookup
-    TypeCode t2 = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    TypeCode t2 = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
     assert (t2.kind() == FLOAT);
-    assert (t2.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t2.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t2.aux_value ("blurb") == "Float Blurb");
     // check that type memory used above is still valid
-    assert (t1.name() + "-postfix" == String ("PlicTests::IntWithFooAsLabel-postfix"));
-    assert (t2.name() == String ("PlicTests::FloatWithBlurbBlurb"));
+    assert (t1.name() + "-postfix" == String ("AidaTests::IntWithFooAsLabel-postfix"));
+    assert (t2.name() == String ("AidaTests::FloatWithBlurbBlurb"));
   }
   { // INT
-    TypeCode t = tp.lookup_local ("PlicTests::ExtendIntWithAux");
+    TypeCode t = tp.lookup_local ("AidaTests::ExtendIntWithAux");
     assert (t.kind() == INT);
-    assert (t.name() == "PlicTests::ExtendIntWithAux");
+    assert (t.name() == "AidaTests::ExtendIntWithAux");
     assert (t.aux_value ("label") == "Extended int");
     assert (t.aux_value ("blurb") == "This int demonstrates extensive auxillary data use");
     assert (t.aux_value ("default") == "33");
@@ -206,28 +191,28 @@ type_code_tests ()
     assert (t.hints().find (":extra-option:") != String().npos);
   }
   { // FLOAT
-    TypeCode t = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    TypeCode t = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
     assert (t.kind() == FLOAT);
-    assert (t.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t.aux_value ("label") == "Float Label");
     assert (t.aux_value ("blurb") == "Float Blurb");
     assert (t.aux_value ("default") == "97.97");
     assert (t.hints() == ":");
   }
   { // STRING
-    TypeCode t = tp.lookup_local ("PlicTests::ExtendedString");
+    TypeCode t = tp.lookup_local ("AidaTests::ExtendedString");
     assert (t.kind() == STRING);
-    assert (t.name() == "PlicTests::ExtendedString");
+    assert (t.name() == "AidaTests::ExtendedString");
     assert (t.aux_value ("label") == "Extended String");
     assert (t.aux_value ("blurb") == "Demonstrate full string specification");
     assert (t.aux_value ("default") == "Default-String-Value");
     assert (t.hints().find (":ro:") != String().npos);
   }
   { // ENUM
-    TypeCode t = tp.lookup_local ("PlicTests::Enum1");
+    TypeCode t = tp.lookup_local ("AidaTests::Enum1");
     assert (t.kind() == ENUM);
     assert (t.kind_name () == "ENUM");
-    assert (t.name() == "PlicTests::Enum1");
+    assert (t.name() == "AidaTests::Enum1");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
@@ -236,10 +221,10 @@ type_code_tests ()
     assert (t.enum_value (1)[0] == "ENUM_VALUE1");
   }
   { // SEQUENCE
-    TypeCode t = tp.lookup_local ("PlicTests::SimpleSequence");
+    TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");
     assert (t.kind() == SEQUENCE);
     assert (t.kind_name () == "SEQUENCE");
-    assert (t.name() == "PlicTests::SimpleSequence");
+    assert (t.name() == "AidaTests::SimpleSequence");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
@@ -249,10 +234,10 @@ type_code_tests ()
     assert (f.name() == "sample_integer");
   }
   { // RECORD
-    TypeCode t = tp.lookup_local ("PlicTests::SimpleRecord");
+    TypeCode t = tp.lookup_local ("AidaTests::SimpleRecord");
     assert (t.kind() == RECORD);
     assert (t.kind_name () == "RECORD");
-    assert (t.name() == "PlicTests::SimpleRecord");
+    assert (t.name() == "AidaTests::SimpleRecord");
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
@@ -271,7 +256,7 @@ type_code_tests ()
     assert (f.name() == "anyfield");
   }
   // done
-  printf ("  TEST   Plic type code IDL tests                                        OK\n");
+  printf ("  TEST   Aida type code IDL tests                                        OK\n");
 }
 
 static const double test_double_value = 7.76576e-306;
@@ -348,7 +333,7 @@ test_any()
             assert (any_assignment_successfull == true);
           }
       }
-  printf ("  TEST   Plic Any storage                                                OK\n");
+  printf ("  TEST   Aida Any storage                                                OK\n");
   a <<= 1.;             assert (a.kind() == FLOAT && a.as_float() == +1.0);
   a <<= -1.;            assert (a.kind() == FLOAT && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
@@ -359,7 +344,7 @@ test_any()
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);
-  printf ("  TEST   Plic Any conversions                                            OK\n");
+  printf ("  TEST   Aida Any conversions                                            OK\n");
   Any b, c, d;
   a <<= -3;              assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= Any();           assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
@@ -372,7 +357,7 @@ test_any()
   a <<= "1"; b <<= 1;    assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= 1.4; b <<= 1.5;  assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
   a <<= 1.6; b <<= 1.6;  assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  printf ("  TEST   Plic Any equality                                               OK\n");
+  printf ("  TEST   Aida Any equality                                               OK\n");
 }
 
 } // Anon

@@ -50,8 +50,8 @@ def reindent (prefix, lines):
 
 base_code = """
 
-def __plic_module_init_once__ (cpy_module):
-  del globals()['__plic_module_init_once__'] # run once only
+def __aida_module_init_once__ (cpy_module):
+  del globals()['__aida_module_init_once__'] # run once only
   global _CPY
   _CPY = cpy_module
 
@@ -59,13 +59,13 @@ class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
 class _BaseClass_ (object):
-  class _PlicID_:
-    def __init__ (self, _plicid):
-      assert isinstance (_plicid, (int, long))
-      self.id = _plicid
-  def __init__ (self, _plic_id):
-    assert isinstance (_plic_id, _BaseClass_._PlicID_)
-    self.__plic__object__ = _plic_id.id
+  class _AidaID_:
+    def __init__ (self, _aidaid):
+      assert isinstance (_aidaid, (int, long))
+      self.id = _aidaid
+  def __init__ (self, _aida_id):
+    assert isinstance (_aida_id, _BaseClass_._AidaID_)
+    self.__aida__object__ = _aida_id.id
 class __Signal__:
   def __init__ (self, signame):
     self.name = signame
@@ -152,18 +152,18 @@ class Generator:
     s += '    else: raise RuntimeError ("invalid or missing record initializers")\n'
     s += '    return self\n'
     s += '  @staticmethod\n'
-    s += '  def to_proto (self, _plic_rec):\n' # FIXME: broken, staticmethod with self?
+    s += '  def to_proto (self, _aida_rec):\n' # FIXME: broken, staticmethod with self?
     for a in type_info.fields:
-      s += '    _plic_field = _plic_rp.fields.add()\n'
-      s += reindent ('  ', self.generate_to_proto ('_plic_field', a[1], 'self.' + a[0])) + '\n'
+      s += '    _aida_field = _aida_rp.fields.add()\n'
+      s += reindent ('  ', self.generate_to_proto ('_aida_field', a[1], 'self.' + a[0])) + '\n'
     return s
   def generate_sighandler (self, ftype, ctype):
     s = ''
     s += 'def __sig_%s__ (self): pass # default handler\n' % ftype.name
     s += 'def sig_%s_connect (self, func):\n' % ftype.name
-    s += '  return _CPY._PLIC_%s (self, func, 0)\n' % ftype.ident_digest()
+    s += '  return _CPY._AIDA_%s (self, func, 0)\n' % ftype.ident_digest()
     s += 'def sig_%s_disconnect (self, connection_id):\n' % ftype.name
-    s += '  return _CPY._PLIC_%s (self, None, connection_id)\n' % ftype.ident_digest()
+    s += '  return _CPY._AIDA_%s (self, None, connection_id)\n' % ftype.ident_digest()
     return s
   def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
     s = ''
@@ -182,7 +182,7 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
     elif type_info.storage == Decls.ANY:
-      s += '  # FIXME: support PLIC::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
+      s += '  # FIXME: support Aida::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
     else: # FUNC
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s
@@ -202,7 +202,7 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  ___ret = _CPY._PLIC_%s (' % m.ident_digest()
+    s += '  ___ret = _CPY._AIDA_%s (' % m.ident_digest()
     s += ', '.join (vals)
     s += ')\n'
     s += '  return ___ret'
@@ -235,8 +235,8 @@ class Generator:
     if not l:
       l = [ '_BaseClass_' ]
     s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
-    s += '  def __init__ (self, _plic_id):\n'
-    s += '    super (%s, self).__init__ (_plic_id)\n' % type_info.name
+    s += '  def __init__ (self, _aida_id):\n'
+    s += '    super (%s, self).__init__ (_aida_id)\n' % type_info.name
     for sg in type_info.signals:
       s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
     for m in type_info.methods:

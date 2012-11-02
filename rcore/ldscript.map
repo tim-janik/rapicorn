@@ -7,11 +7,11 @@
        virtual*Rapicorn[0-9][0-9][0-9][0-9]::*;
            VTT*Rapicorn[0-9][0-9][0-9][0-9]::*;
 
-               Plic::*;
-        vtable*Plic::*;
-      typeinfo*Plic::*;
-       virtual*Plic::*;
-           VTT*Plic::*;
+               Aida::*;
+        vtable*Aida::*;
+      typeinfo*Aida::*;
+       virtual*Aida::*;
+           VTT*Aida::*;
     };
   local: *;
 };

@@ -8,9 +8,9 @@ test_server_smart_handle (void)
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   ApplicationIface *ab = &app;
-  Plic::FieldBuffer8 fb (4);
+  Aida::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
-  // FIXME: Plic::Coupler &c = *rope_thread_coupler();
+  // FIXME: Aida::Coupler &c = *rope_thread_coupler();
   // c.reader.reset (fb);
   ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
   assert (am == &app);

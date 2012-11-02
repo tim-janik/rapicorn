@@ -1,7 +1,7 @@
 # Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-"""PlicTypeMap - Binary Type Map generator for PLIC
+"""AidaTypeMap - Binary Type Map generator for Aida
 
-More details at http://www.testbit.eu/plic
+More details at http://www.rapicorn.org/
 """
 import Decls, struct
 
@@ -18,7 +18,7 @@ class Encoder:
     self.stringm = {}
     if 0: # debug segment offsets
       import sys
-      print >>sys.stderr, "PlicTypeMap:Encoder: segment offsets:", self.node0, self.list0, self.string0
+      print >>sys.stderr, "AidaTypeMap:Encoder: segment offsets:", self.node0, self.list0, self.string0
   def segment_offsets (self):
     return (self.node0, self.list0, self.string0)
   def segment_lengths (self):
@@ -95,7 +95,7 @@ def encode_type_map (nodes):
   def align (l, sz = 8):
     return ((l + sz - 1) / sz) * sz
   def header (sz, ooo, idx):
-    s = 'PlicTypeMap\0\0\0\0\0'
+    s = 'AidaTypeMap\0\0\0\0\0'
     s += Encoder.encode_unsigned (sz) + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0'
     s += Encoder.encode_unsigned (ooo[0])
     s += Encoder.encode_unsigned (ooo[1])
@@ -208,7 +208,7 @@ class Generator:
       otsl,tsl = tsl,[]
       for tp in otsl:
         tid,fqn,aux,memb = tp
-        fqn = re.sub (r'^Plic::__system_typedefs__::__builtin__', '', fqn)
+        fqn = re.sub (r'^Aida::__system_typedefs__::__builtin__', '', fqn)
         tsl += [ (tid, fqn, aux, memb) ]
     # encode type map from serialized types
     return encode_type_map (tsl)
@@ -220,7 +220,7 @@ def error (msg):
 
 def generate (namespace_list, **args):
   import sys, tempfile, os
-  config = { 'output' : 'plic.out' }
+  config = { 'output' : 'idltypes.map' }
   config.update (args)
   gg = Generator()
   packdata = gg.generate_pack (namespace_list, config['system-typedefs'])

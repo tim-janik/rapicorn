@@ -1,24 +1,8 @@
 #!/usr/bin/env python
-# plic - Pluggable IDL Compiler                                -*-mode:python-*-
-# Copyright (C) 2007 Tim Janik
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# Aida - Abstract Interface Definition Architecture            -*-mode:python-*-
+# Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
 import sys, os, Decls
 true, false, length = (True, False, len)
-#@PLICSUBST_PREIMPORT@
-PLIC_VERSION=\
-"@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
 
 import yapps2runtime as runtime
 import AuxData

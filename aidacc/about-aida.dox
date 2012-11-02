@@ -1,7 +1,8 @@
-/*! @page Pluggable-IDL-Compiler	PLIC - a PLuggable Idl Compiler
+/*! @page Aida-IDL-Compiler		Aida - Abstract Interface Definition Architecture
 
-Several considerations motivated the creation of PLIC, which
-are summarized in the following for better or worse.
+Aida is an architecture, centered around abstract interface definitions, used for programming of remote objects.
+The "aidacc" compiler is used to compile Aida IDL files into executable code.
+What follows are some of the motivating considerations for the creation of Aida.
 
 @par Expressive IDL
 The IDL syntax is designed to at least cover the use cases of aRts, Beast and Rapicorn:
@@ -20,7 +21,7 @@ The IDL parser is implemented in Python, as are the code generators.
 Code generators are loaded as external Python modules.
 Choosing Python has acceptable real-world performance and has shown to be very useful to prototype
 new IDL or code generator features.
--# Plic allows custom code generator implementations, implemented as external python scripts.
+-# Aidacc allows custom code generator implementations, implemented as external python scripts.
 
 @par API & ABI Separation
 The generated C++ code goes through some lengths to ensure best client side ABI flexibility.
@@ -42,11 +43,11 @@ In particular, this has the following benefits:
 The generated C++ code for the client side as well as the server side is structured to
 be easily included into existing programs or libraries, without needing any additional
 administrative process (like an object broker).
--# The Plic IPC layer can be used within executables and libraries directly.
+-# The Aida IPC layer can be used within executables and libraries directly.
 -# No brokering architecture is required.
 
 @par IPC Separation
-The generated C++ code separates client and server functionality through a Plic::Connection abstraction.
+The generated C++ code separates client and server functionality through an Aida::Connection abstraction.
 -# This allows remote invocation of the server functions through the client API (currently across threads).
 -# Full developer control is provided on the server and client side about threading and remote connection use.
 
@@ -58,13 +59,13 @@ collected (Python). The corresponding logic is implemented in the respective cod
 
 @par Performance
 The IDL and generated C++ code is designed, profiled and optimized as follows.
--# Optimize IPC calls for low-latency dispatching. @NOTICE{Currently requires Rapicorn/rcore/loop implementation}
+-# Optimize IPC calls for low-latency dispatching, requires the Rapicorn/rcore/loop implementation.
 -# Generate acceptable throughput in high-performance computing scenarios (pseudo realtime).
-@UNIMPLEMENTED{The details of the Plic data port implementation still need to be finalized}
+@UNIMPLEMENTED{The details of the Aida data port implementation still need to be finalized}
 -# Allow zero-copy high-bandwidth data throughput for images and audio. @UNIMPLEMENTED{Needs shared data ports}
 
 @par Miscellaneous
--# For Beast and Rapicorn, Plic is meant as a replacement for the chaotic growth of code generators,
+-# For Beast and Rapicorn, Aida is meant as a replacement for the chaotic growth of code generators,
 such as glib-mkenums.pl, bse/mkcproc.pl, and many others.
 
 @par Missing
@@ -73,7 +74,7 @@ Two 64 bit ints are used for IPC message IDs. The upper four bits encode the mes
 The remaining 124 bits encode the method invocation identifier.
 Using a 124 bit hash keeps collision probabilities below 10^-19 for up to 2 billion inputs.
 The hash algorithm is based on SHA256 to ensure good distribution.
--# @UNIMPLEMENTED{TODO: Port Beast IDL property groups to Plic}
+-# @UNIMPLEMENTED{TODO: Port Beast IDL property groups to Aida}
 -# The client/server split in the generated APIs ensure a clear separation of object locations.
 Instances are always allocated and reside on the server, clients can only invoke methods remotely
 and cannot transfer or create instances locally.
