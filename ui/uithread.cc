@@ -133,12 +133,14 @@ private:
   virtual bool
   prepare (const EventLoop::State &state, int64*)
   {
+    if (UNLIKELY (last_seen_primary && !state.seen_primary))
+      need_check_primary = true;
     return need_check_primary || m_connection.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
   {
-    if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
+    if (UNLIKELY (last_seen_primary && !state.seen_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
     return need_check_primary || m_connection.pending();
@@ -158,7 +160,8 @@ private:
   check_primaries()
   {
     // seen_primary is merely a hint, this handler checks the real loop state
-    if (uithread_main_loop()->finishable())
+    const bool uithread_finishable = uithread_main_loop()->finishable();
+    if (uithread_finishable)
       ApplicationImpl::the().lost_primaries();
   }
 };
@@ -168,6 +171,8 @@ struct Initializer {
   Aida::ServerConnection server_connection;
   Mutex mutex; Cond cond; uint64 app_id;
 };
+
+static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
 
 class UIThread {
   std::thread           m_thread;
@@ -257,6 +262,8 @@ public:
   void
   operator() ()
   {
+    assert (uithread_threadinfo == NULL);
+    uithread_threadinfo = &ThreadInfo::self();
     ThreadInfo::self().name ("RapicornUIThread");
     const bool running_twice = __sync_fetch_and_add (&m_running, +1);
     assert (running_twice == false);
@@ -265,6 +272,11 @@ public:
     initialize();
     assert_return (m_idata == NULL);
     m_main_loop.run();
+    WindowImpl::forcefully_close_all();
+    ScreenDriver::forcefully_close_all();
+    while (!m_main_loop.finishable())
+      if (!m_main_loop.iterate (false))
+        break;  // handle primary idle handlers like exec_now
     m_main_loop.kill_loops();
     rapicorn_thread_leave();
 
@@ -273,6 +285,8 @@ public:
     assert (stopped_twice == false);
 
     assert (m_running == false);
+    assert (uithread_threadinfo == &ThreadInfo::self());
+    uithread_threadinfo = NULL;
   }
 };
 static UIThread *the_uithread = NULL;
@@ -289,10 +303,15 @@ uithread_main_loop ()
   return the_uithread ? the_uithread->main_loop() : NULL;
 }
 
+bool
+uithread_is_current ()
+{
+  return uithread_threadinfo == &ThreadInfo::self();
+}
+
 void
 uithread_shutdown (void)
 {
-  rapicorn_gtk_threads_shutdown();
   if (the_uithread && the_uithread->running())
     {
       the_uithread->queue_stop(); // stops ui thread main loop

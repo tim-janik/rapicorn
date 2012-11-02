@@ -93,7 +93,7 @@
   </tmpl:define>
 
   <!-- test dialog -->
-  <tmpl:define id="main-shell" inherit="Window">
+  <tmpl:define id="main-shell" inherit="Window" title="Rapicorn Example: texttest.xml">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">

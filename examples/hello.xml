@@ -22,7 +22,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- main window -->
-  <tmpl:define id="main-window" inherit="Window">
+  <tmpl:define id="main-window" inherit="Window" title="Rapicorn Hello World Example">
     <OuterShell>
       <Label>
 	<tmpl:property id="markup-text">

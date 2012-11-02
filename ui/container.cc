@@ -785,11 +785,39 @@ SingleContainerImpl::~SingleContainerImpl()
 
 ResizeContainerImpl::ResizeContainerImpl() :
   m_tunable_requisition_counter (0), m_resizer (0)
-{}
+{
+  m_anchor_info.resize_container = this;
+  update_anchor_info();
+}
 
 ResizeContainerImpl::~ResizeContainerImpl()
 {
   clear_exec (&m_resizer);
+  m_anchor_info.resize_container = NULL;
+}
+
+void
+ResizeContainerImpl::hierarchy_changed (ItemImpl *old_toplevel)
+{
+  update_anchor_info();
+  SingleContainerImpl::hierarchy_changed (old_toplevel);
+}
+
+void
+ResizeContainerImpl::update_anchor_info ()
+{
+  ItemImpl *last, *item;
+  m_anchor_info.viewport = NULL;
+  // find first ViewportImpl
+  for (last = item = this; item && !m_anchor_info.viewport; last = item, item = last->parent())
+    m_anchor_info.viewport = dynamic_cast<ViewportImpl*> (item);
+  // find topmost parent
+  item = last;
+  while (item)
+    last = item, item = last->parent();
+  item = last;
+  // assign window iff one is found
+  m_anchor_info.window = dynamic_cast<WindowImpl*> (item);
 }
 
 static inline String

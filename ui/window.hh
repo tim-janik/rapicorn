@@ -8,16 +8,14 @@
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
-                   public virtual ScreenWindow::EventReceiver {
+class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   friend class  ItemImpl;
   EventLoop            &m_loop;
-  Mutex                 m_async_mutex;
-  std::list<Event*>     m_async_event_queue;
-  ScreenWindow         *m_screen_window;
+  ScreenWindow*         m_screen_window;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   uint                  m_pending_win_size : 1;
+  uint                  m_pending_expose : 1;
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
   ScreenWindow::Config  m_config;
@@ -30,8 +28,12 @@ protected:
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
+  virtual const PropertyList& list_properties   ();
+  virtual String        title                   () const;
+  virtual void          title                   (const String &window_title);
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
+  static  void          forcefully_close_all    ();
   // grab handling
   virtual void          add_grab                                (ItemImpl &child, bool unconfined = false);
   void                  add_grab                                (ItemImpl *child, bool unconfined = false);
@@ -62,18 +64,17 @@ private:
   void                  notify_displayed                        (void);
   virtual void          remove_grab_item                        (ItemImpl               &child);
   void                  grab_stack_changed                      ();
-  /*Des*/               ~WindowImpl                             ();
+  virtual              ~WindowImpl                              ();
   virtual void          dispose_item                            (ItemImpl               &item);
   virtual bool          self_visible                            () const;
   /* misc */
   vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
                                                                  const vector<ItemImpl*>    &cminus);
   /* sizing */
-  void                  resize_screen_window                    ();
+  void                  resize_window                           (const Allocation *new_area = NULL);
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  void                  expose_now                              ();
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
   /* screen_window ops */
@@ -92,7 +93,6 @@ private:
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringSeq    &command_args);
   /* event handling */
-  virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (ItemImpl               *item);
   void                  cancel_item_events                      (ItemImpl &item) { cancel_item_events (&item); }
   bool                  dispatch_mouse_movement                 (const Event            &event);
@@ -109,10 +109,10 @@ private:
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
-  bool                  dispatch_win_draw_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
+  bool                  dispatch_win_destroy                    ();
   virtual bool          dispatch_event                          (const Event            &event);
-  bool                  has_pending_win_size                    ();
+  bool                  has_queued_win_size                     ();
   /* --- GrabEntry --- */
   struct GrabEntry {
     ItemImpl *item;

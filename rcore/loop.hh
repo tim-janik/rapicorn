@@ -101,7 +101,7 @@ public:
   void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
-  uint exec_now        (const VoidSlot &sl);    ///< Execute a callback with priority "now" (highest).
+  uint exec_now        (const VoidSlot &sl);    ///< Execute a callback as primary source with priority "now" (highest).
   uint exec_now        (const BoolSlot &sl);    ///< Executes callback as exec_now(), returning true repeats callback.
   uint exec_next       (const VoidSlot &sl);    ///< Execute a callback with priority "next" (very important).
   uint exec_next       (const BoolSlot &sl);    ///< Executes callback as exec_next(), returning true repeats callback.
@@ -291,13 +291,17 @@ public:
 inline uint
 EventLoop::exec_now (const VoidSlot &sl)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
+  TimedSource *tsource = new TimedSource (*sl.get_trampoline());
+  tsource->primary (true);
+  return add (tsource, PRIORITY_NOW);
 }
 
 inline uint
 EventLoop::exec_now (const BoolSlot &sl)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
+  TimedSource *tsource = new TimedSource (*sl.get_trampoline());
+  tsource->primary (true);
+  return add (tsource, PRIORITY_NOW);
 }
 
 inline uint

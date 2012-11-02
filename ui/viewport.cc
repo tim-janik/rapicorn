@@ -9,11 +9,14 @@ namespace Rapicorn {
 ViewportImpl::ViewportImpl () :
   m_xoffset (0), m_yoffset (0),
   sig_scrolled (*this, &ViewportImpl::do_scrolled)
-{}
+{
+  const_cast<AnchorInfo*> (force_anchor_info())->viewport = this;
+}
 
 ViewportImpl::~ViewportImpl ()
-{}
-
+{
+  const_cast<AnchorInfo*> (force_anchor_info())->viewport = NULL;
+}
 
 void
 ViewportImpl::scroll_offsets (int deltax, int deltay)

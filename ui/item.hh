@@ -15,6 +15,7 @@ namespace Rapicorn {
 /* --- Item structures and forward decls --- */
 typedef Rect Allocation;
 class ItemImpl;
+class AnchorInfo;
 class SizeGroup;
 class Adjustment;
 class ContainerImpl;
@@ -48,6 +49,7 @@ class ItemImpl : public virtual ItemIface {
   Requisition                 m_requisition;
   Allocation                  m_allocation;
   FactoryContext             *m_factory_context;
+  const AnchorInfo           *m_ainfo;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &m_parent; }
@@ -55,9 +57,10 @@ class ItemImpl : public virtual ItemIface {
   void                        heritage           (Heritage  *heritage);
   void                        expose_internal    (const Region &region);
 protected:
-  virtual void                constructed             ();
+  const AnchorInfo*           force_anchor_info  () const;
+  virtual void                constructed        ();
   /* flag handling */
-  bool                        change_flags_silently   (uint32 mask, bool on);
+  bool                        change_flags_silently (uint32 mask, bool on);
   enum {
     ANCHORED                  = 1 <<  0,
     VISIBLE                   = 1 <<  1,
@@ -182,6 +185,7 @@ public:
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
+  const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (m_ainfo) ? m_ainfo : force_anchor_info(); }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;

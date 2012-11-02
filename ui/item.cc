@@ -49,6 +49,7 @@ ItemImpl::ItemImpl () :
   m_parent (NULL),
   m_heritage (NULL),
   m_factory_context (NULL), // removing this breaks g++ pre-4.2.0 20060530
+  m_ainfo (NULL),
   sig_finalize (*this),
   sig_changed (*this, &ItemImpl::do_changed),
   sig_invalidate (*this, &ItemImpl::do_invalidate),
@@ -894,11 +895,12 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
     {
       ref (pc);
       WindowImpl *rtoplevel = get_window();
-      pc->unparent_child (*this);
       invalidate();
       if (heritage())
         heritage (NULL);
+      pc->unparent_child (*this);
       m_parent = NULL;
+      m_ainfo = NULL;
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
@@ -910,6 +912,7 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
       if (!dynamic_cast<ContainerImpl*> (pcontainer))
         throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
       m_parent = pcontainer;
+      m_ainfo = NULL;
       if (m_parent->heritage())
         heritage (m_parent->heritage());
       invalidate();
@@ -955,22 +958,26 @@ ItemImpl::common_ancestor (const ItemImpl &other) const
 WindowImpl*
 ItemImpl::get_window () const
 {
-  ItemImpl *parent = const_cast<ItemImpl*> (this);
-  while (parent->parent())
-    parent = parent->parent();
-  return dynamic_cast<WindowImpl*> (parent); // NULL if parent is not of type WindowImpl*
+  const AnchorInfo *ainfo = anchor_info();
+  if (ainfo)
+    return ainfo->window;
+  ItemImpl *item = const_cast<ItemImpl*> (this);
+  while (item->m_parent)
+    item = item->m_parent;
+  return dynamic_cast<WindowImpl*> (item); // NULL iff this is not type WindowImpl*
 }
 
 ViewportImpl*
 ItemImpl::get_viewport () const
 {
-  ItemImpl *parent = const_cast<ItemImpl*> (this);
-  while (parent)
+  const AnchorInfo *ainfo = anchor_info();
+  if (ainfo)
+    return ainfo->viewport;
+  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->m_parent)
     {
-      ViewportImpl *vp = dynamic_cast<ViewportImpl*> (parent);
-      if (vp)
-        return vp;
-      parent = parent->parent();
+      ViewportImpl *v = dynamic_cast<ViewportImpl*> (item);
+      if (v)
+        return v;
     }
   return NULL;
 }
@@ -978,15 +985,39 @@ ItemImpl::get_viewport () const
 ResizeContainerImpl*
 ItemImpl::get_resize_container () const
 {
-  ItemImpl *parent = const_cast<ItemImpl*> (this);
-  while (parent)
+  const AnchorInfo *ainfo = anchor_info();
+  if (ainfo)
+    return ainfo->resize_container;
+  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->m_parent)
     {
-      ResizeContainerImpl *rc = dynamic_cast<ResizeContainerImpl*> (parent);
-      if (rc)
-        return rc;
-      parent = parent->parent();
+      ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (item);
+      if (c)
+        return c;
     }
   return NULL;
+}
+
+const AnchorInfo*
+ItemImpl::force_anchor_info () const
+{
+  if (m_ainfo)
+    return m_ainfo;
+  // find resize container
+  ItemImpl *parent = const_cast<ItemImpl*> (this);
+  ResizeContainerImpl *rc = NULL;
+  while (parent)
+    {
+      rc = dynamic_cast<ResizeContainerImpl*> (parent);
+      if (rc)
+        break;
+      parent = parent->parent();
+    }
+  static const AnchorInfo orphan_anchor_info;
+  const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
+  const_cast<ItemImpl*> (this)->m_ainfo = ainfo;
+  if (anchored())
+    assert (get_window() != NULL); // FIXME
+  return ainfo;
 }
 
 void

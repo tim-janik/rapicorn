@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
 	cmdlib.hh	coffer.hh	commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	item.hh	keycodes.hh	\
+	image.hh	item.hh		keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh	\
@@ -36,7 +36,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	stock.cc	\
 	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
-	screenwindow-gtk.cc	screenwindow.cc	\
+	screenwindow-x11.cc	screenwindow.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -52,8 +52,9 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
 	regionimpl.h			\
-	key2utf8.cc			\
+	key2ucs4.cc			\
 	clientapi.cc			\
+	screenwindow-xaux.cc		\
 	serverapi.cc			\
 )
 

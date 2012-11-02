@@ -206,7 +206,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \

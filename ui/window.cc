@@ -4,6 +4,9 @@
 #include "factory.hh"
 #include "uithread.hh"
 #include <string.h> // memcpy
+#include <algorithm>
+
+#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -34,6 +37,33 @@ WindowIface::impl () const
   if (!wimpl)
     throw std::bad_cast();
   return *wimpl;
+}
+
+const PropertyList&
+WindowImpl::list_properties ()
+{
+  static Property *properties[] = {
+    MakeProperty (WindowImpl, title,   _("Title"),   _("User visible title to be displayed in the window title bar"), "rw"),
+  };
+  static const PropertyList property_list (properties, ViewportImpl::list_properties());
+  return property_list;
+}
+
+String
+WindowImpl::title () const
+{
+  return m_config.title;
+}
+
+void
+WindowImpl::title (const String &window_title)
+{
+  if (m_config.title != window_title)
+    {
+      m_config.title = window_title;
+      if (m_screen_window)
+        m_screen_window->configure (m_config, false);
+    }
 }
 
 void
@@ -120,21 +150,42 @@ WindowImpl::create_snapshot (const Rect &subarea)
   return surface;
 }
 
+namespace WindowTrail {
+static Mutex               wmutex;
+static vector<WindowImpl*> windows;
+static vector<WindowImpl*> wlist  ()               { ScopedLock<Mutex> slock (wmutex); return windows; }
+static void wenter (WindowImpl *wi) { ScopedLock<Mutex> slock (wmutex); windows.push_back (wi); }
+static void wleave (WindowImpl *wi)
+{
+  ScopedLock<Mutex> slock (wmutex);
+  auto it = find (windows.begin(), windows.end(), wi);
+  assert_return (it != windows.end());
+  windows.erase (it);
+};
+} // WindowTrail
+
+void
+WindowImpl::forcefully_close_all ()
+{
+  vector<WindowImpl*> wl = WindowTrail::wlist();
+  for (auto it : wl)
+    it->close();
+}
+
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_screen_window (NULL),
-  m_entered (false), m_auto_close (false), m_pending_win_size (false),
+  m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true),
   m_notify_displayed_id (0)
 {
+  const_cast<AnchorInfo*> (force_anchor_info())->window = this;
+  WindowTrail::wenter (this);
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
   ClassDoctor::set_window_heritage (*this, hr);
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
-  /* adjust default ScreenWindow config */
-  m_config.min_width = 13;
-  m_config.min_height = 7;
   /* create event loop (auto-starts) */
   m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
@@ -152,6 +203,7 @@ WindowImpl::dispose ()
 
 WindowImpl::~WindowImpl()
 {
+  WindowTrail::wleave (this);
   if (m_notify_displayed_id)
     {
       m_loop.try_remove (m_notify_displayed_id);
@@ -159,7 +211,7 @@ WindowImpl::~WindowImpl()
     }
   if (m_screen_window)
     {
-      delete m_screen_window;
+      m_screen_window->destroy();
       m_screen_window = NULL;
     }
   /* make sure all children are removed while this is still of type WindowImpl.
@@ -171,6 +223,7 @@ WindowImpl::~WindowImpl()
   m_loop.kill_sources();
   /* this should be done last */
   unref (&m_loop);
+  const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
 }
 
 bool
@@ -180,34 +233,48 @@ WindowImpl::self_visible () const
 }
 
 void
-WindowImpl::resize_screen_window()
+WindowImpl::resize_window (const Allocation *new_area)
 {
+  const uint64 start = timestamp_realtime();
   assert_return (requisitions_tunable() == false);
+  Requisition rsize;
+  ScreenWindow::State state;
+  bool allocated = false;
 
-  // negotiate size and ensure window is allocated
-  negotiate_size (NULL);
-  const Requisition rsize = requisition();
+  // negotiate sizes (new_area==NULL) and ensures window is allocated
+  negotiate_size (new_area);
+  m_pending_expose = true;
+  if (new_area)
+    goto done;  // only called for reallocating
+  rsize = requisition();
 
   // grow screen window if needed
   if (!m_screen_window)
-    return;
-  ScreenWindow::State state = m_screen_window->get_state();
+    goto done;
+  state = m_screen_window->get_state();
   if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
     {
       m_config.request_width = rsize.width;
       m_config.request_height = rsize.height;
       m_pending_win_size = true;
-      m_screen_window->enqueue_win_draws();
-      discard_expose_region(); // we'll get a new WIN_DRAW event
-      m_screen_window->set_config (m_config, true);
-      return;
+      discard_expose_region(); // we request a new WIN_SIZE event in configure
+      m_screen_window->configure (m_config, true);
+      goto done;
     }
   // screen window size is good, allocate it
   if (rsize.width != state.width || rsize.height != state.height)
     {
       Allocation area = Allocation (0, 0, state.width, state.height);
       negotiate_size (&area);
+      allocated = true;
     }
+ done:
+  const uint64 stop = timestamp_realtime();
+  Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
+  EDEBUG ("RESIZE: request=%s allocate=%s elapsed=%.3fms",
+          new_area ? "-" : string_printf ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
+          string_printf ("%.0fx%.0f", area.width, area.height).c_str(),
+          (stop - start) / 1000.0);
 }
 
 void
@@ -540,28 +607,36 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      m_pending_win_size = false;
-      Allocation area = Allocation (0, 0, wevent->width, wevent->height);
-      negotiate_size (&area);
-      discard_expose_region(); // we'll get a new WIN_DRAW event
-      if (0)
-        DEBUG ("win-size: %f %f", wevent->width, wevent->height);
-      handled = true;
-    }
-  return handled;
-}
-
-bool
-WindowImpl::dispatch_win_draw_event (const Event &event)
-{
-  bool handled = false;
-  const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
-  if (devent)
-    {
-      Region r;
-      for (uint i = 0; i < devent->rectangles.size(); i++)
-        r.add (devent->rectangles[i]);
-      expose (r);
+      m_pending_win_size = wevent->intermediate || has_queued_win_size();
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
+              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size);
+      const Allocation area = allocation();
+      if (wevent->width != area.width || wevent->height != area.height)
+        {
+          Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
+          if (!m_pending_win_size)
+            {
+#if 0 // excessive resizing costs
+              Allocation zzz = new_area;
+              resize_window (&zzz);
+              for (int i = 0; i < 37; i++)
+                {
+                  zzz.width += 1;
+                  resize_window (&zzz);
+                  zzz.height += 1;
+                  resize_window (&zzz);
+                }
+#endif
+              resize_window (&new_area);
+            }
+          else
+            discard_expose_region(); // we'll get more WIN_SIZE events
+        }
+      if (!m_pending_win_size && m_pending_expose)
+        {
+          expose();
+          m_pending_expose = false;
+        }
       handled = true;
     }
   return handled;
@@ -573,48 +648,16 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
   bool handled = false;
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
-    {
-      destroy_screen_window();
-      dispose();
-      handled = true;
-    }
+    handled = dispatch_win_destroy();
   return handled;
 }
 
-void
-WindowImpl::expose_now ()
+bool
+WindowImpl::dispatch_win_destroy ()
 {
-  if (m_screen_window)
-    {
-      /* force delivery of any pending update events */
-      m_screen_window->enqueue_win_draws();
-      /* collect all WIN_DRAW events */
-      m_async_mutex.lock();
-      std::list<Event*> events;
-      std::list<Event*>::iterator it = m_async_event_queue.begin();
-      while (it != m_async_event_queue.end())
-        {
-          if ((*it)->type == WIN_DRAW)
-            {
-              std::list<Event*>::iterator current = it++;
-              events.push_back (*current);
-              m_async_event_queue.erase (current);
-            }
-          else
-            it++;
-        }
-      m_async_mutex.unlock();
-      /* invalidate areas from all collected WIN_DRAW events */
-      while (!events.empty())
-        {
-          Event *event = events.front();
-          events.pop_front();
-          dispatch_event (*event);
-          delete event;
-        }
-    }
-  else
-    discard_expose_region(); // nuke stale exposes
+  destroy_screen_window();
+  dispose();
+  return true;
 }
 
 void
@@ -627,18 +670,20 @@ WindowImpl::notify_displayed()
 void
 WindowImpl::draw_now ()
 {
-  Rect area = allocation();
-  assert_return (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
-      // force delivery of any pending exposes
-      expose_now();
-      // render invalidated contents
+      const uint64 start = timestamp_realtime();
+      Rect area = allocation();
+      assert_return (area.x == 0 && area.y == 0);
+      // determine invalidated rendering region
       Region region = area;
       region.intersect (peek_expose_region());
       discard_expose_region();
-
-      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (area.width), iceil (area.height));
+      // rendering rectangle
+      Rect rrect = region.extents();
+      const int x1 = ifloor (rrect.x), y1 = ifloor (rrect.y), x2 = iceil (rrect.x + rrect.width), y2 = iceil (rrect.y + rrect.height);
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
+      cairo_surface_set_device_offset (surface, -x1, -y1);
       critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
@@ -646,8 +691,12 @@ WindowImpl::draw_now ()
       m_screen_window->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
-      if (!has_pending_win_size() && !m_notify_displayed_id)
+      if (!m_notify_displayed_id)
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
+      const uint64 stop = timestamp_realtime();
+      EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
+              x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
+              (stop - start) / 1000.0);
     }
   else
     discard_expose_region(); // nuke stale exposes
@@ -759,20 +808,9 @@ WindowImpl::dispose_item (ItemImpl &item)
 }
 
 bool
-WindowImpl::has_pending_win_size ()
+WindowImpl::has_queued_win_size ()
 {
-  bool found_one = false;
-  m_async_mutex.lock();
-  for (std::list<Event*>::iterator it = m_async_event_queue.begin();
-       it != m_async_event_queue.end();
-       it++)
-    if ((*it)->type == WIN_SIZE)
-      {
-        found_one = true;
-        break;
-      }
-  m_async_mutex.unlock();
-  return found_one;
+  return m_screen_window && m_screen_window->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
@@ -780,24 +818,17 @@ WindowImpl::dispatch_event (const Event &event)
 {
   if (!m_screen_window)
     return false;       // we can only handle events on a screen_window
-  if (0)
-    DEBUG ("Window: event: %s", string_from_event_type (event.type));
+  EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
     {
     case EVENT_LAST:
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
     case MOUSE_MOVE:
-      if (true) // coalesce multiple motion events
-        {
-          m_async_mutex.lock();
-          std::list<Event*>::iterator it = m_async_event_queue.begin();
-          bool found_event = it != m_async_event_queue.end() && (*it)->type == MOUSE_MOVE;
-          m_async_mutex.unlock();
-          if (found_event)
-            return true;
-        }
-      return dispatch_move_event (event);
+      if (m_screen_window->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
+        return true; // coalesce multiple motion events
+      else
+        return dispatch_move_event (event);
     case MOUSE_LEAVE:         return dispatch_leave_event (event);
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
@@ -811,15 +842,15 @@ WindowImpl::dispatch_event (const Event &event)
     case KEY_PRESS:
     case KEY_CANCELED:
     case KEY_RELEASE:         return dispatch_key_event (event);
-    case SCROLL_UP:          /* button4 */
-    case SCROLL_DOWN:        /* button5 */
-    case SCROLL_LEFT:        /* button6 */
-    case SCROLL_RIGHT:       /* button7 */
-      /**/                    return dispatch_scroll_event (event);
+    case SCROLL_UP:          // button4
+    case SCROLL_DOWN:        // button5
+    case SCROLL_LEFT:        // button6
+    case SCROLL_RIGHT:       // button7
+      ;                       return dispatch_scroll_event (event);
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
-    case WIN_SIZE:            return has_pending_win_size() ? true : dispatch_win_size_event (event);
-    case WIN_DRAW:            return has_pending_win_size() ? true : dispatch_win_draw_event (event);
+    case WIN_SIZE:            return dispatch_win_size_event (event);
     case WIN_DELETE:          return dispatch_win_delete_event (event);
+    case WIN_DESTROY:         return dispatch_win_destroy();
     }
   return false;
 }
@@ -828,23 +859,11 @@ bool
 WindowImpl::event_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    {
-      ScopedLock<Mutex> aelocker (m_async_mutex);
-      const bool has_events = !m_async_event_queue.empty();
-      return has_events;
-    }
+    return m_screen_window && m_screen_window->has_event();
   else if (state.phase == state.DISPATCH)
     {
       ref (this);
-      Event *event = NULL;
-      {
-        ScopedLock<Mutex> aelocker (m_async_mutex);
-        if (!m_async_event_queue.empty())
-          {
-            event = m_async_event_queue.front();
-            m_async_event_queue.pop_front();
-          }
-      }
+      Event *event = m_screen_window ? m_screen_window->pop_event() : NULL;
       if (event)
         {
           dispatch_event (*event);
@@ -869,7 +888,7 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
     {
       ref (this);
       if (need_resize)
-        resize_screen_window();
+        resize_window();
       unref (this);
       return true;
     }
@@ -886,7 +905,7 @@ bool
 WindowImpl::drawing_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return !m_pending_win_size && exposes_pending();
+    return exposes_pending();
   else if (state.phase == state.DISPATCH)
     {
       ref (this);
@@ -931,22 +950,13 @@ WindowImpl::dispatch (const EventLoop::State &state)
 EventLoop*
 WindowImpl::get_loop ()
 {
-  ScopedLock<Mutex> aelocker (m_async_mutex);
   return &m_loop;
-}
-
-void
-WindowImpl::enqueue_async (Event *event)
-{
-  ScopedLock<Mutex> aelocker (m_async_mutex);
-  m_async_event_queue.push_back (event);
-  m_loop.wakeup(); /* thread safe */
 }
 
 bool
 WindowImpl::viewable ()
 {
-  return visible() && m_screen_window && m_screen_window->visible();
+  return visible() && m_screen_window && m_screen_window->viewable();
 }
 
 void
@@ -954,10 +964,7 @@ WindowImpl::idle_show()
 {
   if (m_screen_window)
     {
-      /* request size, WIN_SIZE and WIN_DRAW */
-      if (!m_screen_window->visible())
-        resize_screen_window();
-      /* size requested, show up */
+      // size request & show up
       m_screen_window->show();
     }
 }
@@ -969,8 +976,38 @@ WindowImpl::create_screen_window ()
     {
       if (!m_screen_window)
         {
-          m_screen_window = ScreenWindow::create_screen_window ("auto", WINDOW_TYPE_NORMAL, *this);
-          resize_screen_window();
+          resize_window(); // ensure initial size requisition
+          ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
+          if (sdriver)
+            {
+              ScreenWindow::Setup setup;
+              setup.window_type = WINDOW_TYPE_NORMAL;
+              uint64 flags = ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DELETABLE |
+                             ScreenWindow::DECORATED | ScreenWindow::MINIMIZABLE | ScreenWindow::MAXIMIZABLE;
+              setup.request_flags = ScreenWindow::Flags (flags);
+              String prg = program_ident();
+              if (prg.empty())
+                prg = program_file();
+              setup.session_role = "RAPICORN:" + prg;
+              if (!name().empty())
+                setup.session_role += ":" + name();
+              setup.bg_average = background();
+              const Requisition rsize = requisition();
+              m_config.request_width = rsize.width;
+              m_config.request_height = rsize.height;
+              if (m_config.title.empty())
+                {
+                  // user_warning (this->user_source(), "window title is unset");
+                  m_config.title = setup.session_role;
+                }
+              if (m_config.alias.empty())
+                m_config.alias = program_alias();
+              m_pending_win_size = true;
+              m_screen_window = sdriver->create_screen_window (setup, m_config);
+              m_screen_window->set_event_wakeup ([this] () { m_loop.wakeup(); /* thread safe */ });
+            }
+          else
+            fatal ("failed to find and open any screen driver");
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
       m_loop.flag_primary (true); // FIXME: depends on WM-managable
@@ -982,7 +1019,7 @@ WindowImpl::create_screen_window ()
 bool
 WindowImpl::has_screen_window ()
 {
-  return m_screen_window && m_screen_window->visible();
+  return !!m_screen_window;
 }
 
 void
@@ -991,8 +1028,7 @@ WindowImpl::destroy_screen_window ()
   if (!m_screen_window)
     return; // during destruction, ref_count == 0
   ref (this);
-  m_screen_window->hide();
-  delete m_screen_window;
+  m_screen_window->destroy();
   m_screen_window = NULL;
   m_loop.flag_primary (false);
   m_loop.kill_sources();
@@ -1049,7 +1085,7 @@ WindowImpl::synthesize_enter (double xalign,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  enqueue_async (create_event_mouse (MOUSE_ENTER, ec));
+  m_screen_window->push_event (create_event_mouse (MOUSE_ENTER, ec));
   return true;
 }
 
@@ -1059,7 +1095,7 @@ WindowImpl::synthesize_leave ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  enqueue_async (create_event_mouse (MOUSE_LEAVE, ec));
+  m_screen_window->push_event (create_event_mouse (MOUSE_LEAVE, ec));
   return true;
 }
 
@@ -1079,8 +1115,8 @@ WindowImpl::synthesize_click (ItemIface &itemi,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  enqueue_async (create_event_button (BUTTON_PRESS, ec, button));
-  enqueue_async (create_event_button (BUTTON_RELEASE, ec, button));
+  m_screen_window->push_event (create_event_button (BUTTON_RELEASE, ec, button));
+  m_screen_window->push_event (create_event_button (BUTTON_PRESS, ec, button));
   return true;
 }
 
@@ -1090,7 +1126,7 @@ WindowImpl::synthesize_delete ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  enqueue_async (create_event_win_delete (ec));
+  m_screen_window->push_event (create_event_win_delete (ec));
   return true;
 }
 
