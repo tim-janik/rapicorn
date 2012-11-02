@@ -1,37 +1,11 @@
-# Rapicorn
-# Copyright (C) 2007 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = imports tutorial
 
-# extract source code documentation as psrc
-PSOURCE_TARGETS = $(strip			\
-	psource/rapicorn-core.psrc		\
-	psource/rapicorn-gui.psrc		\
-)
-# noinst_DATA = ${PSOURCE_TARGETS}
+# == Extra Tarball Files ==
+EXTRA_DIST += ChangeLog-2009
 
-DOXIDEFS = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir) -D TOP_WEBDIR "."
-
-# Reference Documentation
-make_psource = $(strip $(DOXER) src2pickle -o $(1) $(DOXIDEFS) $(2))
-# RAPICORN reference docu
-rapicorn_core_globs   = $(top_srcdir)/rcore/*.[hc] $(top_srcdir)/rcore/*.[hc][hc]
-rapicorn_core_exclude = rapicornconfig.h
-rapicorn_core_files   = $(filter-out $(foreach f, $(rapicorn_core_exclude), $(wildcard $(top_srcdir)/rcore/$(f))), $(wildcard $(rapicorn_core_globs)))
-rapicorn_gui_globs    = $(top_srcdir)/ui/*.[hc] $(top_srcdir)/ui/*.[hc][hc]
-rapicorn_gui_exclude  = rapicornconfig.h
-rapicorn_gui_files    = $(filter-out $(foreach f, $(rapicorn_gui_exclude), $(wildcard $(top_srcdir)/ui/$(f))), $(wildcard $(rapicorn_gui_globs)))
-psource/rapicorn-core.psrc: $(rapicorn_core_files)
-	@mkdir -p psource/
-	$(call make_psource, $@, $(filter %.h %.hh, $(rapicorn_core_files)) -Y $(filter-out %.h %.hh, $(rapicorn_core_files)) )
-psource/rapicorn-gui.psrc: $(rapicorn_gui_files)
-	@mkdir -p psource/
-	$(call make_psource, $@, $(filter %.h %.hh, $(rapicorn_gui_files)) -Y $(filter-out %.h %.hh, $(rapicorn_gui_files)) )
-
-# clean up
+# == Clean Up ==
 clean-local:
-	rm -rf psource/
 	[ ! -d dev/ ] || $(MAKE) clean -C dev/
