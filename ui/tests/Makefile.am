@@ -4,17 +4,23 @@ include $(top_srcdir)/Makefile.decl
 INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
 DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 
-# test programs
-noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
+# == Build Classes ==
+noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS) $(NOINSTPRGS)
 noinst_DATA	 =
 LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
+NOINSTPRGS =
+
+# == Programs ==
+NOINSTPRGS        += imgcheck
+imgcheck_SOURCES   = imgcheck.cc
+imgcheck_LDADD     = $(LDADDS)
 
 # environment
 export VPATH   # needed by test programs to find builddir relative input files
 
-# test programs
+# == Test Programs ==
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
 servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \

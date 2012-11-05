@@ -5,14 +5,8 @@ INCLUDES += -I$(top_srcdir) $(RAPICORN_CORE_CFLAGS)
 DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 
 # test programs
-noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS) $(NOINSTPRGS)
+noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
-NOINSTPRGS =
-
-# programs
-NOINSTPRGS        += imgcheck
-imgcheck_SOURCES   = imgcheck.cc
-imgcheck_LDADD     = $(LDADDS)
 
 # == test programs ==
 LOGTEST_PROGS     += testrcore1
