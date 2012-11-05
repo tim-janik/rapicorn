@@ -172,7 +172,12 @@ connection_handle2id (const Aida::SmartHandle &h)
 
 #define AIDA_CONNECTION()       (_clientglue_connection)
 } // Anon
+
+// compile client-side API
 #include "clientapi.cc"
+
+// compile client-side Pixmap<PixbufStruct> template
+#include "pixmap.cc"
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {

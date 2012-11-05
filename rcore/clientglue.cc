@@ -3,5 +3,3 @@
 
 // compile client-side API
 #include "clientapi.cc"
-// compile client-side Pixmap<PixbufStruct> template
-#include "pixmap.cc"

@@ -41,3 +41,5 @@ IGNORE: // close last _scope
 }; // close dummy class scope
 
 global_scope:
+#define RAPICORN_PIXBUF_TYPE    Rapicorn::PixbufImpl
+#include <ui/pixmap.hh>

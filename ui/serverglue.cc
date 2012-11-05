@@ -19,4 +19,8 @@ uithread_serverglue (Aida::ServerConnection connection)
 
 #define AIDA_CONNECTION()       (_serverglue_connection)
 
+// compile server-side API
 #include "serverapi.cc"
+
+// compile server-side Pixmap<PixbufImpl> template
+#include "pixmap.cc"

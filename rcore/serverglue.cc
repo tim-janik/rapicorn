@@ -4,5 +4,3 @@
 
 // compile server-side API
 #include "serverapi.cc"
-// compile server-side Pixmap<PixbufImpl> template
-#include "pixmap.cc"

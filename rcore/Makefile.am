@@ -13,7 +13,7 @@ rapicorn_public_headers = $(strip	\
         platform.hh	debugtools.hh					utilities.hh  \
 			signal.hh		math.hh			unicode.hh   \
         xmlnode.hh	markup.hh		enumdefs.hh		testutils.hh \
-        pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
+			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
 	cxxaux.hh	rcore.hh \
@@ -39,7 +39,6 @@ rapicorn_private_files = $(strip	\
         signalslot.hh		\
         signaltemplate.hh	\
 	mksignals.sh			\
-	pixmap.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
