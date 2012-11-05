@@ -23,8 +23,9 @@ servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testitems.xml
 EXTRA_DIST          += servertests.hh $(XML_FILES) servertests.ref
 TEST_PROGS	    += clienttests
-clienttests_SOURCES  = clienttests.cc
+clienttests_SOURCES  = clienttests.cc pixmaps.cc
 clienttests_LDADD    = $(LDADDS)
+EXTRA_DIST          += testpixs.c testpixs.png
 
 SINFEX_SHELL=./servertests --shell
 check: sinfex-expressions
