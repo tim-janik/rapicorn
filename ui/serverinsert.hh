@@ -13,6 +13,10 @@ class WindowImpl;
 IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
+class_scope:StringSeq:
+  explicit StringSeqImpl () {}
+  /*ctor*/ StringSeqImpl (const std::vector<std::string> &strv) : Sequence (strv) {}
+
 class_scope:Pixbuf:
   /// Construct Pixbuf at given width and height.
   explicit        PixbufImpl   (uint w, uint h) : row_length (0) { pixels.resize (w, h); }

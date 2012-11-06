@@ -8,10 +8,6 @@ includes:
 IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
-class_scope:StringSeq:
-  explicit StringSeqImpl () {}
-  /*ctor*/ StringSeqImpl (const std::vector<std::string> &strv) : Sequence (strv) {}
-
 IGNORE: // close last _scope
 }; // close dummy class scope
 

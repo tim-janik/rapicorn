@@ -6,16 +6,4 @@
 
 namespace Rapicorn {
 
-/// A sequence of strings (in C++ of std::string).
-sequence StringSeq { string strings; };
-
-/// A sequence of @a any objects, useful when the sequence element types need to be determined at runtime.
-sequence AnySeq { any vany; };
-
-/// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
-sequence AnySeqSeq { AnySeq seq; };
-
-/// A sequence of ARGB pixel values.
-sequence PixelSeq { int argb; };
-
 } // Rapicorn
