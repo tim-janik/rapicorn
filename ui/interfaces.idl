@@ -9,6 +9,13 @@ include "hardcoded.idl";
 
 namespace Rapicorn {
 
+/// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
+record Pixbuf {
+  int       row_length;         ///< Length of a Pixbuf row in pixels.
+  PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
+  StringSeq variables;
+};
+
 /**
  * The ListModel interface serves as a row-oriented data provider for list views.
  * For most model implementations, in-order read outs should be of complexity O(1),
