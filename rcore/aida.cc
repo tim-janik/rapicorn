@@ -1167,4 +1167,4 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 
 } // Aida
 
-#include "../aidacc/loadmap.cc"
+#include "aidamap.cc"

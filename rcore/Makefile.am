@@ -36,9 +36,11 @@ rapicorn_generated_headers = $(strip	\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
-        signalslot.hh		\
-        signaltemplate.hh	\
+        signalslot.hh			\
+        signaltemplate.hh		\
 	mksignals.sh			\
+	aidabuiltins.cc			\
+	aidamap.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\

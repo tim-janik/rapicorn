@@ -47,16 +47,21 @@ ${AIDACCV}: plic.py Parser.py
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 
+GPRINT      = @printf '  %-7s%s\n'
+
 # == Aida Builtins ==
-builtins.cc: $(srcdir)/builtins.idl ${AIDACC_INTERN} plic.py
-	$(AM_V_GEN)
-	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o $(@F).typ
-	$(Q) ${AIDACC_INTERN} --cc-intern-file $(@F).typ > xtmp-$(@F)
-	$(Q) cp -p xtmp-$(@F) $@
-	$(Q) rm -f $(@F).typ xtmp-$(@F)
-noinst_DATA = builtins.cc
-EXTRA_DIST += builtins.cc builtins.idl
-CLEANFILES += builtins.cc
+# Serialize builtins.idl into a TypeMap stored as a C string:
+# --system-typedefs essentially strips the "Aida::..builtin__" prefix,
+# --cc-intern-file  converts the TypeMap into a C string.
+check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
+	@echo "  CHECK " builtins.idl
+	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o builtins.typ
+	$(Q) ${AIDACC_INTERN} --cc-intern-file builtins.typ > builtins.cc
+	@echo "  VERIFY" aidabuiltins.cc
+	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
+	$(Q) rm -f builtins.typ builtins.cc
+EXTRA_DIST += builtins.idl
+check: check-builtins
 
 # == Aida Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
