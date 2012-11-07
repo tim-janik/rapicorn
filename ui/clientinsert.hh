@@ -6,7 +6,7 @@ includes:
 #include <ui/utilities.hh>
 #include <aidacc/runtime.hh>
 namespace Rapicorn {
-using namespace Aida;
+using Aida::Any;
 class ItemImpl; // FIXME
 class WindowImpl;
 }
@@ -45,7 +45,7 @@ class_scope:Application:
   static void                     shutdown       ();
   static int                      run_and_exit   () RAPICORN_NORETURN;
   static ApplicationHandle        the            ();
-  static ClientConnection         ipc_connection ();
+  static Aida::ClientConnection   ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
 

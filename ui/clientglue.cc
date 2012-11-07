@@ -182,7 +182,7 @@ connection_handle2id (const Aida::SmartHandle &h)
 #include <rcore/testutils.hh>
 namespace Rapicorn {
 
-ClientConnection
+Aida::ClientConnection
 ApplicationH::ipc_connection()
 {
   return AIDA_CONNECTION();

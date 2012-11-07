@@ -6,7 +6,7 @@ includes:
 #include <ui/utilities.hh>
 #include <aidacc/runtime.hh>
 namespace Rapicorn {
-using namespace Aida;
+using Aida::Any;
 class ItemImpl;
 class WindowImpl;
 }
