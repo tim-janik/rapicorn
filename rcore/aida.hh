@@ -1,4 +1,7 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+#ifndef __AIDA_HH__
+#define __AIDA_HH__
+
 #include <string>
 #include <vector>
 #include <memory>               // auto_ptr
@@ -470,3 +473,6 @@ template<class Signature> struct FieldTools;
 } // Aida
 /// @}
 
+#include <rcore/aidavariants.hh>
+
+#endif // __AIDA_HH__

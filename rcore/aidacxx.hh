@@ -1,8 +1,9 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#ifndef __AIDA_CXXSTUBAUX_HH__
-#define __AIDA_CXXSTUBAUX_HH__
+#ifndef __AIDA_CXX_HH__
+#define __AIDA_CXX_HH__
 
-#include "runtime.hh"
+#include <rcore/aida.hh>
+#include <rcore/signal.hh>
 
 namespace Aida {
 namespace CxxStub /// Internal types, used by the CxxStub code generator.
@@ -85,4 +86,4 @@ public:
 } // CxxStub
 } // Aida
 
-#endif // __AIDA_CXXSTUBAUX_HH__
+#endif // __AIDA_CXX_HH__

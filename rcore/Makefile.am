@@ -9,7 +9,7 @@ DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RE
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	blobres.hh	inifile.hh	\
+	aida.hh		blobres.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
 			signal.hh		math.hh			unicode.hh   \
         xmlnode.hh	markup.hh		enumdefs.hh		testutils.hh \
@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 	cxxaux.hh	rcore.hh \
 )
 rapicorn_cc_sources = $(sort	\
-	blobres.cc	inifile.cc	\
+	aida.cc		blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 			signal.cc		math.cc			unicode.cc   \
         xmlnode.cc	markup.cc		enumdefs.cc		testutils.cc \
@@ -27,10 +27,12 @@ rapicorn_cc_sources = $(sort	\
 	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
+	aidacxx.hh			\
 	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        signalvariants.hh		\
+	aidavariants.hh			\
+	signalvariants.hh		\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
@@ -207,6 +209,17 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
+
+# === aidavariants.hh ===
+$(srcdir)/*.cc: aidavariants.hh
+aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
+	$(Q) cd . \
+	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
+	&& echo '# 1 "$(abs_srcdir)/aidaproto.hh"'		>>xtmp-$(@F) \
+	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
+	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
+CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
+EXTRA_DIST += aidaproto.hh xmanifold.py
 
 # === signalvariants.hh ===
 $(srcdir)/*.cc: signalvariants.hh

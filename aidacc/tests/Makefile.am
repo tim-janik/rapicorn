@@ -10,6 +10,7 @@ AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 ptptest_LDFLAGS = -pthread -lpthread
+ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 $(srcdir)/ptptest.cc: typecodetests.typ
 EXTRA_DIST += typecodetests.idl
 CLEANFILES += typecodetests.typ

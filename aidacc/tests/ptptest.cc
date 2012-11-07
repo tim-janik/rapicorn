@@ -1,8 +1,9 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 // include AidaTypeMap Parser
-#include "../runtime.hh"
-#include "../runtime.cc"
+#include <rapicorn-core.hh>
+#include <cstring>
+#include <cassert>
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 

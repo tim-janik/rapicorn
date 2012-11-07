@@ -7,12 +7,12 @@ import Decls, GenUtils, re
 
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
-#include <aidacc/runtime.hh>
+#include <rapicorn-core.hh>
 """
 
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
-#include <aidacc/runtime.hh>
+#include <rapicorn-core.hh>
 """
 
 rapicornsignal_boilerplate = r"""
@@ -45,8 +45,6 @@ Aida::FieldBuffer* aida$_error (const char *format, ...)
 
 } // Anonymous
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
-
-#include <aidacc/cxxstubaux.hh>
 """
 
 servercc_boilerplate = r"""

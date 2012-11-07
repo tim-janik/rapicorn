@@ -1,5 +1,5 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#include "runtime.hh"
+#include "aida.hh"
 
 #include <assert.h>
 #include <string.h>
@@ -1166,3 +1166,5 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 }
 
 } // Aida
+
+#include "../aidacc/loadmap.cc"
