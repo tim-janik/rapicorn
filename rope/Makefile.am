@@ -68,6 +68,7 @@ check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
+CLEANFILES += testcxxpystub.cc
 check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
 # test interfaces.idl with Aida
 check-rapicorn-idl:
