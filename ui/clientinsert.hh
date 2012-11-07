@@ -4,7 +4,6 @@
 
 includes:
 #include <ui/utilities.hh>
-#include <rcore/clientapi.hh>
 namespace Rapicorn {
 class ItemImpl; // FIXME
 class WindowImpl;

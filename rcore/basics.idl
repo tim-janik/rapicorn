@@ -1,9 +1,0 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
-/**
- * @file
- * @brief Basic structures and enumerations used in the Rapicorn namespace.
- */
-
-namespace Rapicorn {
-
-} // Rapicorn

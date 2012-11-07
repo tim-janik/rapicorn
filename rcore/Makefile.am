@@ -18,7 +18,7 @@ rapicorn_public_headers = $(strip	\
 	$(rapicorn_impl_headers) \
 	cxxaux.hh	rcore.hh \
 )
-rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
+rapicorn_cc_sources = $(sort	\
 	blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 			signal.cc		math.cc			unicode.cc   \
@@ -31,9 +31,8 @@ rapicorn_impl_headers = $(strip 	\
 	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        signalvariants.hh	\
+        signalvariants.hh		\
 	rapicornconfig.h		\
-	clientapi.hh			\
 )
 rapicorn_private_files = $(strip	\
         signalslot.hh		\
@@ -124,34 +123,6 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
 .PHONY: PHONY_REBUILDS
-
-# === Rapicorn Basics IDL ===
-AIDACC	    = $(top_builddir)/aidacc/aidacc-intern
-CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
-EXTRA_DIST += basics.idl serverinsert.hh
-# build serverapi.{hh|cc} and clientapi.{hh|cc} from basics.idl
-$(rapicorn_cc_sources): serverapi.hh clientapi.hh
-serverapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/serverinsert.hh
-	${AIDACC} -G CxxStub -g serverhh -g shortalias -g cppguard=__RAPICORN_RCORE_SERVERAPI_HH_ \
-	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-serverglue.cc: serverapi.cc
-serverapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl serverapi.hh
-	${AIDACC} -G CxxStub -g servercc --inclusions '"serverapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += serverapi.cc serverapi.hh
-EXTRA_DIST += clientinsert.hh
-clientapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/clientinsert.hh
-	${AIDACC} -G CxxStub -g clienthh -g shortalias -g cppguard=__RAPICORN_RCORE_CLIENTAPI_HH_ \
-	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-clientglue.cc: clientapi.cc
-clientapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl clientapi.hh
-	${AIDACC} -G CxxStub -g clientcc --inclusions '"clientapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += clientapi.cc clientapi.hh
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile

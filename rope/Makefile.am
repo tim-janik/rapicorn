@@ -34,14 +34,14 @@ python-call-info:
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc
-	${AIDACC} -G $(srcdir)/CxxPyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
+	${AIDACC} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
-	${AIDACC} -G $(srcdir)/PyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
+	${AIDACC} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 	rm -f xgen-$(@F)
 CLEANFILES += xgen-py2cpy.py py2cpy.py

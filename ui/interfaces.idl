@@ -4,7 +4,6 @@
  * @brief Rapicorn user interface API classes.
  */
 
-include "../rcore/basics.idl";
 include "hardcoded.idl";
 
 namespace Rapicorn {
