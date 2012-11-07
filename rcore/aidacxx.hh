@@ -7,18 +7,19 @@
 
 /// @defgroup AidaManifoldTypes Aida manifold generated types
 /// Tools to pack/unpack and use FieldBuffer contents.
-namespace Aida {
+namespace Rapicorn { namespace Aida {
 
 /// @ingroup AidaManifoldTypes
 template<class Signature> struct FieldTools;
 
-} // Aida
+} } // Rapicorn::Aida
 
 #include <rcore/aidavariants.hh> // FieldTools<> for various Signatures
 
-namespace Aida {
-namespace CxxStub /// Internal types, used by the CxxStub code generator.
-{
+namespace Rapicorn { namespace Aida {
+
+/// Internal types, used by the CxxStub code generator.
+namespace CxxStub {
 
 /// Handles remote (dis-)connection and client side dispatching of events via Rapicorn signals.
 template<class Handle, typename SignalSignature>
@@ -95,6 +96,6 @@ public:
 };
 
 } // CxxStub
-} // Aida
+} } // Rapicorn::Aida
 
 #endif // __AIDA_CXX_HH__

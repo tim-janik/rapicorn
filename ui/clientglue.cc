@@ -6,7 +6,7 @@
 namespace Rapicorn {
 
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-static void       clientglue_setup      (Aida::ClientConnection connection);
+static void       clientglue_setup      (Rapicorn::Aida::ClientConnection connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
@@ -44,9 +44,9 @@ init_app (const String       &app_ident,
   // initialize clientglue bits
   clientglue_setup (uithread_connection());
   // construct smart handle
-  Aida::FieldBuffer8 fb (1);
+  Rapicorn::Aida::FieldBuffer8 fb (1);
   fb.add_object (appid);
-  Aida::FieldReader fbr (fb);
+  Rapicorn::Aida::FieldReader fbr (fb);
   fbr >>= app_cached;
   return app_cached;
 }
@@ -71,9 +71,9 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Aida::ClientConnection m_connection;
-  PollFD            m_pfd;
-  bool              last_seen_primary, need_check_primary;
+  Rapicorn::Aida::ClientConnection m_connection;
+  PollFD m_pfd;
+  bool   last_seen_primary, need_check_primary;
   void
   check_primaries()
   {
@@ -83,7 +83,7 @@ class AppSource : public EventLoop::Source {
       main_loop()->quit();
   }
 public:
-  AppSource (Aida::ClientConnection connection) :
+  AppSource (Rapicorn::Aida::ClientConnection connection) :
     m_connection (connection), last_seen_primary (false), need_check_primary (false)
   {
     m_pfd.fd = m_connection.notify_fd();
@@ -130,42 +130,42 @@ public:
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Aida::ClientConnection _clientglue_connection;
+static Rapicorn::Aida::ClientConnection _clientglue_connection;
 class ConnectionContext {
   // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
-  typedef std::map <Aida::uint64_t, Aida::NonCopyable*> ContextMap;
+  typedef std::map <Rapicorn::Aida::uint64_t, Rapicorn::Aida::NonCopyable*> ContextMap;
   ContextMap context_map;
 public:
-  Aida::NonCopyable*
-  find_context (Aida::uint64_t ipcid)
+  Rapicorn::Aida::NonCopyable*
+  find_context (Rapicorn::Aida::uint64_t ipcid)
   {
     ContextMap::iterator it = context_map.find (ipcid);
     return LIKELY (it != context_map.end()) ? it->second : NULL;
   }
   void
-  add_context (Aida::uint64_t ipcid, Aida::NonCopyable *ctx)
+  add_context (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx)
   {
     context_map[ipcid] = ctx;
   }
 };
 static __thread ConnectionContext *ccontext = NULL;
 static inline void
-connection_context4id (Aida::uint64_t ipcid, Aida::NonCopyable *ctx)
+connection_context4id (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx)
 {
   if (!ccontext)
     ccontext = new ConnectionContext();
   ccontext->add_context (ipcid, ctx);
 }
 template<class Context> static inline Context*
-connection_id2context (Aida::uint64_t ipcid)
+connection_id2context (Rapicorn::Aida::uint64_t ipcid)
 {
-  Aida::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
+  Rapicorn::Aida::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
   if (UNLIKELY (!ctx))
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);
 }
-static inline Aida::uint64_t
-connection_handle2id (const Aida::SmartHandle &h)
+static inline Rapicorn::Aida::uint64_t
+connection_handle2id (const Rapicorn::Aida::SmartHandle &h)
 {
   return h._rpc_id();
 }
@@ -182,7 +182,7 @@ connection_handle2id (const Aida::SmartHandle &h)
 #include <rcore/testutils.hh>
 namespace Rapicorn {
 
-Aida::ClientConnection
+Rapicorn::Aida::ClientConnection
 ApplicationH::ipc_connection()
 {
   return AIDA_CONNECTION();
@@ -226,7 +226,7 @@ init_test_app (const String       &app_ident,
 }
 
 static void
-clientglue_setup (Aida::ClientConnection connection)
+clientglue_setup (Rapicorn::Aida::ClientConnection connection)
 {
   assert_return (_clientglue_connection.is_null() == true);
   _clientglue_connection = connection;

@@ -33,6 +33,7 @@
 #define AIDA_THROW_IF_FAIL(expr)                do { if (AIDA_LIKELY (expr)) break; AIDA_THROW ("failed to assert (" + #expr + ")"); } while (0)
 #define AIDA_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
+namespace Rapicorn {
 /// @namespace Aida The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
@@ -1165,6 +1166,6 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
     }
 }
 
-} // Aida
+} } // Rapicorn::Aida
 
 #include "aidamap.cc"

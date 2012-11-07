@@ -1,7 +1,8 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#ifndef __AIDA_HH__
-#define __AIDA_HH__
+#ifndef __RAPICORN_AIDA_HH__
+#define __RAPICORN_AIDA_HH__
 
+#include <rcore/cxxaux.hh>
 #include <string>
 #include <vector>
 #include <memory>               // auto_ptr
@@ -19,7 +20,7 @@ using std::tr1::weak_ptr;
 }
 #endif  // !_SHARED_PTR_H
 
-namespace Aida {
+namespace Rapicorn { namespace Aida {
 
 // == Auxillary macros ==
 #define AIDA_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
@@ -461,6 +462,6 @@ FieldBuffer::reset()
     }
 }
 
-} // Aida
+} } // Rapicorn::Aida
 
-#endif // __AIDA_HH__
+#endif // __RAPICORN_AIDA_HH__

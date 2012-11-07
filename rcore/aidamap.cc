@@ -7,10 +7,9 @@
 #include <malloc.h>
 #include <assert.h>
 
-#define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
 #define __AIDA_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
 
-namespace Aida {
+namespace Rapicorn { namespace Aida {
 
 const char*
 type_kind_name (TypeKind type_kind)
@@ -693,4 +692,4 @@ TypeMap::builtins ()
   return type_map;
 }
 
-} // Aida
+} } // Rapicorn::Aida

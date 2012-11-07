@@ -1,5 +1,5 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-namespace Aida {
+namespace Rapicorn { namespace Aida {
 
 /// @ingroup AidaManifoldTypes
 template<class R, class A1, class A2>
@@ -23,4 +23,4 @@ public:
   }
 };
 
-} // Aida
+} } // Rapicorn::Aida
