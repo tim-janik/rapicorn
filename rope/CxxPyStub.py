@@ -27,7 +27,7 @@ base_code = """
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
-#include <rapicorn-core.hh>
+#include <rapicorn.hh>
 
 #define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
 #define GOTO_ERROR()    goto error

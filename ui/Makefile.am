@@ -37,6 +37,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
 	screenwindow-x11.cc	screenwindow.cc	\
+	aidawrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\

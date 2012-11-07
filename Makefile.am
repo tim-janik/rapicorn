@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS     = . po data aidacc rcore res ui rope tools tests pytests examples docs
+SUBDIRS     = . po data rcore res aidacc ui rope tools tests pytests examples docs
 
 docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 noinst_DATA =

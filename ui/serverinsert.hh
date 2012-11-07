@@ -4,7 +4,9 @@
 
 includes:
 #include <ui/utilities.hh>
+#include <aidacc/runtime.hh>
 namespace Rapicorn {
+using namespace Aida;
 class ItemImpl;
 class WindowImpl;
 }

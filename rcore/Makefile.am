@@ -25,7 +25,6 @@ rapicorn_cc_sources = $(sort	\
         xmlnode.cc	markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
-        plicwrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	threadlib.hh			\
