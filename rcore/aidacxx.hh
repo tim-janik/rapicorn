@@ -5,6 +5,17 @@
 #include <rcore/aida.hh>
 #include <rcore/signal.hh>
 
+/// @defgroup AidaManifoldTypes Aida manifold generated types
+/// Tools to pack/unpack and use FieldBuffer contents.
+namespace Aida {
+
+/// @ingroup AidaManifoldTypes
+template<class Signature> struct FieldTools;
+
+} // Aida
+
+#include <rcore/aidavariants.hh> // FieldTools<> for various Signatures
+
 namespace Aida {
 namespace CxxStub /// Internal types, used by the CxxStub code generator.
 {

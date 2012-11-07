@@ -463,16 +463,4 @@ FieldBuffer::reset()
 
 } // Aida
 
-/// @weakgroup AidaManifoldTypes Aida manifold generated types
-/// @{
-namespace Aida {
-
-/// Tools to pack/unpack and use FieldBuffer contents.
-template<class Signature> struct FieldTools;
-
-} // Aida
-/// @}
-
-#include <rcore/aidavariants.hh>
-
 #endif // __AIDA_HH__

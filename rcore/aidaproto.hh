@@ -1,6 +1,7 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 namespace Aida {
 
+/// @ingroup AidaManifoldTypes
 template<class R, class A1, class A2>
 class FieldTools<R (A1, A2)> {
   template<class Y> struct Type           { typedef Y T; };
