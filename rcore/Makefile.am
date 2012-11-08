@@ -9,37 +9,38 @@ DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RE
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	blobres.hh	inifile.hh	\
+	aida.hh		blobres.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
 			signal.hh		math.hh			unicode.hh   \
         xmlnode.hh	markup.hh		enumdefs.hh		testutils.hh \
-        pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
+			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
 	cxxaux.hh	rcore.hh \
 )
-rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
-	blobres.cc	inifile.cc	\
+rapicorn_cc_sources = $(sort	\
+	aida.cc		blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 			signal.cc		math.cc			unicode.cc   \
         xmlnode.cc	markup.cc		enumdefs.cc		testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
-        plicwrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
+	aidacxx.hh			\
 	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        signalvariants.hh	\
+	aidavariants.hh			\
+	signalvariants.hh		\
 	rapicornconfig.h		\
-	clientapi.hh			\
 )
 rapicorn_private_files = $(strip	\
-        signalslot.hh		\
-        signaltemplate.hh	\
+        signalslot.hh			\
+        signaltemplate.hh		\
 	mksignals.sh			\
-	pixmap.cc			\
+	aidabuiltins.cc			\
+	aidamap.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
@@ -126,34 +127,6 @@ CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
 .PHONY: PHONY_REBUILDS
 
-# === Rapicorn Basics IDL ===
-AIDACC	    = $(top_builddir)/aidacc/aidacc-intern
-CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
-EXTRA_DIST += basics.idl serverinsert.hh
-# build serverapi.{hh|cc} and clientapi.{hh|cc} from basics.idl
-$(rapicorn_cc_sources): serverapi.hh clientapi.hh
-serverapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/serverinsert.hh
-	${AIDACC} -G CxxStub -g serverhh -g shortalias -g cppguard=__RAPICORN_RCORE_SERVERAPI_HH_ \
-	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-serverglue.cc: serverapi.cc
-serverapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl serverapi.hh
-	${AIDACC} -G CxxStub -g servercc --inclusions '"serverapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += serverapi.cc serverapi.hh
-EXTRA_DIST += clientinsert.hh
-clientapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/clientinsert.hh
-	${AIDACC} -G CxxStub -g clienthh -g shortalias -g cppguard=__RAPICORN_RCORE_CLIENTAPI_HH_ \
-	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-clientglue.cc: clientapi.cc
-clientapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl clientapi.hh
-	${AIDACC} -G CxxStub -g clientcc --inclusions '"clientapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <[a-z0-9.\/]*\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += clientapi.cc clientapi.hh
-
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	cd . \
@@ -238,6 +211,17 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
+
+# === aidavariants.hh ===
+$(srcdir)/*.cc: aidavariants.hh
+aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
+	$(Q) cd . \
+	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
+	&& echo '# 1 "$(abs_srcdir)/aidaproto.hh"'		>>xtmp-$(@F) \
+	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
+	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
+CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
+EXTRA_DIST += aidaproto.hh xmanifold.py
 
 # === signalvariants.hh ===
 $(srcdir)/*.cc: signalvariants.hh

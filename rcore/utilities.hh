@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <aidacc/runtime.hh>
 
 #if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn-core.hh> can be included directly.
@@ -36,7 +35,6 @@
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
-using namespace Aida;
 
 /* --- convenient stdc++ types --- */
 using std::vector;

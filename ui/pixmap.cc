@@ -1,9 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#ifndef __RAPICORN_RCORE_SERVERAPI_HH_
+#ifndef __RAPICORN_SERVERAPI_HH_
 #include "clientapi.hh" // includes pixmap.hh
 #endif
-#include "strings.hh"
-#include "blobres.hh"
 #include <errno.h>
 #include <math.h>
 #include <cstring>

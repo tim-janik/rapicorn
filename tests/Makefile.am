@@ -12,7 +12,7 @@ EXTRA_DIST      += $(XML_FILES)
 
 LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
-IMGCHECK = $(top_builddir)/rcore/tests/imgcheck
+IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11TEST_SERVER) && rrun() { $(RAPIDRUN) --fatal-warnings "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
 # === programs ===

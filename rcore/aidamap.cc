@@ -7,10 +7,9 @@
 #include <malloc.h>
 #include <assert.h>
 
-#define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
 #define __AIDA_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
 
-namespace Aida {
+namespace Rapicorn { namespace Aida {
 
 const char*
 type_kind_name (TypeKind type_kind)
@@ -669,14 +668,14 @@ TypeMap::load_local (std::string filename)
   return type_map;
 }
 
-#include "./builtins.cc" // defines intern_builtins_cc_typ
+#include "aidabuiltins.cc" // defines intern_builtins_typ
 
 TypeMap
 TypeMap::builtins ()
 {
-  InternalMap *imap = (InternalMap*) intern_builtins_cc_typ;
-  const size_t length = sizeof (intern_builtins_cc_typ);
-  if (!imap || sizeof (intern_builtins_cc_typ) < sizeof (*imap) + 4)
+  InternalMap *imap = (InternalMap*) intern_builtins_typ;
+  const size_t length = sizeof (intern_builtins_typ);
+  if (!imap || sizeof (intern_builtins_typ) < sizeof (*imap) + 4)
     {
       errno = ENODATA;
       perror ("ERROR: accessing builtin Aida types");
@@ -693,4 +692,4 @@ TypeMap::builtins ()
   return type_map;
 }
 
-} // Aida
+} } // Rapicorn::Aida

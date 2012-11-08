@@ -1,16 +1,17 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 // include AidaTypeMap Parser
-#include "../runtime.hh"
-#include "../runtime.cc"
+#include <rapicorn-core.hh>
+#include <cstring>
+#include <cassert>
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
 namespace { // Anon
 
-using namespace Aida;
-using Aida::int64_t;
-using Aida::uint64_t;
+using namespace Rapicorn::Aida;
+using Rapicorn::Aida::int64_t;
+using Rapicorn::Aida::uint64_t;
 typedef uint32_t uint;
 typedef std::string String;
 using std::vector;

@@ -21,7 +21,7 @@ rapicorn_public_headers = $(strip	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
 	screenwindow.hh	\
-	$(rapicorn_impl_headers)	internal.hh	\
+	$(rapicorn_impl_headers)	internal.hh	pixmap.hh	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
@@ -56,6 +56,7 @@ rapicorn_private_files = $(strip 	\
 	clientapi.cc			\
 	screenwindow-xaux.cc		\
 	serverapi.cc			\
+	pixmap.cc			\
 )
 
 # === CPU flags ===

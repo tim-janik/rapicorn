@@ -45,7 +45,7 @@ public:
   operator const Pixbuf& () const { return *m_pixbuf; } ///< Allow automatic conversion of a Pixmap into a Pixbuf.
 };
 
-// RAPICORN_PIXBUF_TYPE is defined in <rcore/clientapi.hh> and <rcore/serverapi.hh>
+// RAPICORN_PIXBUF_TYPE is defined in <clientapi.hh> and <serverapi.hh>
 typedef PixmapT<RAPICORN_PIXBUF_TYPE> Pixmap; ///< Pixmap is a convenience alias for PixmapT<Pixbuf>.
 
 } // Rapicorn

@@ -3,6 +3,7 @@
 #define __RAPICORN_BLOBRES_HH__
 
 #include <rcore/utilities.hh>
+#include <memory>
 
 namespace Rapicorn {
 

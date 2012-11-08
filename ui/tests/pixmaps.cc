@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
-#include <rcore/clientapi.hh>
+#include <rapicorn.hh>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>

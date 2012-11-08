@@ -6,8 +6,6 @@ SUBDIRS = . tests
 
 bin_SCRIPTS         = ${AIDACCV}
 noinst_SCRIPTS      = ${AIDACC_INTERN}
-cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/aidacc
-cxxruntime_HEADERS  = runtime.hh runtime.cc cxxstubaux.hh
 AIDACCLNK	    = aidacc			## user visible excutable name
 AIDACCV	            = aidacc-@RAPICORN_RELEASE@	## installed executable name
 AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
@@ -49,42 +47,21 @@ ${AIDACCV}: plic.py Parser.py
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 
-# == Build runtime.hh runtime.cc ==
-runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
-	$(AM_V_GEN)
-	$(Q) echo "// aidacc/runtime.hh - Aida C++ Runtime API"		 > xtmp-$(@F)
-	$(Q) echo "#ifndef __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
-	$(Q) echo "#define __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
-	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.hh"' 			>> xtmp-$(@F)
-	$(Q) cat $(srcdir)/runtypes.hh					>> xtmp-$(@F)
-	$(Q) echo '# 1 "$(abs_srcdir)/runproto.hh"' 			>> xtmp-$(@F)
-	$(Q) $(srcdir)/xmanifold.py $(srcdir)/runproto.hh 18		>> xtmp-$(@F)
-	$(Q) echo "#endif // __AIDA_RUNTIME_HH__" 			>> xtmp-$(@F)
-	$(Q) cp xtmp-$(@F) $@
-	$(Q) rm -f xtmp-$(@F)
-EXTRA_DIST += xmanifold.py
-runtime.cc: runtypes.cc loadmap.cc Makefile.am
-	$(AM_V_GEN)
-	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.cc"'	 > xtmp-$(@F)
-	$(Q) cat $(abs_srcdir)/runtypes.cc		>> xtmp-$(@F)
-	$(Q) echo '# 1 "$(abs_srcdir)/loadmap.cc"'	>> xtmp-$(@F)
-	$(Q) cat $(abs_srcdir)/loadmap.cc		>> xtmp-$(@F)
-	$(Q) cp xtmp-$(@F) $@
-	$(Q) rm -f xtmp-$(@F)
-EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc
-CLEANFILES += runtime.hh runtime.cc
+GPRINT      = @printf '  %-7s%s\n'
 
 # == Aida Builtins ==
-builtins.cc: $(srcdir)/builtins.idl ${AIDACC_INTERN} plic.py
-	$(AM_V_GEN)
-	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o $(@F).typ
-	$(Q) ${AIDACC_INTERN} --cc-intern-file $(@F).typ > xtmp-$(@F)
-	$(Q) cp -p xtmp-$(@F) $@
-	$(Q) rm -f $(@F).typ xtmp-$(@F)
-$(srcdir)/../loadmap.cc $(srcdir)/../runtime.cc: builtins.cc
-noinst_DATA = builtins.cc
-EXTRA_DIST += builtins.cc builtins.idl
-CLEANFILES += builtins.cc
+# Serialize builtins.idl into a TypeMap stored as a C string:
+# --system-typedefs essentially strips the "Aida::..builtin__" prefix,
+# --cc-intern-file  converts the TypeMap into a C string.
+check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
+	@echo "  CHECK " builtins.idl
+	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o builtins.typ
+	$(Q) ${AIDACC_INTERN} --cc-intern-file builtins.typ > builtins.cc
+	@echo "  VERIFY" aidabuiltins.cc
+	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
+	$(Q) rm -f builtins.typ builtins.cc
+EXTRA_DIST += builtins.idl
+check: check-builtins
 
 # == Aida Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils

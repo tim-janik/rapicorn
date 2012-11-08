@@ -27,7 +27,7 @@ base_code = """
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
-#include <rapicorn-core.hh>
+#include <rapicorn.hh>
 
 #define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
 #define GOTO_ERROR()    goto error
@@ -35,14 +35,14 @@ base_code = """
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
 #define ERRORifnotret(fr) do { if (AIDA_UNLIKELY (!fr) || \\
-                                   AIDA_UNLIKELY (!Aida::msgid_is_result (Aida::MessageId (fr->first_id())))) { \\
+                                   AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \\
                                  PyErr_Format_from_AIDA_error (fr); \\
                                  goto error; } } while (0)
 
-// using Aida::uint64_t;
+// using Rapicorn::Aida::uint64_t;
 using ::uint64_t;
-using Aida::FieldBuffer;
-using Aida::FieldReader;
+using Rapicorn::Aida::FieldBuffer;
+using Rapicorn::Aida::FieldReader;
 
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
@@ -52,7 +52,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
-  if (Aida::msgid_is_error (Aida::MessageId (msgid)))
+  if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
       if (domain.size()) domain += ": ";
@@ -80,7 +80,7 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline Aida::uint64_t
+static inline Rapicorn::Aida::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
@@ -107,14 +107,14 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline Aida::Any
+static inline Rapicorn::Aida::Any
 __aida_pyany_to_any (PyObject *pyany)
 {
-  return Aida::Any(); // FIXME: pyany to Any
+  return Rapicorn::Aida::Any(); // FIXME: pyany to Any
 }
 
 static inline PyObject*
-__aida_pyany_from_any (const Aida::Any &any)
+__aida_pyany_from_any (const Rapicorn::Aida::Any &any)
 {
   return None_INCREF(); // FIXME: Any to pyany
 }
@@ -156,7 +156,7 @@ aida_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 }
 
 #ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Aida::ClientConnection*)NULL)
+#define AIDA_CONNECTION() (*(Rapicorn::Aida::ClientConnection*)NULL)
 #endif
 """
 
@@ -225,9 +225,9 @@ class Generator:
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'aida_py%s_proto_add (PyObject *pyrec, Aida::FieldBuffer &dst)\n' % type_info.name
+    s += 'aida_py%s_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
-    s += '  Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
+    s += '  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += '  bool success = false;\n'
     s += '  PyObject *dictR = NULL, *item = NULL;\n'
     s += '  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);\n'
@@ -241,10 +241,10 @@ class Generator:
     s += '}\n'
     # record proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'aida_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
+    s += 'aida_py%s_proto_pop (Rapicorn::Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Aida::FieldReader fbr (src.pop_rec());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("Aida: marshalling error: invalid record length");\n' % len (type_info.fields)
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
@@ -265,11 +265,11 @@ class Generator:
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'aida_py%s_proto_add (PyObject *pyinput, Aida::FieldBuffer &dst)\n' % type_info.name
+    s += 'aida_py%s_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;\n'
     s += '  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;\n'
-    s += '  Aida::FieldBuffer &fb = dst.add_seq (len);\n'
+    s += '  Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  bool success = false;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);\n'
@@ -281,10 +281,10 @@ class Generator:
     s += '}\n'
     # sequence proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'aida_py%s_proto_pop (Aida::FieldReader &src)\n' % type_info.name
+    s += 'aida_py%s_proto_pop (Rapicorn::Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Aida::FieldReader fbr (src.pop_seq());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -304,13 +304,13 @@ class Generator:
     mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     evd_class = '_EventHandler_%s' % mtype.ident_digest()
-    s += 'class %s : public Aida::ClientConnection::EventHandler {\n' % evd_class
+    s += 'class %s : public Rapicorn::Aida::ClientConnection::EventHandler {\n' % evd_class
     s += '  PyObject *m_callable;\n'
     s += 'public:\n'
     s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
     s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
     s += '  virtual FieldBuffer*\n'
-    s += '  handle_event (Aida::FieldBuffer &fb)\n'
+    s += '  handle_event (Rapicorn::Aida::FieldBuffer &fb)\n'
     s += '  {\n'
     if mtype.args:
       s += '    FieldReader fbr (fb);\n'
@@ -344,7 +344,7 @@ class Generator:
     s += '  if (item == Py_None) fb.add_int64 (0);\n'
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
+    s += '    Rapicorn::Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
     s += '    uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
@@ -395,7 +395,7 @@ class Generator:
     else:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
-      s += '    Aida::FieldReader frr (*fr);\n'
+      s += '    Rapicorn::Aida::FieldReader frr (*fr);\n'
       s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'

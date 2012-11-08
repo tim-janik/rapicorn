@@ -14,16 +14,16 @@ static void wrap_test_runner  (void);
 
 namespace Rapicorn {
 
-class Channel { // Channel for cross-thread FieldBuffer IO
-  pthread_spinlock_t        msg_spinlock;
-  std::vector<FieldBuffer*> msg_vector;
-  std::vector<FieldBuffer*> msg_queue;
-  size_t                    msg_index, msg_last_size;
+class Channel { // Channel for cross-thread Aida::FieldBuffer IO
+  pthread_spinlock_t              msg_spinlock;
+  std::vector<Aida::FieldBuffer*> msg_vector;
+  std::vector<Aida::FieldBuffer*> msg_queue;
+  size_t                          msg_index, msg_last_size;
   virtual void  data_notify () = 0;
   virtual void  data_wait   () = 0;
   virtual void  flush_waits () = 0;
 public:
-  FieldBuffer*
+  Aida::FieldBuffer*
   fetch_msg (const int blockpop)
   {
     do
@@ -64,7 +64,7 @@ public:
     pthread_spin_destroy (&msg_spinlock);
   }
   void
-  push_msg (FieldBuffer *fb) // takes fb ownership
+  push_msg (Aida::FieldBuffer *fb) // takes fb ownership
   {
     pthread_spin_lock (&msg_spinlock);
     msg_vector.push_back (fb);
@@ -72,10 +72,10 @@ public:
     pthread_spin_unlock (&msg_spinlock);
     data_notify();
   }
-  bool          has_msg          () { return fetch_msg (0) != NULL; }
-  FieldBuffer*  pop_msg          () { wait_msg(); return fetch_msg (1); } // passes fbmsg ownership
-  void          wait_msg         () { while (!fetch_msg (-1)); }
-  FieldBuffer*  pop_msg_ndelay   () { return fetch_msg (1); } // passes fbmsg ownership
+  bool               has_msg            () { return fetch_msg (0) != NULL; }
+  Aida::FieldBuffer* pop_msg            () { wait_msg(); return fetch_msg (1); } // passes fbmsg ownership
+  void               wait_msg           () { while (!fetch_msg (-1)); }
+  Aida::FieldBuffer* pop_msg_ndelay     () { return fetch_msg (1); } // passes fbmsg ownership
 };
 
 class ChannelS : public Channel { // Channel with semaphore for syncronization
@@ -102,12 +102,11 @@ public:
 
 class ServerConnectionSource : public virtual EventLoop::Source {
   const char            *WHERE;
-  ServerConnection       m_connection;
+  Aida::ServerConnection m_connection;
   PollFD                 pollfd;
   bool                   last_seen_primary, need_check_primary;
 public:
-  ServerConnectionSource (EventLoop        &loop,
-                          ServerConnection  scon) :
+  ServerConnectionSource (EventLoop &loop, Aida::ServerConnection scon) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
     m_connection (scon), last_seen_primary (false), need_check_primary (false)
   {
@@ -121,7 +120,7 @@ public:
   void
   wakeup () // allow external wakeups
   {
-    // evil kludge, we're assuming ServerConnection.notify_fd() is an eventfd
+    // evil kludge, we're assuming Aida::ServerConnection.notify_fd() is an eventfd
     eventfd_write (pollfd.fd, 1);
   }
 private:
@@ -175,21 +174,21 @@ struct Initializer {
 static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
 
 class UIThread {
-  std::thread           m_thread;
-  pthread_mutex_t       m_thread_mutex;
-  volatile bool         m_running;
+  std::thread            m_thread;
+  pthread_mutex_t        m_thread_mutex;
+  volatile bool          m_running;
   Aida::ServerConnection m_server_connection;
-  Initializer      *m_idata;
-  MainLoop         &m_main_loop; // FIXME: non-NULL only while running
+  Initializer           *m_idata;
+  MainLoop              &m_main_loop; // FIXME: non-NULL only while running
 public:
-  ClientConnection      m_client_connection;
+  Aida::ClientConnection m_client_connection;
   UIThread (Initializer *idata) :
     m_thread_mutex (PTHREAD_MUTEX_INITIALIZER), m_running (0), m_idata (idata),
     m_main_loop (*ref_sink (MainLoop::_new()))
   {
     m_main_loop.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
-    m_server_connection = ServerConnection::create_threaded();
-    m_client_connection = ClientConnection (m_server_connection);
+    m_server_connection = Aida::ServerConnection::create_threaded();
+    m_client_connection = Aida::ClientConnection (m_server_connection);
   }
   bool  running() const { return m_running; }
   void
@@ -291,10 +290,10 @@ public:
 };
 static UIThread *the_uithread = NULL;
 
-ClientConnection
+Aida::ClientConnection
 uithread_connection (void) // prototype in ui/internal.hh
 {
-  return the_uithread && the_uithread->running() ? the_uithread->m_client_connection : ClientConnection();
+  return the_uithread && the_uithread->running() ? the_uithread->m_client_connection : Aida::ClientConnection();
 }
 
 MainLoop*
@@ -396,10 +395,10 @@ ui_thread_syscall_twoway (Aida::FieldReader &fbr)
   return &rb;
 }
 
-static const ServerConnection::MethodEntry ui_thread_call_entries[] = {
+static const Aida::ServerConnection::MethodEntry ui_thread_call_entries[] = {
   { Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
 };
-static ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
+static Aida::ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
 
 static int64
 ui_thread_syscall (Callable *callable)
@@ -409,7 +408,7 @@ ui_thread_syscall (Callable *callable)
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
-  FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
+  Aida::FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
   Aida::FieldReader frr (*fr);
   const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
   frr.skip(); // FIXME: check full msgid

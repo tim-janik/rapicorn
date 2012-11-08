@@ -34,14 +34,14 @@ python-call-info:
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc
-	${AIDACC} -G $(srcdir)/CxxPyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
+	${AIDACC} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
-	${AIDACC} -G $(srcdir)/PyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
+	${AIDACC} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 	rm -f xgen-$(@F)
 CLEANFILES += xgen-py2cpy.py py2cpy.py
@@ -68,6 +68,7 @@ check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
+CLEANFILES += testcxxpystub.cc
 check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
 # test interfaces.idl with Aida
 check-rapicorn-idl:
