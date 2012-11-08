@@ -137,7 +137,7 @@ public:
   native_handle_type native_handle() { return &m_cond; }
 };
 
-/// @namespace Rapicorn::ThisThread The Rapicorn::ThisThread namespace provides functions for the current thread of execution.
+/// The ThisThread namespace provides functions for the current thread of execution.
 namespace ThisThread {
 
 String  name            ();             ///< Get thread name.

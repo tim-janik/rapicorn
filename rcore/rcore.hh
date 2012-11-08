@@ -24,7 +24,6 @@
 #include <rcore/strings.hh>
 
 /**
- * @namespace Rapicorn
  * @brief The Rapicorn namespace encompasses core utilities and toolkit functionality.
  *
  * The core utilities are available via including <rapicorn-core.hh> and

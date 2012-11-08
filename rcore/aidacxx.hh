@@ -18,7 +18,7 @@ template<class Signature> struct FieldTools;
 
 namespace Rapicorn { namespace Aida {
 
-/// Internal types, used by the CxxStub code generator.
+/// The CxxStub namespace contains internal types for the stub code generator.
 namespace CxxStub {
 
 /// Handles remote (dis-)connection and client side dispatching of events via Rapicorn signals.

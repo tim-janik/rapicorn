@@ -4,7 +4,7 @@
 
 namespace Rapicorn {
 
-/// @namespace Rapicorn::Unicode The Rapicorn::Unicode namespace provides support for the Unicode standard and UTF-8 encoding.
+/// The Unicode namespace provides support for the Unicode standard and UTF-8 encoding.
 namespace Unicode {
 
 /* --- unichar ctype.h equivalents --- */
