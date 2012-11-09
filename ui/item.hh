@@ -7,7 +7,6 @@
 #include <ui/events.hh>
 #include <ui/region.hh>
 #include <ui/commands.hh>
-#include <ui/properties.hh>
 #include <ui/heritage.hh>
 
 namespace Rapicorn {

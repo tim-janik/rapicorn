@@ -2,7 +2,8 @@
 #ifndef __RAPICORN_PROPERTIES_HH__
 #define __RAPICORN_PROPERTIES_HH__
 
-#include <ui/utilities.hh>
+#include <rcore/enumdefs.hh>
+#include <rcore/strings.hh>
 
 namespace Rapicorn {
 

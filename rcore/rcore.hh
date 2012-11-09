@@ -13,6 +13,7 @@
 #include <rcore/loop.hh>
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
+#include <rcore/properties.hh>
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
 #include <rcore/math.hh>
