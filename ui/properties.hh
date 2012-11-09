@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_PROPERTIES_HH__
 #define __RAPICORN_PROPERTIES_HH__
 
-#include <ui/primitives.hh>
 #include <ui/utilities.hh>
 
 namespace Rapicorn {
@@ -172,33 +171,6 @@ create_property (void (Class::*setter) (double), double (Class::*getter) () cons
                  double min_value, double max_value, double stepping, const char *hints)
 { return new PropertyRange<Class,double> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 
-/* --- point --- */
-template<class Class>
-struct PropertyPoint : Property {
-  Point minimum_value;
-  Point maximum_value;
-  void  (Class::*setter) (Point);
-  Point (Class::*getter) ();
-  PropertyPoint (void (Class::*csetter) (Point), Point (Class::*cgetter) (),
-                 const char *cident, const char *clabel, const char *cblurb,
-                 Point cminimum_value, Point cmaximum_value,
-                 const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue);
-  virtual String get_value   (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, Point &minimum, Point &maximum);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
-};
-template<class Class> inline Property*
-create_property (void (Class::*setter) (Point), Point (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb,
-                 const Point &min_value, const Point &max_value, const char *hints)
-{ return new PropertyPoint<Class> (setter, getter, ident, label, blurb, min_value, max_value, hints); }
-template<class Class> inline Property*
-create_property (void (Class::*setter) (Point), Point (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 const Point &min_value, const Point &max_value, const char *hints)
-{ return new PropertyPoint<Class> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, hints); }
-
 /* --- string --- */
 template<class Class>
 struct PropertyString : Property {
@@ -312,46 +284,6 @@ template<class Class, typename Type> bool
 PropertyRange<Class,Type>::get_range (Deletable *obj, double &minimum, double &maximum, double &vstepping)
 {
   minimum = minimum_value, maximum = maximum_value, vstepping = stepping;
-  return true;
-}
-
-/* point property implementation */
-template<class Class>
-PropertyPoint<Class>::PropertyPoint (void (Class::*csetter) (Point), Point (Class::*cgetter) (),
-                                     const char *cident, const char *clabel, const char *cblurb,
-                                     Point cminimum_value, Point cmaximum_value,
-                                     const char *chints) :
-  Property (cident, clabel, cblurb, chints),
-  setter (csetter),
-  getter (cgetter)
-{}
-
-template<class Class> void
-PropertyPoint<Class>::set_value (Deletable *obj, const String &svalue)
-{
-  Class *instance = dynamic_cast<Class*> (obj);
-  Point point;
-  vector<double> dvec = string_to_double_vector (svalue);
-  if (dvec.size() == 2)
-    point = Point (dvec[0], dvec[1]);
-  (instance->*setter) (point);
-}
-
-template<class Class> String
-PropertyPoint<Class>::get_value (Deletable *obj)
-{
-  Class *instance = dynamic_cast<Class*> (obj);
-  Point point = (instance->*getter) ();
-  vector<double> dvec;
-  dvec.push_back (point.x);
-  dvec.push_back (point.y);
-  return string_from_double_vector (dvec);
-}
-
-template<class Class> bool
-PropertyPoint<Class>::get_range (Deletable *obj, Point &minimum, Point &maximum)
-{
-  minimum = minimum_value, maximum = maximum_value;
   return true;
 }
 

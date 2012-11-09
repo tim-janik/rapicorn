@@ -15,8 +15,10 @@ class ArrangementImpl : public virtual MultiContainerImpl, public virtual Arrang
 public:
   explicit                      ArrangementImpl         ();
   virtual                       ~ArrangementImpl        ();
-  virtual Point                 origin                  ()                      { return m_origin; }
-  virtual void                  origin                  (Point p)               { m_origin = p; invalidate(); }
+  virtual double                xorigin                 ()                      { return m_origin.x; }
+  virtual void                  xorigin                 (double v)              { m_origin.x = v; invalidate(); }
+  virtual double                yorigin                 ()                      { return m_origin.y; }
+  virtual void                  yorigin                 (double v)              { m_origin.y = v; invalidate(); }
   virtual float                 origin_hanchor          ()                      { return m_origin_hanchor; }
   virtual void                  origin_hanchor          (float align)           { m_origin_hanchor = align; invalidate(); }
   virtual float                 origin_vanchor          ()                      { return m_origin_vanchor; }

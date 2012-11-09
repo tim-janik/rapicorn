@@ -8,7 +8,8 @@ const PropertyList&
 Arrangement::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (Arrangement, xorigin,        _("X-Origin"),           _("The x coordinate origin to be displayed by the arrangement"), -MAXDOUBLE, +MAXDOUBLE, 10, "rw"),
+    MakeProperty (Arrangement, yorigin,        _("Y-Origin"),           _("The y coordinate origin to be displayed by the arrangement"), -MAXDOUBLE, +MAXDOUBLE, 10, "rw"),
     MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
     MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
   };

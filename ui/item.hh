@@ -304,8 +304,6 @@ public: /* packing */
   void               valign          (double f);
   double             vscale          () const   { return pack_info ().vscale; }
   void               vscale          (double f);
-  Point              position        () const   { const PackInfo &pi = pack_info(); return Point (pi.hposition, pi.vposition); }
-  void               position        (Point p); // mirrors (hposition,vposition)
   double             hanchor         () const   { return halign(); } // mirrors halign
   void               hanchor         (double a) { halign (a); }      // mirrors halign
   double             vanchor         () const   { return valign(); } // mirrors valign

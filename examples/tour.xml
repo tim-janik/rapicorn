@@ -35,10 +35,10 @@
   <!-- Arrangement test -->
   <tmpl:define id="arrangement-test" inherit="Frame" frame-type="etched-out">
     <tmpl:argument id="label-variable" default="Middle Label (sinfex test)"/>
-    <Arrangement origin="0 0" >
-      <Label markup-text="First?"  hanchor="1" position="-70 30"/>
+    <Arrangement>
+      <Label markup-text="First?"  hanchor="1" hposition="-70" vposition="30"/>
       <Label markup-text="`label_variable`" />
-      <Label markup-text="Third Label" hanchor="0" position="75 30" />
+      <Label markup-text="Third Label" hanchor="0" hposition="75" vposition="30" />
     </Arrangement>
   </tmpl:define>
 
