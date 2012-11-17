@@ -137,7 +137,7 @@ ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
 void
 ItemListImpl::model (const String &modelurl)
 {
-  BaseObject *obj = plor_get (modelurl);
+  BaseObject *obj = NULL; // FIXME: plor_get (modelurl);
   ListModelIface *model = dynamic_cast<ListModelIface*> (obj);
   ListModelIface *oldmodel = m_model;
   m_model = model;
@@ -163,7 +163,7 @@ ItemListImpl::model (const String &modelurl)
 String
 ItemListImpl::model () const
 {
-  return m_model ? m_model->plor_name() : "";
+  return ""; // FIME: m_model ? m_model->plor_name() : "";
 }
 
 void

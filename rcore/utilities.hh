@@ -663,10 +663,7 @@ class BaseObject : public virtual ReferenceCountable, public virtual DataListCon
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
-  static BaseObject* plor_get  (const String &plor_url);
-  void               plor_name (const String &plor_name);
 public:
-  String             plor_name () const;
   virtual void       dispose   ();
 };
 class NullInterface : std::exception {};
