@@ -887,7 +887,6 @@ seed_buffer (vector<uint8> &randbuf)
 }
 
 static uint32 process_hash = 0;
-static uint64 locatable_process_hash64 = 0;
 
 static void
 process_handle_and_seed_init (const StringVector &args)
@@ -911,7 +910,6 @@ process_handle_and_seed_init (const StringVector &args)
   for (uint i = 0; i < randbuf.size(); i++)
     phash64 = (phash64 << 5) - phash64 + randbuf[i];
   process_hash = phash64 % 4294967291U;
-  locatable_process_hash64 = (uint64 (process_hash) << 32) + 0xa0000000;
 
   /* gather random seed entropy, this should include the entropy
    * from process_hash, but not be predictable from it.
@@ -1608,59 +1606,6 @@ IdAllocatorImpl::seen_id (uint unique_id)
   bool inrange = unique_id >= counterstart && unique_id < counter;
   mutex.unlock();
   return inrange;
-}
-
-
-/* --- Locatable --- */
-#define LOCATOR_ID_OFFSET 0xa0000000
-static Spinlock           locatable_mutex;
-static vector<Locatable*> locatable_objs;
-static IdAllocatorImpl    locator_ids (1, 227); // has own mutex
-
-Locatable::Locatable () :
-  m_locatable_index (0)
-{}
-
-Locatable::~Locatable ()
-{
-  if (UNLIKELY (m_locatable_index))
-    {
-      ScopedLock<Spinlock> locker (locatable_mutex);
-      assert_return (m_locatable_index <= locatable_objs.size());
-      const uint index = m_locatable_index - 1;
-      locatable_objs[index] = NULL;
-      locator_ids.release_id (m_locatable_index);
-      m_locatable_index = 0;
-    }
-}
-
-uint64
-Locatable::locatable_id () const
-{
-  if (UNLIKELY (m_locatable_index == 0))
-    {
-      m_locatable_index = locator_ids.alloc_id();
-      const uint index = m_locatable_index - 1;
-      ScopedLock<Spinlock> locker (locatable_mutex);
-      if (index >= locatable_objs.size())
-        locatable_objs.resize (index + 1);
-      locatable_objs[index] = const_cast<Locatable*> (this);
-    }
-  return locatable_process_hash64 + m_locatable_index;
-}
-
-Locatable*
-Locatable::from_locatable_id (uint64 locatable_id)
-{
-  if (UNLIKELY (locatable_id == 0))
-    return NULL;
-  if (locatable_id >> 32 != locatable_process_hash64 >> 32)
-    return NULL; // id from wrong process
-  const uint index = locatable_id - locatable_process_hash64  - 1;
-  ScopedLock<Spinlock> locker (locatable_mutex);
-  assert_return (index < locatable_objs.size(), NULL);
-  Locatable *_this = locatable_objs[index];
-  return _this;
 }
 
 /* --- ReferenceCountable --- */

@@ -321,67 +321,6 @@ test_id_allocator ()
 REGISTER_TEST ("General/Id Allocator", test_id_allocator);
 
 static void
-test_locatable_ids ()
-{
-  SomeObject *o1 = new SomeObject();
-  SomeObject *o2 = new SomeObject();
-  SomeObject *o3 = new SomeObject();
-  uint64 id1 = o1->locatable_id();
-  uint64 id2 = o2->locatable_id();
-  uint64 id3 = o3->locatable_id();
-  assert (id1 != id2);
-  assert (id2 != id3);
-  assert (id1 != id3);
-  Locatable *l0 = Locatable::from_locatable_id (0x00ff00ff00ff00ffULL);
-  assert (l0 == NULL);
-  Locatable *l1 = Locatable::from_locatable_id (id1);
-  Locatable *l2 = Locatable::from_locatable_id (id2);
-  Locatable *l3 = Locatable::from_locatable_id (id3);
-  assert (l1 == o1);
-  assert (l2 == o2);
-  assert (l3 == o3);
-  assert (id1 == l1->locatable_id());
-  assert (id2 == l2->locatable_id());
-  assert (id3 == l3->locatable_id());
-  unref (ref_sink (o1));
-  unref (ref_sink (o2));
-  unref (ref_sink (o3));
-  l1 = Locatable::from_locatable_id (id1);
-  l2 = Locatable::from_locatable_id (id2);
-  l3 = Locatable::from_locatable_id (id3);
-  assert (l1 == NULL);
-  assert (l2 == NULL);
-  assert (l3 == NULL);
-  o1 = new SomeObject();
-  assert (o1->locatable_id() != id1);
-  assert (o1->locatable_id() != id2);
-  assert (o1->locatable_id() != id3);
-  o2 = new SomeObject();
-  assert (o2->locatable_id() != id1);
-  assert (o2->locatable_id() != id2);
-  assert (o2->locatable_id() != id3);
-  o3 = new SomeObject();
-  assert (o3->locatable_id() != id1);
-  assert (o3->locatable_id() != id2);
-  assert (o3->locatable_id() != id3);
-  assert (o1 == Locatable::from_locatable_id (o1->locatable_id()));
-  assert (o2 == Locatable::from_locatable_id (o2->locatable_id()));
-  assert (o3 == Locatable::from_locatable_id (o3->locatable_id()));
-  unref (ref_sink (o1));
-  unref (ref_sink (o2));
-  unref (ref_sink (o3));
-  const uint big = 999;
-  SomeObject *buffer[big];
-  for (uint j = 0; j < big; j++)
-    buffer[j] = ref_sink (new SomeObject());
-  for (uint j = 0; j < big; j++)
-    assert (buffer[j] == Locatable::from_locatable_id (buffer[j]->locatable_id()));
-  for (uint j = 0; j < big; j++)
-    unref (buffer[j]);
-}
-REGISTER_TEST ("General/Locatable IDs", test_locatable_ids);
-
-static void
 test_dtoi32()
 {
   TCMP (_dtoi32_generic (0.0), ==, 0);
@@ -761,14 +700,6 @@ main (int   argc,
     {
       init_core (app_ident, &argc, argv);
       printout ("%s", process_handle().c_str());
-      return 0;
-    }
-
-  if (argc >= 2 && String ("--print-locatable-id") == argv[1])
-    {
-      init_core (app_ident, &argc, argv);
-      SomeObject *obj = new SomeObject();
-      printout ("0x%016llx\n", obj->locatable_id());
       return 0;
     }
 

@@ -444,17 +444,6 @@ template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return ob
 template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
 template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
-/* --- Locatable --- */
-class Locatable : public virtual ReferenceCountable {
-  mutable uint m_locatable_index;
-protected:
-  explicit          Locatable         ();
-  virtual          ~Locatable         ();
-public:
-  uint64            locatable_id      () const;
-  static Locatable* from_locatable_id (uint64 locatable_id);
-};
-
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>
 static inline std::pair<RandIter,bool>
@@ -670,7 +659,7 @@ public: /// @name Accessing custom data members
 };
 
 /* --- BaseObject --- */
-class BaseObject : public virtual Locatable, public virtual DataListContainer, protected NonCopyable {
+class BaseObject : public virtual ReferenceCountable, public virtual DataListContainer, protected NonCopyable {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
