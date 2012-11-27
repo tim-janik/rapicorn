@@ -167,6 +167,11 @@ RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unich
 #define	RAPICORN_IS_DIR_SEPARATOR(c)        (RAPICORN_DIR_SEPARATOR == (c))
 #define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) (RAPICORN_SEARCHPATH_SEPARATOR == (c))
 
+// == C++ Macros ==
+#define RAPICORN_CLASS_NON_COPYABLE(ClassName)                                  private: \
+  /*copy-ctor*/ ClassName  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))); \
+  ClassName&    operator=  (const ClassName&) __attribute__ ((error ("NON_COPYABLE")))
+
 // == X86 Architecture ==
 #if defined __i386__ || defined __x86_64__
 #define RAPICORN_HAVE_X86_RDTSC  1
