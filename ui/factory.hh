@@ -42,8 +42,9 @@ UserSource factory_context_source    (FactoryContext *fc);
 String     factory_context_impl_type (FactoryContext *fc);
 
 /* --- item type registration --- */
-struct ItemTypeFactory : protected Deletable, protected NonCopyable {
+struct ItemTypeFactory : protected Deletable {
   const String  qualified_type;
+  RAPICORN_CLASS_NON_COPYABLE (ItemTypeFactory);
 protected:
   static void   register_item_factory   (const ItemTypeFactory  &itfactory);
   static void   sanity_check_identifier (const char             *namespaced_ident);

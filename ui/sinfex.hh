@@ -6,7 +6,8 @@
 
 namespace Rapicorn {
 
-class Sinfex : public virtual ReferenceCountable, protected NonCopyable {
+class Sinfex : public virtual ReferenceCountable {
+  RAPICORN_CLASS_NON_COPYABLE (Sinfex);
 protected:
   uint          *m_start;
   explicit       Sinfex ();

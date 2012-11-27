@@ -10,7 +10,8 @@ class ScreenDriver;
 class ScreenCommand;
 
 /// Interface class for managing window contents on screens and display devices.
-class ScreenWindow : public virtual Deletable, protected NonCopyable, public virtual std::enable_shared_from_this<ScreenWindow> {
+class ScreenWindow : public virtual Deletable, public virtual std::enable_shared_from_this<ScreenWindow> {
+  RAPICORN_CLASS_NON_COPYABLE (ScreenWindow);
 public:
   /// Flags used to request and reflect certain window operations and states.
   enum Flags {
@@ -125,10 +126,11 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
 };
 
 /// Management class for ScreenWindow driver implementations.
-class ScreenDriver : protected NonCopyable {
+class ScreenDriver {
   AsyncNotifyingQueue<ScreenCommand*> m_command_queue;
   AsyncBlockingQueue<ScreenCommand*>  m_reply_queue;
   std::thread                         m_thread_handle;
+  RAPICORN_CLASS_NON_COPYABLE (ScreenDriver);
 protected:
   ScreenDriver         *m_sibling;
   String                m_name;
