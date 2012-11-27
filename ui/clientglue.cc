@@ -133,33 +133,26 @@ namespace { // Anon
 static Rapicorn::Aida::ClientConnection _clientglue_connection;
 class ConnectionContext {
   // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
-  typedef std::map <Rapicorn::Aida::uint64_t, Rapicorn::Aida::NonCopyable*> ContextMap;
+  typedef std::map <Rapicorn::Aida::uint64_t, void*> ContextMap;
   ContextMap context_map;
 public:
-  Rapicorn::Aida::NonCopyable*
+  void*
   find_context (Rapicorn::Aida::uint64_t ipcid)
   {
     ContextMap::iterator it = context_map.find (ipcid);
     return LIKELY (it != context_map.end()) ? it->second : NULL;
   }
   void
-  add_context (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx)
+  add_context (Rapicorn::Aida::uint64_t ipcid, void *ctx)
   {
     context_map[ipcid] = ctx;
   }
 };
 static __thread ConnectionContext *ccontext = NULL;
-static inline void
-connection_context4id (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx)
-{
-  if (!ccontext)
-    ccontext = new ConnectionContext();
-  ccontext->add_context (ipcid, ctx);
-}
 template<class Context> static inline Context*
 connection_id2context (Rapicorn::Aida::uint64_t ipcid)
 {
-  Rapicorn::Aida::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
+  void *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
   if (UNLIKELY (!ctx))
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);

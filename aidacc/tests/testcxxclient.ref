@@ -35,7 +35,6 @@ Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
 Rapicorn::Aida::uint64_t connection_handle2id  (const Rapicorn::Aida::SmartHandle &h) { return h._rpc_id(); }
-static inline void       connection_context4id (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx) {}
 template<class C> C*     connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
 
@@ -842,7 +841,9 @@ namespace MandatoryNamespace {
 // === FirstInterface ===
 static inline void ref   (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
-struct FirstInterface_Context$ : public Rapicorn::Aida::NonCopyable {
+struct FirstInterface_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (FirstInterface_Context$);
+public:
   struct SmartHandle$ : public FirstInterfaceHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1320,7 +1321,9 @@ namespace InterfaceTests {
 // === UIWidgetArea ===
 static inline void ref   (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
-struct UIWidgetArea_Context$ : public Rapicorn::Aida::NonCopyable {
+struct UIWidgetArea_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (UIWidgetArea_Context$);
+public:
   struct SmartHandle$ : public UIWidgetAreaHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1617,7 +1620,9 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
 // === Parent ===
 static inline void ref   (ParentHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (ParentHandle&) {} // dummy stub for Signal<>.emit
-struct Parent_Context$ : public Rapicorn::Aida::NonCopyable {
+struct Parent_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (Parent_Context$);
+public:
   struct SmartHandle$ : public ParentHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1699,7 +1704,9 @@ ParentHandle::cast_types()
 // === Child ===
 static inline void ref   (ChildHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (ChildHandle&) {} // dummy stub for Signal<>.emit
-struct Child_Context$ : public Rapicorn::Aida::NonCopyable {
+struct Child_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (Child_Context$);
+public:
   struct SmartHandle$ : public ChildHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1776,7 +1783,9 @@ ChildHandle::cast_types()
 // === Descendant ===
 static inline void ref   (DescendantHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (DescendantHandle&) {} // dummy stub for Signal<>.emit
-struct Descendant_Context$ : public Rapicorn::Aida::NonCopyable {
+struct Descendant_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (Descendant_Context$);
+public:
   struct SmartHandle$ : public DescendantHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1853,7 +1862,9 @@ DescendantHandle::cast_types()
 // === GrandChild ===
 static inline void ref   (GrandChildHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (GrandChildHandle&) {} // dummy stub for Signal<>.emit
-struct GrandChild_Context$ : public Rapicorn::Aida::NonCopyable {
+struct GrandChild_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (GrandChild_Context$);
+public:
   struct SmartHandle$ : public GrandChildHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -1970,7 +1981,9 @@ QuickSequenceStruct::append_back()
 // === QuickIface ===
 static inline void ref   (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
-struct QuickIface_Context$ : public Rapicorn::Aida::NonCopyable {
+struct QuickIface_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (QuickIface_Context$);
+public:
   struct SmartHandle$ : public QuickIfaceHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -2062,7 +2075,9 @@ QuickIfaceHandle::simple_function (int arg_i)
 // === MethodTestInterface ===
 static inline void ref   (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
-struct MethodTestInterface_Context$ : public Rapicorn::Aida::NonCopyable {
+struct MethodTestInterface_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (MethodTestInterface_Context$);
+public:
   struct SmartHandle$ : public MethodTestInterfaceHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -2323,7 +2338,9 @@ MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
 // === SignalTestInterface ===
 static inline void ref   (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
-struct SignalTestInterface_Context$ : public Rapicorn::Aida::NonCopyable {
+struct SignalTestInterface_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (SignalTestInterface_Context$);
+public:
   struct SmartHandle$ : public SignalTestInterfaceHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -2581,7 +2598,9 @@ SignalTestInterfaceHandle::sig_self_args ()
 // === ChildInheritingSignals ===
 static inline void ref   (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
-struct ChildInheritingSignals_Context$ : public Rapicorn::Aida::NonCopyable {
+struct ChildInheritingSignals_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (ChildInheritingSignals_Context$);
+public:
   struct SmartHandle$ : public ChildInheritingSignalsHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -2666,7 +2685,9 @@ ChildInheritingSignalsHandle::sig_child_signal ()
 // === AnotherChild ===
 static inline void ref   (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
-struct AnotherChild_Context$ : public Rapicorn::Aida::NonCopyable {
+struct AnotherChild_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (AnotherChild_Context$);
+public:
   struct SmartHandle$ : public AnotherChildHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -2743,7 +2764,9 @@ AnotherChildHandle::cast_types()
 // === PropertyTester ===
 static inline void ref   (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
-struct PropertyTester_Context$ : public Rapicorn::Aida::NonCopyable {
+struct PropertyTester_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (PropertyTester_Context$);
+public:
   struct SmartHandle$ : public PropertyTesterHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -3068,7 +3091,9 @@ namespace RapicornAidaTest {
 // === ButtonArea ===
 static inline void ref   (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
-struct ButtonArea_Context$ : public Rapicorn::Aida::NonCopyable {
+struct ButtonArea_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (ButtonArea_Context$);
+public:
   struct SmartHandle$ : public ButtonAreaHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
@@ -3262,7 +3287,9 @@ ButtonAreaHandle::click_type (ClickType value)
 // === PureMethods ===
 static inline void ref   (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
-struct PureMethods_Context$ : public Rapicorn::Aida::NonCopyable {
+struct PureMethods_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (PureMethods_Context$);
+public:
   struct SmartHandle$ : public PureMethodsHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;

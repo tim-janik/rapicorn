@@ -229,15 +229,6 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
-// == NonCopyable ==
-class NonCopyable {
-  NonCopyable& operator=   (const NonCopyable&);
-  /*copy*/     NonCopyable (const NonCopyable&);
-protected:
-  /*ctor*/     NonCopyable () {}
-  /*dtor*/    ~NonCopyable () {}
-};
-
 // == SmartHandle ==
 class SmartHandle {
   uint64_t m_rpc_id;
