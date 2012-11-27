@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class QuickTimer : protected NonCopyable {
+class QuickTimer {
   enum Type { NONE, PROCESS, RDTSC, TIMEOFDAY };
   uint64        m_usecs, m_start, m_mark;
   static uint64 volatile timer_pcounter;
@@ -19,6 +19,7 @@ class QuickTimer : protected NonCopyable {
   static void   init_timers   ();
   static void   ref_timers    ();
   bool          time_elapsed  ();
+  RAPICORN_CLASS_NON_COPYABLE (QuickTimer);
 public:
   explicit      QuickTimer      (uint64 usecs);
   virtual      ~QuickTimer      ();

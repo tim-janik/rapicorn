@@ -8,7 +8,7 @@ namespace Rapicorn {
 namespace Signals {
 
 /* --- EmissionBase --- */
-struct EmissionBase : protected NonCopyable /// Class to keep emission state during signal emission iteration.
+struct EmissionBase /// Class to keep emission state during signal emission iteration.
 {
   bool restart_emission;
   bool stop_emission;
@@ -16,18 +16,20 @@ struct EmissionBase : protected NonCopyable /// Class to keep emission state dur
     restart_emission (true),
     stop_emission (false)
   {}
+  RAPICORN_CLASS_NON_COPYABLE (EmissionBase);
 };
 
 /* --- TrampolineLink --- */
 typedef ptrdiff_t ConId;
 /// TrampolineLink is the base class for all signal handler connection objects.
-class TrampolineLink : public ReferenceCountable, protected NonCopyable {
+class TrampolineLink : public ReferenceCountable {
   friend    class SignalBase;
   TrampolineLink *next, *prev;
   uint            m_callable : 1;
   uint            m_with_emitter : 1;
   uint            m_linking_owner : 1;
   inline void     with_emitter  (bool b) { m_with_emitter = b; }
+  RAPICORN_CLASS_NON_COPYABLE (TrampolineLink);
 protected:
   inline void     callable      (bool b) { m_callable = b; }
   inline ConId    con_id        () const { return (ptrdiff_t) this; }
@@ -45,7 +47,7 @@ public:
 };
 
 /* --- SignalBase --- */
-class SignalBase : protected NonCopyable /// Signal base class that all Signal classes inherit from.
+class SignalBase /// Signal base class that all Signal classes inherit from.
 {
   friend             class SignalProxyBase;
   class EmbeddedLink : public TrampolineLink /// Internal helper structure for TrampolineLink administration.
@@ -57,6 +59,7 @@ class SignalBase : protected NonCopyable /// Signal base class that all Signal c
     void                   check_last_ref        () const { RAPICORN_ASSERT (ref_count() == 1); }
   };
   EmbeddedLink             start;
+  RAPICORN_CLASS_NON_COPYABLE (SignalBase);
 protected:
   template<class Emission> struct Iterator;
   inline TrampolineLink*   start_link            () { return &start; }
@@ -92,7 +95,7 @@ public:
 
 /* --- Signal Iterator --- */
 template<class Emission>
-class SignalBase::Iterator : protected NonCopyable /// Signal iterators walk the handler list during emissions.
+class SignalBase::Iterator /// Signal iterators walk the handler list during emissions.
 {
   Iterator& operator= (const Iterator&);
 public:
@@ -159,11 +162,11 @@ public:
 
 // === Collectors ===
 template<typename Result>
-struct CollectorVector : protected NonCopyable /// Collect signal handler return values in a std::vector.
+struct CollectorVector /// Collect signal handler return values in a std::vector.
 {
   typedef std::vector<Result> result_type;
-  template<typename InputIterator>
-  result_type operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     result_type result = result_type();
     while (begin != end)
@@ -175,11 +178,11 @@ struct CollectorVector : protected NonCopyable /// Collect signal handler return
   }
 };
 template<typename Result>
-struct CollectorLast : protected NonCopyable /// Return the last handler result as signal emission result.
+struct CollectorLast /// Return the last handler result as signal emission result.
 {
   typedef Result result_type;
-  template<typename InputIterator>
-  Result operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     Result result = Result();
     while (begin != end)
@@ -194,11 +197,11 @@ template<typename Result>
 struct CollectorDefault : CollectorLast<Result> /// The default collector type used by all underspecified signals.
 {};
 template<>
-struct CollectorDefault<void> : protected NonCopyable /// Specialisation used for Signals with void return.
+struct CollectorDefault<void> /// Specialisation used for Signals with void return.
 {
   typedef void result_type;
-  template<typename InputIterator>
-  void operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     while (begin != end)
       {
@@ -208,11 +211,11 @@ struct CollectorDefault<void> : protected NonCopyable /// Specialisation used fo
   }
 };
 template<typename Result>
-struct CollectorSum : protected NonCopyable /// Return the cumulative sum of all signal handlers as emission result.
+struct CollectorSum /// Return the cumulative sum of all signal handlers as emission result.
 {
   typedef Result result_type;
-  template<typename InputIterator>
-  Result operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     Result result = Result();
     while (begin != end)
@@ -224,11 +227,11 @@ struct CollectorSum : protected NonCopyable /// Return the cumulative sum of all
   }
 };
 template<typename Result>
-struct CollectorWhile0 : protected NonCopyable /// Keep signal emission going while all handlers return 0 (false).
+struct CollectorWhile0 /// Keep signal emission going while all handlers return 0 (false).
 {
   typedef Result result_type;
-  template<typename InputIterator>
-  Result operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     Result result = Result();   // result = 0
     while (begin != end)
@@ -242,11 +245,11 @@ struct CollectorWhile0 : protected NonCopyable /// Keep signal emission going wh
   }
 };
 template<typename Result>
-struct CollectorUntil0 : protected NonCopyable /// Keep signal emissions going while all handlers return !0 (true).
+struct CollectorUntil0 /// Keep signal emissions going while all handlers return !0 (true).
 {
   typedef Result result_type;
-  template<typename InputIterator>
-  Result operator() (InputIterator begin, InputIterator end)
+  template<typename InputIterator> result_type
+  operator() (InputIterator begin, InputIterator end)
   {
     Result result = !Result();  // result = !0
     while (begin != end)
@@ -262,9 +265,10 @@ struct CollectorUntil0 : protected NonCopyable /// Keep signal emissions going w
 
 // === ScopeReference ===
 template<class Instance, typename Mark>
-class ScopeReference : protected NonCopyable /// This class is used to force ref/unref on the Emitter around Signal.emit().
+class ScopeReference /// This class is used to force ref/unref on the Emitter around Signal.emit().
 {
   Instance &m_instance;
+  RAPICORN_CLASS_NON_COPYABLE (ScopeReference);
 public:
   ScopeReference  (Instance &instance) : m_instance (instance) { ref (m_instance); }
   ~ScopeReference ()                                           { unref (m_instance); }
@@ -272,8 +276,9 @@ public:
 struct ScopeReferenceFinalizationMark : CollectorDefault<void> /// Internal class used by SignalFinalize.
 {};
 template<class Instance>                /// Internal class used by SignalFinalize.
-class ScopeReference<Instance, ScopeReferenceFinalizationMark> : protected NonCopyable {
+class ScopeReference<Instance, ScopeReferenceFinalizationMark> {
   Instance &m_instance;
+  RAPICORN_CLASS_NON_COPYABLE (ScopeReference);
 public:
   ScopeReference  (Instance &instance) : m_instance (instance) { RAPICORN_ASSERT (m_instance.finalizing() == true); }
   ~ScopeReference ()                                           { RAPICORN_ASSERT (m_instance.finalizing() == true); }
@@ -293,7 +298,7 @@ public:
 };
 
 /* --- SlotBase --- */
-class SlotBase : protected NonCopyable /// Base class for all signal slot objects.
+class SlotBase /// Base class for all signal slot objects.
 {
 protected:
   TrampolineLink *m_link;

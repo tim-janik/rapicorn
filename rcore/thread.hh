@@ -105,9 +105,10 @@ struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {}; ///< Flag for balancing un
  * So this mode can be used to manage ownership for an already locked mutex.
  */
 template<class MUTEX>
-class ScopedLock : protected NonCopyable {
+class ScopedLock {
   MUTEX         &m_mutex;
   volatile int   m_count;
+  RAPICORN_CLASS_NON_COPYABLE (ScopedLock);
 public:
   inline     ~ScopedLock () { while (m_count < 0) lock(); while (m_count > 0) unlock(); }
   inline void lock       () { m_mutex.lock(); m_count++; }

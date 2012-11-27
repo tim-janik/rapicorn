@@ -178,15 +178,6 @@ public:
   static String cxx_demangle       (const char *mangled_identifier);
 };
 
-/* --- NonCopyable --- */
-class NonCopyable {
-  NonCopyable& operator=   (const NonCopyable&);
-  /*Copy*/     NonCopyable (const NonCopyable&);
-protected:
-  /*Con*/      NonCopyable () {}
-  /*Des*/     ~NonCopyable () {}
-};
-
 /* --- private class copies, class ClassDoctor --- */
 #ifdef  __RAPICORN_BUILD__
 class ClassDoctor;
@@ -273,7 +264,8 @@ void* malloc_aligned            (size_t                total_size,
 int   fmsb                      (uint64                value) RAPICORN_CONST;
 
 /* --- Id Allocator --- */
-class IdAllocator : protected NonCopyable {
+class IdAllocator {
+  RAPICORN_CLASS_NON_COPYABLE (IdAllocator);
 protected:
   explicit            IdAllocator ();
 public:
@@ -348,6 +340,7 @@ class ReferenceCountable : public virtual Deletable {
   { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
   inline uint32           ref_get() const
   { return __sync_fetch_and_add (&ref_field, 0); }
+  RAPICORN_CLASS_NON_COPYABLE (ReferenceCountable);
 protected:
   inline uint32
   ref_count() const
@@ -659,7 +652,7 @@ public: /// @name Accessing custom data members
 };
 
 /* --- BaseObject --- */
-class BaseObject : public virtual ReferenceCountable, public virtual DataListContainer, protected NonCopyable {
+class BaseObject : public virtual ReferenceCountable, public virtual DataListContainer {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
@@ -668,10 +661,11 @@ public:
 };
 class NullInterface : std::exception {};
 
-struct BaseObject::InterfaceMatcher : protected NonCopyable {
+struct BaseObject::InterfaceMatcher {
   explicit      InterfaceMatcher (const String &ident) : m_ident (ident), m_match_found (false) {}
   bool          done             () const { return m_match_found; }
   virtual  bool match            (BaseObject *object, const String &ident = String()) = 0;
+  RAPICORN_CLASS_NON_COPYABLE (InterfaceMatcher);
 protected:
   const String &m_ident;
   bool          m_match_found;

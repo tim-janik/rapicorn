@@ -46,11 +46,12 @@ String       program_ident      ();
 String       program_cwd        ();
 
 // === initialization hooks ===
-class InitHook : protected NonCopyable {
+class InitHook {
   typedef void (*InitHookFunc) (const StringVector &args);
   InitHook    *next;
   InitHookFunc hook;
   const String m_name;
+  RAPICORN_CLASS_NON_COPYABLE (InitHook);
 protected:
   static void  invoke_hooks (const String&, int*, char**, const StringVector&);
 public:
