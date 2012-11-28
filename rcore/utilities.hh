@@ -562,6 +562,7 @@ class DataList {
     {}
   };
   NodeBase *nodes;
+  RAPICORN_CLASS_NON_COPYABLE (DataList);
 public:
   DataList() :
     nodes (NULL)
