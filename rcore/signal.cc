@@ -32,7 +32,7 @@ TrampolineLink::~TrampolineLink()
   assert_return (m_linking_owner == false);
   if (next || prev)
     {
-      // unlink() might have left leave next and prev
+      // unlink() might have left stale next and prev
       prev = next = NULL;
     }
 }

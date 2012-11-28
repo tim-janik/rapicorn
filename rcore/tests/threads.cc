@@ -677,6 +677,7 @@ struct MyDeletableHook : public Deletable::DeletionHook {
   {
     if (deletable)
       deletable = NULL;
+    // not deleting this, due to stack allocation
   }
   virtual
   ~MyDeletableHook ()
