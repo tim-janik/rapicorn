@@ -38,7 +38,7 @@ public:
 
 /* --- ItemImpl --- */
 typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
-class ItemImpl : public virtual ItemIface {
+class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;

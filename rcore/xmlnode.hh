@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class XmlNode : public virtual BaseObject {
+class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
   String                m_name; // element name
   XmlNode              *m_parent;
   StringVector          m_attribute_names;

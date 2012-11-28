@@ -652,7 +652,7 @@ public: /// @name Accessing custom data members
 };
 
 /* --- BaseObject --- */
-class BaseObject : public virtual ReferenceCountable, public virtual DataListContainer {
+class BaseObject : public virtual ReferenceCountable {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;

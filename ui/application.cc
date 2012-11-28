@@ -18,91 +18,149 @@ ApplicationIface::factory_window (const std::string &factory_definition)
   return Factory::check_ui_window (factory_definition);
 }
 
-typedef std::map<String,BaseObject*> StringObjectMap;
-static Mutex           xurl_mutex;
-static StringObjectMap xurl_map;
+struct XurlNode : public Deletable::DeletionHook {
+  String       xurl;
+  Deletable   *object;
+  bool         needs_remove;
+  explicit     XurlNode (const String &_xu, Deletable *_ob);
+  virtual void monitoring_deletable (Deletable &deletable) {}
+  virtual void dismiss_deletable ();
+  virtual     ~XurlNode();
+};
 
-static bool
-xurl_map_add (BaseObject   &object,
-              const String &key)
+class XurlMap {
+  typedef std::map<String,XurlNode*>           StringMap;
+  typedef std::map<const Deletable*,XurlNode*> ObjectMap;
+  StringMap     m_smap;
+  ObjectMap     m_omap;
+  XurlNode*     lookup_node (const String *xurl, const Deletable *object);
+public:
+  Deletable*    lookup (const String &xurl)     { XurlNode *xnode = lookup_node (&xurl, NULL); return xnode ? xnode->object : NULL; }
+  String        lookup (const Deletable *obj)   { XurlNode *xnode = lookup_node (NULL, obj);   return xnode ? xnode->xurl : ""; }
+  bool          add    (String xurl, Deletable *obj);
+  bool          remove (String xurl);
+  bool          remove (Deletable *obj);
+};
+
+bool
+XurlMap::add (String xurl, Deletable *obj)
 {
-  ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  if (it != xurl_map.end())
+  XurlNode *xnode = lookup_node (&xurl, obj);
+  if (xnode)
     return false;
-  xurl_map[key] = &object;
+  xnode = new XurlNode (xurl, obj);
+  m_smap[xnode->xurl] = xnode;
+  m_omap[xnode->object] = xnode;
   return true;
 }
 
-static bool
-xurl_map_sub (const String &key)
+bool
+XurlMap::remove (String xurl)
 {
-  ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  if (it != xurl_map.end())
+  auto sit = m_smap.find (xurl);
+  if (sit == m_smap.end())
+    return false;
+  XurlNode *xnode = sit->second;
+  auto oit = m_omap.find (xnode->object);
+  assert (oit != m_omap.end());
+  m_smap.erase (sit);
+  m_omap.erase (oit);
+  delete xnode;
+  return true;
+}
+
+bool
+XurlMap::remove (Deletable *obj)
+{
+  auto oit = m_omap.find (obj);
+  if (oit == m_omap.end())
+    return false;
+  XurlNode *xnode = oit->second;
+  auto sit = m_smap.find (xnode->xurl);
+  assert (sit != m_smap.end());
+  m_smap.erase (sit);
+  m_omap.erase (oit);
+  delete xnode;
+  return true;
+}
+
+XurlNode*
+XurlMap::lookup_node (const String *xurl, const Deletable *object)
+{
+  if (xurl)
     {
-      xurl_map.erase (it);
-      return true;
+      auto it = m_smap.find (*xurl);
+      if (it != m_smap.end())
+        return it->second;
     }
-  return false;
+  if (object)
+    {
+      auto it = m_omap.find (object);
+      if (it != m_omap.end())
+        return it->second;
+    }
+  return NULL;
 }
 
-static BaseObject*
-xurl_map_get (const String &key)
+static Mutex   xurl_mutex;
+static XurlMap xurl_map;
+
+XurlNode::XurlNode (const String &_xu, Deletable *_ob) :
+  xurl (_xu), object (_ob), needs_remove (0)
+{
+  deletable_add_hook (object);
+  needs_remove = true;
+}
+
+void
+XurlNode::dismiss_deletable ()
 {
   ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  return it != xurl_map.end() ? it->second : NULL;
+  needs_remove = false;
+  printerr ("DISMISS: deletable=%p hook=%p\n", object, this);
+  const bool deleted = xurl_map.remove (object);
+  // here, this is deleted
+  assert (deleted == true);
+  // this is leaked if deleted==false
 }
 
-static class XurlDataKey : public DataKey<String> {
-  virtual void destroy (String data) { xurl_map_sub (data); }
-} xurl_name_key;
+XurlNode::~XurlNode()
+{
+  if (needs_remove)
+    deletable_remove_hook (object);
+}
 
 bool
 ApplicationIface::xurl_add (const String &model_path, ListModelIface &model)
 {
-  assert_return (model_path.find ("//local/data/") == 0, false); // FIXME
+  assert_return (model_path.find ("//local/data/") == 0, false); // FIXME: should be auto-added?
   if (model_path.find ("//local/data/") != 0)
     return false;
-  const String xurl_name = model.get_data (&xurl_name_key);
-  if (!xurl_name.empty())
-    return false; // model already in map
-  if (!xurl_map_add (model, model_path))
-    return false; // model_path already in map
-  model.set_data (&xurl_name_key, model_path);
-  return true;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.add (model_path, &model);
 }
 
 bool
 ApplicationIface::xurl_sub (ListModelIface &model)
 {
-  const String xurl_name = model.get_data (&xurl_name_key);
-  if (!xurl_name.empty())
-    {
-      BaseObject *bo = xurl_map_get (xurl_name);
-      assert_return (bo == &model, false);
-      model.delete_data (&xurl_name_key);       // calls xurl_map_sub
-      bo = xurl_map_get (xurl_name);
-      assert_return (bo == NULL, false);
-      return true;
-    }
-  else
-    return false;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.remove (&model);
 }
 
 ListModelIface*
 ApplicationIface::xurl_find (const String &model_path)
 {
-  BaseObject *bo = model_path.empty() ? NULL : xurl_map_get (model_path);
-  return dynamic_cast<ListModelIface*> (bo);
+  ScopedLock<Mutex> locker (xurl_mutex);
+  Deletable *deletable = xurl_map.lookup (model_path);
+  locker.unlock();
+  return dynamic_cast<ListModelIface*> (deletable);
 }
 
 String
 ApplicationIface::xurl_path (const ListModelIface &model)
 {
-  const String xurl_name = model.get_data (&xurl_name_key);
-  return xurl_name;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.lookup (&model);
 }
 
 ApplicationImpl::ApplicationImpl() :
