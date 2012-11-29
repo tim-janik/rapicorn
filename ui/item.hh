@@ -23,7 +23,7 @@ class WindowImpl;
 class ViewportImpl;
 
 /* --- event handler --- */
-class EventHandler : public virtual BaseObject, public virtual ReferenceCountable {
+class EventHandler : public virtual ReferenceCountable {
   typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
