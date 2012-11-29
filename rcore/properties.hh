@@ -4,6 +4,7 @@
 
 #include <rcore/enumdefs.hh>
 #include <rcore/strings.hh>
+#include <rcore/objects.hh>
 
 namespace Rapicorn {
 

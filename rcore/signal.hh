@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_SIGNAL_HH__
 #define __RAPICORN_SIGNAL_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/objects.hh>
 
 namespace Rapicorn {
 namespace Signals {
