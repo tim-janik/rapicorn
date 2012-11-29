@@ -104,6 +104,16 @@ test_failing ()
   TASSERT (Test::trap_aborted() == true);
   TASSERT (Test::trap_stderr().find ("fail") != String::npos);
   TASSERT (Test::trap_stderr().find ("reach") != String::npos);
+
+  if (Test::trap_fork_silent())
+    {
+      struct ReferenceCountableWrapper : public ReferenceCountable {};
+      ReferenceCountableWrapper invalid_ref_countable_on_stack; // fatal: object allocated on stack instead of heap
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("alloc") != String::npos);
+  TASSERT (Test::trap_stderr().find ("stack") != String::npos);
 }
 REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 
