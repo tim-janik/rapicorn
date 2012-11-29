@@ -121,7 +121,7 @@ CommandDataArg<Class,Data>::exec (Deletable *obj, const StringSeq &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
-    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
   return (instance->*command_method) (data, args);
 }
 
@@ -137,7 +137,7 @@ CommandArg<Class>::exec (Deletable *obj, const StringSeq &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
-    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
   return (instance->*command_method) (args);
 }
 
@@ -154,7 +154,7 @@ CommandData<Class,Data>::exec (Deletable *obj, const StringSeq&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
-    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
   return (instance->*command_method) (data);
 }
 
@@ -170,7 +170,7 @@ CommandSimple<Class>::exec (Deletable *obj, const StringSeq&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
-    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
   return (instance->*command_method) ();
 }
 

@@ -194,7 +194,7 @@ ApplicationImpl::create_window (const std::string    &window_identifier,
   if (!window)
     {
       ref_sink (item);
-      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), item.typeid_pretty_name().c_str());
+      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), item.typeid_name().c_str());
       unref (item);
     }
   return window;

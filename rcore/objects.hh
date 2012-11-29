@@ -7,24 +7,23 @@
 
 namespace Rapicorn {
 
-/* --- typeid base type --- */
+// == VirtualTypeid ==
 class VirtualTypeid {
 protected:
   virtual      ~VirtualTypeid      ();
 public:
   String        typeid_name        ();
-  String        typeid_pretty_name ();
   static String cxx_demangle       (const char *mangled_identifier);
 };
 
-/* --- private class copies, class ClassDoctor --- */
+// == ClassDoctor (used for private class copies) ==
 #ifdef  __RAPICORN_BUILD__
 class ClassDoctor;
 #else
 class ClassDoctor {};
 #endif
 
-/* --- Deletable --- */
+// == Deletable ==
 /**
  * Deletable is a virtual base class that can be derived from (usually with
  * public virtual) to ensure an object has a vtable and a virtual destructor.
@@ -83,7 +82,7 @@ public: /// @name Accessing custom data members
   template<typename Type> inline void delete_data (DataKey<Type> *key)            { data_list.del (key); }
 };
 
-/* --- BaseObject --- */
+// == BaseObject ==
 class BaseObject : public virtual Deletable {
 protected:
   class                    InterfaceMatcher;

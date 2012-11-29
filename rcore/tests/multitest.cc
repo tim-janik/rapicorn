@@ -265,8 +265,8 @@ test_virtual_typeid()
   TypeA a;
   TypeB b;
   TCMP (a.typeid_name(), !=, b.typeid_name());
-  TCMPS (strstr (a.typeid_pretty_name().c_str(), "TypeA"), !=, NULL);
-  TCMPS (strstr (b.typeid_pretty_name().c_str(), "TypeB"), !=, NULL);
+  TCMPS (strstr (a.typeid_name().c_str(), "TypeA"), !=, NULL);
+  TCMPS (strstr (b.typeid_name().c_str(), "TypeB"), !=, NULL);
 }
 REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
 

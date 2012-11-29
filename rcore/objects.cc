@@ -13,12 +13,6 @@ VirtualTypeid::~VirtualTypeid ()
 String
 VirtualTypeid::typeid_name ()
 {
-  return typeid (*this).name();
-}
-
-String
-VirtualTypeid::typeid_pretty_name ()
-{
   return cxx_demangle (typeid (*this).name());
 }
 
