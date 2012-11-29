@@ -87,8 +87,8 @@ class BaseObject : public virtual Deletable {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
-public:
   virtual void       dispose   ();
+public:
 };
 class NullInterface : std::exception {};
 
