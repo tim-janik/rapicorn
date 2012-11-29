@@ -97,25 +97,25 @@ EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
-	${AIDACC} -G CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
+	${AIDACC} -G CxxStub -g serverhh -g iface-base=ReferenceCountable -g iface-postfix=Iface \
 	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_SERVERAPI_HH_ \
 	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
-	${AIDACC} -G CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
+	${AIDACC} -G CxxStub -g servercc -g iface-base=ReferenceCountable -g iface-postfix=Iface \
 	  -g RapicornSignal --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.hh
 clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.hh
-	${AIDACC} -G CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
+	${AIDACC} -G CxxStub -g clienthh -g iface-base=ReferenceCountable -g iface-postfix=Iface \
 	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
 	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
-	${AIDACC} -G CxxStub -g clientcc -g iface-base=BaseObject -g iface-postfix=Iface \
+	${AIDACC} -G CxxStub -g clientcc -g iface-base=ReferenceCountable -g iface-postfix=Iface \
 	  -g RapicornSignal --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh

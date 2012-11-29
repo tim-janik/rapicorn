@@ -331,112 +331,6 @@ protected:
   virtual       ~Deletable             ();
 };
 
-/* --- ReferenceCountable --- */
-class ReferenceCountable : public virtual Deletable {
-  volatile mutable uint32 ref_field;
-  static const uint32     FLOATING_FLAG = 1 << 31;
-  static void             stackcheck (const void*);
-  inline bool             ref_cas (uint32 oldv, uint32 newv) const
-  { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
-  inline uint32           ref_get() const
-  { return __sync_fetch_and_add (&ref_field, 0); }
-  RAPICORN_CLASS_NON_COPYABLE (ReferenceCountable);
-protected:
-  inline uint32
-  ref_count() const
-  {
-    return ref_get() & ~FLOATING_FLAG;
-  }
-public:
-  ReferenceCountable (uint allow_stack_magic = 0) :
-    ref_field (FLOATING_FLAG + 1)
-  {
-    if (allow_stack_magic != 0xbadbad)
-      stackcheck (this);
-  }
-  bool
-  floating() const
-  {
-    return 0 != (ref_get() & FLOATING_FLAG);
-  }
-  void
-  ref() const
-  {
-    // fast-path: use one atomic op and deferred checks
-    uint32 old_ref = __sync_fetch_and_add (&ref_field, 1);
-    uint32 new_ref = old_ref + 1;                       // ...and_add (,1)
-    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // check dead objects
-    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);         // check overflow
-  }
-  void
-  ref_sink() const
-  {
-    ref();
-    uint32 old_ref = ref_get();
-    uint32 new_ref = old_ref & ~FLOATING_FLAG;
-    if (RAPICORN_UNLIKELY (old_ref != new_ref))
-      {
-        while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
-          {
-            old_ref = ref_get();
-            new_ref = old_ref & ~FLOATING_FLAG;
-          }
-        if (old_ref & FLOATING_FLAG)
-          unref();
-      }
-  }
-  bool
-  finalizing() const
-  {
-    return ref_count() < 1;
-  }
-  void
-  unref() const
-  {
-    uint32 old_ref = ref_field; // skip read-barrier for fast-path
-    if (RAPICORN_LIKELY (old_ref & ~(FLOATING_FLAG | 1)) && // old_ref >= 2
-        RAPICORN_LIKELY (ref_cas (old_ref, old_ref - 1)))
-      return; // trying fast-path with single atomic op
-    old_ref = ref_get();
-    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
-      {
-        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
-        self->pre_finalize();
-        old_ref = ref_get();
-      }
-    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // old_ref > 1 ?
-    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, old_ref - 1)))
-      {
-        old_ref = ref_get();
-        RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);     // catch underflow
-      }
-    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
-      {
-        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
-        self->finalize();
-        self->delete_this();                            // usually: delete this;
-      }
-  }
-  void                            ref_diag (const char *msg = NULL) const;
-  template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-  template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-  template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-  template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-  template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-  template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-protected:
-  virtual void pre_finalize       ();
-  virtual void finalize           ();
-  virtual void delete_this        ();
-  virtual     ~ReferenceCountable ();
-};
-template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>
 static inline std::pair<RandIter,bool>
@@ -653,7 +547,7 @@ public: /// @name Accessing custom data members
 };
 
 /* --- BaseObject --- */
-class BaseObject : public virtual ReferenceCountable {
+class BaseObject : public virtual Deletable {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
@@ -714,6 +608,112 @@ BaseObject::InterfaceMatch<C>::result (bool may_throw) const
     throw NullInterface();
   return *this->m_instance;
 }
+
+// == ReferenceCountable ==
+class ReferenceCountable : public virtual BaseObject {
+  volatile mutable uint32 ref_field;
+  static const uint32     FLOATING_FLAG = 1 << 31;
+  static void             stackcheck (const void*);
+  inline bool             ref_cas (uint32 oldv, uint32 newv) const
+  { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
+  inline uint32           ref_get() const
+  { return __sync_fetch_and_add (&ref_field, 0); }
+  RAPICORN_CLASS_NON_COPYABLE (ReferenceCountable);
+protected:
+  inline uint32
+  ref_count() const
+  {
+    return ref_get() & ~FLOATING_FLAG;
+  }
+public:
+  ReferenceCountable (uint allow_stack_magic = 0) :
+    ref_field (FLOATING_FLAG + 1)
+  {
+    if (allow_stack_magic != 0xbadbad)
+      stackcheck (this);
+  }
+  bool
+  floating() const
+  {
+    return 0 != (ref_get() & FLOATING_FLAG);
+  }
+  void
+  ref() const
+  {
+    // fast-path: use one atomic op and deferred checks
+    uint32 old_ref = __sync_fetch_and_add (&ref_field, 1);
+    uint32 new_ref = old_ref + 1;                       // ...and_add (,1)
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // check dead objects
+    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);         // check overflow
+  }
+  void
+  ref_sink() const
+  {
+    ref();
+    uint32 old_ref = ref_get();
+    uint32 new_ref = old_ref & ~FLOATING_FLAG;
+    if (RAPICORN_UNLIKELY (old_ref != new_ref))
+      {
+        while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
+          {
+            old_ref = ref_get();
+            new_ref = old_ref & ~FLOATING_FLAG;
+          }
+        if (old_ref & FLOATING_FLAG)
+          unref();
+      }
+  }
+  bool
+  finalizing() const
+  {
+    return ref_count() < 1;
+  }
+  void
+  unref() const
+  {
+    uint32 old_ref = ref_field; // skip read-barrier for fast-path
+    if (RAPICORN_LIKELY (old_ref & ~(FLOATING_FLAG | 1)) && // old_ref >= 2
+        RAPICORN_LIKELY (ref_cas (old_ref, old_ref - 1)))
+      return; // trying fast-path with single atomic op
+    old_ref = ref_get();
+    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
+      {
+        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
+        self->pre_finalize();
+        old_ref = ref_get();
+      }
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // old_ref > 1 ?
+    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, old_ref - 1)))
+      {
+        old_ref = ref_get();
+        RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);     // catch underflow
+      }
+    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
+      {
+        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
+        self->finalize();
+        self->delete_this();                            // usually: delete this;
+      }
+  }
+  void                            ref_diag (const char *msg = NULL) const;
+  template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
+  template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
+  template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
+  template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
+  template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
+  template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
+protected:
+  virtual void pre_finalize       ();
+  virtual void finalize           ();
+  virtual void delete_this        ();
+  virtual     ~ReferenceCountable ();
+};
+template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
+template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
+template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
+template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
+template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
+template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
 } // Rapicorn
 

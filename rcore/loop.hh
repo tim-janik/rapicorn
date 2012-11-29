@@ -48,7 +48,7 @@ public:
 
 // === EventLoop ===
 class MainLoop;
-class EventLoop : public virtual BaseObject /// Loop object, polling for events and executing callbacks in accordance.
+class EventLoop : public virtual ReferenceCountable /// Loop object, polling for events and executing callbacks in accordance.
 {
   class TimedSource;
   class PollFDSource;

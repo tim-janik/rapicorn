@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class Adjustment : public virtual BaseObject {
+class Adjustment : public virtual BaseObject, public virtual ReferenceCountable {
   typedef Signal<Adjustment, void ()>	SignalValueChanged;
   typedef Signal<Adjustment, void ()>	SignalRangeChanged;
 protected:
