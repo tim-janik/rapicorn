@@ -6,11 +6,16 @@
 #include <rcore/strings.hh>
 #include <rcore/aida.hh>
 
-namespace Rapicorn { class Deletable; } // FIXME
-
 namespace Rapicorn { namespace Aida {
 
 class PropertyList;
+
+// == PropertyHostInterface ==
+class PropertyHostInterface {
+protected:
+  virtual                    ~PropertyHostInterface() {}
+  virtual const PropertyList& _property_list ();
+};
 
 // == Property ==
 class Property {
@@ -22,9 +27,9 @@ public:
   char       *blurb;
   char       *hints;
   Property (const char *cident, const char *clabel, const char *cblurb, const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue) = 0;
-  virtual String get_value   (Deletable *obj) = 0;
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) = 0;
+  virtual void   set_value   (PropertyHostInterface *obj, const String &svalue) = 0;
+  virtual String get_value   (PropertyHostInterface *obj) = 0;
+  virtual bool   get_range   (PropertyHostInterface *obj, double &minimum, double &maximum, double &stepping) = 0;
   bool           readable    () const;
   bool           writable    () const;
 };
@@ -75,9 +80,9 @@ struct PropertyBool : Property {
   PropertyBool (void (Class::*csetter) (bool), bool (Class::*cgetter) (),
                 const char *cident, const char *clabel, const char *cblurb,
                 const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue);
-  virtual String get_value   (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
+  virtual void   set_value   (PropertyHostInterface *obj, const String &svalue);
+  virtual String get_value   (PropertyHostInterface *obj);
+  virtual bool   get_range   (PropertyHostInterface *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class> inline Property*
 create_property (void (Class::*setter) (bool), bool (Class::*getter) (),
@@ -100,9 +105,9 @@ struct PropertyRange : Property {
                  const char *cident, const char *clabel, const char *cblurb,
                  Type cminimum_value, Type cmaximum_value,
                  Type cstepping, const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue);
-  virtual String get_value   (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping);
+  virtual void   set_value   (PropertyHostInterface *obj, const String &svalue);
+  virtual String get_value   (PropertyHostInterface *obj);
+  virtual bool   get_range   (PropertyHostInterface *obj, double &minimum, double &maximum, double &stepping);
 };
 /* int */
 template<class Class> inline Property*
@@ -179,9 +184,9 @@ struct PropertyString : Property {
   PropertyString (void (Class::*csetter) (const String&), String (Class::*cgetter) (),
                   const char *cident, const char *clabel, const char *cblurb,
                   const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue);
-  virtual String get_value   (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
+  virtual void   set_value   (PropertyHostInterface *obj, const String &svalue);
+  virtual String get_value   (PropertyHostInterface *obj);
+  virtual bool   get_range   (PropertyHostInterface *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class> inline Property*
 create_property (void (Class::*setter) (const String&), String (Class::*getter) (),
@@ -201,9 +206,9 @@ struct PropertyEnum : Property {
   PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) (),
                 const char *cident, const char *clabel, const char *cblurb,
                 const EnumClass &eclass, const char *chints);
-  virtual void   set_value   (Deletable *obj, const String &svalue);
-  virtual String get_value   (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
+  virtual void   set_value   (PropertyHostInterface *obj, const String &svalue);
+  virtual String get_value   (PropertyHostInterface *obj);
+  virtual bool   get_range   (PropertyHostInterface *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class, typename Type> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) (),
@@ -232,7 +237,7 @@ PropertyBool<Class>::PropertyBool (void (Class::*csetter) (bool), bool (Class::*
 {}
 
 template<class Class> void
-PropertyBool<Class>::set_value (Deletable *obj, const String &svalue)
+PropertyBool<Class>::set_value (PropertyHostInterface *obj, const String &svalue)
 {
   bool b = string_to_bool (svalue);
   Class *instance = dynamic_cast<Class*> (obj);
@@ -240,7 +245,7 @@ PropertyBool<Class>::set_value (Deletable *obj, const String &svalue)
 }
 
 template<class Class> String
-PropertyBool<Class>::get_value (Deletable *obj)
+PropertyBool<Class>::get_value (PropertyHostInterface *obj)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   bool b = (instance->*getter) ();
@@ -265,7 +270,7 @@ PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (C
 }
 
 template<class Class, typename Type> void
-PropertyRange<Class,Type>::set_value (Deletable *obj, const String &svalue)
+PropertyRange<Class,Type>::set_value (PropertyHostInterface *obj, const String &svalue)
 {
   Type v = string_to_type<Type> (svalue);
   Class *instance = dynamic_cast<Class*> (obj);
@@ -273,7 +278,7 @@ PropertyRange<Class,Type>::set_value (Deletable *obj, const String &svalue)
 }
 
 template<class Class, typename Type> String
-PropertyRange<Class,Type>::get_value (Deletable *obj)
+PropertyRange<Class,Type>::get_value (PropertyHostInterface *obj)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   Type v = (instance->*getter) ();
@@ -281,7 +286,7 @@ PropertyRange<Class,Type>::get_value (Deletable *obj)
 }
 
 template<class Class, typename Type> bool
-PropertyRange<Class,Type>::get_range (Deletable *obj, double &minimum, double &maximum, double &vstepping)
+PropertyRange<Class,Type>::get_range (PropertyHostInterface *obj, double &minimum, double &maximum, double &vstepping)
 {
   minimum = minimum_value, maximum = maximum_value, vstepping = stepping;
   return true;
@@ -298,14 +303,14 @@ PropertyString<Class>::PropertyString (void (Class::*csetter) (const String&), S
 {}
 
 template<class Class> void
-PropertyString<Class>::set_value (Deletable *obj, const String &svalue)
+PropertyString<Class>::set_value (PropertyHostInterface *obj, const String &svalue)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   (instance->*setter) (svalue);
 }
 
 template<class Class> String
-PropertyString<Class>::get_value (Deletable *obj)
+PropertyString<Class>::get_value (PropertyHostInterface *obj)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   return (instance->*getter) ();
@@ -323,7 +328,7 @@ PropertyEnum<Class,Type>::PropertyEnum (void (Class::*csetter) (Type), Type (Cla
 {}
 
 template<class Class, typename Type> void
-PropertyEnum<Class,Type>::set_value (Deletable *obj, const String &svalue)
+PropertyEnum<Class,Type>::set_value (PropertyHostInterface *obj, const String &svalue)
 {
   String error_string;
   uint64 value = enum_class.parse (svalue.c_str(), &error_string);
@@ -337,7 +342,7 @@ PropertyEnum<Class,Type>::set_value (Deletable *obj, const String &svalue)
 }
 
 template<class Class, typename Type> String
-PropertyEnum<Class,Type>::get_value (Deletable *obj)
+PropertyEnum<Class,Type>::get_value (PropertyHostInterface *obj)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   Type v = (instance->*getter) ();

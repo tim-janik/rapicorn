@@ -18,6 +18,14 @@ propcanonify (String s)
   return s;
 }
 
+// == PropertyHostInterface ==
+const PropertyList&
+PropertyHostInterface::_property_list ()
+{
+  static const PropertyList empty_property_list;
+  return empty_property_list;
+}
+
 // == PropertyList ==
 Property::Property (const char *cident, const char *clabel, const char *cblurb, const char *chints) :
   ident (cident),

@@ -84,7 +84,7 @@ public: /// @name Accessing custom data members
 };
 
 // == BaseObject ==
-class BaseObject : public virtual Deletable {
+class BaseObject : public virtual Deletable, public virtual Aida::PropertyHostInterface {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
