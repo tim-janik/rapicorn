@@ -538,8 +538,14 @@ ItemImpl::lookup_property (const String &property_name)
   if (!pmap)
     {
       pmap = new PropertyMap;
-      for (uint i = 0; i < plist.n_properties; i++)
-        (*pmap)[plist.properties[i]->ident] = plist.properties[i];
+      size_t n_properties = 0;
+      Aida::Property **properties = plist.list_properties (&n_properties);
+      for (uint i = 0; i < n_properties; i++)
+        {
+          Property *prop = dynamic_cast<Property*> (properties[i]);
+          if (prop)
+            (*pmap)[prop->ident] = prop;
+        }
       plist_map[&plist] = pmap;
     }
   PropertyMap::iterator it = pmap->find (property_name);
@@ -1158,13 +1164,16 @@ ItemImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
   const PropertyList &plist = list_properties();
-  for (uint i = 0; i < plist.n_properties; i++)
+  size_t n_properties = 0;
+  Aida::Property **properties = plist.list_properties (&n_properties);
+  for (uint i = 0; i < n_properties; i++)
     {
-      Property *property = plist.properties[i];
-      if (!property->readable())
-        continue;
-      String value = get_property (property->ident);
-      tstream.dump (property->ident, value);
+      Property *property = dynamic_cast<Property*> (properties[i]);
+      if (property && property->readable())
+        {
+          String value = get_property (property->ident);
+          tstream.dump (property->ident, value);
+        }
     }
   tstream.push_indent();
   dump_private_data (tstream);

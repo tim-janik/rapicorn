@@ -3,7 +3,7 @@
 #include <ui/uithread.hh>
 #include <stdio.h>
 
-#define MakeProperty    RAPICORN_MakeProperty
+#define MakeProperty    RAPICORN_AIDA_PROPERTY
 
 namespace {
 using namespace Rapicorn;
@@ -72,8 +72,11 @@ static void
 property_test()
 {
   PropertyHost ph;
+  size_t n_properties = 0;
+  Aida::Property **properties = ph.list_properties().list_properties (&n_properties);
+  (void) properties;
   // printf ("created %d properties.\n", ph.list_properties().n_properties);
-  TASSERT (ph.list_properties().n_properties == 15 - 1);
+  TASSERT (n_properties == 15 - 1);
 }
 REGISTER_UITHREAD_TEST ("Objects/Property Test", property_test);
 

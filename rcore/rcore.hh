@@ -5,6 +5,7 @@
 #include <rcore/rapicornconfig.h>
 #include <rcore/aida.hh>
 #include <rcore/aidacxx.hh>
+#include <rcore/aidaprops.hh>
 #include <rcore/blobres.hh>
 #include <rcore/enumdefs.hh>
 #include <rcore/inifile.hh>
@@ -14,7 +15,6 @@
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/objects.hh>
-#include <rcore/properties.hh>
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
 #include <rcore/math.hh>

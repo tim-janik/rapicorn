@@ -4,6 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <rcore/thread.hh>
+#include <rcore/aidaprops.hh>
 
 namespace Rapicorn {
 
@@ -87,9 +88,11 @@ class BaseObject : public virtual Deletable {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
-  virtual void       dispose   ();
+  virtual void                 dispose   ();
 public:
 };
+typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
+typedef Aida::Property     Property;     // import Property from Aida namespace
 class NullInterface : std::exception {};
 
 struct BaseObject::InterfaceMatcher {
