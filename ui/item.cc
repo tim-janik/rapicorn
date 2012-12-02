@@ -564,7 +564,7 @@ ItemImpl::set_property (const String    &property_name,
 {
   Property *prop = lookup_property (property_name);
   if (prop)
-    prop->set_value (this, value);
+    prop->set_value (*this, value);
   else if (&nt == &dothrow)
     throw Exception ("no such property: " + name() + "::" + property_name);
 }
@@ -577,7 +577,7 @@ ItemImpl::try_set_property (const String    &property_name,
   Property *prop = lookup_property (property_name);
   if (prop)
     {
-      prop->set_value (this, value);
+      prop->set_value (*this, value);
       return true;
     }
   else
@@ -590,7 +590,7 @@ ItemImpl::get_property (const String   &property_name)
   Property *prop = lookup_property (property_name);
   if (!prop)
     throw Exception ("no such property: " + name() + "::" + property_name);
-  return prop->get_value (this);
+  return prop->get_value (*this);
 }
 
 static class OvrKey : public DataKey<Requisition> {
