@@ -265,6 +265,7 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}
+  virtual const PropertyList& _property_list () { return RAPICORN_AIDA_PROPERTY_CHAIN (ItemImpl::_property_list(), IdlTestItemIface::_property_list()); }
 };
 static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
 

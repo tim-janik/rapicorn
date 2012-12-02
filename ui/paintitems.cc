@@ -203,6 +203,12 @@ DrawableImpl::DrawableImpl() :
   m_x (0), m_y (0)
 {}
 
+const PropertyList&
+DrawableImpl::_property_list ()
+{
+  return RAPICORN_AIDA_PROPERTY_CHAIN (ItemImpl::_property_list(), DrawableIface::_property_list());
+}
+
 void
 DrawableImpl::size_request (Requisition &requisition)
 {

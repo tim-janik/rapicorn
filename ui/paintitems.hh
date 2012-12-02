@@ -49,6 +49,7 @@ protected:
   virtual void  size_request    (Requisition &requisition);
   virtual void  size_allocate   (Allocation area, bool changed);
   virtual void  render          (RenderContext &rcontext, const Rect &rect);
+  virtual const PropertyList&   _property_list ();
 public:
   explicit      DrawableImpl    ();
 };
