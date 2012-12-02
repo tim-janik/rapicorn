@@ -412,7 +412,7 @@ class Generator:
     if type_info.fields:
       il = max (len (fl[0]) for fl in type_info.fields)
     for fl in type_info.fields:
-      s += self.generate_property (fl[0], fl[1], il)
+      s += self.generate_property_prototype (fl[0], fl[1], il)
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
@@ -702,7 +702,7 @@ class Generator:
     # done
     s += '}\n'
     return s
-  def generate_property (self, fident, ftype, pad = 0):
+  def generate_property_prototype (self, fident, ftype, pad = 0):
     s, v, v0, ptr = '', '', '', ''
     if self.gen_mode == G4SERVER:
       v, v0, ptr = 'virtual ', ' = 0', '*'
