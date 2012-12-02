@@ -3,6 +3,15 @@
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
 
+namespace Rapicorn { namespace Aida {
+class TestServerBase : public virtual PropertyHostInterface {
+public:
+  explicit             TestServerBase ()            {}
+  virtual             ~TestServerBase ()            {}
+  virtual uint64_t     _rpc_id        () const      { return uint64_t (this); }
+};
+} } // Rapicorn::Aida
+
 #include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
 
@@ -136,13 +145,14 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e
 /** @interface FirstInterface
  * See also the corresponding C++ class I_FirstInterface_Interface (server side). */
 /// See also the corresponding IDL class FirstInterface.
-class I_FirstInterface_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_FirstInterface_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_FirstInterface_Interface ();
   virtual /*Des*/                       ~I_FirstInterface_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          void_func                  ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterface_Interface&);
@@ -387,13 +397,14 @@ namespace InterfaceTests {
 /** @interface UIWidgetArea
  * See also the corresponding C++ class I_UIWidgetArea_Interface (server side). */
 /// See also the corresponding IDL class UIWidgetArea.
-class I_UIWidgetArea_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_UIWidgetArea_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_UIWidgetArea_Interface ();
   virtual /*Des*/                       ~I_UIWidgetArea_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual double                        dummy    () const = 0;
   virtual void                          dummy    (double) = 0;
   virtual std::string                   on_click () const = 0;
@@ -427,13 +438,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetArea_Interface*&);
 /** @interface Parent
  * See also the corresponding C++ class I_Parent_Interface (server side). */
 /// See also the corresponding IDL class Parent.
-class I_Parent_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_Parent_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_Parent_Interface ();
   virtual /*Des*/                       ~I_Parent_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Parent_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Parent_Interface*);
@@ -449,6 +461,7 @@ protected:
   virtual /*Des*/                       ~I_Child_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Child_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Child_Interface*);
@@ -464,6 +477,7 @@ protected:
   virtual /*Des*/                       ~I_Descendant_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Descendant_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Descendant_Interface*);
@@ -479,6 +493,7 @@ protected:
   virtual /*Des*/                       ~I_GrandChild_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChild_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChild_Interface*);
@@ -516,13 +531,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequenceImpl&);
 /** @interface QuickIface
  * See also the corresponding C++ class I_QuickIface_Interface (server side). */
 /// See also the corresponding IDL class QuickIface.
-class I_QuickIface_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_QuickIface_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_QuickIface_Interface ();
   virtual /*Des*/                       ~I_QuickIface_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          simple_function        (int i = 9);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIface_Interface&);
@@ -532,13 +548,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIface_Interface*&);
 /** @interface MethodTestInterface
  * See also the corresponding C++ class I_MethodTestInterface_Interface (server side). */
 /// See also the corresponding IDL class MethodTestInterface.
-class I_MethodTestInterface_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_MethodTestInterface_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_MethodTestInterface_Interface ();
   virtual /*Des*/                       ~I_MethodTestInterface_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          method_with_void                ();
   virtual bool                          method_with_bools               (bool input,
                                                                          bool optval = 0);
@@ -568,13 +585,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterface_Interface*
 /** @interface SignalTestInterface
  * See also the corresponding C++ class I_SignalTestInterface_Interface (server side). */
 /// See also the corresponding IDL class SignalTestInterface.
-class I_SignalTestInterface_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_SignalTestInterface_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_SignalTestInterface_Interface ();
   virtual /*Des*/                       ~I_SignalTestInterface_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
@@ -634,6 +652,7 @@ protected:
   virtual /*Des*/                       ~I_ChildInheritingSignals_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Signals::Signal<I_ChildInheritingSignals_Interface, void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordImpl &r, const QuickSequenceImpl &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
@@ -651,6 +670,7 @@ protected:
   virtual /*Des*/                       ~I_AnotherChild_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChild_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChild_Interface*);
@@ -659,13 +679,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChild_Interface*&);
 /** @interface PropertyTester
  * See also the corresponding C++ class I_PropertyTester_Interface (server side). */
 /// See also the corresponding IDL class PropertyTester.
-class I_PropertyTester_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_PropertyTester_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_PropertyTester_Interface ();
   virtual /*Des*/                       ~I_PropertyTester_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          bool_prop      () const = 0;
   virtual void                          bool_prop      (bool) = 0;
   virtual int                           int_prop       () const = 0;
@@ -707,13 +728,14 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = C
 /** @interface ButtonArea
  * See also the corresponding C++ class I_ButtonArea_Interface (server side). */
 /// See also the corresponding IDL class ButtonArea.
-class I_ButtonArea_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_ButtonArea_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_ButtonArea_Interface ();
   virtual /*Des*/                       ~I_ButtonArea_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual std::string                   on_click   () const = 0;
   virtual void                          on_click   (const std::string&) = 0;
   virtual std::string                   on_click2  () const = 0;
@@ -736,13 +758,14 @@ class I_PureMethods_Interface;
 /** @interface PureMethods
  * See also the corresponding C++ class I_PureMethods_Interface (server side). */
 /// See also the corresponding IDL class PureMethods.
-class I_PureMethods_Interface : public virtual Rapicorn::Aida::SimpleServer
+class I_PureMethods_Interface : public virtual Rapicorn::Aida::TestServerBase
 {
 protected:
   explicit                               I_PureMethods_Interface ();
   virtual /*Des*/                       ~I_PureMethods_Interface () = 0;
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual int                           pure_method             (double f) = 0;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethods_Interface&);

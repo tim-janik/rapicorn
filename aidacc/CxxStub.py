@@ -15,6 +15,17 @@ serverhh_boilerplate = r"""
 #include <rapicorn-core.hh>
 """
 
+serverhh_testcode = r"""
+namespace Rapicorn { namespace Aida {
+class TestServerBase : public virtual PropertyHostInterface {
+public:
+  explicit             TestServerBase ()            {}
+  virtual             ~TestServerBase ()            {}
+  virtual uint64_t     _rpc_id        () const      { return uint64_t (this); }
+};
+} } // Rapicorn::Aida
+"""
+
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
@@ -47,12 +58,12 @@ Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
 """
 
-servercc_boilerplate = r"""
+servercc_testcode = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-template<class O> O*  connection_id2object (Rapicorn::Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Rapicorn::Aida::SimpleServer*> (oid)); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::SimpleServer &obj) { return connection_object2id (&obj); }
+template<class O> O*  connection_id2object (Rapicorn::Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
+inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase &obj) { return connection_object2id (&obj); }
 #endif // !AIDA_CONNECTION
 """
 
@@ -86,8 +97,9 @@ class Generator:
     self.gen_inclusions = []
     self.skip_symbols = set()
     self.skip_classes = []
-    self._iface_base = 'Rapicorn::Aida::SimpleServer'
-    self.property_list = ""
+    self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
+    self.iface_base = self.test_iface_base
+    self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
     self.gen_shortalias = False
     self.object_impl = None # ('impl', ('', 'Impl'))
@@ -358,7 +370,7 @@ class Generator:
     if   self.gen_mode == G4SERVER and l:
       heritage = 'public virtual'
     elif self.gen_mode == G4SERVER and not l:
-      l = [self._iface_base]
+      l = [self.iface_base]
       heritage = 'public virtual'
     elif self.gen_mode == G4CLIENT and l:
       heritage = 'public'
@@ -1040,12 +1052,16 @@ class Generator:
         s += rapicornsignal_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
+      if self.iface_base == self.test_iface_base:
+        s += serverhh_testcode
       if self.gen_rapicornsignals:
         s += rapicornsignal_boilerplate
     if self.gen_clientcc:
       s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     if self.gen_servercc:
-      s += gencc_boilerplate + '\n' + servercc_boilerplate + '\n'
+      s += gencc_boilerplate + '\n'
+    if self.gen_servercc and self.iface_base == self.test_iface_base:
+      s += servercc_testcode + '\n'
     self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
@@ -1189,9 +1205,9 @@ def generate (namespace_list, **args):
     if opt.startswith ('iface-prefix='):
       I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
     if opt.startswith ('iface-base='):
-      gg._iface_base = opt[11:]
-    if opt.startswith ('property-list='):
-      gg.property_list = opt[14:]
+      gg.iface_base = opt[11:]
+    if opt.startswith ('property-list=') and opt[14:].lower() in ('0', 'no', 'none', 'false'):
+      gg.property_list = ""
     if opt.startswith ('filter-out='):
       gg.skip_classes += opt[11:].split (',')
   for ifile in config['insertions']:

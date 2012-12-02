@@ -431,30 +431,6 @@ SmartHandle::_is_null () const
 SmartHandle::~SmartHandle()
 {}
 
-/* === SimpleServer === */
-static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
-static std::set<SimpleServer*> simple_server_set;
-
-SimpleServer::SimpleServer ()
-{
-  pthread_mutex_lock (&simple_server_mutex);
-  simple_server_set.insert (this);
-  pthread_mutex_unlock (&simple_server_mutex);
-}
-
-SimpleServer::~SimpleServer ()
-{
-  pthread_mutex_lock (&simple_server_mutex);
-  simple_server_set.erase (this);
-  pthread_mutex_unlock (&simple_server_mutex);
-}
-
-uint64_t
-SimpleServer::_rpc_id () const
-{
-  return uint64_t (this);
-}
-
 /* === FieldBuffer === */
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)

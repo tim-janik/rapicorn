@@ -188,7 +188,6 @@ public:
 };
 
 // == Type Declarations ==
-class SimpleServer;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -246,14 +245,6 @@ public:
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
   static NullHandle         _null_handle()                      { return NullHandle(); }
-};
-
-// == SimpleServer ==
-class SimpleServer {
-public:
-  explicit             SimpleServer ();
-  virtual             ~SimpleServer ();
-  virtual uint64_t     _rpc_id      () const;
 };
 
 // == FieldBuffer ==
