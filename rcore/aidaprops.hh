@@ -39,8 +39,10 @@ public:
 };
 
 // == PropertyList ==
-class PropertyList /// Container structure for property descriptions.
+struct PropertyList /// Container structure for property descriptions.
 {
+  typedef Aida::Property Property; // make Property available as class member
+private:
   size_t     m_n_properties;
   Property **m_properties;
   void       append_properties (size_t n_props, Property **props, const PropertyList &c0, const PropertyList &c1,
@@ -75,6 +77,10 @@ inline Return (Class::*
                noconst_getter (Return (Class::*const_getter)() const)
                 ) ()
 { return reinterpret_cast<Return (Class::*)()> (const_getter); }
+#define RAPICORN_AIDA_PROPERTY_CHAIN(first,...)                    (*({ \
+  static Property *__dummy_[] = {};                                     \
+  static const PropertyList property_list (__dummy_, first, __VA_ARGS__); \
+  &property_list; }))
 
 /* --- bool --- */
 template<class Class>
