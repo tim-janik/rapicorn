@@ -87,6 +87,7 @@ class Generator:
     self.skip_symbols = set()
     self.skip_classes = []
     self._iface_base = 'Rapicorn::Aida::SimpleServer'
+    self.property_list = ""
     self.gen_mode = None
     self.gen_shortalias = False
     self.object_impl = None # ('impl', ('', 'Impl'))
@@ -375,8 +376,8 @@ class Generator:
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
     # inherit
-    l, heritage, cl, ddc = self.interface_class_inheritance (type_info)
-    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
+    precls, heritage, cl, ddc = self.interface_class_inheritance (type_info)
+    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (precls) + '\n'
     s += '{\n'
     if self.gen_mode == G4CLIENT:
       s += '  ' + self.F ('static %s' % classC) + '_cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
@@ -394,6 +395,8 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode == G4SERVER:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      if self.property_list:
+        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4CLIENT
       classH = self.C4client (type_info) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
@@ -546,7 +549,7 @@ class Generator:
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
-    l, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     if ddc:
@@ -616,6 +619,20 @@ class Generator:
     ancestors.reverse()
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
+    s += '}\n'
+    return s
+  def generate_server_property_list (self, class_info):
+    if not self.property_list:
+      return ''
+    assert self.gen_mode == G4SERVER
+    s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
+    s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
+    s += '  static ' + self.property_list + '::Property *properties[] = {\n'
+    s += '  };\n'
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    calls = [cl + '::_property_list()' for cl in precls]
+    s += '  static ' + constPList + ' property_list (properties, %s);\n' % (', ').join (calls)
+    s += '  return property_list;\n'
     s += '}\n'
     return s
   def generate_client_method_stub (self, class_info, mtype):
@@ -1095,6 +1112,7 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_server_class_methods (tp)
+              s += self.generate_server_property_list (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             s += self.generate_client_class_context (tp)
@@ -1172,6 +1190,8 @@ def generate (namespace_list, **args):
       I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
     if opt.startswith ('iface-base='):
       gg._iface_base = opt[11:]
+    if opt.startswith ('property-list='):
+      gg.property_list = opt[14:]
     if opt.startswith ('filter-out='):
       gg.skip_classes += opt[11:].split (',')
   for ifile in config['insertions']:

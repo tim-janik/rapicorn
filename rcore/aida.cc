@@ -1,5 +1,6 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 #include "aida.hh"
+#include "aidaprops.hh"
 
 #include <assert.h>
 #include <string.h>
