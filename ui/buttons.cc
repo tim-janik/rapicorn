@@ -17,7 +17,7 @@ ButtonAreaImpl::ButtonAreaImpl() :
 {}
 
 const PropertyList&
-ButtonAreaImpl::list_properties()
+ButtonAreaImpl::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (ButtonAreaImpl, on_click,   _("On CLick"),   _("Command on button1 click"), "rw"),
@@ -25,7 +25,7 @@ ButtonAreaImpl::list_properties()
     MakeProperty (ButtonAreaImpl, on_click3,  _("On CLick3"),  _("Command on button3 click"), "rw"),
     MakeProperty (ButtonAreaImpl, click_type, _("CLick Type"), _("Click event generation type"), "rw"),
   };
-  static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
+  static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
   return property_list;
 }
 

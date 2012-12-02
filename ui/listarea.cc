@@ -10,13 +10,13 @@
 namespace Rapicorn {
 
 const PropertyList&
-ItemList::list_properties()
+ItemList::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (ItemList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
     MakeProperty (ItemList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 

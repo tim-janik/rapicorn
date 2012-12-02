@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class Arrangement : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList& list_properties ();
+  virtual const PropertyList& _property_list ();
 public:
   virtual double xorigin         () = 0;
   virtual void   xorigin         (double v) = 0;

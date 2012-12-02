@@ -530,67 +530,32 @@ ItemImpl::list_commands ()
 Property*
 ItemImpl::lookup_property (const String &property_name)
 {
-  typedef std::map<const String, Property*> PropertyMap;
-  static std::map<const PropertyList*,PropertyMap*> plist_map;
-  /* find/construct property map */
-  const PropertyList &plist = list_properties();
-  PropertyMap *pmap = plist_map[&plist];
-  if (!pmap)
-    {
-      pmap = new PropertyMap;
-      size_t n_properties = 0;
-      Aida::Property **properties = plist.list_properties (&n_properties);
-      for (uint i = 0; i < n_properties; i++)
-        {
-          Property *prop = dynamic_cast<Property*> (properties[i]);
-          if (prop)
-            (*pmap)[prop->ident] = prop;
-        }
-      plist_map[&plist] = pmap;
-    }
-  PropertyMap::iterator it = pmap->find (property_name);
-  if (it == pmap->end())        // try canonicalized
-    it = pmap->find (string_substitute_char (property_name, '-', '_'));
-  if (it != pmap->end())
-    return it->second;
-  else
-    return NULL;
-}
-
-void
-ItemImpl::set_property (const String    &property_name,
-                    const String    &value,
-                    const nothrow_t &nt)
-{
-  Property *prop = lookup_property (property_name);
-  if (prop)
-    prop->set_value (*this, value);
-  else if (&nt == &dothrow)
-    throw Exception ("no such property: " + name() + "::" + property_name);
-}
-
-bool
-ItemImpl::try_set_property (const String    &property_name,
-                        const String    &value,
-                        const nothrow_t &nt)
-{
-  Property *prop = lookup_property (property_name);
-  if (prop)
-    {
-      prop->set_value (*this, value);
-      return true;
-    }
-  else
-    return false;
+  return _property_lookup (property_name);
 }
 
 String
-ItemImpl::get_property (const String   &property_name)
+ItemImpl::get_property (const String &property_name)
 {
-  Property *prop = lookup_property (property_name);
-  if (!prop)
+  return _property_get (property_name);
+}
+
+void
+ItemImpl::set_property (const String &property_name, const String &value)
+{
+  if (!_property_set (property_name, value))
     throw Exception ("no such property: " + name() + "::" + property_name);
-  return prop->get_value (*this);
+}
+
+const PropertyList&
+ItemImpl::list_properties ()
+{
+  return _property_list();
+}
+
+bool
+ItemImpl::try_set_property (const String &property_name, const String &value)
+{
+  return _property_set (property_name, value);
 }
 
 static class OvrKey : public DataKey<Requisition> {
@@ -634,7 +599,7 @@ ItemImpl::height (double h)
 }
 
 const PropertyList&
-ItemImpl::list_properties ()
+ItemImpl::_property_list ()
 {
   static Property *properties[] = {
     MakeProperty (ItemImpl, name,      _("Name"), _("Identification name of the item"), "rw"),

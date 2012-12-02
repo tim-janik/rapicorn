@@ -9,7 +9,7 @@ namespace Rapicorn {
 class Alignment : public virtual ContainerImpl {
   virtual uint  padding         () const  = 0;
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual uint  left_padding    () const  = 0;
   virtual void  left_padding    (uint c)  = 0;
@@ -24,7 +24,7 @@ public:
 
 class HBox : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
@@ -34,7 +34,7 @@ public:
 
 class VBox : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;

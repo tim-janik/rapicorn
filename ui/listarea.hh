@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class ItemList : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual bool   browse       () const  = 0;
   virtual void   browse       (bool b) = 0;

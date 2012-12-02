@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "aidaprops.hh"
+#include "thread.hh"
 #include <set>
 #include <cstring>
 #include <malloc.h>
@@ -24,6 +25,64 @@ PropertyHostInterface::_property_list ()
 {
   static const PropertyList empty_property_list;
   return empty_property_list;
+}
+
+static Mutex plist_map_mutex;
+
+Property*
+PropertyHostInterface::_property_lookup (const String &property_name)
+{
+  // provide PropertyMaps globally
+  typedef std::map<const String, Property*> PropertyMap;
+  static std::map<const PropertyList*,PropertyMap*> *plist_map = NULL;
+  do_once {
+    static uint64 space[sizeof (*plist_map) / sizeof (uint64)];
+    plist_map = new (space) std::map<const PropertyList*,PropertyMap*>();
+  }
+  // find or construct property map
+  const PropertyList &plist = _property_list();
+  ScopedLock<Mutex> plist_map_locker (plist_map_mutex);
+  PropertyMap *pmap = (*plist_map)[&plist];
+  if (!pmap)
+    {
+      pmap = new PropertyMap;
+      size_t n_properties = 0;
+      Property **properties = plist.list_properties (&n_properties);
+      for (uint i = 0; i < n_properties; i++)
+        {
+          Property *prop = properties[i];
+          if (prop)
+            (*pmap)[prop->ident] = prop;
+        }
+      (*plist_map)[&plist] = pmap;
+    }
+  plist_map_locker.unlock();
+  PropertyMap::iterator it = pmap->find (property_name);
+  if (it == pmap->end())        // try canonicalized
+    it = pmap->find (string_substitute_char (property_name, '-', '_'));
+  if (it != pmap->end())
+    return it->second;
+  else
+    return NULL;
+}
+
+bool
+PropertyHostInterface::_property_set (const String &property_name, const String &value)
+{
+  Property *prop = _property_lookup (property_name);
+  if (!prop)
+    return false;
+  prop->set_value (*this, value);
+  return true;
+}
+
+String
+PropertyHostInterface::_property_get (const String &property_name)
+{
+  Property *prop = _property_lookup (property_name);
+  if (!prop)
+    return ""; // be more verbose here?
+  return prop->get_value (*this);
 }
 
 // == PropertyList ==

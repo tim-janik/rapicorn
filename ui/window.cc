@@ -40,12 +40,12 @@ WindowIface::impl () const
 }
 
 const PropertyList&
-WindowImpl::list_properties ()
+WindowImpl::_property_list ()
 {
   static Property *properties[] = {
     MakeProperty (WindowImpl, title,   _("Title"),   _("User visible title to be displayed in the window title bar"), "rw"),
   };
-  static const PropertyList property_list (properties, ViewportImpl::list_properties());
+  static const PropertyList property_list (properties, ViewportImpl::_property_list());
   return property_list;
 }
 

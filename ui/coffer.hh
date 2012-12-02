@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class Coffer : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList& list_properties ();
+  virtual const PropertyList& _property_list ();
 public:
   virtual String element        () const = 0;
   virtual void   element        (const String &id) = 0;

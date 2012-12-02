@@ -34,7 +34,7 @@ public:
   virtual String accu_history     () const = 0;
   virtual void   accu_history     (const String &val) = 0;
   static uint    seen_test_items  ();
-  const PropertyList&                                    list_properties ();
+  const PropertyList&                                    _property_list ();
   Signal<TestContainer, void (const String &assertion)>  sig_assertion_ok;
   Signal<TestContainer, void ()>                         sig_assertions_passed;
 };
@@ -43,7 +43,7 @@ class TestBox : public virtual ContainerImpl {
 public:
   virtual String      snapshot_file   () const = 0;
   virtual void        snapshot_file   (const String &val) = 0;
-  const PropertyList& list_properties ();
+  const PropertyList& _property_list ();
 };
 
 } // Rapicorn

@@ -14,13 +14,13 @@ namespace Rapicorn {
 static DataKey<SizePolicyType> size_policy_key;
 
 const PropertyList&
-Arrow::list_properties()
+Arrow::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
     MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
   };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::_property_list());
   return property_list;
 }
 
@@ -87,7 +87,7 @@ DotGrid::dot_type (FrameType ft)
 }
 
 const PropertyList&
-DotGrid::list_properties()
+DotGrid::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (DotGrid, normal_dot, _("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw"),
@@ -100,7 +100,7 @@ DotGrid::list_properties()
     MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
     MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
   };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::_property_list());
   return property_list;
 }
 

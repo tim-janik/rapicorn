@@ -10,7 +10,7 @@ class Image : public virtual ItemImpl {
   virtual String        image_file      () const { RAPICORN_ASSERT_UNREACHED(); }
   virtual String        stock_pixmap    () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
-  const PropertyList&   list_properties ();
+  const PropertyList&   _property_list ();
 public:
   virtual void             pixbuf       (const Pixbuf &pixbuf) = 0;
   virtual Pixbuf           pixbuf       (void) = 0;

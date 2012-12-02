@@ -75,7 +75,7 @@ Editor::Client::plain_text () const
 }
 
 const PropertyList&
-Editor::Client::client_list_properties()
+Editor::Client::client__property_list()
 {
   static Property *properties[] = {
     MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
@@ -88,7 +88,7 @@ Editor::Client::client_list_properties()
 
 
 const PropertyList&
-Editor::list_properties()
+Editor::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
@@ -97,7 +97,7 @@ Editor::list_properties()
     MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
     MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 

@@ -6,7 +6,7 @@
 namespace Rapicorn {
 
 const PropertyList&
-Alignment::list_properties()
+Alignment::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Alignment, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
@@ -15,7 +15,7 @@ Alignment::list_properties()
     MakeProperty (Alignment, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, padding,        _("Padding"),        _("Amount of padding to add at the child's sides"), 0, 65535, 3, "w"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -93,18 +93,18 @@ public:
 static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 
 const PropertyList&
-HBox::list_properties()
+HBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (HBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (HBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class HBoxImpl : public virtual TableImpl, public virtual HBox {
-  virtual const PropertyList& list_properties() { return HBox::list_properties(); }
+  virtual const PropertyList& _property_list() { return HBox::_property_list(); }
   virtual void
   add_child (ItemImpl &item)
   {
@@ -132,19 +132,19 @@ public:
 static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
 
 const PropertyList&
-VBox::list_properties()
+VBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (VBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (VBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class VBoxImpl : public virtual TableImpl, public virtual VBox {
   /* pack properties */
-  virtual const PropertyList& list_properties() { return VBox::list_properties(); }
+  virtual const PropertyList& _property_list() { return VBox::_property_list(); }
   virtual void
   add_child (ItemImpl &item)
   {

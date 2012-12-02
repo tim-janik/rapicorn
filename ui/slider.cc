@@ -59,13 +59,13 @@ SliderArea::list_commands ()
 }
 
 const PropertyList&
-SliderArea::list_properties()
+SliderArea::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
     MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -81,7 +81,7 @@ class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
     m_adjustment->unref();
     m_adjustment = NULL;
   }
-  virtual const PropertyList& list_properties() { return SliderArea::list_properties(); }
+  virtual const PropertyList& _property_list() { return SliderArea::_property_list(); }
 protected:
   virtual AdjustmentSourceType
   adjustment_source () const
@@ -441,12 +441,12 @@ protected:
   }
 private:
   virtual const PropertyList&
-  list_properties() // escape check-list_properties ';'
+  _property_list() // escape check-_property_list ';'
   {
     static Property *properties[] = {
       MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw"),
     };
-    static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
+    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
   }
 };

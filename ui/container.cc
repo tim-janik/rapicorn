@@ -248,11 +248,11 @@ ContainerImpl::~ContainerImpl ()
 {}
 
 const PropertyList&
-ContainerImpl::list_properties()
+ContainerImpl::_property_list()
 {
   static Property *properties[] = {
   };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::_property_list());
   return property_list;
 }
 

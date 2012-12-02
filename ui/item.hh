@@ -107,7 +107,8 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~ItemImpl            ();
+  virtual                     ~ItemImpl         ();
+  virtual const PropertyList& _property_list    ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);
@@ -166,15 +167,13 @@ public:
   double                      height            () const;
   void                        height            (double h);
   /* properties */
-  void                        set_property      (const String    &property_name,
-                                                 const String    &value,
-                                                 const nothrow_t &nt = dothrow);
-  bool                        try_set_property  (const String    &property_name,
-                                                 const String    &value,
-                                                 const nothrow_t &nt = dothrow);
-  String                      get_property      (const String    &property_name);
   Property*                   lookup_property   (const String    &property_name);
-  virtual const PropertyList& list_properties   ();
+  String                      get_property      (const String    &property_name);
+  void                        set_property      (const String    &property_name,
+                                                 const String    &value);
+  bool                        try_set_property  (const String    &property_name,
+                                                 const String    &value);
+  const PropertyList&         list_properties   ();
   /* commands */
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);

@@ -17,7 +17,7 @@ TestContainer::TestContainer() :
 #define DFLTEPS (1e-8)
 
 const PropertyList&
-TestContainer::list_properties()
+TestContainer::_property_list()
 {
   /* not using _() here, because TestContainer is just a developer tool */
   static Property *properties[] = {
@@ -35,7 +35,7 @@ TestContainer::list_properties()
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
     MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -181,12 +181,12 @@ protected:
 static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 const PropertyList&
-TestBox::list_properties()
+TestBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
