@@ -604,8 +604,6 @@ ItemImpl::_property_list ()
   static Property *properties[] = {
     MakeProperty (ItemImpl, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
     MakeProperty (ItemImpl, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
-    MakeProperty (ItemImpl, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
-    MakeProperty (ItemImpl, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
     MakeProperty (ItemImpl, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
     /* packing */
     MakeProperty (ItemImpl, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
