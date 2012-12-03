@@ -1258,6 +1258,8 @@ const Rapicorn::Aida::PropertyList&
 I_UIWidgetArea_Interface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
+    // RAPICORN_AIDA_PROPERTY (I_UIWidgetArea_Interface, dummy, "dummy", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_UIWidgetArea_Interface, on_click, _("On CLick"), _("Command on button1 click"), "rw"),
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
   return property_list;
@@ -1628,6 +1630,16 @@ const Rapicorn::Aida::PropertyList&
 I_PropertyTester_Interface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, bool_prop, "bool_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, int_prop, "int_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, float_prop, "float_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, string_prop, "string_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, enum_prop, "enum_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, record_prop, "record_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, sequence_prop, "sequence_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, interface_prop, "interface_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, self_prop, "self_prop", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_PropertyTester_Interface, any_prop, "any_prop", "", ""),
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
   return property_list;
@@ -1664,6 +1676,10 @@ const Rapicorn::Aida::PropertyList&
 I_ButtonArea_Interface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
+    // RAPICORN_AIDA_PROPERTY (I_ButtonArea_Interface, on_click, "on_click", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_ButtonArea_Interface, on_click2, "on_click2", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_ButtonArea_Interface, on_click3, "on_click3", "", ""),
+    // RAPICORN_AIDA_PROPERTY (I_ButtonArea_Interface, click_type, "click_type", "", ""),
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
   return property_list;

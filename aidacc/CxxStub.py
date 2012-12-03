@@ -640,6 +640,11 @@ class Generator:
     s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
     s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
+    for fl in class_info.fields:
+      cmmt = '// '
+      label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
+      dflags = fl[1].auxdata.get ('default', '""')
+      s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     calls = [cl + '::_property_list()' for cl in precls]
