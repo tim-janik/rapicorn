@@ -1259,7 +1259,7 @@ I_UIWidgetArea_Interface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     // RAPICORN_AIDA_PROPERTY (I_UIWidgetArea_Interface, dummy, "dummy", "", ""),
-    // RAPICORN_AIDA_PROPERTY (I_UIWidgetArea_Interface, on_click, _("On CLick"), _("Command on button1 click"), "rw"),
+    RAPICORN_AIDA_PROPERTY (I_UIWidgetArea_Interface, on_click, _("On CLick"), _("Command on button1 click"), "rw"),
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
   return property_list;

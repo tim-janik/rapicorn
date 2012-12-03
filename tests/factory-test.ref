@@ -1,6 +1,5 @@
 <main-test
   title="RAPICORN:Rapidrun:main-test"
-  name="main-test"
   width="-1"
   height="-1"
   visible="1"
@@ -12,13 +11,13 @@
   vspread="0"
   hshrink="0"
   vshrink="0"
+  name="main-test"
   >
     <Alignment
       left_padding="5"
       right_padding="5"
       bottom_padding="5"
       top_padding="5"
-      name="Alignment"
       width="-1"
       height="-1"
       visible="1"
@@ -30,11 +29,11 @@
       vspread="0"
       hshrink="0"
       vshrink="0"
+      name="Alignment"
       >
         <VBox
           homogeneous="0"
           spacing="5"
-          name="VBox"
           width="-1"
           height="-1"
           visible="1"
@@ -46,6 +45,7 @@
           vspread="0"
           hshrink="0"
           vshrink="0"
+          name="VBox"
           >
             <TestItem
               value="19"
@@ -61,7 +61,6 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="TestItem"
               width="10"
               height="10"
               visible="1"
@@ -73,6 +72,7 @@
               vspread="0"
               hshrink="0"
               vshrink="0"
+              name="TestItem"
             >
             </TestItem>
             <TestItem
@@ -89,7 +89,6 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="TestItem"
               width="10"
               height="10"
               visible="1"
@@ -101,6 +100,7 @@
               vspread="0"
               hshrink="0"
               vshrink="0"
+              name="TestItem"
             >
             </TestItem>
         </VBox>

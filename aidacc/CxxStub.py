@@ -641,7 +641,7 @@ class Generator:
     s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
     for fl in class_info.fields:
-      cmmt = '// '
+      cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
       label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
       dflags = fl[1].auxdata.get ('default', '""')
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)

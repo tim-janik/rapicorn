@@ -602,7 +602,6 @@ const PropertyList&
 ItemImpl::_property_list ()
 {
   static Property *properties[] = {
-    MakeProperty (ItemImpl, name,      _("Name"), _("Identification name of the item"), "rw"),
     MakeProperty (ItemImpl, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
     MakeProperty (ItemImpl, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
     MakeProperty (ItemImpl, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
@@ -630,7 +629,7 @@ ItemImpl::_property_list ()
     MakeProperty (ItemImpl, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
     MakeProperty (ItemImpl, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
   };
-  static const PropertyList property_list (properties);
+  static const PropertyList property_list (properties, ItemIface::_property_list());
   return property_list;
 }
 
