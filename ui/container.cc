@@ -15,20 +15,19 @@ struct ClassDoctor {
 };
 
 /* --- CrossLinks --- */
-struct CrossLink : protected NonCopyable {
+struct CrossLink {
   ItemImpl                             *owner, *link;
   Signals::Trampoline1<void,ItemImpl&> *uncross;
   CrossLink                            *next;
-  explicit      CrossLink (ItemImpl                         *o,
-                           ItemImpl                         *l,
-                           Signals::Trampoline1<void,ItemImpl&> &it) :
+  CrossLink (ItemImpl *o, ItemImpl *l, Signals::Trampoline1<void,ItemImpl&> &it) :
     owner (o), link (l),
     uncross (ref_sink (&it)), next (NULL)
   {}
-  /*Des*/       ~CrossLink()
+  ~CrossLink()
   {
     unref (uncross);
   }
+  RAPICORN_CLASS_NON_COPYABLE (CrossLink);
 };
 struct CrossLinks {
   ContainerImpl *container;
@@ -48,14 +47,14 @@ struct CrossLinksKey : public DataKey<CrossLinks*> {
 };
 static CrossLinksKey cross_links_key;
 
-struct UncrossNode : protected NonCopyable {
+struct UncrossNode {
   UncrossNode *next;
   ContainerImpl   *mutable_container;
   CrossLink   *clink;
-  explicit      UncrossNode (ContainerImpl *xcontainer,
-                             CrossLink *xclink) :
+  UncrossNode (ContainerImpl *xcontainer, CrossLink *xclink) :
     next (NULL), mutable_container (xcontainer), clink (xclink)
   {}
+  RAPICORN_CLASS_NON_COPYABLE (UncrossNode);
 };
 static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;

@@ -656,7 +656,6 @@ ItemImpl::list_properties ()
     MakeProperty (ItemImpl, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
     MakeProperty (ItemImpl, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
     MakeProperty (ItemImpl, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, position, _("Position"),          _("Horizontal/vertical position of the item as point coordinate"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "Prw"),
     MakeProperty (ItemImpl, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
     MakeProperty (ItemImpl, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
   };
@@ -1338,15 +1337,6 @@ ItemImpl::vscale (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vscale = f;
-  repack (op, pa);
-}
-
-void
-ItemImpl::position (Point point) // mirrors (hposition,vposition)
-{
-  PackInfo &pa = pack_info (true), op = pa;
-  pa.hposition = point.x;
-  pa.vposition = point.y;
   repack (op, pa);
 }
 

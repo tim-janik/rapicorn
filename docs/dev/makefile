@@ -7,7 +7,7 @@ build-stamp:
 
 top_srcdir  = ../..
 git_stamp   = $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
-GBR_VERSION   = $(shell git name-rev HEAD 2>/dev/null | sed 's/.* //')
+GBR_VERSION   = $(shell git name-rev --always --name-only HEAD 2>/dev/null | sed 's,/,_,g')
 PRJ_VERSION   = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
 DOC_VERSION = $(or $(GBR_VERSION), $(PRJ_VERSION))
 SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
@@ -89,7 +89,7 @@ all-docs: $(git_stamp) doxygen.cfg
 	$(Q) sed $(LINK_PROJECT_NAME) -i html.tmp/html/*.html
 	$(Q) sed -r $(R_ACCESSKEY_AS_F) -i html.tmp/html/*.html
 	$(Q) mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
-	$(Q) test "$(DOC_VERSION)" != "master" || ln -s $(DOC_VERSION) html.tmp/latest
+	$(Q) ln -s $(DOC_VERSION) html.tmp/latest
 	$(GPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) rsync -aH --del html.tmp/ html/
 	$(GPRINT) "CLEAN" "Temporaries..."

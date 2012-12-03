@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class IniFile : protected NonCopyable {
+class IniFile {
   typedef std::map<String,StringVector> SectionMap;
   SectionMap                    m_sections;
   void          load_ini        (const String &inputname, const String &data);

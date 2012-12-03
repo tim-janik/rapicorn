@@ -20,10 +20,11 @@ enum Kind {
 };
 inline bool is_combinator           (Kind kind) { return kind >= DESCENDANT && kind <= NEIGHBORING; }
 
-class CustomPseudoRegistry : protected NonCopyable {
+class CustomPseudoRegistry {
   CustomPseudoRegistry                 *m_next;
   String                                m_ident, m_blurb;
   static Atomic<CustomPseudoRegistry*>  stack_head;
+  RAPICORN_CLASS_NON_COPYABLE (CustomPseudoRegistry);
 public:
   const String& ident                () const { return m_ident; }
   const String& blurb                () const { return m_blurb; }

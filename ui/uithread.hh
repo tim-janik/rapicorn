@@ -22,7 +22,6 @@
 #include <ui/paintitems.hh>
 #include <ui/painter.hh>
 #include <ui/primitives.hh>
-#include <ui/properties.hh>
 #include <ui/region.hh>
 #include <ui/scrollitems.hh>
 #include <ui/selector.hh>

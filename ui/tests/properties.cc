@@ -57,7 +57,7 @@ public:
       MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 0, 100, 0.5, "rw"),
       MakeProperty (PropertyHost, float_prop,           "Label", "Blurb", 0, 100, 0.5, "rw"),
       MakeProperty (PropertyHost, const_float_prop,     "Label", "Blurb", 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
+      // MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
       MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "rw"),
       MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "rw"),
       MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", "rw"),
@@ -73,7 +73,7 @@ property_test()
 {
   PropertyHost ph;
   // printf ("created %d properties.\n", ph.list_properties().n_properties);
-  TASSERT (ph.list_properties().n_properties == 15);
+  TASSERT (ph.list_properties().n_properties == 15 - 1);
 }
 REGISTER_UITHREAD_TEST ("Objects/Property Test", property_test);
 

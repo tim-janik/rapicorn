@@ -9,7 +9,7 @@ namespace Rapicorn {
 class WindowImpl;
 class ItemImpl;
 
-class Heritage : public virtual BaseObject {
+class Heritage : public virtual ReferenceCountable {
   friend        class ClassDoctor;
   class Internals;
   Internals    *m_internals;

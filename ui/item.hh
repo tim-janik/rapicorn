@@ -7,7 +7,6 @@
 #include <ui/events.hh>
 #include <ui/region.hh>
 #include <ui/commands.hh>
-#include <ui/properties.hh>
 #include <ui/heritage.hh>
 
 namespace Rapicorn {
@@ -24,7 +23,7 @@ class WindowImpl;
 class ViewportImpl;
 
 /* --- event handler --- */
-class EventHandler : public virtual BaseObject {
+class EventHandler : public virtual ReferenceCountable {
   typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
@@ -39,7 +38,7 @@ public:
 
 /* --- ItemImpl --- */
 typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
-class ItemImpl : public virtual ItemIface {
+class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
@@ -304,8 +303,6 @@ public: /* packing */
   void               valign          (double f);
   double             vscale          () const   { return pack_info ().vscale; }
   void               vscale          (double f);
-  Point              position        () const   { const PackInfo &pi = pack_info(); return Point (pi.hposition, pi.vposition); }
-  void               position        (Point p); // mirrors (hposition,vposition)
   double             hanchor         () const   { return halign(); } // mirrors halign
   void               hanchor         (double a) { halign (a); }      // mirrors halign
   double             vanchor         () const   { return valign(); } // mirrors valign

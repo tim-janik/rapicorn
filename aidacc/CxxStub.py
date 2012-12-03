@@ -60,7 +60,6 @@ clientcc_boilerplate = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
 Rapicorn::Aida::uint64_t connection_handle2id  (const Rapicorn::Aida::SmartHandle &h) { return h._rpc_id(); }
-static inline void       connection_context4id (Rapicorn::Aida::uint64_t ipcid, Rapicorn::Aida::NonCopyable *ctx) {}
 template<class C> C*     connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
 """
@@ -496,7 +495,9 @@ class Generator:
     s += '// === %s ===\n' % class_info.name
     s += 'static inline void ref   (%s&) {} // dummy stub for Signal<>.emit\n' % classH
     s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
-    s += 'struct %s : public Rapicorn::Aida::NonCopyable {\n' % classC    # context class
+    s += 'struct %s {\n' % classC    # context class
+    s += '  RAPICORN_CLASS_NON_COPYABLE (%s);\n' % classC       # make class non-copyable
+    s += 'public:\n'
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'

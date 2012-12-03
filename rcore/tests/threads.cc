@@ -385,10 +385,11 @@ REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
 // == Atomic Ring Buffer
 template<typename T>
-class RingBuffer : protected Rapicorn::NonCopyable {
+class RingBuffer {
   const uint    m_size;
   Atomic<uint>  m_wmark, m_rmark;
   T            *m_buffer;
+  RAPICORN_CLASS_NON_COPYABLE (RingBuffer);
 public:
   explicit
   RingBuffer (uint bsize) :
@@ -676,6 +677,7 @@ struct MyDeletableHook : public Deletable::DeletionHook {
   {
     if (deletable)
       deletable = NULL;
+    // not deleting this, due to stack allocation
   }
   virtual
   ~MyDeletableHook ()

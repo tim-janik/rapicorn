@@ -3,10 +3,11 @@
 #define __RAPICORN_XMLNODE_HH__
 
 #include <rcore/markup.hh>
+#include <rcore/objects.hh>
 
 namespace Rapicorn {
 
-class XmlNode : public virtual BaseObject {
+class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
   String                m_name; // element name
   XmlNode              *m_parent;
   StringVector          m_attribute_names;

@@ -10,7 +10,8 @@
 namespace Rapicorn {
 
 /* --- test dump --- */
-class TestStream : protected NonCopyable {
+class TestStream {
+  RAPICORN_CLASS_NON_COPYABLE (TestStream);
 public:
   typedef enum { TEXT, NODE, VALUE, INTERN, INDENT, POPNODE, POPINDENT } Kind;
 protected:

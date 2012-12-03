@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_SVG_HH__
 #define __RAPICORN_SVG_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/objects.hh>
 #include <cairo.h>
 #include <math.h>
 

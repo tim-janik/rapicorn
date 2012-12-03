@@ -70,7 +70,7 @@ void
 WindowImpl::set_parent (ContainerImpl *parent)
 {
   if (parent)
-    critical ("setting parent on toplevel Window item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
+    critical ("setting parent on toplevel Window item to: %p (%s)", parent, parent->typeid_name().c_str());
   return ContainerImpl::set_parent (parent);
 }
 

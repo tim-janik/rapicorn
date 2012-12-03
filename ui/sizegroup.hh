@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 /* --- SizeGroup --- */
-class SizeGroup : public virtual BaseObject {
+class SizeGroup : public virtual ReferenceCountable {
   friend            class ClassDoctor;
   friend            class ItemImpl;
 protected:

@@ -48,7 +48,7 @@ public:
 
 // === EventLoop ===
 class MainLoop;
-class EventLoop : public virtual BaseObject /// Loop object, polling for events and executing callbacks in accordance.
+class EventLoop : public virtual ReferenceCountable /// Loop object, polling for events and executing callbacks in accordance.
 {
   class TimedSource;
   class PollFDSource;
@@ -180,9 +180,10 @@ struct EventLoop::State {
 };
 
 // === EventLoop::Source ===
-class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyable /// EventLoop source for callback execution.
+class EventLoop::Source : public virtual ReferenceCountable /// EventLoop source for callback execution.
 {
   friend        class EventLoop;
+  RAPICORN_CLASS_NON_COPYABLE (Source);
 protected:
   EventLoop   *m_loop;
   struct {
