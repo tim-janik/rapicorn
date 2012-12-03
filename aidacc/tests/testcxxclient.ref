@@ -337,11 +337,11 @@ void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeqStruct&);
 
 typedef Rapicorn::Aida::Any AliasAny;
 
+typedef bool AliasBool;
+
 typedef int AliasInt;
 
 typedef double AliasFloat;
-
-typedef bool AliasBool;
 
 typedef std::string AliasString;
 
@@ -412,11 +412,13 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecordStruct&);
 
 namespace Auxdata {
 
-typedef int bar;
+typedef bool bfoo;
 
-typedef double x;
+typedef int ifoo;
 
-typedef std::string s;
+typedef double ffoo;
+
+typedef std::string sfoo;
 } // Auxdata
 
 namespace InterfaceTests {
@@ -437,8 +439,8 @@ public:
   static UIWidgetAreaHandle     downcast (C c) { return _cast (c, c.cast_types()); }
   const Rapicorn::Aida::TypeHashList& cast_types ();
   explicit                      UIWidgetAreaHandle ();
-  double                        dummy    () const;
-  void                          dummy    (double);
+  bool                          dummy    () const;
+  void                          dummy    (bool);
   std::string                   on_click () const;
   void                          on_click (const std::string&);
   Signal_void_signal&           sig_void_signal();
@@ -450,7 +452,8 @@ public:
                                                     double r);
   double                        two_args2          (int n = 6,
                                                     double r = 7.7);
-  double                        multi_args         (int n,
+  double                        multi_args         (bool b,
+                                                    int n,
                                                     double r,
                                                     int i,
                                                     const std::string &s = "String ding",
@@ -1417,25 +1420,25 @@ UIWidgetAreaHandle::sig_sample_signal ()
 {
   return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->sample_signal.psignal;
 }
-double
+bool
 UIWidgetAreaHandle::dummy () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
+  fb.add_msgid (0x311213c7f9f683fbULL, 0x5ce277b1d4ad5f84ULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval;
+  bool  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-UIWidgetAreaHandle::dummy (double value)
+UIWidgetAreaHandle::dummy (bool value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
+  fb.add_msgid (0x2cd4545fdbf8e1bcULL, 0xf980e99fa9f34ab1ULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1544,15 +1547,17 @@ UIWidgetAreaHandle::two_args2 (int arg_n,
   return retval;
 }
 double
-UIWidgetAreaHandle::multi_args (int arg_n,
+UIWidgetAreaHandle::multi_args (bool arg_b,
+                                int arg_n,
                                 double arg_r,
                                 int arg_i,
                                 const std::string &arg_s,
                                 double arg_y)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 5), *fr = NULL;
-  fb.add_msgid (0x3501ef84b7c1d9ffULL, 0x564566ab8a5e1b8bULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 6), *fr = NULL;
+  fb.add_msgid (0x32dd2e884e50472dULL, 0xc4f9dcc09eb0bb6cULL); // msgid
   fb <<= (*this);
+  fb <<= arg_b;
   fb <<= arg_n;
   fb <<= arg_r;
   fb <<= arg_i;

@@ -344,11 +344,11 @@ void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeqImpl&);
 
 typedef Rapicorn::Aida::Any AliasAny;
 
+typedef bool AliasBool;
+
 typedef int AliasInt;
 
 typedef double AliasFloat;
-
-typedef bool AliasBool;
 
 typedef std::string AliasString;
 
@@ -419,11 +419,13 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecordImpl&);
 
 namespace Auxdata {
 
-typedef int bar;
+typedef bool bfoo;
 
-typedef double x;
+typedef int ifoo;
 
-typedef std::string s;
+typedef double ffoo;
+
+typedef std::string sfoo;
 } // Auxdata
 
 namespace InterfaceTests {
@@ -439,8 +441,8 @@ protected:
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
-  virtual double                        dummy    () const = 0;
-  virtual void                          dummy    (double) = 0;
+  virtual bool                          dummy    () const = 0;
+  virtual void                          dummy    (bool) = 0;
   virtual std::string                   on_click () const = 0;
   virtual void                          on_click (const std::string&) = 0;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
@@ -454,7 +456,8 @@ public:
                                                                   double r);
   virtual double                        two_args2                (int n = 6,
                                                                   double r = 7.7);
-  virtual double                        multi_args               (int n,
+  virtual double                        multi_args               (bool b,
+                                                                  int n,
                                                                   double r,
                                                                   int i,
                                                                   const std::string &s = "String ding",
@@ -1778,7 +1781,7 @@ _$getter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  double  rval = self->dummy ();
+  bool  rval = self->dummy ();
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= rval;
   return &rb;
@@ -1790,7 +1793,7 @@ _$setter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  double  arg_dummy;
+  bool  arg_dummy;
   fbr >>= arg_dummy;
   self->dummy (arg_dummy);
   return NULL;
@@ -1894,10 +1897,12 @@ _$caller__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 5) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 6) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
+  bool  arg_b;
+  fbr >>= arg_b;
   int  arg_n;
   fbr >>= arg_n;
   double  arg_r;
@@ -1908,7 +1913,7 @@ _$caller__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= arg_s;
   double  arg_y;
   fbr >>= arg_y;
-  double  rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
+  double  rval = self->multi_args (arg_b, arg_n, arg_r, arg_i, arg_s, arg_y);
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= rval;
   return &rb;
@@ -3796,8 +3801,8 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
   { 0x3ced16bab1c08fe8ULL, 0xd1fa4cb922b6d7deULL, InterfaceTests::_$lsttyp__UIWidgetArea__, },
-  { 0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL, InterfaceTests::_$getter__UIWidgetArea__dummy, },
-  { 0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL, InterfaceTests::_$setter__UIWidgetArea__dummy, },
+  { 0x311213c7f9f683fbULL, 0x5ce277b1d4ad5f84ULL, InterfaceTests::_$getter__UIWidgetArea__dummy, },
+  { 0x2cd4545fdbf8e1bcULL, 0xf980e99fa9f34ab1ULL, InterfaceTests::_$setter__UIWidgetArea__dummy, },
   { 0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL, InterfaceTests::_$getter__UIWidgetArea__on_click, },
   { 0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL, InterfaceTests::_$setter__UIWidgetArea__on_click, },
   { 0x39a122b559d15903ULL, 0x0a95fe35b7a1de33ULL, InterfaceTests::_$caller__UIWidgetArea__simple_method, },
@@ -3805,7 +3810,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x3b5ae84b86dfa59cULL, 0x5d2ef3880b1fa360ULL, InterfaceTests::_$caller__UIWidgetArea__single_arg2, },
   { 0x359c33f1677a63ebULL, 0x3a05748016992575ULL, InterfaceTests::_$caller__UIWidgetArea__two_args, },
   { 0x3291a584ff9121b3ULL, 0xbd14f4bbc47fb2ccULL, InterfaceTests::_$caller__UIWidgetArea__two_args2, },
-  { 0x3501ef84b7c1d9ffULL, 0x564566ab8a5e1b8bULL, InterfaceTests::_$caller__UIWidgetArea__multi_args, },
+  { 0x32dd2e884e50472dULL, 0xc4f9dcc09eb0bb6cULL, InterfaceTests::_$caller__UIWidgetArea__multi_args, },
   { 0x316521a2bcc037d0ULL, 0x43987053dab0c3c0ULL, InterfaceTests::_$caller__UIWidgetArea__self_method, },
   { 0x2e02c52c84773703ULL, 0x00027e452edb615cULL, InterfaceTests::_$caller__UIWidgetArea__void_method, },
   { 0x3e4f2ff4e1424783ULL, 0x439ed3d602e3946eULL, InterfaceTests::_$caller__UIWidgetArea__on_click2out, },

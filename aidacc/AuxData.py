@@ -5,6 +5,7 @@ import Decls
 
 
 auxillary_initializers = {
+  (Decls.BOOL,      'Bool')     : ('label', 'blurb', 'default', 'hints'),
   (Decls.INT,       'Int')      : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
   (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'default', 'hints'),

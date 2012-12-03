@@ -185,7 +185,9 @@ class Generator:
     return s
   def generate_proto_add_py (self, fb, type, var):
     s = ''
-    if type.storage == Decls.INT:
+    if type.storage == Decls.BOOL:
+      s += '  %s.add_bool (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
+    elif type.storage == Decls.INT:
       s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ENUM:
       s += '  %s.add_evalue (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
@@ -204,7 +206,9 @@ class Generator:
     return s
   def generate_proto_pop_py (self, fbr, type, var):
     s = ''
-    if type.storage == Decls.INT:
+    if type.storage == Decls.BOOL:
+      s += '  %s = PyLong_FromLongLong (%s.pop_bool()); ERRORifpy ();\n' % (var, fbr)
+    elif type.storage == Decls.INT:
       s += '  %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % (var, fbr)
     elif type.storage == Decls.ENUM:
       s += '  %s = PyLong_FromLongLong (%s.pop_evalue()); ERRORifpy();\n' % (var, fbr)

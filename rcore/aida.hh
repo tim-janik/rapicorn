@@ -53,6 +53,7 @@ typedef unsigned long long int uint64_t; // libc's uint64_t is a long on AMD64 w
 enum TypeKind {
   UNTYPED        = 0,   ///< Type indicator for unused Any instances.
   VOID           = 'v', ///< 'void' type.
+  BOOL           = 'b', ///< Boolean type.
   INT            = 'i', ///< Numeric type.
   FLOAT          = 'd', ///< Floating point type of IEEE-754 Double precision.
   STRING         = 's', ///< String type for character sequence in UTF-8 encoding.
@@ -158,9 +159,9 @@ public:
   bool operator>>= (std::string   &v) const; ///< Extract a std::string if possible.
   bool operator>>= (const Any    *&v) const; ///< Extract an Any if possible.
   const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
-  double     as_float () const; ///< Obtain INT or FLOAT contents as double float.
-  int64_t    as_int   () const; ///< Obtain INT or FLOAT contents as integer (yields 1 for non-empty strings).
-  String     as_string() const; ///< Obtain INT, FLOAT or STRING contents as string.
+  double     as_float () const; ///< Obtain BOOL, INT or FLOAT contents as double float.
+  int64_t    as_int   () const; ///< Obtain BOOL, INT or FLOAT contents as integer (yields 1 for non-empty strings).
+  String     as_string() const; ///< Obtain BOOL, INT, FLOAT or STRING contents as string.
   // >>= enum
   // >>= sequence
   // >>= record
@@ -283,6 +284,7 @@ protected:
 public:
   virtual     ~FieldBuffer();
   inline uint64_t first_id () const { return buffermem && size() && type_at (0) == INT ? upeek (0).vint64 : 0; }
+  inline void add_bool   (bool    vbool)   { FieldUnion &u = addu (BOOL); u.vint64 = vbool; }
   inline void add_int64  (int64_t vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
   inline void add_evalue (int64_t vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
@@ -304,7 +306,7 @@ public:
   inline void operator<<= (int64_t  v)        { FieldUnion &u = addu (INT); u.vint64 = v; }
   inline void operator<<= (uint32_t v)        { FieldUnion &u = addu (INT); u.vint64 = v; }
   inline void operator<<= (int    v)          { FieldUnion &u = addu (INT); u.vint64 = v; }
-  inline void operator<<= (bool   v)          { FieldUnion &u = addu (INT); u.vint64 = v; }
+  inline void operator<<= (bool   v)          { FieldUnion &u = addu (BOOL); u.vint64 = v; }
   inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; }
   inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; }
   inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
@@ -336,6 +338,7 @@ public:
   inline void               skip_msgid () { skip(); skip(); }
   inline uint32_t           n_types    () { return m_fb->size(); }
   inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
+  inline int64_t            get_bool   () { FieldUnion &u = fb_getu (BOOL); return u.vint64; }
   inline int64_t            get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
   inline int64_t            get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
@@ -344,6 +347,7 @@ public:
   inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *u.vany; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
+  inline int64_t            pop_bool   () { FieldUnion &u = fb_popu (BOOL); return u.vint64; }
   inline int64_t            pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
   inline int64_t            pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
@@ -357,7 +361,7 @@ public:
   inline void operator>>= (int64_t &v)         { FieldUnion &u = fb_popu (INT); v = u.vint64; }
   inline void operator>>= (uint32_t &v)        { FieldUnion &u = fb_popu (INT); v = u.vint64; }
   inline void operator>>= (int &v)             { FieldUnion &u = fb_popu (INT); v = u.vint64; }
-  inline void operator>>= (bool &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; }
+  inline void operator>>= (bool &v)            { FieldUnion &u = fb_popu (BOOL); v = u.vint64; }
   inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; }
   inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; }
   inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }

@@ -51,6 +51,7 @@ Const G = (5 * 3 + 4);                          // 19
 Const Signs = +1 + -2 + - -3 - +-+-+-+-+- 4;    // 6
 Const Pows = 1**1 - -1**1 + 1**-1 - -1**-1 - -(1 + 1)**-(1 + 1) + +1**+1;
 Const Floats = 0 + 0. + .0 + 1. + 10. + .011 + 101. + 1.1e+1 + .1e+1 + 1e-1 + 1E+1 + 1E-1 + 1e+01 + 1e-02; // 144.221
+Const Bools = TRUE + True + true + FALSE + False + false + 0 + 1; // 4
 Const Vint = 42;
 
 /* test that C++ style commments are properly ignored within strings */
@@ -195,9 +196,9 @@ sequence NestedTypesSeq {
 
 // typedef tests
 typedef any AliasAny;
+typedef bool AliasBool;
 typedef int  AliasInt;
 typedef float AliasFloat;
-typedef bool AliasBool;
 typedef string AliasString;
 typedef XFooRecord AliasRecord;
 typedef XFooSequence AliasSequence;
@@ -255,21 +256,23 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 namespace Auxdata {
 // FIXME: can't check auxdata of record fields yet
 //record RecordWithAuxdata {
-  typedef int bar  = Int ("Bar", "The Bar number", 10007.000, -10, +10, +2, "rw");
-  typedef float x  = Float ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
-  typedef string s = String ("auxtest2", "Specify text here", "auxtest3", "rw");
+  typedef bool bfoo   = Bool   ("Bool Foo", "A Boolean", "rw");
+  typedef int  ifoo   = Int    ("Int Foo", "The Bar number", 10007.000, -10, +10, +2, "rw");
+  typedef float ffoo  = Float  ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
+  typedef string sfoo = String ("auxtest2", "Specify text here", "auxtest3", "rw");
+  /* auxtest1 and auxtest2 are explicit testing keywords */
 //};
 }
 
 namespace InterfaceTests {
 interface UIWidgetArea {
-  float dummy;
+  bool  dummy;
   float simple_method ();
   float single_arg (int n);
   float single_arg2 (int n = 5);
   float two_args (int n, float r);
   float two_args2 (int n = 6, float r = 7.7);
-  float multi_args (int n, float r, int i, string s = ("String ding"), float y = 5);
+  float multi_args (bool b, int n, float r, int i, string s = ("String ding"), float y = 5);
   float self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
   void void_method();
   /* sample property accessors: */

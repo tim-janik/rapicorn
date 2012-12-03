@@ -5,10 +5,11 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vidsEQRCFTY']
+VOID, BOOL, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vbidsEQRCFTY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',
+    BOOL      : 'BOOL',
     INT       : 'INT',
     FLOAT     : 'FLOAT',
     STRING    : 'STRING',
@@ -78,7 +79,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
+    assert storage in (VOID, BOOL, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl
@@ -109,7 +110,7 @@ class TypeInfo (BaseDecl):
     if self.__dict__.get ('rtype', None): arglist += [self.rtype]
     if self.__dict__.get ('args', []): arglist += [a[1] for a in self.args]
     typelist = '::'.join ([tp.full_name() for tp in typelist]) # MethodObject method_name
-    arglist  =  '+'.join ([tp.full_name() for tp in arglist])  # void float int string
+    arglist  =  '+'.join ([tp.full_name() for tp in arglist])  # void bool int float string
     return typelist + (' ' if arglist else '') + arglist
   def ident_digest (self):
     digest = self.string_digest()
