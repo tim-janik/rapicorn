@@ -257,9 +257,9 @@ namespace Auxdata {
 // FIXME: can't check auxdata of record fields yet
 //record RecordWithAuxdata {
   typedef bool bfoo   = Bool   ("Bool Foo", "A Boolean", "rw");
-  typedef int  ifoo   = Int    ("Int Foo", "The Bar number", 10007.000, -10, +10, +2, "rw");
-  typedef float ffoo  = Float  ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
-  typedef string sfoo = String ("auxtest2", "Specify text here", "auxtest3", "rw");
+  typedef int  ifoo   = Int    ("Int Foo", "The Bar number", "rw", 10007.000);
+  typedef float ffoo  = Float  ("auxtest1", "X coordinate", "ro", 19e-3);
+  typedef string sfoo = String ("auxtest2", "Specify text here", "rw", "auxtest3");
   /* auxtest1 and auxtest2 are explicit testing keywords */
 //};
 }

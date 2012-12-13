@@ -182,12 +182,13 @@ type_code_tests ()
     assert (t2.name() == String ("AidaTests::FloatWithBlurbBlurb"));
   }
   { // INT
-    TypeCode t = tp.lookup_local ("AidaTests::ExtendIntWithAux");
+    TypeCode t = tp.lookup_local ("AidaTests::IntAuxRange");
     assert (t.kind() == INT);
-    assert (t.name() == "AidaTests::ExtendIntWithAux");
-    assert (t.aux_value ("label") == "Extended int");
-    assert (t.aux_value ("blurb") == "This int demonstrates extensive auxillary data use");
-    assert (t.aux_value ("default") == "33");
+    assert (t.name() == "AidaTests::IntAuxRange");
+    assert (t.aux_value ("label") == "Int Range");
+    assert (t.aux_value ("blurb") == "This int demonstrates range data use");
+    assert (t.aux_value ("min") == "-100");
+    assert (t.aux_value ("max") == "100");
     assert (t.aux_value ("step") == "-5");
     assert (t.hints().find (":extra-option:") != String().npos);
   }
@@ -198,7 +199,7 @@ type_code_tests ()
     assert (t.aux_value ("label") == "Float Label");
     assert (t.aux_value ("blurb") == "Float Blurb");
     assert (t.aux_value ("default") == "97.97");
-    assert (t.hints() == ":");
+    assert (t.hints() == ":rw:");
   }
   { // STRING
     TypeCode t = tp.lookup_local ("AidaTests::ExtendedString");

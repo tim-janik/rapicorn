@@ -643,7 +643,7 @@ class Generator:
     for fl in class_info.fields:
       cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
       label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
-      dflags = fl[1].auxdata.get ('default', '""')
+      dflags = fl[1].auxdata.get ('hints', '""')
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)

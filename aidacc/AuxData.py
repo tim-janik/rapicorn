@@ -5,10 +5,12 @@ import Decls
 
 
 auxillary_initializers = {
-  (Decls.BOOL,      'Bool')     : ('label', 'blurb', 'default', 'hints'),
-  (Decls.INT,       'Int')      : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
-  (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
-  (Decls.STRING,    'String')   : ('label', 'blurb', 'default', 'hints'),
+  (Decls.BOOL,      'Bool')     : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.INT,       'Int')      : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.INT,       'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
+  (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.FLOAT,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
+  (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),
 }
 
 class Error (Exception):
