@@ -8,6 +8,10 @@ include "hardcoded.idl";
 
 namespace Rapicorn {
 
+Const MAXINT32 = +4294967295;
+Const MAXINT31 = +2147483647;
+Const MININT31 = -2147483648;
+
 /// A sequence of strings (in C++ of std::string).
 sequence StringSeq { string strings; };
 
@@ -87,6 +91,8 @@ interface Item {
   string        name = String (_("Name"), _("Identification name of the item"), "rw");
   bool          visible = Bool (_("Visible"), _("Whether this item is visible"), "rw");
   bool          sensitive = Bool (_("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw");
+  float         width  = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
+  float         height = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
 };
 
 /**

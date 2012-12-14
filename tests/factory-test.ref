@@ -1,7 +1,5 @@
 <main-test
   title="RAPICORN:Rapidrun:main-test"
-  width="-1"
-  height="-1"
   color_scheme="COLOR_INHERIT"
   hexpand="0"
   vexpand="0"
@@ -12,14 +10,14 @@
   name="main-test"
   visible="1"
   sensitive="1"
+  width="-1"
+  height="-1"
   >
     <Alignment
       left_padding="5"
       right_padding="5"
       bottom_padding="5"
       top_padding="5"
-      width="-1"
-      height="-1"
       color_scheme="COLOR_INHERIT"
       hexpand="0"
       vexpand="0"
@@ -30,12 +28,12 @@
       name="Alignment"
       visible="1"
       sensitive="1"
+      width="-1"
+      height="-1"
       >
         <VBox
           homogeneous="0"
           spacing="5"
-          width="-1"
-          height="-1"
           color_scheme="COLOR_INHERIT"
           hexpand="0"
           vexpand="0"
@@ -46,6 +44,8 @@
           name="VBox"
           visible="1"
           sensitive="1"
+          width="-1"
+          height="-1"
           >
             <TestItem
               value="19"
@@ -61,8 +61,6 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              width="10"
-              height="10"
               color_scheme="COLOR_INHERIT"
               hexpand="0"
               vexpand="0"
@@ -73,6 +71,8 @@
               name="TestItem"
               visible="1"
               sensitive="1"
+              width="10"
+              height="10"
             >
             </TestItem>
             <TestItem
@@ -89,8 +89,6 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              width="10"
-              height="10"
               color_scheme="COLOR_INHERIT"
               hexpand="0"
               vexpand="0"
@@ -101,6 +99,8 @@
               name="TestItem"
               visible="1"
               sensitive="1"
+              width="10"
+              height="10"
             >
             </TestItem>
         </VBox>
