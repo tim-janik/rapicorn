@@ -286,14 +286,14 @@ public: /* packing */
   void               vposition       (double d);
   double             vspan           () const   { return pack_info ().vspan; }
   void               vspan           (double d);
-  uint               left_spacing    () const   { return pack_info ().left_spacing; }
-  void               left_spacing    (uint s);
-  uint               right_spacing   () const   { return pack_info ().right_spacing; }
-  void               right_spacing   (uint s);
-  uint               bottom_spacing  () const   { return pack_info ().bottom_spacing; }
-  void               bottom_spacing  (uint s);
-  uint               top_spacing     () const   { return pack_info ().top_spacing; }
-  void               top_spacing     (uint s);
+  int                left_spacing    () const   { return pack_info ().left_spacing; }
+  void               left_spacing    (int s);
+  int                right_spacing   () const   { return pack_info ().right_spacing; }
+  void               right_spacing   (int s);
+  int                bottom_spacing  () const   { return pack_info ().bottom_spacing; }
+  void               bottom_spacing  (int s);
+  int                top_spacing     () const   { return pack_info ().top_spacing; }
+  void               top_spacing     (int s);
   double             halign          () const   { return pack_info ().halign; }
   void               halign          (double f);
   double             hscale          () const   { return pack_info ().hscale; }

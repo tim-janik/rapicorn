@@ -603,27 +603,6 @@ ItemImpl::_property_list ()
 {
   static Property *properties[] = {
     MakeProperty (ItemImpl, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
-    /* packing */
-    MakeProperty (ItemImpl, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
-    MakeProperty (ItemImpl, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
-    MakeProperty (ItemImpl, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
-    MakeProperty (ItemImpl, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
-    MakeProperty (ItemImpl, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
-    MakeProperty (ItemImpl, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
-    MakeProperty (ItemImpl, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (ItemImpl, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (ItemImpl, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (ItemImpl, vspan,     _("Vertical Span"),       _("Vertical span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (ItemImpl, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, halign, _("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
   };
   static const PropertyList property_list (properties, ItemIface::_property_list());
   return property_list;
@@ -1246,34 +1225,34 @@ ItemImpl::vspan (double d)
 }
 
 void
-ItemImpl::left_spacing (uint s)
+ItemImpl::left_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.left_spacing = s;
+  pa.left_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::right_spacing (uint s)
+ItemImpl::right_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.right_spacing = s;
+  pa.right_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::bottom_spacing (uint s)
+ItemImpl::bottom_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.bottom_spacing = s;
+  pa.bottom_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::top_spacing (uint s)
+ItemImpl::top_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.top_spacing = s;
+  pa.top_spacing = MAX (0, s);
   repack (op, pa);
 }
 

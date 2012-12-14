@@ -88,11 +88,31 @@ interface Item {
   ItemSeq       query_selector_all      (string selector) = 0; //< Returns all selector matches.
   Item          query_selector_unique   (string selector) = 0; //< Returns single selector match if unique.
   string	test_dump               () = 0;
-  string        name = String (_("Name"), _("Identification name of the item"), "rw");
-  bool          visible = Bool (_("Visible"), _("Whether this item is visible"), "rw");
-  bool          sensitive = Bool (_("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw");
-  float         width  = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
-  float         height = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
+  string name = String (_("Name"), _("Identification name of the item"), "rw");
+  float width   = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
+  float height  = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
+  bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw");
+  bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this item vertically"), "rw");
+  bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw");
+  bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this item and all its parents vertically"), "rw");
+  bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw");
+  bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw");
+  bool  visible   = Bool (_("Visible"),   _("Whether this item is visible"), "rw");
+  bool  sensitive = Bool (_("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw");
+  float hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the item"), "Prw", 0, 99999, 5);
+  float hspan     = Range (_("Horizontal Span"),     _("Horizontal span for item layout"), "Prw", 1, 100000, 5);
+  float vposition = Range (_("Vertical Position"),   _("Vertical layout position for the item"), "Prw", 0, 99999, 5);
+  float vspan     = Range (_("Vertical Span"),       _("Vertical span for item layout"), "Prw", 1, 100000, 5);
+  int left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the item's left side"),   "Prw", 0, 65535, 3);
+  int right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the item's right side"),  "Prw", 0, 65535, 3);
+  int bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), "Prw", 0, 65535, 3);
+  int top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the item's top side"),    "Prw", 0, 65535, 3);
+  float hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  float valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
 };
 
 /**
