@@ -28,7 +28,7 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
-  virtual uint  spacing         () = 0;
+  virtual uint  spacing         () const = 0;
   virtual void  spacing         (uint cspacing) = 0;
 };
 
@@ -38,7 +38,7 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
-  virtual uint  spacing         () = 0;
+  virtual uint  spacing         () const = 0;
   virtual void  spacing         (uint cspacing) = 0;
 };
 

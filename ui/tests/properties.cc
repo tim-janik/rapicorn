@@ -9,35 +9,35 @@ namespace {
 using namespace Rapicorn;
 
 class PropertyHost {
-  bool          bool_prop ()             		{ return false; }
+  bool          bool_prop () const       		{ return false; }
   void          bool_prop (bool v)       		{}
   bool          const_bool_prop () const 		{ return false; }
   void          const_bool_prop (bool v) 		{}
-  uint          uint_prop ()             		{ return 0; }
+  uint          uint_prop () const       		{ return 0; }
   void          uint_prop (uint v)       		{}
   uint          const_uint_prop () const 		{ return 0; }
   void          const_uint_prop (uint v) 		{}
-  int           int_prop ()              		{ return 0; }
+  int           int_prop () const        		{ return 0; }
   void          int_prop (int v)         		{}
   int           const_int_prop () const  		{ return 0; }
   void          const_int_prop (int v)          	{}
-  double        double_prop ()               		{ return 0; }
+  double        double_prop () const         		{ return 0; }
   void          double_prop (double v)       		{}
   double        const_double_prop () const   		{ return 0; }
   void          const_double_prop (double v) 		{}
-  float         float_prop ()                		{ return 0; }
+  float         float_prop () const          		{ return 0; }
   void          float_prop (float v)         		{}
   float         const_float_prop () const    		{ return 0; }
   void          const_float_prop (float v)   		{}
-  Point         point_prop ()             		{ return Point (7, 7); }
+  Point         point_prop () const       		{ return Point (7, 7); }
   void          point_prop (Point v)       		{}
   Point         const_point_prop () const      		{ return Point (7, 7); }
   void          const_point_prop (Point v)     		{}
-  String        string_prop ()               		{ return ""; }
+  String        string_prop () const         		{ return ""; }
   void          string_prop (const String &v)      	{}
   String        const_string_prop () const   		{ return ""; }
   void          const_string_prop (const String &v) 	{}
-  FrameType     enum_prop ()                    	{ return FRAME_NONE; }
+  FrameType     enum_prop () const              	{ return FRAME_NONE; }
   void          enum_prop (FrameType ft)        	{}
   FrameType     const_enum_prop () const        	{ return FRAME_NONE; }
   void          const_enum_prop (FrameType ft)  	{}

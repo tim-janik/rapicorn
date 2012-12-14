@@ -120,7 +120,7 @@ class HBoxImpl : public virtual TableImpl, public virtual HBox {
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
   virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
-  virtual uint  spacing  ()                                     { return col_spacing(); }
+  virtual uint  spacing  () const                               { return col_spacing(); }
   virtual void  spacing  (uint cspacing)                        { col_spacing (cspacing); }
 public:
   explicit
@@ -160,7 +160,7 @@ class VBoxImpl : public virtual TableImpl, public virtual VBox {
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
   virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
-  virtual uint  spacing  ()                                     { return row_spacing(); }
+  virtual uint  spacing  () const                               { return row_spacing(); }
   virtual void  spacing  (uint cspacing)                        { row_spacing (cspacing); }
 public:
   explicit
