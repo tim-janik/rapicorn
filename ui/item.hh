@@ -108,7 +108,6 @@ protected:
   virtual void                visual_update        ();
   /* misc */
   virtual                     ~ItemImpl         ();
-  virtual const PropertyList& _property_list    ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);

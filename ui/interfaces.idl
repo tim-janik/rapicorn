@@ -290,6 +290,7 @@ interface Item {
   float hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
   float valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this item"), "rw");
 };
 
 /**

@@ -598,16 +598,6 @@ ItemImpl::height (double h)
   invalidate_size();
 }
 
-const PropertyList&
-ItemImpl::_property_list ()
-{
-  static Property *properties[] = {
-    MakeProperty (ItemImpl, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
-  };
-  static const PropertyList property_list (properties, ItemIface::_property_list());
-  return property_list;
-}
-
 void
 ItemImpl::propagate_heritage ()
 {
