@@ -10,7 +10,7 @@ import AuxData
 reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-            'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
+            'namespace', 'enum', 'Const', 'typedef', 'interface',
             'record', 'sequence', 'bool', 'int', 'float', 'string', 'any')
 reservedkeywords = set (keywords + reservedwords)
 
