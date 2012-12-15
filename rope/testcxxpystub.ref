@@ -249,6 +249,7 @@ enum MathExpressions {
   RESULT_13 = 13,
   RESULT_m2 = -2,
   RESULT_77 = 77,
+  RESULT_511 = 511,
 };
 static RAPICORN_UNUSED bool
 aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)

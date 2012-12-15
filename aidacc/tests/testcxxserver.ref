@@ -816,6 +816,7 @@ enum MathExpressions {
   RESULT_13 = 13,
   RESULT_m2 = -2,
   RESULT_77 = 77,
+  RESULT_511 = 511,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
@@ -1925,6 +1926,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
     RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_13),
     RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_m2),
     RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_77),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_511),
   };
   Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "MathExpressions", enum_values);
 });

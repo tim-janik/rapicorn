@@ -406,6 +406,7 @@ enum MathExpressions {
   RESULT_13     = ((3 << 2) + 1),
   RESULT_m2     = ~1,
   RESULT_77     = ~-78,
+  RESULT_511    = 0x01ff,
 };
 
 } // RapicornAidaTest
