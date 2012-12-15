@@ -135,8 +135,6 @@ aida_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 #define AIDA_CONNECTION() (*(Rapicorn::Aida::ClientConnection*)NULL)
 #endif
 
-enum Empty {
-};
 enum Enum1 {
   E1_A = 1,
 };

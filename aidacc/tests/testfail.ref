@@ -156,3 +156,6 @@
 .../testfail.idl:95:56: TypeError: redefining existing identifier: I
 >  interface I; interface I {}; interface I; interface I {}; // interface redefinition
 >                                                         ^
+.../testfail.idl:97:15: AttributeError: invalid empty enumeration: Empty
+>  enum Empty { }; // invalid empty enumeration
+>                ^

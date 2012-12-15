@@ -72,7 +72,7 @@ Const Vistring = _("foo");
 Const Vstring = "foo";
 
 // enumerations
-enumeration Empty  { };
+// enumeration Empty  { };
 enumeration Enum1  { E1_A };
 enumeration Enum1c { E1C_A, };
 enumeration Enum2  { E2_A,  E2_B };

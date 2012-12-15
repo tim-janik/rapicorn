@@ -53,6 +53,8 @@ class YYGlobals (object):
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values):
+    if len (enum_values) < 1:
+      raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     for ev in enum_values:
       enum.add_option (*ev)

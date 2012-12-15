@@ -43,11 +43,6 @@ template<class C> C*     connection_id2context (Rapicorn::Aida::uint64_t oid) { 
 
 namespace MandatoryNamespace {
 
-enum Empty {
-};
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Empty  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); }
-
 enum Enum1 {
   E1_A = 1,
 };
