@@ -19,7 +19,7 @@
 .../testfail.idl:17:17: TypeError: redefining existing identifier: TRUE
 >  Const TRUE = 17; // invalid constant name
 >                  ^
-.../testfail.idl:19:24: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', ';', ',', '}', got '_'
+.../testfail.idl:19:24: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', '<<', '>>', '&', '\^', '\|', ';', ',', '}', got '_'
 >  Const tmp = "invalid" _("i18n string") "concatenation";
 >                         ^
 .../testfail.idl:21:1: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'

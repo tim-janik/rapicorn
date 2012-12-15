@@ -393,4 +393,19 @@ interface PureMethods {
 
 interface PureMethods; // interface prototyping
 
+// math expression tests
+enum MathExpressions {
+  RESULT_2      = 1 + 1,
+  RESULT_5      = 4 | 5,
+  RESULT_8      = 15 & 8,
+  RESULT_6      = 7 ^ 1,
+  RESULT_7      = 6 ^ 1,
+  RESULT_16     = 2 << 3,
+  RESULT_3      = 13 >> 2,
+  RESULT_24     = 3 << 2 + 1,
+  RESULT_13     = ((3 << 2) + 1),
+  RESULT_m2     = ~1,
+  RESULT_77     = ~-78,
+};
+
 } // RapicornAidaTest

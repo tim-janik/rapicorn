@@ -237,6 +237,19 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
+enum MathExpressions {
+  RESULT_2 = 2,
+  RESULT_5 = 5,
+  RESULT_8 = 8,
+  RESULT_6 = 6,
+  RESULT_7 = 7,
+  RESULT_16 = 16,
+  RESULT_3 = 3,
+  RESULT_24 = 24,
+  RESULT_13 = 13,
+  RESULT_m2 = -2,
+  RESULT_77 = 77,
+};
 static RAPICORN_UNUSED bool
 aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 {

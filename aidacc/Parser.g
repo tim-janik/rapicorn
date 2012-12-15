@@ -526,25 +526,43 @@ rule sequence:
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}
 
-rule expression: summation                      {{ return summation }}
+rule expression: or_expr                        {{ return or_expr }}
+rule or_expr:
+          xor_expr                              {{ result = xor_expr }}
+        ( '\|' or_expr                          {{ AN (result); result = result | or_expr }}
+        )*                                      {{ return result }}
+rule xor_expr:
+          and_expr                              {{ result = and_expr }}
+        ( '\^' xor_expr                         {{ AN (result); result = result ^ xor_expr }}
+        )*                                      {{ return result }}
+rule and_expr:
+          shift_expr                            {{ result = shift_expr }}
+        ( '&' and_expr                          {{ AN (result); result = result & and_expr }}
+        )*                                      {{ return result }}
+rule shift_expr:
+          summation                             {{ result = summation }}
+        ( '<<' shift_expr                       {{ AN (result); result = result << shift_expr }}
+        | '>>' shift_expr                       {{ AN (result); result = result >> shift_expr }}
+        )*                                      {{ return result }}
 rule summation:
           factor                                {{ result = factor }}
-        ( '\+' factor                           {{ AN (result); result = result + factor }}
-        | '-'  factor                           {{ result = result - factor }}
+        ( '\+' summation                        {{ AN (result); result = result + summation }}
+        | '-'  summation                        {{ result = result - summation }}
         )*                                      {{ return result }}
 rule factor:
-          signed                                {{ result = signed }}
-        ( '\*' signed                           {{ result = result * signed }}
-        | '/'  signed                           {{ result = result / signed }}
-        | '%'  signed                           {{ AN (result); result = result % signed }}
+          unary                                 {{ result = unary }}
+        ( '\*' factor                           {{ result = result * factor }}
+        | '/'  factor                           {{ result = result / factor }}
+        | '%'  factor                           {{ AN (result); result = result % factor }}
         )*                                      {{ return result }}
-rule signed:
+rule unary:
           power                                 {{ return power }}
-        | '\+' signed                           {{ return +signed }}
-        | '-'  signed                           {{ return -signed }}
+        | '\+' unary                            {{ return +unary }}
+        | '-'  unary                            {{ return -unary }}
+        | '~'  unary                            {{ return ~unary }}
 rule power:
           term                                  {{ result = term }}
-        ( '\*\*' signed                         {{ result = result ** signed }}
+        ( '\*\*' unary                          {{ result = result ** unary }}
         )*                                      {{ return result }}
 rule term:                                      # numerical/string term
           '(TRUE|True|true)'                    {{ return 1; }}

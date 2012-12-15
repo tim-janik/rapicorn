@@ -830,6 +830,22 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
+
+enum MathExpressions {
+  RESULT_2 = 2,
+  RESULT_5 = 5,
+  RESULT_8 = 8,
+  RESULT_6 = 6,
+  RESULT_7 = 7,
+  RESULT_16 = 16,
+  RESULT_3 = 3,
+  RESULT_24 = 24,
+  RESULT_13 = 13,
+  RESULT_m2 = -2,
+  RESULT_77 = 77,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
 } // RapicornAidaTest
 
 namespace Rapicorn {
@@ -861,6 +877,8 @@ template<> inline EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum>() { retu
 template<> inline EnumInfo enum_info<InterfaceTests::QuickEnum>() { return EnumInfo::from_nsid ("InterfaceTests", "QuickEnum"); }
 
 template<> inline EnumInfo enum_info<RapicornAidaTest::ClickType>() { return EnumInfo::from_nsid ("RapicornAidaTest", "ClickType"); }
+
+template<> inline EnumInfo enum_info<RapicornAidaTest::MathExpressions>() { return EnumInfo::from_nsid ("RapicornAidaTest", "MathExpressions"); }
 } // Aida
 } // Rapicorn
 
@@ -3561,5 +3579,22 @@ PureMethodsHandle::pure_method (double arg_f)
   delete fr;
   return retval;
 }
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_2),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_5),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_8),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_6),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_7),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_16),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_3),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_24),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_13),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_m2),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_77),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "MathExpressions", enum_values);
+});
 } // RapicornAidaTest
 
