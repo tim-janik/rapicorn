@@ -204,21 +204,6 @@ typedef enum {
 typedef EnumType<SizePolicyType> EnumTypeSizePolicyType;
 
 typedef enum {
-  STATE_INSENSITIVE     = 1 << 0,
-  STATE_PRELIGHT        = 1 << 1,
-  STATE_IMPRESSED       = 1 << 2,
-  STATE_FOCUS           = 1 << 3,
-  STATE_DEFAULT         = 1 << 4,
-} StateType;
-static const StateType STATE_NORMAL = StateType (0);
-static const StateType STATE_MASK = StateType (0x1f);
-typedef FlagsType<StateType> FlagsTypeStateType;
-inline StateType  operator&  (StateType  s1, StateType s2) { return StateType (s1 & (uint64) s2); }
-inline StateType& operator&= (StateType &s1, StateType s2) { s1 = s1 & s2; return s1; }
-inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s1 | (uint64) s2); }
-inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
-
-typedef enum {
   TEXT_MODE_WRAPPED = 1,
   TEXT_MODE_ELLIPSIZED,
   TEXT_MODE_SINGLE_LINE,
