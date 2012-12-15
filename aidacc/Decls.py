@@ -87,6 +87,7 @@ class TypeInfo (BaseDecl):
     self.typedef_origin = None
     self.is_forward = False
     self.options = []           # holds: (ident, label, blurb, number)
+    self.combinable = False
     if (self.storage == RECORD or
         self.storage == INTERFACE):
       self.fields = []          # holds: (ident, TypeInfo)
@@ -157,6 +158,7 @@ class TypeInfo (BaseDecl):
     ti.typedef_origin = self.typedef_origin
     ti.is_forward = self.is_forward
     ti.options += self.options
+    ti.combinable = self.combinable
     if hasattr (self, 'namespace'):
       ti.namespace = self.namespace
     if hasattr (self, 'fields'):
@@ -183,6 +185,9 @@ class TypeInfo (BaseDecl):
     return ti
   def update_auxdata (self, auxdict):
     self.auxdata.update (auxdict)
+  def set_combinable (self, as_flags):
+    assert self.storage == ENUM
+    self.combinable = as_flags
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)

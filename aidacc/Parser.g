@@ -52,10 +52,12 @@ class YYGlobals (object):
       yy.ecounter = 1 + evalue_number
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
-  def nsadd_enum (self, enum_name, enum_values):
+  def nsadd_enum (self, enum_name, enum_values, as_flags):
     if len (enum_values) < 1:
       raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
+    if as_flags:
+      enum.set_combinable (True)
     for ev in enum_values:
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
@@ -386,7 +388,7 @@ rule namespace:
         '{' declaration* '}'                    {{ yy.namespace_close() }}
 rule topincludes:
         'include' STRING                        {{ include_file = unquote (STRING); as_impl = false }}
-        [ 'as implementation'                   {{ as_impl = true }}
+        [ 'as' 'implementation'                 {{ as_impl = true }}
         ] ';'                                   {{ yy.handle_include (include_file, self._scanner, as_impl) }}
 rule declaration:
           ';'
@@ -399,10 +401,12 @@ rule declaration:
         | namespace
 
 rule enumeration:
-        ( 'enumeration' | 'enum' )
+        ( 'flags' ('enumeration' | 'enum')      {{ as_flags = True }}
+        |         ('enumeration' | 'enum')      {{ as_flags = False }}
+        )
         IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues) }}
+        '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues, as_flags) }}
         ';'                                     {{ evalues = None; yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty

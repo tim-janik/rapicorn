@@ -22,10 +22,10 @@
 .../testfail.idl:19:24: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', ';', ',', '}', got '_'
 >  Const tmp = "invalid" _("i18n string") "concatenation";
 >                         ^
-.../testfail.idl:21:1: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:21:1: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  FrobCheck tmp = 1; // FrobCheck is no type
 >  ^
-.../testfail.idl:23:16: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:23:16: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  Const zzz = 1; zzz tmp = 1; // zzz is no type
 >                 ^
 .../testfail.idl:25:25: Trying to find one of '=', ';'
@@ -118,7 +118,7 @@
 .../testfail.idl:76:17: TypeError: redefining existing identifier: void
 >  Const void = 17; // invalid constant name
 >                  ^
-.../testfail.idl:77:1: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:77:1: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  void xy = 17; // invalid property type
 >  ^
 .../testfail.idl:78:31: Trying to find one of '::', IDENT
@@ -127,7 +127,7 @@
 .../testfail.idl:79:40: TypeError: unknown type: 'void'
 >  interface I { int method (int n, void v); }; // invalid argument type
 >                                         ^
-.../include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >    unexisting_var var;
 >    ^
 .../include-f1.idl:1: note: included "include-f2.idl" from here
