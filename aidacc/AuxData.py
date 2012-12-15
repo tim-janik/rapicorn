@@ -11,6 +11,7 @@ auxillary_initializers = {
   (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'hints', 'default=0'),
   (Decls.FLOAT,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),
+  (Decls.ENUM,      'Enum')     : ('label', 'blurb', 'hints', 'default'),
 }
 
 class Error (Exception):
