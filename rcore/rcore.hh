@@ -5,6 +5,7 @@
 #include <rcore/rapicornconfig.h>
 #include <rcore/aida.hh>
 #include <rcore/aidacxx.hh>
+#include <rcore/aidaenums.hh>
 #include <rcore/aidaprops.hh>
 #include <rcore/blobres.hh>
 #include <rcore/enumdefs.hh>
