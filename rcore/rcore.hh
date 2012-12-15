@@ -8,7 +8,6 @@
 #include <rcore/aidaenums.hh>
 #include <rcore/aidaprops.hh>
 #include <rcore/blobres.hh>
-#include <rcore/enumdefs.hh>
 #include <rcore/inifile.hh>
 #include <rcore/platform.hh>
 #include <rcore/debugtools.hh>

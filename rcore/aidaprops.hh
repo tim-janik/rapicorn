@@ -3,7 +3,6 @@
 #define __RAPICORN_AIDA_PROPS_HH__
 
 #include <rcore/aidaenums.hh>
-#include <rcore/enumdefs.hh>
 
 namespace Rapicorn { namespace Aida {
 
