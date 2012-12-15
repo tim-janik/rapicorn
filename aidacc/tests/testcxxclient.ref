@@ -832,9 +832,170 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
 } // RapicornAidaTest
 
+namespace Rapicorn {
+
+namespace Aida {
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1c"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2c"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3c"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4a>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4a"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4b>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4b"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4c"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4d>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4d"); }
+
+template<> inline EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum>() { return EnumInfo::from_nsid ("MandatoryNamespace", "ExtensiveEnum"); }
+
+template<> inline EnumInfo enum_info<InterfaceTests::QuickEnum>() { return EnumInfo::from_nsid ("InterfaceTests", "QuickEnum"); }
+
+template<> inline EnumInfo enum_info<RapicornAidaTest::ClickType>() { return EnumInfo::from_nsid ("RapicornAidaTest", "ClickType"); }
+} // Aida
+} // Rapicorn
+
 // --- Implementations ---
 
 namespace MandatoryNamespace {
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum1_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E1_A),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum1c_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E1C_A),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1c", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E2_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E2_B),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2c_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_B),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2c", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_C),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3c_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_C),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3c", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4a_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_C),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_D),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4a", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4b_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_C),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_D),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4b", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4c_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_C),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_D),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4c", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4d_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_A),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_B),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_C),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_D),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4d", enum_values);
+});
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__ExtensiveEnum_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V1a),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V1b),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V2),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V3),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V4),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V5),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V6),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V7),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V8),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V9),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V10),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V11),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V12),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V13),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V14),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V15),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V16),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V17),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V18),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V20),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V21),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V22),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V23),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V24),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V25),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V26),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V27),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V28),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V30),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V31),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V32),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V33),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V34),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V35),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (V36),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "ExtensiveEnum", enum_values);
+});
 
 // === FirstInterface ===
 static inline void ref   (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
@@ -1937,6 +2098,13 @@ GrandChildHandle::cast_types()
   if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<GrandChild_Context$> (ipcid)->list_types();
 }
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__QuickEnum_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (ZERO),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("InterfaceTests", "QuickEnum", enum_values);
+});
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecordStruct &self)
 {
@@ -3087,6 +3255,17 @@ PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value)
 } // InterfaceTests
 
 namespace RapicornAidaTest {
+
+static Rapicorn::Init _Rapicorn_Aida__INIT__ClickType_ ([]() {
+  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
+    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_PRESS),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_RELEASE),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_SLOW_REPEAT),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_FAST_REPEAT),
+    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_KEY_REPEAT),
+  };
+  Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "ClickType", enum_values);
+});
 
 // === ButtonArea ===
 static inline void ref   (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit

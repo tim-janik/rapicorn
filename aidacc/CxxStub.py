@@ -94,6 +94,7 @@ class Generator:
     self.namespaces = []
     self.insertions = {}
     self.cppguard = ''
+    self.ns_aida = None
     self.gen_inclusions = []
     self.skip_symbols = set()
     self.skip_classes = []
@@ -189,11 +190,13 @@ class Generator:
   def open_inner_namespace (self, namespace):
     self.namespaces += [ namespace ]
     return '\nnamespace %s {\n' % self.namespaces[-1].name
-  def open_namespace (self, type):
+  def open_namespace (self, typeinfo):
     s = ''
     newspaces = []
-    if type:
-      newspaces = type.list_namespaces()
+    if type (typeinfo) == tuple:
+      newspaces = list (typeinfo)
+    elif typeinfo:
+      newspaces = typeinfo.list_namespaces()
       # s += '// ' + str ([n.name for n in newspaces]) + '\n'
     while len (self.namespaces) > len (newspaces):
       s += self.close_inner_namespace()
@@ -213,7 +216,10 @@ class Generator:
     namespace_names = [d.name for d in tnsl]
     return namespace_names
   def namespaced_identifier (self, ident):
-    return '::'.join ([d.name for d in self.namespaces] + [ident])
+    names = [d.name for d in self.namespaces]
+    if ident:
+      names += [ ident ]
+    return '::'.join (names)
   def mkzero (self, type):
     if type.storage == Decls.STRING:
       return '""'
@@ -310,6 +316,23 @@ class Generator:
     s += '  resize (size() + 1);\n'
     s += '  return back();\n'
     s += '}\n'
+    return s
+  def generate_enum_impl (self, type_info):
+    s = '\n'
+    ns, nm = self.namespaced_identifier (None), type_info.name
+    s += 'static Rapicorn::Init _Rapicorn_Aida__INIT__%s_ ([]() {\n' % nm
+    s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
+    for opt in type_info.options:
+      (ident, label, blurb, number) = opt
+      s += '    RAPICORN_AIDA_ENUM_INFO_VALUE (%s),\n' % ident
+    s += '  };\n'
+    s += '  Rapicorn::Aida::EnumInfo::enlist ("%s", "%s", enum_values);\n' % (ns, nm)
+    s += '});\n'
+    return s
+  def generate_enum_info_specialization (self, type_info):
+    s = '\n'
+    ns, nm = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
+    s += 'template<> inline EnumInfo enum_info<%s::%s>() { return EnumInfo::from_nsid ("%s", "%s"); }\n' % (ns, nm, ns, nm)
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -1078,6 +1101,7 @@ class Generator:
     if self.gen_clienthh or self.gen_serverhh:
       self.gen_mode = G4SERVER if self.gen_serverhh else G4CLIENT
       s += '\n// --- Interfaces (class declarations) ---\n'
+      spc_enums = []
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
@@ -1099,6 +1123,7 @@ class Generator:
         elif tp.storage == Decls.ENUM:
           s += self.open_namespace (tp)
           s += self.generate_enum_decl (tp)
+          spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
           if self.gen_clienthh and not self.gen_serverhh:
             s += self.open_namespace (tp)
@@ -1111,6 +1136,10 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_class (tp)   # Class_Interface server base
+      if spc_enums:
+        s += self.open_namespace (self.ns_aida)
+        for tp in spc_enums:
+          s += self.generate_enum_info_specialization (tp)
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -1125,6 +1154,9 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
+        elif tp.storage == Decls.ENUM:
+          s += self.open_namespace (tp)
+          s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             if tp.name in self.skip_classes:
@@ -1219,6 +1251,8 @@ def generate (namespace_list, **args):
     gg.insertion_file (ifile)
   for ssfile in config['skip-skels']:
     gg.symbol_file (ssfile)
+  ns_rapicorn = Decls.Namespace ('Rapicorn', None, [])
+  gg.ns_aida = ( ns_rapicorn, Decls.Namespace ('Aida', ns_rapicorn, []) ) # Rapicorn::Aida namespace tuple for open_namespace()
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
   outname = config.get ('output', '-')
   if outname != '-':
