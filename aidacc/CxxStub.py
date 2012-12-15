@@ -1008,6 +1008,7 @@ class Generator:
     return s
   def generate_enum_decl (self, type_info):
     s = '\n'
+    nm = type_info.name
     l = []
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
@@ -1017,10 +1018,15 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
-    s += 'inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  %s  e) ' % type_info.name
+    s += 'inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  %s  e) ' % nm
     s += '{ fb <<= Rapicorn::Aida::EnumValue (e); }\n'
-    s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % type_info.name
-    s += '{ e = %s (frr.pop_evalue()); }\n' % type_info.name
+    s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % nm
+    s += '{ e = %s (frr.pop_evalue()); }\n' % nm
+    if type_info.combinable: # enum as flags
+      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
+      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
