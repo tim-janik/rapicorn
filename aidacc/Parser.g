@@ -526,6 +526,7 @@ rule sequence:
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}
 
+# for operator precedence, see: http://docs.python.org/2/reference/expressions.html
 rule expression: or_expr                        {{ return or_expr }}
 rule or_expr:
           xor_expr                              {{ result = xor_expr }}
