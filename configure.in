@@ -399,15 +399,8 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
 AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
 [
-    # need doxer to generate documentation
-    DOXERDEP='#'
-    AC_CHECK_PROGS(DOXER, doxer)
-    if test -n "$DOXER" ; then
-	doxer_version=`$DOXER --version`
-	MC_CHECK_VERSION($doxer_version, 0.6, [DOXERDEP=''])
-    fi
-    AC_SUBST(DOXER)
-    AC_SUBST(DOXERDEP)
+  # need doxygen to generate documentation
+  AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 ])
 
 dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
@@ -563,7 +556,7 @@ Autoconfiguration complete.
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
 	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
-	Documentation tool:		${DOXER:-none}
+	Documentation tool:		${DOXYGEN:-none}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS
