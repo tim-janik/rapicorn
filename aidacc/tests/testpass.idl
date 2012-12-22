@@ -435,3 +435,13 @@ using namespace U1;
 Const B = A + 1; // refer to U1::A
 Const A = 17;    // new identifier in U2!
 }
+
+namespace BseTest {
+interface Compressor {
+  group _("compat") {
+    float64 threshold    = Num ("", "", "w");
+    float64 ratio        = Num ("", "", "w", 0);
+  };
+};
+
+}

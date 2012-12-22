@@ -713,3 +713,7 @@ class NameTests (_BaseClass_):
     ___ret = _CPY._AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (self, qr, qe, sr)
     return ___ret
 
+class Compressor (_BaseClass_):
+  def __init__ (self, _aida_id):
+    super (Compressor, self).__init__ (_aida_id)
+

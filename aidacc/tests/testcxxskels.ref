@@ -823,6 +823,29 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTests_Interface*&);
 } // Other
 
+namespace BseTest {
+
+/** @interface Compressor
+ * See also the corresponding C++ class I_Compressor_Interface (server side). */
+/// See also the corresponding IDL class Compressor.
+class I_Compressor_Interface : public virtual Rapicorn::Aida::TestServerBase
+{
+protected:
+  explicit                               I_Compressor_Interface ();
+  virtual /*Des*/                       ~I_Compressor_Interface () = 0;
+public:
+  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual double                        threshold () const = 0;
+  virtual void                          threshold (double) = 0;
+  virtual double                        ratio     () const = 0;
+  virtual void                          ratio     (double) = 0;
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Compressor_Interface&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Compressor_Interface*);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_Compressor_Interface*&);
+} // BseTest
+
 namespace Rapicorn {
 
 namespace Aida {

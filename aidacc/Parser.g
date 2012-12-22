@@ -468,10 +468,10 @@ rule auxinit:
         '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename                                {{ vtype = yy.clone_type (typename) }}
-        IDENT                                   {{ vars = (IDENT, vtype, () ) }}
-        [ '=' auxinit                           {{ vars = (vars[0], vars[1], auxinit) }}
-        ] ';'                                   {{ return [ vars ] }}
+        typename                                {{ ftype = yy.clone_type (typename) }}
+        IDENT                                   {{ ftuple = (IDENT, ftype, () ) }}
+        [ '=' auxinit                           {{ ftuple = (ftuple[0], ftuple[1], auxinit) }}
+        ] ';'                                   {{ return [ ftuple ] }}
 
 rule method_args:
         typename                                {{ atype = yy.clone_type (typename) }}
@@ -508,6 +508,12 @@ rule field_or_method_or_signal_decl:
 rule typedef:
         'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}
 
+rule field_group:
+               'group'                          {{ gfields = [] }}
+               ('_' '\(' STRING '\)'            {{ gident = STRING }}
+               |         STRING                 {{ gident = STRING }}
+               ) '{' ( field_decl               {{ gfields += field_decl }}
+                 )+ '}' ';'                     {{ return gfields }}
 rule interface:
         'interface'                             {{ ipls = []; ifls = []; prq = [] }}
         IDENT                                   {{ iident = IDENT; isigs = [] }}
@@ -517,8 +523,8 @@ rule interface:
               ( ',' IDENT                       {{ prq += [ IDENT ]; AIi (IDENT) }}
               ) * ]
           '{'                                   {{ iface = yy.nsadd_interface (iident) }}
-             (
-               field_or_method_or_signal_decl   {{ fmd = field_or_method_or_signal_decl }}
+             ( field_group                      {{ ipls = ipls + field_group }}
+             | field_or_method_or_signal_decl   {{ fmd = field_or_method_or_signal_decl }}
                                                 {{ if fmd[0] == 'field': ipls = ipls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'func': ifls = ifls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'signal': isigs = isigs + [ fmd[1] ] }}
