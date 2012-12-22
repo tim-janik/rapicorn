@@ -359,7 +359,7 @@ interface PropertyTester {
   any            any_prop;
 };
 
-}
+} // InterfaceTests
 
 include "include-p1.idl"; // test includes
 
