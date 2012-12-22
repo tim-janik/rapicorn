@@ -61,7 +61,7 @@ check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
 	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
 	$(Q) rm -f builtins.typ builtins.cc
 EXTRA_DIST += builtins.idl
-check: check-builtins
+check-local: check-builtins
 
 # == Aida Dependencies ==
 pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
