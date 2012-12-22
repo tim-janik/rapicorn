@@ -45,13 +45,17 @@ class Namespace (BaseDecl):
     super (Namespace, self).__init__()
     self.name = name
     self.namespace = outer
+    if outer:
+      outer.ns_nested[self.name] = self
+    self.ns_nested = {}
     self.cmembers = [] # holds: (name, content)
     self.tmembers = [] # holds: (name, content)
     self.type_dict = {}
     self.const_dict = {}
     self.impl_set = set()
     self.global_impl_list = impl_list
-    self.full_name = "::". join ([x.name for x in self.list_namespaces()] + [self.name])
+  def full_name (self):
+    return "::". join ([x.name for x in self.list_namespaces() if x.name] + [self.name])
   def add_const (self, name, content, isimpl):
     self.cmembers += [ (name, content) ]
     self.const_dict[name] = self.cmembers[-1]
@@ -161,6 +165,9 @@ class TypeInfo (BaseDecl):
     ti.combinable = self.combinable
     if hasattr (self, 'namespace'):
       ti.namespace = self.namespace
+    if hasattr (self, 'ns_nested'):
+      ti.ns_nested = {}
+      ti.ns_nested.update (self.ns_nested)
     if hasattr (self, 'fields'):
       ti.fields += self.fields
     if hasattr (self, 'args'):
@@ -248,9 +255,7 @@ class TypeInfo (BaseDecl):
     assert isinstance (type, TypeInfo)
     self.elements = (ident, type)
   def full_name (self):
-    s = self.name
-    namespace = self.namespace
-    while namespace:
-      s = namespace.name + '::' + s
-      namespace = namespace.namespace
-    return s
+    # record fields are not namespaced
+    prefix = self.namespace.full_name() if self.namespace else ''
+    if prefix: prefix += '::'
+    return prefix + self.name

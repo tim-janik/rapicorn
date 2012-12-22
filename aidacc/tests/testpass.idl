@@ -410,3 +410,11 @@ enum MathExpressions {
 };
 
 } // RapicornAidaTest
+
+namespace Other {
+
+interface NameTests {
+  void  args_from_other_namespace (InterfaceTests::QuickRecord qr, ::RapicornAidaTest::ClickType qe);
+};
+
+} // Other

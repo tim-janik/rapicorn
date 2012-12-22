@@ -849,6 +849,30 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) {
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
 } // RapicornAidaTest
 
+namespace Other {
+
+/** @interface NameTests
+ * See also the corresponding C++ class NameTestsHandle (client side). */
+/// See also the corresponding IDL class NameTests.
+class NameTestsHandle : public virtual Rapicorn::Aida::SmartHandle
+{
+  static NameTestsHandle        _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
+  static const Rapicorn::Aida::TypeHash& _type ();
+protected:
+  static Rapicorn::Aida::ClientConnection __client_connection__ (void);
+public:
+  template<class C>
+  static NameTestsHandle        downcast (C c) { return _cast (c, c.cast_types()); }
+  const Rapicorn::Aida::TypeHashList& cast_types ();
+  explicit                      NameTestsHandle ();
+  void                          args_from_other_namespace (const InterfaceTests::QuickRecordStruct &qr,
+                                                           RapicornAidaTest::ClickType qe);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
+void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
+} // Other
+
 namespace Rapicorn {
 
 namespace Aida {
@@ -3599,4 +3623,103 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "MathExpressions", enum_values);
 });
 } // RapicornAidaTest
+
+namespace Other {
+
+// === NameTests ===
+static inline void ref   (NameTestsHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (NameTestsHandle&) {} // dummy stub for Signal<>.emit
+struct NameTests_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (NameTests_Context$);
+public:
+  struct SmartHandle$ : public NameTestsHandle {
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
+  } handle$;
+  NameTests_Context$ (Rapicorn::Aida::uint64_t ipcid) :
+    handle$ (ipcid),
+    m_cached_types (NULL)
+  {}
+  Rapicorn::Aida::TypeHashList *m_cached_types;
+  const Rapicorn::Aida::TypeHashList& list_types ();
+};
+const Rapicorn::Aida::TypeHashList&
+NameTests_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3cc442e612d0c931ULL, 0x174426019c513b3aULL);
+    fb <<= handle$;
+    Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >>= len;
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+    Rapicorn::Aida::TypeHashList *thv = new Rapicorn::Aida::TypeHashList();
+    Rapicorn::Aida::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >>= thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Rapicorn::Aida::atomic_ptr_cas (&m_cached_types, (Rapicorn::Aida::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+NameTestsHandle::NameTestsHandle ()
+{}
+Rapicorn::Aida::ClientConnection
+NameTestsHandle::__client_connection__ (void)
+{
+  return AIDA_CONNECTION();
+}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const NameTestsHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+}
+void
+operator>>= (Rapicorn::Aida::FieldReader &fbr, NameTestsHandle &handle)
+{
+  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<NameTests_Context$> (ipcid)->handle$ : NameTestsHandle();
+}
+const Rapicorn::Aida::TypeHash&
+NameTestsHandle::_type()
+{
+  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x0ff49e5977e3e416ULL, 0x2d10a2bc2d53eab1ULL);
+  return type_hash;
+}
+NameTestsHandle
+NameTestsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
+{
+  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<NameTests_Context$> (connection_handle2id (other))->handle$;
+  return NameTestsHandle();
+}
+const Rapicorn::Aida::TypeHashList&
+NameTestsHandle::cast_types()
+{
+  static Rapicorn::Aida::TypeHashList notypes;
+  const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<NameTests_Context$> (ipcid)->list_types();
+}
+void
+NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStruct &arg_qr,
+                                            RapicornAidaTest::ClickType arg_qe)
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
+  fb.add_msgid (0x2be191f31970f029ULL, 0xdeb4e5a66bb57fdbULL); // msgid
+  fb <<= (*this);
+  fb <<= arg_qr;
+  fb <<= arg_qe;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
+}
+} // Other
 

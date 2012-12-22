@@ -788,6 +788,27 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) {
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
 } // RapicornAidaTest
 
+namespace Other {
+
+/** @interface NameTests
+ * See also the corresponding C++ class I_NameTests_Interface (server side). */
+/// See also the corresponding IDL class NameTests.
+class I_NameTests_Interface : public virtual Rapicorn::Aida::TestServerBase
+{
+protected:
+  explicit                               I_NameTests_Interface ();
+  virtual /*Des*/                       ~I_NameTests_Interface () = 0;
+public:
+  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
+                                                                   RapicornAidaTest::ClickType qe);
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface*);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTests_Interface*&);
+} // Other
+
 namespace Rapicorn {
 
 namespace Aida {
@@ -973,5 +994,11 @@ InterfaceTests::I_MethodTestInterface_Interface::method_with_quickiface (Interfa
                                                                          InterfaceTests::I_QuickIface_Interface &iface0)
 {
   return 0;
+}
+
+void
+Other::I_NameTests_Interface::args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
+                                                         RapicornAidaTest::ClickType qe)
+{
 }
 
