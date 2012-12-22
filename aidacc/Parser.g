@@ -10,7 +10,7 @@ import AuxData
 reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-            'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
+            'namespace', 'enum', 'Const', 'typedef', 'interface',
             'record', 'sequence', 'bool', 'int', 'float', 'string', 'any')
 reservedkeywords = set (keywords + reservedwords)
 
@@ -52,8 +52,12 @@ class YYGlobals (object):
       yy.ecounter = 1 + evalue_number
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
-  def nsadd_enum (self, enum_name, enum_values):
+  def nsadd_enum (self, enum_name, enum_values, as_flags):
+    if len (enum_values) < 1:
+      raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
+    if as_flags:
+      enum.set_combinable (True)
     for ev in enum_values:
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
@@ -130,7 +134,7 @@ class YYGlobals (object):
   def argcheck (self, aident, atype, adef):
     if adef == None:
       pass # no default arg
-    elif atype.storage in (Decls.INT, Decls.FLOAT):
+    elif atype.storage in (Decls.BOOL, Decls.INT, Decls.FLOAT):
       if not isinstance (adef, (bool, int, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
@@ -201,7 +205,7 @@ class YYGlobals (object):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
-        'bool'    : Decls.TypeInfo ('bool',   Decls.INT, false),
+        'bool'    : Decls.TypeInfo ('bool',   Decls.BOOL, false),
         'int'     : Decls.TypeInfo ('int',    Decls.INT, false),
         'float'   : Decls.TypeInfo ('float',  Decls.FLOAT, false),
         'string'  : Decls.TypeInfo ('string', Decls.STRING, false),
@@ -370,6 +374,7 @@ parser IdlSyntaxParser:
         token IDENT:        r'[a-zA-Z_][a-zA-Z_0-9]*'       # identifiers
         token NSIDENT:      r'[a-zA-Z_][a-zA-Z_0-9$]*'      # identifier + '$'
         token INTEGER:      r'[0-9]+'
+        token HEXINT:       r'0[xX][0-9abcdefABCDEF]+'
         token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
@@ -384,7 +389,7 @@ rule namespace:
         '{' declaration* '}'                    {{ yy.namespace_close() }}
 rule topincludes:
         'include' STRING                        {{ include_file = unquote (STRING); as_impl = false }}
-        [ 'as implementation'                   {{ as_impl = true }}
+        [ 'as' 'implementation'                 {{ as_impl = true }}
         ] ';'                                   {{ yy.handle_include (include_file, self._scanner, as_impl) }}
 rule declaration:
           ';'
@@ -397,10 +402,12 @@ rule declaration:
         | namespace
 
 rule enumeration:
-        ( 'enumeration' | 'enum' )
+        ( 'flags' ('enumeration' | 'enum')      {{ as_flags = True }}
+        |         ('enumeration' | 'enum')      {{ as_flags = False }}
+        )
         IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues) }}
+        '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues, as_flags) }}
         ';'                                     {{ evalues = None; yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
@@ -520,25 +527,44 @@ rule sequence:
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}
 
-rule expression: summation                      {{ return summation }}
+# for operator precedence, see: http://docs.python.org/2/reference/expressions.html
+rule expression: or_expr                        {{ return or_expr }}
+rule or_expr:
+          xor_expr                              {{ result = xor_expr }}
+        ( '\|' or_expr                          {{ AN (result); result = result | or_expr }}
+        )*                                      {{ return result }}
+rule xor_expr:
+          and_expr                              {{ result = and_expr }}
+        ( '\^' xor_expr                         {{ AN (result); result = result ^ xor_expr }}
+        )*                                      {{ return result }}
+rule and_expr:
+          shift_expr                            {{ result = shift_expr }}
+        ( '&' and_expr                          {{ AN (result); result = result & and_expr }}
+        )*                                      {{ return result }}
+rule shift_expr:
+          summation                             {{ result = summation }}
+        ( '<<' shift_expr                       {{ AN (result); result = result << shift_expr }}
+        | '>>' shift_expr                       {{ AN (result); result = result >> shift_expr }}
+        )*                                      {{ return result }}
 rule summation:
           factor                                {{ result = factor }}
-        ( '\+' factor                           {{ AN (result); result = result + factor }}
-        | '-'  factor                           {{ result = result - factor }}
+        ( '\+' summation                        {{ AN (result); result = result + summation }}
+        | '-'  summation                        {{ result = result - summation }}
         )*                                      {{ return result }}
 rule factor:
-          signed                                {{ result = signed }}
-        ( '\*' signed                           {{ result = result * signed }}
-        | '/'  signed                           {{ result = result / signed }}
-        | '%'  signed                           {{ AN (result); result = result % signed }}
+          unary                                 {{ result = unary }}
+        ( '\*' factor                           {{ result = result * factor }}
+        | '/'  factor                           {{ result = result / factor }}
+        | '%'  factor                           {{ AN (result); result = result % factor }}
         )*                                      {{ return result }}
-rule signed:
+rule unary:
           power                                 {{ return power }}
-        | '\+' signed                           {{ return +signed }}
-        | '-'  signed                           {{ return -signed }}
+        | '\+' unary                            {{ return +unary }}
+        | '-'  unary                            {{ return -unary }}
+        | '~'  unary                            {{ return ~unary }}
 rule power:
           term                                  {{ result = term }}
-        ( '\*\*' signed                         {{ result = result ** signed }}
+        ( '\*\*' unary                          {{ result = result ** unary }}
         )*                                      {{ return result }}
 rule term:                                      # numerical/string term
           '(TRUE|True|true)'                    {{ return 1; }}
@@ -547,6 +573,7 @@ rule term:                                      # numerical/string term
           (string                               {{ ASp (result, IDENT); ASp (string); result += string }}
           )*                                    {{ return result }}
         | INTEGER                               {{ return int (INTEGER); }}
+        | HEXINT                                {{ return int (HEXINT, 16); }}
         | FULLFLOAT                             {{ return float (FULLFLOAT); }}
         | FRACTFLOAT                            {{ return float (FRACTFLOAT); }}
         | '\(' expression '\)'                  {{ return expression; }}

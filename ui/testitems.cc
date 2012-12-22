@@ -17,7 +17,7 @@ TestContainer::TestContainer() :
 #define DFLTEPS (1e-8)
 
 const PropertyList&
-TestContainer::list_properties()
+TestContainer::_property_list()
 {
   /* not using _() here, because TestContainer is just a developer tool */
   static Property *properties[] = {
@@ -35,7 +35,7 @@ TestContainer::list_properties()
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
     MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -181,12 +181,12 @@ protected:
 static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 const PropertyList&
-TestBox::list_properties()
+TestBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -265,6 +265,7 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}
+  virtual const PropertyList& _property_list () { return RAPICORN_AIDA_PROPERTY_CHAIN (ItemImpl::_property_list(), IdlTestItemIface::_property_list()); }
 };
 static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
 

@@ -8,13 +8,13 @@ namespace Rapicorn {
 
 class Table : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
-  virtual uint  col_spacing     () = 0;
+  virtual uint  col_spacing     () const = 0;
   virtual void  col_spacing     (uint cspacing) = 0;
-  virtual uint  row_spacing     () = 0;
+  virtual uint  row_spacing     () const = 0;
   virtual void  row_spacing     (uint rspacing) = 0;
   virtual void  resize          (uint n_cols, uint n_rows) = 0;
   virtual uint  get_n_rows      () = 0;

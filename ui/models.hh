@@ -6,7 +6,8 @@
 
 namespace Rapicorn {
 
-class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual ListModelIface {
+class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual ListModelIface,
+                           public virtual Aida::PropertyHostInterface {
   int                           m_size, m_columns;
   vector<AnySeqImpl>            m_rows;
   explicit                      ListModelRelayImpl (int n_columns);
@@ -26,6 +27,7 @@ public:
   virtual void                  fill            (int first, const AnySeqSeqImpl &ss);
   virtual ListModelIface*       model           ()              { return this; }
   void                          refill          (int first, int last);
+  virtual const PropertyList&   _property_list  ();
 };
 
 class MemoryListStore : public virtual ListModelIface {

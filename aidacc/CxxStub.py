@@ -15,6 +15,17 @@ serverhh_boilerplate = r"""
 #include <rapicorn-core.hh>
 """
 
+serverhh_testcode = r"""
+namespace Rapicorn { namespace Aida {
+class TestServerBase : public virtual PropertyHostInterface {
+public:
+  explicit             TestServerBase ()            {}
+  virtual             ~TestServerBase ()            {}
+  virtual uint64_t     _rpc_id        () const      { return uint64_t (this); }
+};
+} } // Rapicorn::Aida
+"""
+
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
@@ -47,12 +58,12 @@ Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
 """
 
-servercc_boilerplate = r"""
+servercc_testcode = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-template<class O> O*  connection_id2object (Rapicorn::Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Rapicorn::Aida::SimpleServer*> (oid)); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::SimpleServer &obj) { return connection_object2id (&obj); }
+template<class O> O*  connection_id2object (Rapicorn::Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
+inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase &obj) { return connection_object2id (&obj); }
 #endif // !AIDA_CONNECTION
 """
 
@@ -83,10 +94,13 @@ class Generator:
     self.namespaces = []
     self.insertions = {}
     self.cppguard = ''
+    self.ns_aida = None
     self.gen_inclusions = []
     self.skip_symbols = set()
     self.skip_classes = []
-    self._iface_base = 'Rapicorn::Aida::SimpleServer'
+    self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
+    self.iface_base = self.test_iface_base
+    self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
     self.gen_shortalias = False
     self.object_impl = None # ('impl', ('', 'Impl'))
@@ -176,11 +190,13 @@ class Generator:
   def open_inner_namespace (self, namespace):
     self.namespaces += [ namespace ]
     return '\nnamespace %s {\n' % self.namespaces[-1].name
-  def open_namespace (self, type):
+  def open_namespace (self, typeinfo):
     s = ''
     newspaces = []
-    if type:
-      newspaces = type.list_namespaces()
+    if type (typeinfo) == tuple:
+      newspaces = list (typeinfo)
+    elif typeinfo:
+      newspaces = typeinfo.list_namespaces()
       # s += '// ' + str ([n.name for n in newspaces]) + '\n'
     while len (self.namespaces) > len (newspaces):
       s += self.close_inner_namespace()
@@ -200,7 +216,10 @@ class Generator:
     namespace_names = [d.name for d in tnsl]
     return namespace_names
   def namespaced_identifier (self, ident):
-    return '::'.join ([d.name for d in self.namespaces] + [ident])
+    names = [d.name for d in self.namespaces]
+    if ident:
+      names += [ ident ]
+    return '::'.join (names)
   def mkzero (self, type):
     if type.storage == Decls.STRING:
       return '""'
@@ -229,7 +248,7 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
-        if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+        if fl[1].storage in (Decls.BOOL, Decls.INT, Decls.FLOAT, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
     s += self.insertion_text ('class_scope:' + type_info.name)
@@ -298,6 +317,23 @@ class Generator:
     s += '  return back();\n'
     s += '}\n'
     return s
+  def generate_enum_impl (self, type_info):
+    s = '\n'
+    ns, nm = self.namespaced_identifier (None), type_info.name
+    s += 'static Rapicorn::Init _Rapicorn_Aida__INIT__%s_ ([]() {\n' % nm
+    s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
+    for opt in type_info.options:
+      (ident, label, blurb, number) = opt
+      s += '    RAPICORN_AIDA_ENUM_INFO_VALUE (%s),\n' % ident
+    s += '  };\n'
+    s += '  Rapicorn::Aida::EnumInfo::enlist ("%s", "%s", enum_values);\n' % (ns, nm)
+    s += '});\n'
+    return s
+  def generate_enum_info_specialization (self, type_info):
+    s = '\n'
+    ns, nm = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
+    s += 'template<> inline EnumInfo enum_info<%s::%s>() { return EnumInfo::from_nsid ("%s", "%s"); }\n' % (ns, nm, ns, nm)
+    return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def method_digest (self, method_info):
@@ -357,7 +393,7 @@ class Generator:
     if   self.gen_mode == G4SERVER and l:
       heritage = 'public virtual'
     elif self.gen_mode == G4SERVER and not l:
-      l = [self._iface_base]
+      l = [self.iface_base]
       heritage = 'public virtual'
     elif self.gen_mode == G4CLIENT and l:
       heritage = 'public'
@@ -375,8 +411,8 @@ class Generator:
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
     # inherit
-    l, heritage, cl, ddc = self.interface_class_inheritance (type_info)
-    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
+    precls, heritage, cl, ddc = self.interface_class_inheritance (type_info)
+    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (precls) + '\n'
     s += '{\n'
     if self.gen_mode == G4CLIENT:
       s += '  ' + self.F ('static %s' % classC) + '_cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
@@ -394,6 +430,8 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode == G4SERVER:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      if self.property_list:
+        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4CLIENT
       classH = self.C4client (type_info) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
@@ -409,7 +447,7 @@ class Generator:
     if type_info.fields:
       il = max (len (fl[0]) for fl in type_info.fields)
     for fl in type_info.fields:
-      s += self.generate_property (fl[0], fl[1], il)
+      s += self.generate_property_prototype (fl[0], fl[1], il)
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
@@ -546,7 +584,7 @@ class Generator:
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
-    l, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     if ddc:
@@ -618,6 +656,25 @@ class Generator:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '}\n'
     return s
+  def generate_server_property_list (self, class_info):
+    if not self.property_list:
+      return ''
+    assert self.gen_mode == G4SERVER
+    s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
+    s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
+    s += '  static ' + self.property_list + '::Property *properties[] = {\n'
+    for fl in class_info.fields:
+      cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
+      label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
+      dflags = fl[1].auxdata.get ('hints', '""')
+      s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
+    s += '  };\n'
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    calls = [cl + '::_property_list()' for cl in precls]
+    s += '  static ' + constPList + ' property_list (properties, %s);\n' % (', ').join (calls)
+    s += '  return property_list;\n'
+    s += '}\n'
+    return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
     hasret = mtype.rtype.storage != Decls.VOID
@@ -685,13 +742,13 @@ class Generator:
     # done
     s += '}\n'
     return s
-  def generate_property (self, fident, ftype, pad = 0):
+  def generate_property_prototype (self, fident, ftype, pad = 0):
     s, v, v0, ptr = '', '', '', ''
     if self.gen_mode == G4SERVER:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     pid = fident + ' ' * max (0, pad - len (fident))
-    if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+    if ftype.storage in (Decls.BOOL, Decls.INT, Decls.FLOAT, Decls.ENUM):
       s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
       s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
     elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
@@ -951,6 +1008,7 @@ class Generator:
     return s
   def generate_enum_decl (self, type_info):
     s = '\n'
+    nm = type_info.name
     l = []
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
@@ -960,10 +1018,15 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
-    s += 'inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  %s  e) ' % type_info.name
+    s += 'inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  %s  e) ' % nm
     s += '{ fb <<= Rapicorn::Aida::EnumValue (e); }\n'
-    s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % type_info.name
-    s += '{ e = %s (frr.pop_evalue()); }\n' % type_info.name
+    s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % nm
+    s += '{ e = %s (frr.pop_evalue()); }\n' % nm
+    if type_info.combinable: # enum as flags
+      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
+      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
@@ -1023,12 +1086,16 @@ class Generator:
         s += rapicornsignal_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
+      if self.iface_base == self.test_iface_base:
+        s += serverhh_testcode
       if self.gen_rapicornsignals:
         s += rapicornsignal_boilerplate
     if self.gen_clientcc:
       s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     if self.gen_servercc:
-      s += gencc_boilerplate + '\n' + servercc_boilerplate + '\n'
+      s += gencc_boilerplate + '\n'
+    if self.gen_servercc and self.iface_base == self.test_iface_base:
+      s += servercc_testcode + '\n'
     self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
@@ -1040,6 +1107,7 @@ class Generator:
     if self.gen_clienthh or self.gen_serverhh:
       self.gen_mode = G4SERVER if self.gen_serverhh else G4CLIENT
       s += '\n// --- Interfaces (class declarations) ---\n'
+      spc_enums = []
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
@@ -1061,6 +1129,7 @@ class Generator:
         elif tp.storage == Decls.ENUM:
           s += self.open_namespace (tp)
           s += self.generate_enum_decl (tp)
+          spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
           if self.gen_clienthh and not self.gen_serverhh:
             s += self.open_namespace (tp)
@@ -1073,6 +1142,10 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_class (tp)   # Class_Interface server base
+      if spc_enums:
+        s += self.open_namespace (self.ns_aida)
+        for tp in spc_enums:
+          s += self.generate_enum_info_specialization (tp)
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -1087,6 +1160,9 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
+        elif tp.storage == Decls.ENUM:
+          s += self.open_namespace (tp)
+          s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             if tp.name in self.skip_classes:
@@ -1095,6 +1171,7 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_server_class_methods (tp)
+              s += self.generate_server_property_list (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             s += self.generate_client_class_context (tp)
@@ -1171,13 +1248,17 @@ def generate (namespace_list, **args):
     if opt.startswith ('iface-prefix='):
       I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
     if opt.startswith ('iface-base='):
-      gg._iface_base = opt[11:]
+      gg.iface_base = opt[11:]
+    if opt.startswith ('property-list=') and opt[14:].lower() in ('0', 'no', 'none', 'false'):
+      gg.property_list = ""
     if opt.startswith ('filter-out='):
       gg.skip_classes += opt[11:].split (',')
   for ifile in config['insertions']:
     gg.insertion_file (ifile)
   for ssfile in config['skip-skels']:
     gg.symbol_file (ssfile)
+  ns_rapicorn = Decls.Namespace ('Rapicorn', None, [])
+  gg.ns_aida = ( ns_rapicorn, Decls.Namespace ('Aida', ns_rapicorn, []) ) # Rapicorn::Aida namespace tuple for open_namespace()
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
   outname = config.get ('output', '-')
   if outname != '-':

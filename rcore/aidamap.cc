@@ -18,6 +18,7 @@ type_kind_name (TypeKind type_kind)
     {
     case UNTYPED:         return "UNTYPED";
     case VOID:            return "VOID";
+    case BOOL:            return "BOOL";
     case INT:             return "INT";
     case FLOAT:           return "FLOAT";
     case STRING:          return "STRING";

@@ -52,9 +52,9 @@ public:
   virtual void          insert_cols     (uint first_col, uint n_cols);
   virtual bool          homogeneous     () const                        { return homogeneous_items; }
   virtual void          homogeneous     (bool chomogeneous_items)       { homogeneous_items = chomogeneous_items; invalidate(); }
-  virtual uint          col_spacing     ()                              { return default_col_spacing; }
+  virtual uint          col_spacing     () const                        { return default_col_spacing; }
   virtual void          col_spacing     (uint cspacing);
-  virtual uint          row_spacing     ()                              { return default_row_spacing; }
+  virtual uint          row_spacing     () const                        { return default_row_spacing; }
   virtual void          row_spacing     (uint rspacing);
 };
 

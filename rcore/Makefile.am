@@ -12,8 +12,8 @@ rapicorn_public_headers = $(strip	\
 	aida.hh		blobres.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
 			signal.hh		math.hh			unicode.hh   \
-	objects.hh	properties.hh	\
-        xmlnode.hh	markup.hh		enumdefs.hh		testutils.hh \
+	objects.hh	aidaenums.hh	aidaprops.hh	\
+        xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
@@ -23,8 +23,8 @@ rapicorn_cc_sources = $(sort	\
 	aida.cc		blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 			signal.cc		math.cc			unicode.cc   \
-	objects.cc	properties.cc	\
-        xmlnode.cc	markup.cc		enumdefs.cc		testutils.cc \
+	objects.cc	aidaenums.cc	aidaprops.cc	\
+        xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
 )
@@ -89,25 +89,6 @@ progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LI
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
-
-# === enum introspection ===
-$(srcdir)/enumdefs.cc: gen-enums.cc
-gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
-	cd . \
-	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
-	  --fprod "\n/* --- $< --- */\n#include\t\"$<\"" \
-	  --vhead "/* @EnumName@\n */\n" \
-	  --vhead "static const @Type@Type<@EnumName@>::Value @EnumName@_value_array[] = {" \
-	  --vprod "  { @VALUENAME@, \"@VALUENAME@\", sizeof (\"@VALUENAME@\") - 1 }," \
-	  --vtail "};\n" \
-	  --vtail "template<> const uint @Type@Type<@EnumName@>::n_values = sizeof (@EnumName@_value_array) / sizeof (@EnumName@_value_array[0]);\n" \
-	  --vtail "template<> const @Type@Type@EnumName@::Value *const @Type@Type@EnumName@::values = @EnumName@_value_array;\n" \
-	  --vtail "template<> const char *@Type@Type@EnumName@::ename = \"@EnumName@\";" \
-	    <(sed 's,//[/!].*,,' $<) ) > xgen-enu \
-	&& cp xgen-enu $@ \
-	&& rm -f xgen-enu
-CLEANFILES += xgen-enu gen-enums.cc
-
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \

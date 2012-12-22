@@ -530,61 +530,32 @@ ItemImpl::list_commands ()
 Property*
 ItemImpl::lookup_property (const String &property_name)
 {
-  typedef std::map<const String, Property*> PropertyMap;
-  static std::map<const PropertyList*,PropertyMap*> plist_map;
-  /* find/construct property map */
-  const PropertyList &plist = list_properties();
-  PropertyMap *pmap = plist_map[&plist];
-  if (!pmap)
-    {
-      pmap = new PropertyMap;
-      for (uint i = 0; i < plist.n_properties; i++)
-        (*pmap)[plist.properties[i]->ident] = plist.properties[i];
-      plist_map[&plist] = pmap;
-    }
-  PropertyMap::iterator it = pmap->find (property_name);
-  if (it == pmap->end())        // try canonicalized
-    it = pmap->find (string_substitute_char (property_name, '-', '_'));
-  if (it != pmap->end())
-    return it->second;
-  else
-    return NULL;
-}
-
-void
-ItemImpl::set_property (const String    &property_name,
-                    const String    &value,
-                    const nothrow_t &nt)
-{
-  Property *prop = lookup_property (property_name);
-  if (prop)
-    prop->set_value (this, value);
-  else if (&nt == &dothrow)
-    throw Exception ("no such property: " + name() + "::" + property_name);
-}
-
-bool
-ItemImpl::try_set_property (const String    &property_name,
-                        const String    &value,
-                        const nothrow_t &nt)
-{
-  Property *prop = lookup_property (property_name);
-  if (prop)
-    {
-      prop->set_value (this, value);
-      return true;
-    }
-  else
-    return false;
+  return _property_lookup (property_name);
 }
 
 String
-ItemImpl::get_property (const String   &property_name)
+ItemImpl::get_property (const String &property_name)
 {
-  Property *prop = lookup_property (property_name);
-  if (!prop)
+  return _property_get (property_name);
+}
+
+void
+ItemImpl::set_property (const String &property_name, const String &value)
+{
+  if (!_property_set (property_name, value))
     throw Exception ("no such property: " + name() + "::" + property_name);
-  return prop->get_value (this);
+}
+
+const PropertyList&
+ItemImpl::list_properties ()
+{
+  return _property_list();
+}
+
+bool
+ItemImpl::try_set_property (const String &property_name, const String &value)
+{
+  return _property_set (property_name, value);
 }
 
 static class OvrKey : public DataKey<Requisition> {
@@ -625,42 +596,6 @@ ItemImpl::height (double h)
   ovr.height = h >= 0 ? h : -1;
   set_data (&override_requisition, ovr);
   invalidate_size();
-}
-
-const PropertyList&
-ItemImpl::list_properties ()
-{
-  static Property *properties[] = {
-    MakeProperty (ItemImpl, name,      _("Name"), _("Identification name of the item"), "rw"),
-    MakeProperty (ItemImpl, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
-    MakeProperty (ItemImpl, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
-    MakeProperty (ItemImpl, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
-    MakeProperty (ItemImpl, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
-    MakeProperty (ItemImpl, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
-    /* packing */
-    MakeProperty (ItemImpl, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
-    MakeProperty (ItemImpl, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
-    MakeProperty (ItemImpl, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
-    MakeProperty (ItemImpl, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
-    MakeProperty (ItemImpl, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
-    MakeProperty (ItemImpl, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
-    MakeProperty (ItemImpl, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (ItemImpl, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (ItemImpl, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (ItemImpl, vspan,     _("Vertical Span"),       _("Vertical span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (ItemImpl, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (ItemImpl, halign, _("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (ItemImpl, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
-  };
-  static const PropertyList property_list (properties);
-  return property_list;
 }
 
 void
@@ -1158,13 +1093,16 @@ ItemImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
   const PropertyList &plist = list_properties();
-  for (uint i = 0; i < plist.n_properties; i++)
+  size_t n_properties = 0;
+  Aida::Property **properties = plist.list_properties (&n_properties);
+  for (uint i = 0; i < n_properties; i++)
     {
-      Property *property = plist.properties[i];
-      if (!property->readable())
-        continue;
-      String value = get_property (property->ident);
-      tstream.dump (property->ident, value);
+      Property *property = dynamic_cast<Property*> (properties[i]);
+      if (property && property->readable())
+        {
+          String value = get_property (property->ident);
+          tstream.dump (property->ident, value);
+        }
     }
   tstream.push_indent();
   dump_private_data (tstream);
@@ -1277,34 +1215,34 @@ ItemImpl::vspan (double d)
 }
 
 void
-ItemImpl::left_spacing (uint s)
+ItemImpl::left_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.left_spacing = s;
+  pa.left_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::right_spacing (uint s)
+ItemImpl::right_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.right_spacing = s;
+  pa.right_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::bottom_spacing (uint s)
+ItemImpl::bottom_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.bottom_spacing = s;
+  pa.bottom_spacing = MAX (0, s);
   repack (op, pa);
 }
 
 void
-ItemImpl::top_spacing (uint s)
+ItemImpl::top_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
-  pa.top_spacing = s;
+  pa.top_spacing = MAX (0, s);
   repack (op, pa);
 }
 

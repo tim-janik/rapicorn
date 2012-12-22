@@ -15,13 +15,13 @@ class ArrangementImpl : public virtual MultiContainerImpl, public virtual Arrang
 public:
   explicit                      ArrangementImpl         ();
   virtual                       ~ArrangementImpl        ();
-  virtual double                xorigin                 ()                      { return m_origin.x; }
+  virtual double                xorigin                 () const                { return m_origin.x; }
   virtual void                  xorigin                 (double v)              { m_origin.x = v; invalidate(); }
-  virtual double                yorigin                 ()                      { return m_origin.y; }
+  virtual double                yorigin                 () const                { return m_origin.y; }
   virtual void                  yorigin                 (double v)              { m_origin.y = v; invalidate(); }
-  virtual float                 origin_hanchor          ()                      { return m_origin_hanchor; }
+  virtual float                 origin_hanchor          () const                { return m_origin_hanchor; }
   virtual void                  origin_hanchor          (float align)           { m_origin_hanchor = align; invalidate(); }
-  virtual float                 origin_vanchor          ()                      { return m_origin_vanchor; }
+  virtual float                 origin_vanchor          () const                { return m_origin_vanchor; }
   virtual void                  origin_vanchor          (float align)           { m_origin_vanchor = align; invalidate(); }
   virtual Rect                  child_area              ();
 protected:

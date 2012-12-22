@@ -52,7 +52,6 @@ public:
   void                  add             (ItemImpl                   *item);
   virtual Affine        child_affine    (const ItemImpl             &item); /* container => item affine */
   virtual
-  const PropertyList&   list_properties (); /* essentially chaining to ItemImpl:: */
   const CommandList&    list_commands   (); /* essentially chaining to ItemImpl:: */
   virtual void          point_children  (Point                   p, /* item coordinates relative */
                                          std::vector<ItemImpl*>     &stack);

@@ -393,8 +393,8 @@ class UIWidgetArea (_BaseClass_):
   def two_args2 (self, n = 6, r = 7.7): # float
     ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args2_float_int_float (self, n, r)
     return ___ret
-  def multi_args (self, n, r, i, s = "String ding", y = 5): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float_int_float_int_string_float (self, n, r, i, s, y)
+  def multi_args (self, b, n, r, i, s = "String ding", y = 5): # float
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float_bool_int_float_int_string_float (self, b, n, r, i, s, y)
     return ___ret
   def self_method (self, ba1, ba2): # float
     ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (self, ba1, ba2)

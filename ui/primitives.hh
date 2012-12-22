@@ -7,6 +7,7 @@
 #include <values.h> /* MAXDOUBLE, etc. */
 #include <cairo.h>
 #include <rapicorn-core.hh>
+#include <ui/serverapi.hh> // for enums
 
 namespace Rapicorn {
 

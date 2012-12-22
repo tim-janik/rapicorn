@@ -11,8 +11,8 @@
 
 /* --- internally used macros --- */
 #ifdef __RAPICORN_BUILD__
-/* convenience macros */
-#define MakeProperty                    RAPICORN_MakeProperty
+// convenience macros
+#define MakeProperty                    RAPICORN_AIDA_PROPERTY
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 #endif

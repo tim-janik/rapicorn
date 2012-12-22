@@ -244,7 +244,7 @@ Heritage::resolve_color (const String  &color_name,
                          StateType      state,
                          ColorType      color_type)
 {
-  EnumTypeColorType ect;
+  Aida::EnumInfo ect = Aida::enum_info<ColorType>();
   if (color_name[0] == '#')
     {
       uint32 argb = string_to_int (&color_name[1], 16);
@@ -253,7 +253,7 @@ Heritage::resolve_color (const String  &color_name,
       c.alpha (0xff - c.alpha());
       return state_color (c, state, color_type);
     }
-  const EnumClass::Value *value = ect.find_first (color_name);
+  const Aida::EnumInfo::Value *value = ect.find_first (color_name);
   if (value)
     return get_color (state, ColorType (value->value));
   else

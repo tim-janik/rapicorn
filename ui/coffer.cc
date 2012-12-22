@@ -32,13 +32,13 @@ public:
 };
 
 const PropertyList&
-Coffer::list_properties()
+Coffer::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Coffer, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
     MakeProperty (Coffer, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 

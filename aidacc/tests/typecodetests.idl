@@ -5,12 +5,12 @@ namespace AidaTests {
 
   typedef int IntWithFooAsLabel = Int ("Foo");
 
-  typedef float FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", 97.97);
+  typedef float FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", "rw", 97.97);
 
-  typedef int ExtendIntWithAux = Int ("Extended int", "This int demonstrates extensive auxillary data use",
-				      33, -100, +100, -5, "rw:extra-option");
-  typedef string ExtendedString = String ("Extended String", "Demonstrate full string specification",
-					  "Default-String-Value", "ro");
+  typedef int IntAuxRange = Range ("Int Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
+  typedef float FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
+  typedef string ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
+
   enum EnumType { ENUM_VALUE0, ENUM_VALUE1 };
 
   typedef EnumType Enum1;

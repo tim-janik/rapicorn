@@ -117,6 +117,12 @@ ListModelRelayImpl::create_list_model_relay (int n_columns)
   return *relay;
 }
 
+const PropertyList&
+ListModelRelayImpl::_property_list ()
+{
+  return RAPICORN_AIDA_PROPERTY_CHAIN (ListModelRelayIface::_property_list(), ListModelIface::_property_list());
+}
+
 ListModelRelayIface*
 ApplicationImpl::create_list_model_relay (int                n_columns,
                                           const std::string &name)

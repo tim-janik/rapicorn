@@ -5,10 +5,11 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vidsEQRCFTY']
+VOID, BOOL, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vbidsEQRCFTY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',
+    BOOL      : 'BOOL',
     INT       : 'INT',
     FLOAT     : 'FLOAT',
     STRING    : 'STRING',
@@ -78,7 +79,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
+    assert storage in (VOID, BOOL, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl
@@ -86,6 +87,7 @@ class TypeInfo (BaseDecl):
     self.typedef_origin = None
     self.is_forward = False
     self.options = []           # holds: (ident, label, blurb, number)
+    self.combinable = False
     if (self.storage == RECORD or
         self.storage == INTERFACE):
       self.fields = []          # holds: (ident, TypeInfo)
@@ -109,7 +111,7 @@ class TypeInfo (BaseDecl):
     if self.__dict__.get ('rtype', None): arglist += [self.rtype]
     if self.__dict__.get ('args', []): arglist += [a[1] for a in self.args]
     typelist = '::'.join ([tp.full_name() for tp in typelist]) # MethodObject method_name
-    arglist  =  '+'.join ([tp.full_name() for tp in arglist])  # void float int string
+    arglist  =  '+'.join ([tp.full_name() for tp in arglist])  # void bool int float string
     return typelist + (' ' if arglist else '') + arglist
   def ident_digest (self):
     digest = self.string_digest()
@@ -156,6 +158,7 @@ class TypeInfo (BaseDecl):
     ti.typedef_origin = self.typedef_origin
     ti.is_forward = self.is_forward
     ti.options += self.options
+    ti.combinable = self.combinable
     if hasattr (self, 'namespace'):
       ti.namespace = self.namespace
     if hasattr (self, 'fields'):
@@ -182,6 +185,9 @@ class TypeInfo (BaseDecl):
     return ti
   def update_auxdata (self, auxdict):
     self.auxdata.update (auxdict)
+  def set_combinable (self, as_flags):
+    assert self.storage == ENUM
+    self.combinable = as_flags
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)

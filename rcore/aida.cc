@@ -1,5 +1,6 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 #include "aida.hh"
+#include "aidaprops.hh"
 
 #include <assert.h>
 #include <string.h>
@@ -174,7 +175,7 @@ Any::rekind (TypeKind _kind)
   switch (_kind)
     {
     case UNTYPED:     type = NULL;                                      break;
-      // case BOOL:   type = "bool";                                    break;
+    case BOOL:        type = "bool";                                    break;
     case INT:         type = "int";                                     break;
       // case UINT:   type = "uint";                                    break;
     case FLOAT:       type = "float";                                   break;
@@ -202,9 +203,8 @@ Any::operator== (const Any &clone) const
   switch (kind())
     {
     case UNTYPED:     break;
-      // case BOOL:   // chain
-    case ENUM:
-      // case UINT:   // chain
+      // case UINT: // chain
+    case BOOL: case ENUM: // chain
     case INT:         if (u.vint64 != clone.u.vint64) return false;                     break;
     case FLOAT:       if (u.vdouble != clone.u.vdouble) return false;                   break;
     case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
@@ -281,6 +281,7 @@ Any::as_int () const
 {
   switch (kind())
     {
+    case BOOL:          return u.vint64;
     case INT:           return u.vint64;
     case FLOAT:         return u.vdouble;
     case ENUM:          return u.vint64;
@@ -294,6 +295,7 @@ Any::as_float () const
 {
   switch (kind())
     {
+    case BOOL:          return u.vint64;
     case INT:           return u.vint64;
     case FLOAT:         return u.vdouble;
     case ENUM:          return u.vint64;
@@ -307,7 +309,7 @@ Any::as_string() const
 {
   switch (kind())
     {
-    case ENUM:
+    case BOOL: case ENUM:
     case INT:           return string_cprintf ("%lli", u.vint64);
     case FLOAT:         return string_cprintf ("%.17g", u.vdouble);
     case STRING:        return *(String*) &u;
@@ -359,7 +361,11 @@ Any::operator<<= (uint64_t v)
 void
 Any::operator<<= (int64_t v)
 {
-  // if (kind() == BOOL && v >= 0 && v <= 1) { u.vint64 = v; return; }
+  if (kind() == BOOL && v >= 0 && v <= 1)
+    {
+      u.vint64 = v;
+      return;
+    }
   ensure (INT);
   u.vint64 = v;
 }
@@ -429,30 +435,6 @@ SmartHandle::_is_null () const
 
 SmartHandle::~SmartHandle()
 {}
-
-/* === SimpleServer === */
-static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
-static std::set<SimpleServer*> simple_server_set;
-
-SimpleServer::SimpleServer ()
-{
-  pthread_mutex_lock (&simple_server_mutex);
-  simple_server_set.insert (this);
-  pthread_mutex_unlock (&simple_server_mutex);
-}
-
-SimpleServer::~SimpleServer ()
-{
-  pthread_mutex_lock (&simple_server_mutex);
-  simple_server_set.erase (this);
-  pthread_mutex_unlock (&simple_server_mutex);
-}
-
-uint64_t
-SimpleServer::_rpc_id () const
-{
-  return uint64_t (this);
-}
 
 /* === FieldBuffer === */
 FieldBuffer::FieldBuffer (uint _ntypes) :
@@ -566,10 +548,10 @@ FieldBuffer::to_string() const
         case FUNC:
         case TYPE_REFERENCE:
         case VOID:      s += string_cprintf (", %s", tn); fbr.skip();                               break;
+        case BOOL: case ENUM:
         case INT:       s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
         case FLOAT:     s += string_cprintf (", %s: %.17g", tn, fbr.pop_double());                  break;
         case STRING:    s += string_cprintf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case ENUM:      s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
         case SEQUENCE:  s += string_cprintf (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_cprintf (", %s: %p", tn, &fbr.pop_rec());                       break;
         case INSTANCE:  s += string_cprintf (", %s: %p", tn, (void*) fbr.pop_object());             break;

@@ -4,6 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <rcore/thread.hh>
+#include <rcore/aidaprops.hh>
 
 namespace Rapicorn {
 
@@ -83,13 +84,15 @@ public: /// @name Accessing custom data members
 };
 
 // == BaseObject ==
-class BaseObject : public virtual Deletable {
+class BaseObject : public virtual Deletable, public virtual Aida::PropertyHostInterface {
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
-  virtual void       dispose   ();
+  virtual void                 dispose   ();
 public:
 };
+typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
+typedef Aida::Property     Property;     // import Property from Aida namespace
 class NullInterface : std::exception {};
 
 struct BaseObject::InterfaceMatcher {

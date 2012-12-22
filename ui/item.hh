@@ -107,7 +107,7 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~ItemImpl            ();
+  virtual                     ~ItemImpl         ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);
@@ -166,15 +166,13 @@ public:
   double                      height            () const;
   void                        height            (double h);
   /* properties */
-  void                        set_property      (const String    &property_name,
-                                                 const String    &value,
-                                                 const nothrow_t &nt = dothrow);
-  bool                        try_set_property  (const String    &property_name,
-                                                 const String    &value,
-                                                 const nothrow_t &nt = dothrow);
-  String                      get_property      (const String    &property_name);
   Property*                   lookup_property   (const String    &property_name);
-  virtual const PropertyList& list_properties   ();
+  String                      get_property      (const String    &property_name);
+  void                        set_property      (const String    &property_name,
+                                                 const String    &value);
+  bool                        try_set_property  (const String    &property_name,
+                                                 const String    &value);
+  const PropertyList&         list_properties   ();
   /* commands */
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);
@@ -287,14 +285,14 @@ public: /* packing */
   void               vposition       (double d);
   double             vspan           () const   { return pack_info ().vspan; }
   void               vspan           (double d);
-  uint               left_spacing    () const   { return pack_info ().left_spacing; }
-  void               left_spacing    (uint s);
-  uint               right_spacing   () const   { return pack_info ().right_spacing; }
-  void               right_spacing   (uint s);
-  uint               bottom_spacing  () const   { return pack_info ().bottom_spacing; }
-  void               bottom_spacing  (uint s);
-  uint               top_spacing     () const   { return pack_info ().top_spacing; }
-  void               top_spacing     (uint s);
+  int                left_spacing    () const   { return pack_info ().left_spacing; }
+  void               left_spacing    (int s);
+  int                right_spacing   () const   { return pack_info ().right_spacing; }
+  void               right_spacing   (int s);
+  int                bottom_spacing  () const   { return pack_info ().bottom_spacing; }
+  void               bottom_spacing  (int s);
+  int                top_spacing     () const   { return pack_info ().top_spacing; }
+  void               top_spacing     (int s);
   double             halign          () const   { return pack_info ().halign; }
   void               halign          (double f);
   double             hscale          () const   { return pack_info ().hscale; }

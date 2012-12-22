@@ -247,15 +247,6 @@ container_uncross_link_R (ContainerImpl *container,
 ContainerImpl::~ContainerImpl ()
 {}
 
-const PropertyList&
-ContainerImpl::list_properties()
-{
-  static Property *properties[] = {
-  };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
-  return property_list;
-}
-
 const CommandList&
 ContainerImpl::list_commands()
 {
