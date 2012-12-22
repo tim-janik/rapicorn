@@ -165,6 +165,10 @@ class YYGlobals (object):
       if ns_child:
         return self.namespace_match (ns_child, ns_words[1:], ident, flags)
     else:               # identifier lookup
+      if flags.get ('asnamespace', 0):
+        ns_child = nspace.ns_nested.get (ident, None)
+        if ns_child:
+          return ns_child
       if flags.get ('astype', 0):
         type_info = nspace.find_type (ident)
         if type_info:
@@ -187,11 +191,13 @@ class YYGlobals (object):
       candidates = []
       while ns:
         candidates += [ ns ]
-        # FIXME: add "using" candidates
+        if flags.get ('withusing', 1):
+          candidates += ns.ns_using
         ns = ns.namespace
     else:
       candidates = [ self.global_namespace ]
-      # FIXME: add "using" candidates
+      if flags.get ('withusing', 1):
+        candidates += self.global_namespace.ns_using
     # try candidates in order
     for ns in candidates:
       result = self.namespace_match (ns, nswords, ident, flags)
@@ -216,6 +222,13 @@ class YYGlobals (object):
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
+  def namespace_using (self, ident):
+    ns = self.namespace_lookup (ident, asnamespace = True)
+    if not ns:
+      raise NameError ('not a namespace-name: ' + ident)
+    current_namespace = self.namespaces[-1]
+    if ns != current_namespace and not ns in current_namespace.ns_using:
+      current_namespace.ns_using += [ ns ]
   def namespace_open (self, ident):
     if not self.config.get ('system-typedefs', 0) and ident.find ('$') >= 0:
       raise NameError ('invalid characters in namespace: ' + ident)
@@ -277,7 +290,7 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
+  if (yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False) or
       (identifier in reservedkeywords)):
     raise TypeError ('redefining existing identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
@@ -386,6 +399,8 @@ rule topincludes:
         'include' STRING                        {{ include_file = unquote (STRING); as_impl = false }}
         [ 'as' 'implementation'                 {{ as_impl = true }}
         ] ';'                                   {{ yy.handle_include (include_file, self._scanner, as_impl) }}
+rule using_namespace:
+        'using' 'namespace' NSIDENT ';'         {{ yy.namespace_using (NSIDENT) }}
 rule declaration:
           ';'
         | const_assignment
@@ -395,6 +410,7 @@ rule declaration:
         | record
         | interface
         | namespace
+        | using_namespace
 
 rule enumeration:
         ( 'flags' ('enumeration' | 'enum')      {{ as_flags = True }}

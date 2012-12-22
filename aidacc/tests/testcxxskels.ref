@@ -802,7 +802,8 @@ public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
-                                                                   RapicornAidaTest::ClickType qe);
+                                                                   RapicornAidaTest::ClickType qe,
+                                                                   const OtherNamespace::SomeRecordImpl &sr);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface*);
@@ -998,7 +999,8 @@ InterfaceTests::I_MethodTestInterface_Interface::method_with_quickiface (Interfa
 
 void
 Other::I_NameTests_Interface::args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
-                                                         RapicornAidaTest::ClickType qe)
+                                                         RapicornAidaTest::ClickType qe,
+                                                         const OtherNamespace::SomeRecordImpl &sr)
 {
 }
 

@@ -95,3 +95,5 @@ interface P { void void_prop; }; // invalid property type
 interface I; interface I {}; interface I; interface I {}; // interface redefinition
 
 enum Empty { }; // invalid empty enumeration
+
+namespace U { using namespace Unknown; } // not a namespace-name

@@ -836,7 +836,8 @@ public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
-                                                                   RapicornAidaTest::ClickType qe);
+                                                                   RapicornAidaTest::ClickType qe,
+                                                                   const OtherNamespace::SomeRecordImpl &sr);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface*);
@@ -4085,7 +4086,7 @@ _$lsttyp__NameTests__ (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 3) return aida$_error ("invalid number of arguments");
   I_NameTests_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4093,7 +4094,9 @@ _$caller__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr
   fbr >>= arg_qr;
   RapicornAidaTest::ClickType  arg_qe;
   fbr >>= arg_qe;
-  self->args_from_other_namespace (arg_qr, arg_qe);
+  OtherNamespace::SomeRecordImpl  arg_sr;
+  fbr >>= arg_sr;
+  self->args_from_other_namespace (arg_qr, arg_qe, arg_sr);
   return NULL;
 }
 
@@ -4196,7 +4199,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x34692a915fe47960ULL, 0x86e3694656f6f9afULL, RapicornAidaTest::_$lsttyp__PureMethods__, },
   { 0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL, RapicornAidaTest::_$caller__PureMethods__pure_method, },
   { 0x3cc442e612d0c931ULL, 0x174426019c513b3aULL, Other::_$lsttyp__NameTests__, },
-  { 0x2be191f31970f029ULL, 0xdeb4e5a66bb57fdbULL, Other::_$caller__NameTests__args_from_other_namespace, },
+  { 0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL, Other::_$caller__NameTests__args_from_other_namespace, },
 };
 static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 

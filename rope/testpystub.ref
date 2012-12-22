@@ -684,7 +684,7 @@ class PureMethods (_BaseClass_):
 class NameTests (_BaseClass_):
   def __init__ (self, _aida_id):
     super (NameTests, self).__init__ (_aida_id)
-  def args_from_other_namespace (self, qr, qe): # one way
-    ___ret = _CPY._AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType (self, qr, qe)
+  def args_from_other_namespace (self, qr, qe, sr): # one way
+    ___ret = _CPY._AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (self, qr, qe, sr)
     return ___ret
 

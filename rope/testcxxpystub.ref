@@ -3017,18 +3017,20 @@ _aida_rpc_RapicornAidaTest__PureMethods__pure_method_int_float (PyObject *pyself
   return NULL;
 }
 static PyObject*
-_aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType (PyObject *pyself, PyObject *pyargs)
+_aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x2be191f31970f029ULL, 0xdeb4e5a66bb57fdbULL);
-  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 3), &fb = *fm, *fr = NULL;
+  fb.add_msgid (0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL);
+  if (PyTuple_Size (pyargs) != 1 + 3) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // qr
   if (!aida_pyQuickRecord_proto_add (item, fb)) goto error;
   item = PyTuple_GET_ITEM (pyargs, 2); // qe
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 3); // sr
+  if (!aida_pySomeRecord_proto_add (item, fb)) goto error;
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -3090,5 +3092,5 @@ _aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__Quick
   { "_AIDA_RapicornAidaTest__ButtonArea__check_activate_bool", _aida_marshal__RapicornAidaTest__ButtonArea__check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_RapicornAidaTest__ButtonArea__activate_void", _aida_marshal__RapicornAidaTest__ButtonArea__activate_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_RapicornAidaTest__PureMethods__pure_method_int_float", _aida_rpc_RapicornAidaTest__PureMethods__pure_method_int_float, METH_VARARGS, "pyRapicorn rpc call" },\
-  { "_AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType", _aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType, METH_VARARGS, "pyRapicorn rpc call" }
+  { "_AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord", _aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord, METH_VARARGS, "pyRapicorn rpc call" }
 static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };

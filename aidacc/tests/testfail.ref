@@ -159,3 +159,6 @@
 .../testfail.idl:97:15: AttributeError: invalid empty enumeration: Empty
 >  enum Empty { }; // invalid empty enumeration
 >                ^
+.../testfail.idl:99:39: NameError: not a namespace-name: Unknown
+>  namespace U { using namespace Unknown; } // not a namespace-name
+>                                        ^

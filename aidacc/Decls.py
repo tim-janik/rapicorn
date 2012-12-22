@@ -48,6 +48,7 @@ class Namespace (BaseDecl):
     if outer:
       outer.ns_nested[self.name] = self
     self.ns_nested = {}
+    self.ns_using = []
     self.cmembers = [] # holds: (name, content)
     self.tmembers = [] # holds: (name, content)
     self.type_dict = {}
@@ -168,6 +169,8 @@ class TypeInfo (BaseDecl):
     if hasattr (self, 'ns_nested'):
       ti.ns_nested = {}
       ti.ns_nested.update (self.ns_nested)
+    if hasattr (self, 'ns_using'):
+      ti.ns_using += self.ns_using
     if hasattr (self, 'fields'):
       ti.fields += self.fields
     if hasattr (self, 'args'):

@@ -866,7 +866,8 @@ public:
   const Rapicorn::Aida::TypeHashList& cast_types ();
   explicit                      NameTestsHandle ();
   void                          args_from_other_namespace (const InterfaceTests::QuickRecordStruct &qr,
-                                                           RapicornAidaTest::ClickType qe);
+                                                           RapicornAidaTest::ClickType qe,
+                                                           const OtherNamespace::SomeRecordStruct &sr);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
@@ -3711,13 +3712,15 @@ NameTestsHandle::cast_types()
 }
 void
 NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStruct &arg_qr,
-                                            RapicornAidaTest::ClickType arg_qe)
+                                            RapicornAidaTest::ClickType arg_qe,
+                                            const OtherNamespace::SomeRecordStruct &arg_sr)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x2be191f31970f029ULL, 0xdeb4e5a66bb57fdbULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 3), *fr = NULL;
+  fb.add_msgid (0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL); // msgid
   fb <<= (*this);
   fb <<= arg_qr;
   fb <<= arg_qe;
+  fb <<= arg_sr;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
