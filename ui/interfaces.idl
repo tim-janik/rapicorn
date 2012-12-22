@@ -203,7 +203,7 @@ sequence PixelSeq { int32 argb; };
 
 /// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
 record Pixbuf {
-  int32       row_length;         ///< Length of a Pixbuf row in pixels.
+  int32     row_length;         ///< Length of a Pixbuf row in pixels.
   PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
   StringSeq variables;
 };
@@ -214,8 +214,8 @@ record Pixbuf {
  * while random order read outs may be of O(log n) or even O(n).
  */
 interface ListModel {
-  int32         size     () = 0;		      ///< Obtain the number of rows provided by this model.
-  int32         columns  () = 0;		      ///< Obtain the number of columns provided by this model.
+  int32       size     () = 0;		      ///< Obtain the number of rows provided by this model.
+  int32       columns  () = 0;		      ///< Obtain the number of columns provided by this model.
   AnySeq      row      (int32 n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
   signal void inserted (int32 first, int32 last); ///< Notify about insertion of last-first+1 rows.
   signal void changed  (int32 first, int32 last); ///< Notify about changes in last-first+1 rows.
@@ -378,8 +378,8 @@ interface Application {
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
   void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.
-  int32           test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
-  int32           test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
+  int32         test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
+  int32         test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
 };
 
 enum TestEnum {
@@ -390,8 +390,8 @@ enum TestEnum {
 
 interface IdlTestItem : Item {
   bool           bool_prop;
-  int32            int_prop;
-  float64          float_prop;
+  int32          int_prop;
+  float64        float_prop;
   String         string_prop;
   TestEnum       enum_prop;
   Requisition    record_prop;
