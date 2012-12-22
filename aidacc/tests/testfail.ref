@@ -85,15 +85,15 @@
 .../testfail.idl:61:45: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
 >  typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
 >                                              ^
-.../testfail.idl:63:74: TypeError: too many args for type definition: = Int ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
->  ... Int ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+.../testfail.idl:63:74: TypeError: too many args for type definition: = Num ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
+>  ... Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 >                                                             ^
 .../testfail.idl:65:69: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
 >  ...ing_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
 >                                                        ^
-.../testfail.idl:67:73: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
->  ... s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
->                                                            ^
+.../testfail.idl:67:71: TypeError: invalid type definition: = Num ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
+>  ... s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+>                                                          ^
 .../testfail.idl:69:29: Trying to find one of ...
 >  interface I { int32 method (,); }; // invalid method arg separator
 >                              ^

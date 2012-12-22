@@ -60,11 +60,11 @@ enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
 
 typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
 
-typedef int32 x = Int ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+typedef int32 x = Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 
 typedef int32 string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
 
-record R { String s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+record R { String s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 
 interface I { int32 method (,); }; // invalid method arg separator
 interface I { int32 method (); int32 method (); }; // multiple method definitions

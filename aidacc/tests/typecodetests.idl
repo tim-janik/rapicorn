@@ -3,9 +3,9 @@ namespace AidaTests {
 
   typedef String SimpleString;
 
-  typedef int32 IntWithFooAsLabel = Int ("Foo");
+  typedef int32 IntWithFooAsLabel = Num ("Foo");
 
-  typedef float64 FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", "rw", 97.97);
+  typedef float64 FloatWithBlurbBlurb = Num ("Float Label", "Float Blurb", "rw", 97.97);
 
   typedef int32 IntAuxRange = Range ("Int Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
   typedef float64 FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);

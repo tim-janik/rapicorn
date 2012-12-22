@@ -256,10 +256,10 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 namespace Auxdata {
 // FIXME: can't check auxdata of record fields yet
 //record RecordWithAuxdata {
-  typedef bool bfoo   = Bool   ("Bool Foo", "A Boolean", "rw");
-  typedef int32  ifoo   = Int    ("Int Foo", "The Bar number", "rw", 10007.000);
-  typedef float64 ffoo  = Float  ("auxtest1", "X coordinate", "ro", 19e-3);
-  typedef String sfoo = String ("auxtest2", "Specify text here", "rw", "auxtest3");
+  typedef bool    bfoo = Bool   ("Bool Foo", "A Boolean", "rw");
+  typedef int32   ifoo = Num    ("Int Foo", "The Bar number", "rw", 10007.000);
+  typedef float64 ffoo = Num    ("auxtest1", "X coordinate", "ro", 19e-3);
+  typedef String  sfoo = String ("auxtest2", "Specify text here", "rw", "auxtest3");
   /* auxtest1 and auxtest2 are explicit testing keywords */
 //};
 }
