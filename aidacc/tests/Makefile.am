@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
-AIDACC = ../aidacc-intern $(DEBUG:%=--aida-debug)
+AIDACC = ../aidacc-intern $(if $(findstring 1, $(V)), --aida-debug)
 
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 
