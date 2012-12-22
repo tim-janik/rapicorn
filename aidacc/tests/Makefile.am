@@ -20,7 +20,7 @@ EXTRA_DIST += testfail.ref testrapicorn.ref
 DEBUG	    =
 
 # tests for auxillary data in testpass.idl
-TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
+TESTPASS_AUXTESTS = --aux-test label=AuxF64 --aux-test AuxStr --aux-test Aux32 \
 		    --aux-test default=10007 --aux-test hints=rw
 
 ### Aida build rule for binary type maps

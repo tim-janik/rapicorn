@@ -178,6 +178,7 @@ Any::rekind (TypeKind _kind)
     case BOOL:        type = "bool";                                    break;
     case INT32:       type = "int32";                                   break;
       // case UINT32: type = "uint32";                                  break;
+    case INT64:       type = "int64";                                   break;
     case FLOAT64:     type = "float64";                                 break;
     case ENUM:        type = "int";                                     break;
     case STRING:      type = "String";          new (&u) String();      break;
@@ -205,7 +206,8 @@ Any::operator== (const Any &clone) const
     case UNTYPED:     break;
       // case UINT: // chain
     case BOOL: case ENUM: // chain
-    case INT32:       if (u.vint64 != clone.u.vint64) return false;                     break;
+    case INT32:
+    case INT64:       if (u.vint64 != clone.u.vint64) return false;                     break;
     case FLOAT64:     if (u.vdouble != clone.u.vdouble) return false;                   break;
     case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
     case SEQUENCE:    if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
@@ -255,7 +257,7 @@ Any::swap (Any &other)
 bool
 Any::to_int (int64_t &v, char b) const
 {
-  if (kind() != INT32)
+  if (kind() != INT32 && kind() != INT64)
     return false;
   bool s = 0;
   switch (b)
@@ -282,7 +284,8 @@ Any::as_int () const
   switch (kind())
     {
     case BOOL:          return u.vint64;
-    case INT32:         return u.vint64;
+    case INT32:
+    case INT64:         return u.vint64;
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
     case STRING:        return !((String*) &u)->empty();
@@ -296,7 +299,8 @@ Any::as_float () const
   switch (kind())
     {
     case BOOL:          return u.vint64;
-    case INT32:         return u.vint64;
+    case INT32:
+    case INT64:         return u.vint64;
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
     case STRING:        return !((String*) &u)->empty();
@@ -310,7 +314,8 @@ Any::as_string() const
   switch (kind())
     {
     case BOOL: case ENUM:
-    case INT32:         return string_cprintf ("%lli", u.vint64);
+    case INT32:
+    case INT64:         return string_cprintf ("%lli", u.vint64);
     case FLOAT64:       return string_cprintf ("%.17g", u.vdouble);
     case STRING:        return *(String*) &u;
     default:            return "";
@@ -366,7 +371,7 @@ Any::operator<<= (int64_t v)
       u.vint64 = v;
       return;
     }
-  ensure (INT32);
+  ensure (INT64);
   u.vint64 = v;
 }
 
@@ -549,7 +554,8 @@ FieldBuffer::to_string() const
         case TYPE_REFERENCE:
         case VOID:      s += string_cprintf (", %s", tn); fbr.skip();                               break;
         case BOOL: case ENUM:
-        case INT32:     s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case INT32:
+        case INT64:     s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
         case FLOAT64:   s += string_cprintf (", %s: %.17g", tn, fbr.pop_double());                  break;
         case STRING:    s += string_cprintf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
         case SEQUENCE:  s += string_cprintf (", %s: %p", tn, &fbr.pop_seq());                       break;

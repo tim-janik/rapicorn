@@ -139,6 +139,7 @@ interface FirstInterface {
 record XFooRecord {
   bool   single_bool;
   int32    single_num;
+  int64    num64;
   float64  single_float;
   String single_string;
   int32    sibling1;
@@ -197,7 +198,8 @@ sequence NestedTypesSeq {
 // typedef tests
 typedef Any AliasAny;
 typedef bool AliasBool;
-typedef int32  AliasInt;
+typedef int32 AliasInt32;
+typedef int64 AliasInt64;
 typedef float64 AliasFloat;
 typedef String AliasString;
 typedef XFooRecord AliasRecord;
@@ -256,10 +258,11 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 namespace Auxdata {
 // FIXME: can't check auxdata of record fields yet
 //record RecordWithAuxdata {
-  typedef bool    bfoo = Bool   ("Bool Foo", "A Boolean", "rw");
-  typedef int32   ifoo = Num    ("Int Foo", "The Bar number", "rw", 10007.000);
-  typedef float64 ffoo = Num    ("auxtest1", "X coordinate", "ro", 19e-3);
-  typedef String  sfoo = String ("auxtest2", "Specify text here", "rw", "auxtest3");
+  typedef bool    AuxBool = Bool   ("AuxBool", "A Boolean", "rw");
+  typedef int32   Aux32   = Num    ("Aux32", "The Bar number", "rw", 10007.000);
+  typedef int64   Aux64   = Num    ("Aux64", "64bit auxillary number", "rw", 1152921504606846976);
+  typedef float64 AuxF64  = Num    ("AuxF64", "X coordinate", "ro", 19e-3);
+  typedef String  AuxStr  = String ("AuxStr", "Specify text here", "rw", "auxtest3");
   /* auxtest1 and auxtest2 are explicit testing keywords */
 //};
 }
@@ -272,7 +275,7 @@ interface UIWidgetArea {
   float64 single_arg2 (int32 n = 5);
   float64 two_args (int32 n, float64 r);
   float64 two_args2 (int32 n = 6, float64 r = 7.7);
-  float64 multi_args (bool b, int32 n, float64 r, int32 i, String s = ("String ding"), float64 y = 5);
+  float64 multi_args (bool b, int64 n, float64 r, int32 i, String s = ("String ding"), float64 y = 5);
   float64 self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
   void void_method();
   /* sample property accessors: */
@@ -302,8 +305,9 @@ interface QuickIface {
 interface MethodTestInterface {
   void           method_with_void       ();
   bool           method_with_bools      (bool   input, bool   optval = FALSE);
-  int32            method_with_ints       (int32    input, int32    optval = -3 - -1);
-  float64          method_with_floats     (float64  input, float64  optval = 9.9 + 3.e+2);
+  int32          method_with_ints32     (int32    input, int32    optval = -3 - -1);
+  int64          method_with_ints64     (int64    input, int64    optval = 576460752303423488);
+  float64        method_with_floats     (float64  input, float64  optval = 9.9 + 3.e+2);
   String         method_with_string     (String input, String optval = "default");
   QuickEnum      method_with_enum       (QuickEnum      input, QuickEnum     optval = ZERO);
   QuickRecord    method_with_record     (QuickRecord    input, QuickRecord   optval = 0);
@@ -316,8 +320,9 @@ interface MethodTestInterface {
 interface SignalTestInterface {
   signal void                void_result      ();
   signal bool                bool_result      ();
-  signal int32                 int_result       ();
-  signal float64               float_result     ();
+  signal int32               int32_result     ();
+  signal int64               int64_result     ();
+  signal float64             float64_result   ();
   signal String              string_result    ();
   signal QuickEnum           enum_result      ();
   signal QuickRecord         record_result    ();
@@ -327,8 +332,9 @@ interface SignalTestInterface {
   signal SignalTestInterface self_result      ();
   signal void                void_arg         ();
   signal void                bool_arg         (bool b);
-  signal void                int_arg          (int32 i);
-  signal void                float_arg        (float64 f);
+  signal void                int32_arg        (int32 i);
+  signal void                int64_arg        (int64 i);
+  signal void                float64_arg      (float64 f);
   signal void                string_arg       (String s);
   signal void                enum_arg         (QuickEnum e);
   signal void                record_arg       (QuickRecord r);
@@ -348,8 +354,9 @@ interface AnotherChild : SignalTestInterface {
 interface PropertyTester {
   // void        void_prop;
   bool           bool_prop;
-  int32            int_prop;
-  float64          float_prop;
+  int32          int32_prop;
+  int64          int64_prop;
+  float64        float64_prop;
   String         string_prop;
   QuickEnum      enum_prop;
   QuickRecord    record_prop;

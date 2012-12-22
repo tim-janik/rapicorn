@@ -20,6 +20,7 @@ type_kind_name (TypeKind type_kind)
     case VOID:            return "VOID";
     case BOOL:            return "BOOL";
     case INT32:           return "INT32";
+    case INT64:           return "INT64";
     case FLOAT64:         return "FLOAT64";
     case STRING:          return "STRING";
     case ENUM:            return "ENUM";

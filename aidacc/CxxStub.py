@@ -116,6 +116,7 @@ class Generator:
     if tstorage == Decls.VOID:          return 'void'
     if tstorage == Decls.BOOL:          return 'bool'
     if tstorage == Decls.INT32:         return 'int'
+    if tstorage == Decls.INT64:         return 'Rapicorn::Aida::int64_t'
     if tstorage == Decls.FLOAT64:       return 'double'
     if tstorage == Decls.STRING:        return 'std::string'
     if tstorage == Decls.ANY:           return 'Rapicorn::Aida::Any'
@@ -253,7 +254,7 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
-        if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.FLOAT64, Decls.ENUM):
+        if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
     s += self.insertion_text ('class_scope:' + type_info.name)
@@ -753,7 +754,7 @@ class Generator:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     pid = fident + ' ' * max (0, pad - len (fident))
-    if ftype.storage in (Decls.BOOL, Decls.INT32, Decls.FLOAT64, Decls.ENUM):
+    if ftype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
       s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
       s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
     elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):

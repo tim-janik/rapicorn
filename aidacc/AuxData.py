@@ -8,6 +8,8 @@ auxillary_initializers = {
   (Decls.BOOL,      'Bool')     : ('label', 'blurb', 'hints', 'default=0'),
   (Decls.INT32,     'Num')      : ('label', 'blurb', 'hints', 'default=0'),
   (Decls.INT32,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
+  (Decls.INT64,     'Num')      : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.INT64,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
   (Decls.FLOAT64,   'Num')      : ('label', 'blurb', 'hints', 'default=0'),
   (Decls.FLOAT64,   'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),

@@ -137,7 +137,7 @@ class YYGlobals (object):
   def argcheck (self, aident, atype, adef):
     if adef == None:
       pass # no default arg
-    elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.FLOAT64):
+    elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64):
       if not isinstance (adef, (bool, int, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
@@ -216,6 +216,7 @@ class YYGlobals (object):
       type_info = {
         'bool'    : Decls.TypeInfo ('bool',     Decls.BOOL, false),
         'int32'   : Decls.TypeInfo ('int32',    Decls.INT32, false),
+        'int64'   : Decls.TypeInfo ('int64',    Decls.INT64, false),
         'float64' : Decls.TypeInfo ('float64',  Decls.FLOAT64, false),
         'String'  : Decls.TypeInfo ('String',   Decls.STRING, false),
         'Any'     : Decls.TypeInfo ('Any',      Decls.ANY, false),

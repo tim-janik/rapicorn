@@ -129,10 +129,14 @@ list_types (std::string type_map_file)
 static void
 standard_tests ()
 {
-  TypeCode tcint = TypeMap::lookup ("int32");
-  assert (tcint.kind() == INT32);
-  assert (tcint.name() == "int32");
-  assert (tcint.kind_name() == "INT32");
+  TypeCode tcin32 = TypeMap::lookup ("int32");
+  assert (tcin32.kind() == INT32);
+  assert (tcin32.name() == "int32");
+  assert (tcin32.kind_name() == "INT32");
+  TypeCode tcin64 = TypeMap::lookup ("int64");
+  assert (tcin64.kind() == INT64);
+  assert (tcin64.name() == "int64");
+  assert (tcin64.kind_name() == "INT64");
   TypeCode tcfloat = TypeMap::lookup ("float64");
   assert (tcfloat.kind_name() == "FLOAT64");
   assert (tcfloat.kind() == FLOAT64);
@@ -182,14 +186,25 @@ type_code_tests ()
     assert (t2.name() == String ("AidaTests::FloatWithBlurbBlurb"));
   }
   { // INT32
-    TypeCode t = tp.lookup_local ("AidaTests::IntAuxRange");
+    TypeCode t = tp.lookup_local ("AidaTests::Int32AuxRange");
     assert (t.kind() == INT32);
-    assert (t.name() == "AidaTests::IntAuxRange");
-    assert (t.aux_value ("label") == "Int Range");
+    assert (t.name() == "AidaTests::Int32AuxRange");
+    assert (t.aux_value ("label") == "Int32 Range");
     assert (t.aux_value ("blurb") == "This int demonstrates range data use");
     assert (t.aux_value ("min") == "-100");
     assert (t.aux_value ("max") == "100");
     assert (t.aux_value ("step") == "-5");
+    assert (t.hints().find (":extra-option:") != String().npos);
+  }
+  { // INT64
+    TypeCode t = tp.lookup_local ("AidaTests::Int64AuxRange");
+    assert (t.kind() == INT64);
+    assert (t.name() == "AidaTests::Int64AuxRange");
+    assert (t.aux_value ("label") == "Int64 Range");
+    assert (t.aux_value ("blurb") == "This int demonstrates range data use");
+    assert (t.aux_value ("min") == "-1000");
+    assert (t.aux_value ("max") == "1000");
+    assert (t.aux_value ("step") == "-50");
     assert (t.hints().find (":extra-option:") != String().npos);
   }
   { // FLOAT64
@@ -234,6 +249,19 @@ type_code_tests ()
     TypeCode f = t.field (0);
     assert (f.kind() == INT32);
     assert (f.name() == "sample_integer");
+  }
+  { // SEQUENCE
+    TypeCode t = tp.lookup_local ("AidaTests::Int64Sequence");
+    assert (t.kind() == SEQUENCE);
+    assert (t.kind_name () == "SEQUENCE");
+    assert (t.name() == "AidaTests::Int64Sequence");
+    assert (t.aux_value ("blurb") == "");
+    assert (t.aux_value ("default") == "");
+    assert (t.hints() == ":");
+    assert (t.field_count() == 1);
+    TypeCode f = t.field (0);
+    assert (f.kind() == INT64);
+    assert (f.name() == "v64");
   }
   { // RECORD
     TypeCode t = tp.lookup_local ("AidaTests::SimpleRecord");
@@ -339,10 +367,10 @@ test_any()
   a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
   a <<= -1.;            assert (a.kind() == FLOAT64 && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
-  a <<= 1;              assert (a.kind() == INT32 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= -1;             assert (a.kind() == INT32 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= 0;              assert (a.kind() == INT32 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
-  a <<= 32767199;       assert (a.kind() == INT32 && a.as_int() == 32767199);
+  a <<= 1;              assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= -1;             assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= 0;              assert (a.kind() == INT64 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
+  a <<= 32767199;       assert (a.kind() == INT64 && a.as_int() == 32767199);
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);

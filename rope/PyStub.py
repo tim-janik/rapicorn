@@ -102,6 +102,7 @@ class Generator:
   def zero_value (self, type):
     return { Decls.BOOL      : '0',
              Decls.INT32     : '0',
+             Decls.INT64     : '0',
              Decls.FLOAT64   : '0',
              Decls.ENUM      : '0',
              Decls.RECORD    : 'None',
@@ -111,7 +112,7 @@ class Generator:
              Decls.ANY       : '()',
            }[type.storage]
   def default_value (self, type, vdefault):
-    if type.storage in (Decls.BOOL, Decls.INT32, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
+    if type.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
       return vdefault # number litrals or string
     return self.zero_value (type) # zero is the only default for these types
   def generate_record_impl (self, type_info):
@@ -156,7 +157,7 @@ class Generator:
     s = ''
     if type_info.storage == Decls.VOID:
       pass
-    elif type_info.storage in (Decls.BOOL, Decls.INT32, Decls.ENUM):
+    elif type_info.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.ENUM):
       s += '  %s.vint64 = %s\n' % (argname, valname)
     elif type_info.storage == Decls.FLOAT64:
       s += '  %s.vdouble = %s\n' % (argname, valname)

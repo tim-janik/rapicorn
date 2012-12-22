@@ -30,50 +30,53 @@ class FirstInterface (_BaseClass_):
 
 class XFooRecord (_BaseRecord_):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'num64' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
     self.__dict__.update (defaults)
     _BaseRecord_.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = XFooRecord()
-    if hasattr (args, "__iter__") and len (args) == 17:
+    if hasattr (args, "__iter__") and len (args) == 18:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
       #  self.single_num.vint64 = args[1]
-      self.single_float = args[2]
-      #  self.single_float.vdouble = args[2]
-      self.single_string = args[3]
-      #  self.single_string.vstring = args[3]
-      self.sibling1 = args[4]
-      #  self.sibling1.vint64 = args[4]
-      self.sibling2 = args[5]
-      #  self.sibling2.vint64 = args[5]
-      self.multi1 = args[6]
-      #  self.multi1.vint64 = args[6]
-      self.multi2 = args[7]
-      #  self.multi2.vint64 = args[7]
-      self.multi3 = args[8]
-      #  self.multi3.vint64 = args[8]
-      self.multi4 = args[9]
-      #  self.multi4.vint64 = args[9]
-      self.enum_field = args[10]
-      #  self.enum_field.vint64 = args[10]
-      self.iface1 = args[11]
-      #  self.iface1.vstring (Instance2StringCast (args[11]))
-      self.iface2 = args[12]
-      #  self.iface2.vstring (Instance2StringCast (args[12]))
-      self.iface3 = args[13]
-      #  self.iface3.vstring (Instance2StringCast (args[13]))
-      self.any1 = args[14]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[14])
-      self.any2 = args[15]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[15])
-      self.any3 = args[16]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[16])
+      self.num64 = args[2]
+      #  self.num64.vint64 = args[2]
+      self.single_float = args[3]
+      #  self.single_float.vdouble = args[3]
+      self.single_string = args[4]
+      #  self.single_string.vstring = args[4]
+      self.sibling1 = args[5]
+      #  self.sibling1.vint64 = args[5]
+      self.sibling2 = args[6]
+      #  self.sibling2.vint64 = args[6]
+      self.multi1 = args[7]
+      #  self.multi1.vint64 = args[7]
+      self.multi2 = args[8]
+      #  self.multi2.vint64 = args[8]
+      self.multi3 = args[9]
+      #  self.multi3.vint64 = args[9]
+      self.multi4 = args[10]
+      #  self.multi4.vint64 = args[10]
+      self.enum_field = args[11]
+      #  self.enum_field.vint64 = args[11]
+      self.iface1 = args[12]
+      #  self.iface1.vstring (Instance2StringCast (args[12]))
+      self.iface2 = args[13]
+      #  self.iface2.vstring (Instance2StringCast (args[13]))
+      self.iface3 = args[14]
+      #  self.iface3.vstring (Instance2StringCast (args[14]))
+      self.any1 = args[15]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[15])
+      self.any2 = args[16]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[16])
+      self.any3 = args[17]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[17])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
+      self.num64 = args["num64"]
       self.single_float = args["single_float"]
       self.single_string = args["single_string"]
       self.sibling1 = args["sibling1"]
@@ -97,6 +100,8 @@ class XFooRecord (_BaseRecord_):
     _aida_field.vint64 = self.single_bool
     _aida_field = _aida_rp.fields.add()
     _aida_field.vint64 = self.single_num
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.num64
     _aida_field = _aida_rp.fields.add()
     _aida_field.vdouble = self.single_float
     _aida_field = _aida_rp.fields.add()
@@ -155,50 +160,53 @@ class NestedTypesRec (_BaseRecord_):
 
 class AliasRecord (_BaseRecord_):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'num64' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
     self.__dict__.update (defaults)
     _BaseRecord_.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = AliasRecord()
-    if hasattr (args, "__iter__") and len (args) == 17:
+    if hasattr (args, "__iter__") and len (args) == 18:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
       #  self.single_num.vint64 = args[1]
-      self.single_float = args[2]
-      #  self.single_float.vdouble = args[2]
-      self.single_string = args[3]
-      #  self.single_string.vstring = args[3]
-      self.sibling1 = args[4]
-      #  self.sibling1.vint64 = args[4]
-      self.sibling2 = args[5]
-      #  self.sibling2.vint64 = args[5]
-      self.multi1 = args[6]
-      #  self.multi1.vint64 = args[6]
-      self.multi2 = args[7]
-      #  self.multi2.vint64 = args[7]
-      self.multi3 = args[8]
-      #  self.multi3.vint64 = args[8]
-      self.multi4 = args[9]
-      #  self.multi4.vint64 = args[9]
-      self.enum_field = args[10]
-      #  self.enum_field.vint64 = args[10]
-      self.iface1 = args[11]
-      #  self.iface1.vstring (Instance2StringCast (args[11]))
-      self.iface2 = args[12]
-      #  self.iface2.vstring (Instance2StringCast (args[12]))
-      self.iface3 = args[13]
-      #  self.iface3.vstring (Instance2StringCast (args[13]))
-      self.any1 = args[14]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[14])
-      self.any2 = args[15]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[15])
-      self.any3 = args[16]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[16])
+      self.num64 = args[2]
+      #  self.num64.vint64 = args[2]
+      self.single_float = args[3]
+      #  self.single_float.vdouble = args[3]
+      self.single_string = args[4]
+      #  self.single_string.vstring = args[4]
+      self.sibling1 = args[5]
+      #  self.sibling1.vint64 = args[5]
+      self.sibling2 = args[6]
+      #  self.sibling2.vint64 = args[6]
+      self.multi1 = args[7]
+      #  self.multi1.vint64 = args[7]
+      self.multi2 = args[8]
+      #  self.multi2.vint64 = args[8]
+      self.multi3 = args[9]
+      #  self.multi3.vint64 = args[9]
+      self.multi4 = args[10]
+      #  self.multi4.vint64 = args[10]
+      self.enum_field = args[11]
+      #  self.enum_field.vint64 = args[11]
+      self.iface1 = args[12]
+      #  self.iface1.vstring (Instance2StringCast (args[12]))
+      self.iface2 = args[13]
+      #  self.iface2.vstring (Instance2StringCast (args[13]))
+      self.iface3 = args[14]
+      #  self.iface3.vstring (Instance2StringCast (args[14]))
+      self.any1 = args[15]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[15])
+      self.any2 = args[16]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[16])
+      self.any3 = args[17]
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[17])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
+      self.num64 = args["num64"]
       self.single_float = args["single_float"]
       self.single_string = args["single_string"]
       self.sibling1 = args["sibling1"]
@@ -222,6 +230,8 @@ class AliasRecord (_BaseRecord_):
     _aida_field.vint64 = self.single_bool
     _aida_field = _aida_rp.fields.add()
     _aida_field.vint64 = self.single_num
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.num64
     _aida_field = _aida_rp.fields.add()
     _aida_field.vdouble = self.single_float
     _aida_field = _aida_rp.fields.add()
@@ -394,7 +404,7 @@ class UIWidgetArea (_BaseClass_):
     ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (self, n, r)
     return ___ret
   def multi_args (self, b, n, r, i, s = "String ding", y = 5): # float64
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int32_float64_int32_String_float64 (self, b, n, r, i, s, y)
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_int32_String_float64 (self, b, n, r, i, s, y)
     return ___ret
   def self_method (self, ba1, ba2): # float64
     ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (self, ba1, ba2)
@@ -476,8 +486,11 @@ class MethodTestInterface (_BaseClass_):
   def method_with_bools (self, input, optval = 0): # bool
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool (self, input, optval)
     return ___ret
-  def method_with_ints (self, input, optval = -2): # int32
-    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_ints_int32_int32_int32 (self, input, optval)
+  def method_with_ints32 (self, input, optval = -2): # int32
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_int32 (self, input, optval)
+    return ___ret
+  def method_with_ints64 (self, input, optval = 576460752303423488): # int64
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_int64 (self, input, optval)
     return ___ret
   def method_with_floats (self, input, optval = 309.9): # float64
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64 (self, input, optval)
@@ -509,8 +522,9 @@ class SignalTestInterface (_BaseClass_):
     super (SignalTestInterface, self).__init__ (_aida_id)
     self.sig_void_result = __Signal__ ('void_result')
     self.sig_bool_result = __Signal__ ('bool_result')
-    self.sig_int_result = __Signal__ ('int_result')
-    self.sig_float_result = __Signal__ ('float_result')
+    self.sig_int32_result = __Signal__ ('int32_result')
+    self.sig_int64_result = __Signal__ ('int64_result')
+    self.sig_float64_result = __Signal__ ('float64_result')
     self.sig_string_result = __Signal__ ('string_result')
     self.sig_enum_result = __Signal__ ('enum_result')
     self.sig_record_result = __Signal__ ('record_result')
@@ -520,8 +534,9 @@ class SignalTestInterface (_BaseClass_):
     self.sig_self_result = __Signal__ ('self_result')
     self.sig_void_arg = __Signal__ ('void_arg')
     self.sig_bool_arg = __Signal__ ('bool_arg')
-    self.sig_int_arg = __Signal__ ('int_arg')
-    self.sig_float_arg = __Signal__ ('float_arg')
+    self.sig_int32_arg = __Signal__ ('int32_arg')
+    self.sig_int64_arg = __Signal__ ('int64_arg')
+    self.sig_float64_arg = __Signal__ ('float64_arg')
     self.sig_string_arg = __Signal__ ('string_arg')
     self.sig_enum_arg = __Signal__ ('enum_arg')
     self.sig_record_arg = __Signal__ ('record_arg')
@@ -539,16 +554,21 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_result_bool (self, func, 0)
   def sig_bool_result_disconnect (self, connection_id):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_result_bool (self, None, connection_id)
-  def __sig_int_result__ (self): pass # default handler
-  def sig_int_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int32 (self, func, 0)
-  def sig_int_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int32 (self, None, connection_id)
-  def __sig_float_result__ (self): pass # default handler
-  def sig_float_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float64 (self, func, 0)
-  def sig_float_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float64 (self, None, connection_id)
+  def __sig_int32_result__ (self): pass # default handler
+  def sig_int32_result_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int32_result_int32 (self, func, 0)
+  def sig_int32_result_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int32_result_int32 (self, None, connection_id)
+  def __sig_int64_result__ (self): pass # default handler
+  def sig_int64_result_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int64_result_int64 (self, func, 0)
+  def sig_int64_result_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int64_result_int64 (self, None, connection_id)
+  def __sig_float64_result__ (self): pass # default handler
+  def sig_float64_result_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float64_result_float64 (self, func, 0)
+  def sig_float64_result_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float64_result_float64 (self, None, connection_id)
   def __sig_string_result__ (self): pass # default handler
   def sig_string_result_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_result_String (self, func, 0)
@@ -594,16 +614,21 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_arg_void_bool (self, func, 0)
   def sig_bool_arg_disconnect (self, connection_id):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_arg_void_bool (self, None, connection_id)
-  def __sig_int_arg__ (self): pass # default handler
-  def sig_int_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int32 (self, func, 0)
-  def sig_int_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int32 (self, None, connection_id)
-  def __sig_float_arg__ (self): pass # default handler
-  def sig_float_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float64 (self, func, 0)
-  def sig_float_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float64 (self, None, connection_id)
+  def __sig_int32_arg__ (self): pass # default handler
+  def sig_int32_arg_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int32_arg_void_int32 (self, func, 0)
+  def sig_int32_arg_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int32_arg_void_int32 (self, None, connection_id)
+  def __sig_int64_arg__ (self): pass # default handler
+  def sig_int64_arg_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int64_arg_void_int64 (self, func, 0)
+  def sig_int64_arg_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int64_arg_void_int64 (self, None, connection_id)
+  def __sig_float64_arg__ (self): pass # default handler
+  def sig_float64_arg_connect (self, func):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float64_arg_void_float64 (self, func, 0)
+  def sig_float64_arg_disconnect (self, connection_id):
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float64_arg_void_float64 (self, None, connection_id)
   def __sig_string_arg__ (self): pass # default handler
   def sig_string_arg_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_arg_void_String (self, func, 0)

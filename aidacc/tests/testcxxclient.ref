@@ -188,6 +188,7 @@ struct XFooRecordStruct
 {
   bool                          single_bool;
   int                           single_num;
+  Rapicorn::Aida::int64_t       num64;
   double                        single_float;
   std::string                   single_string;
   int                           sibling1;
@@ -203,7 +204,7 @@ struct XFooRecordStruct
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
-  inline                        XFooRecordStruct () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  inline                        XFooRecordStruct () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecordStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecordStruct&);
@@ -334,7 +335,9 @@ typedef Rapicorn::Aida::Any AliasAny;
 
 typedef bool AliasBool;
 
-typedef int AliasInt;
+typedef int AliasInt32;
+
+typedef Rapicorn::Aida::int64_t AliasInt64;
 
 typedef double AliasFloat;
 
@@ -407,13 +410,15 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecordStruct&);
 
 namespace Auxdata {
 
-typedef bool bfoo;
+typedef bool AuxBool;
 
-typedef int ifoo;
+typedef int Aux32;
 
-typedef double ffoo;
+typedef Rapicorn::Aida::int64_t Aux64;
 
-typedef std::string sfoo;
+typedef double AuxF64;
+
+typedef std::string AuxStr;
 } // Auxdata
 
 namespace InterfaceTests {
@@ -448,7 +453,7 @@ public:
   double                        two_args2          (int n = 6,
                                                     double r = 7.7);
   double                        multi_args         (bool b,
-                                                    int n,
+                                                    Rapicorn::Aida::int64_t n,
                                                     double r,
                                                     int i,
                                                     const std::string &s = "String ding",
@@ -602,8 +607,10 @@ public:
   void                          method_with_void          ();
   bool                          method_with_bools         (bool input,
                                                            bool optval = 0);
-  int                           method_with_ints          (int input,
+  int                           method_with_ints32        (int input,
                                                            int optval = -2);
+  Rapicorn::Aida::int64_t       method_with_ints64        (Rapicorn::Aida::int64_t input,
+                                                           Rapicorn::Aida::int64_t optval = 576460752303423488);
   double                        method_with_floats        (double input,
                                                            double optval = 309.9);
   std::string                   method_with_string        (const std::string &input,
@@ -636,8 +643,9 @@ protected:
   static Rapicorn::Aida::ClientConnection __client_connection__ (void);
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, int ()> Signal_int_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, int ()> Signal_int32_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, Rapicorn::Aida::int64_t ()> Signal_int64_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, double ()> Signal_float64_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, std::string ()> Signal_string_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickEnum ()> Signal_enum_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickRecordStruct ()> Signal_record_result;
@@ -647,8 +655,9 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, SignalTestInterfaceHandle ()> Signal_self_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (int i)> Signal_int_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (int i)> Signal_int32_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (double f)> Signal_float64_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const std::string &s)> Signal_string_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (QuickEnum e)> Signal_enum_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const QuickRecordStruct &r)> Signal_record_arg;
@@ -663,8 +672,9 @@ public:
   explicit                      SignalTestInterfaceHandle ();
   Signal_void_result&           sig_void_result();
   Signal_bool_result&           sig_bool_result();
-  Signal_int_result&            sig_int_result();
-  Signal_float_result&          sig_float_result();
+  Signal_int32_result&          sig_int32_result();
+  Signal_int64_result&          sig_int64_result();
+  Signal_float64_result&        sig_float64_result();
   Signal_string_result&         sig_string_result();
   Signal_enum_result&           sig_enum_result();
   Signal_record_result&         sig_record_result();
@@ -674,8 +684,9 @@ public:
   Signal_self_result&           sig_self_result();
   Signal_void_arg&              sig_void_arg();
   Signal_bool_arg&              sig_bool_arg();
-  Signal_int_arg&               sig_int_arg();
-  Signal_float_arg&             sig_float_arg();
+  Signal_int32_arg&             sig_int32_arg();
+  Signal_int64_arg&             sig_int64_arg();
+  Signal_float64_arg&           sig_float64_arg();
   Signal_string_arg&            sig_string_arg();
   Signal_enum_arg&              sig_enum_arg();
   Signal_record_arg&            sig_record_arg();
@@ -742,10 +753,12 @@ public:
   explicit                      PropertyTesterHandle ();
   bool                          bool_prop      () const;
   void                          bool_prop      (bool);
-  int                           int_prop       () const;
-  void                          int_prop       (int);
-  double                        float_prop     () const;
-  void                          float_prop     (double);
+  int                           int32_prop     () const;
+  void                          int32_prop     (int);
+  Rapicorn::Aida::int64_t       int64_prop     () const;
+  void                          int64_prop     (Rapicorn::Aida::int64_t);
+  double                        float64_prop   () const;
+  void                          float64_prop   (double);
   std::string                   string_prop    () const;
   void                          string_prop    (const std::string&);
   QuickEnum                     enum_prop      () const;
@@ -1136,9 +1149,10 @@ FirstInterfaceHandle::void_func ()
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecordStruct &self)
 {
-  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (17);
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (18);
   fb <<= self.single_bool;
   fb <<= self.single_num;
+  fb <<= self.num64;
   fb <<= self.single_float;
   fb <<= self.single_string;
   fb <<= self.sibling1;
@@ -1159,9 +1173,10 @@ inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, XFooRecordStruct &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 17) return;
+  if (fbr.remaining() < 18) return;
   fbr >>= self.single_bool;
   fbr >>= self.single_num;
+  fbr >>= self.num64;
   fbr >>= self.single_float;
   fbr >>= self.single_string;
   fbr >>= self.sibling1;
@@ -1748,14 +1763,14 @@ UIWidgetAreaHandle::two_args2 (int arg_n,
 }
 double
 UIWidgetAreaHandle::multi_args (bool arg_b,
-                                int arg_n,
+                                Rapicorn::Aida::int64_t arg_n,
                                 double arg_r,
                                 int arg_i,
                                 const std::string &arg_s,
                                 double arg_y)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 6), *fr = NULL;
-  fb.add_msgid (0x3993d5ee318a9a89ULL, 0x1cbcea9bfa6853daULL); // msgid
+  fb.add_msgid (0x3da25289fcf7fe26ULL, 0xf2dfa2d031dd302cULL); // msgid
   fb <<= (*this);
   fb <<= arg_b;
   fb <<= arg_n;
@@ -2394,11 +2409,11 @@ MethodTestInterfaceHandle::method_with_bools (bool arg_input,
   return retval;
 }
 int
-MethodTestInterfaceHandle::method_with_ints (int arg_input,
-                                             int arg_optval)
+MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
+                                               int arg_optval)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3205f554593fc0dfULL, 0x73373d271242f5adULL); // msgid
+  fb.add_msgid (0x3c7dd838073a8a92ULL, 0xddd57eef6f36ab11ULL); // msgid
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
@@ -2406,6 +2421,23 @@ MethodTestInterfaceHandle::method_with_ints (int arg_input,
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
   int  retval;
+  frr >>= retval;
+  delete fr;
+  return retval;
+}
+Rapicorn::Aida::int64_t
+MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64_t arg_input,
+                                               Rapicorn::Aida::int64_t arg_optval)
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
+  fb.add_msgid (0x394bb1c2a7be91fbULL, 0x3f077bb42a25d6e4ULL); // msgid
+  fb <<= (*this);
+  fb <<= arg_input;
+  fb <<= arg_optval;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  Rapicorn::Aida::int64_t  retval;
   frr >>= retval;
   delete fr;
   return retval;
@@ -2560,10 +2592,12 @@ public:
   SignalHandler__void_result void_result;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, bool ()> SignalHandler__bool_result;
   SignalHandler__bool_result bool_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, int ()> SignalHandler__int_result;
-  SignalHandler__int_result int_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, double ()> SignalHandler__float_result;
-  SignalHandler__float_result float_result;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, int ()> SignalHandler__int32_result;
+  SignalHandler__int32_result int32_result;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, Rapicorn::Aida::int64_t ()> SignalHandler__int64_result;
+  SignalHandler__int64_result int64_result;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, double ()> SignalHandler__float64_result;
+  SignalHandler__float64_result float64_result;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, std::string ()> SignalHandler__string_result;
   SignalHandler__string_result string_result;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickEnum ()> SignalHandler__enum_result;
@@ -2582,10 +2616,12 @@ public:
   SignalHandler__void_arg void_arg;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (bool b)> SignalHandler__bool_arg;
   SignalHandler__bool_arg bool_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (int i)> SignalHandler__int_arg;
-  SignalHandler__int_arg int_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (double f)> SignalHandler__float_arg;
-  SignalHandler__float_arg float_arg;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (int i)> SignalHandler__int32_arg;
+  SignalHandler__int32_arg int32_arg;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64_t i)> SignalHandler__int64_arg;
+  SignalHandler__int64_arg int64_arg;
+  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (double f)> SignalHandler__float64_arg;
+  SignalHandler__float64_arg float64_arg;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const std::string &s)> SignalHandler__string_arg;
   SignalHandler__string_arg string_arg;
   typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (QuickEnum e)> SignalHandler__enum_arg;
@@ -2604,8 +2640,9 @@ public:
     handle$ (ipcid),
     void_result (handle$, 0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL),
     bool_result (handle$, 0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL),
-    int_result (handle$, 0x5b434c3fa3867a2dULL, 0x367e9157a84a9a61ULL),
-    float_result (handle$, 0x580488dd51618453ULL, 0xe7c2b7dd3b27f580ULL),
+    int32_result (handle$, 0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL),
+    int64_result (handle$, 0x5670d5594a24b2d9ULL, 0x8ad93cc1a1e9bb50ULL),
+    float64_result (handle$, 0x51aee1ad06b0e2ffULL, 0x0a7f816f9bdaf008ULL),
     string_result (handle$, 0x5daa2a4439deab5fULL, 0xc0580f71a4d7d1d6ULL),
     enum_result (handle$, 0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL),
     record_result (handle$, 0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL),
@@ -2615,8 +2652,9 @@ public:
     self_result (handle$, 0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL),
     void_arg (handle$, 0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL),
     bool_arg (handle$, 0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL),
-    int_arg (handle$, 0x58387c9d58975d82ULL, 0x51c675f902946ed5ULL),
-    float_arg (handle$, 0x568812c610d9f6eeULL, 0xa56180bc50f936d0ULL),
+    int32_arg (handle$, 0x583ed84bd4d820efULL, 0x87214001f1934890ULL),
+    int64_arg (handle$, 0x5d6ed628b051e336ULL, 0x442670f1eba34b7bULL),
+    float64_arg (handle$, 0x5d937b3a9a059ff0ULL, 0x641851b425c3f91cULL),
     string_arg (handle$, 0x524e550794aaa1e8ULL, 0x093b71ccace2863bULL),
     enum_arg (handle$, 0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL),
     record_arg (handle$, 0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL),
@@ -2706,15 +2744,20 @@ SignalTestInterfaceHandle::sig_bool_result ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_result.psignal;
 }
-SignalTestInterfaceHandle::Signal_int_result&
-SignalTestInterfaceHandle::sig_int_result ()
+SignalTestInterfaceHandle::Signal_int32_result&
+SignalTestInterfaceHandle::sig_int32_result ()
 {
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int_result.psignal;
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int32_result.psignal;
 }
-SignalTestInterfaceHandle::Signal_float_result&
-SignalTestInterfaceHandle::sig_float_result ()
+SignalTestInterfaceHandle::Signal_int64_result&
+SignalTestInterfaceHandle::sig_int64_result ()
 {
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float_result.psignal;
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int64_result.psignal;
+}
+SignalTestInterfaceHandle::Signal_float64_result&
+SignalTestInterfaceHandle::sig_float64_result ()
+{
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float64_result.psignal;
 }
 SignalTestInterfaceHandle::Signal_string_result&
 SignalTestInterfaceHandle::sig_string_result ()
@@ -2761,15 +2804,20 @@ SignalTestInterfaceHandle::sig_bool_arg ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_arg.psignal;
 }
-SignalTestInterfaceHandle::Signal_int_arg&
-SignalTestInterfaceHandle::sig_int_arg ()
+SignalTestInterfaceHandle::Signal_int32_arg&
+SignalTestInterfaceHandle::sig_int32_arg ()
 {
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int_arg.psignal;
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int32_arg.psignal;
 }
-SignalTestInterfaceHandle::Signal_float_arg&
-SignalTestInterfaceHandle::sig_float_arg ()
+SignalTestInterfaceHandle::Signal_int64_arg&
+SignalTestInterfaceHandle::sig_int64_arg ()
 {
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float_arg.psignal;
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int64_arg.psignal;
+}
+SignalTestInterfaceHandle::Signal_float64_arg&
+SignalTestInterfaceHandle::sig_float64_arg ()
+{
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float64_arg.psignal;
 }
 SignalTestInterfaceHandle::Signal_string_arg&
 SignalTestInterfaceHandle::sig_string_arg ()
@@ -3081,10 +3129,10 @@ PropertyTesterHandle::bool_prop (bool value)
   if (fr) delete fr;
 }
 int
-PropertyTesterHandle::int_prop () const
+PropertyTesterHandle::int32_prop () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x380e699e8e83356bULL, 0x3b10e1c51bf53d58ULL);
+  fb.add_msgid (0x3fc09bee2af126a2ULL, 0xc3a6e67a53c81eb1ULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Rapicorn::Aida::FieldReader frr (*fr);
@@ -3095,20 +3143,44 @@ PropertyTesterHandle::int_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::int_prop (int value)
+PropertyTesterHandle::int32_prop (int value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2c781ddf42b87412ULL, 0x78d1d25fdc7a0cc8ULL); // msgid
+  fb.add_msgid (0x26fd925ece96e768ULL, 0xac82e725f914b79dULL); // msgid
+  fb <<= (*this);
+  fb <<= value;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+Rapicorn::Aida::int64_t
+PropertyTesterHandle::int64_prop () const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3731039da4eac87cULL, 0x78ad56f71ec3500aULL);
+  fb <<= (*this);
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  Rapicorn::Aida::int64_t  retval;
+  frr >>= retval;
+  delete fr;
+  return retval;
+}
+void
+PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64_t value)
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x2231b1bcd886b3c0ULL, 0x84a1427a737bc687ULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
 double
-PropertyTesterHandle::float_prop () const
+PropertyTesterHandle::float64_prop () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3cd6db6ba31a4bd8ULL, 0xf930b37be1bd5d1fULL);
+  fb.add_msgid (0x36e831c918e287dfULL, 0x6bd2c7a7a75237faULL);
   fb <<= (*this);
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   Rapicorn::Aida::FieldReader frr (*fr);
@@ -3119,10 +3191,10 @@ PropertyTesterHandle::float_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::float_prop (double value)
+PropertyTesterHandle::float64_prop (double value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2b940c08f3e262d5ULL, 0xfee13020d05069f4ULL); // msgid
+  fb.add_msgid (0x2e886d9d9b74fd50ULL, 0xf218d40a5edc2eb9ULL); // msgid
   fb <<= (*this);
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
