@@ -5,13 +5,13 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, BOOL, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vbidsEQRCFTY']
+VOID, BOOL, INT32, FLOAT64, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vbidsEQRCFTY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',
     BOOL      : 'BOOL',
-    INT       : 'INT',
-    FLOAT     : 'FLOAT',
+    INT32     : 'INT32',
+    FLOAT64   : 'FLOAT64',
     STRING    : 'STRING',
     ENUM      : 'ENUM',
     RECORD    : 'RECORD',
@@ -84,7 +84,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, BOOL, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
+    assert storage in (VOID, BOOL, INT32, FLOAT64, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl

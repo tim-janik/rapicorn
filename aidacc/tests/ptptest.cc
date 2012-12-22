@@ -129,21 +129,21 @@ list_types (std::string type_map_file)
 static void
 standard_tests ()
 {
-  TypeCode tcint = TypeMap::lookup ("int");
-  assert (tcint.kind() == INT);
-  assert (tcint.name() == "int");
-  assert (tcint.kind_name() == "INT");
-  TypeCode tcfloat = TypeMap::lookup ("float");
-  assert (tcfloat.kind_name() == "FLOAT");
-  assert (tcfloat.kind() == FLOAT);
-  assert (tcfloat.name() == "float");
-  TypeCode tcstring = TypeMap::lookup ("string");
+  TypeCode tcint = TypeMap::lookup ("int32");
+  assert (tcint.kind() == INT32);
+  assert (tcint.name() == "int32");
+  assert (tcint.kind_name() == "INT32");
+  TypeCode tcfloat = TypeMap::lookup ("float64");
+  assert (tcfloat.kind_name() == "FLOAT64");
+  assert (tcfloat.kind() == FLOAT64);
+  assert (tcfloat.name() == "float64");
+  TypeCode tcstring = TypeMap::lookup ("String");
   assert (tcstring.kind() == STRING);
-  assert (tcstring.name() == "string");
+  assert (tcstring.name() == "String");
   assert (tcstring.kind_name () == "STRING");
-  TypeCode tcany = TypeMap::lookup ("any");
+  TypeCode tcany = TypeMap::lookup ("Any");
   assert (tcany.kind() == ANY);
-  assert (tcany.name() == "any");
+  assert (tcany.name() == "Any");
   assert (tcany.kind_name () == "ANY");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
@@ -168,22 +168,22 @@ type_code_tests ()
   {
     // simple int lookup
     TypeCode t1 = tp.lookup_local ("AidaTests::IntWithFooAsLabel");
-    assert (t1.kind() == INT);
+    assert (t1.kind() == INT32);
     assert (t1.name() == "AidaTests::IntWithFooAsLabel");
     assert (t1.aux_value ("label") == "Foo");
     assert (t1.hints() == ":");
     // simple float lookup
     TypeCode t2 = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
-    assert (t2.kind() == FLOAT);
+    assert (t2.kind() == FLOAT64);
     assert (t2.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t2.aux_value ("blurb") == "Float Blurb");
     // check that type memory used above is still valid
     assert (t1.name() + "-postfix" == String ("AidaTests::IntWithFooAsLabel-postfix"));
     assert (t2.name() == String ("AidaTests::FloatWithBlurbBlurb"));
   }
-  { // INT
+  { // INT32
     TypeCode t = tp.lookup_local ("AidaTests::IntAuxRange");
-    assert (t.kind() == INT);
+    assert (t.kind() == INT32);
     assert (t.name() == "AidaTests::IntAuxRange");
     assert (t.aux_value ("label") == "Int Range");
     assert (t.aux_value ("blurb") == "This int demonstrates range data use");
@@ -192,9 +192,9 @@ type_code_tests ()
     assert (t.aux_value ("step") == "-5");
     assert (t.hints().find (":extra-option:") != String().npos);
   }
-  { // FLOAT
+  { // FLOAT64
     TypeCode t = tp.lookup_local ("AidaTests::FloatWithBlurbBlurb");
-    assert (t.kind() == FLOAT);
+    assert (t.kind() == FLOAT64);
     assert (t.name() == "AidaTests::FloatWithBlurbBlurb");
     assert (t.aux_value ("label") == "Float Label");
     assert (t.aux_value ("blurb") == "Float Blurb");
@@ -232,7 +232,7 @@ type_code_tests ()
     assert (t.hints() == ":");
     assert (t.field_count() == 1);
     TypeCode f = t.field (0);
-    assert (f.kind() == INT);
+    assert (f.kind() == INT32);
     assert (f.name() == "sample_integer");
   }
   { // RECORD
@@ -245,10 +245,10 @@ type_code_tests ()
     assert (t.hints() == ":");
     assert (t.field_count() == 4);
     TypeCode f = t.field (0);
-    assert (f.kind() == INT);
+    assert (f.kind() == INT32);
     assert (f.name() == "intfield");
     f = t.field (1);
-    assert (f.kind() == FLOAT);
+    assert (f.kind() == FLOAT64);
     assert (f.name() == "floatfield");
     f = t.field (2);
     assert (f.kind() == STRING);
@@ -336,13 +336,13 @@ test_any()
           }
       }
   printf ("  TEST   Aida Any storage                                                OK\n");
-  a <<= 1.;             assert (a.kind() == FLOAT && a.as_float() == +1.0);
-  a <<= -1.;            assert (a.kind() == FLOAT && a.as_float() == -1.0);
+  a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
+  a <<= -1.;            assert (a.kind() == FLOAT64 && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
-  a <<= 1;              assert (a.kind() == INT && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= -1;             assert (a.kind() == INT && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= 0;              assert (a.kind() == INT && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
-  a <<= 32767199;       assert (a.kind() == INT && a.as_int() == 32767199);
+  a <<= 1;              assert (a.kind() == INT32 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= -1;             assert (a.kind() == INT32 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= 0;              assert (a.kind() == INT32 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
+  a <<= 32767199;       assert (a.kind() == INT32 && a.as_int() == 32767199);
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);

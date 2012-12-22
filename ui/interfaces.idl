@@ -190,20 +190,20 @@ enum WindowType {
 };
 
 /// A sequence of strings (in C++ of std::string).
-sequence StringSeq { string strings; };
+sequence StringSeq { String strings; };
 
-/// A sequence of @a any objects, useful when the sequence element types need to be determined at runtime.
-sequence AnySeq { any vany; };
+/// A sequence of @a Any objects, useful when the sequence element types need to be determined at runtime.
+sequence AnySeq { Any vany; };
 
 /// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
 sequence AnySeqSeq { AnySeq seq; };
 
 /// A sequence of ARGB pixel values.
-sequence PixelSeq { int argb; };
+sequence PixelSeq { int32 argb; };
 
 /// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
 record Pixbuf {
-  int       row_length;         ///< Length of a Pixbuf row in pixels.
+  int32       row_length;         ///< Length of a Pixbuf row in pixels.
   PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
   StringSeq variables;
 };
@@ -214,12 +214,12 @@ record Pixbuf {
  * while random order read outs may be of O(log n) or even O(n).
  */
 interface ListModel {
-  int         size     () = 0;		      ///< Obtain the number of rows provided by this model.
-  int         columns  () = 0;		      ///< Obtain the number of columns provided by this model.
-  AnySeq      row      (int n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
-  signal void inserted (int first, int last); ///< Notify about insertion of last-first+1 rows.
-  signal void changed  (int first, int last); ///< Notify about changes in last-first+1 rows.
-  signal void removed  (int first, int last); ///< Notify about removal of last-first+1 rows.
+  int32         size     () = 0;		      ///< Obtain the number of rows provided by this model.
+  int32         columns  () = 0;		      ///< Obtain the number of columns provided by this model.
+  AnySeq      row      (int32 n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
+  signal void inserted (int32 first, int32 last); ///< Notify about insertion of last-first+1 rows.
+  signal void changed  (int32 first, int32 last); ///< Notify about changes in last-first+1 rows.
+  signal void removed  (int32 first, int32 last); ///< Notify about removal of last-first+1 rows.
 };
 
 /**
@@ -228,12 +228,12 @@ interface ListModel {
  * be displayed is provided sparsely on demand through explicit API calls.
  */
 interface ListModelRelay {
-  void        resize     (int size) = 0;		///< Resize the ListModel to the given number of rows.
-  void        inserted   (int first, int last = 0) = 0; ///< Issue model notification for row insertion.
-  void        changed    (int first, int last = 0) = 0; ///< Issue model notification for row changes.
-  void        removed    (int first, int last = 0) = 0; ///< Issue model notification for row removal.
-  void        fill       (int first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
-  signal void refill     (int first, int last);         ///< Refill requests row data for last-first+1 rows.
+  void        resize     (int32 size) = 0;		///< Resize the ListModel to the given number of rows.
+  void        inserted   (int32 first, int32 last = 0) = 0; ///< Issue model notification for row insertion.
+  void        changed    (int32 first, int32 last = 0) = 0; ///< Issue model notification for row changes.
+  void        removed    (int32 first, int32 last = 0) = 0; ///< Issue model notification for row removal.
+  void        fill       (int32 first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
+  signal void refill     (int32 first, int32 last);         ///< Refill requests row data for last-first+1 rows.
   ListModel   model      () = 0; ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
 };
 
@@ -243,8 +243,8 @@ interface ListModelRelay {
  * Requisition information, providing requisition @a width and @a height.
  */
 record Requisition {
-  float width;
-  float height;
+  float64 width;
+  float64 height;
 };
 
 interface Item;
@@ -260,14 +260,14 @@ sequence ItemSeq {
  * Item is the base type for all UI elements.
  */
 interface Item {
-  bool          match_selector          (string selector) = 0; //< Check if selector matches this item.
-  Item          query_selector          (string selector) = 0; //< Returns first selector match.
-  ItemSeq       query_selector_all      (string selector) = 0; //< Returns all selector matches.
-  Item          query_selector_unique   (string selector) = 0; //< Returns single selector match if unique.
-  string	test_dump               () = 0;
-  string name = String (_("Name"), _("Identification name of the item"), "rw");
-  float width   = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
-  float height  = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
+  bool          match_selector          (String selector) = 0; //< Check if selector matches this item.
+  Item          query_selector          (String selector) = 0; //< Returns first selector match.
+  ItemSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
+  Item          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
+  String	test_dump               () = 0;
+  String name = String (_("Name"), _("Identification name of the item"), "rw");
+  float64 width   = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
+  float64 height  = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
   bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw");
   bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this item vertically"), "rw");
   bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw");
@@ -276,20 +276,20 @@ interface Item {
   bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw");
   bool  visible   = Bool (_("Visible"),   _("Whether this item is visible"), "rw");
   bool  sensitive = Bool (_("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw");
-  float hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the item"), "Prw", 0, 99999, 5);
-  float hspan     = Range (_("Horizontal Span"),     _("Horizontal span for item layout"), "Prw", 1, 100000, 5);
-  float vposition = Range (_("Vertical Position"),   _("Vertical layout position for the item"), "Prw", 0, 99999, 5);
-  float vspan     = Range (_("Vertical Span"),       _("Vertical span for item layout"), "Prw", 1, 100000, 5);
-  int left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the item's left side"),   "Prw", 0, 65535, 3);
-  int right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the item's right side"),  "Prw", 0, 65535, 3);
-  int bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), "Prw", 0, 65535, 3);
-  int top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the item's top side"),    "Prw", 0, 65535, 3);
-  float hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
-  float vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
-  float halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
-  float hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
-  float valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
-  float vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the item"), "Prw", 0, 99999, 5);
+  float64 hspan     = Range (_("Horizontal Span"),     _("Horizontal span for item layout"), "Prw", 1, 100000, 5);
+  float64 vposition = Range (_("Vertical Position"),   _("Vertical layout position for the item"), "Prw", 0, 99999, 5);
+  float64 vspan     = Range (_("Vertical Span"),       _("Vertical span for item layout"), "Prw", 1, 100000, 5);
+  int32 left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the item's left side"),   "Prw", 0, 65535, 3);
+  int32 right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the item's right side"),  "Prw", 0, 65535, 3);
+  int32 bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), "Prw", 0, 65535, 3);
+  int32 top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the item's top side"),    "Prw", 0, 65535, 3);
+  float64 hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float64 vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float64 halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float64 hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  float64 valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float64 vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
   ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this item"), "rw");
 };
 
@@ -298,7 +298,7 @@ interface Item {
  */
 interface Container : Item {
   /// Create a child item from the @a item_identifier template and add it to the container.
-  Item          create_child            (string item_identifier, StringSeq args = 0) = 0;
+  Item          create_child            (String item_identifier, StringSeq args = 0) = 0;
 };
 
 /**
@@ -307,15 +307,15 @@ interface Container : Item {
  * respective mouse button is clicked.
  */
 interface ButtonArea : Container {
-  string	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
-  string	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
-  string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+  String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
 };
 
 /// The Drawable interface allows display of custom images, created by client-side rendering.
 interface Drawable : Item {
-  signal void redraw    (int x, int y, int w, int h);	        ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int x, int y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
+  signal void redraw    (int32 x, int32 y, int32 w, int32 h);	        ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
 };
 
 /**
@@ -328,15 +328,15 @@ interface Window : Container {
   void          show                    () = 0;
   bool          closed                  () = 0;
   void          close                   () = 0;
-  bool          snapshot                (string     pngname) = 0;
-  signal bool   commands                (string     cmdname, StringSeq args);
+  bool          snapshot                (String     pngname) = 0;
+  signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();
   bool          synthesize_click        (Item       item,
-                                         int        button,
-                                         float      xalign = 0.5,
-                                         float      yalign = 0.5) = 0;
-  bool          synthesize_enter        (float      xalign = 0.5,
-                                         float      yalign = 0.5) = 0;
+                                         int32        button,
+                                         float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
+  bool          synthesize_enter        (float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
   bool          synthesize_leave        () = 0;
   bool          synthesize_delete       () = 0;
 };
@@ -353,33 +353,33 @@ sequence WindowList {
  */
 interface Application {
   /// @name Application Startup
-  string        auto_path       (string         file_name,
-                                 string         binary_path,
+  String        auto_path       (String         file_name,
+                                 String         binary_path,
                                  bool           search_vpath = true) = 0;
-  StringSeq     auto_load       (string         defs_domain,
-                                 string         file_name,
-                                 string         binary_path,
-                                 string         i18n_domain = "") = 0;
-  bool          factory_window  (string         factory_definition);
-  void          load_string     (string         defs_domain,
-                                 string         xml_string,
-                                 string         i18n_domain = "") = 0;
+  StringSeq     auto_load       (String         defs_domain,
+                                 String         file_name,
+                                 String         binary_path,
+                                 String         i18n_domain = "") = 0;
+  bool          factory_window  (String         factory_definition);
+  void          load_string     (String         defs_domain,
+                                 String         xml_string,
+                                 String         i18n_domain = "") = 0;
   /// @name Window handling
-  Window        create_window   (string window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
+  Window        create_window   (String window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
   bool          finishable      ();                     ///< Indicates whether all windows and other primary event sources are gone.
   signal void   missing_primary ();                     ///< Indicates the Application entering finishable() state.
   void          close_all       () = 0;                 ///< Forces closing of all windows.
-  Window        query_window    (string selector) = 0;  ///< Returns first Window match for @a selector.
-  WindowList    query_windows   (string selector) = 0;  ///< Returns all Window matches for @a selector.
+  Window        query_window    (String selector) = 0;  ///< Returns first Window match for @a selector.
+  WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
   /// @name Application Registries
   ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
-  ListModelRelay create_list_model_relay (int n_columns, string name = "") = 0;
+  ListModelRelay create_list_model_relay (int32 n_columns, String name = "") = 0;
   /// @name Test counter for debugging/profiling
-  void          test_counter_set        (int val) = 0;  ///< Testing, set the test counter.
-  void          test_counter_add        (int val) = 0;  ///< Testing, add to the test counter.
-  int           test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
-  int           test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
+  void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
+  void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.
+  int32           test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
+  int32           test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
 };
 
 enum TestEnum {
@@ -390,9 +390,9 @@ enum TestEnum {
 
 interface IdlTestItem : Item {
   bool           bool_prop;
-  int            int_prop;
-  float          float_prop;
-  string         string_prop;
+  int32            int_prop;
+  float64          float_prop;
+  String         string_prop;
   TestEnum       enum_prop;
   Requisition    record_prop;
   StringSeq      sequence_prop;

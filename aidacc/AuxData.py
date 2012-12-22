@@ -6,10 +6,10 @@ import Decls
 
 auxillary_initializers = {
   (Decls.BOOL,      'Bool')     : ('label', 'blurb', 'hints', 'default=0'),
-  (Decls.INT,       'Int')      : ('label', 'blurb', 'hints', 'default=0'),
-  (Decls.INT,       'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
-  (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'hints', 'default=0'),
-  (Decls.FLOAT,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
+  (Decls.INT32,     'Int')      : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.INT32,     'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
+  (Decls.FLOAT64,   'Float')    : ('label', 'blurb', 'hints', 'default=0'),
+  (Decls.FLOAT64,   'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),
   (Decls.ENUM,      'Enum')     : ('label', 'blurb', 'hints', 'default'),
 }

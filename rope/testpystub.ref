@@ -66,11 +66,11 @@ class XFooRecord (_BaseRecord_):
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
       self.any1 = args[14]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any1.vany, args[14])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[14])
       self.any2 = args[15]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any2.vany, args[15])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[15])
       self.any3 = args[16]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any3.vany, args[16])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -122,11 +122,11 @@ class XFooRecord (_BaseRecord_):
     _aida_field = _aida_rp.fields.add()
     _aida_field.vstring (Instance2StringCast (self.iface3))
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any1)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any1)
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any2)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any2)
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any3)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any3)
 
 class NestedTypesRec (_BaseRecord_):
   def __init__ (self, **entries):
@@ -191,11 +191,11 @@ class AliasRecord (_BaseRecord_):
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
       self.any1 = args[14]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any1.vany, args[14])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[14])
       self.any2 = args[15]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any2.vany, args[15])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[15])
       self.any3 = args[16]
-      #  # FIXME: support Aida::Any with any.to_proto (self.any3.vany, args[16])
+      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -247,11 +247,11 @@ class AliasRecord (_BaseRecord_):
     _aida_field = _aida_rp.fields.add()
     _aida_field.vstring (Instance2StringCast (self.iface3))
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any1)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any1)
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any2)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any2)
     _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with any.to_proto (_aida_field.vany, self.any3)
+    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any3)
 
 class NewRecord (_BaseRecord_):
   def __init__ (self, **entries):
@@ -378,35 +378,35 @@ class UIWidgetArea (_BaseClass_):
     super (UIWidgetArea, self).__init__ (_aida_id)
     self.sig_void_signal = __Signal__ ('void_signal')
     self.sig_sample_signal = __Signal__ ('sample_signal')
-  def simple_method (self): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__simple_method_float (self)
+  def simple_method (self): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__simple_method_float64 (self)
     return ___ret
-  def single_arg (self, n): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__single_arg_float_int (self, n)
+  def single_arg (self, n): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__single_arg_float64_int32 (self, n)
     return ___ret
-  def single_arg2 (self, n = 5): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__single_arg2_float_int (self, n)
+  def single_arg2 (self, n = 5): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (self, n)
     return ___ret
-  def two_args (self, n, r): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args_float_int_float (self, n, r)
+  def two_args (self, n, r): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (self, n, r)
     return ___ret
-  def two_args2 (self, n = 6, r = 7.7): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args2_float_int_float (self, n, r)
+  def two_args2 (self, n = 6, r = 7.7): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (self, n, r)
     return ___ret
-  def multi_args (self, b, n, r, i, s = "String ding", y = 5): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float_bool_int_float_int_string_float (self, b, n, r, i, s, y)
+  def multi_args (self, b, n, r, i, s = "String ding", y = 5): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int32_float64_int32_String_float64 (self, b, n, r, i, s, y)
     return ___ret
-  def self_method (self, ba1, ba2): # float
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (self, ba1, ba2)
+  def self_method (self, ba1, ba2): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (self, ba1, ba2)
     return ___ret
   def void_method (self): # one way
     ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__void_method_void (self)
     return ___ret
-  def on_click2out (self): # string
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__on_click2out_string (self)
+  def on_click2out (self): # String
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__on_click2out_String (self)
     return ___ret
   def on_click2in (self, command): # one way
-    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__on_click2in_void_string (self, command)
+    ___ret = _CPY._AIDA_InterfaceTests__UIWidgetArea__on_click2in_void_String (self, command)
     return ___ret
   def __sig_void_signal__ (self): pass # default handler
   def sig_void_signal_connect (self, func):
@@ -415,9 +415,9 @@ class UIWidgetArea (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__UIWidgetArea__void_signal_void (self, None, connection_id)
   def __sig_sample_signal__ (self): pass # default handler
   def sig_sample_signal_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (self, func, 0)
   def sig_sample_signal_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (self, None, connection_id)
 
 class Parent (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -464,7 +464,7 @@ class QuickIface (_BaseClass_):
   def __init__ (self, _aida_id):
     super (QuickIface, self).__init__ (_aida_id)
   def simple_function (self, i = 9): # one way
-    ___ret = _CPY._AIDA_InterfaceTests__QuickIface__simple_function_void_int (self, i)
+    ___ret = _CPY._AIDA_InterfaceTests__QuickIface__simple_function_void_int32 (self, i)
     return ___ret
 
 class MethodTestInterface (_BaseClass_):
@@ -476,14 +476,14 @@ class MethodTestInterface (_BaseClass_):
   def method_with_bools (self, input, optval = 0): # bool
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool (self, input, optval)
     return ___ret
-  def method_with_ints (self, input, optval = -2): # int
-    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_ints_int_int_int (self, input, optval)
+  def method_with_ints (self, input, optval = -2): # int32
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_ints_int32_int32_int32 (self, input, optval)
     return ___ret
-  def method_with_floats (self, input, optval = 309.9): # float
-    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_floats_float_float_float (self, input, optval)
+  def method_with_floats (self, input, optval = 309.9): # float64
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64 (self, input, optval)
     return ___ret
-  def method_with_string (self, input, optval = "default"): # string
-    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_string_string_string_string (self, input, optval)
+  def method_with_string (self, input, optval = "default"): # String
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_string_String_String_String (self, input, optval)
     return ___ret
   def method_with_enum (self, input, optval = 0): # QuickEnum
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum (self, input, optval)
@@ -497,8 +497,8 @@ class MethodTestInterface (_BaseClass_):
   def method_with_interface (self, input, optval = None): # GrandChild
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (self, input, optval)
     return ___ret
-  def method_with_anys (self, input, optval): # any
-    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any (self, input, optval)
+  def method_with_anys (self, input, optval): # Any
+    ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any (self, input, optval)
     return ___ret
   def method_with_quickiface (self, input, iface0 = None): # QuickIface
     ___ret = _CPY._AIDA_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (self, input, iface0)
@@ -541,19 +541,19 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_result_bool (self, None, connection_id)
   def __sig_int_result__ (self): pass # default handler
   def sig_int_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int32 (self, func, 0)
   def sig_int_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_result_int32 (self, None, connection_id)
   def __sig_float_result__ (self): pass # default handler
   def sig_float_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float64 (self, func, 0)
   def sig_float_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_result_float64 (self, None, connection_id)
   def __sig_string_result__ (self): pass # default handler
   def sig_string_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_result_string (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_result_String (self, func, 0)
   def sig_string_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_result_string (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_result_String (self, None, connection_id)
   def __sig_enum_result__ (self): pass # default handler
   def sig_enum_result_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (self, func, 0)
@@ -576,9 +576,9 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (self, None, connection_id)
   def __sig_any_result__ (self): pass # default handler
   def sig_any_result_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_result_any (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_result_Any (self, func, 0)
   def sig_any_result_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_result_any (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_result_Any (self, None, connection_id)
   def __sig_self_result__ (self): pass # default handler
   def sig_self_result_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (self, func, 0)
@@ -596,19 +596,19 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__bool_arg_void_bool (self, None, connection_id)
   def __sig_int_arg__ (self): pass # default handler
   def sig_int_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int32 (self, func, 0)
   def sig_int_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__int_arg_void_int32 (self, None, connection_id)
   def __sig_float_arg__ (self): pass # default handler
   def sig_float_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float64 (self, func, 0)
   def sig_float_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__float_arg_void_float64 (self, None, connection_id)
   def __sig_string_arg__ (self): pass # default handler
   def sig_string_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_arg_void_string (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_arg_void_String (self, func, 0)
   def sig_string_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_arg_void_string (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__string_arg_void_String (self, None, connection_id)
   def __sig_enum_arg__ (self): pass # default handler
   def sig_enum_arg_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (self, func, 0)
@@ -631,9 +631,9 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (self, None, connection_id)
   def __sig_any_arg__ (self): pass # default handler
   def sig_any_arg_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_arg_void_any (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_arg_void_Any (self, func, 0)
   def sig_any_arg_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_arg_void_any (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__SignalTestInterface__any_arg_void_Any (self, None, connection_id)
   def __sig_self_args__ (self): pass # default handler
   def sig_self_args_connect (self, func):
     return _CPY._AIDA_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (self, func, 0)
@@ -646,9 +646,9 @@ class ChildInheritingSignals (SignalTestInterface):
     self.sig_child_signal = __Signal__ ('child_signal')
   def __sig_child_signal__ (self): pass # default handler
   def sig_child_signal_connect (self, func):
-    return _CPY._AIDA_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, func, 0)
+    return _CPY._AIDA_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, func, 0)
   def sig_child_signal_disconnect (self, connection_id):
-    return _CPY._AIDA_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, None, connection_id)
+    return _CPY._AIDA_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, None, connection_id)
 
 class AnotherChild (SignalTestInterface):
   def __init__ (self, _aida_id):
@@ -677,8 +677,8 @@ class ButtonArea (_BaseClass_):
 class PureMethods (_BaseClass_):
   def __init__ (self, _aida_id):
     super (PureMethods, self).__init__ (_aida_id)
-  def pure_method (self, f): # int
-    ___ret = _CPY._AIDA_RapicornAidaTest__PureMethods__pure_method_int_float (self, f)
+  def pure_method (self, f): # int32
+    ___ret = _CPY._AIDA_RapicornAidaTest__PureMethods__pure_method_int32_float64 (self, f)
     return ___ret
 
 class NameTests (_BaseClass_):

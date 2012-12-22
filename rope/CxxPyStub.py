@@ -187,11 +187,11 @@ class Generator:
     s = ''
     if type.storage == Decls.BOOL:
       s += '  %s.add_bool (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
-    elif type.storage == Decls.INT:
+    elif type.storage == Decls.INT32:
       s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ENUM:
       s += '  %s.add_evalue (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
-    elif type.storage == Decls.FLOAT:
+    elif type.storage == Decls.FLOAT64:
       s += '  %s.add_double (PyFloat_AsDouble (%s)); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.STRING:
       s += '  %s.add_string (PyString_As_std_string (%s)); ERRORifpy();\n' % (fb, var)
@@ -208,11 +208,11 @@ class Generator:
     s = ''
     if type.storage == Decls.BOOL:
       s += '  %s = PyLong_FromLongLong (%s.pop_bool()); ERRORifpy ();\n' % (var, fbr)
-    elif type.storage == Decls.INT:
+    elif type.storage == Decls.INT32:
       s += '  %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % (var, fbr)
     elif type.storage == Decls.ENUM:
       s += '  %s = PyLong_FromLongLong (%s.pop_evalue()); ERRORifpy();\n' % (var, fbr)
-    elif type.storage == Decls.FLOAT:
+    elif type.storage == Decls.FLOAT64:
       s += '  %s = PyFloat_FromDouble (%s.pop_double()); ERRORifpy();\n' % (var, fbr)
     elif type.storage == Decls.STRING:
       s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)

@@ -1,29 +1,29 @@
 
 namespace AidaTests {
 
-  typedef string SimpleString;
+  typedef String SimpleString;
 
-  typedef int IntWithFooAsLabel = Int ("Foo");
+  typedef int32 IntWithFooAsLabel = Int ("Foo");
 
-  typedef float FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", "rw", 97.97);
+  typedef float64 FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", "rw", 97.97);
 
-  typedef int IntAuxRange = Range ("Int Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
-  typedef float FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
-  typedef string ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
+  typedef int32 IntAuxRange = Range ("Int Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
+  typedef float64 FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
+  typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
 
   enum EnumType { ENUM_VALUE0, ENUM_VALUE1 };
 
   typedef EnumType Enum1;
 
   sequence SimpleSequence {
-    int sample_integer;
+    int32 sample_integer;
   };
 
   record SimpleRecord {
-    int    intfield;
-    float  floatfield;
-    string stringfield;
-    any    anyfield;
+    int32    intfield;
+    float64  floatfield;
+    String stringfield;
+    Any    anyfield;
   };
 
 }
