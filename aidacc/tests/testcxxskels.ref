@@ -844,6 +844,21 @@ public:
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Compressor_Interface&);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_Compressor_Interface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_Compressor_Interface*&);
+
+/** @interface RecordForGroups
+ * See also the corresponding C++ class RecordForGroupsImpl (server side). */
+/// See also the corresponding IDL class RecordForGroups.
+struct RecordForGroupsImpl
+{
+  int                           i;
+  double                        ratio;
+  bool                          ordinary_bool;
+  double                        threshold1;
+  double                        threshold2;
+  inline                        RecordForGroupsImpl () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsImpl&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsImpl&);
 } // BseTest
 
 namespace Rapicorn {

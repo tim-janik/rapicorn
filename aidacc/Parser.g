@@ -536,6 +536,7 @@ rule interface:
 rule record:
         'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}
           ( field_decl                          {{ rfields = rfields + field_decl }}
+          | field_group                         {{ rfields = rfields + field_group }}
           | info_assignment                     {{ }}
           )+
         '}' ';'                                 {{ yy.nsadd_record (rident, rfields) }}

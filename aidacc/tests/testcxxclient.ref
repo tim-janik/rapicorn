@@ -911,6 +911,21 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
+
+/** @interface RecordForGroups
+ * See also the corresponding C++ class RecordForGroupsStruct (client side). */
+/// See also the corresponding IDL class RecordForGroups.
+struct RecordForGroupsStruct
+{
+  int                           i;
+  double                        ratio;
+  bool                          ordinary_bool;
+  double                        threshold1;
+  double                        threshold2;
+  inline                        RecordForGroupsStruct () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsStruct&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsStruct&);
 } // BseTest
 
 namespace Rapicorn {
@@ -3956,6 +3971,27 @@ CompressorHandle::ratio (double value)
   fb <<= value;
   fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
+}
+inline void __attribute__ ((used))
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroupsStruct &self)
+{
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
+  fb <<= self.i;
+  fb <<= self.ratio;
+  fb <<= self.ordinary_bool;
+  fb <<= self.threshold1;
+  fb <<= self.threshold2;
+}
+inline void __attribute__ ((used))
+operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsStruct &self)
+{
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  if (fbr.remaining() < 5) return;
+  fbr >>= self.i;
+  fbr >>= self.ratio;
+  fbr >>= self.ordinary_bool;
+  fbr >>= self.threshold1;
+  fbr >>= self.threshold2;
 }
 } // BseTest
 

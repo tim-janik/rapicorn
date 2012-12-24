@@ -717,3 +717,43 @@ class Compressor (_BaseClass_):
   def __init__ (self, _aida_id):
     super (Compressor, self).__init__ (_aida_id)
 
+class RecordForGroups (_BaseRecord_):
+  def __init__ (self, **entries):
+    defaults = { 'i' : 0,  'ratio' : 0,  'ordinary_bool' : 0,  'threshold1' : 0,  'threshold2' : 0, }
+    self.__dict__.update (defaults)
+    _BaseRecord_.__init__ (self, **entries)
+  @staticmethod
+  def create (args):
+    self = RecordForGroups()
+    if hasattr (args, "__iter__") and len (args) == 5:
+      self.i = args[0]
+      #  self.i.vint64 = args[0]
+      self.ratio = args[1]
+      #  self.ratio.vdouble = args[1]
+      self.ordinary_bool = args[2]
+      #  self.ordinary_bool.vint64 = args[2]
+      self.threshold1 = args[3]
+      #  self.threshold1.vdouble = args[3]
+      self.threshold2 = args[4]
+      #  self.threshold2.vdouble = args[4]
+    elif isinstance (args, dict):
+      self.i = args["i"]
+      self.ratio = args["ratio"]
+      self.ordinary_bool = args["ordinary_bool"]
+      self.threshold1 = args["threshold1"]
+      self.threshold2 = args["threshold2"]
+    else: raise RuntimeError ("invalid or missing record initializers")
+    return self
+  @staticmethod
+  def to_proto (self, _aida_rec):
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.i
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vdouble = self.ratio
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.ordinary_bool
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vdouble = self.threshold1
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vdouble = self.threshold2
+

@@ -444,4 +444,16 @@ interface Compressor {
   };
 };
 
+record RecordForGroups {
+  group _("Normal") {
+    int32 i;
+    float64 ratio        = Num ("", "", "w", 0);
+  };
+  bool ordinary_bool;
+  group _("compat") {
+    float64 threshold1;
+    float64 threshold2;
+  };
+};
+
 }
