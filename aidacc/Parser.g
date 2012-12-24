@@ -426,28 +426,26 @@ rule enumeration:
         ';'                                     {{ evalues = None; yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
-        | enumeration_value                     {{ evalues = evalues + [ enumeration_value ] }}
+        | enumerator_decl                       {{ evalues = evalues + [ enumerator_decl ] }}
           [ ',' enumeration_rest                {{ evalues = evalues + enumeration_rest }}
           ]
         )                                       {{ return evalues }}
-rule enumeration_value:
+rule enumerator_decl:
         IDENT                                   {{ l = [IDENT, None, "", ""]; AIn (IDENT) }}
         [ '='
-          ( '\(' enumeration_args               {{ l = [ IDENT ] + enumeration_args }}
-            '\)'
-          | '(?!\()'                            # disambiguate from enumeration arg list
-            expression                          {{ if TS (expression): l = [ None, expression ]; }}
+          ( enumerator_args                     {{ l = [ IDENT ] + enumerator_args }}
+          | expression                          {{ if TS (expression): l = [ None, expression ]; }}
                                                 {{ else:               l = [ expression, "" ] }}
                                                 {{ l = [ IDENT ] + l + [ "" ] }}
           )
         ]                                       {{ return yy.nsadd_evalue (l[0], l[2], l[3], l[1]) }}
-rule enumeration_args:
-        expression                              {{ l = [ expression ] }}
+rule enumerator_args:
+        'Enum' '\(' expression                  {{ l = [ expression ] }}
                                                 {{ if TS (expression): l = [ None ] + l }}
         [   ',' expression                      {{ AS (expression); l.append (expression) }}
         ] [ ',' expression                      {{ if len (l) >= 3: raise OverflowError ("too many arguments") }}
                                                 {{ AS (expression); l.append (expression) }}
-        ]                                       {{ while len (l) < 3: l.append ("") }}
+        ] '\)'                                  {{ while len (l) < 3: l.append ("") }}
                                                 {{ return l }}
 
 rule typename:                                  {{ plist = [] }}
