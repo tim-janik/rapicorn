@@ -524,6 +524,7 @@ rule interface:
               ) * ]
           '{'                                   {{ iface = yy.nsadd_interface (iident) }}
              ( field_group                      {{ ipls = ipls + field_group }}
+             | info_assignment                  {{ }}
              | field_or_method_or_signal_decl   {{ fmd = field_or_method_or_signal_decl }}
                                                 {{ if fmd[0] == 'field': ipls = ipls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'func': ifls = ifls + [ fmd[1] ] }}
@@ -535,18 +536,25 @@ rule interface:
 rule record:
         'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}
           ( field_decl                          {{ rfields = rfields + field_decl }}
+          | info_assignment                     {{ }}
           )+
         '}' ';'                                 {{ yy.nsadd_record (rident, rfields) }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}
+          ( info_assignment                     {{ }}
+          )*
           ( field_decl                          {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
                                                 {{ sfields = sfields + field_decl }}
           )
+          ( info_assignment                     {{ }}
+          )*
         '}' ';'                                 {{ yy.nsadd_sequence (IDENT, sfields) }}
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}
+rule info_assignment:
+        'Info' IDENT '=' expression ';'         {{ AIn (IDENT); }} # FIXME
 
 # for operator precedence, see: http://docs.python.org/2/reference/expressions.html
 rule expression: or_expr                        {{ return or_expr }}
