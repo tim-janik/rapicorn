@@ -166,7 +166,7 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
   import tempfile, os
   sys.argv.remove (failtestoption) # remove --aida-fail-file-test
   config = parse_files_and_args()
-  config['anonimize-filepaths'] = true # anonimize paths for varying builddirs (../a/b/c.idl -> .../c.idl)
+  config['anonymize-filepaths'] = true # anonymize paths for varying builddirs (../a/b/c.idl -> .../c.idl)
   files = config['files']
   if len (files) != 1:
     raise Exception (failtestoption + ': single input file required')

@@ -254,7 +254,7 @@ class YYGlobals (object):
       result = parse_try (filepath, input, implinc)
     except Error, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
-      if self.config.get ('anonimize-filepaths', 0):
+      if self.config.get ('anonymize-filepaths', 0):
         pos_file = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + pos_file)
       ix = Error ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
       ix.exception = ex.exception
@@ -345,7 +345,7 @@ def parse_try (filename, input_string, implinc):
   if exmsg:
     pos = xscanner.get_pos()
     file_name, line_number, column_number = pos
-    if yy.config.get ('anonimize-filepaths', 0):        # FIXME: global yy reference
+    if yy.config.get ('anonymize-filepaths', 0):        # FIXME: global yy reference
         file_name = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + file_name)
     errstr = '%s:%d:%d: %s' % (file_name, line_number, column_number, exmsg)
     class WritableObject:
