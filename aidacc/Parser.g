@@ -20,12 +20,12 @@ class YYGlobals (object):
   def reset (self):
     self.config = {}
     self.ecounter = None
-    self.namespaces = []
-    self.ns_list = [] # namespaces
     self.impl_list = [] # ordered impl types list
     self.impl_includes = false
     self.impl_rpaths = []
     self.parsed_files = []
+    self.global_namespace = Decls.Namespace ('', None, self.impl_list)
+    self.namespaces = [ self.global_namespace ] # currently open namespaces
   def configure (self, confdict, implfiles):
     self.config = {}
     self.config.update (confdict)
@@ -159,44 +159,50 @@ class YYGlobals (object):
     seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[-1].add_type (seq)
-  def namespace_lookup (self, full_identifier, **flags):
-    words = full_identifier.split ('::')
-    isabs = words[0] == ''      # ::PrefixedName
-    if isabs: words = words[1:]
-    prefix, identifier = '::'.join (words[:-1]), words[-1]
-    candidates = targetns = []
-    # match outer namespaces by identifier
-    if not isabs and not prefix:
-      candidates = self.namespaces
-    # match inner namespaces by prefix
-    if not targetns and not isabs and prefix:
-      iprefix = self.namespaces[-1].full_name + '::' + prefix
-      for ns in self.ns_list:
-        if ns.full_name == iprefix:
-          targetns = [ns]
-          break
-    # match outer namespaces by prefix
-    if not targetns and not isabs and prefix:
-      for ns in self.namespaces:
-        if ns.full_name.endswith (prefix):
-          targetns = [ns]
-          break
-    # match absolute namespaces by prefix
-    if not targetns and prefix:
-      for ns in self.ns_list:
-        if ns.full_name == prefix:
-          targetns = [ns]
-          break
-    # identifier lookup
-    for ns in candidates + targetns:
+  def namespace_match (self, nspace, ns_words, ident, flags):
+    if ns_words:        # nested namespace lookup
+      ns_child = nspace.ns_nested.get (ns_words[0], None)
+      if ns_child:
+        return self.namespace_match (ns_child, ns_words[1:], ident, flags)
+    else:               # identifier lookup
+      if flags.get ('asnamespace', 0):
+        ns_child = nspace.ns_nested.get (ident, None)
+        if ns_child:
+          return ns_child
       if flags.get ('astype', 0):
-        type_info = ns.find_type (identifier)
+        type_info = nspace.find_type (ident)
         if type_info:
           return type_info
       if flags.get ('asconst', 0):
-        cvalue = ns.find_const (identifier)
+        cvalue = nspace.find_const (ident)
         if cvalue:
           return cvalue
+    return None
+  def namespace_lookup (self, full_identifier, **flags):
+    current_namespace = self.namespaces[-1]
+    words = full_identifier.split ('::')
+    isabs = words[0] == ''      # ::PrefixedName
+    if isabs: words = words[1:]
+    nswords, ident = words[:-1], words[-1] # namespace words, identifier
+    prefix, identifier = '::'.join (words[:-1]), words[-1]
+    # collect ancestor namespaces for lookups
+    if not isabs:
+      ns = current_namespace
+      candidates = []
+      while ns:
+        candidates += [ ns ]
+        if flags.get ('withusing', 1):
+          candidates += ns.ns_using
+        ns = ns.namespace
+    else:
+      candidates = [ self.global_namespace ]
+      if flags.get ('withusing', 1):
+        candidates += self.global_namespace.ns_using
+    # try candidates in order
+    for ns in candidates:
+      result = self.namespace_match (ns, nswords, ident, flags)
+      if result:
+        return result
     return None
   def clone_type (self, typename, **flags):
     type_info = self.resolve_type (typename, flags.get ('void', 0))
@@ -216,20 +222,22 @@ class YYGlobals (object):
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
+  def namespace_using (self, ident):
+    ns = self.namespace_lookup (ident, asnamespace = True)
+    if not ns:
+      raise NameError ('not a namespace-name: ' + ident)
+    current_namespace = self.namespaces[-1]
+    if ns != current_namespace and not ns in current_namespace.ns_using:
+      current_namespace.ns_using += [ ns ]
   def namespace_open (self, ident):
     if not self.config.get ('system-typedefs', 0) and ident.find ('$') >= 0:
       raise NameError ('invalid characters in namespace: ' + ident)
-    full_ident = "::". join ([ns.name for ns in self.namespaces] + [ident])
-    namespace = None
-    for ns in self.ns_list:
-      if ns.full_name == full_ident:
-        namespace = ns
-        break
+    current_namespace = self.namespaces[-1]
+    namespace = current_namespace.ns_nested.get (ident, None)
     if not namespace:
-      outer = self.namespaces[-1] if self.namespaces else None
-      namespace = Decls.Namespace (ident, outer, self.impl_list)
-      self.ns_list.append (namespace)
+      namespace = Decls.Namespace (ident, current_namespace, self.impl_list)
     self.namespaces += [ namespace ]
+    return
   def namespace_close (self):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[:-1]
@@ -282,7 +290,7 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
+  if (yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False) or
       (identifier in reservedkeywords)):
     raise TypeError ('redefining existing identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
@@ -391,6 +399,8 @@ rule topincludes:
         'include' STRING                        {{ include_file = unquote (STRING); as_impl = false }}
         [ 'as' 'implementation'                 {{ as_impl = true }}
         ] ';'                                   {{ yy.handle_include (include_file, self._scanner, as_impl) }}
+rule using_namespace:
+        'using' 'namespace' NSIDENT ';'         {{ yy.namespace_using (NSIDENT) }}
 rule declaration:
           ';'
         | const_assignment
@@ -400,6 +410,7 @@ rule declaration:
         | record
         | interface
         | namespace
+        | using_namespace
 
 rule enumeration:
         ( 'flags' ('enumeration' | 'enum')      {{ as_flags = True }}

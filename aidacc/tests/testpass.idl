@@ -359,7 +359,7 @@ interface PropertyTester {
   any            any_prop;
 };
 
-}
+} // InterfaceTests
 
 include "include-p1.idl"; // test includes
 
@@ -410,3 +410,21 @@ enum MathExpressions {
 };
 
 } // RapicornAidaTest
+
+namespace Other {
+using namespace OtherNamespace; // for OtherNamespace::SomeRecord
+
+interface NameTests {
+  void args_from_other_namespace (InterfaceTests::QuickRecord qr, ::RapicornAidaTest::ClickType qe, SomeRecord sr);
+};
+
+} // Other
+
+namespace U1 {
+Const A = 7;
+}
+namespace U2 {
+using namespace U1;
+Const B = A + 1; // refer to U1::A
+Const A = 17;    // new identifier in U2!
+}

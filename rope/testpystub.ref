@@ -681,3 +681,10 @@ class PureMethods (_BaseClass_):
     ___ret = _CPY._AIDA_RapicornAidaTest__PureMethods__pure_method_int_float (self, f)
     return ___ret
 
+class NameTests (_BaseClass_):
+  def __init__ (self, _aida_id):
+    super (NameTests, self).__init__ (_aida_id)
+  def args_from_other_namespace (self, qr, qe, sr): # one way
+    ___ret = _CPY._AIDA_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (self, qr, qe, sr)
+    return ___ret
+

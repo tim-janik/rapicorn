@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
-AIDACC = ../aidacc-intern $(DEBUG:%=--aida-debug)
+AIDACC = ../aidacc-intern $(if $(findstring 1, $(V)), --aida-debug)
 
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 
@@ -50,6 +50,7 @@ check-local: check-testpass check-include-p1
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
 	$(Q) ${AIDACC} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' <$(TSTOUT) >$(TSTOUT).tmp && mv $(TSTOUT).tmp $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
 

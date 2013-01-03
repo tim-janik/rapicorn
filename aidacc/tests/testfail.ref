@@ -22,25 +22,25 @@
 .../testfail.idl:19:24: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', '<<', '>>', '&', '\^', '\|', ';', ',', '}', got '_'
 >  Const tmp = "invalid" _("i18n string") "concatenation";
 >                         ^
-.../testfail.idl:21:1: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:21:1: Trying to find one of ...
 >  FrobCheck tmp = 1; // FrobCheck is no type
 >  ^
-.../testfail.idl:23:16: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:23:16: Trying to find one of ...
 >  Const zzz = 1; zzz tmp = 1; // zzz is no type
 >                 ^
-.../testfail.idl:25:25: Trying to find one of '=', ';'
+.../testfail.idl:25:25: Trying to find one of ...
 >  record DupRecord { int a, b, c; }; // fail on multiple fields per type
 >                          ^
 .../testfail.idl:27:36: NameError: duplicate field name: b
 >  record DupRecord { int b; int b; }; // duplicate: b
 >                                     ^
-.../testfail.idl:29:22: Trying to find one of '::', IDENT
+.../testfail.idl:29:22: Trying to find one of ...
 >  record EmptyRecord { }; // record is empty
 >                       ^
 .../testfail.idl:31:28: TypeError: redefining existing identifier: record
 >  enum ExtensiveEnum { record, }; // keyword as enum value
 >                             ^
-.../testfail.idl:33:25: Trying to find one of '=', ',', '}'
+.../testfail.idl:33:25: Trying to find one of ...
 >  enum ExtensiveEnum { Foo; }; // semicolon in enum
 >                          ^
 .../testfail.idl:35:35: TypeError: redefining existing identifier: EV1
@@ -55,10 +55,10 @@
 .../testfail.idl:41:40: TypeError: redefining existing identifier: Var
 >  Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
 >                                         ^
-.../testfail.idl:43:26: Trying to find one of '::', IDENT
+.../testfail.idl:43:26: Trying to find one of ...
 >  sequence EmptySequence { }; // sequence needs 1 field
 >                           ^
-.../testfail.idl:45:41: Trying to find one of '}'
+.../testfail.idl:45:41: Trying to find one of ...
 >  sequence MultiFieldSequence { bool one; int toomany; }; // sequence needs 1 field
 >                                          ^
 .../testfail.idl:47:22: TypeError: unknown type: 'enum'
@@ -94,7 +94,7 @@
 .../testfail.idl:67:73: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
 >  ... s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 >                                                            ^
-.../testfail.idl:69:27: Trying to find one of '::', IDENT, '\)'
+.../testfail.idl:69:27: Trying to find one of ...
 >  interface I { int method (,); }; // invalid method arg separator
 >                            ^
 .../testfail.idl:70:47: NameError: duplicate member name: method
@@ -118,16 +118,16 @@
 .../testfail.idl:76:17: TypeError: redefining existing identifier: void
 >  Const void = 17; // invalid constant name
 >                  ^
-.../testfail.idl:77:1: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../testfail.idl:77:1: Trying to find one of ...
 >  void xy = 17; // invalid property type
 >  ^
-.../testfail.idl:78:31: Trying to find one of '::', IDENT
+.../testfail.idl:78:31: Trying to find one of ...
 >  interface I { int method (void); }; // invalid argument type
 >                                ^
 .../testfail.idl:79:40: TypeError: unknown type: 'void'
 >  interface I { int method (int n, void v); }; // invalid argument type
 >                                         ^
-.../include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'flags', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../include-f2.idl:2:3: Trying to find one of ...
 >    unexisting_var var;
 >    ^
 .../include-f1.idl:1: note: included "include-f2.idl" from here
@@ -159,3 +159,6 @@
 .../testfail.idl:97:15: AttributeError: invalid empty enumeration: Empty
 >  enum Empty { }; // invalid empty enumeration
 >                ^
+.../testfail.idl:99:39: NameError: not a namespace-name: Unknown
+>  namespace U { using namespace Unknown; } // not a namespace-name
+>                                        ^

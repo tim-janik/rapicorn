@@ -186,10 +186,12 @@ class Generator:
   def tab_stop (self, n):
     self.ntab = n
   def close_inner_namespace (self):
-    return '} // %s\n' % self.namespaces.pop().name
+    current_namespace = self.namespaces.pop()
+    return '} // %s\n' % current_namespace.name if current_namespace.name else ''
   def open_inner_namespace (self, namespace):
     self.namespaces += [ namespace ]
-    return '\nnamespace %s {\n' % self.namespaces[-1].name
+    current_namespace = self.namespaces[-1]
+    return '\nnamespace %s {\n' % current_namespace.name if current_namespace.name else ''
   def open_namespace (self, typeinfo):
     s = ''
     newspaces = []
@@ -213,10 +215,10 @@ class Generator:
         tnsl = tnsl[1:]
       else:
         break
-    namespace_names = [d.name for d in tnsl]
+    namespace_names = [d.name for d in tnsl if d.name]
     return namespace_names
   def namespaced_identifier (self, ident):
-    names = [d.name for d in self.namespaces]
+    names = [d.name for d in self.namespaces if d.name]
     if ident:
       names += [ ident ]
     return '::'.join (names)

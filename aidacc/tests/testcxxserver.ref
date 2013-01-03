@@ -822,6 +822,28 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) {
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
 } // RapicornAidaTest
 
+namespace Other {
+
+/** @interface NameTests
+ * See also the corresponding C++ class I_NameTests_Interface (server side). */
+/// See also the corresponding IDL class NameTests.
+class I_NameTests_Interface : public virtual Rapicorn::Aida::TestServerBase
+{
+protected:
+  explicit                               I_NameTests_Interface ();
+  virtual /*Des*/                       ~I_NameTests_Interface () = 0;
+public:
+  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecordImpl &qr,
+                                                                   RapicornAidaTest::ClickType qe,
+                                                                   const OtherNamespace::SomeRecordImpl &sr);
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTests_Interface*);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTests_Interface*&);
+} // Other
+
 namespace Rapicorn {
 
 namespace Aida {
@@ -1930,9 +1952,44 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
   };
   Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "MathExpressions", enum_values);
 });
+} // RapicornAidaTest
+
+namespace Other {
+
+I_NameTests_Interface::I_NameTests_Interface ()
+{}
+I_NameTests_Interface::~I_NameTests_Interface () {}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTests_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTests_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+}
+void
+operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTests_Interface* &obj)
+{
+  obj = connection_id2object<I_NameTests_Interface> (fbr.pop_object());
+}
+void
+I_NameTests_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
+{
+  thl.push_back (Rapicorn::Aida::TypeHash (0x0ff49e5977e3e416ULL, 0x2d10a2bc2d53eab1ULL)); // NameTests
+}
+const Rapicorn::Aida::PropertyList&
+I_NameTests_Interface::_property_list ()
+{
+  static Rapicorn::Aida::PropertyList::Property *properties[] = {
+  };
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  return property_list;
+}
 
 // --- Method Dispatchers & Registry ---
-} // RapicornAidaTest
+} // Other
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
@@ -4008,6 +4065,41 @@ _$caller__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 
+} // RapicornAidaTest
+
+namespace Other {
+static Rapicorn::Aida::FieldBuffer*
+_$lsttyp__NameTests__ (Rapicorn::Aida::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  I_NameTests_Interface *self;
+  fbr >>= self;
+  AIDA_CHECK (self, "self must be non-NULL");
+  Rapicorn::Aida::TypeHashList thl;
+  self->_list_types (thl);
+  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb <<= thl[i];
+  return &rb;
+}
+static Rapicorn::Aida::FieldBuffer*
+_$caller__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1 + 3) return aida$_error ("invalid number of arguments");
+  I_NameTests_Interface *self;
+  fbr >>= self;
+  AIDA_CHECK (self, "self must be non-NULL");
+  InterfaceTests::QuickRecordImpl  arg_qr;
+  fbr >>= arg_qr;
+  RapicornAidaTest::ClickType  arg_qe;
+  fbr >>= arg_qe;
+  OtherNamespace::SomeRecordImpl  arg_sr;
+  fbr >>= arg_sr;
+  self->args_from_other_namespace (arg_qr, arg_qe, arg_sr);
+  return NULL;
+}
+
 static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {
   { 0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
@@ -4106,8 +4198,10 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, RapicornAidaTest::_$sigcon__ButtonArea__activate, },
   { 0x34692a915fe47960ULL, 0x86e3694656f6f9afULL, RapicornAidaTest::_$lsttyp__PureMethods__, },
   { 0x3b3394fb03a86bf1ULL, 0x914fbcdcdac7d567ULL, RapicornAidaTest::_$caller__PureMethods__pure_method, },
+  { 0x3cc442e612d0c931ULL, 0x174426019c513b3aULL, Other::_$lsttyp__NameTests__, },
+  { 0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL, Other::_$caller__NameTests__args_from_other_namespace, },
 };
 static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
-} // RapicornAidaTest
+} // Other
 
