@@ -461,9 +461,7 @@ rule typename:                                  {{ plist = [] }}
           )*                                    {{ id = "::".join (plist); ATN (id); return id }}
 
 rule auxinit:
-                                                {{ tiident = '' }}
-        [ IDENT                                 {{ tiident = IDENT }}
-        ]
+        IDENT                                   {{ tiident = IDENT }}
         '\('                                    {{ tiargs = [] }}
           [ expression                          {{ tiargs += [ expression ] }}
             ( ',' expression                    {{ tiargs += [ expression ] }}
