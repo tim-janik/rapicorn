@@ -3,8 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 
-AIDACC = ../aidacc-intern $(if $(findstring 1, $(V)), --aida-debug)
-
+AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
+AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 
 noinst_PROGRAMS = ptptest
@@ -20,7 +20,7 @@ EXTRA_DIST += testfail.ref testrapicorn.ref
 DEBUG	    =
 
 # tests for auxillary data in testpass.idl
-TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
+TESTPASS_AUXTESTS = --aux-test label=AuxF64 --aux-test AuxStr --aux-test Aux32 \
 		    --aux-test default=10007 --aux-test hints=rw
 
 ### Aida build rule for binary type maps
@@ -49,7 +49,7 @@ check-local: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${AIDACC} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${AIDACC_NODEBUG} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' <$(TSTOUT) >$(TSTOUT).tmp && mv $(TSTOUT).tmp $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail

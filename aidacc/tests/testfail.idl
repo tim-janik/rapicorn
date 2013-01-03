@@ -6,7 +6,7 @@ Const a = 5; Const a = 6; // redefining existing identifier
 
 Const record = 5; // keyword assignment
 
-typedef string string; // keyword redefinition (without --system-typedefs)
+typedef String String; // keyword redefinition (without --system-typedefs)
 
 namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
 
@@ -22,9 +22,9 @@ FrobCheck tmp = 1; // FrobCheck is no type
 
 Const zzz = 1; zzz tmp = 1; // zzz is no type
 
-record DupRecord { int a, b, c; }; // fail on multiple fields per type
+record DupRecord { int32 a, b, c; }; // fail on multiple fields per type
 
-record DupRecord { int b; int b; }; // duplicate: b
+record DupRecord { int32 b; int32 b; }; // duplicate: b
 
 record EmptyRecord { }; // record is empty
 
@@ -42,7 +42,7 @@ Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
 
 sequence EmptySequence { }; // sequence needs 1 field
 
-sequence MultiFieldSequence { bool one; int toomany; }; // sequence needs 1 field
+sequence MultiFieldSequence { bool one; int32 toomany; }; // sequence needs 1 field
 
 sequence Seq { enum b; }; // keyword is not typename
 
@@ -58,25 +58,25 @@ Const class = 5; // keyword redefinition
 
 enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
 
-typedef int x = _No_SUCH_initializer (17); // unknown type definition
+typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
 
-typedef int x = Int ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+typedef int32 x = Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 
-typedef int string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+typedef int32 string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
 
-record R { string s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+record R { String s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 
-interface I { int method (,); }; // invalid method arg separator
-interface I { int method (); int method (); }; // multiple method definitions
-interface I { int xxx; int xxx (); }; // multiple member definitions
-interface I { int method (int n, int n); }; // duplicate method argument
+interface I { int32 method (,); }; // invalid method arg separator
+interface I { int32 method (); int32 method (); }; // multiple method definitions
+interface I { int32 xxx; int32 xxx (); }; // multiple member definitions
+interface I { int32 method (int32 n, int32 n); }; // duplicate method argument
 interface I : Unknown {}; // invalid parent interface
-record R { string s; }; interface I : R {}; // invalid interface inheritance
-interface I { signal int xxx; }; // invalidly declared as signal
+record R { String s; }; interface I : R {}; // invalid interface inheritance
+interface I { signal int32 xxx; }; // invalidly declared as signal
 Const void = 17; // invalid constant name
 void xy = 17; // invalid property type
-interface I { int method (void); }; // invalid argument type
-interface I { int method (int n, void v); }; // invalid argument type
+interface I { int32 method (void); }; // invalid argument type
+interface I { int32 method (int32 n, void v); }; // invalid argument type
 
 include "include-f1.idl"; // test include error messages
 
@@ -84,11 +84,11 @@ namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } // namespaced type
 
 namespace A { namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
 
-interface I { int method (I self); }; // invalid method arg name
+interface I { int32 method (I self); }; // invalid method arg name
 
-interface I { int self; }; // invalid property name
-interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer
-interface I { signal int m() = 0; }; // invalid pure decl for non-method
+interface I { int32 self; }; // invalid property name
+interface I { int32 method (int32 a, int32 b = 2, int32 c); }; // missing subsequent default initializer
+interface I { signal int32 m() = 0; }; // invalid pure decl for non-method
 
 interface P { void void_prop; }; // invalid property type
 

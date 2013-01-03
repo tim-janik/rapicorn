@@ -11,7 +11,10 @@ reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'Const', 'typedef', 'interface',
-            'record', 'sequence', 'bool', 'int', 'float', 'string', 'any')
+            'record', 'sequence', 'bool', 'String', 'Any',
+            # golang types
+            'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64',
+            'float32', 'float64', 'complex64', 'complex128', 'byte', 'rune')
 reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
@@ -134,7 +137,7 @@ class YYGlobals (object):
   def argcheck (self, aident, atype, adef):
     if adef == None:
       pass # no default arg
-    elif atype.storage in (Decls.BOOL, Decls.INT, Decls.FLOAT):
+    elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64):
       if not isinstance (adef, (bool, int, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
@@ -211,11 +214,12 @@ class YYGlobals (object):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
-        'bool'    : Decls.TypeInfo ('bool',   Decls.BOOL, false),
-        'int'     : Decls.TypeInfo ('int',    Decls.INT, false),
-        'float'   : Decls.TypeInfo ('float',  Decls.FLOAT, false),
-        'string'  : Decls.TypeInfo ('string', Decls.STRING, false),
-        'any'     : Decls.TypeInfo ('any',    Decls.ANY, false),
+        'bool'    : Decls.TypeInfo ('bool',     Decls.BOOL, false),
+        'int32'   : Decls.TypeInfo ('int32',    Decls.INT32, false),
+        'int64'   : Decls.TypeInfo ('int64',    Decls.INT64, false),
+        'float64' : Decls.TypeInfo ('float64',  Decls.FLOAT64, false),
+        'String'  : Decls.TypeInfo ('String',   Decls.STRING, false),
+        'Any'     : Decls.TypeInfo ('Any',      Decls.ANY, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
       type_info = Decls.TypeInfo ('void', Decls.VOID, false)

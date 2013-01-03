@@ -4,8 +4,8 @@
 .../testfail.idl:7:18: TypeError: redefining existing identifier: record
 >  Const record = 5; // keyword assignment
 >                   ^
-.../testfail.idl:9:23: TypeError: redefining existing identifier: string
->  typedef string string; // keyword redefinition (without --system-typedefs)
+.../testfail.idl:9:23: TypeError: redefining existing identifier: String
+>  typedef String String; // keyword redefinition (without --system-typedefs)
 >                        ^
 .../testfail.idl:11:22: NameError: invalid characters in namespace: broken$name
 >  namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
@@ -28,12 +28,12 @@
 .../testfail.idl:23:16: Trying to find one of ...
 >  Const zzz = 1; zzz tmp = 1; // zzz is no type
 >                 ^
-.../testfail.idl:25:25: Trying to find one of ...
->  record DupRecord { int a, b, c; }; // fail on multiple fields per type
->                          ^
-.../testfail.idl:27:36: NameError: duplicate field name: b
->  record DupRecord { int b; int b; }; // duplicate: b
->                                     ^
+.../testfail.idl:25:27: Trying to find one of ...
+>  record DupRecord { int32 a, b, c; }; // fail on multiple fields per type
+>                            ^
+.../testfail.idl:27:40: NameError: duplicate field name: b
+>  record DupRecord { int32 b; int32 b; }; // duplicate: b
+>                                         ^
 .../testfail.idl:29:22: Trying to find one of ...
 >  record EmptyRecord { }; // record is empty
 >                       ^
@@ -59,7 +59,7 @@
 >  sequence EmptySequence { }; // sequence needs 1 field
 >                           ^
 .../testfail.idl:45:41: Trying to find one of ...
->  sequence MultiFieldSequence { bool one; int toomany; }; // sequence needs 1 field
+>  sequence MultiFieldSequence { bool one; int32 toomany; }; // sequence needs 1 field
 >                                          ^
 .../testfail.idl:47:22: TypeError: unknown type: 'enum'
 >  sequence Seq { enum b; }; // keyword is not typename
@@ -82,51 +82,51 @@
 .../testfail.idl:59:37: TypeError: redefining existing identifier: Enu1
 >  enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
 >                                      ^
-.../testfail.idl:61:43: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
->  typedef int x = _No_SUCH_initializer (17); // unknown type definition
->                                            ^
-.../testfail.idl:63:72: TypeError: too many args for type definition: = Int ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
->  ...nt ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
->                                                           ^
-.../testfail.idl:65:67: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
->  ...t string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+.../testfail.idl:61:45: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
+>  typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
+>                                              ^
+.../testfail.idl:63:74: TypeError: too many args for type definition: = Num ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
+>  ... Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 >                                                             ^
-.../testfail.idl:67:73: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
->  ... s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
->                                                            ^
-.../testfail.idl:69:27: Trying to find one of ...
->  interface I { int method (,); }; // invalid method arg separator
->                            ^
-.../testfail.idl:70:47: NameError: duplicate member name: method
->  interface I { int method (); int method (); }; // multiple method definitions
->                                                ^
-.../testfail.idl:71:38: NameError: duplicate member name: xxx
->  interface I { int xxx; int xxx (); }; // multiple member definitions
->                                       ^
-.../testfail.idl:72:44: NameError: duplicate method arg name: method (...n...)
->  interface I { int method (int n, int n); }; // duplicate method argument
->                                             ^
+.../testfail.idl:65:69: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
+>  ...ing_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+>                                                        ^
+.../testfail.idl:67:71: TypeError: invalid type definition: = Num ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
+>  ... s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+>                                                          ^
+.../testfail.idl:69:29: Trying to find one of ...
+>  interface I { int32 method (,); }; // invalid method arg separator
+>                              ^
+.../testfail.idl:70:51: NameError: duplicate member name: method
+>  interface I { int32 method (); int32 method (); }; // multiple method definitions
+>                                                    ^
+.../testfail.idl:71:42: NameError: duplicate member name: xxx
+>  interface I { int32 xxx; int32 xxx (); }; // multiple member definitions
+>                                           ^
+.../testfail.idl:72:50: NameError: duplicate method arg name: method (...n...)
+>  interface I { int32 method (int32 n, int32 n); }; // duplicate method argument
+>                                                   ^
 .../testfail.idl:73:22: TypeError: no such interface type: Unknown
 >  interface I : Unknown {}; // invalid parent interface
 >                       ^
 .../testfail.idl:74:40: TypeError: no such interface type: R
->  record R { string s; }; interface I : R {}; // invalid interface inheritance
+>  record R { String s; }; interface I : R {}; // invalid interface inheritance
 >                                         ^
-.../testfail.idl:75:30: TypeError: non-method invalidly declared as 'signal': xxx
->  interface I { signal int xxx; }; // invalidly declared as signal
->                               ^
+.../testfail.idl:75:32: TypeError: non-method invalidly declared as 'signal': xxx
+>  interface I { signal int32 xxx; }; // invalidly declared as signal
+>                                 ^
 .../testfail.idl:76:17: TypeError: redefining existing identifier: void
 >  Const void = 17; // invalid constant name
 >                  ^
 .../testfail.idl:77:1: Trying to find one of ...
 >  void xy = 17; // invalid property type
 >  ^
-.../testfail.idl:78:31: Trying to find one of ...
->  interface I { int method (void); }; // invalid argument type
->                                ^
-.../testfail.idl:79:40: TypeError: unknown type: 'void'
->  interface I { int method (int n, void v); }; // invalid argument type
->                                         ^
+.../testfail.idl:78:33: Trying to find one of ...
+>  interface I { int32 method (void); }; // invalid argument type
+>                                  ^
+.../testfail.idl:79:44: TypeError: unknown type: 'void'
+>  interface I { int32 method (int32 n, void v); }; // invalid argument type
+>                                             ^
 .../include-f2.idl:2:3: Trying to find one of ...
 >    unexisting_var var;
 >    ^
@@ -138,18 +138,18 @@
 .../testfail.idl:85:71: TypeError: redefining existing identifier: E1
 >  ...espace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
 >                                                          ^
-.../testfail.idl:87:38: NameError: invalid method arg name: method (...self...)
->  interface I { int method (I self); }; // invalid method arg name
->                                       ^
-.../testfail.idl:89:27: NameError: invalid property name: self
->  interface I { int self; }; // invalid property name
->                            ^
-.../testfail.idl:90:55: AttributeError: missing subsequent default initializer: method (...c...)
->  interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer
->                                                        ^
-.../testfail.idl:91:33: TypeError: non-method invalidly declared as pure: m
->  interface I { signal int m() = 0; }; // invalid pure decl for non-method
->                                  ^
+.../testfail.idl:87:40: NameError: invalid method arg name: method (...self...)
+>  interface I { int32 method (I self); }; // invalid method arg name
+>                                         ^
+.../testfail.idl:89:29: NameError: invalid property name: self
+>  interface I { int32 self; }; // invalid property name
+>                              ^
+.../testfail.idl:90:63: AttributeError: missing subsequent default initializer: method (...c...)
+>  ...I { int32 method (int32 a, int32 b = 2, int32 c); }; // missing subsequent default initializer
+>                                                         ^
+.../testfail.idl:91:35: TypeError: non-method invalidly declared as pure: m
+>  interface I { signal int32 m() = 0; }; // invalid pure decl for non-method
+>                                    ^
 .../testfail.idl:93:30: TypeError: unknown type: 'void'
 >  interface P { void void_prop; }; // invalid property type
 >                               ^

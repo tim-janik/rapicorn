@@ -7,10 +7,11 @@
 namespace Aida {
   namespace __system_typedefs__ {
     // special namespace, containing definitions for the builtin TypeMap
-    typedef bool   __builtin__bool;
-    typedef int    __builtin__int;
-    typedef float  __builtin__float;
-    typedef string __builtin__string;
-    typedef any    __builtin__any;
+    typedef bool	__builtin__bool;
+    typedef int32 	__builtin__int32;
+    typedef int64 	__builtin__int64;
+    typedef float64	__builtin__float64;
+    typedef String  	__builtin__String;
+    typedef Any    	__builtin__Any;
   }
 }

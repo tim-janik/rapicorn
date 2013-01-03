@@ -161,6 +161,7 @@ struct XFooRecordImpl
 {
   bool                          single_bool;
   int                           single_num;
+  Rapicorn::Aida::int64_t       num64;
   double                        single_float;
   std::string                   single_string;
   int                           sibling1;
@@ -176,7 +177,7 @@ struct XFooRecordImpl
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
-  inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecordImpl&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecordImpl&);
@@ -307,7 +308,9 @@ typedef Rapicorn::Aida::Any AliasAny;
 
 typedef bool AliasBool;
 
-typedef int AliasInt;
+typedef int AliasInt32;
+
+typedef Rapicorn::Aida::int64_t AliasInt64;
 
 typedef double AliasFloat;
 
@@ -380,13 +383,15 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecordImpl&);
 
 namespace Auxdata {
 
-typedef bool bfoo;
+typedef bool AuxBool;
 
-typedef int ifoo;
+typedef int Aux32;
 
-typedef double ffoo;
+typedef Rapicorn::Aida::int64_t Aux64;
 
-typedef std::string sfoo;
+typedef double AuxF64;
+
+typedef std::string AuxStr;
 } // Auxdata
 
 namespace InterfaceTests {
@@ -418,7 +423,7 @@ public:
   virtual double                        two_args2                (int n = 6,
                                                                   double r = 7.7);
   virtual double                        multi_args               (bool b,
-                                                                  int n,
+                                                                  Rapicorn::Aida::int64_t n,
                                                                   double r,
                                                                   int i,
                                                                   const std::string &s = "String ding",
@@ -557,8 +562,10 @@ public:
   virtual void                          method_with_void                ();
   virtual bool                          method_with_bools               (bool input,
                                                                          bool optval = 0);
-  virtual int                           method_with_ints                (int input,
+  virtual int                           method_with_ints32              (int input,
                                                                          int optval = -2);
+  virtual Rapicorn::Aida::int64_t       method_with_ints64              (Rapicorn::Aida::int64_t input,
+                                                                         Rapicorn::Aida::int64_t optval = 576460752303423488);
   virtual double                        method_with_floats              (double input,
                                                                          double optval = 309.9);
   virtual std::string                   method_with_string              (const std::string &input,
@@ -593,8 +600,9 @@ public:
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int32_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, Rapicorn::Aida::int64_t ()> Signal_int64_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, double ()> Signal_float64_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, std::string ()> Signal_string_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickEnum ()> Signal_enum_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecordImpl ()> Signal_record_result;
@@ -604,8 +612,9 @@ public:
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_SignalTestInterface_Interface* ()> Signal_self_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (int i)> Signal_int_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (int i)> Signal_int32_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (double f)> Signal_float64_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const std::string &s)> Signal_string_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (QuickEnum e)> Signal_enum_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecordImpl &r)> Signal_record_arg;
@@ -615,8 +624,9 @@ public:
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
   Signal_void_result sig_void_result;
   Signal_bool_result sig_bool_result;
-  Signal_int_result sig_int_result;
-  Signal_float_result sig_float_result;
+  Signal_int32_result sig_int32_result;
+  Signal_int64_result sig_int64_result;
+  Signal_float64_result sig_float64_result;
   Signal_string_result sig_string_result;
   Signal_enum_result sig_enum_result;
   Signal_record_result sig_record_result;
@@ -626,8 +636,9 @@ public:
   Signal_self_result sig_self_result;
   Signal_void_arg sig_void_arg;
   Signal_bool_arg sig_bool_arg;
-  Signal_int_arg sig_int_arg;
-  Signal_float_arg sig_float_arg;
+  Signal_int32_arg sig_int32_arg;
+  Signal_int64_arg sig_int64_arg;
+  Signal_float64_arg sig_float64_arg;
   Signal_string_arg sig_string_arg;
   Signal_enum_arg sig_enum_arg;
   Signal_record_arg sig_record_arg;
@@ -687,10 +698,12 @@ public:
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          bool_prop      () const = 0;
   virtual void                          bool_prop      (bool) = 0;
-  virtual int                           int_prop       () const = 0;
-  virtual void                          int_prop       (int) = 0;
-  virtual double                        float_prop     () const = 0;
-  virtual void                          float_prop     (double) = 0;
+  virtual int                           int32_prop     () const = 0;
+  virtual void                          int32_prop     (int) = 0;
+  virtual Rapicorn::Aida::int64_t       int64_prop     () const = 0;
+  virtual void                          int64_prop     (Rapicorn::Aida::int64_t) = 0;
+  virtual double                        float64_prop   () const = 0;
+  virtual void                          float64_prop   (double) = 0;
   virtual std::string                   string_prop    () const = 0;
   virtual void                          string_prop    (const std::string&) = 0;
   virtual QuickEnum                     enum_prop      () const = 0;
@@ -885,7 +898,7 @@ InterfaceTests::I_UIWidgetArea_Interface::two_args2 (int n,
 
 double
 InterfaceTests::I_UIWidgetArea_Interface::multi_args (bool b,
-                                                      int n,
+                                                      Rapicorn::Aida::int64_t n,
                                                       double r,
                                                       int i,
                                                       const std::string &s,
@@ -935,8 +948,15 @@ InterfaceTests::I_MethodTestInterface_Interface::method_with_bools (bool input,
 }
 
 int
-InterfaceTests::I_MethodTestInterface_Interface::method_with_ints (int input,
-                                                                   int optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_ints32 (int input,
+                                                                     int optval)
+{
+  return 0;
+}
+
+Rapicorn::Aida::int64_t
+InterfaceTests::I_MethodTestInterface_Interface::method_with_ints64 (Rapicorn::Aida::int64_t input,
+                                                                     Rapicorn::Aida::int64_t optval)
 {
   return 0;
 }
