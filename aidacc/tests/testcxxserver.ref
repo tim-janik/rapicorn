@@ -893,6 +893,22 @@ struct RecordForGroupsImpl
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsImpl&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsImpl&);
+
+/** @interface SoundModule
+ * See also the corresponding C++ class I_SoundModule_Interface (server side). */
+/// See also the corresponding IDL class SoundModule.
+class I_SoundModule_Interface : public virtual Rapicorn::Aida::TestServerBase
+{
+protected:
+  explicit                               I_SoundModule_Interface ();
+  virtual /*Des*/                       ~I_SoundModule_Interface () = 0;
+public:
+  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModule_Interface&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModule_Interface*);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModule_Interface*&);
 } // BseTest
 
 namespace Rapicorn {
@@ -2098,6 +2114,38 @@ operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsImpl &self)
   fbr >>= self.ordinary_bool;
   fbr >>= self.threshold1;
   fbr >>= self.threshold2;
+}
+
+I_SoundModule_Interface::I_SoundModule_Interface ()
+{}
+I_SoundModule_Interface::~I_SoundModule_Interface () {}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModule_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModule_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+}
+void
+operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModule_Interface* &obj)
+{
+  obj = connection_id2object<I_SoundModule_Interface> (fbr.pop_object());
+}
+void
+I_SoundModule_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
+{
+  thl.push_back (Rapicorn::Aida::TypeHash (0x06285204d12388cdULL, 0x2cf10a9d917227b5ULL)); // SoundModule
+}
+const Rapicorn::Aida::PropertyList&
+I_SoundModule_Interface::_property_list ()
+{
+  static Rapicorn::Aida::PropertyList::Property *properties[] = {
+  };
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  return property_list;
 }
 
 // --- Method Dispatchers & Registry ---
@@ -4400,6 +4448,22 @@ _$setter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 
+static Rapicorn::Aida::FieldBuffer*
+_$lsttyp__SoundModule__ (Rapicorn::Aida::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  I_SoundModule_Interface *self;
+  fbr >>= self;
+  AIDA_CHECK (self, "self must be non-NULL");
+  Rapicorn::Aida::TypeHashList thl;
+  self->_list_types (thl);
+  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb <<= thl[i];
+  return &rb;
+}
+
 static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {
   { 0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
@@ -4510,6 +4574,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x2209f452a5de4de8ULL, 0x3fb166b528077900ULL, BseTest::_$setter__Compressor__threshold, },
   { 0x3415341ee86f2c05ULL, 0xe5f3f6787cc5e436ULL, BseTest::_$getter__Compressor__ratio, },
   { 0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL, BseTest::_$setter__Compressor__ratio, },
+  { 0x34056ecd1702e81aULL, 0x68e32ce1244df22bULL, BseTest::_$lsttyp__SoundModule__, },
 };
 static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 

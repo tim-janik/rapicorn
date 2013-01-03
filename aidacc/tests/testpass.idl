@@ -456,4 +456,13 @@ record RecordForGroups {
   };
 };
 
-}
+interface SoundModule {
+  IStream simple_input;
+  JStream simple_multi;
+  OStream simple_output;
+  IStream input_stream = Stream ("Input Strem", "Stream for data input", "w");
+  JStream multi_stream = Stream ("Multi Strem", "Stream for multiple data input", "w");
+  OStream output_stream = Stream ("Output Strem", "Stream for data output", "r");
+};
+
+} // BseTest

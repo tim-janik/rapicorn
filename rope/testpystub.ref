@@ -757,3 +757,7 @@ class RecordForGroups (_BaseRecord_):
     _aida_field = _aida_rp.fields.add()
     _aida_field.vdouble = self.threshold2
 
+class SoundModule (_BaseClass_):
+  def __init__ (self, _aida_id):
+    super (SoundModule, self).__init__ (_aida_id)
+

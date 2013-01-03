@@ -162,3 +162,24 @@
 .../testfail.idl:99:39: NameError: not a namespace-name: Unknown
 >  namespace U { using namespace Unknown; } // not a namespace-name
 >                                        ^
+.../testfail.idl:101:38: TypeError: stream type used in wrong context: IStream stream_func1
+>  interface I { IStream stream_func1(); }; // stream type used in wrong context
+>                                       ^
+.../testfail.idl:102:44: TypeError: stream type used in wrong context: JStream js
+>  interface I { void stream_func2 (JStream js); }; // stream type used in wrong context
+>                                             ^
+.../testfail.idl:103:55: TypeError: stream type used in wrong context: OStream os
+>  interface I { void stream_func3 (int32 i32, OStream os); }; // stream type used in wrong context
+>                                                        ^
+.../testfail.idl:104:47: TypeError: stream type used in wrong context: JStream stream_signal1
+>  interface I { signal JStream stream_signal1(); }; // stream type used in wrong context
+>                                                ^
+.../testfail.idl:105:64: TypeError: stream type used in wrong context: OStream os
+>  ...I { signal void stream_signal2 (float64 f, OStream os); }; // stream type used in wrong context
+>                                                          ^
+.../testfail.idl:106:27: TypeError: stream type used in wrong context: OStream istream
+>  record I { OStream istream; }; // stream type used in wrong context
+>                            ^
+.../testfail.idl:107:29: TypeError: stream type used in wrong context: IStream istream
+>  sequence S { IStream istream; }; // stream type used in wrong context
+>                              ^

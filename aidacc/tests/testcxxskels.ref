@@ -859,6 +859,22 @@ struct RecordForGroupsImpl
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsImpl&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsImpl&);
+
+/** @interface SoundModule
+ * See also the corresponding C++ class I_SoundModule_Interface (server side). */
+/// See also the corresponding IDL class SoundModule.
+class I_SoundModule_Interface : public virtual Rapicorn::Aida::TestServerBase
+{
+protected:
+  explicit                               I_SoundModule_Interface ();
+  virtual /*Des*/                       ~I_SoundModule_Interface () = 0;
+public:
+  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModule_Interface&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModule_Interface*);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModule_Interface*&);
 } // BseTest
 
 namespace Rapicorn {

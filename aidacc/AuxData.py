@@ -14,6 +14,7 @@ auxillary_initializers = {
   (Decls.FLOAT64,   'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),
   (Decls.ENUM,      'Enum')     : ('label', 'blurb', 'hints', 'default'),
+  (Decls.STREAM,    'Stream')   : ('label', 'blurb', 'hints'),
 }
 
 class Error (Exception):

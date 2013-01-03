@@ -207,10 +207,16 @@ class YYGlobals (object):
       if result:
         return result
     return None
-  def clone_type (self, typename, **flags):
+  def clone_type (self, typename, errorident, **flags):
+    if not flags.get ('stream', 0):
+      ANOSTREAM (typename, errorident)
     type_info = self.resolve_type (typename, flags.get ('void', 0))
     return type_info.clone (type_info.name, yy.impl_includes)
   def resolve_type (self, typename, void = False):
+    def mkstream (ioj):
+      ti = Decls.TypeInfo (ioj + 'Stream', Decls.STREAM, false)
+      ti.set_stream_type (ioj)
+      return ti
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
@@ -219,6 +225,9 @@ class YYGlobals (object):
         'int64'   : Decls.TypeInfo ('int64',    Decls.INT64, false),
         'float64' : Decls.TypeInfo ('float64',  Decls.FLOAT64, false),
         'String'  : Decls.TypeInfo ('String',   Decls.STRING, false),
+        'IStream' : mkstream ('I'),
+        'OStream' : mkstream ('O'),
+        'JStream' : mkstream ('J'),
         'Any'     : Decls.TypeInfo ('Any',      Decls.ANY, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
@@ -310,9 +319,14 @@ def AIi (identifier):   # assert interface identifier
   raise TypeError ('no such interface type: %s' % identifier)
 def ATN (typename):     # assert a typename
   yy.resolve_type (typename) # raises exception
-def ANS (issignal, identifier): # assert non-signal decl
+def ANOSIG (issignal, identifier): # assert non-signal decl
   if issignal:
     raise TypeError ('non-method invalidly declared as \'signal\': %s' % identifier)
+def TSTREAM (typename):
+  return typename in ('IStream', 'OStream', 'JStream')
+def ANOSTREAM (typename, identifier): # assert non-stream decl
+  if TSTREAM (typename):
+    raise TypeError ('stream type used in wrong context: %s %s' % (typename, identifier))
 def ANP (isfunc, identifier): # assert pure non-func decl
   if not isfunc:
     raise TypeError ('non-method invalidly declared as pure: %s' % identifier)
@@ -470,23 +484,20 @@ rule auxinit:
         '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename                                {{ ftype = yy.clone_type (typename) }}
-        IDENT                                   {{ ftuple = (IDENT, ftype, () ) }}
+        typename IDENT                          {{ ftype = yy.clone_type (typename, IDENT); ftuple = (IDENT, ftype, () ) }}
         [ '=' auxinit                           {{ ftuple = (ftuple[0], ftuple[1], auxinit) }}
         ] ';'                                   {{ return [ ftuple ] }}
 
 rule method_args:
-        typename                                {{ atype = yy.clone_type (typename) }}
-        IDENT                                   {{ aident = IDENT; adef = None }}
+        typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.clone_type (typename, IDENT) }}
         [ '=' expression                        {{ adef = expression }}
         ]                                       {{ a = yy.argcheck (aident, atype, adef); args = [ a ] }}
-        ( ',' typename                          {{ atype = yy.clone_type (typename) }}
-          IDENT                                 {{ aident = IDENT; adef = None }}
+        ( ',' typename IDENT                    {{ aident = IDENT; adef = None; atype = yy.clone_type (typename, IDENT) }}
           [ '=' expression                      {{ adef = expression }}
           ]                                     {{ a = yy.argcheck (aident, atype, adef); args += [ a ] }}
         ) *                                     {{ return args }}
 
-rule field_or_method_or_signal_decl:
+rule field_stream_method_signal_decl:
                                                 {{ signal = false; pure = 0; fargs = []; daux = () }}
         [ 'signal'                              {{ signal = true; coll = 'void' }}
           [ '<' IDENT '>'                       {{ coll = IDENT; ASC (coll) }}
@@ -501,8 +512,10 @@ rule field_or_method_or_signal_decl:
               [ method_args                     {{ fargs = method_args }}
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
         ) [ '=' '0'                             {{ pure = 1; ANP (kind == 'func', dident) }}
-          ] ';'                                 {{ if kind == 'field': ANS (signal, dident) }}
-                                                {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
+          ] ';'                                 {{ if kind == 'field': ANOSIG (signal, dident) }}
+                                                {{ if kind == 'field' and TSTREAM (dtname): kind = 'stream' }}
+                                                {{ flags = { 'void' : kind in ('func', 'signal'), 'stream' : kind == 'stream' } }}
+                                                {{ dtype = yy.clone_type (dtname, dident, **flags) }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs, pure)) }}
@@ -527,7 +540,7 @@ rule interface:
           '{'                                   {{ iface = yy.nsadd_interface (iident) }}
              ( field_group                      {{ ipls = ipls + field_group }}
              | info_assignment                  {{ }}
-             | field_or_method_or_signal_decl   {{ fmd = field_or_method_or_signal_decl }}
+             | field_stream_method_signal_decl  {{ fmd = field_stream_method_signal_decl }}
                                                 {{ if fmd[0] == 'field': ipls = ipls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'func': ifls = ifls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'signal': isigs = isigs + [ fmd[1] ] }}
