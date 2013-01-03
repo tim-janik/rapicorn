@@ -83,6 +83,7 @@ def print_help (with_help = True):
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
   print "  --output-format=<oformat>"
+  print "  -I <dir>                  add include directory"
   print "  -o=<outputfile>           output filename"
   print "  -G=<oformat>              select output format"
   print "  -g=<generator-option>     set output generator option"
@@ -94,9 +95,9 @@ def print_help (with_help = True):
 
 def parse_files_and_args():
   import re, getopt
-  config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [],
+  config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [], 'includedirs' : [],
              'insertions' : [], 'inclusions' : [], 'skip-skels' : [], 'system-typedefs' : False }
-  sop = 'vhG:g:o:'
+  sop = 'vhG:g:o:I:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
          'aida-debug', 'cc-intern-file=',
          'insertions=', 'inclusions=', 'skip-skels=']
@@ -112,6 +113,7 @@ def parse_files_and_args():
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
     if arg == '--aida-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
+    if arg == '-I': config['includedirs'] += [ val ]
     if arg == '--insertions': config['insertions'] += [ val ]
     if arg == '--inclusions': config['inclusions'] += [ val ]
     if arg == '--skip-skels': config['skip-skels'] += [ val ]

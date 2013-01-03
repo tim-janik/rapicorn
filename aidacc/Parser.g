@@ -246,8 +246,14 @@ class YYGlobals (object):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[:-1]
   def handle_include (self, includefilename, origscanner, implinc):
-    dir = os.path.dirname (origscanner.filename) # directory for source relative includes
-    filepath = os.path.join (dir, includefilename)
+    ddir = os.path.dirname (origscanner.filename) # directory for source relative includes
+    filepath = os.path.join (ddir, includefilename)
+    if not os.path.exists (filepath):
+      for dd in self.config.get ('includedirs'):
+        testpath = os.path.join (dd, includefilename)
+        if os.path.exists (testpath):
+          filepath = testpath
+          break
     f = open (filepath)
     input = f.read()
     try:
