@@ -106,12 +106,12 @@
 .../testfail.idl:72:50: NameError: duplicate method arg name: method (...n...)
 >  interface I { int32 method (int32 n, int32 n); }; // duplicate method argument
 >                                                   ^
-.../testfail.idl:73:22: TypeError: no such interface type: Unknown
+.../testfail.idl:73:24: TypeError: unknown type: 'Unknown'
 >  interface I : Unknown {}; // invalid parent interface
->                       ^
-.../testfail.idl:74:40: TypeError: no such interface type: R
+>                         ^
+.../testfail.idl:74:42: TypeError: no such interface type: R
 >  record R { String s; }; interface I : R {}; // invalid interface inheritance
->                                         ^
+>                                           ^
 .../testfail.idl:75:32: TypeError: non-method invalidly declared as 'signal': xxx
 >  interface I { signal int32 xxx; }; // invalidly declared as signal
 >                                 ^

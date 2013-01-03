@@ -534,8 +534,8 @@ rule interface:
         IDENT                                   {{ iident = IDENT; isigs = [] }}
         ( ';'                                   {{ iface = yy.nsadd_interface (iident, True) }}
         |
-          [ ':' IDENT                           {{ prq += [ IDENT ]; AIi (IDENT) }}
-              ( ',' IDENT                       {{ prq += [ IDENT ]; AIi (IDENT) }}
+          [ ':' typename                        {{ prq += [ typename ]; AIi (typename) }}
+              ( ',' typename                    {{ prq += [ typename ]; AIi (typename) }}
               ) * ]
           '{'                                   {{ iface = yy.nsadd_interface (iident) }}
              ( field_group                      {{ ipls = ipls + field_group }}
