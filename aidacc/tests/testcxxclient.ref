@@ -887,6 +887,66 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
 } // Other
 
+namespace BseTest {
+
+/** @interface Compressor
+ * See also the corresponding C++ class CompressorHandle (client side). */
+/// See also the corresponding IDL class Compressor.
+class CompressorHandle : public virtual Rapicorn::Aida::SmartHandle
+{
+  static CompressorHandle       _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
+  static const Rapicorn::Aida::TypeHash& _type ();
+protected:
+  static Rapicorn::Aida::ClientConnection __client_connection__ (void);
+public:
+  template<class C>
+  static CompressorHandle       downcast (C c) { return _cast (c, c.cast_types()); }
+  const Rapicorn::Aida::TypeHashList& cast_types ();
+  explicit                      CompressorHandle ();
+  double                        threshold () const;
+  void                          threshold (double);
+  double                        ratio     () const;
+  void                          ratio     (double);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
+void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
+
+/** @interface RecordForGroups
+ * See also the corresponding C++ class RecordForGroupsStruct (client side). */
+/// See also the corresponding IDL class RecordForGroups.
+struct RecordForGroupsStruct
+{
+  int                           i;
+  double                        ratio;
+  bool                          ordinary_bool;
+  double                        threshold1;
+  double                        threshold2;
+  inline                        RecordForGroupsStruct () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsStruct&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsStruct&);
+
+/** @interface SoundModule
+ * See also the corresponding C++ class SoundModuleHandle (client side). */
+/// See also the corresponding IDL class SoundModule.
+class SoundModuleHandle : public virtual Rapicorn::Aida::SmartHandle
+{
+  static SoundModuleHandle      _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
+  static const Rapicorn::Aida::TypeHash& _type ();
+protected:
+  static Rapicorn::Aida::ClientConnection __client_connection__ (void);
+public:
+  template<class C>
+  static SoundModuleHandle      downcast (C c) { return _cast (c, c.cast_types()); }
+  const Rapicorn::Aida::TypeHashList& cast_types ();
+  explicit                      SoundModuleHandle ();
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SoundModuleHandle&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SoundModuleHandle&);
+} // BseTest
+
 namespace Rapicorn {
 
 namespace Aida {
@@ -3797,4 +3857,244 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStr
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 } // Other
+
+namespace BseTest {
+
+// === Compressor ===
+static inline void ref   (CompressorHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (CompressorHandle&) {} // dummy stub for Signal<>.emit
+struct Compressor_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (Compressor_Context$);
+public:
+  struct SmartHandle$ : public CompressorHandle {
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
+  } handle$;
+  Compressor_Context$ (Rapicorn::Aida::uint64_t ipcid) :
+    handle$ (ipcid),
+    m_cached_types (NULL)
+  {}
+  Rapicorn::Aida::TypeHashList *m_cached_types;
+  const Rapicorn::Aida::TypeHashList& list_types ();
+};
+const Rapicorn::Aida::TypeHashList&
+Compressor_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3cc93ec8b4f43e89ULL, 0x38bbc5321cdaa262ULL);
+    fb <<= handle$;
+    Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >>= len;
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+    Rapicorn::Aida::TypeHashList *thv = new Rapicorn::Aida::TypeHashList();
+    Rapicorn::Aida::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >>= thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Rapicorn::Aida::atomic_ptr_cas (&m_cached_types, (Rapicorn::Aida::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+CompressorHandle::CompressorHandle ()
+{}
+Rapicorn::Aida::ClientConnection
+CompressorHandle::__client_connection__ (void)
+{
+  return AIDA_CONNECTION();
+}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const CompressorHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+}
+void
+operator>>= (Rapicorn::Aida::FieldReader &fbr, CompressorHandle &handle)
+{
+  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Compressor_Context$> (ipcid)->handle$ : CompressorHandle();
+}
+const Rapicorn::Aida::TypeHash&
+CompressorHandle::_type()
+{
+  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x0491625894ae6f81ULL, 0x139b9ce73db32661ULL);
+  return type_hash;
+}
+CompressorHandle
+CompressorHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
+{
+  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<Compressor_Context$> (connection_handle2id (other))->handle$;
+  return CompressorHandle();
+}
+const Rapicorn::Aida::TypeHashList&
+CompressorHandle::cast_types()
+{
+  static Rapicorn::Aida::TypeHashList notypes;
+  const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<Compressor_Context$> (ipcid)->list_types();
+}
+double
+CompressorHandle::threshold () const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3ffc3dfaef875d63ULL, 0xf6f4d889560ba297ULL);
+  fb <<= (*this);
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  double  retval;
+  frr >>= retval;
+  delete fr;
+  return retval;
+}
+void
+CompressorHandle::threshold (double value)
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x2209f452a5de4de8ULL, 0x3fb166b528077900ULL); // msgid
+  fb <<= (*this);
+  fb <<= value;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+double
+CompressorHandle::ratio () const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3415341ee86f2c05ULL, 0xe5f3f6787cc5e436ULL);
+  fb <<= (*this);
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  double  retval;
+  frr >>= retval;
+  delete fr;
+  return retval;
+}
+void
+CompressorHandle::ratio (double value)
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL); // msgid
+  fb <<= (*this);
+  fb <<= value;
+  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+inline void __attribute__ ((used))
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroupsStruct &self)
+{
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
+  fb <<= self.i;
+  fb <<= self.ratio;
+  fb <<= self.ordinary_bool;
+  fb <<= self.threshold1;
+  fb <<= self.threshold2;
+}
+inline void __attribute__ ((used))
+operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsStruct &self)
+{
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  if (fbr.remaining() < 5) return;
+  fbr >>= self.i;
+  fbr >>= self.ratio;
+  fbr >>= self.ordinary_bool;
+  fbr >>= self.threshold1;
+  fbr >>= self.threshold2;
+}
+
+// === SoundModule ===
+static inline void ref   (SoundModuleHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (SoundModuleHandle&) {} // dummy stub for Signal<>.emit
+struct SoundModule_Context$ {
+  RAPICORN_CLASS_NON_COPYABLE (SoundModule_Context$);
+public:
+  struct SmartHandle$ : public SoundModuleHandle {
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
+  } handle$;
+  SoundModule_Context$ (Rapicorn::Aida::uint64_t ipcid) :
+    handle$ (ipcid),
+    m_cached_types (NULL)
+  {}
+  Rapicorn::Aida::TypeHashList *m_cached_types;
+  const Rapicorn::Aida::TypeHashList& list_types ();
+};
+const Rapicorn::Aida::TypeHashList&
+SoundModule_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x34056ecd1702e81aULL, 0x68e32ce1244df22bULL);
+    fb <<= handle$;
+    Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
+    AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >>= len;
+    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+    Rapicorn::Aida::TypeHashList *thv = new Rapicorn::Aida::TypeHashList();
+    Rapicorn::Aida::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >>= thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Rapicorn::Aida::atomic_ptr_cas (&m_cached_types, (Rapicorn::Aida::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+SoundModuleHandle::SoundModuleHandle ()
+{}
+Rapicorn::Aida::ClientConnection
+SoundModuleHandle::__client_connection__ (void)
+{
+  return AIDA_CONNECTION();
+}
+void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SoundModuleHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+}
+void
+operator>>= (Rapicorn::Aida::FieldReader &fbr, SoundModuleHandle &handle)
+{
+  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
+  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<SoundModule_Context$> (ipcid)->handle$ : SoundModuleHandle();
+}
+const Rapicorn::Aida::TypeHash&
+SoundModuleHandle::_type()
+{
+  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x06285204d12388cdULL, 0x2cf10a9d917227b5ULL);
+  return type_hash;
+}
+SoundModuleHandle
+SoundModuleHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
+{
+  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<SoundModule_Context$> (connection_handle2id (other))->handle$;
+  return SoundModuleHandle();
+}
+const Rapicorn::Aida::TypeHashList&
+SoundModuleHandle::cast_types()
+{
+  static Rapicorn::Aida::TypeHashList notypes;
+  const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);
+  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<SoundModule_Context$> (ipcid)->list_types();
+}
+} // BseTest
 

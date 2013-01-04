@@ -251,6 +251,7 @@ enum MathExpressions {
   RESULT_77 = 77,
   RESULT_511 = 511,
 };
+struct RecordForGroups;
 static RAPICORN_UNUSED bool
 aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 {
@@ -961,6 +962,55 @@ aida_pyQuickSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
   Py_XDECREF (pyfoR);
   if (pyret != listR)
     Py_XDECREF (listR);
+  return pyret;
+}
+
+static RAPICORN_UNUSED bool
+aida_pyRecordForGroups_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
+{
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
+  bool success = false;
+  PyObject *dictR = NULL, *item = NULL;
+  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
+  item = PyDict_GetItemString (dictR, "i"); ERRORif (!item);
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "ratio"); ERRORif (!item);
+  fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "ordinary_bool"); ERRORif (!item);
+  fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "threshold1"); ERRORif (!item);
+  fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "threshold2"); ERRORif (!item);
+  fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+static RAPICORN_UNUSED PyObject*
+aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
+{
+  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  if (fbr.remaining() != 5) ERRORpy ("Aida: marshalling error: invalid record length");
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
+  pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
+  if (PyDict_Take_Item (dictR, "i", &pyfoR) < 0) goto error;
+  pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "ratio", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromLongLong (fbr.pop_bool()); ERRORifpy ();
+  if (PyDict_Take_Item (dictR, "ordinary_bool", &pyfoR) < 0) goto error;
+  pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "threshold1", &pyfoR) < 0) goto error;
+  pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "threshold2", &pyfoR) < 0) goto error;
+  pyret = pyinstR;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (dictR);
+  if (pyret != pyinstR)
+    Py_XDECREF (pyinstR);
   return pyret;
 }
 

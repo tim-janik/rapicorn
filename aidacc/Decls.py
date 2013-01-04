@@ -5,7 +5,7 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, BOOL, INT32, INT64, FLOAT64, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vbildsEQRCFTY']
+VOID, BOOL, INT32, INT64, FLOAT64, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, STREAM, ANY = [ord (x) for x in 'vbildsEQRCFTMY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',
@@ -19,6 +19,7 @@ def storage_name (storage):
     SEQUENCE  : 'SEQUENCE',
     FUNC      : 'FUNC',
     INTERFACE : 'INTERFACE',
+    STREAM    : 'STREAM',
     ANY       : 'ANY',
   }.get (storage, None)
   if not name:
@@ -85,7 +86,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, BOOL, INT32, INT64, FLOAT64, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
+    assert storage in (VOID, BOOL, INT32, INT64, FLOAT64, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, STREAM, ANY)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl
@@ -110,6 +111,8 @@ class TypeInfo (BaseDecl):
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
     self.auxdata = {}
+    if self.storage == STREAM:
+      self.ioj_stream = ''      # one of: 'I', 'O', 'J'
   def string_digest (self):
     typelist, arglist = [], [] # owner, self, rtype, arg*type, ...
     if self.__dict__.get ('ownertype', None): typelist += [self.ownertype]
@@ -165,6 +168,8 @@ class TypeInfo (BaseDecl):
     ti.is_forward = self.is_forward
     ti.options += self.options
     ti.combinable = self.combinable
+    if hasattr (self, 'ioj_stream'):
+      ti.ioj_stream = self.ioj_stream
     if hasattr (self, 'namespace'):
       ti.namespace = self.namespace
     if hasattr (self, 'ns_nested'):
@@ -217,6 +222,10 @@ class TypeInfo (BaseDecl):
           (number == None or o[3] == number)):
         return true
     return false
+  def set_stream_type (self, ioj):
+    assert self.storage == STREAM
+    assert ioj in ('I', 'O', 'J')
+    self.ioj_stream = ioj
   def add_field (self, ident, type):
     assert self.storage == RECORD or self.storage == INTERFACE
     assert isinstance (ident, str)
