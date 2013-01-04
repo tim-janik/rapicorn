@@ -583,7 +583,7 @@ class Generator:
     return s
   def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
     s, classH, signame = '', self.C4client (class_info), self.generate_signal_typename (sg, class_info)
-    sh, signature = 'SignalHandler__%s' % sg.name, self.generate_signal_signature (sg, class_info)
+    sh, signature = 'SignalHandler__%s' % sg.name, self.generate_signal_signature (sg)
     s += '  typedef Rapicorn::Aida::CxxStub::SignalHandler<%s, %s> %s;\n' % (classH, signature, sh)
     s += '  %s %s;\n' % (sh, sg.name)
     return s
@@ -874,7 +874,7 @@ class Generator:
     return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name
-  def generate_signal_signature (self, functype, ctype):
+  def generate_signal_signature (self, functype):
     s = '%s (' % self.R (functype.rtype)
     l = []
     for a in functype.args:
