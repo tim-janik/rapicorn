@@ -9,6 +9,8 @@ noinst_SCRIPTS      = ${AIDACC_INTERN}
 AIDACCLNK	    = aidacc			## user visible excutable name
 AIDACCV	            = aidacc-@RAPICORN_RELEASE@	## installed executable name
 AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
+AIDACC_VDEBUG	    = $(AIDACC_INTERN) $(if $(findstring 1, $(V)), --aida-debug)
+
 CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
 CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
@@ -55,8 +57,8 @@ GPRINT      = @printf '  %-7s%s\n'
 # --cc-intern-file  converts the TypeMap into a C string.
 check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
 	@echo "  CHECK " builtins.idl
-	$(Q) ${AIDACC_INTERN} --system-typedefs $< -G TypeMap -o builtins.typ
-	$(Q) ${AIDACC_INTERN} --cc-intern-file builtins.typ > builtins.cc
+	$(Q) ${AIDACC_VDEBUG} --system-typedefs $< -G TypeMap -o builtins.typ
+	$(Q) ${AIDACC_VDEBUG} --cc-intern-file builtins.typ > builtins.cc
 	@echo "  VERIFY" aidabuiltins.cc
 	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
 	$(Q) rm -f builtins.typ builtins.cc
@@ -70,7 +72,7 @@ pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${ai
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
-	$(Q) ${AIDACC_INTERN} --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_VDEBUG} --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
 check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
