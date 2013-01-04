@@ -463,6 +463,7 @@ class Generator:
     else: # G4CLIENT
       for sg in type_info.signals:
         s += self.generate_signal_accessor_def (sg, type_info)
+        s += self.generate_client_signal_decl (sg, type_info)
     # methods
     il = 0
     if type_info.methods:
@@ -872,16 +873,21 @@ class Generator:
     return s
   def generate_signal_proxy_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name # 'Proxy_%s'
-  def generate_signal_typename (self, functype, ctype):
-    return 'Signal_%s' % functype.name
-  def generate_signal_signature (self, functype):
-    s = '%s (' % self.R (functype.rtype)
+  def generate_signal_typename (self, functype, ctype, prefix = 'Signal'):
+    return '%s_%s' % (prefix, functype.name)
+  def generate_signal_signature_tuple (self, functype, funcname = ''):
+    s, r = '', self.R (functype.rtype)
+    if funcname:
+      s += '%s ' % funcname
+    s += '('
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
     s += ')'
-    return s
+    return (r, s)
+  def generate_signal_signature (self, functype, funcname = ''):
+    return ' '.join (self.generate_signal_signature_tuple (functype, funcname))
   def generate_signal_proxy_typedef (self, functype, ctype, prefix = ''):
     assert self.gen_mode == G4CLIENT
     proxyname = self.generate_signal_proxy_typename (functype, ctype)
@@ -898,6 +904,13 @@ class Generator:
     assert self.gen_mode == G4CLIENT
     s, signame = '', self.generate_signal_typename (functype, ctype)
     s = '  ' + self.F (signame + '&') + 'sig_' + functype.name + '();\n'
+    return s
+  def generate_client_signal_decl (self, functype, ctype):
+    assert self.gen_mode == G4CLIENT
+    s, cbtname = '', self.generate_signal_typename (functype, ctype, 'Callback')
+    sigret, sigfunc = self.generate_signal_signature_tuple (functype, cbtname)
+    s += '  ' + self.F ('typedef ' + sigret) + sigfunc + ';\n'
+    s += '  ' + self.F ('uint ') + 'sig_' + functype.name + ' (const std::function<%s>&, bool connect = true);\n' % cbtname
     return s
   def generate_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)
