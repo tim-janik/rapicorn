@@ -19,7 +19,6 @@
 #include <stddef.h>             // ptrdiff_t
 #include <stdexcept>
 #include <deque>
-#include <map>
 
 // == Auxillary macros ==
 #ifndef __GNUC__
@@ -793,7 +792,7 @@ public:
 ClientConnection::ClientConnection (Connector &connector) :
   m_connector (&connector)
 {
-  pthread_spin_init (&ehandler_spin, 0 /* pshared */);
+  pthread_spin_init (&signal_spin_, 0 /* pshared */);
   m_connector->ref();
 }
 
@@ -801,7 +800,7 @@ ClientConnection::~ClientConnection ()
 {
   m_connector->unref();
   m_connector = NULL;
-  pthread_spin_destroy (&ehandler_spin);
+  pthread_spin_destroy (&signal_spin_);
 }
 
 int          ClientConnection::notify_fd ()                  { return m_connector->notify_fd(); }
@@ -819,10 +818,11 @@ ClientConnection::dispatch ()
   if (msgid_is_event (msgid))
     {
       const uint64_t handler_id = fbr.pop_int64();
-      ClientConnection::EventHandler *evh = find_event_handler (handler_id);
-      if (evh)
+      // ClientConnection::EventHandler *evh = find_event_handler (handler_id);
+      SignalHandler *shandler = signal_lookup (handler_id);
+      if (shandler)
         {
-          FieldBuffer *fr = evh->handle_event (*fb);
+          FieldBuffer *fr = shandler->seh (*this, fb, shandler->data);
           if (fr)
             {
               FieldReader frr (*fr);
@@ -857,18 +857,18 @@ ClientConnection::dispatch ()
 uint64_t
 ClientConnection::register_event_handler (EventHandler *evh)
 {
-  pthread_spin_lock (&ehandler_spin);
+  pthread_spin_lock (&signal_spin_);
   const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
-  pthread_spin_unlock (&ehandler_spin);
+  pthread_spin_unlock (&signal_spin_);
   return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
 }
 
 ClientConnection::EventHandler*
 ClientConnection::find_event_handler (uint64_t handler_id)
 {
-  pthread_spin_lock (&ehandler_spin);
+  pthread_spin_lock (&signal_spin_);
   UIntSet::iterator iter = ehandler_set.find (handler_id);
-  pthread_spin_unlock (&ehandler_spin);
+  pthread_spin_unlock (&signal_spin_);
   if (iter == ehandler_set.end())
     return NULL; // unknown handler_id
   EventHandler *evh = (EventHandler*) ptrdiff_t (handler_id);
@@ -878,14 +878,92 @@ ClientConnection::find_event_handler (uint64_t handler_id)
 bool
 ClientConnection::delete_event_handler (uint64_t handler_id)
 {
-  pthread_spin_lock (&ehandler_spin);
+  pthread_spin_lock (&signal_spin_);
   size_t nerased = ehandler_set.erase (handler_id);
-  pthread_spin_unlock (&ehandler_spin);
+  pthread_spin_unlock (&signal_spin_);
   return nerased > 0; // deletion successful?
 }
 
 ClientConnection::EventHandler::~EventHandler()
 {}
+
+uint64_t
+ClientConnection::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
+{
+  assert_return (handle_id > 0, 0);
+  assert_return (hhi > 0, 0);   // FIXME: check for signal id
+  assert_return (hlo > 0, 0);
+  assert_return (seh != NULL, 0);
+  SignalHandler *shandler = new SignalHandler;
+  shandler->hhi = hhi;
+  shandler->hlo = hlo;
+  shandler->oid = handle_id;
+  shandler->cid = 0;
+  shandler->seh = seh;
+  shandler->data = data;
+  pthread_spin_lock (&signal_spin_);
+  const uint handler_id = signal_handler_counter_++;
+  shandler->hid = handler_id;
+  signal_handler_map_[shandler->hid] = shandler;
+  pthread_spin_unlock (&signal_spin_);
+  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
+  fb.add_msgid (shandler->hhi, shandler->hlo);  // message id
+  fb.add_object (shandler->oid);                // emitting object
+  fb <<= shandler->hid;                         // handler connection request id
+  fb <<= 0;                                     // disconnection request id
+  Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  assert_return (connection_result != NULL, 0);
+  Aida::FieldReader frr (*connection_result);
+  frr.skip_msgid();             // FIXME: check for signal id
+  pthread_spin_lock (&signal_spin_);
+  frr >>= shandler->cid;
+  pthread_spin_unlock (&signal_spin_);
+  delete connection_result;
+  return handler_id;
+}
+
+bool
+ClientConnection::signal_disconnect (uint64_t signal_handler_id)
+{
+  assert_return (signal_handler_id > 0, 0);
+  SignalHandler *shandler = NULL;
+  pthread_spin_lock (&signal_spin_);
+  auto it = signal_handler_map_.find (signal_handler_id);
+  if (it != signal_handler_map_.end())
+    {
+      shandler = it->second;
+      signal_handler_map_.erase (it);
+    }
+  pthread_spin_unlock (&signal_spin_);
+  return_if (!shandler, false);
+  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
+  fb.add_msgid (shandler->hhi, shandler->hlo);  // message id
+  fb.add_object (shandler->oid);                // emitting object
+  fb <<= 0;                                     // handler connection request id
+  fb <<= shandler->cid;                         // disconnection request id
+  Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  if (connection_result)
+    {
+      // FIXME: handle error message connection_result
+      delete connection_result;
+      critical_unless (connection_result == NULL);
+    }
+  shandler->seh (*this, NULL, shandler->data);
+  delete shandler;
+  return true;
+}
+
+ClientConnection::SignalHandler*
+ClientConnection::signal_lookup (uint64_t signal_handler_id)
+{
+  SignalHandler *shandler = NULL;
+  pthread_spin_lock (&signal_spin_);
+  auto it = signal_handler_map_.find (signal_handler_id);
+  if (it != signal_handler_map_.end())
+    shandler = it->second;
+  pthread_spin_unlock (&signal_spin_);
+  return shandler;
+}
 
 // == ServerConnection::Dispatcher ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.

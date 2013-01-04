@@ -628,7 +628,7 @@ class Generator:
     for sg in class_info.signals:
       signame = self.generate_signal_typename (sg, class_info)
       s += '%s::%s&\n' % (classH, signame)
-      s += '%s::sig_%s ()\n{\n' % (classH, sg.name)
+      s += '%s::old_sig_%s ()\n{\n' % (classH, sg.name)
       s += '  return connection_id2context<%s> (connection_handle2id (*this))->%s.psignal;\n' % (classC, sg.name)
       s += '}\n'
     return s
@@ -903,14 +903,35 @@ class Generator:
   def generate_signal_accessor_def (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
     s, signame = '', self.generate_signal_typename (functype, ctype)
-    s = '  ' + self.F (signame + '&') + 'sig_' + functype.name + '();\n'
+    s = '  ' + self.F (signame + '&') + 'old_sig_' + functype.name + '();\n'
     return s
   def generate_client_signal_decl (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
-    s, cbtname = '', self.generate_signal_typename (functype, ctype, 'Callback')
+    s, cbtname, u64 = '', self.generate_signal_typename (functype, ctype, 'Callback'), 'Rapicorn::Aida::uint64_t'
     sigret, sigfunc = self.generate_signal_signature_tuple (functype, cbtname)
     s += '  ' + self.F ('typedef ' + sigret) + sigfunc + ';\n'
-    s += '  ' + self.F ('uint ') + 'sig_' + functype.name + ' (const std::function<%s>&, bool connect = true);\n' % cbtname
+    s += '  ' + self.F (u64 + ' ') + 'sig_' + functype.name + ' (const std::function<%s> &callback);\n' % cbtname
+    s += '  ' + self.F ('bool ') + 'sig_' + functype.name + ' (%s signal_id); ///< Disconnect Signal\n' % u64
+    return s
+  def generate_client_signal_def (self, class_info, functype):
+    assert self.gen_mode == G4CLIENT
+    s, cbtname, classH = '', self.generate_signal_typename (functype, class_info, 'Callback'), self.C4client (class_info)
+    (sigret, sigfunc), u64 = self.generate_signal_signature_tuple (functype, cbtname), 'Rapicorn::Aida::uint64_t'
+    emitfunc = '__AIDA_emit__%s__%s' % (classH, functype.name)
+    s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
+    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '  auto fptr = (const std::function<%s::%s>*) data;\n' % (classH, cbtname)
+    s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
+    s += '  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr);\n'
+    s += '  return NULL; // no support for remote signal returns atm\n'
+    s += '}\n'
+    s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)
+    s += '  void *fptr = new std::function<%s> (func);\n' % cbtname
+    s += '  %s id = AIDA_CONNECTION().signal_connect (%s, _rpc_id(), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
+    s += '  return id;\n}\n'
+    s += 'bool\n%s::sig_%s (%s signal_id)\n{\n' % (classH, functype.name, u64)
+    s += '  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);\n'
+    s += '  return r;\n}\n'
     return s
   def generate_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)
@@ -1194,6 +1215,8 @@ class Generator:
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             s += self.generate_client_class_context (tp)
+            for sg in tp.signals:
+              s += self.generate_client_signal_def (tp, sg)
             s += self.generate_client_class_methods (tp)
             for fl in tp.fields:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])

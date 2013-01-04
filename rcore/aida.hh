@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <memory>               // shared_ptr
 #include <set>
+#include <map>
 
 #ifndef _SHARED_PTR_H           // might require -std=c++0x
 #include <tr1/memory>           // import shared_ptr if needed
@@ -211,6 +212,11 @@ bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_
 void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
 void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
 void    warning_printf  (const char *format, ...) AIDA_PRINTF (1, 2);
+
+// == Type Utilities ==
+template<class Y> struct ValueType           { typedef Y T; };
+template<class Y> struct ValueType<Y&>       { typedef Y T; };
+template<class Y> struct ValueType<const Y&> { typedef Y T; };
 
 // == Message IDs ==
 enum MessageId {
@@ -427,7 +433,10 @@ public: /// @name Lifetime
   virtual      ~ClientConnection ();
   /*ctor*/      ClientConnection (Connector&);
 public: /// @name API for event handler bookkeeping
-  struct EventHandler                        /// Interface class used for client side signal emissions.
+  typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
+  uint64_t             signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data);
+  bool                 signal_disconnect (uint64_t signal_handler_id);
+  struct EventHandler                       /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler ();
     virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
@@ -437,9 +446,13 @@ public: /// @name API for event handler bookkeeping
   bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
 private: /// @name Internals
   Connector    *m_connector;
+  struct SignalHandler { uint64_t hhi, hlo, oid, hid, cid; ClientConnection::SignalEmitHandler *seh; void *data; };
+  std::map<uint64_t,SignalHandler*> signal_handler_map_;
+  uint64_t                          signal_handler_counter_;
+  pthread_spinlock_t                signal_spin_;
+  SignalHandler*                    signal_lookup (uint64_t handler_id);
   // client event handler
   typedef std::set<uint64_t> UIntSet;
-  pthread_spinlock_t        ehandler_spin;
   UIntSet                   ehandler_set;
 };
 

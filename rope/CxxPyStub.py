@@ -307,7 +307,58 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
+  def generate_client_signal_def (self, class_info, functype, mdefs):
+    mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
+               (functype.ident_digest(), functype.ident_digest()) ]
+    s, cbtname, classN = '', 'Callback' + '_' + functype.name, class_info.name
+    u64 = 'Rapicorn::Aida::uint64_t'
+    emitfunc = '__AIDA_pyemit__%s__%s' % (classN, functype.name)
+    s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
+    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '  PyObject *callable = (PyObject*) data;\n'
+    s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
+    if functype.args:
+      s += '  FieldReader fbr (*sfb);\n'
+      s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
+      s += '  fbr.pop_int64();  // skip handler_id\n'
+    s += '  const uint length = %u;\n' % len (functype.args)
+    s += '  PyObject *result = NULL, *tuple = PyTuple_New (length)%s;\n' % (', *item' if functype.args else '')
+    arg_counter = 0
+    for a in functype.args:
+      s += self.generate_proto_pop_py ('fbr', a[1], 'item')
+      s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
+      arg_counter += 1
+    s += '  if (PyErr_Occurred()) goto error;\n'
+    s += '  result = PyObject_Call (callable, tuple, NULL);\n'
+    s += '  Py_XDECREF (result);\n'
+    s += ' error:\n'
+    s += '  Py_XDECREF (tuple);\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    s += 'static PyObject*\n'
+    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % functype.ident_digest()
+    s += '{\n'
+    s += '  while (0) { error: return NULL; }\n'
+    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
+    s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
+    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
+    s += '  %s result = 0;\n' % u64
+    s += '  if (callable == Py_None) {\n'
+    s += '    PyObject *pyo = PyTuple_GET_ITEM (pyargs, 2);\n' # connection id for disconnect
+    s += '    %s dc_id = PyIntLong_AsLongLong (pyo); ERRORifpy();\n' % u64
+    s += '    result = AIDA_CONNECTION().signal_disconnect (dc_id);\n'
+    s += '  } else {\n'
+    s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
+    s += '    Py_INCREF (callable);\n'
+    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '  }\n'
+    s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
+    s += '  return pyres;\n'
+    s += '}\n'
+    return s
   def generate_rpc_signal_call (self, class_info, mtype, mdefs):
+    return ''
     s = ''
     mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
@@ -463,6 +514,7 @@ class Generator:
           s += self.generate_rpc_call_wrapper (tp, m, mdefs)
         for sg in tp.signals:
           s += self.generate_rpc_signal_call (tp, sg, mdefs)
+          s += self.generate_client_signal_def (tp, sg, mdefs)
     # method def array
     if mdefs:
       aux = '{ "_AIDA___register_object_factory_callable", _aida___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
