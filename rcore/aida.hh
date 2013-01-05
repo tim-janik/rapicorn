@@ -446,9 +446,8 @@ public: /// @name API for event handler bookkeeping
   bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
 private: /// @name Internals
   Connector    *m_connector;
-  struct SignalHandler { uint64_t hhi, hlo, oid, hid, cid; ClientConnection::SignalEmitHandler *seh; void *data; };
+  struct SignalHandler { uint64_t hhi, hlo, oid, cid; ClientConnection::SignalEmitHandler *seh; void *data; };
   std::map<uint64_t,SignalHandler*> signal_handler_map_;
-  uint64_t                          signal_handler_counter_;
   pthread_spinlock_t                signal_spin_;
   SignalHandler*                    signal_lookup (uint64_t handler_id);
   // client event handler

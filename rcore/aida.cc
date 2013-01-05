@@ -902,14 +902,13 @@ ClientConnection::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t handle_id
   shandler->seh = seh;
   shandler->data = data;
   pthread_spin_lock (&signal_spin_);
-  const uint handler_id = signal_handler_counter_++;
-  shandler->hid = handler_id;
-  signal_handler_map_[shandler->hid] = shandler;
+  const uint64_t handler_id = ptrdiff_t (shandler);
+  signal_handler_map_[handler_id] = shandler;
   pthread_spin_unlock (&signal_spin_);
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (shandler->hhi, shandler->hlo);  // message id
   fb.add_object (shandler->oid);                // emitting object
-  fb <<= shandler->hid;                         // handler connection request id
+  fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
   Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
