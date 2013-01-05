@@ -258,6 +258,7 @@ public:
 
 // == FieldBuffer ==
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
+class BaseConnection;
 
 union FieldUnion {
   int64_t      vint64;
@@ -332,13 +333,15 @@ public:
 class FieldReader { // read field buffer contents
   typedef std::string String;
   const FieldBuffer *m_fb;
+  BaseConnection    &bc_;
   uint32_t           m_nth;
   void               check_request (int type);
   inline void        request (int t) { if (AIDA_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
   inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
 public:
-  explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
+  explicit                 FieldReader (const FieldBuffer &fb, BaseConnection &bc) : m_fb (&fb), bc_ (bc), m_nth (0) {}
+  inline BaseConnection&    connection () { return bc_; }
   inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint32_t           remaining  () { return n_types() - m_nth; }
@@ -390,8 +393,13 @@ public:
   virtual void         unref       () = 0;
 };
 
+class BaseConnection {
+public:
+  virtual ~BaseConnection() {}
+};
+
 /// Connection context for IPC servers. @nosubgrouping
-class ServerConnection {
+class ServerConnection : public BaseConnection {
 private: /// @name Internals
   class Dispatcher;
   Dispatcher *m_transport;
@@ -422,7 +430,7 @@ public: /// @name Registry for IPC method lookups
 };
 
 /// Connection context for IPC clients. @nosubgrouping
-class ClientConnection {
+class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 public: /// @name API for remote calls
   FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a remote call syncronously, transfers memory.

@@ -3,6 +3,11 @@
 #include "internal.hh"
 #include <stdlib.h>
 
+namespace { // Anon
+#define AIDA_CONNECTION()       (*clientglue_connection)
+static Rapicorn::Aida::ClientConnection *clientglue_connection = NULL;
+} // Anon
+
 namespace Rapicorn {
 
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
@@ -46,7 +51,7 @@ init_app (const String       &app_ident,
   // construct smart handle
   Rapicorn::Aida::FieldBuffer8 fb (1);
   fb.add_object (appid);
-  Rapicorn::Aida::FieldReader fbr (fb);
+  Rapicorn::Aida::FieldReader fbr (fb, AIDA_CONNECTION());
   fbr >>= app_cached;
   return app_cached;
 }
@@ -130,7 +135,6 @@ public:
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Rapicorn::Aida::ClientConnection *clientglue_connection = NULL;
 class ConnectionContext {
   // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
   typedef std::map <Rapicorn::Aida::uint64_t, void*> ContextMap;
@@ -162,8 +166,6 @@ connection_handle2id (const Rapicorn::Aida::SmartHandle &h)
 {
   return h._rpc_id();
 }
-
-#define AIDA_CONNECTION()       (*clientglue_connection)
 } // Anon
 
 // compile client-side API

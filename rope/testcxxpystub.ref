@@ -25,7 +25,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
-  FieldReader frr (*fr);
+  FieldReader frr (*fr, *(Rapicorn::Aida::BaseConnection*) NULL);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
@@ -304,7 +304,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 18) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -372,7 +372,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyXFooSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -406,7 +406,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyIntSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -440,7 +440,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyFloatSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -474,7 +474,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyStringSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -508,7 +508,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyExtensiveEnumSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -542,7 +542,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyRecordSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -576,7 +576,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pySequenceSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -610,7 +610,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyInterfaceSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -644,7 +644,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyAnySequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -679,7 +679,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyNestedTypesRec_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -715,7 +715,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyNestedTypesSeq_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -754,7 +754,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyNewRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -797,7 +797,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyInnerRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 3) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -834,7 +834,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyRefer2Inner_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 1) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -873,7 +873,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pySomeRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -914,7 +914,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyQuickRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -950,7 +950,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyQuickSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -991,7 +991,7 @@ static RAPICORN_UNUSED PyObject*
 aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());
   if (fbr.remaining() != 5) ERRORpy ("Aida: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -1043,7 +1043,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__simple_method_float64 (PyObject *pyself,
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1070,7 +1070,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject *pyse
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1097,7 +1097,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject *pys
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1126,7 +1126,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyObject
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1155,7 +1155,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (PyObjec
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1192,7 +1192,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_in
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1221,7 +1221,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWi
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1263,7 +1263,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__on_click2out_String (PyObject *pyself, P
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1335,7 +1335,7 @@ __AIDA_pyemit__UIWidgetArea__sample_signal (Rapicorn::Aida::ClientConnection &ai
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 2;
@@ -1424,7 +1424,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool 
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_bool()); ERRORifpy ();
@@ -1453,7 +1453,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_in
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1482,7 +1482,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_in
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1511,7 +1511,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_floats_float64_float6
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1540,7 +1540,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_string_String_String_
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1569,7 +1569,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
@@ -1598,7 +1598,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = aida_pyQuickRecord_proto_pop (frr); ERRORif (!pyfoR);
@@ -1627,7 +1627,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTes
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = aida_pyQuickSequence_proto_pop (frr); ERRORif (!pyfoR);
@@ -1656,7 +1656,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTe
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = aida_PyObject_4uint64 ("GrandChild", frr.pop_object()); ERRORifpy();
@@ -1685,7 +1685,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any (PyO
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = __aida_pyany_from_any (frr.pop_any()); ERRORifpy();
@@ -1714,7 +1714,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = aida_PyObject_4uint64 ("QuickIface", frr.pop_object()); ERRORifpy();
@@ -2187,7 +2187,7 @@ __AIDA_pyemit__SignalTestInterface__bool_arg (Rapicorn::Aida::ClientConnection &
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2227,7 +2227,7 @@ __AIDA_pyemit__SignalTestInterface__int32_arg (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2267,7 +2267,7 @@ __AIDA_pyemit__SignalTestInterface__int64_arg (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2307,7 +2307,7 @@ __AIDA_pyemit__SignalTestInterface__float64_arg (Rapicorn::Aida::ClientConnectio
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2347,7 +2347,7 @@ __AIDA_pyemit__SignalTestInterface__string_arg (Rapicorn::Aida::ClientConnection
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2387,7 +2387,7 @@ __AIDA_pyemit__SignalTestInterface__enum_arg (Rapicorn::Aida::ClientConnection &
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2427,7 +2427,7 @@ __AIDA_pyemit__SignalTestInterface__record_arg (Rapicorn::Aida::ClientConnection
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2467,7 +2467,7 @@ __AIDA_pyemit__SignalTestInterface__sequence_arg (Rapicorn::Aida::ClientConnecti
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2507,7 +2507,7 @@ __AIDA_pyemit__SignalTestInterface__interface_arg (Rapicorn::Aida::ClientConnect
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2547,7 +2547,7 @@ __AIDA_pyemit__SignalTestInterface__any_arg (Rapicorn::Aida::ClientConnection &a
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2587,7 +2587,7 @@ __AIDA_pyemit__SignalTestInterface__self_args (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 1;
@@ -2627,7 +2627,7 @@ __AIDA_pyemit__ChildInheritingSignals__child_signal (Rapicorn::Aida::ClientConne
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
+  FieldReader fbr (*sfb, aida_con);
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.pop_int64();  // skip handler_id
   const uint length = 6;
@@ -2756,7 +2756,7 @@ _aida_rpc_RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObject *py
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
-    Rapicorn::Aida::FieldReader frr (*fr);
+    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();

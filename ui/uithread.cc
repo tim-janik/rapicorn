@@ -323,7 +323,7 @@ ui_thread_syscall (Callable *callable)
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
   Aida::FieldBuffer *fr = uithread_connection()->call_remote (fb); // deletes fb
-  Aida::FieldReader frr (*fr);
+  Aida::FieldReader frr (*fr, *(Aida::BaseConnection*) NULL);
   const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
   frr.skip(); // FIXME: check full msgid
   int64 result = 0;
