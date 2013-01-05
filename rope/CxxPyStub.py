@@ -357,72 +357,6 @@ class Generator:
     s += '  return pyres;\n'
     s += '}\n'
     return s
-  def generate_rpc_signal_call (self, class_info, mtype, mdefs):
-    return ''
-    s = ''
-    mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
-               (mtype.ident_digest(), mtype.ident_digest()) ]
-    evd_class = '_EventHandler_%s' % mtype.ident_digest()
-    s += 'class %s : public Rapicorn::Aida::ClientConnection::EventHandler {\n' % evd_class
-    s += '  PyObject *m_callable;\n'
-    s += 'public:\n'
-    s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
-    s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
-    s += '  virtual FieldBuffer*\n'
-    s += '  handle_event (Rapicorn::Aida::FieldBuffer &fb)\n'
-    s += '  {\n'
-    if mtype.args:
-      s += '    FieldReader fbr (fb);\n'
-      s += '    fbr.skip_msgid(); // FIXME: check msgid\n'
-      s += '    fbr.pop_int64();  // FIXME: check handler_id\n'
-    s += '    const uint length = %u;\n' % len (mtype.args)
-    s += '    PyObject *result, *tuple = PyTuple_New (length)%s;\n' % (', *item' if mtype.args else '')
-    arg_counter = 0
-    for a in mtype.args:
-      s += '  ' + self.generate_proto_pop_py ('fbr', a[1], 'item')
-      s += '    PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
-      arg_counter += 1
-    s += '    if (PyErr_Occurred()) goto error;\n'
-    s += '    result = PyObject_Call (m_callable, tuple, NULL);\n'
-    s += '    Py_XDECREF (result);\n'
-    s += '   error:\n'
-    s += '    Py_XDECREF (tuple);\n'
-    s += '    return NULL;\n'
-    s += '  }\n'
-    s += '};\n'
-    s += 'static PyObject*\n'
-    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
-    s += '{\n'
-    s += '  PyObject *item, *pyfoR = NULL;\n'
-    s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
-    s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
-    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += self.generate_proto_add_py ('fb', class_info, 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
-    s += '  if (item == Py_None) fb.add_int64 (0);\n'
-    s += '  else {\n'
-    s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    Rapicorn::Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
-    s += '    uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);\n'
-    s += '    fb.add_int64 (handler_id); }\n'
-    s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
-    s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
-    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '  ERRORifnotret (fr);\n'
-    s += '  if (fr) {\n'
-    s += '    FieldReader frr (*fr);\n'
-    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-    s += '    if (frr.remaining() == 1) {\n'
-    s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
-    s += '    }\n'
-    s += '  }\n'
-    s += ' error:\n'
-    s += '  if (fm) delete fm;\n'
-    s += '  if (fr) delete fr;\n'
-    s += '  return pyfoR;\n'
-    s += '}\n'
-    return s
   def method_digest (self, mtype):
     digest = mtype.type_hash()
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -513,7 +447,6 @@ class Generator:
         for m in tp.methods:
           s += self.generate_rpc_call_wrapper (tp, m, mdefs)
         for sg in tp.signals:
-          s += self.generate_rpc_signal_call (tp, sg, mdefs)
           s += self.generate_client_signal_def (tp, sg, mdefs)
     # method def array
     if mdefs:

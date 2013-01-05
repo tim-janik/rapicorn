@@ -3,9 +3,6 @@
 // --- ClientHH Boilerplate ---
 #include <rapicorn-core.hh>
 
-#include <rapicorn-core.hh> // for rcore/signal.hh
-using Rapicorn::Signals::slot;
-
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
 #include <vector>
@@ -169,7 +166,6 @@ class FirstInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   static FirstInterfaceHandle   _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static FirstInterfaceHandle   downcast (C c) { return _cast (c, c.cast_types()); }
@@ -431,9 +427,6 @@ class UIWidgetAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   static UIWidgetAreaHandle     _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<UIWidgetAreaHandle, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::SignalProxy<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> Signal_sample_signal;
 public:
   template<class C>
   static UIWidgetAreaHandle     downcast (C c) { return _cast (c, c.cast_types()); }
@@ -443,11 +436,9 @@ public:
   void                          dummy    (bool);
   std::string                   on_click () const;
   void                          on_click (const std::string&);
-  Signal_void_signal&           old_sig_void_signal();
   typedef void                  Callback_void_signal ();
   Rapicorn::Aida::uint64_t      sig_void_signal (const std::function<Callback_void_signal> &callback);
   bool                          sig_void_signal (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_sample_signal&         old_sig_sample_signal();
   typedef double                Callback_sample_signal (UIWidgetAreaHandle &ba1, int someint);
   Rapicorn::Aida::uint64_t      sig_sample_signal (const std::function<Callback_sample_signal> &callback);
   bool                          sig_sample_signal (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
@@ -482,7 +473,6 @@ class ParentHandle : public virtual Rapicorn::Aida::SmartHandle
   static ParentHandle           _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static ParentHandle           downcast (C c) { return _cast (c, c.cast_types()); }
@@ -584,7 +574,6 @@ class QuickIfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   static QuickIfaceHandle       _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static QuickIfaceHandle       downcast (C c) { return _cast (c, c.cast_types()); }
@@ -604,7 +593,6 @@ class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   static MethodTestInterfaceHandle _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static MethodTestInterfaceHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -646,129 +634,80 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   static SignalTestInterfaceHandle _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, int ()> Signal_int32_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, Rapicorn::Aida::int64_t ()> Signal_int64_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, double ()> Signal_float64_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, std::string ()> Signal_string_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickRecordStruct ()> Signal_record_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, QuickSequenceStruct ()> Signal_sequence_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, GrandChildHandle ()> Signal_interface_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, Rapicorn::Aida::Any ()> Signal_any_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, SignalTestInterfaceHandle ()> Signal_self_result;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void ()> Signal_void_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (int i)> Signal_int32_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (double f)> Signal_float64_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const std::string &s)> Signal_string_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const QuickRecordStruct &r)> Signal_record_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const QuickSequenceStruct &s)> Signal_sequence_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (GrandChildHandle &i)> Signal_interface_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (const Rapicorn::Aida::Any &a)> Signal_any_arg;
-  typedef Rapicorn::Signals::SignalProxy<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> Signal_self_args;
 public:
   template<class C>
   static SignalTestInterfaceHandle downcast (C c) { return _cast (c, c.cast_types()); }
   const Rapicorn::Aida::TypeHashList& cast_types ();
   explicit                      SignalTestInterfaceHandle ();
-  Signal_void_result&           old_sig_void_result();
   typedef void                  Callback_void_result ();
   Rapicorn::Aida::uint64_t      sig_void_result (const std::function<Callback_void_result> &callback);
   bool                          sig_void_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_bool_result&           old_sig_bool_result();
   typedef bool                  Callback_bool_result ();
   Rapicorn::Aida::uint64_t      sig_bool_result (const std::function<Callback_bool_result> &callback);
   bool                          sig_bool_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_int32_result&          old_sig_int32_result();
   typedef int                   Callback_int32_result ();
   Rapicorn::Aida::uint64_t      sig_int32_result (const std::function<Callback_int32_result> &callback);
   bool                          sig_int32_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_int64_result&          old_sig_int64_result();
   typedef Rapicorn::Aida::int64_t Callback_int64_result ();
   Rapicorn::Aida::uint64_t      sig_int64_result (const std::function<Callback_int64_result> &callback);
   bool                          sig_int64_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_float64_result&        old_sig_float64_result();
   typedef double                Callback_float64_result ();
   Rapicorn::Aida::uint64_t      sig_float64_result (const std::function<Callback_float64_result> &callback);
   bool                          sig_float64_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_string_result&         old_sig_string_result();
   typedef std::string           Callback_string_result ();
   Rapicorn::Aida::uint64_t      sig_string_result (const std::function<Callback_string_result> &callback);
   bool                          sig_string_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_enum_result&           old_sig_enum_result();
   typedef QuickEnum             Callback_enum_result ();
   Rapicorn::Aida::uint64_t      sig_enum_result (const std::function<Callback_enum_result> &callback);
   bool                          sig_enum_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_record_result&         old_sig_record_result();
   typedef QuickRecordStruct     Callback_record_result ();
   Rapicorn::Aida::uint64_t      sig_record_result (const std::function<Callback_record_result> &callback);
   bool                          sig_record_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_sequence_result&       old_sig_sequence_result();
   typedef QuickSequenceStruct   Callback_sequence_result ();
   Rapicorn::Aida::uint64_t      sig_sequence_result (const std::function<Callback_sequence_result> &callback);
   bool                          sig_sequence_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_interface_result&      old_sig_interface_result();
   typedef GrandChildHandle      Callback_interface_result ();
   Rapicorn::Aida::uint64_t      sig_interface_result (const std::function<Callback_interface_result> &callback);
   bool                          sig_interface_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_any_result&            old_sig_any_result();
   typedef Rapicorn::Aida::Any   Callback_any_result ();
   Rapicorn::Aida::uint64_t      sig_any_result (const std::function<Callback_any_result> &callback);
   bool                          sig_any_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_self_result&           old_sig_self_result();
   typedef SignalTestInterfaceHandle Callback_self_result ();
   Rapicorn::Aida::uint64_t      sig_self_result (const std::function<Callback_self_result> &callback);
   bool                          sig_self_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_void_arg&              old_sig_void_arg();
   typedef void                  Callback_void_arg ();
   Rapicorn::Aida::uint64_t      sig_void_arg (const std::function<Callback_void_arg> &callback);
   bool                          sig_void_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_bool_arg&              old_sig_bool_arg();
   typedef void                  Callback_bool_arg (bool b);
   Rapicorn::Aida::uint64_t      sig_bool_arg (const std::function<Callback_bool_arg> &callback);
   bool                          sig_bool_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_int32_arg&             old_sig_int32_arg();
   typedef void                  Callback_int32_arg (int i);
   Rapicorn::Aida::uint64_t      sig_int32_arg (const std::function<Callback_int32_arg> &callback);
   bool                          sig_int32_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_int64_arg&             old_sig_int64_arg();
   typedef void                  Callback_int64_arg (Rapicorn::Aida::int64_t i);
   Rapicorn::Aida::uint64_t      sig_int64_arg (const std::function<Callback_int64_arg> &callback);
   bool                          sig_int64_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_float64_arg&           old_sig_float64_arg();
   typedef void                  Callback_float64_arg (double f);
   Rapicorn::Aida::uint64_t      sig_float64_arg (const std::function<Callback_float64_arg> &callback);
   bool                          sig_float64_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_string_arg&            old_sig_string_arg();
   typedef void                  Callback_string_arg (const std::string &s);
   Rapicorn::Aida::uint64_t      sig_string_arg (const std::function<Callback_string_arg> &callback);
   bool                          sig_string_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_enum_arg&              old_sig_enum_arg();
   typedef void                  Callback_enum_arg (QuickEnum e);
   Rapicorn::Aida::uint64_t      sig_enum_arg (const std::function<Callback_enum_arg> &callback);
   bool                          sig_enum_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_record_arg&            old_sig_record_arg();
   typedef void                  Callback_record_arg (const QuickRecordStruct &r);
   Rapicorn::Aida::uint64_t      sig_record_arg (const std::function<Callback_record_arg> &callback);
   bool                          sig_record_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_sequence_arg&          old_sig_sequence_arg();
   typedef void                  Callback_sequence_arg (const QuickSequenceStruct &s);
   Rapicorn::Aida::uint64_t      sig_sequence_arg (const std::function<Callback_sequence_arg> &callback);
   bool                          sig_sequence_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_interface_arg&         old_sig_interface_arg();
   typedef void                  Callback_interface_arg (GrandChildHandle &i);
   Rapicorn::Aida::uint64_t      sig_interface_arg (const std::function<Callback_interface_arg> &callback);
   bool                          sig_interface_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_any_arg&               old_sig_any_arg();
   typedef void                  Callback_any_arg (const Rapicorn::Aida::Any &a);
   Rapicorn::Aida::uint64_t      sig_any_arg (const std::function<Callback_any_arg> &callback);
   bool                          sig_any_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_self_args&             old_sig_self_args();
   typedef void                  Callback_self_args (SignalTestInterfaceHandle &self_);
   Rapicorn::Aida::uint64_t      sig_self_args (const std::function<Callback_self_args> &callback);
   bool                          sig_self_args (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
@@ -785,13 +724,11 @@ class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
   static ChildInheritingSignalsHandle _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s)> Signal_child_signal;
 public:
   template<class C>
   static ChildInheritingSignalsHandle downcast (C c) { return _cast (c, c.cast_types()); }
   const Rapicorn::Aida::TypeHashList& cast_types ();
   explicit                      ChildInheritingSignalsHandle ();
-  Signal_child_signal&          old_sig_child_signal();
   typedef void                  Callback_child_signal (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s);
   Rapicorn::Aida::uint64_t      sig_child_signal (const std::function<Callback_child_signal> &callback);
   bool                          sig_child_signal (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
@@ -826,7 +763,6 @@ class PropertyTesterHandle : public virtual Rapicorn::Aida::SmartHandle
   static PropertyTesterHandle   _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static PropertyTesterHandle   downcast (C c) { return _cast (c, c.cast_types()); }
@@ -880,9 +816,6 @@ class ButtonAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   static ButtonAreaHandle       _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
-  typedef Rapicorn::Signals::SignalProxy<ButtonAreaHandle, bool ()> Signal_check_activate;
-  typedef Rapicorn::Signals::SignalProxy<ButtonAreaHandle, void ()> Signal_activate;
 public:
   template<class C>
   static ButtonAreaHandle       downcast (C c) { return _cast (c, c.cast_types()); }
@@ -896,11 +829,9 @@ public:
   void                          on_click3  (const std::string&);
   ClickType                     click_type () const;
   void                          click_type (ClickType);
-  Signal_check_activate&        old_sig_check_activate();
   typedef bool                  Callback_check_activate ();
   Rapicorn::Aida::uint64_t      sig_check_activate (const std::function<Callback_check_activate> &callback);
   bool                          sig_check_activate (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  Signal_activate&              old_sig_activate();
   typedef void                  Callback_activate ();
   Rapicorn::Aida::uint64_t      sig_activate (const std::function<Callback_activate> &callback);
   bool                          sig_activate (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
@@ -919,7 +850,6 @@ class PureMethodsHandle : public virtual Rapicorn::Aida::SmartHandle
   static PureMethodsHandle      _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static PureMethodsHandle      downcast (C c) { return _cast (c, c.cast_types()); }
@@ -959,7 +889,6 @@ class NameTestsHandle : public virtual Rapicorn::Aida::SmartHandle
   static NameTestsHandle        _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static NameTestsHandle        downcast (C c) { return _cast (c, c.cast_types()); }
@@ -984,7 +913,6 @@ class CompressorHandle : public virtual Rapicorn::Aida::SmartHandle
   static CompressorHandle       _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static CompressorHandle       downcast (C c) { return _cast (c, c.cast_types()); }
@@ -1022,7 +950,6 @@ class SoundModuleHandle : public virtual Rapicorn::Aida::SmartHandle
   static SoundModuleHandle      _cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& _type ();
 protected:
-  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);
 public:
   template<class C>
   static SoundModuleHandle      downcast (C c) { return _cast (c, c.cast_types()); }
@@ -1202,8 +1129,6 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__ExtensiveEnum_ ([]() {
 });
 
 // === FirstInterface ===
-static inline void ref   (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (FirstInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct FirstInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (FirstInterface_Context$);
 public:
@@ -1245,11 +1170,6 @@ FirstInterface_Context$::list_types ()
 }
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-FirstInterfaceHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const FirstInterfaceHandle &handle)
 {
@@ -1684,22 +1604,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecordStruct &self)
 namespace InterfaceTests {
 
 // === UIWidgetArea ===
-static inline void ref   (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (UIWidgetAreaHandle&) {} // dummy stub for Signal<>.emit
 struct UIWidgetArea_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (UIWidgetArea_Context$);
 public:
   struct SmartHandle$ : public UIWidgetAreaHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<UIWidgetAreaHandle, void ()> SignalHandler__void_signal;
-  SignalHandler__void_signal void_signal;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> SignalHandler__sample_signal;
-  SignalHandler__sample_signal sample_signal;
   UIWidgetArea_Context$ (Rapicorn::Aida::uint64_t ipcid) :
     handle$ (ipcid),
-    void_signal (handle$, 0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL),
-    sample_signal (handle$, 0x506409a3044ac65eULL, 0xda804abb85f8c1e8ULL),
     m_cached_types (NULL)
   {}
   Rapicorn::Aida::TypeHashList *m_cached_types;
@@ -1775,11 +1687,6 @@ UIWidgetAreaHandle::sig_sample_signal (Rapicorn::Aida::uint64_t signal_id)
 }
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-UIWidgetAreaHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
 {
@@ -1813,16 +1720,6 @@ UIWidgetAreaHandle::cast_types()
   const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);
   if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<UIWidgetArea_Context$> (ipcid)->list_types();
-}
-UIWidgetAreaHandle::Signal_void_signal&
-UIWidgetAreaHandle::old_sig_void_signal ()
-{
-  return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->void_signal.psignal;
-}
-UIWidgetAreaHandle::Signal_sample_signal&
-UIWidgetAreaHandle::old_sig_sample_signal ()
-{
-  return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->sample_signal.psignal;
 }
 bool
 UIWidgetAreaHandle::dummy () const
@@ -2027,8 +1924,6 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
 }
 
 // === Parent ===
-static inline void ref   (ParentHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ParentHandle&) {} // dummy stub for Signal<>.emit
 struct Parent_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Parent_Context$);
 public:
@@ -2070,11 +1965,6 @@ Parent_Context$::list_types ()
 }
 ParentHandle::ParentHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-ParentHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ParentHandle &handle)
 {
@@ -2111,8 +2001,6 @@ ParentHandle::cast_types()
 }
 
 // === Child ===
-static inline void ref   (ChildHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ChildHandle&) {} // dummy stub for Signal<>.emit
 struct Child_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Child_Context$);
 public:
@@ -2190,8 +2078,6 @@ ChildHandle::cast_types()
 }
 
 // === Descendant ===
-static inline void ref   (DescendantHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (DescendantHandle&) {} // dummy stub for Signal<>.emit
 struct Descendant_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Descendant_Context$);
 public:
@@ -2269,8 +2155,6 @@ DescendantHandle::cast_types()
 }
 
 // === GrandChild ===
-static inline void ref   (GrandChildHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (GrandChildHandle&) {} // dummy stub for Signal<>.emit
 struct GrandChild_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (GrandChild_Context$);
 public:
@@ -2395,8 +2279,6 @@ QuickSequenceStruct::append_back()
 }
 
 // === QuickIface ===
-static inline void ref   (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (QuickIfaceHandle&) {} // dummy stub for Signal<>.emit
 struct QuickIface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (QuickIface_Context$);
 public:
@@ -2438,11 +2320,6 @@ QuickIface_Context$::list_types ()
 }
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-QuickIfaceHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const QuickIfaceHandle &handle)
 {
@@ -2489,8 +2366,6 @@ QuickIfaceHandle::simple_function (int arg_i)
 }
 
 // === MethodTestInterface ===
-static inline void ref   (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (MethodTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct MethodTestInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (MethodTestInterface_Context$);
 public:
@@ -2532,11 +2407,6 @@ MethodTestInterface_Context$::list_types ()
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-MethodTestInterfaceHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const MethodTestInterfaceHandle &handle)
 {
@@ -2769,88 +2639,14 @@ MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
 }
 
 // === SignalTestInterface ===
-static inline void ref   (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (SignalTestInterfaceHandle&) {} // dummy stub for Signal<>.emit
 struct SignalTestInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (SignalTestInterface_Context$);
 public:
   struct SmartHandle$ : public SignalTestInterfaceHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void ()> SignalHandler__void_result;
-  SignalHandler__void_result void_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, bool ()> SignalHandler__bool_result;
-  SignalHandler__bool_result bool_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, int ()> SignalHandler__int32_result;
-  SignalHandler__int32_result int32_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, Rapicorn::Aida::int64_t ()> SignalHandler__int64_result;
-  SignalHandler__int64_result int64_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, double ()> SignalHandler__float64_result;
-  SignalHandler__float64_result float64_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, std::string ()> SignalHandler__string_result;
-  SignalHandler__string_result string_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickEnum ()> SignalHandler__enum_result;
-  SignalHandler__enum_result enum_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickRecordStruct ()> SignalHandler__record_result;
-  SignalHandler__record_result record_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, QuickSequenceStruct ()> SignalHandler__sequence_result;
-  SignalHandler__sequence_result sequence_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, GrandChildHandle ()> SignalHandler__interface_result;
-  SignalHandler__interface_result interface_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, Rapicorn::Aida::Any ()> SignalHandler__any_result;
-  SignalHandler__any_result any_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, SignalTestInterfaceHandle ()> SignalHandler__self_result;
-  SignalHandler__self_result self_result;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void ()> SignalHandler__void_arg;
-  SignalHandler__void_arg void_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (bool b)> SignalHandler__bool_arg;
-  SignalHandler__bool_arg bool_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (int i)> SignalHandler__int32_arg;
-  SignalHandler__int32_arg int32_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64_t i)> SignalHandler__int64_arg;
-  SignalHandler__int64_arg int64_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (double f)> SignalHandler__float64_arg;
-  SignalHandler__float64_arg float64_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const std::string &s)> SignalHandler__string_arg;
-  SignalHandler__string_arg string_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (QuickEnum e)> SignalHandler__enum_arg;
-  SignalHandler__enum_arg enum_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const QuickRecordStruct &r)> SignalHandler__record_arg;
-  SignalHandler__record_arg record_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const QuickSequenceStruct &s)> SignalHandler__sequence_arg;
-  SignalHandler__sequence_arg sequence_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (GrandChildHandle &i)> SignalHandler__interface_arg;
-  SignalHandler__interface_arg interface_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (const Rapicorn::Aida::Any &a)> SignalHandler__any_arg;
-  SignalHandler__any_arg any_arg;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> SignalHandler__self_args;
-  SignalHandler__self_args self_args;
   SignalTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) :
     handle$ (ipcid),
-    void_result (handle$, 0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL),
-    bool_result (handle$, 0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL),
-    int32_result (handle$, 0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL),
-    int64_result (handle$, 0x5670d5594a24b2d9ULL, 0x8ad93cc1a1e9bb50ULL),
-    float64_result (handle$, 0x51aee1ad06b0e2ffULL, 0x0a7f816f9bdaf008ULL),
-    string_result (handle$, 0x5daa2a4439deab5fULL, 0xc0580f71a4d7d1d6ULL),
-    enum_result (handle$, 0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL),
-    record_result (handle$, 0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL),
-    sequence_result (handle$, 0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL),
-    interface_result (handle$, 0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL),
-    any_result (handle$, 0x5ae2293e0b4f9854ULL, 0xbb549e7d52c43e50ULL),
-    self_result (handle$, 0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL),
-    void_arg (handle$, 0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL),
-    bool_arg (handle$, 0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL),
-    int32_arg (handle$, 0x583ed84bd4d820efULL, 0x87214001f1934890ULL),
-    int64_arg (handle$, 0x5d6ed628b051e336ULL, 0x442670f1eba34b7bULL),
-    float64_arg (handle$, 0x5d937b3a9a059ff0ULL, 0x641851b425c3f91cULL),
-    string_arg (handle$, 0x524e550794aaa1e8ULL, 0x093b71ccace2863bULL),
-    enum_arg (handle$, 0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL),
-    record_arg (handle$, 0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL),
-    sequence_arg (handle$, 0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL),
-    interface_arg (handle$, 0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL),
-    any_arg (handle$, 0x51355ac177cc776eULL, 0x8b062ce8d8442de0ULL),
-    self_args (handle$, 0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL),
     m_cached_types (NULL)
   {}
   Rapicorn::Aida::TypeHashList *m_cached_types;
@@ -3388,11 +3184,6 @@ SignalTestInterfaceHandle::sig_self_args (Rapicorn::Aida::uint64_t signal_id)
 }
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-SignalTestInterfaceHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SignalTestInterfaceHandle &handle)
 {
@@ -3427,141 +3218,16 @@ SignalTestInterfaceHandle::cast_types()
   if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<SignalTestInterface_Context$> (ipcid)->list_types();
 }
-SignalTestInterfaceHandle::Signal_void_result&
-SignalTestInterfaceHandle::old_sig_void_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->void_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_bool_result&
-SignalTestInterfaceHandle::old_sig_bool_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_int32_result&
-SignalTestInterfaceHandle::old_sig_int32_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int32_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_int64_result&
-SignalTestInterfaceHandle::old_sig_int64_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int64_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_float64_result&
-SignalTestInterfaceHandle::old_sig_float64_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float64_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_string_result&
-SignalTestInterfaceHandle::old_sig_string_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->string_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_enum_result&
-SignalTestInterfaceHandle::old_sig_enum_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->enum_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_record_result&
-SignalTestInterfaceHandle::old_sig_record_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->record_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_sequence_result&
-SignalTestInterfaceHandle::old_sig_sequence_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->sequence_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_interface_result&
-SignalTestInterfaceHandle::old_sig_interface_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->interface_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_any_result&
-SignalTestInterfaceHandle::old_sig_any_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->any_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_self_result&
-SignalTestInterfaceHandle::old_sig_self_result ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->self_result.psignal;
-}
-SignalTestInterfaceHandle::Signal_void_arg&
-SignalTestInterfaceHandle::old_sig_void_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->void_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_bool_arg&
-SignalTestInterfaceHandle::old_sig_bool_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->bool_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_int32_arg&
-SignalTestInterfaceHandle::old_sig_int32_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int32_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_int64_arg&
-SignalTestInterfaceHandle::old_sig_int64_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->int64_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_float64_arg&
-SignalTestInterfaceHandle::old_sig_float64_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->float64_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_string_arg&
-SignalTestInterfaceHandle::old_sig_string_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->string_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_enum_arg&
-SignalTestInterfaceHandle::old_sig_enum_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->enum_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_record_arg&
-SignalTestInterfaceHandle::old_sig_record_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->record_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_sequence_arg&
-SignalTestInterfaceHandle::old_sig_sequence_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->sequence_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_interface_arg&
-SignalTestInterfaceHandle::old_sig_interface_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->interface_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_any_arg&
-SignalTestInterfaceHandle::old_sig_any_arg ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->any_arg.psignal;
-}
-SignalTestInterfaceHandle::Signal_self_args&
-SignalTestInterfaceHandle::old_sig_self_args ()
-{
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->self_args.psignal;
-}
 
 // === ChildInheritingSignals ===
-static inline void ref   (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ChildInheritingSignalsHandle&) {} // dummy stub for Signal<>.emit
 struct ChildInheritingSignals_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (ChildInheritingSignals_Context$);
 public:
   struct SmartHandle$ : public ChildInheritingSignalsHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s)> SignalHandler__child_signal;
-  SignalHandler__child_signal child_signal;
   ChildInheritingSignals_Context$ (Rapicorn::Aida::uint64_t ipcid) :
     handle$ (ipcid),
-    child_signal (handle$, 0x5ffad83b68b79139ULL, 0x7175e65d7705749fULL),
     m_cached_types (NULL)
   {}
   Rapicorn::Aida::TypeHashList *m_cached_types;
@@ -3650,15 +3316,8 @@ ChildInheritingSignalsHandle::cast_types()
   if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ChildInheritingSignals_Context$> (ipcid)->list_types();
 }
-ChildInheritingSignalsHandle::Signal_child_signal&
-ChildInheritingSignalsHandle::old_sig_child_signal ()
-{
-  return connection_id2context<ChildInheritingSignals_Context$> (connection_handle2id (*this))->child_signal.psignal;
-}
 
 // === AnotherChild ===
-static inline void ref   (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (AnotherChildHandle&) {} // dummy stub for Signal<>.emit
 struct AnotherChild_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (AnotherChild_Context$);
 public:
@@ -3736,8 +3395,6 @@ AnotherChildHandle::cast_types()
 }
 
 // === PropertyTester ===
-static inline void ref   (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (PropertyTesterHandle&) {} // dummy stub for Signal<>.emit
 struct PropertyTester_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (PropertyTester_Context$);
 public:
@@ -3779,11 +3436,6 @@ PropertyTester_Context$::list_types ()
 }
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-PropertyTesterHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PropertyTesterHandle &handle)
 {
@@ -4098,22 +3750,14 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__ClickType_ ([]() {
 });
 
 // === ButtonArea ===
-static inline void ref   (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (ButtonAreaHandle&) {} // dummy stub for Signal<>.emit
 struct ButtonArea_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (ButtonArea_Context$);
 public:
   struct SmartHandle$ : public ButtonAreaHandle {
     SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
   } handle$;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<ButtonAreaHandle, bool ()> SignalHandler__check_activate;
-  SignalHandler__check_activate check_activate;
-  typedef Rapicorn::Aida::CxxStub::SignalHandler<ButtonAreaHandle, void ()> SignalHandler__activate;
-  SignalHandler__activate activate;
   ButtonArea_Context$ (Rapicorn::Aida::uint64_t ipcid) :
     handle$ (ipcid),
-    check_activate (handle$, 0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL),
-    activate (handle$, 0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL),
     m_cached_types (NULL)
   {}
   Rapicorn::Aida::TypeHashList *m_cached_types;
@@ -4189,11 +3833,6 @@ ButtonAreaHandle::sig_activate (Rapicorn::Aida::uint64_t signal_id)
 }
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-ButtonAreaHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ButtonAreaHandle &handle)
 {
@@ -4227,16 +3866,6 @@ ButtonAreaHandle::cast_types()
   const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);
   if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ButtonArea_Context$> (ipcid)->list_types();
-}
-ButtonAreaHandle::Signal_check_activate&
-ButtonAreaHandle::old_sig_check_activate ()
-{
-  return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->check_activate.psignal;
-}
-ButtonAreaHandle::Signal_activate&
-ButtonAreaHandle::old_sig_activate ()
-{
-  return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->activate.psignal;
 }
 std::string
 ButtonAreaHandle::on_click () const
@@ -4336,8 +3965,6 @@ ButtonAreaHandle::click_type (ClickType value)
 }
 
 // === PureMethods ===
-static inline void ref   (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (PureMethodsHandle&) {} // dummy stub for Signal<>.emit
 struct PureMethods_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (PureMethods_Context$);
 public:
@@ -4379,11 +4006,6 @@ PureMethods_Context$::list_types ()
 }
 PureMethodsHandle::PureMethodsHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-PureMethodsHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PureMethodsHandle &handle)
 {
@@ -4456,8 +4078,6 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
 namespace Other {
 
 // === NameTests ===
-static inline void ref   (NameTestsHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (NameTestsHandle&) {} // dummy stub for Signal<>.emit
 struct NameTests_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (NameTests_Context$);
 public:
@@ -4499,11 +4119,6 @@ NameTests_Context$::list_types ()
 }
 NameTestsHandle::NameTestsHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-NameTestsHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const NameTestsHandle &handle)
 {
@@ -4557,8 +4172,6 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStr
 namespace BseTest {
 
 // === Compressor ===
-static inline void ref   (CompressorHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (CompressorHandle&) {} // dummy stub for Signal<>.emit
 struct Compressor_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Compressor_Context$);
 public:
@@ -4600,11 +4213,6 @@ Compressor_Context$::list_types ()
 }
 CompressorHandle::CompressorHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-CompressorHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const CompressorHandle &handle)
 {
@@ -4710,8 +4318,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsStruct &self)
 }
 
 // === SoundModule ===
-static inline void ref   (SoundModuleHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (SoundModuleHandle&) {} // dummy stub for Signal<>.emit
 struct SoundModule_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (SoundModule_Context$);
 public:
@@ -4753,11 +4359,6 @@ SoundModule_Context$::list_types ()
 }
 SoundModuleHandle::SoundModuleHandle ()
 {}
-Rapicorn::Aida::ClientConnection*
-SoundModuleHandle::__client_connection__ (void)
-{
-  return &AIDA_CONNECTION();
-}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SoundModuleHandle &handle)
 {

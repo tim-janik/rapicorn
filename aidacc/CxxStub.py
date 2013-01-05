@@ -428,11 +428,6 @@ class Generator:
     if self.gen_mode == G4SERVER:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
-    else: # G4CLIENT
-      if ddc:
-        s += '  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);\n'
-      for sg in type_info.signals:
-        s += '  ' + self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
     if self.gen_mode == G4SERVER:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
@@ -457,12 +452,11 @@ class Generator:
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
-        s += '  ' + self.generate_signal_typedef (sg, type_info)
+        s += '  ' + self.generate_server_signal_typedef (sg, type_info)
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_typename (sg, type_info) + ' sig_%s;\n' % sg.name
     else: # G4CLIENT
       for sg in type_info.signals:
-        s += self.generate_signal_accessor_def (sg, type_info)
         s += self.generate_client_signal_decl (sg, type_info)
     # methods
     il = 0
@@ -538,20 +532,14 @@ class Generator:
   def generate_client_class_context (self, class_info):
     s, classH, classC = '\n', self.C4client (class_info), class_info.name + '_Context$' # class names
     s += '// === %s ===\n' % class_info.name
-    s += 'static inline void ref   (%s&) {} // dummy stub for Signal<>.emit\n' % classH
-    s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
     s += 'struct %s {\n' % classC    # context class
     s += '  RAPICORN_CLASS_NON_COPYABLE (%s);\n' % classC       # make class non-copyable
     s += 'public:\n'
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'
-    for sg in class_info.signals:
-      s += self.generate_client_class_context_event_handler_def (class_info, class_info, sg)
     s += '  %s (Rapicorn::Aida::uint64_t ipcid) :\n' % classC             # ctor
     s += '    handle$ (ipcid)'
-    for sg in class_info.signals:
-      s += ',\n    %s (handle$, %s)' % (sg.name, self.method_digest (sg))
     s += ',\n    m_cached_types (NULL)\n  {}\n'
     s += '  Rapicorn::Aida::TypeHashList *m_cached_types;\n'
     s += '  const Rapicorn::Aida::TypeHashList& list_types ();\n'
@@ -582,21 +570,12 @@ class Generator:
     s += '  return *m_cached_types;\n'
     s += '}\n'
     return s
-  def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
-    s, classH, signame = '', self.C4client (class_info), self.generate_signal_typename (sg, class_info)
-    sh, signature = 'SignalHandler__%s' % sg.name, self.generate_signal_signature (sg)
-    s += '  typedef Rapicorn::Aida::CxxStub::SignalHandler<%s, %s> %s;\n' % (classH, signature, sh)
-    s += '  %s %s;\n' % (sh, sg.name)
-    return s
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
-    if ddc:
-      s += 'Rapicorn::Aida::ClientConnection*\n%s::__client_connection__ (void)\n{\n' % classH
-      s += '  return &AIDA_CONNECTION();\n}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'
@@ -625,12 +604,6 @@ class Generator:
     s += '  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle\n'
     s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
-    for sg in class_info.signals:
-      signame = self.generate_signal_typename (sg, class_info)
-      s += '%s::%s&\n' % (classH, signame)
-      s += '%s::old_sig_%s ()\n{\n' % (classH, sg.name)
-      s += '  return connection_id2context<%s> (connection_handle2id (*this))->%s.psignal;\n' % (classC, sg.name)
-      s += '}\n'
     return s
   def generate_server_class_methods (self, class_info):
     assert self.gen_mode == G4SERVER
@@ -871,8 +844,6 @@ class Generator:
     s += '  return &rb;\n'
     s += '}\n'
     return s
-  def generate_signal_proxy_typename (self, functype, ctype):
-    return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype, prefix = 'Signal'):
     return '%s_%s' % (prefix, functype.name)
   def generate_signal_signature_tuple (self, functype, funcname = ''):
@@ -886,25 +857,6 @@ class Generator:
     s += ', '.join (l)
     s += ')'
     return (r, s)
-  def generate_signal_signature (self, functype, funcname = ''):
-    return ' '.join (self.generate_signal_signature_tuple (functype, funcname))
-  def generate_signal_proxy_typedef (self, functype, ctype, prefix = ''):
-    assert self.gen_mode == G4CLIENT
-    proxyname = self.generate_signal_proxy_typename (functype, ctype)
-    cpp_rtype = self.R (functype.rtype)
-    s = 'typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1]) ]
-    s += ', '.join (l)
-    s += ')'
-    s += '> ' + prefix + proxyname + ';\n'
-    return s
-  def generate_signal_accessor_def (self, functype, ctype):
-    assert self.gen_mode == G4CLIENT
-    s, signame = '', self.generate_signal_typename (functype, ctype)
-    s = '  ' + self.F (signame + '&') + 'old_sig_' + functype.name + '();\n'
-    return s
   def generate_client_signal_decl (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
     s, cbtname, u64 = '', self.generate_signal_typename (functype, ctype, 'Callback'), 'Rapicorn::Aida::uint64_t'
@@ -933,7 +885,7 @@ class Generator:
     s += '  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);\n'
     s += '  return r;\n}\n'
     return s
-  def generate_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
+  def generate_server_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
     s += 'typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
@@ -1122,8 +1074,6 @@ class Generator:
     s += self.insertion_text ('includes')
     if self.gen_clienthh:
       s += clienthh_boilerplate
-      if self.gen_rapicornsignals:
-        s += rapicornsignal_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
       if self.iface_base == self.test_iface_base:
