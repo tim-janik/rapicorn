@@ -9,6 +9,7 @@
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
 #include <memory>               // shared_ptr
+#include <set>
 
 #ifndef _SHARED_PTR_H           // might require -std=c++0x
 #include <tr1/memory>           // import shared_ptr if needed
@@ -372,15 +373,38 @@ public:
 };
 
 // == Connections ==
-class ConnectionTransport;
+/// Client and server connection interface.
+class Connector {
+public:
+  virtual int          notify_fd   () = 0;      ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool         pending     () = 0;      ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual FieldBuffer* pop         () = 0;      ///< Dispatch a single event if any is pending.
+  virtual FieldBuffer* call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void         ref         () = 0;
+  virtual void         unref       () = 0;
+};
+
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection {
+private: /// @name Internals
+  class Dispatcher;
+  Dispatcher *m_transport;
 public: /// @name API for remote calls
-  void send_event (FieldBuffer*); ///< Send event to remote asyncronously, transfers memory.
-  int  notify_fd  (); ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool pending    (); ///< Indicate whether any incoming calls are pending that need to be dispatched.
-  void dispatch   (); ///< Dispatch a single call if any is pending.
-  bool is_null    () const;
+  void       send_event (FieldBuffer*); ///< Send event to remote asyncronously, transfers memory.
+  int        notify_fd  (); ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool       pending    (); ///< Indicate whether any incoming calls are pending that need to be dispatched.
+  void       dispatch   (); ///< Dispatch a single call if any is pending.
+  bool       is_null    () const;
+  Connector& connector  ();
+protected:
+  static DispatchFunc     find_method      (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
+public: /// @name Construction
+  static ServerConnection create_threaded  ();
+  virtual                ~ServerConnection ();
+  /*ctor*/                ServerConnection ();
+  /*copy*/                ServerConnection (const ServerConnection&);
+  void                    operator=        (const ServerConnection&);
+protected:                ServerConnection (Dispatcher&);
 public: /// @name Registry for IPC method lookups
   struct MethodEntry       { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry    /// Registry structure for IPC method stubs.
@@ -389,27 +413,19 @@ public: /// @name Registry for IPC method lookups
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
-protected:
-  static DispatchFunc  find_method      (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
-public: /// @name Construction
-  static ServerConnection create_threaded  ();
-  virtual                ~ServerConnection ();
-  /*ctor*/                ServerConnection ();
-  /*copy*/                ServerConnection (const ServerConnection&);
-  void                    operator=        (const ServerConnection&);
-protected:                ServerConnection (ConnectionTransport&);
-private: /// @name Internals
-  ConnectionTransport *m_transport;
-  friend class ClientConnection;
 };
+
 /// Connection context for IPC clients. @nosubgrouping
 class ClientConnection {
+  RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 public: /// @name API for remote calls
-  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a syncronous remote call, transfers memory.
+  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a remote call syncronously, transfers memory.
   int           notify_fd   ();             ///< Returns fd for POLLIN, to wake up on incomming events.
   bool          pending     ();             ///< Indicate whether any incoming events are pending that need to be dispatched.
   void          dispatch    ();             ///< Dispatch a single event if any is pending.
-  bool          is_null     () const;
+public: /// @name Lifetime
+  virtual      ~ClientConnection ();
+  /*ctor*/      ClientConnection (Connector&);
 public: /// @name API for event handler bookkeeping
   struct EventHandler                        /// Interface class used for client side signal emissions.
   {
@@ -419,14 +435,12 @@ public: /// @name API for event handler bookkeeping
   uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
   EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
   bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
-public: /// @name Construction
-  virtual      ~ClientConnection ();
-  /*ctor*/      ClientConnection ();
-  /*ctor*/      ClientConnection (ServerConnection&);
-  /*copy*/      ClientConnection (const ClientConnection&);
-  void          operator=        (const ClientConnection&);
 private: /// @name Internals
-  ConnectionTransport *m_transport;
+  Connector    *m_connector;
+  // client event handler
+  typedef std::set<uint64_t> UIntSet;
+  pthread_spinlock_t        ehandler_spin;
+  UIntSet                   ehandler_set;
 };
 
 // == inline implementations ==

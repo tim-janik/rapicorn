@@ -44,7 +44,7 @@ class_scope:Application:
   static void                     shutdown       ();
   static int                      run_and_exit   () RAPICORN_NORETURN;
   static ApplicationHandle        the            ();
-  static Aida::ClientConnection   ipc_connection ();
+  static Aida::ClientConnection*  ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
 

@@ -25,7 +25,7 @@ namespace CxxStub {
 template<class Handle, typename SignalSignature>
 class SignalHandler : Aida::ClientConnection::EventHandler
 {
-  static inline Aida::ClientConnection
+  static inline Aida::ClientConnection*
   __client_connection__ (void)
   {
     struct _Handle : Handle { using Handle::__client_connection__; };
@@ -52,7 +52,7 @@ public:
   {
     if (m_handler_id)
       {
-        __client_connection__().delete_event_handler (m_handler_id);
+        __client_connection__()->delete_event_handler (m_handler_id);
         m_handler_id = 0;
       }
   }
@@ -65,7 +65,7 @@ public:
     if (hasconnections)
       {
         if (!m_handler_id)      // signal connected
-          m_handler_id = __client_connection__().register_event_handler (this);
+          m_handler_id = __client_connection__()->register_event_handler (this);
         fb <<= m_handler_id;    // handler connection request
         fb <<= 0;               // no disconnection
       }
@@ -77,7 +77,7 @@ public:
         fb <<= m_connection_id; // disconnection request
         m_connection_id = 0;
       }
-    Aida::FieldBuffer *fr = __client_connection__().call_remote (&fb); // deletes fb
+    Aida::FieldBuffer *fr = __client_connection__()->call_remote (&fb); // deletes fb
     if (fr)
       { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
         Aida::FieldReader frr (*fr);

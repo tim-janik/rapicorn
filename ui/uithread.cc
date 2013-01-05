@@ -95,14 +95,14 @@ class UIThread {
   Initializer           *m_idata;
   MainLoop              &m_main_loop; // FIXME: non-NULL only while running
 public:
-  Aida::ClientConnection m_client_connection;
+  Aida::ClientConnection *m_client_connection;
   UIThread (Initializer *idata) :
     m_thread_mutex (PTHREAD_MUTEX_INITIALIZER), m_running (0), m_idata (idata),
     m_main_loop (*ref_sink (MainLoop::_new()))
   {
     m_main_loop.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
     m_server_connection = Aida::ServerConnection::create_threaded();
-    m_client_connection = Aida::ClientConnection (m_server_connection);
+    m_client_connection = new Aida::ClientConnection (m_server_connection.connector());
   }
   bool  running() const { return m_running; }
   void
@@ -204,10 +204,10 @@ public:
 };
 static UIThread *the_uithread = NULL;
 
-Aida::ClientConnection
+Aida::ClientConnection*
 uithread_connection (void) // prototype in ui/internal.hh
 {
-  return the_uithread && the_uithread->running() ? the_uithread->m_client_connection : Aida::ClientConnection();
+  return the_uithread && the_uithread->running() ? the_uithread->m_client_connection : NULL;
 }
 
 MainLoop*
@@ -322,7 +322,7 @@ ui_thread_syscall (Callable *callable)
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
-  Aida::FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
+  Aida::FieldBuffer *fr = uithread_connection()->call_remote (fb); // deletes fb
   Aida::FieldReader frr (*fr);
   const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
   frr.skip(); // FIXME: check full msgid

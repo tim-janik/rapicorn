@@ -20,7 +20,6 @@
 #include <stdexcept>
 #include <deque>
 #include <map>
-#include <set>
 
 // == Auxillary macros ==
 #ifndef __GNUC__
@@ -790,176 +789,37 @@ public:
   {}
 };
 
-// == ConnectionTransport ==
-class ConnectionTransport /// Transport layer for messages sent between ClientConnection and ServerConnection.
+// == ClientConnection ==
+ClientConnection::ClientConnection (Connector &connector) :
+  m_connector (&connector)
 {
-  TransportChannel         server_queue; // messages sent to server
-  TransportChannel         client_queue; // messages sent to client
-  std::deque<FieldBuffer*> client_events; // messages pending for client
-  sem_t                    result_sem;
-  int                      ref_count;
-  void     operator=               (const ConnectionTransport&); // no assignments
-  explicit ConnectionTransport     (const ConnectionTransport&); // no copying
-public:
-  ConnectionTransport () :
-    ref_count (1)
-  {
-    pthread_spin_init (&ehandler_spin, 0 /* pshared */);
-    sem_init (&result_sem, 0 /* unshared */, 0 /* init */);
-  }
-  ConnectionTransport*
-  ref()
-  {
-    int last_ref = __sync_fetch_and_add (&ref_count, 1);
-    assert (last_ref > 0);
-    return this;
-  }
-  void
-  unref()
-  {
-    int last_ref = __sync_fetch_and_add (&ref_count, -1);
-    assert (last_ref > 0);
-    if (last_ref == 1)
-      delete this;
-  }
-  virtual
-  ~ConnectionTransport ()
-  {
-    assert (ref_count == 0);
-    sem_destroy (&result_sem);
-    pthread_spin_destroy (&ehandler_spin);
-  }
-  void  block_for_result        () { sem_wait (&result_sem); }
-  void  notify_for_result       () { sem_post (&result_sem); }
-public: // server
-  void          server_send_event (FieldBuffer *fb) { return client_queue.send_msg (fb, true); } // FIXME: check type
-  int           server_notify_fd  ()    { return server_queue.inputfd(); }
-  bool          server_pending    ()    { return server_queue.has_msg(); }
-  void          server_dispatch   ();
-public: // client
-  int          client_notify_fd   ()    { return client_queue.inputfd(); }
-  bool         client_pending     ()    { return !client_events.empty() || client_queue.has_msg(); }
-  void         client_dispatch    ();
-  FieldBuffer* client_call_remote (FieldBuffer *fb);
-  // client event handler
-  typedef std::set<uint64_t> UIntSet;
-  pthread_spinlock_t        ehandler_spin;
-  UIntSet                   ehandler_set;
-  uint64_t
-  client_register_event_handler (ClientConnection::EventHandler *evh)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
-    pthread_spin_unlock (&ehandler_spin);
-    return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
-  }
-  ClientConnection::EventHandler*
-  client_find_event_handler (uint64_t handler_id)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    UIntSet::iterator iter = ehandler_set.find (handler_id);
-    pthread_spin_unlock (&ehandler_spin);
-    if (iter == ehandler_set.end())
-      return NULL; // unknown handler_id
-    ClientConnection::EventHandler *evh = (ClientConnection::EventHandler*) ptrdiff_t (handler_id);
-    return evh;
-  }
-  bool
-  client_delete_event_handler (uint64_t handler_id)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    size_t nerased = ehandler_set.erase (handler_id);
-    pthread_spin_unlock (&ehandler_spin);
-    return nerased > 0; // deletion successful?
-  }
-};
-
-FieldBuffer*
-ConnectionTransport::client_call_remote (FieldBuffer *fb)
-{
-  AIDA_THROW_IF_FAIL (fb != NULL);
-  // enqueue method call message
-  const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
-  server_queue.send_msg (fb, true);
-  // wait for result
-  const bool needsresult = Aida::msgid_has_result (msgid);
-  if (needsresult)
-    block_for_result ();
-  while (needsresult)
-    {
-      FieldBuffer *fr = client_queue.pop_msg();
-      Aida::MessageId retid = Aida::MessageId (fr->first_id());
-      if (Aida::msgid_is_error (retid))
-        {
-          FieldReader fbr (*fr);
-          fbr.skip_msgid();
-          std::string msg = fbr.pop_string();
-          std::string dom = fbr.pop_string();
-          warning_printf ("%s: %s", dom.c_str(), msg.c_str());
-          delete fr;
-        }
-      else if (Aida::msgid_is_result (retid))
-        return fr;
-      else
-        client_events.push_back (fr);
-    }
-  return NULL;
+  pthread_spin_init (&ehandler_spin, 0 /* pshared */);
+  m_connector->ref();
 }
 
-void
-ConnectionTransport::server_dispatch ()
+ClientConnection::~ClientConnection ()
 {
-  FieldBuffer *fb = server_queue.fetch_msg();
-  if (!fb)
-    return;
-  FieldReader fbr (*fb);
-  const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t  hashlow = fbr.pop_int64();
-  const bool needsresult = msgid_has_result (msgid);
-  struct Wrapper : ServerConnection { using ServerConnection::find_method; };
-  const DispatchFunc method = Wrapper::find_method (msgid, hashlow);
-  FieldBuffer *fr = NULL;
-  if (method)
-    {
-      fr = method (fbr);
-      const MessageId retid = MessageId (fr ? fr->first_id() : 0);
-      if (fr && (!needsresult || !msgid_is_result (retid)))
-        {
-          warning_printf ("bogus result from method (%016lx%016llx): id=%016lx", msgid, hashlow, retid);
-          delete fr;
-          fr = NULL;
-        }
-    }
-  else
-    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
-  delete fb;
-  if (needsresult)
-    {
-      client_queue.send_msg (fr ? fr : FieldBuffer::new_result(), false);
-      notify_for_result();
-    }
+  m_connector->unref();
+  m_connector = NULL;
+  pthread_spin_destroy (&ehandler_spin);
 }
 
+int          ClientConnection::notify_fd ()                  { return m_connector->notify_fd(); }
+bool         ClientConnection::pending ()                    { return m_connector->pending(); }
+FieldBuffer* ClientConnection::call_remote (FieldBuffer *fb) { return m_connector->call_remote (fb); }
+
 void
-ConnectionTransport::client_dispatch ()
+ClientConnection::dispatch ()
 {
-  FieldBuffer *fb;
-  if (!client_events.empty())
-    {
-      fb = client_events.front();
-      client_events.pop_front();
-    }
-  else
-    fb = client_queue.fetch_msg();
-  if (!fb)
-    return;
+  FieldBuffer *fb = m_connector->pop();
+  return_if (fb == NULL);
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64_t  hashlow = fbr.pop_int64();
   if (msgid_is_event (msgid))
     {
       const uint64_t handler_id = fbr.pop_int64();
-      ClientConnection::EventHandler *evh = client_find_event_handler (handler_id);
+      ClientConnection::EventHandler *evh = find_event_handler (handler_id);
       if (evh)
         {
           FieldBuffer *fr = evh->handle_event (*fb);
@@ -994,58 +854,171 @@ ConnectionTransport::client_dispatch ()
   delete fb;
 }
 
-// == ClientConnection ==
-ClientConnection::ClientConnection (ServerConnection &server_connection) :
-  m_transport (server_connection.m_transport->ref())
-{}
-
-ClientConnection::ClientConnection() :
-  m_transport (NULL)
-{}
-
-ClientConnection::ClientConnection (const ClientConnection &clone) :
-  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
-{}
-
-void
-ClientConnection::operator= (const ClientConnection &clone)
-{
-  ConnectionTransport *old = m_transport;
-  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
-  if (old)
-    old->unref();
-}
-
-ClientConnection::~ClientConnection ()
-{
-  if (m_transport)
-    m_transport->unref();
-  m_transport = NULL;
-}
-
-bool
-ClientConnection::is_null () const              { return m_transport == NULL; }
-int
-ClientConnection::notify_fd ()                  { return m_transport->client_notify_fd(); }
-bool
-ClientConnection::pending ()                    { return m_transport->client_pending(); }
-void
-ClientConnection::dispatch ()                   { return m_transport->client_dispatch(); }
-FieldBuffer*
-ClientConnection::call_remote (FieldBuffer *fb) { return m_transport->client_call_remote (fb); }
 uint64_t
-ClientConnection::register_event_handler (EventHandler *evh) { return m_transport->client_register_event_handler (evh); }
+ClientConnection::register_event_handler (EventHandler *evh)
+{
+  pthread_spin_lock (&ehandler_spin);
+  const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
+  pthread_spin_unlock (&ehandler_spin);
+  return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
+}
+
 ClientConnection::EventHandler*
-ClientConnection::find_event_handler (uint64_t h_id)     { return m_transport->client_find_event_handler (h_id); }
+ClientConnection::find_event_handler (uint64_t handler_id)
+{
+  pthread_spin_lock (&ehandler_spin);
+  UIntSet::iterator iter = ehandler_set.find (handler_id);
+  pthread_spin_unlock (&ehandler_spin);
+  if (iter == ehandler_set.end())
+    return NULL; // unknown handler_id
+  EventHandler *evh = (EventHandler*) ptrdiff_t (handler_id);
+  return evh;
+}
+
 bool
-ClientConnection::delete_event_handler (uint64_t h_id)   { return m_transport->client_delete_event_handler (h_id); }
+ClientConnection::delete_event_handler (uint64_t handler_id)
+{
+  pthread_spin_lock (&ehandler_spin);
+  size_t nerased = ehandler_set.erase (handler_id);
+  pthread_spin_unlock (&ehandler_spin);
+  return nerased > 0; // deletion successful?
+}
 
 ClientConnection::EventHandler::~EventHandler()
 {}
 
+// == ServerConnection::Dispatcher ==
+/// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
+class ServerConnection::Dispatcher : Connector {
+  TransportChannel         server_queue;        // messages sent to server
+  TransportChannel         client_queue;        // messages sent to client
+  std::deque<FieldBuffer*> client_events;       // messages pending for client
+  sem_t                    result_sem;          // signal result from server to client
+  int                      ref_count;
+  RAPICORN_CLASS_NON_COPYABLE (Dispatcher);
+public:
+  Dispatcher () :
+    ref_count (1)
+  {
+    sem_init (&result_sem, 0 /* unshared */, 0 /* init */);
+  }
+  Dispatcher*
+  ref_impl()
+  {
+    int last_ref = __sync_fetch_and_add (&ref_count, 1);
+    assert (last_ref > 0);
+    return this;
+  }
+  void
+  unref_impl()
+  {
+    int last_ref = __sync_fetch_and_add (&ref_count, -1);
+    assert (last_ref > 0);
+    if (last_ref == 1)
+      delete this;
+  }
+  virtual
+  ~Dispatcher ()
+  {
+    assert (ref_count == 0);
+    sem_destroy (&result_sem);
+  }
+  void  block_for_result        () { sem_wait (&result_sem); }
+  void  notify_for_result       () { sem_post (&result_sem); }
+public: // server
+  void          server_send_event (FieldBuffer *fb) { return client_queue.send_msg (fb, true); } // FIXME: check type
+  int           server_notify_fd  ()    { return server_queue.inputfd(); }
+  bool          server_pending    ()    { return server_queue.has_msg(); }
+  void          server_dispatch   ();
+  Connector&    server_connector  ()    { return *this; }
+public: // client Connector
+  virtual void         ref         ()             { ref_impl(); }
+  virtual void         unref       ()             { unref_impl(); }
+  virtual int          notify_fd   ()             { return client_queue.inputfd(); }
+  virtual bool         pending     ()             { return !client_events.empty() || client_queue.has_msg(); }
+  virtual FieldBuffer* call_remote (FieldBuffer*);
+  virtual FieldBuffer* pop         ();
+};
+
+FieldBuffer*
+ServerConnection::Dispatcher::pop () // Connector::pop
+{
+  if (client_events.empty())
+    return client_queue.fetch_msg();
+  FieldBuffer *fb = client_events.front();
+  client_events.pop_front();
+  return fb;
+}
+
+FieldBuffer*
+ServerConnection::Dispatcher::call_remote (FieldBuffer *fb) // Connector::call_remote
+{
+  AIDA_THROW_IF_FAIL (fb != NULL);
+  // enqueue method call message
+  const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
+  server_queue.send_msg (fb, true);
+  // wait for result
+  const bool needsresult = Aida::msgid_has_result (msgid);
+  if (needsresult)
+    block_for_result ();
+  while (needsresult)
+    {
+      FieldBuffer *fr = client_queue.pop_msg();
+      Aida::MessageId retid = Aida::MessageId (fr->first_id());
+      if (Aida::msgid_is_error (retid))
+        {
+          FieldReader fbr (*fr);
+          fbr.skip_msgid();
+          std::string msg = fbr.pop_string();
+          std::string dom = fbr.pop_string();
+          warning_printf ("%s: %s", dom.c_str(), msg.c_str());
+          delete fr;
+        }
+      else if (Aida::msgid_is_result (retid))
+        return fr;
+      else
+        client_events.push_back (fr);
+    }
+  return NULL;
+}
+
+void
+ServerConnection::Dispatcher::server_dispatch ()
+{
+  FieldBuffer *fb = server_queue.fetch_msg();
+  if (!fb)
+    return;
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  const uint64_t  hashlow = fbr.pop_int64();
+  const bool needsresult = msgid_has_result (msgid);
+  struct Wrapper : ServerConnection { using ServerConnection::find_method; };
+  const DispatchFunc method = Wrapper::find_method (msgid, hashlow);
+  FieldBuffer *fr = NULL;
+  if (method)
+    {
+      fr = method (fbr);
+      const MessageId retid = MessageId (fr ? fr->first_id() : 0);
+      if (fr && (!needsresult || !msgid_is_result (retid)))
+        {
+          warning_printf ("bogus result from method (%016lx%016llx): id=%016lx", msgid, hashlow, retid);
+          delete fr;
+          fr = NULL;
+        }
+    }
+  else
+    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+  delete fb;
+  if (needsresult)
+    {
+      client_queue.send_msg (fr ? fr : FieldBuffer::new_result(), false);
+      notify_for_result();
+    }
+}
+
 // == ServerConnection ==
-ServerConnection::ServerConnection (ConnectionTransport &transport) :
-  m_transport (transport.ref())
+ServerConnection::ServerConnection (Dispatcher &transport) :
+  m_transport (transport.ref_impl())
 {}
 
 ServerConnection::ServerConnection () :
@@ -1053,14 +1026,14 @@ ServerConnection::ServerConnection () :
 {}
 
 ServerConnection::ServerConnection (const ServerConnection &clone) :
-  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
+  m_transport (clone.m_transport ? clone.m_transport->ref_impl() : NULL)
 {}
 
 void
 ServerConnection::operator= (const ServerConnection &clone)
 {
-  ConnectionTransport *old = m_transport;
-  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
+  Dispatcher *old = m_transport;
+  m_transport = clone.m_transport ? clone.m_transport->ref_impl() : NULL;
   if (old)
     old->unref();
 }
@@ -1072,24 +1045,25 @@ ServerConnection::~ServerConnection ()
   m_transport = NULL;
 }
 
-bool
-ServerConnection::is_null () const              { return m_transport == NULL; }
-void
-ServerConnection::send_event (FieldBuffer *fb) { return m_transport->server_send_event (fb); }
-int
-ServerConnection::notify_fd () { return m_transport->server_notify_fd(); }
-bool
-ServerConnection::pending () { return m_transport->server_pending(); }
-void
-ServerConnection::dispatch () { return m_transport->server_dispatch(); }
+bool    ServerConnection::is_null    () const           { return m_transport == NULL; }
+void    ServerConnection::send_event (FieldBuffer *fb)  { return m_transport->server_send_event (fb); }
+int     ServerConnection::notify_fd  ()                 { return m_transport->server_notify_fd(); }
+bool    ServerConnection::pending    ()                 { return m_transport->server_pending(); }
+void    ServerConnection::dispatch   ()                 { return m_transport->server_dispatch(); }
 
 ServerConnection
 ServerConnection::create_threaded ()
 {
-  ConnectionTransport *t = new ConnectionTransport(); // ref_count=1
+  Dispatcher *t = new Dispatcher(); // ref_count=1
   ServerConnection scon (*t);
   t->unref();
   return scon;
+}
+
+Connector&
+ServerConnection::connector()
+{
+  return m_transport->server_connector();
 }
 
 // == MethodRegistry ==

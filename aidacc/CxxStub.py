@@ -430,7 +430,7 @@ class Generator:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     else: # G4CLIENT
       if ddc:
-        s += '  static Rapicorn::Aida::ClientConnection __client_connection__ (void);\n'
+        s += '  static Rapicorn::Aida::ClientConnection* __client_connection__ (void);\n'
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
@@ -594,8 +594,8 @@ class Generator:
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     if ddc:
-      s += 'Rapicorn::Aida::ClientConnection\n%s::__client_connection__ (void)\n{\n' % classH
-      s += '  return AIDA_CONNECTION();\n}\n'
+      s += 'Rapicorn::Aida::ClientConnection*\n%s::__client_connection__ (void)\n{\n' % classH
+      s += '  return &AIDA_CONNECTION();\n}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'

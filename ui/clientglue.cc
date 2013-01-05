@@ -6,7 +6,7 @@
 namespace Rapicorn {
 
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-static void       clientglue_setup      (Rapicorn::Aida::ClientConnection connection);
+static void       clientglue_setup      (Rapicorn::Aida::ClientConnection *connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
@@ -71,7 +71,7 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Rapicorn::Aida::ClientConnection m_connection;
+  Rapicorn::Aida::ClientConnection &m_connection;
   PollFD m_pfd;
   bool   last_seen_primary, need_check_primary;
   void
@@ -83,7 +83,7 @@ class AppSource : public EventLoop::Source {
       main_loop()->quit();
   }
 public:
-  AppSource (Rapicorn::Aida::ClientConnection connection) :
+  AppSource (Rapicorn::Aida::ClientConnection &connection) :
     m_connection (connection), last_seen_primary (false), need_check_primary (false)
   {
     m_pfd.fd = m_connection.notify_fd();
@@ -130,7 +130,7 @@ public:
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Rapicorn::Aida::ClientConnection _clientglue_connection;
+static Rapicorn::Aida::ClientConnection *clientglue_connection = NULL;
 class ConnectionContext {
   // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
   typedef std::map <Rapicorn::Aida::uint64_t, void*> ContextMap;
@@ -163,7 +163,7 @@ connection_handle2id (const Rapicorn::Aida::SmartHandle &h)
   return h._rpc_id();
 }
 
-#define AIDA_CONNECTION()       (_clientglue_connection)
+#define AIDA_CONNECTION()       (*clientglue_connection)
 } // Anon
 
 // compile client-side API
@@ -175,17 +175,17 @@ connection_handle2id (const Rapicorn::Aida::SmartHandle &h)
 #include <rcore/testutils.hh>
 namespace Rapicorn {
 
-Rapicorn::Aida::ClientConnection
+Rapicorn::Aida::ClientConnection*
 ApplicationH::ipc_connection()
 {
-  return AIDA_CONNECTION();
+  return &AIDA_CONNECTION();
 }
 
 MainLoop*
 ApplicationH::main_loop()
 {
   assert_return (the()._is_null() == false, NULL);
-  assert_return (_clientglue_connection.is_null() == false, NULL);
+  assert_return (clientglue_connection, NULL);
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;
@@ -195,7 +195,7 @@ ApplicationH::main_loop()
       ref_sink (mloop);
       slave = mloop->new_slave();
       ref_sink (slave);
-      source = new AppSource (_clientglue_connection);
+      source = new AppSource (*clientglue_connection);
       ref_sink (source);
       slave->add (source);
       source->queue_check_primaries();
@@ -219,10 +219,10 @@ init_test_app (const String       &app_ident,
 }
 
 static void
-clientglue_setup (Rapicorn::Aida::ClientConnection connection)
+clientglue_setup (Rapicorn::Aida::ClientConnection *connection)
 {
-  assert_return (_clientglue_connection.is_null() == true);
-  _clientglue_connection = connection;
+  assert_return (clientglue_connection == NULL);
+  clientglue_connection = connection;
 }
 
 /**
