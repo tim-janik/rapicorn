@@ -679,7 +679,7 @@ class Generator:
   def generate_server_method_stub (self, class_info, mtype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
+    dispatcher_name = '__AIDA_call__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
@@ -768,7 +768,7 @@ class Generator:
   def generate_server_property_setter (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
+    dispatcher_name = '__AIDA_set__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -791,7 +791,7 @@ class Generator:
   def generate_server_property_getter (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
+    dispatcher_name = '__AIDA_get__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -817,7 +817,7 @@ class Generator:
   def generate_server_list_types (self, class_info, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '__AIDA_list_types__%s' % class_info.name
+    dispatcher_name = '__AIDA_types__%s' % class_info.name
     reglines += [ (self.list_types_digest (class_info), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
@@ -897,7 +897,7 @@ class Generator:
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '_$sigcon__%s__%s' % (class_info.name, stype.name)
+    dispatcher_name = '__AIDA_signal__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
