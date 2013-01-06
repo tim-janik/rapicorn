@@ -43,7 +43,7 @@ Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
 
 namespace { // Anon
 namespace __AIDA_Local__ {
-  inline Rapicorn::Aida::uint64_t obj2id (Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+  inline ptrdiff_t                obj2id (Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
   template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
 } } // Anon::__AIDA_Local__
 

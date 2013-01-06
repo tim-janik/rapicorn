@@ -75,9 +75,12 @@ namespace __AIDA_Local__ {
 clientcc_boilerplate = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-Rapicorn::Aida::uint64_t connection_handle2id  (const Rapicorn::Aida::SmartHandle &h) { return h._rpc_id(); }
 template<class C> C*     connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
+namespace { // Anon
+namespace __AIDA_Local__ {
+  inline ptrdiff_t       smh2id (const Rapicorn::Aida::SmartHandle &h) { return h._rpc_id(); }
+} } // Anon::__AIDA_Local__
 """
 
 identifiers = {
@@ -583,7 +586,7 @@ class Generator:
     s += '\n{}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
-    s += '  fb.add_object (connection_handle2id (handle));\n'
+    s += '  fb.add_object (__AIDA_Local__::smh2id (handle));\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
@@ -599,13 +602,13 @@ class Generator:
     s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
-    s += '      return connection_id2context<%s> (connection_handle2id (other))->handle$;\n' % classC
+    s += '      return connection_id2context<%s> (__AIDA_Local__::smh2id (other))->handle$;\n' % classC
     s += '  return %s();\n' % classH
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHashList&\n'
     s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
     s += '  static Rapicorn::Aida::TypeHashList notypes;\n'
-    s += '  const Rapicorn::Aida::uint64_t ipcid = connection_handle2id (*this);\n'
+    s += '  const Rapicorn::Aida::uint64_t ipcid = __AIDA_Local__::smh2id (*this);\n'
     s += '  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle\n'
     s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
@@ -884,7 +887,7 @@ class Generator:
     s += '}\n'
     s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)
     s += '  void *fptr = new std::function<%s> (func);\n' % cbtname
-    s += '  %s id = AIDA_CONNECTION().signal_connect (%s, _rpc_id(), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
+    s += '  %s id = AIDA_CONNECTION().signal_connect (%s, __AIDA_Local__::smh2id (*this), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
     s += '  return id;\n}\n'
     s += 'bool\n%s::sig_%s (%s signal_id)\n{\n' % (classH, functype.name, u64)
     s += '  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);\n'

@@ -161,11 +161,6 @@ connection_id2context (Rapicorn::Aida::uint64_t ipcid)
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);
 }
-static inline Rapicorn::Aida::uint64_t
-connection_handle2id (const Rapicorn::Aida::SmartHandle &h)
-{
-  return h._rpc_id();
-}
 } // Anon
 
 // compile client-side API
