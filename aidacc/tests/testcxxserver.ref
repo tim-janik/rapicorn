@@ -1140,7 +1140,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecordImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, XFooRecordImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 18) return;
   fbr >>= self.single_bool;
   fbr >>= self.single_num;
@@ -1173,7 +1173,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, XFooSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1198,7 +1198,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const IntSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, IntSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1223,7 +1223,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const FloatSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, FloatSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1248,7 +1248,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const StringSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, StringSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1273,7 +1273,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ExtensiveEnumSequenceImpl &
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, ExtensiveEnumSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1298,7 +1298,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, RecordSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1323,7 +1323,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SequenceSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, SequenceSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1348,7 +1348,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InterfaceSequenceImpl &self
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, InterfaceSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.reserve (len);
   for (size_t k = 0; k < len; k++) {
@@ -1373,7 +1373,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const AnySequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, AnySequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1396,7 +1396,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRecImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesRecImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
   fbr >>= self.rec;
   fbr >>= self.seq;
@@ -1413,7 +1413,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesSeqImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesSeqImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -1438,7 +1438,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecordImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, NewRecordImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
   fbr >>= self.i;
   fbr >>= self.enum1;
@@ -1458,7 +1458,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecordImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, InnerRecordImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 3) return;
   fbr >>= self.x;
   fbr >>= self.y;
@@ -1474,7 +1474,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2InnerImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, Refer2InnerImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 1) return;
   fbr >>= self.r;
 }
@@ -1493,7 +1493,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecordImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecordImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
   fbr >>= self.r1;
   fbr >>= self.r2;
@@ -1689,7 +1689,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecordImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, QuickRecordImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
   fbr >>= self.int1;
   fbr >>= self.int2;
@@ -1706,7 +1706,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickSequenceImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, QuickSequenceImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.resize (len);
   for (size_t k = 0; k < len; k++) {
@@ -2112,7 +2112,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroupsImpl &self)
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsImpl &self)
 {
-  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 5) return;
   fbr >>= self.i;
   fbr >>= self.ratio;

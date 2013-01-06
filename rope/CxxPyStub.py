@@ -49,7 +49,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
-  FieldReader frr (*fr, *(Rapicorn::Aida::BaseConnection*) NULL);
+  FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
@@ -252,7 +252,7 @@ class Generator:
     s += 'aida_py%s_proto_pop (Rapicorn::Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), src.connection());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("Aida: marshalling error: invalid record length");\n' % len (type_info.fields)
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
@@ -292,7 +292,7 @@ class Generator:
     s += 'aida_py%s_proto_pop (Rapicorn::Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), src.connection());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -318,7 +318,7 @@ class Generator:
     s += '  PyObject *callable = (PyObject*) data;\n'
     s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
     if functype.args:
-      s += '  FieldReader fbr (*sfb, aida_con);\n'
+      s += '  FieldReader fbr (*sfb);\n'
       s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
       s += '  fbr.pop_int64();  // skip handler_id\n'
     s += '  const uint length = %u;\n' % len (functype.args)
@@ -388,7 +388,7 @@ class Generator:
     else:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
-      s += '    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
+      s += '    Rapicorn::Aida::FieldReader frr (*fr);\n'
       s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'

@@ -292,7 +292,7 @@ class Generator:
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec(), AIDA_CONNECTION());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     s += self.generate_proto_pop_args ('fbr', type_info, 'self.', type_info.fields)
     s += '}\n'
@@ -312,7 +312,7 @@ class Generator:
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq(), AIDA_CONNECTION());\n'
+    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage == Decls.INTERFACE:
       s += '  self.reserve (len);\n'
@@ -581,7 +581,7 @@ class Generator:
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
-    s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
+    s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
     s += '  frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
     s += '  size_t len;\n'
     s += '  frr >>= len;\n'
@@ -665,7 +665,7 @@ class Generator:
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
-      s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
+      s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
       s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
@@ -742,7 +742,7 @@ class Generator:
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
-      s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
+      s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
       s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
@@ -865,7 +865,7 @@ class Generator:
     s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  auto fptr = (const std::function<%s::%s>*) data;\n' % (classH, cbtname)
     s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
-    s += '  Rapicorn::Aida::field_buffer_emit_signal (aida_con, *sfb, *fptr);\n'
+    s += '  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr);\n'
     s += '  return NULL; // no support for remote signal returns atm\n'
     s += '}\n'
     s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)

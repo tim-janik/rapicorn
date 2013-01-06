@@ -540,7 +540,7 @@ FieldBuffer::to_string() const
 {
   String s = string_cprintf ("Aida::FieldBuffer(%p)={", this);
   s += string_cprintf ("size=%u, capacity=%u", size(), capacity());
-  FieldReader fbr (*this, *(BaseConnection*) NULL);
+  FieldReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
     {
       const String tname = type_name (fbr.get_type());
@@ -812,7 +812,7 @@ ClientConnection::dispatch ()
 {
   FieldBuffer *fb = m_connector->pop();
   return_if (fb == NULL);
-  FieldReader fbr (*fb, *this);
+  FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64_t  hashlow = fbr.pop_int64();
   if (msgid_is_event (msgid))
@@ -825,7 +825,7 @@ ClientConnection::dispatch ()
           FieldBuffer *fr = shandler->seh (*this, fb, shandler->data);
           if (fr)
             {
-              FieldReader frr (*fr, *this);
+              FieldReader frr (*fr);
               const MessageId retid = MessageId (frr.pop_int64());
               frr.skip(); // msgid low
               if (msgid_is_error (retid))
@@ -912,7 +912,7 @@ ClientConnection::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t handle_id
   fb <<= 0;                                     // disconnection request id
   Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
-  Aida::FieldReader frr (*connection_result, *this);
+  Aida::FieldReader frr (*connection_result);
   frr.skip_msgid();             // FIXME: check for signal id
   pthread_spin_lock (&signal_spin_);
   frr >>= shandler->cid;
@@ -966,7 +966,7 @@ ClientConnection::signal_lookup (uint64_t signal_handler_id)
 
 // == ServerConnection::Dispatcher ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
-class ServerConnection::Dispatcher : Connector, BaseConnection { // FIXME: remove BaseConnection
+class ServerConnection::Dispatcher : Connector {
   TransportChannel         server_queue;        // messages sent to server
   TransportChannel         client_queue;        // messages sent to client
   std::deque<FieldBuffer*> client_events;       // messages pending for client
@@ -1044,7 +1044,7 @@ ServerConnection::Dispatcher::call_remote (FieldBuffer *fb) // Connector::call_r
       Aida::MessageId retid = Aida::MessageId (fr->first_id());
       if (Aida::msgid_is_error (retid))
         {
-          FieldReader fbr (*fr, *this);
+          FieldReader fbr (*fr);
           fbr.skip_msgid();
           std::string msg = fbr.pop_string();
           std::string dom = fbr.pop_string();
@@ -1065,7 +1065,7 @@ ServerConnection::Dispatcher::server_dispatch ()
   FieldBuffer *fb = server_queue.fetch_msg();
   if (!fb)
     return;
-  FieldReader fbr (*fb, *this);
+  FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64_t  hashlow = fbr.pop_int64();
   const bool needsresult = msgid_has_result (msgid);
