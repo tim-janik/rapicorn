@@ -8,7 +8,7 @@ static void
 add_button_row (ContainerH area, uint row)
 {
   ItemH child = area.create_child ("RapicornExamples:button-row", Strings ("id=row#" + string_from_uint (row)));
-  ContainerH brow = ContainerH::downcast (child);
+  ContainerH brow = ContainerH::down_cast (child);
   for (uint i = 0; i < 50; i++)
     {
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");

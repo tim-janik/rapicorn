@@ -83,11 +83,6 @@ namespace __AIDA_Local__ {
 } } // Anon::__AIDA_Local__
 """
 
-identifiers = {
-  'downcast' :          'downcast',
-  'cast_types' :        'cast_types',
-};
-
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
@@ -355,7 +350,7 @@ class Generator:
   def class_digest (self, class_info):
     return self.digest2cbytes (class_info.type_hash())
   def list_types_digest (self, class_info):
-    return self.digest2cbytes (class_info.twoway_hash ('Aida:list_types()'))
+    return self.digest2cbytes (class_info.twoway_hash ('__AIDA__list_types # internal-method'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -444,10 +439,10 @@ class Generator:
     else: # G4CLIENT
       classH = self.C4client (type_info) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
-      s += '  template<class C>\n'
-      s += '  ' + self.F ('static %s' % classH) + identifiers['downcast'] + ' (C c) ' # ctor
-      s += '{ return _cast (c, c.%s()); }\n' % identifiers['cast_types']
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList&') + identifiers['cast_types'] + ' ();\n'
+      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList') + '_down_cast_types();\n'
+      s += '  template<class SmartHandle>\n'
+      s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
+      s += '{ return smh._is_null() ? %s() : _cast (smh, smh._down_cast_types()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -547,36 +542,8 @@ class Generator:
     s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'
     s += '  %s (Rapicorn::Aida::uint64_t ipcid) :\n' % classC             # ctor
-    s += '    handle$ (ipcid)'
-    s += ',\n    m_cached_types (NULL)\n  {}\n'
-    s += '  Rapicorn::Aida::TypeHashList *m_cached_types;\n'
-    s += '  const Rapicorn::Aida::TypeHashList& list_types ();\n'
+    s += '    handle$ (ipcid)\n  {}\n'
     s += '};\n'
-    s += 'const Rapicorn::Aida::TypeHashList&\n'
-    s += '%s::list_types ()\n{\n' % classC
-    s += '  if (!m_cached_types) {\n'
-    s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid self
-    s += '    fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
-    s += '  ' + self.generate_proto_add_args ('fb', class_info, '', [('handle$', class_info)], '')
-    s += '    Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '    AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
-    s += '    Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
-    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-    s += '    size_t len;\n'
-    s += '    frr >>= len;\n'
-    s += '    AIDA_CHECK (frr.remaining() == len * 2, "result truncated");\n'
-    s += '    Rapicorn::Aida::TypeHashList *thv = new Rapicorn::Aida::TypeHashList();\n'
-    s += '    Rapicorn::Aida::TypeHash thash;\n'
-    s += '    for (size_t i = 0; i < len; i++) {\n'
-    s += '      frr >>= thash;\n'
-    s += '      thv->push_back (thash);\n'
-    s += '    }\n'
-    s += '    delete fr;\n'
-    s += '    if (!Rapicorn::Aida::atomic_ptr_cas (&m_cached_types, (Rapicorn::Aida::TypeHashList*) NULL, thv))\n'
-    s += '      delete thv;\n'
-    s += '  }\n'
-    s += '  return *m_cached_types;\n'
-    s += '}\n'
     return s
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
@@ -605,12 +572,26 @@ class Generator:
     s += '      return connection_id2context<%s> (__AIDA_Local__::smh2id (other))->handle$;\n' % classC
     s += '  return %s();\n' % classH
     s += '}\n'
-    s += 'const Rapicorn::Aida::TypeHashList&\n'
-    s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
-    s += '  static Rapicorn::Aida::TypeHashList notypes;\n'
-    s += '  const Rapicorn::Aida::uint64_t ipcid = __AIDA_Local__::smh2id (*this);\n'
-    s += '  if (AIDA_UNLIKELY (!ipcid)) return notypes; // null handle\n'
-    s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
+    s += 'const Rapicorn::Aida::TypeHashList\n'
+    s += '%s::_down_cast_types()\n{\n' % classH
+    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid self
+    s += '  fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
+    s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
+    s += '  frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+    s += '  size_t len;\n'
+    s += '  frr >>= len;\n'
+    s += '  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");\n'
+    s += '  Rapicorn::Aida::TypeHashList thl;\n'
+    s += '  Rapicorn::Aida::TypeHash thash;\n'
+    s += '  for (size_t i = 0; i < len; i++) {\n'
+    s += '    frr >>= thash;\n'
+    s += '    thl.push_back (thash);\n'
+    s += '  }\n'
+    s += '  delete fr;\n'
+    s += '  return thl;\n'
     s += '}\n'
     return s
   def generate_server_class_methods (self, class_info):
@@ -834,7 +815,7 @@ class Generator:
   def generate_server_list_types (self, class_info, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    dispatcher_name = '_$lsttyp__%s__' % class_info.name
+    dispatcher_name = '__AIDA_list_types__%s' % class_info.name
     reglines += [ (self.list_types_digest (class_info), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'

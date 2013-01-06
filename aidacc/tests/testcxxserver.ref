@@ -2157,7 +2157,7 @@ I_SoundModule_Interface::_property_list ()
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__FirstInterface__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
@@ -2192,7 +2192,7 @@ namespace OtherNamespace {
 
 namespace InterfaceTests {
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__UIWidgetArea__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
@@ -2485,7 +2485,7 @@ _$sigcon__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__Parent__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__Parent (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Parent_Interface *self;
@@ -2501,7 +2501,7 @@ _$lsttyp__Parent__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__Child__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__Child (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Child_Interface *self;
@@ -2517,7 +2517,7 @@ _$lsttyp__Child__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__Descendant__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Descendant_Interface *self;
@@ -2533,7 +2533,7 @@ _$lsttyp__Descendant__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__GrandChild__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_GrandChild_Interface *self;
@@ -2549,7 +2549,7 @@ _$lsttyp__GrandChild__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__QuickIface__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
@@ -2577,7 +2577,7 @@ _$caller__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__MethodTestInterface__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
@@ -2779,7 +2779,7 @@ _$caller__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldRead
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__SignalTestInterface__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
@@ -3764,7 +3764,7 @@ _$sigcon__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__ChildInheritingSignals__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ChildInheritingSignals_Interface *self;
@@ -3831,7 +3831,7 @@ _$sigcon__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__AnotherChild__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_AnotherChild_Interface *self;
@@ -3847,7 +3847,7 @@ _$lsttyp__AnotherChild__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__PropertyTester__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
@@ -4130,7 +4130,7 @@ _$setter__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 
 namespace RapicornAidaTest {
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__ButtonArea__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
@@ -4321,7 +4321,7 @@ _$sigcon__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__PureMethods__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
@@ -4354,7 +4354,7 @@ _$caller__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 
 namespace Other {
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__NameTests__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_NameTests_Interface *self;
@@ -4389,7 +4389,7 @@ _$caller__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr
 
 namespace BseTest {
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__Compressor__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_Compressor_Interface *self;
@@ -4453,7 +4453,7 @@ _$setter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-_$lsttyp__SoundModule__ (Rapicorn::Aida::FieldReader &fbr)
+__AIDA_list_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
   I_SoundModule_Interface *self;
@@ -4469,9 +4469,9 @@ _$lsttyp__SoundModule__ (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {
-  { 0x3dacdb0c72319c6dULL, 0xd0a4dababf07cfb8ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
+  { 0x3cad22e1b186d8e6ULL, 0x23cfa997842f0221ULL, MandatoryNamespace::__AIDA_list_types__FirstInterface, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
-  { 0x3ced16bab1c08fe8ULL, 0xd1fa4cb922b6d7deULL, InterfaceTests::_$lsttyp__UIWidgetArea__, },
+  { 0x3fb268ab4c1fdceeULL, 0xa7ef7cb29317740fULL, InterfaceTests::__AIDA_list_types__UIWidgetArea, },
   { 0x311213c7f9f683fbULL, 0x5ce277b1d4ad5f84ULL, InterfaceTests::_$getter__UIWidgetArea__dummy, },
   { 0x2cd4545fdbf8e1bcULL, 0xf980e99fa9f34ab1ULL, InterfaceTests::_$setter__UIWidgetArea__dummy, },
   { 0x389d73bb93692d3eULL, 0xe60676c6ab0ecd60ULL, InterfaceTests::_$getter__UIWidgetArea__on_click, },
@@ -4488,13 +4488,13 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x24ee88e59b05bae4ULL, 0x879ebaad31e6d20eULL, InterfaceTests::_$caller__UIWidgetArea__on_click2in, },
   { 0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL, InterfaceTests::_$sigcon__UIWidgetArea__void_signal, },
   { 0x506409a3044ac65eULL, 0xda804abb85f8c1e8ULL, InterfaceTests::_$sigcon__UIWidgetArea__sample_signal, },
-  { 0x364b25c79aef2195ULL, 0x61e123d5c1b02ffeULL, InterfaceTests::_$lsttyp__Parent__, },
-  { 0x3c8323457768deefULL, 0x3d61b2123c42c46bULL, InterfaceTests::_$lsttyp__Child__, },
-  { 0x32d59697075869a1ULL, 0x9f10f279be69b4e2ULL, InterfaceTests::_$lsttyp__Descendant__, },
-  { 0x320a324ec480c060ULL, 0x86f1af86bd39afc2ULL, InterfaceTests::_$lsttyp__GrandChild__, },
-  { 0x3bfdb92d01f4df38ULL, 0x09c3ffac5658b30eULL, InterfaceTests::_$lsttyp__QuickIface__, },
+  { 0x3327c0cc6ecd6a2dULL, 0x0de3e7721fabd150ULL, InterfaceTests::__AIDA_list_types__Parent, },
+  { 0x3118068a57e2ee2aULL, 0xc4519ca878439f44ULL, InterfaceTests::__AIDA_list_types__Child, },
+  { 0x3fc1dfccbeb60bb3ULL, 0xbd418b9a2af4becbULL, InterfaceTests::__AIDA_list_types__Descendant, },
+  { 0x3971e4cc3544a47cULL, 0xdea4e100c7a24298ULL, InterfaceTests::__AIDA_list_types__GrandChild, },
+  { 0x383dc33025fafcfaULL, 0xda0a2afdebee2319ULL, InterfaceTests::__AIDA_list_types__QuickIface, },
   { 0x2b860359fa7e3dceULL, 0x198d5fe242474308ULL, InterfaceTests::_$caller__QuickIface__simple_function, },
-  { 0x38887fce34a056a1ULL, 0xdfafd7692069f2bcULL, InterfaceTests::_$lsttyp__MethodTestInterface__, },
+  { 0x3b0c3b9557d989c7ULL, 0xdc704105222c6a36ULL, InterfaceTests::__AIDA_list_types__MethodTestInterface, },
   { 0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_void, },
   { 0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_bools, },
   { 0x3c7dd838073a8a92ULL, 0xddd57eef6f36ab11ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_ints32, },
@@ -4507,7 +4507,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x34619983babcee5bULL, 0x9875f78f28f381b7ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_interface, },
   { 0x362c672843766d85ULL, 0x6ed30851db440471ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_anys, },
   { 0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_quickiface, },
-  { 0x3b8444b272305b05ULL, 0xeeb938b589d70b8cULL, InterfaceTests::_$lsttyp__SignalTestInterface__, },
+  { 0x3570023447b98293ULL, 0x7acb17b4ba84a625ULL, InterfaceTests::__AIDA_list_types__SignalTestInterface, },
   { 0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL, InterfaceTests::_$sigcon__SignalTestInterface__void_result, },
   { 0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL, InterfaceTests::_$sigcon__SignalTestInterface__bool_result, },
   { 0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL, InterfaceTests::_$sigcon__SignalTestInterface__int32_result, },
@@ -4532,10 +4532,10 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, InterfaceTests::_$sigcon__SignalTestInterface__interface_arg, },
   { 0x51355ac177cc776eULL, 0x8b062ce8d8442de0ULL, InterfaceTests::_$sigcon__SignalTestInterface__any_arg, },
   { 0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, InterfaceTests::_$sigcon__SignalTestInterface__self_args, },
-  { 0x3e2ad0e03001d9acULL, 0x29b504a5e59d6c5fULL, InterfaceTests::_$lsttyp__ChildInheritingSignals__, },
+  { 0x3de75b0bd290d267ULL, 0x69c1ca3c14a574bdULL, InterfaceTests::__AIDA_list_types__ChildInheritingSignals, },
   { 0x5ffad83b68b79139ULL, 0x7175e65d7705749fULL, InterfaceTests::_$sigcon__ChildInheritingSignals__child_signal, },
-  { 0x3d193e12c75ef8cdULL, 0x583552525e108c61ULL, InterfaceTests::_$lsttyp__AnotherChild__, },
-  { 0x342f93a48aa12aebULL, 0x06c2ed978db9d30eULL, InterfaceTests::_$lsttyp__PropertyTester__, },
+  { 0x3151395e716b65e2ULL, 0x64194778ee7320bcULL, InterfaceTests::__AIDA_list_types__AnotherChild, },
+  { 0x3538d51513b2455aULL, 0x2707341b320622dfULL, InterfaceTests::__AIDA_list_types__PropertyTester, },
   { 0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL, InterfaceTests::_$getter__PropertyTester__bool_prop, },
   { 0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL, InterfaceTests::_$setter__PropertyTester__bool_prop, },
   { 0x3fc09bee2af126a2ULL, 0xc3a6e67a53c81eb1ULL, InterfaceTests::_$getter__PropertyTester__int32_prop, },
@@ -4558,7 +4558,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL, InterfaceTests::_$setter__PropertyTester__self_prop, },
   { 0x385bac7894911455ULL, 0x4d74265aa4c9d3b8ULL, InterfaceTests::_$getter__PropertyTester__any_prop, },
   { 0x25ed5049e1dab81dULL, 0x30b595a3c260b96fULL, InterfaceTests::_$setter__PropertyTester__any_prop, },
-  { 0x3ba079ca93d55fb3ULL, 0xf9944831dc1fc726ULL, RapicornAidaTest::_$lsttyp__ButtonArea__, },
+  { 0x397a884d8f22f463ULL, 0x3b07e25021b667fdULL, RapicornAidaTest::__AIDA_list_types__ButtonArea, },
   { 0x30c3d3f2b33bf581ULL, 0x79478f015decbb26ULL, RapicornAidaTest::_$getter__ButtonArea__on_click, },
   { 0x2049371318a90eaeULL, 0xaad2e3187e219eaeULL, RapicornAidaTest::_$setter__ButtonArea__on_click, },
   { 0x35b46ed6cb8f24c3ULL, 0x261d8542336e8649ULL, RapicornAidaTest::_$getter__ButtonArea__on_click2, },
@@ -4569,16 +4569,16 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x21058465dc0b1d3fULL, 0x7e683383d0024c74ULL, RapicornAidaTest::_$setter__ButtonArea__click_type, },
   { 0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL, RapicornAidaTest::_$sigcon__ButtonArea__check_activate, },
   { 0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, RapicornAidaTest::_$sigcon__ButtonArea__activate, },
-  { 0x34692a915fe47960ULL, 0x86e3694656f6f9afULL, RapicornAidaTest::_$lsttyp__PureMethods__, },
+  { 0x3969e9b8871ee6b7ULL, 0x71149dcf4b20bd8eULL, RapicornAidaTest::__AIDA_list_types__PureMethods, },
   { 0x3e0c1c388c4a51a1ULL, 0x5f146e2e050f17e1ULL, RapicornAidaTest::_$caller__PureMethods__pure_method, },
-  { 0x3cc442e612d0c931ULL, 0x174426019c513b3aULL, Other::_$lsttyp__NameTests__, },
+  { 0x3676f9f233fd36dcULL, 0x9fbf4b5b329f3621ULL, Other::__AIDA_list_types__NameTests, },
   { 0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL, Other::_$caller__NameTests__args_from_other_namespace, },
-  { 0x3cc93ec8b4f43e89ULL, 0x38bbc5321cdaa262ULL, BseTest::_$lsttyp__Compressor__, },
+  { 0x31f198df574388e9ULL, 0xcf0b48010788bdd2ULL, BseTest::__AIDA_list_types__Compressor, },
   { 0x3ffc3dfaef875d63ULL, 0xf6f4d889560ba297ULL, BseTest::_$getter__Compressor__threshold, },
   { 0x2209f452a5de4de8ULL, 0x3fb166b528077900ULL, BseTest::_$setter__Compressor__threshold, },
   { 0x3415341ee86f2c05ULL, 0xe5f3f6787cc5e436ULL, BseTest::_$getter__Compressor__ratio, },
   { 0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL, BseTest::_$setter__Compressor__ratio, },
-  { 0x34056ecd1702e81aULL, 0x68e32ce1244df22bULL, BseTest::_$lsttyp__SoundModule__, },
+  { 0x3eb7a2dcce63f895ULL, 0x9370827685d22ef8ULL, BseTest::__AIDA_list_types__SoundModule, },
 };
 static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
