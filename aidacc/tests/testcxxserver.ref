@@ -51,6 +51,8 @@ namespace { // Anon
 namespace __AIDA_Local__ {
   inline ptrdiff_t                obj2id (Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
   template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
+  typedef ServerConnection::MethodRegistry MethodRegistry;
+  typedef ServerConnection::MethodEntry MethodEntry;
 } } // Anon::__AIDA_Local__
 
 
@@ -4469,7 +4471,7 @@ __AIDA_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 
-static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {
+static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x3cad22e1b186d8e6ULL, 0x23cfa997842f0221ULL, MandatoryNamespace::__AIDA_types__FirstInterface, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::__AIDA_call__FirstInterface__void_func, },
   { 0x3fb268ab4c1fdceeULL, 0xa7ef7cb29317740fULL, InterfaceTests::__AIDA_types__UIWidgetArea, },
@@ -4581,7 +4583,7 @@ static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] 
   { 0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL, BseTest::__AIDA_set__Compressor__ratio, },
   { 0x3eb7a2dcce63f895ULL, 0x9370827685d22ef8ULL, BseTest::__AIDA_types__SoundModule, },
 };
-static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);
+static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
 } // BseTest
 

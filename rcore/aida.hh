@@ -379,6 +379,8 @@ public:
 };
 
 // == Connections ==
+class ClientConnection;
+
 /// Client and server connection interface.
 class Connector {
 public:
@@ -389,6 +391,9 @@ public:
   virtual void         ref         () = 0;
   virtual void         unref       () = 0;
 };
+
+/// Function typoe for internal signal handling.
+typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
 
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection {
@@ -433,7 +438,6 @@ public: /// @name Lifetime
   virtual      ~ClientConnection ();
   /*ctor*/      ClientConnection (Connector&);
 public: /// @name API for event handler bookkeeping
-  typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
   uint64_t             signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data);
   bool                 signal_disconnect (uint64_t signal_handler_id);
   struct EventHandler                       /// Interface class used for client side signal emissions.
@@ -446,7 +450,7 @@ public: /// @name API for event handler bookkeeping
   bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
 private: /// @name Internals
   Connector    *m_connector;
-  struct SignalHandler { uint64_t hhi, hlo, oid, cid; ClientConnection::SignalEmitHandler *seh; void *data; };
+  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
   std::map<uint64_t,SignalHandler*> signal_handler_map_;
   pthread_spinlock_t                signal_spin_;
   SignalHandler*                    signal_lookup (uint64_t handler_id);

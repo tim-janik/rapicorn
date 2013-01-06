@@ -70,6 +70,8 @@ namespace { // Anon
 namespace __AIDA_Local__ {
   inline ptrdiff_t                obj2id ($AIDA_iface_base$ *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
   template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<$AIDA_iface_base$*> (oid)); }
+  typedef ServerConnection::MethodRegistry MethodRegistry;
+  typedef ServerConnection::MethodEntry MethodEntry;
 } } // Anon::__AIDA_Local__
 """
 
@@ -80,8 +82,11 @@ template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { retu
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-  inline ptrdiff_t   smh2id (const SmartHandle &h) { return h._rpc_id(); }
+inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._rpc_id(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
+static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
+static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
+                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
 } } // Anon::__AIDA_Local__
 """
 
@@ -870,10 +875,10 @@ class Generator:
     s += '}\n'
     s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)
     s += '  void *fptr = new std::function<%s> (func);\n' % cbtname
-    s += '  %s id = AIDA_CONNECTION().signal_connect (%s, __AIDA_Local__::smh2id (*this), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
+    s += '  %s id = __AIDA_Local__::signal_connect (%s, __AIDA_Local__::smh2id (*this), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
     s += '  return id;\n}\n'
     s += 'bool\n%s::sig_%s (%s signal_id)\n{\n' % (classH, functype.name, u64)
-    s += '  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);\n'
+    s += '  const bool r = __AIDA_Local__::signal_disconnect (signal_id);\n'
     s += '  return r;\n}\n'
     return s
   def generate_server_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
@@ -952,13 +957,13 @@ class Generator:
     s = ''
     if len (reglines) == 0:
       return '// Skipping empty MethodRegistry\n'
-    s += 'static const Rapicorn::Aida::ServerConnection::MethodEntry _aida_stub_entries[] = {\n'
+    s += 'static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
       s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static Rapicorn::Aida::ServerConnection::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
+    s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVER

@@ -36,8 +36,11 @@ template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { retu
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-  inline ptrdiff_t   smh2id (const SmartHandle &h) { return h._rpc_id(); }
+inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._rpc_id(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
+static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
+static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
+                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
 } } // Anon::__AIDA_Local__
 
 
@@ -1616,13 +1619,13 @@ Rapicorn::Aida::uint64_t
 UIWidgetAreaHandle::sig_void_signal (const std::function<Callback_void_signal> &func)
 {
   void *fptr = new std::function<Callback_void_signal> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__UIWidgetAreaHandle__void_signal, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__UIWidgetAreaHandle__void_signal, fptr);
   return id;
 }
 bool
 UIWidgetAreaHandle::sig_void_signal (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -1637,13 +1640,13 @@ Rapicorn::Aida::uint64_t
 UIWidgetAreaHandle::sig_sample_signal (const std::function<Callback_sample_signal> &func)
 {
   void *fptr = new std::function<Callback_sample_signal> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x506409a3044ac65eULL, 0xda804abb85f8c1e8ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__UIWidgetAreaHandle__sample_signal, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x506409a3044ac65eULL, 0xda804abb85f8c1e8ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__UIWidgetAreaHandle__sample_signal, fptr);
   return id;
 }
 bool
 UIWidgetAreaHandle::sig_sample_signal (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
@@ -2546,13 +2549,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_void_result (const std::function<Callback_void_result> &func)
 {
   void *fptr = new std::function<Callback_void_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__void_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__void_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_void_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2567,13 +2570,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_bool_result (const std::function<Callback_bool_result> &func)
 {
   void *fptr = new std::function<Callback_bool_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__bool_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__bool_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_bool_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2588,13 +2591,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_int32_result (const std::function<Callback_int32_result> &func)
 {
   void *fptr = new std::function<Callback_int32_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int32_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int32_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_int32_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2609,13 +2612,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_int64_result (const std::function<Callback_int64_result> &func)
 {
   void *fptr = new std::function<Callback_int64_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5670d5594a24b2d9ULL, 0x8ad93cc1a1e9bb50ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int64_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5670d5594a24b2d9ULL, 0x8ad93cc1a1e9bb50ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int64_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_int64_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2630,13 +2633,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_float64_result (const std::function<Callback_float64_result> &func)
 {
   void *fptr = new std::function<Callback_float64_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x51aee1ad06b0e2ffULL, 0x0a7f816f9bdaf008ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__float64_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x51aee1ad06b0e2ffULL, 0x0a7f816f9bdaf008ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__float64_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_float64_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2651,13 +2654,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_string_result (const std::function<Callback_string_result> &func)
 {
   void *fptr = new std::function<Callback_string_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5daa2a4439deab5fULL, 0xc0580f71a4d7d1d6ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__string_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5daa2a4439deab5fULL, 0xc0580f71a4d7d1d6ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__string_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_string_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2672,13 +2675,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_enum_result (const std::function<Callback_enum_result> &func)
 {
   void *fptr = new std::function<Callback_enum_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__enum_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__enum_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_enum_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2693,13 +2696,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_record_result (const std::function<Callback_record_result> &func)
 {
   void *fptr = new std::function<Callback_record_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__record_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__record_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_record_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2714,13 +2717,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_sequence_result (const std::function<Callback_sequence_result> &func)
 {
   void *fptr = new std::function<Callback_sequence_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__sequence_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__sequence_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_sequence_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2735,13 +2738,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_interface_result (const std::function<Callback_interface_result> &func)
 {
   void *fptr = new std::function<Callback_interface_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__interface_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__interface_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_interface_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2756,13 +2759,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_any_result (const std::function<Callback_any_result> &func)
 {
   void *fptr = new std::function<Callback_any_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5ae2293e0b4f9854ULL, 0xbb549e7d52c43e50ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__any_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5ae2293e0b4f9854ULL, 0xbb549e7d52c43e50ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__any_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_any_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2777,13 +2780,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_self_result (const std::function<Callback_self_result> &func)
 {
   void *fptr = new std::function<Callback_self_result> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__self_result, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__self_result, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_self_result (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2798,13 +2801,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_void_arg (const std::function<Callback_void_arg> &func)
 {
   void *fptr = new std::function<Callback_void_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__void_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__void_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_void_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2819,13 +2822,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_bool_arg (const std::function<Callback_bool_arg> &func)
 {
   void *fptr = new std::function<Callback_bool_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__bool_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__bool_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_bool_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2840,13 +2843,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_int32_arg (const std::function<Callback_int32_arg> &func)
 {
   void *fptr = new std::function<Callback_int32_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x583ed84bd4d820efULL, 0x87214001f1934890ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int32_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x583ed84bd4d820efULL, 0x87214001f1934890ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int32_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_int32_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2861,13 +2864,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_int64_arg (const std::function<Callback_int64_arg> &func)
 {
   void *fptr = new std::function<Callback_int64_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5d6ed628b051e336ULL, 0x442670f1eba34b7bULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int64_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5d6ed628b051e336ULL, 0x442670f1eba34b7bULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__int64_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_int64_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2882,13 +2885,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_float64_arg (const std::function<Callback_float64_arg> &func)
 {
   void *fptr = new std::function<Callback_float64_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5d937b3a9a059ff0ULL, 0x641851b425c3f91cULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__float64_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5d937b3a9a059ff0ULL, 0x641851b425c3f91cULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__float64_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_float64_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2903,13 +2906,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_string_arg (const std::function<Callback_string_arg> &func)
 {
   void *fptr = new std::function<Callback_string_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x524e550794aaa1e8ULL, 0x093b71ccace2863bULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__string_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x524e550794aaa1e8ULL, 0x093b71ccace2863bULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__string_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_string_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2924,13 +2927,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_enum_arg (const std::function<Callback_enum_arg> &func)
 {
   void *fptr = new std::function<Callback_enum_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__enum_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__enum_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_enum_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2945,13 +2948,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_record_arg (const std::function<Callback_record_arg> &func)
 {
   void *fptr = new std::function<Callback_record_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__record_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__record_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_record_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2966,13 +2969,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_sequence_arg (const std::function<Callback_sequence_arg> &func)
 {
   void *fptr = new std::function<Callback_sequence_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__sequence_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__sequence_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_sequence_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2987,13 +2990,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_interface_arg (const std::function<Callback_interface_arg> &func)
 {
   void *fptr = new std::function<Callback_interface_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__interface_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__interface_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_interface_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -3008,13 +3011,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_any_arg (const std::function<Callback_any_arg> &func)
 {
   void *fptr = new std::function<Callback_any_arg> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x51355ac177cc776eULL, 0x8b062ce8d8442de0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__any_arg, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x51355ac177cc776eULL, 0x8b062ce8d8442de0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__any_arg, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_any_arg (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -3029,13 +3032,13 @@ Rapicorn::Aida::uint64_t
 SignalTestInterfaceHandle::sig_self_args (const std::function<Callback_self_args> &func)
 {
   void *fptr = new std::function<Callback_self_args> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__self_args, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__SignalTestInterfaceHandle__self_args, fptr);
   return id;
 }
 bool
 SignalTestInterfaceHandle::sig_self_args (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
@@ -3112,13 +3115,13 @@ Rapicorn::Aida::uint64_t
 ChildInheritingSignalsHandle::sig_child_signal (const std::function<Callback_child_signal> &func)
 {
   void *fptr = new std::function<Callback_child_signal> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5ffad83b68b79139ULL, 0x7175e65d7705749fULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ChildInheritingSignalsHandle__child_signal, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5ffad83b68b79139ULL, 0x7175e65d7705749fULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ChildInheritingSignalsHandle__child_signal, fptr);
   return id;
 }
 bool
 ChildInheritingSignalsHandle::sig_child_signal (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 ChildInheritingSignalsHandle::ChildInheritingSignalsHandle ()
@@ -3597,13 +3600,13 @@ Rapicorn::Aida::uint64_t
 ButtonAreaHandle::sig_check_activate (const std::function<Callback_check_activate> &func)
 {
   void *fptr = new std::function<Callback_check_activate> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ButtonAreaHandle__check_activate, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ButtonAreaHandle__check_activate, fptr);
   return id;
 }
 bool
 ButtonAreaHandle::sig_check_activate (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -3618,13 +3621,13 @@ Rapicorn::Aida::uint64_t
 ButtonAreaHandle::sig_activate (const std::function<Callback_activate> &func)
 {
   void *fptr = new std::function<Callback_activate> (func);
-  Rapicorn::Aida::uint64_t id = AIDA_CONNECTION().signal_connect (0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ButtonAreaHandle__activate, fptr);
+  Rapicorn::Aida::uint64_t id = __AIDA_Local__::signal_connect (0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, __AIDA_Local__::smh2id (*this), __AIDA_emit__ButtonAreaHandle__activate, fptr);
   return id;
 }
 bool
 ButtonAreaHandle::sig_activate (Rapicorn::Aida::uint64_t signal_id)
 {
-  const bool r = AIDA_CONNECTION().signal_disconnect (signal_id);
+  const bool r = __AIDA_Local__::signal_disconnect (signal_id);
   return r;
 }
 ButtonAreaHandle::ButtonAreaHandle ()
