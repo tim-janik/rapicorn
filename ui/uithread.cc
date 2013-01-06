@@ -166,7 +166,7 @@ private:
     uithread_serverglue (m_server_connection);
     // Complete initialization by signalling caller
     m_idata->mutex.lock();
-    m_idata->app_id = connection_object2id (ApplicationImpl::the());
+    m_idata->app_id = ptrdiff_t (&ApplicationImpl::the()); // FIXME: use AIDA_ORB.activate_object instead of __AIDA_Local__::obj2id
     m_idata->cond.signal();
     m_idata->mutex.unlock();
     m_idata = NULL;

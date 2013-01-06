@@ -41,11 +41,15 @@ Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
 
+namespace { // Anon
+namespace __AIDA_Local__ {
+  inline Rapicorn::Aida::uint64_t obj2id (Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+  template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
+} } // Anon::__AIDA_Local__
+
+
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-template<class O> O*  connection_id2object (Rapicorn::Aida::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline Rapicorn::Aida::uint64_t connection_object2id (const Rapicorn::Aida::TestServerBase &obj) { return connection_object2id (&obj); }
 #endif // !AIDA_CONNECTION
 
 
@@ -1084,17 +1088,17 @@ I_FirstInterface_Interface::~I_FirstInterface_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_FirstInterface_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_FirstInterface_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterface_Interface* &obj)
 {
-  obj = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_FirstInterface_Interface> (fbr.pop_object());
 }
 void
 I_FirstInterface_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1506,17 +1510,17 @@ I_UIWidgetArea_Interface::~I_UIWidgetArea_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_UIWidgetArea_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_UIWidgetArea_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetArea_Interface* &obj)
 {
-  obj = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_UIWidgetArea_Interface> (fbr.pop_object());
 }
 void
 I_UIWidgetArea_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1540,17 +1544,17 @@ I_Parent_Interface::~I_Parent_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Parent_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Parent_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_Parent_Interface* &obj)
 {
-  obj = connection_id2object<I_Parent_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_Parent_Interface> (fbr.pop_object());
 }
 void
 I_Parent_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1572,17 +1576,17 @@ I_Child_Interface::~I_Child_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Child_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Child_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_Child_Interface* &obj)
 {
-  obj = connection_id2object<I_Child_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_Child_Interface> (fbr.pop_object());
 }
 void
 I_Child_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1605,17 +1609,17 @@ I_Descendant_Interface::~I_Descendant_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Descendant_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Descendant_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_Descendant_Interface* &obj)
 {
-  obj = connection_id2object<I_Descendant_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_Descendant_Interface> (fbr.pop_object());
 }
 void
 I_Descendant_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1639,17 +1643,17 @@ I_GrandChild_Interface::~I_GrandChild_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_GrandChild_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_GrandChild_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_GrandChild_Interface* &obj)
 {
-  obj = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_GrandChild_Interface> (fbr.pop_object());
 }
 void
 I_GrandChild_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1721,17 +1725,17 @@ I_QuickIface_Interface::~I_QuickIface_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_QuickIface_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_QuickIface_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIface_Interface* &obj)
 {
-  obj = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_QuickIface_Interface> (fbr.pop_object());
 }
 void
 I_QuickIface_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1753,17 +1757,17 @@ I_MethodTestInterface_Interface::~I_MethodTestInterface_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_MethodTestInterface_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_MethodTestInterface_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterface_Interface* &obj)
 {
-  obj = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_MethodTestInterface_Interface> (fbr.pop_object());
 }
 void
 I_MethodTestInterface_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1786,17 +1790,17 @@ I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SignalTestInterface_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SignalTestInterface_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterface_Interface* &obj)
 {
-  obj = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_SignalTestInterface_Interface> (fbr.pop_object());
 }
 void
 I_SignalTestInterface_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1819,17 +1823,17 @@ I_ChildInheritingSignals_Interface::~I_ChildInheritingSignals_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildInheritingSignals_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildInheritingSignals_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildInheritingSignals_Interface* &obj)
 {
-  obj = connection_id2object<I_ChildInheritingSignals_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_ChildInheritingSignals_Interface> (fbr.pop_object());
 }
 void
 I_ChildInheritingSignals_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1852,17 +1856,17 @@ I_AnotherChild_Interface::~I_AnotherChild_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_AnotherChild_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_AnotherChild_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_AnotherChild_Interface* &obj)
 {
-  obj = connection_id2object<I_AnotherChild_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_AnotherChild_Interface> (fbr.pop_object());
 }
 void
 I_AnotherChild_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1885,17 +1889,17 @@ I_PropertyTester_Interface::~I_PropertyTester_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PropertyTester_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PropertyTester_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTester_Interface* &obj)
 {
-  obj = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_PropertyTester_Interface> (fbr.pop_object());
 }
 void
 I_PropertyTester_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1943,17 +1947,17 @@ I_ButtonArea_Interface::~I_ButtonArea_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ButtonArea_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ButtonArea_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonArea_Interface* &obj)
 {
-  obj = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_ButtonArea_Interface> (fbr.pop_object());
 }
 void
 I_ButtonArea_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -1979,17 +1983,17 @@ I_PureMethods_Interface::~I_PureMethods_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PureMethods_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PureMethods_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethods_Interface* &obj)
 {
-  obj = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_PureMethods_Interface> (fbr.pop_object());
 }
 void
 I_PureMethods_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -2032,17 +2036,17 @@ I_NameTests_Interface::~I_NameTests_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTests_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTests_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTests_Interface* &obj)
 {
-  obj = connection_id2object<I_NameTests_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_NameTests_Interface> (fbr.pop_object());
 }
 void
 I_NameTests_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -2067,17 +2071,17 @@ I_Compressor_Interface::~I_Compressor_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Compressor_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_Compressor_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_Compressor_Interface* &obj)
 {
-  obj = connection_id2object<I_Compressor_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_Compressor_Interface> (fbr.pop_object());
 }
 void
 I_Compressor_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
@@ -2122,17 +2126,17 @@ I_SoundModule_Interface::~I_SoundModule_Interface () {}
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModule_Interface &obj)
 {
-  fb.add_object (connection_object2id (&obj));
+  fb.add_object (__AIDA_Local__::obj2id (&obj));
 }
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModule_Interface *obj)
 {
-  fb.add_object (connection_object2id (obj));
+  fb.add_object (__AIDA_Local__::obj2id (obj));
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModule_Interface* &obj)
 {
-  obj = connection_id2object<I_SoundModule_Interface> (fbr.pop_object());
+  obj = __AIDA_Local__::id2obj<I_SoundModule_Interface> (fbr.pop_object());
 }
 void
 I_SoundModule_Interface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
