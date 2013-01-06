@@ -117,7 +117,7 @@ XurlNode::dismiss_deletable ()
 {
   ScopedLock<Mutex> locker (xurl_mutex);
   needs_remove = false;
-  printerr ("DISMISS: deletable=%p hook=%p\n", object, this);
+  // printerr ("DISMISS: deletable=%p hook=%p\n", object, this);
   const bool deleted = xurl_map.remove (object);
   // here, this is deleted
   assert (deleted == true);
