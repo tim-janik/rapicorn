@@ -15,6 +15,11 @@ public:
 #include <rapicorn-core.hh> // for rcore/signal.hh
 using Rapicorn::Signals::slot;
 
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
+#endif // !AIDA_CONNECTION
+
+
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
 #include <vector>
@@ -24,20 +29,21 @@ using Rapicorn::Signals::slot;
 
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
 
-namespace { // Anonymous
+namespace { // Anon
 using Rapicorn::Aida::uint64_t;
 
-static __attribute__ ((__format__ (__printf__, 1, 2), unused))
-Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
+namespace __AIDA_Local__ {
+using namespace Rapicorn::Aida;
+static __attribute__ ((__format__ (__printf__, 1, 2), unused)) FieldBuffer*
+error (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
-  Rapicorn::Aida::error_vprintf (format, args);
+  error_vprintf (format, args);
   va_end (args);
   return NULL;
 }
-
-} // Anonymous
+} } // Anon::__AIDA_Local__
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
 
@@ -46,11 +52,6 @@ namespace __AIDA_Local__ {
   inline ptrdiff_t                obj2id (Rapicorn::Aida::TestServerBase *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
   template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<Rapicorn::Aida::TestServerBase*> (oid)); }
 } } // Anon::__AIDA_Local__
-
-
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-#endif // !AIDA_CONNECTION
 
 
 // --- Interfaces (class declarations) ---
@@ -2159,7 +2160,7 @@ namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2174,7 +2175,7 @@ __AIDA_list_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2194,7 +2195,7 @@ namespace InterfaceTests {
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2209,7 +2210,7 @@ __AIDA_list_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2221,7 +2222,7 @@ _$getter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2233,7 +2234,7 @@ _$setter__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2245,7 +2246,7 @@ _$getter__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2257,7 +2258,7 @@ _$setter__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2269,7 +2270,7 @@ _$caller__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2283,7 +2284,7 @@ _$caller__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2297,7 +2298,7 @@ _$caller__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2313,7 +2314,7 @@ _$caller__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2329,7 +2330,7 @@ _$caller__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 6) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 6) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2353,7 +2354,7 @@ _$caller__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2369,7 +2370,7 @@ _$caller__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2379,7 +2380,7 @@ _$caller__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2391,7 +2392,7 @@ _$caller__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2410,7 +2411,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (SharedPtr sp)
@@ -2418,13 +2419,13 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2449,7 +2450,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static double
   handler (I_UIWidgetArea_Interface &arg_ba1,
@@ -2461,14 +2462,14 @@ public:
     fb <<= sp->m_handler;
     fb <<= arg_ba1;
     fb <<= arg_someint;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2487,7 +2488,7 @@ _$sigcon__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__Parent (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Parent_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2503,7 +2504,7 @@ __AIDA_list_types__Parent (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__Child (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Child_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2519,7 +2520,7 @@ __AIDA_list_types__Child (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Descendant_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2535,7 +2536,7 @@ __AIDA_list_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_GrandChild_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2551,7 +2552,7 @@ __AIDA_list_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_QuickIface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2566,7 +2567,7 @@ __AIDA_list_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_QuickIface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2579,7 +2580,7 @@ _$caller__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2594,7 +2595,7 @@ __AIDA_list_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2604,7 +2605,7 @@ _$caller__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fb
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2620,7 +2621,7 @@ _$caller__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &f
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2636,7 +2637,7 @@ _$caller__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2652,7 +2653,7 @@ _$caller__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2668,7 +2669,7 @@ _$caller__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2684,7 +2685,7 @@ _$caller__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2700,7 +2701,7 @@ _$caller__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fb
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2716,7 +2717,7 @@ _$caller__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2732,7 +2733,7 @@ _$caller__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2748,7 +2749,7 @@ _$caller__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReade
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2764,7 +2765,7 @@ _$caller__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fb
 static Rapicorn::Aida::FieldBuffer*
 _$caller__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2781,7 +2782,7 @@ _$caller__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldRead
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2803,7 +2804,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (SharedPtr sp)
@@ -2811,13 +2812,13 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2842,7 +2843,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static bool
   handler (SharedPtr sp)
@@ -2850,14 +2851,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2882,7 +2883,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static int
   handler (SharedPtr sp)
@@ -2890,14 +2891,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2922,7 +2923,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static Rapicorn::Aida::int64_t
   handler (SharedPtr sp)
@@ -2930,14 +2931,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -2962,7 +2963,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static double
   handler (SharedPtr sp)
@@ -2970,14 +2971,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3002,7 +3003,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static std::string
   handler (SharedPtr sp)
@@ -3010,14 +3011,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return "";
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3042,7 +3043,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static QuickEnum
   handler (SharedPtr sp)
@@ -3050,14 +3051,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return QuickEnum (0);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3082,7 +3083,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static QuickRecordImpl
   handler (SharedPtr sp)
@@ -3090,14 +3091,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return QuickRecordImpl();
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3122,7 +3123,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static QuickSequenceImpl
   handler (SharedPtr sp)
@@ -3130,14 +3131,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return QuickSequenceImpl();
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3162,7 +3163,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static I_GrandChild_Interface*
   handler (SharedPtr sp)
@@ -3170,14 +3171,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3202,7 +3203,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static Rapicorn::Aida::Any
   handler (SharedPtr sp)
@@ -3210,14 +3211,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return Rapicorn::Aida::Any();
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3242,7 +3243,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static I_SignalTestInterface_Interface*
   handler (SharedPtr sp)
@@ -3250,14 +3251,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3282,7 +3283,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (SharedPtr sp)
@@ -3290,13 +3291,13 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3321,7 +3322,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (bool arg_b,
@@ -3331,13 +3332,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_b;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3362,7 +3363,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (int arg_i,
@@ -3372,13 +3373,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_i;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3403,7 +3404,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (Rapicorn::Aida::int64_t arg_i,
@@ -3413,13 +3414,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_i;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3444,7 +3445,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (double arg_f,
@@ -3454,13 +3455,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_f;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3485,7 +3486,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (const std::string &arg_s,
@@ -3495,13 +3496,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_s;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3526,7 +3527,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (QuickEnum arg_e,
@@ -3536,13 +3537,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_e;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3567,7 +3568,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (const QuickRecordImpl &arg_r,
@@ -3577,13 +3578,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_r;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3608,7 +3609,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (const QuickSequenceImpl &arg_s,
@@ -3618,13 +3619,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_s;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3649,7 +3650,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (I_GrandChild_Interface &arg_i,
@@ -3659,13 +3660,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_i;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3690,7 +3691,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (const Rapicorn::Aida::Any &arg_a,
@@ -3700,13 +3701,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_a;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3731,7 +3732,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (I_SignalTestInterface_Interface &arg_self_,
@@ -3741,13 +3742,13 @@ public:
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
     fb <<= arg_self_;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3766,7 +3767,7 @@ _$sigcon__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ChildInheritingSignals_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3788,7 +3789,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (I_ChildInheritingSignals_Interface &arg_c,
@@ -3808,13 +3809,13 @@ public:
     fb <<= arg_i;
     fb <<= arg_r;
     fb <<= arg_s;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_ChildInheritingSignals_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3833,7 +3834,7 @@ _$sigcon__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_AnotherChild_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3849,7 +3850,7 @@ __AIDA_list_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3864,7 +3865,7 @@ __AIDA_list_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3876,7 +3877,7 @@ _$getter__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3888,7 +3889,7 @@ _$setter__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3900,7 +3901,7 @@ _$getter__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3912,7 +3913,7 @@ _$setter__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3924,7 +3925,7 @@ _$getter__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3936,7 +3937,7 @@ _$setter__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3948,7 +3949,7 @@ _$getter__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3960,7 +3961,7 @@ _$setter__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3972,7 +3973,7 @@ _$getter__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3984,7 +3985,7 @@ _$setter__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -3996,7 +3997,7 @@ _$getter__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4008,7 +4009,7 @@ _$setter__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4020,7 +4021,7 @@ _$getter__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4032,7 +4033,7 @@ _$setter__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4044,7 +4045,7 @@ _$getter__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4056,7 +4057,7 @@ _$setter__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4068,7 +4069,7 @@ _$getter__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4080,7 +4081,7 @@ _$setter__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4092,7 +4093,7 @@ _$getter__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4104,7 +4105,7 @@ _$setter__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4116,7 +4117,7 @@ _$getter__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4132,7 +4133,7 @@ namespace RapicornAidaTest {
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4147,7 +4148,7 @@ __AIDA_list_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4159,7 +4160,7 @@ _$getter__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4171,7 +4172,7 @@ _$setter__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4183,7 +4184,7 @@ _$getter__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4195,7 +4196,7 @@ _$setter__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4207,7 +4208,7 @@ _$getter__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4219,7 +4220,7 @@ _$setter__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4231,7 +4232,7 @@ _$getter__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4250,7 +4251,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static bool
   handler (SharedPtr sp)
@@ -4258,14 +4259,14 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
     return 0;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4290,7 +4291,7 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
     fb <<= m_handler;
-    m_connection.send_event (&fb); // deletes fb
+    m_connection.send_event (&fb);
   }
   static void
   handler (SharedPtr sp)
@@ -4298,13 +4299,13 @@ public:
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0
     fb <<= sp->m_handler;
-    sp->m_connection.send_event (&fb); // deletes fb
+    sp->m_connection.send_event (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
 _$sigcon__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4323,7 +4324,7 @@ _$sigcon__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PureMethods_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4338,7 +4339,7 @@ __AIDA_list_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_PureMethods_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4356,7 +4357,7 @@ namespace Other {
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_NameTests_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4371,7 +4372,7 @@ __AIDA_list_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$caller__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 3) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 3) return __AIDA_Local__::error ("invalid number of arguments");
   I_NameTests_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4391,7 +4392,7 @@ namespace BseTest {
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Compressor_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4406,7 +4407,7 @@ __AIDA_list_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Compressor_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4418,7 +4419,7 @@ _$getter__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Compressor_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4430,7 +4431,7 @@ _$setter__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$getter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Compressor_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4442,7 +4443,7 @@ _$getter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 _$setter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_Compressor_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
@@ -4455,7 +4456,7 @@ _$setter__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_list_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");
+  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");
   I_SoundModule_Interface *self;
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");

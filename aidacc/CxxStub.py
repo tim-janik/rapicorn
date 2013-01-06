@@ -31,6 +31,12 @@ rapicornsignal_boilerplate = r"""
 using Rapicorn::Signals::slot;
 """
 
+servercc_testcode = r"""
+#ifndef AIDA_CONNECTION
+#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
+#endif // !AIDA_CONNECTION
+"""
+
 gencc_boilerplate = r"""
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
@@ -41,27 +47,22 @@ gencc_boilerplate = r"""
 
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
 
-namespace { // Anonymous
+namespace { // Anon
 using Rapicorn::Aida::uint64_t;
 
-static __attribute__ ((__format__ (__printf__, 1, 2), unused))
-Rapicorn::Aida::FieldBuffer* aida$_error (const char *format, ...)
+namespace __AIDA_Local__ {
+using namespace Rapicorn::Aida;
+static __attribute__ ((__format__ (__printf__, 1, 2), unused)) FieldBuffer*
+error (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
-  Rapicorn::Aida::error_vprintf (format, args);
+  error_vprintf (format, args);
   va_end (args);
   return NULL;
 }
-
-} // Anonymous
+} } // Anon::__AIDA_Local__
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
-"""
-
-servercc_testcode = r"""
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-#endif // !AIDA_CONNECTION
 """
 
 servercc_boilerplate = r"""
@@ -75,11 +76,12 @@ namespace __AIDA_Local__ {
 clientcc_boilerplate = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-template<class C> C*     connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
+template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-  inline ptrdiff_t       smh2id (const Rapicorn::Aida::SmartHandle &h) { return h._rpc_id(); }
+  inline ptrdiff_t   smh2id (const SmartHandle &h) { return h._rpc_id(); }
+static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 } } // Anon::__AIDA_Local__
 """
 
@@ -577,7 +579,7 @@ class Generator:
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid self
     s += '  fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    s += '  Rapicorn::Aida::FieldBuffer *fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
     s += '  frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
@@ -659,7 +661,7 @@ class Generator:
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     # call out
-    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
@@ -682,7 +684,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + %u) return aida$_error ("invalid number of arguments");\n' % len (mtype.args)
+    s += '  if (fbr.remaining() != 1 + %u) return __AIDA_Local__::error ("invalid number of arguments");\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -737,7 +739,7 @@ class Generator:
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
     s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Rapicorn::Aida::FieldReader frr (*fr, AIDA_CONNECTION());\n'
@@ -759,7 +761,7 @@ class Generator:
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    s += '  fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  if (fr) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
@@ -772,7 +774,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 1) return aida$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -795,7 +797,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -820,7 +822,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return aida$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
@@ -908,7 +910,7 @@ class Generator:
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid handler
     s += '    fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb <<= m_handler;\n'
-    s += '    m_connection.send_event (&fb); // deletes fb\n'
+    s += '    m_connection.send_event (&fb);\n' # deletes fb
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
@@ -922,7 +924,7 @@ class Generator:
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_connection.send_event (&fb); // deletes fb\n'
+    s += '    sp->m_connection.send_event (&fb);\n' # deletes fb
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'
@@ -930,7 +932,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 2) return aida$_error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
@@ -1072,12 +1074,12 @@ class Generator:
         s += serverhh_testcode
       if self.gen_rapicornsignals:
         s += rapicornsignal_boilerplate
-    if self.gen_clientcc:
-      s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
-    if self.gen_servercc:
-      s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
     if self.gen_servercc and self.iface_base == self.test_iface_base:
       s += servercc_testcode + '\n'
+    if self.gen_servercc:
+      s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
+    if self.gen_clientcc:
+      s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
