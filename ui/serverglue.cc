@@ -4,20 +4,20 @@
 #include "internal.hh"
 
 namespace { // Anon
-static Rapicorn::Aida::ServerConnection _serverglue_connection;
+static Rapicorn::Aida::ServerConnection *_serverglue_connection;
 };
 
 namespace Rapicorn {
 
 void
-uithread_serverglue (Rapicorn::Aida::ServerConnection connection)
+uithread_serverglue (Rapicorn::Aida::ServerConnection &connection)
 {
- _serverglue_connection = connection;
+ _serverglue_connection = &connection;
 }
 
 } // Rapicorn
 
-#define AIDA_CONNECTION()       (_serverglue_connection)
+#define AIDA_CONNECTION()       (*_serverglue_connection)
 
 // compile server-side API
 #include "serverapi.cc"

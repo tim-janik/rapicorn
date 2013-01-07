@@ -11,6 +11,8 @@ rules = [
   (r'a1, a2',                         ('',   'a%i',         ', ', '')),
   (r'typename Type<A1>::T a1; '+
    r'typename Type<A2>::T a2;',       ('',   'typename Type<A%i>::T a%i', '; ', ';')),
+  (r'typename ValueType<A1>::T a1; '+
+   r'typename ValueType<A2>::T a2;',  ('',   'typename ValueType<A%i>::T a%i', '; ', ';')),
   (r'A1 a1; A2 a2;',                  ('',   'A%i a%i',     '; ', ';')),
   (r'A1 a1, A2 a2',                   ('',   'A%i a%i',     ', ', '')),
   (r'fbr >>= a1; fbr >>= a2;',        ('',   'fbr >>= a%i', '; ', ';')),

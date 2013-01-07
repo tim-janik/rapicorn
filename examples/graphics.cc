@@ -62,7 +62,7 @@ main (int   argc,
   // hook up drawable test
   DrawableH drawable = window.component<DrawableH> ("Drawable#drawable1");
   RAPICORN_ASSERT (drawable._is_null() == false);
-  drawable.sig_redraw() += slot (&drawable_redraw);
+  drawable.sig_redraw ([&drawable] (int x, int y, int w, int h) { drawable_redraw (drawable, x, y, w, h); });
 
   // show main window
   window.show();

@@ -137,11 +137,11 @@ _aida___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
 }
 
 static inline PyObject*
-aida_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
+aida_PyObject_4uint64 (const char *type_name, uint64_t orbid)
 {
   if (!_aida_object_factory_callable)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
-  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (rpc_id);
+  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (orbid);
   if (pyid) {
     PyObject *tuple = PyTuple_New (2);
     if (tuple) {
@@ -307,69 +307,54 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_rpc_signal_call (self, class_info, mtype, mdefs):
-    s = ''
+  def generate_client_signal_def (self, class_info, functype, mdefs):
     mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
-               (mtype.ident_digest(), mtype.ident_digest()) ]
-    evd_class = '_EventHandler_%s' % mtype.ident_digest()
-    s += 'class %s : public Rapicorn::Aida::ClientConnection::EventHandler {\n' % evd_class
-    s += '  PyObject *m_callable;\n'
-    s += 'public:\n'
-    s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
-    s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
-    s += '  virtual FieldBuffer*\n'
-    s += '  handle_event (Rapicorn::Aida::FieldBuffer &fb)\n'
-    s += '  {\n'
-    if mtype.args:
-      s += '    FieldReader fbr (fb);\n'
-      s += '    fbr.skip_msgid(); // FIXME: check msgid\n'
-      s += '    fbr.pop_int64();  // FIXME: check handler_id\n'
-    s += '    const uint length = %u;\n' % len (mtype.args)
-    s += '    PyObject *result, *tuple = PyTuple_New (length)%s;\n' % (', *item' if mtype.args else '')
+               (functype.ident_digest(), functype.ident_digest()) ]
+    s, cbtname, classN = '', 'Callback' + '_' + functype.name, class_info.name
+    u64 = 'Rapicorn::Aida::uint64_t'
+    emitfunc = '__AIDA_pyemit__%s__%s' % (classN, functype.name)
+    s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
+    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '  PyObject *callable = (PyObject*) data;\n'
+    s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
+    if functype.args:
+      s += '  FieldReader fbr (*sfb);\n'
+      s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
+      s += '  fbr.pop_int64();  // skip handler_id\n'
+    s += '  const uint length = %u;\n' % len (functype.args)
+    s += '  PyObject *result = NULL, *tuple = PyTuple_New (length)%s;\n' % (', *item' if functype.args else '')
     arg_counter = 0
-    for a in mtype.args:
-      s += '  ' + self.generate_proto_pop_py ('fbr', a[1], 'item')
-      s += '    PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
+    for a in functype.args:
+      s += self.generate_proto_pop_py ('fbr', a[1], 'item')
+      s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
       arg_counter += 1
-    s += '    if (PyErr_Occurred()) goto error;\n'
-    s += '    result = PyObject_Call (m_callable, tuple, NULL);\n'
-    s += '    Py_XDECREF (result);\n'
-    s += '   error:\n'
-    s += '    Py_XDECREF (tuple);\n'
-    s += '    return NULL;\n'
-    s += '  }\n'
-    s += '};\n'
-    s += 'static PyObject*\n'
-    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
-    s += '{\n'
-    s += '  PyObject *item, *pyfoR = NULL;\n'
-    s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
-    s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
-    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += self.generate_proto_add_py ('fb', class_info, 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
-    s += '  if (item == Py_None) fb.add_int64 (0);\n'
-    s += '  else {\n'
-    s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    Rapicorn::Aida::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
-    s += '    uint64_t handler_id = AIDA_CONNECTION().register_event_handler (evh);\n'
-    s += '    fb.add_int64 (handler_id); }\n'
-    s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
-    s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
-    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '  ERRORifnotret (fr);\n'
-    s += '  if (fr) {\n'
-    s += '    FieldReader frr (*fr);\n'
-    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-    s += '    if (frr.remaining() == 1) {\n'
-    s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
-    s += '    }\n'
-    s += '  }\n'
+    s += '  if (PyErr_Occurred()) goto error;\n'
+    s += '  result = PyObject_Call (callable, tuple, NULL);\n'
+    s += '  Py_XDECREF (result);\n'
     s += ' error:\n'
-    s += '  if (fm) delete fm;\n'
-    s += '  if (fr) delete fr;\n'
-    s += '  return pyfoR;\n'
+    s += '  Py_XDECREF (tuple);\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    s += 'static PyObject*\n'
+    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % functype.ident_digest()
+    s += '{\n'
+    s += '  while (0) { error: return NULL; }\n'
+    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
+    s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
+    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
+    s += '  %s result = 0;\n' % u64
+    s += '  if (callable == Py_None) {\n'
+    s += '    PyObject *pyo = PyTuple_GET_ITEM (pyargs, 2);\n' # connection id for disconnect
+    s += '    %s dc_id = PyIntLong_AsLongLong (pyo); ERRORifpy();\n' % u64
+    s += '    result = AIDA_CONNECTION().signal_disconnect (dc_id);\n'
+    s += '  } else {\n'
+    s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
+    s += '    Py_INCREF (callable);\n'
+    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '  }\n'
+    s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
+    s += '  return pyres;\n'
     s += '}\n'
     return s
   def method_digest (self, mtype):
@@ -462,7 +447,7 @@ class Generator:
         for m in tp.methods:
           s += self.generate_rpc_call_wrapper (tp, m, mdefs)
         for sg in tp.signals:
-          s += self.generate_rpc_signal_call (tp, sg, mdefs)
+          s += self.generate_client_signal_def (tp, sg, mdefs)
     # method def array
     if mdefs:
       aux = '{ "_AIDA___register_object_factory_callable", _aida___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'

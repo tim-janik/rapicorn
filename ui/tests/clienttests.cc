@@ -20,13 +20,13 @@ test_item_usage()
   WindowH window = create_plain_window();
   ItemH item = window;
   TASSERT (item._is_null() == false);
-  ContainerH c = ContainerH::downcast (item);
+  ContainerH c = ContainerH::down_cast (item);
   TASSERT (c._is_null() == false);
-  TASSERT (WindowH::downcast (c)._is_null() == false);
+  TASSERT (WindowH::down_cast (c)._is_null() == false);
   window.close();
-  TASSERT (ItemH::downcast (app)._is_null() == true);
-  TASSERT (ContainerH::downcast (app)._is_null() == true);
-  TASSERT (WindowH::downcast (app)._is_null() == true);
+  TASSERT (ItemH::down_cast (app)._is_null() == true);
+  TASSERT (ContainerH::down_cast (app)._is_null() == true);
+  TASSERT (WindowH::down_cast (app)._is_null() == true);
   const char *testname = "3e3b0d44-ded6-4fc5-a134-c16569c23d96";
   String name = item.name();
   TASSERT (name != testname);

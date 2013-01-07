@@ -29,7 +29,7 @@ main (int   argc,
   WindowH window = app.create_window ("RapicornTest:main-window");
 
   /* connect custom callback to handle UI commands */
-  window.sig_commands() += handle_commands;
+  window.sig_commands ([&window] (const String &command, const StringSeq &args) -> bool { return handle_commands (window, command, args); });
 
   /* display window on screen */
   window.show();

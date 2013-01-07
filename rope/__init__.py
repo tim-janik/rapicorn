@@ -65,11 +65,11 @@ class AidaObjectFactory:
   def __init__ (self, _PY):
     self._PY = _PY
     self.AidaID = _PY._BaseClass_._AidaID_
-  def __call__ (self, type_name, rpc_id):
+  def __call__ (self, type_name, orbid):
     klass = getattr (self._PY, type_name)
-    if not klass or not rpc_id:
+    if not klass or not orbid:
       return None
-    return klass (self.AidaID (rpc_id))
+    return klass (self.AidaID (orbid))
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_

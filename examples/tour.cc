@@ -40,7 +40,7 @@ main (int   argc,
 
   // create window, handle commands
   WindowH window = app.create_window ("RapicornTest:tour-dialog");
-  window.sig_commands() += custom_commands;
+  window.sig_commands ([&window] (const String &command, const StringSeq &args) -> bool { return custom_commands (window, command, args); });
 
   // display window and enter main event loop
   window.show();

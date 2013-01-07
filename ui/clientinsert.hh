@@ -35,8 +35,8 @@ class_scope:Requisition:
   inline RequisitionStruct (double w, double h) : width (w), height (h) {}
 
 class_scope:Item:
-  /// Carry out Item::query_selector_unique() and Target::downcast() in one step, for type safe access to a descendant.
-  template<class Target> Target component (const std::string &selector) { return Target::downcast (query_selector_unique (selector)); }
+  /// Carry out Item::query_selector_unique() and Target::down_cast() in one step, for type safe access to a descendant.
+  template<class Target> Target component (const std::string &selector) { return Target::down_cast (query_selector_unique (selector)); }
 
 class_scope:Application:
   static int                      run            ();
@@ -44,7 +44,7 @@ class_scope:Application:
   static void                     shutdown       ();
   static int                      run_and_exit   () RAPICORN_NORETURN;
   static ApplicationHandle        the            ();
-  static Aida::ClientConnection   ipc_connection ();
+  static Aida::ClientConnection*  ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
 

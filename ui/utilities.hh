@@ -35,12 +35,6 @@ inline double min     (int64  a, double b) { return min<double> (a, b); }
 inline double max     (double a, int64  b) { return max<double> (a, b); }
 inline double max     (int64  a, double b) { return max<double> (a, b); }
 
-// === IDL Helpers === // FIXME: remove
-template<class O>
-O*      connection_id2object (uint64 oid) { return dynamic_cast<O*> (reinterpret_cast<BaseObject*> (oid)); }
-inline uint64  connection_object2id (const BaseObject *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline uint64  connection_object2id (const BaseObject &obj) { return connection_object2id (&obj); }
-
 /* --- exceptions --- */
 struct Exception : std::exception {
 public:

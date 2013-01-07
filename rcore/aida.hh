@@ -9,6 +9,8 @@
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
 #include <memory>               // shared_ptr
+#include <set>
+#include <map>
 
 #ifndef _SHARED_PTR_H           // might require -std=c++0x
 #include <tr1/memory>           // import shared_ptr if needed
@@ -190,6 +192,7 @@ public:
 };
 
 // == Type Declarations ==
+class ObjectBroker;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -211,6 +214,11 @@ void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETU
 void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
 void    warning_printf  (const char *format, ...) AIDA_PRINTF (1, 2);
 
+// == Type Utilities ==
+template<class Y> struct ValueType           { typedef Y T; };
+template<class Y> struct ValueType<Y&>       { typedef Y T; };
+template<class Y> struct ValueType<const Y&> { typedef Y T; };
+
 // == Message IDs ==
 enum MessageId {
   MSGID_NONE        = 0,
@@ -230,23 +238,39 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
+// == OrbObject ==
+/// Internal management structure for objects known to the ORB.
+class OrbObject {
+  ptrdiff_t     orbid_;
+protected:
+  explicit      OrbObject (ptrdiff_t orbid);
+public:
+  ptrdiff_t     orbid     ()            { return orbid_; }
+};
+
 // == SmartHandle ==
 class SmartHandle {
-  uint64_t m_rpc_id;
+  OrbObject     *orbo_;
   template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
+  friend class ObjectBroker;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
-  typedef uint64_t RpcId;
-  explicit                  SmartHandle (uint64_t ipcid);
-  void                      _reset      ();
+  explicit                  SmartHandle (OrbObject&);
   explicit                  SmartHandle ();
 public:
-  uint64_t                  _rpc_id     () const;
-  bool                      _is_null    () const;
+  uint64_t                  _orbid      () const { return orbo_->orbid(); }
+  bool                      _is_null    () const { return !orbo_->orbid(); }
   virtual                  ~SmartHandle ();
-  static NullHandle         _null_handle()                      { return NullHandle(); }
+  static NullHandle         _null_handle()       { return NullHandle(); }
+};
+
+// == ObjectBroker ==
+class ObjectBroker {
+public:
+  static void pop_handle (FieldReader&, SmartHandle&);
+  static void dup_handle (const ptrdiff_t[2], SmartHandle&);
 };
 
 // == FieldBuffer ==
@@ -372,16 +396,38 @@ public:
 };
 
 // == Connections ==
-class ConnectionTransport;
+class ClientConnection;
+
+/// Client and server connection interface.
+class Connector {
+public:
+  virtual int          notify_fd   () = 0;      ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool         pending     () = 0;      ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual FieldBuffer* pop         () = 0;      ///< Dispatch a single event if any is pending.
+  virtual FieldBuffer* call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void         ref         () = 0;
+  virtual void         unref       () = 0;
+};
+
+/// Function typoe for internal signal handling.
+typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
+
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection {
+  RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
+public: /// @name Construction
+  static ServerConnection* create_threaded  ();
+  virtual                 ~ServerConnection ();
+protected:                 ServerConnection ();
 public: /// @name API for remote calls
-  void send_event (FieldBuffer*); ///< Send event to remote asyncronously, transfers memory.
-  int  notify_fd  (); ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool pending    (); ///< Indicate whether any incoming calls are pending that need to be dispatched.
-  void dispatch   (); ///< Dispatch a single call if any is pending.
-  bool is_null    () const;
-public: /// @name Registry for IPC method lookups
+  virtual void       send_event (FieldBuffer*) = 0; ///< Send event to remote asyncronously, transfers memory.
+  virtual int        notify_fd  () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool       pending    () = 0; ///< Indicate whether any incoming calls are pending that need to be dispatched.
+  virtual void       dispatch   () = 0; ///< Dispatch a single call if any is pending.
+  virtual Connector& connector  () = 0;
+protected: /// @name Registry for IPC method lookups
+  static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
+public:
   struct MethodEntry       { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry    /// Registry structure for IPC method stubs.
   {
@@ -389,29 +435,23 @@ public: /// @name Registry for IPC method lookups
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
-protected:
-  static DispatchFunc  find_method      (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
-public: /// @name Construction
-  static ServerConnection create_threaded  ();
-  virtual                ~ServerConnection ();
-  /*ctor*/                ServerConnection ();
-  /*copy*/                ServerConnection (const ServerConnection&);
-  void                    operator=        (const ServerConnection&);
-protected:                ServerConnection (ConnectionTransport&);
-private: /// @name Internals
-  ConnectionTransport *m_transport;
-  friend class ClientConnection;
 };
+
 /// Connection context for IPC clients. @nosubgrouping
 class ClientConnection {
+  RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 public: /// @name API for remote calls
-  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a syncronous remote call, transfers memory.
+  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a remote call syncronously, transfers memory.
   int           notify_fd   ();             ///< Returns fd for POLLIN, to wake up on incomming events.
   bool          pending     ();             ///< Indicate whether any incoming events are pending that need to be dispatched.
   void          dispatch    ();             ///< Dispatch a single event if any is pending.
-  bool          is_null     () const;
+public: /// @name Lifetime
+  virtual      ~ClientConnection ();
+  /*ctor*/      ClientConnection (Connector&);
 public: /// @name API for event handler bookkeeping
-  struct EventHandler                        /// Interface class used for client side signal emissions.
+  uint64_t             signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data);
+  bool                 signal_disconnect (uint64_t signal_handler_id);
+  struct EventHandler                       /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler ();
     virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
@@ -419,14 +459,15 @@ public: /// @name API for event handler bookkeeping
   uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
   EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
   bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
-public: /// @name Construction
-  virtual      ~ClientConnection ();
-  /*ctor*/      ClientConnection ();
-  /*ctor*/      ClientConnection (ServerConnection&);
-  /*copy*/      ClientConnection (const ClientConnection&);
-  void          operator=        (const ClientConnection&);
 private: /// @name Internals
-  ConnectionTransport *m_transport;
+  Connector    *m_connector;
+  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
+  std::map<uint64_t,SignalHandler*> signal_handler_map_;
+  pthread_spinlock_t                signal_spin_;
+  SignalHandler*                    signal_lookup (uint64_t handler_id);
+  // client event handler
+  typedef std::set<uint64_t> UIntSet;
+  UIntSet                   ehandler_set;
 };
 
 // == inline implementations ==

@@ -10,8 +10,8 @@
 // --- Anonymous namespacing
 namespace {
 
-static Aida::ClientConnection pyrope_connection;
-#define AIDA_CONNECTION()    (pyrope_connection)
+static Aida::ClientConnection *pyrope_connection;
+#define AIDA_CONNECTION()    (*pyrope_connection)
 
 // --- cpy2rope stubs (generated) ---
 #include "cpy2rope.cc"
@@ -39,7 +39,7 @@ shutdown_rapicorn_atexit (void)
 static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
-  assert_return (pyrope_connection.is_null(), NULL);
+  assert_return (pyrope_connection == NULL, NULL);
   // parse args: application_name, cmdline_args
   const char *ns = NULL;
   unsigned int nl = 0;
@@ -75,7 +75,7 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   iargs.push_back (string_printf ("cpu-affinity=%d", !ThisThread::affinity()));
   // initialize core
   ApplicationH app = init_app (application_name, &argc, argv, iargs);
-  uint64 app_id = app._rpc_id();
+  uint64 app_id = app._orbid();
   if (app_id == 0)
     ; // FIXME: throw exception
   pyrope_connection = app.ipc_connection();
