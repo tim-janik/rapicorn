@@ -272,7 +272,7 @@ public:
 template<class SmartHandle>
 class SmartMember : public SmartHandle {
 public:
-  explicit SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
+  inline   SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
   explicit SmartMember () : SmartHandle() {}
   void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
 };

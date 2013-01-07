@@ -13,6 +13,10 @@ clienthh_boilerplate = r"""
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
+namespace Rapicorn { namespace Aida {
+constexpr struct _ServantType {} _servant;
+constexpr struct _HandleType {} _handle;
+} } // Rapicorn::Aida
 """
 
 serverhh_testcode = r"""
@@ -68,10 +72,20 @@ error (const char *format, ...)
 servercc_boilerplate = r"""
 namespace { // Anon
 namespace __AIDA_Local__ {
-  inline ptrdiff_t                obj2id ($AIDA_iface_base$ *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-  template<class Object> Object*  id2obj (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<$AIDA_iface_base$*> (oid)); }
   typedef ServerConnection::MethodRegistry MethodRegistry;
   typedef ServerConnection::MethodEntry MethodEntry;
+  inline ptrdiff_t               obj2id  ($AIDA_iface_base$ *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+  template<class Object> Object* id2obj  (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<$AIDA_iface_base$*> (oid)); }
+  template<class Object> Object* smh2obj (const SmartHandle &sh)
+                                         { ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
+  template<class SMH> SMH        obj2smh ($AIDA_iface_base$ *self)
+  {
+    const ptrdiff_t orbid = obj2id (self);
+    SMH target;
+    const ptrdiff_t input[2] = { orbid, target._orbid() };
+    Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+    return target;
+  }
 } } // Anon::__AIDA_Local__
 """
 
@@ -81,17 +95,17 @@ clientcc_boilerplate = r"""
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._orbid(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
                                        { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
-template<class C> C  smh2cast (const SmartHandle &handle) {
+inline ptrdiff_t        smh2id (const SmartHandle &h) { return h._orbid(); }
+template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
-  C casted;
-  const ptrdiff_t input[2] = { orbid, casted._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, casted);
-  return casted;
+  SMH target;
+  const ptrdiff_t input[2] = { orbid, target._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  return target;
 }
 } } // Anon::__AIDA_Local__
 """
@@ -141,7 +155,7 @@ class Generator:
   def C4server (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
-      return tname + "Impl"     # FIXME
+      return tname # + "Impl"     # FIXME
     elif type_node.storage == Decls.INTERFACE:
       return self.Iwrap (tname)
     else:
@@ -435,7 +449,7 @@ class Generator:
       cl = []
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
   def generate_interface_class (self, type_info):
-    s, classC = '\n', self.C (type_info) # class names
+    s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -457,7 +471,6 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4CLIENT
-      classH = self.C4client (type_info) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList') + '_down_cast_types();\n'
       s += '  template<class SmartHandle>\n'
@@ -488,11 +501,7 @@ class Generator:
       il = max (il, len (self.C (type_info)))
     for m in type_info.methods:
       s += self.generate_method_decl (m, il)
-    # specials (operators)
-    if self.gen_mode == G4CLIENT:
-      s += '//' + self.F ('inline', -9)
-      s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
-      s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
+    # impl()
     if self.gen_mode == G4SERVER and self.object_impl:
       impl_method, ppwrap = self.object_impl
       implname = ppwrap[0] + type_info.name + ppwrap[1]
@@ -508,7 +517,16 @@ class Generator:
     else: # G4CLIENT
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
-    s += self.generate_shortalias (type_info)   # typedef alias
+    # conversion operators
+    if self.gen_mode == G4SERVER:       # ->* _servant and ->* _handle operators
+      s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
+      s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
+    else: # self.gen_mode == G4CLIENT
+      s += '//' + self.F ('inline', -9)
+      s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
+      s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
+    # typedef alias
+    s += self.generate_shortalias (type_info)
     return s
   def generate_shortdoc (self, type_info):      # doxygen snippets
     classC = self.C (type_info) # class name
@@ -602,7 +620,7 @@ class Generator:
     return s
   def generate_server_class_methods (self, class_info):
     assert self.gen_mode == G4SERVER
-    s, classC = '\n', self.C (class_info) # class names
+    s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
     s += '%s::%s ()' % (classC, classC) # ctor
     l = [] # constructor agument list
     for sg in class_info.signals:
@@ -610,7 +628,7 @@ class Generator:
     if l:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
-    s += '%s::~%s () {}\n' % (classC, classC) # dtor
+    s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s &obj)\n{\n' % classC
     s += '  fb.add_object (__AIDA_Local__::obj2id (&obj));\n'
@@ -622,6 +640,12 @@ class Generator:
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::id2obj<%s> (fbr.pop_object());\n' % classC
+    s += '}\n'
+    s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
+    s += '  return __AIDA_Local__::smh2obj<%s> (sh);\n' % classC
+    s += '}\n'
+    s += '%s\noperator->* (%s *obj, Rapicorn::Aida::_HandleType)\n{\n' % (classH, classC)
+    s += '  return __AIDA_Local__::obj2smh<%s> (obj);\n' % classH
     s += '}\n'
     s += 'void\n'
     s += '%s::_list_types (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
@@ -1107,14 +1131,14 @@ class Generator:
         elif tp.typedef_origin:
           s += self.open_namespace (tp) + '\n'
           s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
-        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
+        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4CLIENT:
           if self.gen_serverhh:
             s += self.open_namespace (tp)
             s += self.generate_recseq_decl (tp)
           if self.gen_clienthh:
             s += self.open_namespace (tp)
             s += self.generate_recseq_decl (tp)
-        elif tp.storage == Decls.ENUM:
+        elif tp.storage == Decls.ENUM and self.gen_mode == G4CLIENT:
           s += self.open_namespace (tp)
           s += self.generate_enum_decl (tp)
           spc_enums += [ tp ]
@@ -1142,13 +1166,13 @@ class Generator:
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
-        if tp.storage == Decls.RECORD:
+        if tp.storage == Decls.RECORD and self.gen_mode == G4CLIENT:
           s += self.open_namespace (tp)
           s += self.generate_record_impl (tp)
-        elif tp.storage == Decls.SEQUENCE:
+        elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4CLIENT:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
-        elif tp.storage == Decls.ENUM:
+        elif tp.storage == Decls.ENUM and self.gen_mode == G4CLIENT:
           s += self.open_namespace (tp)
           s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:

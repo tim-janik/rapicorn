@@ -43,9 +43,9 @@ public:
 };
 
 class DrawableImpl : public virtual ItemImpl, public virtual DrawableIface {
-  PixbufImpl m_pixbuf; int m_x, m_y;
+  Pixbuf m_pixbuf; int m_x, m_y;
 protected:
-  virtual void  draw_rect       (int x, int y, const PixbufImpl &pixbuf);
+  virtual void  draw_rect       (int x, int y, const Pixbuf &pixbuf);
   virtual void  size_request    (Requisition &requisition);
   virtual void  size_allocate   (Allocation area, bool changed);
   virtual void  render          (RenderContext &rcontext, const Rect &rect);

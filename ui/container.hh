@@ -61,7 +61,7 @@ public:
   void                  debug_tree      (String indent = String());
   // ContainerIface
   virtual ItemIface*    create_child    (const std::string      &item_identifier,
-                                         const StringSeqImpl    &args);
+                                         const StringSeq    &args);
 };
 
 // == Single Child Container ==
