@@ -896,7 +896,7 @@ class Generator:
     s = ''
     dispatcher_name = '__AIDA_signal__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
-    closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
+    closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
     s += '  Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;\n'
     s += 'public:\n'

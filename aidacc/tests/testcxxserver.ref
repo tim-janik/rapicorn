@@ -2403,12 +2403,12 @@ __AIDA_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
   self->on_click2in (arg_command);
   return NULL;
 }
-class _$Closure__UIWidgetArea__void_signal {
+class __AIDA_Closure__UIWidgetArea__void_signal {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__UIWidgetArea__void_signal> SharedPtr;
-  _$Closure__UIWidgetArea__void_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__UIWidgetArea__void_signal()
+  typedef std::shared_ptr<__AIDA_Closure__UIWidgetArea__void_signal> SharedPtr;
+  __AIDA_Closure__UIWidgetArea__void_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__UIWidgetArea__void_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2436,18 +2436,18 @@ __AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_void_signal.disconnect (con_id);
   if (handler_id) {
-    _$Closure__UIWidgetArea__void_signal::SharedPtr sp (new _$Closure__UIWidgetArea__void_signal (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__UIWidgetArea__void_signal::SharedPtr sp (new __AIDA_Closure__UIWidgetArea__void_signal (AIDA_CONNECTION(), handler_id));
     cid = self->sig_void_signal.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__UIWidgetArea__sample_signal {
+class __AIDA_Closure__UIWidgetArea__sample_signal {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__UIWidgetArea__sample_signal> SharedPtr;
-  _$Closure__UIWidgetArea__sample_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__UIWidgetArea__sample_signal()
+  typedef std::shared_ptr<__AIDA_Closure__UIWidgetArea__sample_signal> SharedPtr;
+  __AIDA_Closure__UIWidgetArea__sample_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__UIWidgetArea__sample_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2480,7 +2480,7 @@ __AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_sample_signal.disconnect (con_id);
   if (handler_id) {
-    _$Closure__UIWidgetArea__sample_signal::SharedPtr sp (new _$Closure__UIWidgetArea__sample_signal (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__UIWidgetArea__sample_signal::SharedPtr sp (new __AIDA_Closure__UIWidgetArea__sample_signal (AIDA_CONNECTION(), handler_id));
     cid = self->sig_sample_signal.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
@@ -2796,12 +2796,12 @@ __AIDA_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
     rb <<= thl[i];
   return &rb;
 }
-class _$Closure__SignalTestInterface__void_result {
+class __AIDA_Closure__SignalTestInterface__void_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__void_result> SharedPtr;
-  _$Closure__SignalTestInterface__void_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__void_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__void_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__void_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__void_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2829,18 +2829,18 @@ __AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fb
   fbr >>= con_id;
   if (con_id) self->sig_void_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__void_result::SharedPtr sp (new _$Closure__SignalTestInterface__void_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__void_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__void_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_void_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__bool_result {
+class __AIDA_Closure__SignalTestInterface__bool_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__bool_result> SharedPtr;
-  _$Closure__SignalTestInterface__bool_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__bool_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__bool_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__bool_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__bool_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2869,18 +2869,18 @@ __AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fb
   fbr >>= con_id;
   if (con_id) self->sig_bool_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__bool_result::SharedPtr sp (new _$Closure__SignalTestInterface__bool_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__bool_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__bool_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_bool_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__int32_result {
+class __AIDA_Closure__SignalTestInterface__int32_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__int32_result> SharedPtr;
-  _$Closure__SignalTestInterface__int32_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__int32_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int32_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__int32_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__int32_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2909,18 +2909,18 @@ __AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &f
   fbr >>= con_id;
   if (con_id) self->sig_int32_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__int32_result::SharedPtr sp (new _$Closure__SignalTestInterface__int32_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__int32_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int32_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_int32_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__int64_result {
+class __AIDA_Closure__SignalTestInterface__int64_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__int64_result> SharedPtr;
-  _$Closure__SignalTestInterface__int64_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__int64_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int64_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__int64_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__int64_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2949,18 +2949,18 @@ __AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &f
   fbr >>= con_id;
   if (con_id) self->sig_int64_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__int64_result::SharedPtr sp (new _$Closure__SignalTestInterface__int64_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__int64_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int64_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_int64_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__float64_result {
+class __AIDA_Closure__SignalTestInterface__float64_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__float64_result> SharedPtr;
-  _$Closure__SignalTestInterface__float64_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__float64_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__float64_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__float64_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__float64_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -2989,18 +2989,18 @@ __AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader 
   fbr >>= con_id;
   if (con_id) self->sig_float64_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__float64_result::SharedPtr sp (new _$Closure__SignalTestInterface__float64_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__float64_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__float64_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_float64_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__string_result {
+class __AIDA_Closure__SignalTestInterface__string_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__string_result> SharedPtr;
-  _$Closure__SignalTestInterface__string_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__string_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__string_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__string_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__string_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3029,18 +3029,18 @@ __AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &
   fbr >>= con_id;
   if (con_id) self->sig_string_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__string_result::SharedPtr sp (new _$Closure__SignalTestInterface__string_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__string_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__string_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_string_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__enum_result {
+class __AIDA_Closure__SignalTestInterface__enum_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__enum_result> SharedPtr;
-  _$Closure__SignalTestInterface__enum_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__enum_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__enum_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__enum_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__enum_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3069,18 +3069,18 @@ __AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fb
   fbr >>= con_id;
   if (con_id) self->sig_enum_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__enum_result::SharedPtr sp (new _$Closure__SignalTestInterface__enum_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__enum_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__enum_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_enum_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__record_result {
+class __AIDA_Closure__SignalTestInterface__record_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__record_result> SharedPtr;
-  _$Closure__SignalTestInterface__record_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__record_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__record_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__record_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__record_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3109,18 +3109,18 @@ __AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &
   fbr >>= con_id;
   if (con_id) self->sig_record_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__record_result::SharedPtr sp (new _$Closure__SignalTestInterface__record_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__record_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__record_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_record_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__sequence_result {
+class __AIDA_Closure__SignalTestInterface__sequence_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__sequence_result> SharedPtr;
-  _$Closure__SignalTestInterface__sequence_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__sequence_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__sequence_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__sequence_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__sequence_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3149,18 +3149,18 @@ __AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader
   fbr >>= con_id;
   if (con_id) self->sig_sequence_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__sequence_result::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__sequence_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__sequence_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_sequence_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__interface_result {
+class __AIDA_Closure__SignalTestInterface__interface_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__interface_result> SharedPtr;
-  _$Closure__SignalTestInterface__interface_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__interface_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__interface_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__interface_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__interface_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3189,18 +3189,18 @@ __AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReade
   fbr >>= con_id;
   if (con_id) self->sig_interface_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__interface_result::SharedPtr sp (new _$Closure__SignalTestInterface__interface_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__interface_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__interface_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_interface_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__any_result {
+class __AIDA_Closure__SignalTestInterface__any_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__any_result> SharedPtr;
-  _$Closure__SignalTestInterface__any_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__any_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__any_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__any_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__any_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3229,18 +3229,18 @@ __AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr
   fbr >>= con_id;
   if (con_id) self->sig_any_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__any_result::SharedPtr sp (new _$Closure__SignalTestInterface__any_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__any_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__any_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_any_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__self_result {
+class __AIDA_Closure__SignalTestInterface__self_result {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__self_result> SharedPtr;
-  _$Closure__SignalTestInterface__self_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__self_result()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__self_result> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__self_result (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__self_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3269,18 +3269,18 @@ __AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fb
   fbr >>= con_id;
   if (con_id) self->sig_self_result.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__self_result::SharedPtr sp (new _$Closure__SignalTestInterface__self_result (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__self_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__self_result (AIDA_CONNECTION(), handler_id));
     cid = self->sig_self_result.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__void_arg {
+class __AIDA_Closure__SignalTestInterface__void_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__void_arg> SharedPtr;
-  _$Closure__SignalTestInterface__void_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__void_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__void_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__void_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__void_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3308,18 +3308,18 @@ __AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_void_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__void_arg::SharedPtr sp (new _$Closure__SignalTestInterface__void_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__void_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__void_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_void_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__bool_arg {
+class __AIDA_Closure__SignalTestInterface__bool_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__bool_arg> SharedPtr;
-  _$Closure__SignalTestInterface__bool_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__bool_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__bool_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__bool_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__bool_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3349,18 +3349,18 @@ __AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_bool_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__bool_arg::SharedPtr sp (new _$Closure__SignalTestInterface__bool_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__bool_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__bool_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_bool_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__int32_arg {
+class __AIDA_Closure__SignalTestInterface__int32_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__int32_arg> SharedPtr;
-  _$Closure__SignalTestInterface__int32_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__int32_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int32_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__int32_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__int32_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3390,18 +3390,18 @@ __AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_int32_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__int32_arg::SharedPtr sp (new _$Closure__SignalTestInterface__int32_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__int32_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int32_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_int32_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__int64_arg {
+class __AIDA_Closure__SignalTestInterface__int64_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__int64_arg> SharedPtr;
-  _$Closure__SignalTestInterface__int64_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__int64_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int64_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__int64_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__int64_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3431,18 +3431,18 @@ __AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_int64_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__int64_arg::SharedPtr sp (new _$Closure__SignalTestInterface__int64_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__int64_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int64_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_int64_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__float64_arg {
+class __AIDA_Closure__SignalTestInterface__float64_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__float64_arg> SharedPtr;
-  _$Closure__SignalTestInterface__float64_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__float64_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__float64_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__float64_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__float64_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3472,18 +3472,18 @@ __AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fb
   fbr >>= con_id;
   if (con_id) self->sig_float64_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__float64_arg::SharedPtr sp (new _$Closure__SignalTestInterface__float64_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__float64_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__float64_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_float64_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__string_arg {
+class __AIDA_Closure__SignalTestInterface__string_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__string_arg> SharedPtr;
-  _$Closure__SignalTestInterface__string_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__string_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__string_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__string_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__string_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3513,18 +3513,18 @@ __AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr
   fbr >>= con_id;
   if (con_id) self->sig_string_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__string_arg::SharedPtr sp (new _$Closure__SignalTestInterface__string_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__string_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__string_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_string_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__enum_arg {
+class __AIDA_Closure__SignalTestInterface__enum_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__enum_arg> SharedPtr;
-  _$Closure__SignalTestInterface__enum_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__enum_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__enum_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__enum_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__enum_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3554,18 +3554,18 @@ __AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_enum_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__enum_arg::SharedPtr sp (new _$Closure__SignalTestInterface__enum_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__enum_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__enum_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_enum_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__record_arg {
+class __AIDA_Closure__SignalTestInterface__record_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__record_arg> SharedPtr;
-  _$Closure__SignalTestInterface__record_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__record_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__record_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__record_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__record_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3595,18 +3595,18 @@ __AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr
   fbr >>= con_id;
   if (con_id) self->sig_record_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__record_arg::SharedPtr sp (new _$Closure__SignalTestInterface__record_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__record_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__record_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_record_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__sequence_arg {
+class __AIDA_Closure__SignalTestInterface__sequence_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__sequence_arg> SharedPtr;
-  _$Closure__SignalTestInterface__sequence_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__sequence_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__sequence_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__sequence_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__sequence_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3636,18 +3636,18 @@ __AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &f
   fbr >>= con_id;
   if (con_id) self->sig_sequence_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__sequence_arg::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__sequence_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__sequence_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_sequence_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__interface_arg {
+class __AIDA_Closure__SignalTestInterface__interface_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__interface_arg> SharedPtr;
-  _$Closure__SignalTestInterface__interface_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__interface_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__interface_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__interface_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__interface_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3677,18 +3677,18 @@ __AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &
   fbr >>= con_id;
   if (con_id) self->sig_interface_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__interface_arg::SharedPtr sp (new _$Closure__SignalTestInterface__interface_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__interface_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__interface_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_interface_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__any_arg {
+class __AIDA_Closure__SignalTestInterface__any_arg {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__any_arg> SharedPtr;
-  _$Closure__SignalTestInterface__any_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__any_arg()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__any_arg> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__any_arg (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__any_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3718,18 +3718,18 @@ __AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_any_arg.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__any_arg::SharedPtr sp (new _$Closure__SignalTestInterface__any_arg (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__any_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__any_arg (AIDA_CONNECTION(), handler_id));
     cid = self->sig_any_arg.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__SignalTestInterface__self_args {
+class __AIDA_Closure__SignalTestInterface__self_args {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__SignalTestInterface__self_args> SharedPtr;
-  _$Closure__SignalTestInterface__self_args (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__SignalTestInterface__self_args()
+  typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__self_args> SharedPtr;
+  __AIDA_Closure__SignalTestInterface__self_args (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__SignalTestInterface__self_args()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3759,7 +3759,7 @@ __AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_self_args.disconnect (con_id);
   if (handler_id) {
-    _$Closure__SignalTestInterface__self_args::SharedPtr sp (new _$Closure__SignalTestInterface__self_args (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__SignalTestInterface__self_args::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__self_args (AIDA_CONNECTION(), handler_id));
     cid = self->sig_self_args.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
@@ -3781,12 +3781,12 @@ __AIDA_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
     rb <<= thl[i];
   return &rb;
 }
-class _$Closure__ChildInheritingSignals__child_signal {
+class __AIDA_Closure__ChildInheritingSignals__child_signal {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__ChildInheritingSignals__child_signal> SharedPtr;
-  _$Closure__ChildInheritingSignals__child_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__ChildInheritingSignals__child_signal()
+  typedef std::shared_ptr<__AIDA_Closure__ChildInheritingSignals__child_signal> SharedPtr;
+  __AIDA_Closure__ChildInheritingSignals__child_signal (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__ChildInheritingSignals__child_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -3826,7 +3826,7 @@ __AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader
   fbr >>= con_id;
   if (con_id) self->sig_child_signal.disconnect (con_id);
   if (handler_id) {
-    _$Closure__ChildInheritingSignals__child_signal::SharedPtr sp (new _$Closure__ChildInheritingSignals__child_signal (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__ChildInheritingSignals__child_signal::SharedPtr sp (new __AIDA_Closure__ChildInheritingSignals__child_signal (AIDA_CONNECTION(), handler_id));
     cid = self->sig_child_signal.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
@@ -4243,12 +4243,12 @@ __AIDA_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
   self->click_type (arg_click_type);
   return NULL;
 }
-class _$Closure__ButtonArea__check_activate {
+class __AIDA_Closure__ButtonArea__check_activate {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__ButtonArea__check_activate> SharedPtr;
-  _$Closure__ButtonArea__check_activate (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__ButtonArea__check_activate()
+  typedef std::shared_ptr<__AIDA_Closure__ButtonArea__check_activate> SharedPtr;
+  __AIDA_Closure__ButtonArea__check_activate (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__ButtonArea__check_activate()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -4277,18 +4277,18 @@ __AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_check_activate.disconnect (con_id);
   if (handler_id) {
-    _$Closure__ButtonArea__check_activate::SharedPtr sp (new _$Closure__ButtonArea__check_activate (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__ButtonArea__check_activate::SharedPtr sp (new __AIDA_Closure__ButtonArea__check_activate (AIDA_CONNECTION(), handler_id));
     cid = self->sig_check_activate.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
   return &rb;
 }
-class _$Closure__ButtonArea__activate {
+class __AIDA_Closure__ButtonArea__activate {
   Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;
 public:
-  typedef std::shared_ptr<_$Closure__ButtonArea__activate> SharedPtr;
-  _$Closure__ButtonArea__activate (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
-  ~_$Closure__ButtonArea__activate()
+  typedef std::shared_ptr<__AIDA_Closure__ButtonArea__activate> SharedPtr;
+  __AIDA_Closure__ButtonArea__activate (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~__AIDA_Closure__ButtonArea__activate()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0
@@ -4316,7 +4316,7 @@ __AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= con_id;
   if (con_id) self->sig_activate.disconnect (con_id);
   if (handler_id) {
-    _$Closure__ButtonArea__activate::SharedPtr sp (new _$Closure__ButtonArea__activate (AIDA_CONNECTION(), handler_id));
+    __AIDA_Closure__ButtonArea__activate::SharedPtr sp (new __AIDA_Closure__ButtonArea__activate (AIDA_CONNECTION(), handler_id));
     cid = self->sig_activate.connect (slot (sp->handler, sp)); }
   Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();
   rb <<= cid;
