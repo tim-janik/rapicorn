@@ -208,9 +208,9 @@ struct XFooRecordStruct
   int                           multi3;
   int                           multi4;
   ExtensiveEnum                 enum_field;
-  FirstInterfaceHandle          iface1;
-  FirstInterfaceHandle          iface2;
-  FirstInterfaceHandle          iface3;
+  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface1;
+  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface2;
+  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface3;
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
@@ -299,9 +299,9 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequenceStruct&);
 /** @interface InterfaceSequence
  * See also the corresponding C++ class InterfaceSequenceStruct (client side). */
 /// See also the corresponding IDL class InterfaceSequence.
-struct InterfaceSequenceStruct : public std::vector<FirstInterfaceHandle>
+struct InterfaceSequenceStruct : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
 {
-  typedef std::vector<FirstInterfaceHandle> Sequence;
+  typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequenceStruct&);

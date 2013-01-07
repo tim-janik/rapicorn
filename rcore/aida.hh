@@ -253,7 +253,9 @@ class SmartHandle {
   OrbObject     *orbo_;
   template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
-  friend class ObjectBroker;
+  friend  class ObjectBroker;
+  void    assign (const SmartHandle&);
+  void    reset ();
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
@@ -264,6 +266,15 @@ public:
   bool                      _is_null    () const { return !orbo_->orbid(); }
   virtual                  ~SmartHandle ();
   static NullHandle         _null_handle()       { return NullHandle(); }
+};
+
+// == SmartMember ==
+template<class SmartHandle>
+class SmartMember : public SmartHandle {
+public:
+  explicit SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
+  explicit SmartMember () : SmartHandle() {}
+  void     operator=   (const SmartMember &src) { SmartHandle::operator= (src); }
 };
 
 // == ObjectBroker ==

@@ -420,16 +420,36 @@ struct OrbObjectImpl : public OrbObject {
 static const OrbObjectImpl aida_orb_object_null (0);
 
 // == SmartHandle ==
+static OrbObject* smart_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
+
 SmartHandle::SmartHandle (OrbObject &orbo) :
   orbo_ (&orbo)
 {
   assert (&orbo);
-  assert (0 != _orbid());
 }
 
 SmartHandle::SmartHandle() :
-  orbo_ (&const_cast<OrbObjectImpl&> (aida_orb_object_null))
+  orbo_ (smart_handle_null_orb_object())
 {}
+
+void
+SmartHandle::reset ()
+{
+  if (orbo_ != smart_handle_null_orb_object())
+    {
+      orbo_ = smart_handle_null_orb_object();
+    }
+}
+
+void
+SmartHandle::assign (const SmartHandle &src)
+{
+  if (orbo_ == src.orbo_)
+    return;
+  if (!_is_null())
+    reset();
+  orbo_ = src.orbo_;
+}
 
 SmartHandle::~SmartHandle()
 {}
@@ -448,7 +468,7 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.orbo_ = orbo;
+  sh.assign (SmartHandle (*orbo));
 }
 
 void
@@ -462,7 +482,7 @@ ObjectBroker::dup_handle (const ptrdiff_t fake[2], SmartHandle &sh)
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.orbo_ = orbo;
+  sh.assign (SmartHandle (*orbo));
 }
 
 // == FieldBuffer ==

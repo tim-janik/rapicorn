@@ -164,6 +164,13 @@ class Generator:
     if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
       tname += '*'
     return tname
+  def M (self, type_node):                              # construct Member type
+    if self.gen_mode == G4CLIENT and type_node.storage == Decls.INTERFACE:
+      classH = self.C4client (type_node) # smart handle class name
+      classC = self.C4server (type_node) # servant class name
+      return 'Rapicorn::Aida::SmartMember<%s>' % classH # classC
+    else:
+      return self.R (type_node)
   def V (self, ident, type_node, f_delta = -999999):    # construct Variable
     s = ''
     s += self.C (type_node)
@@ -255,7 +262,7 @@ class Generator:
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.R (fl[1]) + '>\n'
+      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.M (fl[1]) + '>\n'
       s += '{\n'
     else:
       s += 'struct %s\n' % self.C (type_info)
@@ -263,9 +270,9 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
-        s += '  ' + self.F (self.R (fl[1])) + fl[0] + ';\n'
+        s += '  ' + self.F (self.M (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
-      s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
+      s += '  typedef std::vector<' + self.M (fl[1]) + '> Sequence;\n'
       s += '  reference append_back(); ///< Append data at the end, returns write reference to data.\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
