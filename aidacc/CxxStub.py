@@ -21,7 +21,7 @@ class TestServerBase : public virtual PropertyHostInterface {
 public:
   explicit             TestServerBase ()            {}
   virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _rpc_id        () const      { return uint64_t (this); }
+  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
 };
 } } // Rapicorn::Aida
 """
@@ -82,11 +82,18 @@ template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { retu
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._rpc_id(); }
+inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._orbid(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
                                        { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
+template<class C> C  smh2cast (const SmartHandle &handle) {
+  const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
+  C casted;
+  const ptrdiff_t input[2] = { orbid, casted._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, casted);
+  return casted;
+}
 } } // Anon::__AIDA_Local__
 """
 
@@ -546,10 +553,10 @@ class Generator:
     s += '  RAPICORN_CLASS_NON_COPYABLE (%s);\n' % classC       # make class non-copyable
     s += 'public:\n'
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
-    s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}\n'
-    s += '  } handle$;\n'
-    s += '  %s (Rapicorn::Aida::uint64_t ipcid) :\n' % classC             # ctor
-    s += '    handle$ (ipcid)\n  {}\n'
+    s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}\n'
+    s += '  }; // handle$;\n'
+    s += '  %s (Rapicorn::Aida::uint64_t ipcid) {}\n' % classC             # ctor
+    s += '    // handle$ (ipcid)\n'
     s += '};\n'
     return s
   def generate_client_class_methods (self, class_info):
@@ -564,8 +571,9 @@ class Generator:
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();\n'
-    s += '  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
+    s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
+    #s += '  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();\n'
+    #s += '  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
     s += '%s::_type()\n{\n' % classH
@@ -576,7 +584,7 @@ class Generator:
     s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
-    s += '      return connection_id2context<%s> (__AIDA_Local__::smh2id (other))->handle$;\n' % classC
+    s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
     s += '  return %s();\n' % classH
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHashList\n'

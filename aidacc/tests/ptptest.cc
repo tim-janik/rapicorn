@@ -153,12 +153,14 @@ standard_tests ()
   assert (tcnot.untyped() == true);
   // SmartHandle
   assert (SmartHandle::_null_handle()._is_null() == true);
-  assert (SmartHandle::_null_handle()._rpc_id() == 0);
-  struct OneHandle : SmartHandle { OneHandle() : SmartHandle (1) {} };
-  assert (OneHandle()._is_null() == false);
-  assert (OneHandle()._rpc_id() == 1);
-  assert (OneHandle()._null_handle()._is_null() == true);
-  assert (OneHandle()._null_handle()._rpc_id() == 0);
+  assert (SmartHandle::_null_handle()._orbid() == 0);
+  struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
+  struct OneHandle : SmartHandle { OneHandle (OrbObject &orbo) : SmartHandle (orbo) {} };
+  TestOrbObject torbo (1);
+  assert (OneHandle (torbo)._is_null() == false);
+  assert (OneHandle (torbo)._orbid() == 1);
+  assert (OneHandle (torbo)._null_handle()._is_null() == true);
+  assert (OneHandle (torbo)._null_handle()._orbid() == 0);
   printf ("  TEST   Aida standard types                                             OK\n");
 }
 

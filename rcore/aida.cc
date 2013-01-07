@@ -1,6 +1,7 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 #include "aida.hh"
 #include "aidaprops.hh"
+#include "thread.hh"
 
 #include <assert.h>
 #include <string.h>
@@ -13,7 +14,6 @@
 #include <errno.h>
 #include <limits.h>
 #include <semaphore.h>
-#include <pthread.h>
 #include <poll.h>
 #include <sys/eventfd.h>        // defines EFD_SEMAPHORE
 #include <stddef.h>             // ptrdiff_t
@@ -407,39 +407,65 @@ Any::resize (size_t n)
   ((AnyVector*) &u)->resize (n);
 }
 
-/* === SmartHandle === */
-SmartHandle::SmartHandle (uint64_t ipcid) :
-  m_rpc_id (ipcid)
+// == OrbObject ==
+OrbObject::OrbObject (ptrdiff_t orbid) :
+  orbid_ (orbid)
+{}
+
+// == OrbObjectImpl ==
+struct OrbObjectImpl : public OrbObject {
+  OrbObjectImpl (ptrdiff_t obid) : OrbObject (obid) {}
+};
+
+static const OrbObjectImpl aida_orb_object_null (0);
+
+// == SmartHandle ==
+SmartHandle::SmartHandle (OrbObject &orbo) :
+  orbo_ (&orbo)
 {
-  assert (0 != ipcid);
+  assert (&orbo);
+  assert (0 != _orbid());
 }
 
 SmartHandle::SmartHandle() :
-  m_rpc_id (0)
+  orbo_ (&const_cast<OrbObjectImpl&> (aida_orb_object_null))
 {}
-
-void
-SmartHandle::_reset ()
-{
-  m_rpc_id = 0;
-}
-
-uint64_t
-SmartHandle::_rpc_id () const
-{
-  return m_rpc_id;
-}
-
-bool
-SmartHandle::_is_null () const
-{
-  return m_rpc_id == 0;
-}
 
 SmartHandle::~SmartHandle()
 {}
 
-/* === FieldBuffer === */
+// == ObjectBroker ==
+typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
+static OrboMap orbo_map;
+static Mutex   orbo_mutex;
+
+void
+ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+{
+  assert (sh._is_null() == true);
+  const uint64_t orbid = fr.pop_object();
+  ScopedLock<Mutex> locker (orbo_mutex);
+  OrbObject *orbo = orbo_map[orbid];
+  if (AIDA_UNLIKELY (!orbo))
+    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
+  sh.orbo_ = orbo;
+}
+
+void
+ObjectBroker::dup_handle (const ptrdiff_t fake[2], SmartHandle &sh)
+{
+  assert (sh._is_null() == true);
+  if (fake[1])
+    return;
+  const uint64_t orbid = fake[0];
+  ScopedLock<Mutex> locker (orbo_mutex);
+  OrbObject *orbo = orbo_map[orbid];
+  if (AIDA_UNLIKELY (!orbo))
+    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
+  sh.orbo_ = orbo;
+}
+
+// == FieldBuffer ==
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
 {

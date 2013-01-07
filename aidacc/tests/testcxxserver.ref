@@ -8,7 +8,7 @@ class TestServerBase : public virtual PropertyHostInterface {
 public:
   explicit             TestServerBase ()            {}
   virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _rpc_id        () const      { return uint64_t (this); }
+  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
 };
 } } // Rapicorn::Aida
 

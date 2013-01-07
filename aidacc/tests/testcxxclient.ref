@@ -36,11 +36,18 @@ template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { retu
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._rpc_id(); }
+inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._orbid(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
                                        { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
+template<class C> C  smh2cast (const SmartHandle &handle) {
+  const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
+  C casted;
+  const ptrdiff_t input[2] = { orbid, casted._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, casted);
+  return casted;
+}
 } } // Anon::__AIDA_Local__
 
 
@@ -1141,11 +1148,10 @@ struct FirstInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (FirstInterface_Context$);
 public:
   struct SmartHandle$ : public FirstInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  FirstInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  FirstInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
@@ -1157,8 +1163,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const FirstInterfaceHandle &handle
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, FirstInterfaceHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterfaceHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 FirstInterfaceHandle::_type()
@@ -1172,7 +1177,7 @@ FirstInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn:
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<FirstInterface_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<FirstInterfaceHandle> (other);
   return FirstInterfaceHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -1601,11 +1606,10 @@ struct UIWidgetArea_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (UIWidgetArea_Context$);
 public:
   struct SmartHandle$ : public UIWidgetAreaHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  UIWidgetArea_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  UIWidgetArea_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__UIWidgetAreaHandle__void_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -1659,8 +1663,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, UIWidgetAreaHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetAreaHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 UIWidgetAreaHandle::_type()
@@ -1674,7 +1677,7 @@ UIWidgetAreaHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::A
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<UIWidgetArea_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<UIWidgetAreaHandle> (other);
   return UIWidgetAreaHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -1906,11 +1909,10 @@ struct Parent_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Parent_Context$);
 public:
   struct SmartHandle$ : public ParentHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  Parent_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  Parent_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 ParentHandle::ParentHandle ()
 {}
@@ -1922,8 +1924,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ParentHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ParentHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : ParentHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 ParentHandle::_type()
@@ -1937,7 +1938,7 @@ ParentHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::T
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<Parent_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<ParentHandle> (other);
   return ParentHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -1968,11 +1969,10 @@ struct Child_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Child_Context$);
 public:
   struct SmartHandle$ : public ChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  Child_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  Child_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 ChildHandle::ChildHandle ()
 {}
@@ -1984,8 +1984,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : ChildHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 ChildHandle::_type()
@@ -1999,7 +1998,7 @@ ChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::Ty
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<Child_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<ChildHandle> (other);
   return ChildHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -2030,11 +2029,10 @@ struct Descendant_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Descendant_Context$);
 public:
   struct SmartHandle$ : public DescendantHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  Descendant_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  Descendant_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 DescendantHandle::DescendantHandle ()
 {}
@@ -2046,8 +2044,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const DescendantHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, DescendantHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : DescendantHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 DescendantHandle::_type()
@@ -2061,7 +2058,7 @@ DescendantHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<Descendant_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<DescendantHandle> (other);
   return DescendantHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -2092,11 +2089,10 @@ struct GrandChild_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (GrandChild_Context$);
 public:
   struct SmartHandle$ : public GrandChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  GrandChild_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  GrandChild_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 GrandChildHandle::GrandChildHandle ()
 {}
@@ -2108,8 +2104,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const GrandChildHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, GrandChildHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChildHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 GrandChildHandle::_type()
@@ -2123,7 +2118,7 @@ GrandChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<GrandChild_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<GrandChildHandle> (other);
   return GrandChildHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -2201,11 +2196,10 @@ struct QuickIface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (QuickIface_Context$);
 public:
   struct SmartHandle$ : public QuickIfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  QuickIface_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  QuickIface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
@@ -2217,8 +2211,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const QuickIfaceHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, QuickIfaceHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIfaceHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 QuickIfaceHandle::_type()
@@ -2232,7 +2225,7 @@ QuickIfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<QuickIface_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<QuickIfaceHandle> (other);
   return QuickIfaceHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -2273,11 +2266,10 @@ struct MethodTestInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (MethodTestInterface_Context$);
 public:
   struct SmartHandle$ : public MethodTestInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  MethodTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  MethodTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
@@ -2289,8 +2281,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const MethodTestInterfaceHandle &h
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, MethodTestInterfaceHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterfaceHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 MethodTestInterfaceHandle::_type()
@@ -2304,7 +2295,7 @@ MethodTestInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapi
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<MethodTestInterface_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<MethodTestInterfaceHandle> (other);
   return MethodTestInterfaceHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -2531,11 +2522,10 @@ struct SignalTestInterface_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (SignalTestInterface_Context$);
 public:
   struct SmartHandle$ : public SignalTestInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  SignalTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  SignalTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__SignalTestInterfaceHandle__void_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -3051,8 +3041,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SignalTestInterfaceHandle &h
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, SignalTestInterfaceHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterfaceHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 SignalTestInterfaceHandle::_type()
@@ -3066,7 +3055,7 @@ SignalTestInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapi
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<SignalTestInterface_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<SignalTestInterfaceHandle> (other);
   return SignalTestInterfaceHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3097,11 +3086,10 @@ struct ChildInheritingSignals_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (ChildInheritingSignals_Context$);
 public:
   struct SmartHandle$ : public ChildInheritingSignalsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  ChildInheritingSignals_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  ChildInheritingSignals_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__ChildInheritingSignalsHandle__child_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -3134,8 +3122,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildInheritingSignalsHandle
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildInheritingSignalsHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignalsHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 ChildInheritingSignalsHandle::_type()
@@ -3149,7 +3136,7 @@ ChildInheritingSignalsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const R
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<ChildInheritingSignals_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<ChildInheritingSignalsHandle> (other);
   return ChildInheritingSignalsHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3180,11 +3167,10 @@ struct AnotherChild_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (AnotherChild_Context$);
 public:
   struct SmartHandle$ : public AnotherChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  AnotherChild_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  AnotherChild_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 AnotherChildHandle::AnotherChildHandle ()
 {}
@@ -3196,8 +3182,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const AnotherChildHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, AnotherChildHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChildHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 AnotherChildHandle::_type()
@@ -3211,7 +3196,7 @@ AnotherChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::A
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<AnotherChild_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<AnotherChildHandle> (other);
   return AnotherChildHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3242,11 +3227,10 @@ struct PropertyTester_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (PropertyTester_Context$);
 public:
   struct SmartHandle$ : public PropertyTesterHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  PropertyTester_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  PropertyTester_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
@@ -3258,8 +3242,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PropertyTesterHandle &handle
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, PropertyTesterHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTesterHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 PropertyTesterHandle::_type()
@@ -3273,7 +3256,7 @@ PropertyTesterHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn:
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<PropertyTester_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<PropertyTesterHandle> (other);
   return PropertyTesterHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3582,11 +3565,10 @@ struct ButtonArea_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (ButtonArea_Context$);
 public:
   struct SmartHandle$ : public ButtonAreaHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  ButtonArea_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  ButtonArea_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__ButtonAreaHandle__check_activate (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -3640,8 +3622,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ButtonAreaHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ButtonAreaHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonAreaHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 ButtonAreaHandle::_type()
@@ -3655,7 +3636,7 @@ ButtonAreaHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<ButtonArea_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<ButtonAreaHandle> (other);
   return ButtonAreaHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3782,11 +3763,10 @@ struct PureMethods_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (PureMethods_Context$);
 public:
   struct SmartHandle$ : public PureMethodsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  PureMethods_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  PureMethods_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 PureMethodsHandle::PureMethodsHandle ()
 {}
@@ -3798,8 +3778,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PureMethodsHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, PureMethodsHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethodsHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 PureMethodsHandle::_type()
@@ -3813,7 +3792,7 @@ PureMethodsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Ai
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<PureMethods_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<PureMethodsHandle> (other);
   return PureMethodsHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3880,11 +3859,10 @@ struct NameTests_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (NameTests_Context$);
 public:
   struct SmartHandle$ : public NameTestsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  NameTests_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  NameTests_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 NameTestsHandle::NameTestsHandle ()
 {}
@@ -3896,8 +3874,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const NameTestsHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, NameTestsHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<NameTests_Context$> (ipcid)->handle$ : NameTestsHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 NameTestsHandle::_type()
@@ -3911,7 +3888,7 @@ NameTestsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<NameTests_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<NameTestsHandle> (other);
   return NameTestsHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -3959,11 +3936,10 @@ struct Compressor_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (Compressor_Context$);
 public:
   struct SmartHandle$ : public CompressorHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  Compressor_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  Compressor_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 CompressorHandle::CompressorHandle ()
 {}
@@ -3975,8 +3951,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const CompressorHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, CompressorHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<Compressor_Context$> (ipcid)->handle$ : CompressorHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 CompressorHandle::_type()
@@ -3990,7 +3965,7 @@ CompressorHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<Compressor_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<CompressorHandle> (other);
   return CompressorHandle();
 }
 const Rapicorn::Aida::TypeHashList
@@ -4090,11 +4065,10 @@ struct SoundModule_Context$ {
   RAPICORN_CLASS_NON_COPYABLE (SoundModule_Context$);
 public:
   struct SmartHandle$ : public SoundModuleHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle (ipcid) {}
-  } handle$;
-  SoundModule_Context$ (Rapicorn::Aida::uint64_t ipcid) :
-    handle$ (ipcid)
-  {}
+    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
+  }; // handle$;
+  SoundModule_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
+    // handle$ (ipcid)
 };
 SoundModuleHandle::SoundModuleHandle ()
 {}
@@ -4106,8 +4080,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SoundModuleHandle &handle)
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, SoundModuleHandle &handle)
 {
-  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();
-  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<SoundModule_Context$> (ipcid)->handle$ : SoundModuleHandle();
+  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
 SoundModuleHandle::_type()
@@ -4121,7 +4094,7 @@ SoundModuleHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Ai
   size_t i; const Rapicorn::Aida::TypeHash &mine = _type();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
-      return connection_id2context<SoundModule_Context$> (__AIDA_Local__::smh2id (other))->handle$;
+      return __AIDA_Local__::smh2cast<SoundModuleHandle> (other);
   return SoundModuleHandle();
 }
 const Rapicorn::Aida::TypeHashList

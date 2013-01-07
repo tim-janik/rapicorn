@@ -137,11 +137,11 @@ _aida___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
 }
 
 static inline PyObject*
-aida_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
+aida_PyObject_4uint64 (const char *type_name, uint64_t orbid)
 {
   if (!_aida_object_factory_callable)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
-  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (rpc_id);
+  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (orbid);
   if (pyid) {
     PyObject *tuple = PyTuple_New (2);
     if (tuple) {

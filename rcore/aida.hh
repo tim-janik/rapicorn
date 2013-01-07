@@ -192,6 +192,7 @@ public:
 };
 
 // == Type Declarations ==
+class ObjectBroker;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -237,23 +238,39 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
+// == OrbObject ==
+/// Internal management structure for objects known to the ORB.
+class OrbObject {
+  ptrdiff_t     orbid_;
+protected:
+  explicit      OrbObject (ptrdiff_t orbid);
+public:
+  ptrdiff_t     orbid     ()            { return orbid_; }
+};
+
 // == SmartHandle ==
 class SmartHandle {
-  uint64_t m_rpc_id;
+  OrbObject     *orbo_;
   template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
+  friend class ObjectBroker;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
-  typedef uint64_t RpcId;
-  explicit                  SmartHandle (uint64_t ipcid);
-  void                      _reset      ();
+  explicit                  SmartHandle (OrbObject&);
   explicit                  SmartHandle ();
 public:
-  uint64_t                  _rpc_id     () const;
-  bool                      _is_null    () const;
+  uint64_t                  _orbid      () const { return orbo_->orbid(); }
+  bool                      _is_null    () const { return !orbo_->orbid(); }
   virtual                  ~SmartHandle ();
-  static NullHandle         _null_handle()                      { return NullHandle(); }
+  static NullHandle         _null_handle()       { return NullHandle(); }
+};
+
+// == ObjectBroker ==
+class ObjectBroker {
+public:
+  static void pop_handle (FieldReader&, SmartHandle&);
+  static void dup_handle (const ptrdiff_t[2], SmartHandle&);
 };
 
 // == FieldBuffer ==
