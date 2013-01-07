@@ -78,7 +78,6 @@ namespace __AIDA_Local__ {
 clientcc_boilerplate = r"""
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
@@ -546,21 +545,8 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
-  def generate_client_class_context (self, class_info):
-    s, classH, classC = '\n', self.C4client (class_info), class_info.name + '_Context$' # class names
-    s += '// === %s ===\n' % class_info.name
-    s += 'struct %s {\n' % classC    # context class
-    s += '  RAPICORN_CLASS_NON_COPYABLE (%s);\n' % classC       # make class non-copyable
-    s += 'public:\n'
-    s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
-    s += '    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}\n'
-    s += '  }; // handle$;\n'
-    s += '  %s (Rapicorn::Aida::uint64_t ipcid) {}\n' % classC             # ctor
-    s += '    // handle$ (ipcid)\n'
-    s += '};\n'
-    return s
   def generate_client_class_methods (self, class_info):
-    s, classH, classC = '', self.C4client (class_info), class_info.name + '_Context$' # class names
+    s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
@@ -572,8 +558,6 @@ class Generator:
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
     s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
-    #s += '  const Rapicorn::Aida::uint64_t ipcid = fbr.pop_object();\n'
-    #s += '  handle = AIDA_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
     s += '%s::_type()\n{\n' % classH
@@ -1171,7 +1155,6 @@ class Generator:
               s += self.generate_server_property_list (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
-            s += self.generate_client_class_context (tp)
             for sg in tp.signals:
               s += self.generate_client_signal_def (tp, sg)
             s += self.generate_client_class_methods (tp)

@@ -32,7 +32,6 @@ error (const char *format, ...)
 
 #ifndef AIDA_CONNECTION
 #define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-template<class C> C* connection_id2context (Rapicorn::Aida::uint64_t oid) { return (C*) NULL; }
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
@@ -1142,17 +1141,6 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__ExtensiveEnum_ ([]() {
   };
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "ExtensiveEnum", enum_values);
 });
-
-// === FirstInterface ===
-struct FirstInterface_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (FirstInterface_Context$);
-public:
-  struct SmartHandle$ : public FirstInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  FirstInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 void
@@ -1600,17 +1588,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecordStruct &self)
 } // OtherNamespace
 
 namespace InterfaceTests {
-
-// === UIWidgetArea ===
-struct UIWidgetArea_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (UIWidgetArea_Context$);
-public:
-  struct SmartHandle$ : public UIWidgetAreaHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  UIWidgetArea_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__UIWidgetAreaHandle__void_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
@@ -1903,17 +1880,6 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
-
-// === Parent ===
-struct Parent_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (Parent_Context$);
-public:
-  struct SmartHandle$ : public ParentHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  Parent_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 ParentHandle::ParentHandle ()
 {}
 void
@@ -1963,17 +1929,6 @@ ParentHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === Child ===
-struct Child_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (Child_Context$);
-public:
-  struct SmartHandle$ : public ChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  Child_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 ChildHandle::ChildHandle ()
 {}
 void
@@ -2023,17 +1978,6 @@ ChildHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === Descendant ===
-struct Descendant_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (Descendant_Context$);
-public:
-  struct SmartHandle$ : public DescendantHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  Descendant_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 DescendantHandle::DescendantHandle ()
 {}
 void
@@ -2083,17 +2027,6 @@ DescendantHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === GrandChild ===
-struct GrandChild_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (GrandChild_Context$);
-public:
-  struct SmartHandle$ : public GrandChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  GrandChild_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 GrandChildHandle::GrandChildHandle ()
 {}
 void
@@ -2190,17 +2123,6 @@ QuickSequenceStruct::append_back()
   resize (size() + 1);
   return back();
 }
-
-// === QuickIface ===
-struct QuickIface_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (QuickIface_Context$);
-public:
-  struct SmartHandle$ : public QuickIfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  QuickIface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
 void
@@ -2260,17 +2182,6 @@ QuickIfaceHandle::simple_function (int arg_i)
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
-
-// === MethodTestInterface ===
-struct MethodTestInterface_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (MethodTestInterface_Context$);
-public:
-  struct SmartHandle$ : public MethodTestInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  MethodTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
 void
@@ -2516,17 +2427,6 @@ MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
   delete fr;
   return retval;
 }
-
-// === SignalTestInterface ===
-struct SignalTestInterface_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (SignalTestInterface_Context$);
-public:
-  struct SmartHandle$ : public SignalTestInterfaceHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  SignalTestInterface_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__SignalTestInterfaceHandle__void_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
@@ -3080,17 +2980,6 @@ SignalTestInterfaceHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === ChildInheritingSignals ===
-struct ChildInheritingSignals_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (ChildInheritingSignals_Context$);
-public:
-  struct SmartHandle$ : public ChildInheritingSignalsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  ChildInheritingSignals_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__ChildInheritingSignalsHandle__child_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
@@ -3161,17 +3050,6 @@ ChildInheritingSignalsHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === AnotherChild ===
-struct AnotherChild_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (AnotherChild_Context$);
-public:
-  struct SmartHandle$ : public AnotherChildHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  AnotherChild_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 AnotherChildHandle::AnotherChildHandle ()
 {}
 void
@@ -3221,17 +3099,6 @@ AnotherChildHandle::_down_cast_types()
   delete fr;
   return thl;
 }
-
-// === PropertyTester ===
-struct PropertyTester_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (PropertyTester_Context$);
-public:
-  struct SmartHandle$ : public PropertyTesterHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  PropertyTester_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
 void
@@ -3559,17 +3426,6 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__ClickType_ ([]() {
   };
   Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "ClickType", enum_values);
 });
-
-// === ButtonArea ===
-struct ButtonArea_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (ButtonArea_Context$);
-public:
-  struct SmartHandle$ : public ButtonAreaHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  ButtonArea_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_emit__ButtonAreaHandle__check_activate (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
@@ -3757,17 +3613,6 @@ ButtonAreaHandle::click_type (ClickType value)
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
-
-// === PureMethods ===
-struct PureMethods_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (PureMethods_Context$);
-public:
-  struct SmartHandle$ : public PureMethodsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  PureMethods_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 PureMethodsHandle::PureMethodsHandle ()
 {}
 void
@@ -3853,17 +3698,6 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
 } // RapicornAidaTest
 
 namespace Other {
-
-// === NameTests ===
-struct NameTests_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (NameTests_Context$);
-public:
-  struct SmartHandle$ : public NameTestsHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  NameTests_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 NameTestsHandle::NameTestsHandle ()
 {}
 void
@@ -3930,17 +3764,6 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStr
 } // Other
 
 namespace BseTest {
-
-// === Compressor ===
-struct Compressor_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (Compressor_Context$);
-public:
-  struct SmartHandle$ : public CompressorHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  Compressor_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 CompressorHandle::CompressorHandle ()
 {}
 void
@@ -4059,17 +3882,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsStruct &self)
   fbr >>= self.threshold1;
   fbr >>= self.threshold2;
 }
-
-// === SoundModule ===
-struct SoundModule_Context$ {
-  RAPICORN_CLASS_NON_COPYABLE (SoundModule_Context$);
-public:
-  struct SmartHandle$ : public SoundModuleHandle {
-    SmartHandle$ (Rapicorn::Aida::uint64_t ipcid) : Rapicorn::Aida::SmartHandle () {}
-  }; // handle$;
-  SoundModule_Context$ (Rapicorn::Aida::uint64_t ipcid) {}
-    // handle$ (ipcid)
-};
 SoundModuleHandle::SoundModuleHandle ()
 {}
 void
