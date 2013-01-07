@@ -964,27 +964,26 @@ ClientConnection::signal_lookup (uint64_t signal_handler_id)
   return shandler;
 }
 
-// == ServerConnection::Dispatcher ==
+// == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
-class ServerConnection::Dispatcher : Connector {
-  TransportChannel         server_queue;        // messages sent to server
-  TransportChannel         client_queue;        // messages sent to client
-  std::deque<FieldBuffer*> client_events;       // messages pending for client
-  sem_t                    result_sem;          // signal result from server to client
+class ServerConnectionImpl : public ServerConnection {
+  TransportChannel         server_queue_;       // messages sent to server
+  TransportChannel         client_queue_;       // messages sent to client
+  std::deque<FieldBuffer*> client_events_;      // messages pending for client
+  sem_t                    result_sem_;         // signal result from server to client
   int                      ref_count;
-  RAPICORN_CLASS_NON_COPYABLE (Dispatcher);
+  RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
 public:
-  Dispatcher () :
-    ref_count (1)
+  ServerConnectionImpl () :
+    ref_count (1), connector_ (*this)
   {
-    sem_init (&result_sem, 0 /* unshared */, 0 /* init */);
+    sem_init (&result_sem_, 0 /* unshared */, 0 /* init */);
   }
-  Dispatcher*
+  void
   ref_impl()
   {
     int last_ref = __sync_fetch_and_add (&ref_count, 1);
     assert (last_ref > 0);
-    return this;
   }
   void
   unref_impl()
@@ -995,52 +994,57 @@ public:
       delete this;
   }
   virtual
-  ~Dispatcher ()
+  ~ServerConnectionImpl ()
   {
     assert (ref_count == 0);
-    sem_destroy (&result_sem);
+    sem_destroy (&result_sem_);
   }
-  void  block_for_result        () { sem_wait (&result_sem); }
-  void  notify_for_result       () { sem_post (&result_sem); }
-public: // server
-  void          server_send_event (FieldBuffer *fb) { return client_queue.send_msg (fb, true); } // FIXME: check type
-  int           server_notify_fd  ()    { return server_queue.inputfd(); }
-  bool          server_pending    ()    { return server_queue.has_msg(); }
-  void          server_dispatch   ();
-  Connector&    server_connector  ()    { return *this; }
-public: // client Connector
-  virtual void         ref         ()             { ref_impl(); }
-  virtual void         unref       ()             { unref_impl(); }
-  virtual int          notify_fd   ()             { return client_queue.inputfd(); }
-  virtual bool         pending     ()             { return !client_events.empty() || client_queue.has_msg(); }
-  virtual FieldBuffer* call_remote (FieldBuffer*);
-  virtual FieldBuffer* pop         ();
+  void  block_for_result        () { sem_wait (&result_sem_); }
+  void  notify_for_result       () { sem_post (&result_sem_); }
+public: // ServerConnection
+  virtual void          send_event (FieldBuffer *fb) { return client_queue_.send_msg (fb, true); } // FIXME: check type
+  virtual int           notify_fd  ()    { return server_queue_.inputfd(); }
+  virtual bool          pending    ()    { return server_queue_.has_msg(); }
+  virtual void          dispatch   ();
+  virtual Connector&    connector  ()    { return connector_; }
+private: // client Connector
+  struct ServerConnector : Connector {
+    ServerConnectionImpl &self_;
+    explicit              ServerConnector (ServerConnectionImpl &self) : self_ (self) {}
+    virtual void          ref         ()             { self_.ref_impl(); }
+    virtual void          unref       ()             { self_.unref_impl(); }
+    virtual int           notify_fd   ()             { return self_.client_queue_.inputfd(); }
+    virtual bool          pending     ()             { return !self_.client_events_.empty() || self_.client_queue_.has_msg(); }
+    virtual FieldBuffer*  call_remote (FieldBuffer*);
+    virtual FieldBuffer*  pop         ();
+  };
+  ServerConnector connector_;
 };
 
 FieldBuffer*
-ServerConnection::Dispatcher::pop () // Connector::pop
+ServerConnectionImpl::ServerConnector::pop () // Connector::pop
 {
-  if (client_events.empty())
-    return client_queue.fetch_msg();
-  FieldBuffer *fb = client_events.front();
-  client_events.pop_front();
+  if (self_.client_events_.empty())
+    return self_.client_queue_.fetch_msg();
+  FieldBuffer *fb = self_.client_events_.front();
+  self_.client_events_.pop_front();
   return fb;
 }
 
 FieldBuffer*
-ServerConnection::Dispatcher::call_remote (FieldBuffer *fb) // Connector::call_remote
+ServerConnectionImpl::ServerConnector::call_remote (FieldBuffer *fb) // Connector::call_remote
 {
   AIDA_THROW_IF_FAIL (fb != NULL);
   // enqueue method call message
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
-  server_queue.send_msg (fb, true);
+  self_.server_queue_.send_msg (fb, true);
   // wait for result
   const bool needsresult = Aida::msgid_has_result (msgid);
   if (needsresult)
-    block_for_result ();
+    self_.block_for_result ();
   while (needsresult)
     {
-      FieldBuffer *fr = client_queue.pop_msg();
+      FieldBuffer *fr = self_.client_queue_.pop_msg();
       Aida::MessageId retid = Aida::MessageId (fr->first_id());
       if (Aida::msgid_is_error (retid))
         {
@@ -1054,15 +1058,15 @@ ServerConnection::Dispatcher::call_remote (FieldBuffer *fb) // Connector::call_r
       else if (Aida::msgid_is_result (retid))
         return fr;
       else
-        client_events.push_back (fr);
+        self_.client_events_.push_back (fr);
     }
   return NULL;
 }
 
 void
-ServerConnection::Dispatcher::server_dispatch ()
+ServerConnectionImpl::dispatch ()
 {
-  FieldBuffer *fb = server_queue.fetch_msg();
+  FieldBuffer *fb = server_queue_.fetch_msg();
   if (!fb)
     return;
   FieldReader fbr (*fb);
@@ -1088,59 +1092,23 @@ ServerConnection::Dispatcher::server_dispatch ()
   delete fb;
   if (needsresult)
     {
-      client_queue.send_msg (fr ? fr : FieldBuffer::new_result(), false);
+      client_queue_.send_msg (fr ? fr : FieldBuffer::new_result(), false);
       notify_for_result();
     }
 }
 
 // == ServerConnection ==
-ServerConnection::ServerConnection (Dispatcher &transport) :
-  m_transport (transport.ref_impl())
+ServerConnection::ServerConnection ()
 {}
-
-ServerConnection::ServerConnection () :
-  m_transport (NULL)
-{}
-
-ServerConnection::ServerConnection (const ServerConnection &clone) :
-  m_transport (clone.m_transport ? clone.m_transport->ref_impl() : NULL)
-{}
-
-void
-ServerConnection::operator= (const ServerConnection &clone)
-{
-  Dispatcher *old = m_transport;
-  m_transport = clone.m_transport ? clone.m_transport->ref_impl() : NULL;
-  if (old)
-    old->unref();
-}
 
 ServerConnection::~ServerConnection ()
-{
-  if (m_transport)
-    m_transport->unref();
-  m_transport = NULL;
-}
+{}
 
-bool    ServerConnection::is_null    () const           { return m_transport == NULL; }
-void    ServerConnection::send_event (FieldBuffer *fb)  { return m_transport->server_send_event (fb); }
-int     ServerConnection::notify_fd  ()                 { return m_transport->server_notify_fd(); }
-bool    ServerConnection::pending    ()                 { return m_transport->server_pending(); }
-void    ServerConnection::dispatch   ()                 { return m_transport->server_dispatch(); }
-
-ServerConnection
+ServerConnection*
 ServerConnection::create_threaded ()
 {
-  Dispatcher *t = new Dispatcher(); // ref_count=1
-  ServerConnection scon (*t);
-  t->unref();
-  return scon;
-}
-
-Connector&
-ServerConnection::connector()
-{
-  return m_transport->server_connector();
+  ServerConnectionImpl *simpl = new ServerConnectionImpl(); // ref_count=1
+  return simpl;
 }
 
 // == MethodRegistry ==

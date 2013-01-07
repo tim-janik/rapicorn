@@ -397,26 +397,20 @@ typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, v
 
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection {
-private: /// @name Internals
-  class Dispatcher;
-  Dispatcher *m_transport;
-public: /// @name API for remote calls
-  void       send_event (FieldBuffer*); ///< Send event to remote asyncronously, transfers memory.
-  int        notify_fd  (); ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool       pending    (); ///< Indicate whether any incoming calls are pending that need to be dispatched.
-  void       dispatch   (); ///< Dispatch a single call if any is pending.
-  bool       is_null    () const;
-  Connector& connector  ();
-protected:
-  static DispatchFunc     find_method      (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
+  RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 public: /// @name Construction
-  static ServerConnection create_threaded  ();
-  virtual                ~ServerConnection ();
-  /*ctor*/                ServerConnection ();
-  /*copy*/                ServerConnection (const ServerConnection&);
-  void                    operator=        (const ServerConnection&);
-protected:                ServerConnection (Dispatcher&);
-public: /// @name Registry for IPC method lookups
+  static ServerConnection* create_threaded  ();
+  virtual                 ~ServerConnection ();
+protected:                 ServerConnection ();
+public: /// @name API for remote calls
+  virtual void       send_event (FieldBuffer*) = 0; ///< Send event to remote asyncronously, transfers memory.
+  virtual int        notify_fd  () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool       pending    () = 0; ///< Indicate whether any incoming calls are pending that need to be dispatched.
+  virtual void       dispatch   () = 0; ///< Dispatch a single call if any is pending.
+  virtual Connector& connector  () = 0;
+protected: /// @name Registry for IPC method lookups
+  static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
+public:
   struct MethodEntry       { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry    /// Registry structure for IPC method stubs.
   {
