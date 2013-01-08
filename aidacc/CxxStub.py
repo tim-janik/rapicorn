@@ -131,7 +131,6 @@ class Generator:
     self.iface_base = self.test_iface_base
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
-    self.gen_shortalias = False
     self.object_impl = None # ('impl', ('', 'Impl'))
   def Iwrap (self, name):
     cc = name.rfind ('::')
@@ -293,7 +292,6 @@ class Generator:
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
-    s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
     s = ''
@@ -522,7 +520,8 @@ class Generator:
       s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     # typedef alias
-    s += self.generate_shortalias (type_info)
+    if self.gen_mode == G4STUB:
+      s += self.generate_shortalias (type_info)
     return s
   def generate_shortdoc (self, type_info):      # doxygen snippets
     classC = self.C (type_info) # class name
@@ -532,15 +531,9 @@ class Generator:
     s += '/// See also the corresponding IDL class %s.\n' % type_info.name
     return s
   def generate_shortalias (self, type_info):
-    classC = self.C (type_info) # class name
-    if not self.gen_shortalias: return ''
+    assert self.gen_mode == G4STUB
     s = ''
-    alias = self.type2cpp (type_info)
-    if type_info.storage == Decls.INTERFACE:
-      if self.gen_mode == G4SERVANT:
-        s += '// '
-      else: # G4STUB
-        alias += 'H'
+    alias = self.type2cpp (type_info) + 'H'
     s += 'typedef %s %s;' % (self.C (type_info), alias)
     s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
     return s
@@ -1218,7 +1211,6 @@ def generate (namespace_list, **args):
   gg.gen_server_skel = 'server-skel' in config['backend-options']
   gg.gen_clienthh = all or 'clienthh' in config['backend-options']
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
-  gg.gen_shortalias = all or 'shortalias' in config['backend-options']
   gg.gen_rapicornsignals = all or 'RapicornSignal' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
