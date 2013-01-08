@@ -192,9 +192,9 @@ void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface XFooRecord
- * See also the corresponding C++ stub class XFooRecordStruct. */
+ * See also the corresponding C++ stub class XFooRecord. */
 /// See also the corresponding IDL class XFooRecord.
-struct XFooRecordStruct
+struct XFooRecord
 {
   bool                          single_bool;
   int                           single_num;
@@ -214,132 +214,132 @@ struct XFooRecordStruct
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
-  inline                        XFooRecordStruct () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecordStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecordStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
 
 /** @interface XFooSequence
- * See also the corresponding C++ stub class XFooSequenceStruct. */
+ * See also the corresponding C++ stub class XFooSequence. */
 /// See also the corresponding IDL class XFooSequence.
-struct XFooSequenceStruct : public std::vector<bool>
+struct XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
 
 /** @interface IntSequence
- * See also the corresponding C++ stub class IntSequenceStruct. */
+ * See also the corresponding C++ stub class IntSequence. */
 /// See also the corresponding IDL class IntSequence.
-struct IntSequenceStruct : public std::vector<int>
+struct IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, IntSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
 
 /** @interface FloatSequence
- * See also the corresponding C++ stub class FloatSequenceStruct. */
+ * See also the corresponding C++ stub class FloatSequence. */
 /// See also the corresponding IDL class FloatSequence.
-struct FloatSequenceStruct : public std::vector<double>
+struct FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
 
 /** @interface StringSequence
- * See also the corresponding C++ stub class StringSequenceStruct. */
+ * See also the corresponding C++ stub class StringSequence. */
 /// See also the corresponding IDL class StringSequence.
-struct StringSequenceStruct : public std::vector<std::string>
+struct StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, StringSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
 
 /** @interface ExtensiveEnumSequence
- * See also the corresponding C++ stub class ExtensiveEnumSequenceStruct. */
+ * See also the corresponding C++ stub class ExtensiveEnumSequence. */
 /// See also the corresponding IDL class ExtensiveEnumSequence.
-struct ExtensiveEnumSequenceStruct : public std::vector<ExtensiveEnum>
+struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
 
 /** @interface RecordSequence
- * See also the corresponding C++ stub class RecordSequenceStruct. */
+ * See also the corresponding C++ stub class RecordSequence. */
 /// See also the corresponding IDL class RecordSequence.
-struct RecordSequenceStruct : public std::vector<XFooRecordStruct>
+struct RecordSequence : public std::vector<XFooRecord>
 {
-  typedef std::vector<XFooRecordStruct> Sequence;
+  typedef std::vector<XFooRecord> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
 
 /** @interface SequenceSequence
- * See also the corresponding C++ stub class SequenceSequenceStruct. */
+ * See also the corresponding C++ stub class SequenceSequence. */
 /// See also the corresponding IDL class SequenceSequence.
-struct SequenceSequenceStruct : public std::vector<IntSequenceStruct>
+struct SequenceSequence : public std::vector<IntSequence>
 {
-  typedef std::vector<IntSequenceStruct> Sequence;
+  typedef std::vector<IntSequence> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
 
 /** @interface InterfaceSequence
- * See also the corresponding C++ stub class InterfaceSequenceStruct. */
+ * See also the corresponding C++ stub class InterfaceSequence. */
 /// See also the corresponding IDL class InterfaceSequence.
-struct InterfaceSequenceStruct : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
+struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
 {
   typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
 
 /** @interface AnySequence
- * See also the corresponding C++ stub class AnySequenceStruct. */
+ * See also the corresponding C++ stub class AnySequence. */
 /// See also the corresponding IDL class AnySequence.
-struct AnySequenceStruct : public std::vector<Rapicorn::Aida::Any>
+struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, AnySequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
 
 /** @interface NestedTypesRec
- * See also the corresponding C++ stub class NestedTypesRecStruct. */
+ * See also the corresponding C++ stub class NestedTypesRec. */
 /// See also the corresponding IDL class NestedTypesRec.
-struct NestedTypesRecStruct
+struct NestedTypesRec
 {
-  XFooRecordStruct              rec;
-  XFooSequenceStruct            seq;
-  inline                        NestedTypesRecStruct () { }
+  XFooRecord                    rec;
+  XFooSequence                  seq;
+  inline                        NestedTypesRec () { }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRecStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRecStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
+void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
 
 /** @interface NestedTypesSeq
- * See also the corresponding C++ stub class NestedTypesSeqStruct. */
+ * See also the corresponding C++ stub class NestedTypesSeq. */
 /// See also the corresponding IDL class NestedTypesSeq.
-struct NestedTypesSeqStruct : public std::vector<NestedTypesRecStruct>
+struct NestedTypesSeq : public std::vector<NestedTypesRec>
 {
-  typedef std::vector<NestedTypesRecStruct> Sequence;
+  typedef std::vector<NestedTypesRec> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeqStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeqStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
+void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
 
 typedef Rapicorn::Aida::Any AliasAny;
 
@@ -353,69 +353,69 @@ typedef double AliasFloat;
 
 typedef std::string AliasString;
 
-typedef XFooRecordStruct AliasRecord;
+typedef XFooRecord AliasRecord;
 
-typedef XFooSequenceStruct AliasSequence;
+typedef XFooSequence AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
 /** @interface NewRecord
- * See also the corresponding C++ stub class NewRecordStruct. */
+ * See also the corresponding C++ stub class NewRecord. */
 /// See also the corresponding IDL class NewRecord.
-struct NewRecordStruct
+struct NewRecord
 {
   int                           i;
   Enum1                         enum1;
-  XFooSequenceStruct            xfs;
-  NestedTypesRecStruct          ntr;
-  inline                        NewRecordStruct () { i = 0; enum1 = Enum1 (0); }
+  XFooSequence                  xfs;
+  NestedTypesRec                ntr;
+  inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecordStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, NewRecordStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
 
 namespace Inner {
 
 /** @interface InnerRecord
- * See also the corresponding C++ stub class InnerRecordStruct. */
+ * See also the corresponding C++ stub class InnerRecord. */
 /// See also the corresponding IDL class InnerRecord.
-struct InnerRecordStruct
+struct InnerRecord
 {
   int                           x;
   int                           y;
-  NewRecordStruct               rec;
-  inline                        InnerRecordStruct () { x = 0; y = 0; }
+  NewRecord                     rec;
+  inline                        InnerRecord () { x = 0; y = 0; }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecordStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecordStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
 } // Inner
 
 /** @interface Refer2Inner
- * See also the corresponding C++ stub class Refer2InnerStruct. */
+ * See also the corresponding C++ stub class Refer2Inner. */
 /// See also the corresponding IDL class Refer2Inner.
-struct Refer2InnerStruct
+struct Refer2Inner
 {
-  Inner::InnerRecordStruct      r;
-  inline                        Refer2InnerStruct () { }
+  Inner::InnerRecord            r;
+  inline                        Refer2Inner () { }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2InnerStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, Refer2InnerStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
+void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
 
 /** @interface SomeRecord
- * See also the corresponding C++ stub class SomeRecordStruct. */
+ * See also the corresponding C++ stub class SomeRecord. */
 /// See also the corresponding IDL class SomeRecord.
-struct SomeRecordStruct
+struct SomeRecord
 {
-  MandatoryNamespace::NewRecordStruct r1;
-  MandatoryNamespace::NewRecordStruct r2;
-  MandatoryNamespace::Inner::InnerRecordStruct r3;
-  MandatoryNamespace::Inner::InnerRecordStruct r4;
-  inline                        SomeRecordStruct () { }
+  MandatoryNamespace::NewRecord r1;
+  MandatoryNamespace::NewRecord r2;
+  MandatoryNamespace::Inner::InnerRecord r3;
+  MandatoryNamespace::Inner::InnerRecord r4;
+  inline                        SomeRecord () { }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecordStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecordStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -558,27 +558,27 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
 /** @interface QuickRecord
- * See also the corresponding C++ stub class QuickRecordStruct. */
+ * See also the corresponding C++ stub class QuickRecord. */
 /// See also the corresponding IDL class QuickRecord.
-struct QuickRecordStruct
+struct QuickRecord
 {
   int                           int1;
   int                           int2;
-  inline                        QuickRecordStruct () { int1 = 0; int2 = 0; }
+  inline                        QuickRecord () { int1 = 0; int2 = 0; }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecordStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecordStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
 
 /** @interface QuickSequence
- * See also the corresponding C++ stub class QuickSequenceStruct. */
+ * See also the corresponding C++ stub class QuickSequence. */
 /// See also the corresponding IDL class QuickSequence.
-struct QuickSequenceStruct : public std::vector<double>
+struct QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequenceStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequenceStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
 
 /** @interface QuickIface
  * See also the corresponding C++ stub class QuickIfaceHandle. */
@@ -625,10 +625,10 @@ public:
                                                            const std::string &optval = "default");
   QuickEnum                     method_with_enum          (QuickEnum input,
                                                            QuickEnum optval = QuickEnum (0));
-  QuickRecordStruct             method_with_record        (const QuickRecordStruct &input,
-                                                           const QuickRecordStruct &optval = QuickRecordStruct());
-  QuickSequenceStruct           method_with_sequence      (const QuickSequenceStruct &input,
-                                                           const QuickSequenceStruct &optval = QuickSequenceStruct());
+  QuickRecord                   method_with_record        (const QuickRecord &input,
+                                                           const QuickRecord &optval = QuickRecord());
+  QuickSequence                 method_with_sequence      (const QuickSequence &input,
+                                                           const QuickSequence &optval = QuickSequence());
   GrandChildHandle              method_with_interface     (GrandChildHandle &input,
                                                            GrandChildHandle &optval = *(GrandChildHandle*) NULL);
   Rapicorn::Aida::Any           method_with_anys          (const Rapicorn::Aida::Any &input,
@@ -674,10 +674,10 @@ public:
   typedef QuickEnum             Callback_enum_result ();
   Rapicorn::Aida::uint64_t      sig_enum_result (const std::function<Callback_enum_result> &callback);
   bool                          sig_enum_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  typedef QuickRecordStruct     Callback_record_result ();
+  typedef QuickRecord           Callback_record_result ();
   Rapicorn::Aida::uint64_t      sig_record_result (const std::function<Callback_record_result> &callback);
   bool                          sig_record_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  typedef QuickSequenceStruct   Callback_sequence_result ();
+  typedef QuickSequence         Callback_sequence_result ();
   Rapicorn::Aida::uint64_t      sig_sequence_result (const std::function<Callback_sequence_result> &callback);
   bool                          sig_sequence_result (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
   typedef GrandChildHandle      Callback_interface_result ();
@@ -710,10 +710,10 @@ public:
   typedef void                  Callback_enum_arg (QuickEnum e);
   Rapicorn::Aida::uint64_t      sig_enum_arg (const std::function<Callback_enum_arg> &callback);
   bool                          sig_enum_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  typedef void                  Callback_record_arg (const QuickRecordStruct &r);
+  typedef void                  Callback_record_arg (const QuickRecord &r);
   Rapicorn::Aida::uint64_t      sig_record_arg (const std::function<Callback_record_arg> &callback);
   bool                          sig_record_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-  typedef void                  Callback_sequence_arg (const QuickSequenceStruct &s);
+  typedef void                  Callback_sequence_arg (const QuickSequence &s);
   Rapicorn::Aida::uint64_t      sig_sequence_arg (const std::function<Callback_sequence_arg> &callback);
   bool                          sig_sequence_arg (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
   typedef void                  Callback_interface_arg (GrandChildHandle &i);
@@ -743,7 +743,7 @@ public:
   template<class SmartHandle>
   static ChildInheritingSignalsHandle down_cast (SmartHandle smh) { return smh._is_null() ? ChildInheritingSignalsHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      ChildInheritingSignalsHandle ();
-  typedef void                  Callback_child_signal (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s);
+  typedef void                  Callback_child_signal (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s);
   Rapicorn::Aida::uint64_t      sig_child_signal (const std::function<Callback_child_signal> &callback);
   bool                          sig_child_signal (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
 };
@@ -794,10 +794,10 @@ public:
   void                          string_prop    (const std::string&);
   QuickEnum                     enum_prop      () const;
   void                          enum_prop      (QuickEnum);
-  QuickRecordStruct             record_prop    () const;
-  void                          record_prop    (const QuickRecordStruct&);
-  QuickSequenceStruct           sequence_prop  () const;
-  void                          sequence_prop  (const QuickSequenceStruct&);
+  QuickRecord                   record_prop    () const;
+  void                          record_prop    (const QuickRecord&);
+  QuickSequence                 sequence_prop  () const;
+  void                          sequence_prop  (const QuickSequence&);
   GrandChildHandle              interface_prop () const;
   void                          interface_prop (GrandChildHandle);
   PropertyTesterHandle          self_prop      () const;
@@ -908,9 +908,9 @@ public:
   template<class SmartHandle>
   static NameTestsHandle        down_cast (SmartHandle smh) { return smh._is_null() ? NameTestsHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      NameTestsHandle ();
-  void                          args_from_other_namespace (const InterfaceTests::QuickRecordStruct &qr,
+  void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                            RapicornAidaTest::ClickType qe,
-                                                           const OtherNamespace::SomeRecordStruct &sr);
+                                                           const OtherNamespace::SomeRecord &sr);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
@@ -942,19 +942,19 @@ void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface RecordForGroups
- * See also the corresponding C++ stub class RecordForGroupsStruct. */
+ * See also the corresponding C++ stub class RecordForGroups. */
 /// See also the corresponding IDL class RecordForGroups.
-struct RecordForGroupsStruct
+struct RecordForGroups
 {
   int                           i;
   double                        ratio;
   bool                          ordinary_bool;
   double                        threshold1;
   double                        threshold2;
-  inline                        RecordForGroupsStruct () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+  inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsStruct&);
-void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsStruct&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
 
 /** @interface SoundModule
  * See also the corresponding C++ stub class SoundModuleHandle. */
@@ -1200,7 +1200,7 @@ FirstInterfaceHandle::void_func ()
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecordStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecord &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (18);
   fb <<= self.single_bool;
@@ -1223,7 +1223,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecordStruct &self)
   fb <<= self.any3;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, XFooRecordStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, XFooRecord &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 18) return;
@@ -1247,7 +1247,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, XFooRecordStruct &self)
   fbr >>= self.any3;
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1256,7 +1256,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, XFooSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, XFooSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1265,14 +1265,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, XFooSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-XFooSequenceStruct::reference
-XFooSequenceStruct::append_back()
+XFooSequence::reference
+XFooSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const IntSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const IntSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1281,7 +1281,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const IntSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, IntSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, IntSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1290,14 +1290,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, IntSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-IntSequenceStruct::reference
-IntSequenceStruct::append_back()
+IntSequence::reference
+IntSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const FloatSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const FloatSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1306,7 +1306,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const FloatSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, FloatSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, FloatSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1315,14 +1315,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, FloatSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-FloatSequenceStruct::reference
-FloatSequenceStruct::append_back()
+FloatSequence::reference
+FloatSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const StringSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const StringSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1331,7 +1331,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const StringSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, StringSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, StringSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1340,14 +1340,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, StringSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-StringSequenceStruct::reference
-StringSequenceStruct::append_back()
+StringSequence::reference
+StringSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ExtensiveEnumSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ExtensiveEnumSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1356,7 +1356,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ExtensiveEnumSequenceStruct
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, ExtensiveEnumSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, ExtensiveEnumSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1365,14 +1365,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ExtensiveEnumSequenceStruct &self
     fbr >>= self[k];
   }
 }
-ExtensiveEnumSequenceStruct::reference
-ExtensiveEnumSequenceStruct::append_back()
+ExtensiveEnumSequence::reference
+ExtensiveEnumSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1381,7 +1381,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, RecordSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, RecordSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1390,14 +1390,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, RecordSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-RecordSequenceStruct::reference
-RecordSequenceStruct::append_back()
+RecordSequence::reference
+RecordSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SequenceSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SequenceSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1406,7 +1406,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SequenceSequenceStruct &sel
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, SequenceSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, SequenceSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1415,14 +1415,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SequenceSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-SequenceSequenceStruct::reference
-SequenceSequenceStruct::append_back()
+SequenceSequence::reference
+SequenceSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InterfaceSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InterfaceSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1431,7 +1431,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InterfaceSequenceStruct &se
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, InterfaceSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, InterfaceSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1440,14 +1440,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, InterfaceSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-InterfaceSequenceStruct::reference
-InterfaceSequenceStruct::append_back()
+InterfaceSequence::reference
+InterfaceSequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const AnySequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const AnySequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1456,7 +1456,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const AnySequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, AnySequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, AnySequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1465,21 +1465,21 @@ operator>>= (Rapicorn::Aida::FieldReader &src, AnySequenceStruct &self)
     fbr >>= self[k];
   }
 }
-AnySequenceStruct::reference
-AnySequenceStruct::append_back()
+AnySequence::reference
+AnySequence::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRecStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRec &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (2);
   fb <<= self.rec;
   fb <<= self.seq;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesRecStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesRec &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
@@ -1487,7 +1487,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesRecStruct &self)
   fbr >>= self.seq;
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesSeqStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesSeq &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -1496,7 +1496,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesSeqStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesSeqStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesSeq &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -1505,14 +1505,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, NestedTypesSeqStruct &self)
     fbr >>= self[k];
   }
 }
-NestedTypesSeqStruct::reference
-NestedTypesSeqStruct::append_back()
+NestedTypesSeq::reference
+NestedTypesSeq::append_back()
 {
   resize (size() + 1);
   return back();
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecordStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecord &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (4);
   fb <<= self.i;
@@ -1521,7 +1521,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecordStruct &self)
   fb <<= self.ntr;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, NewRecordStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, NewRecord &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
@@ -1533,7 +1533,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, NewRecordStruct &self)
 
 namespace Inner {
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecordStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecord &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (3);
   fb <<= self.x;
@@ -1541,7 +1541,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecordStruct &self)
   fb <<= self.rec;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, InnerRecordStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, InnerRecord &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 3) return;
@@ -1551,13 +1551,13 @@ operator>>= (Rapicorn::Aida::FieldReader &src, InnerRecordStruct &self)
 }
 } // Inner
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2InnerStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2Inner &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (1);
   fb <<= self.r;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, Refer2InnerStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, Refer2Inner &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 1) return;
@@ -1567,7 +1567,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, Refer2InnerStruct &self)
 
 namespace OtherNamespace {
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecordStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecord &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (4);
   fb <<= self.r1;
@@ -1576,7 +1576,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecordStruct &self)
   fb <<= self.r4;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecordStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecord &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 4) return;
@@ -2084,14 +2084,14 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__QuickEnum_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("InterfaceTests", "QuickEnum", enum_values);
 });
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecordStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecord &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (2);
   fb <<= self.int1;
   fb <<= self.int2;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, QuickRecordStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, QuickRecord &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 2) return;
@@ -2099,7 +2099,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, QuickRecordStruct &self)
   fbr >>= self.int2;
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickSequenceStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickSequence &self)
 {
   const size_t len = self.size();
   Rapicorn::Aida::FieldBuffer &fb = dst.add_seq (len);
@@ -2108,7 +2108,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickSequenceStruct &self)
   }
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, QuickSequenceStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, QuickSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -2117,8 +2117,8 @@ operator>>= (Rapicorn::Aida::FieldReader &src, QuickSequenceStruct &self)
     fbr >>= self[k];
   }
 }
-QuickSequenceStruct::reference
-QuickSequenceStruct::append_back()
+QuickSequence::reference
+QuickSequence::append_back()
 {
   resize (size() + 1);
   return back();
@@ -2342,9 +2342,9 @@ MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
   delete fr;
   return retval;
 }
-QuickRecordStruct
-MethodTestInterfaceHandle::method_with_record (const QuickRecordStruct &arg_input,
-                                               const QuickRecordStruct &arg_optval)
+QuickRecord
+MethodTestInterfaceHandle::method_with_record (const QuickRecord &arg_input,
+                                               const QuickRecord &arg_optval)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL); // msgid
@@ -2354,14 +2354,14 @@ MethodTestInterfaceHandle::method_with_record (const QuickRecordStruct &arg_inpu
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickRecordStruct  retval;
+  QuickRecord  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
-QuickSequenceStruct
-MethodTestInterfaceHandle::method_with_sequence (const QuickSequenceStruct &arg_input,
-                                                 const QuickSequenceStruct &arg_optval)
+QuickSequence
+MethodTestInterfaceHandle::method_with_sequence (const QuickSequence &arg_input,
+                                                 const QuickSequence &arg_optval)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL); // msgid
@@ -2371,7 +2371,7 @@ MethodTestInterfaceHandle::method_with_sequence (const QuickSequenceStruct &arg_
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickSequenceStruct  retval;
+  QuickSequence  retval;
   frr >>= retval;
   delete fr;
   return retval;
@@ -3292,7 +3292,7 @@ PropertyTesterHandle::enum_prop (QuickEnum value)
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
-QuickRecordStruct
+QuickRecord
 PropertyTesterHandle::record_prop () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
@@ -3301,13 +3301,13 @@ PropertyTesterHandle::record_prop () const
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickRecordStruct  retval;
+  QuickRecord  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTesterHandle::record_prop (const QuickRecordStruct &value)
+PropertyTesterHandle::record_prop (const QuickRecord &value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a5f5c212625f446ULL, 0x30d24123307269ceULL); // msgid
@@ -3316,7 +3316,7 @@ PropertyTesterHandle::record_prop (const QuickRecordStruct &value)
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
-QuickSequenceStruct
+QuickSequence
 PropertyTesterHandle::sequence_prop () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
@@ -3325,13 +3325,13 @@ PropertyTesterHandle::sequence_prop () const
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickSequenceStruct  retval;
+  QuickSequence  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTesterHandle::sequence_prop (const QuickSequenceStruct &value)
+PropertyTesterHandle::sequence_prop (const QuickSequence &value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL); // msgid
@@ -3748,9 +3748,9 @@ NameTestsHandle::_down_cast_types()
   return thl;
 }
 void
-NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecordStruct &arg_qr,
+NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecord &arg_qr,
                                             RapicornAidaTest::ClickType arg_qe,
-                                            const OtherNamespace::SomeRecordStruct &arg_sr)
+                                            const OtherNamespace::SomeRecord &arg_sr)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 3), *fr = NULL;
   fb.add_msgid (0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL); // msgid
@@ -3862,7 +3862,7 @@ CompressorHandle::ratio (double value)
   if (fr) delete fr;
 }
 inline void __attribute__ ((used))
-operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroupsStruct &self)
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroups &self)
 {
   Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
   fb <<= self.i;
@@ -3872,7 +3872,7 @@ operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroupsStruct &self
   fb <<= self.threshold2;
 }
 inline void __attribute__ ((used))
-operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroupsStruct &self)
+operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroups &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() < 5) return;

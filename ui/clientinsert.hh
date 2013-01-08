@@ -14,12 +14,12 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:StringSeq:
-  explicit StringSeqStruct () {}
-  /*ctor*/ StringSeqStruct (const std::vector<std::string> &strv) : Sequence (strv) {}
+  explicit StringSeq () {}
+  /*ctor*/ StringSeq (const std::vector<std::string> &strv) : Sequence (strv) {}
 
 class_scope:Pixbuf:
   /// Construct Pixbuf at given width and height.
-  explicit        PixbufStruct (uint w, uint h) : row_length (0) { pixels.resize (w, h); }
+  explicit        Pixbuf       (uint w, uint h) : row_length (0) { pixels.resize (w, h); }
   /// Reset width and height and resize pixel sequence.
   void            resize       (uint w, uint h) { row_length = w; pixels.resize (row_length * h); }
   /// Access row as endian dependant ARGB integers.
@@ -32,7 +32,7 @@ class_scope:Pixbuf:
   int             height       () const         { return row_length ? pixels.size() / row_length : 0; }
 
 class_scope:Requisition:
-  inline RequisitionStruct (double w, double h) : width (w), height (h) {}
+  inline Requisition (double w, double h) : width (w), height (h) {}
 
 class_scope:Item:
   /// Carry out Item::query_selector_unique() and Target::down_cast() in one step, for type safe access to a descendant.
@@ -65,5 +65,5 @@ ApplicationHandle init_test_app           (const String       &app_ident,
 void              exit                    (int status) RAPICORN_NORETURN;
 
 } // Rapicorn
-#define RAPICORN_PIXBUF_TYPE    Rapicorn::PixbufStruct
+#define RAPICORN_PIXBUF_TYPE    Rapicorn::Pixbuf
 #include <ui/pixmap.hh>

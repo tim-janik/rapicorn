@@ -153,17 +153,12 @@ class Generator:
     return fullnsname
   def C4server (self, type_node):
     tname = self.type2cpp (type_node)
-    if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
-      return tname # + "Impl"     # FIXME
-    elif type_node.storage == Decls.INTERFACE:
-      return self.Iwrap (tname)
-    else:
-      return tname
+    if type_node.storage == Decls.INTERFACE:
+      return self.Iwrap (tname)                         # construct servant class interface name
+    return tname
   def C4client (self, type_node):
     tname = self.type2cpp (type_node)
-    if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
-      return tname + "Struct"                           # construct client structure name
-    elif type_node.storage == Decls.INTERFACE:
+    if type_node.storage == Decls.INTERFACE:
       return tname + 'Handle'                           # construct client class SmartHandle
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
