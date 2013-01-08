@@ -83,16 +83,22 @@ check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-
 EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
 
 # == Test CxxStub Code Compilation ==
-check-CxxStub-server-code: $(srcdir)/testcxxserver.ref
-	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
+check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g shortalias -g RapicornSignal \
+	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
+	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxserver.cc
+	$(Q) cat $(srcdir)/testcxxserver.ref		>>testcxxserver.cc
 	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxserver.cc testcxxserver.o
+	$(Q) rm -f testcxxserver.cc testcxxserver.o testcxxserver-stub.hh
 check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
 check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
-	$(Q) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g shortalias -g RapicornSignal \
+	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
+	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxskels.cc
+	$(Q) cat $(srcdir)/testcxxskels.ref		>>testcxxskels.cc
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxskels.cc testcxxskels.o
+	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxserver-stub.hh
 check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code

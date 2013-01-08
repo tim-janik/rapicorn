@@ -35,17 +35,17 @@ error (const char *format, ...)
 #endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-inline ptrdiff_t     smh2id (const SmartHandle &h) { return h._orbid(); }
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
                                        { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
-template<class C> C  smh2cast (const SmartHandle &handle) {
+inline ptrdiff_t        smh2id (const SmartHandle &h) { return h._orbid(); }
+template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
-  C casted;
-  const ptrdiff_t input[2] = { orbid, casted._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, casted);
-  return casted;
+  SMH target;
+  const ptrdiff_t input[2] = { orbid, target._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  return target;
 }
 } } // Anon::__AIDA_Local__
 
@@ -186,10 +186,10 @@ public:
   static FirstInterfaceHandle   down_cast (SmartHandle smh) { return smh._is_null() ? FirstInterfaceHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      FirstInterfaceHandle ();
   void                          void_func            ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FirstInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface XFooRecord
  * See also the corresponding C++ class XFooRecordStruct (client side). */
@@ -474,10 +474,10 @@ public:
   void                          void_method        ();
   std::string                   on_click2out       ();
   void                          on_click2in        (const std::string &command);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const UIWidgetAreaHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, UIWidgetAreaHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Parent
  * See also the corresponding C++ class ParentHandle (client side). */
@@ -492,10 +492,10 @@ public:
   template<class SmartHandle>
   static ParentHandle           down_cast (SmartHandle smh) { return smh._is_null() ? ParentHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      ParentHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ParentHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ParentHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Child
  * See also the corresponding C++ class ChildHandle (client side). */
@@ -510,10 +510,10 @@ public:
   template<class SmartHandle>
   static ChildHandle            down_cast (SmartHandle smh) { return smh._is_null() ? ChildHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      ChildHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ChildHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Descendant
  * See also the corresponding C++ class DescendantHandle (client side). */
@@ -528,10 +528,10 @@ public:
   template<class SmartHandle>
   static DescendantHandle       down_cast (SmartHandle smh) { return smh._is_null() ? DescendantHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      DescendantHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const DescendantHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, DescendantHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface GrandChild
  * See also the corresponding C++ class GrandChildHandle (client side). */
@@ -546,10 +546,10 @@ public:
   template<class SmartHandle>
   static GrandChildHandle       down_cast (SmartHandle smh) { return smh._is_null() ? GrandChildHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      GrandChildHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const GrandChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, GrandChildHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 enum QuickEnum {
   ZERO = 0,
@@ -594,10 +594,10 @@ public:
   static QuickIfaceHandle       down_cast (SmartHandle smh) { return smh._is_null() ? QuickIfaceHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      QuickIfaceHandle ();
   void                          simple_function  (int i = 9);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickIfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickIfaceHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface MethodTestInterface
  * See also the corresponding C++ class MethodTestInterfaceHandle (client side). */
@@ -635,10 +635,10 @@ public:
                                                            const Rapicorn::Aida::Any &optval);
   QuickIfaceHandle              method_with_quickiface    (QuickIfaceHandle &input,
                                                            QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const MethodTestInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, MethodTestInterfaceHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface SignalTestInterface
  * See also the corresponding C++ class SignalTestInterfaceHandle (client side). */
@@ -725,10 +725,10 @@ public:
   typedef void                  Callback_self_args (SignalTestInterfaceHandle &self_);
   Rapicorn::Aida::uint64_t      sig_self_args (const std::function<Callback_self_args> &callback);
   bool                          sig_self_args (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SignalTestInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SignalTestInterfaceHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface ChildInheritingSignals
  * See also the corresponding C++ class ChildInheritingSignalsHandle (client side). */
@@ -746,10 +746,10 @@ public:
   typedef void                  Callback_child_signal (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecordStruct &r, const QuickSequenceStruct &s);
   Rapicorn::Aida::uint64_t      sig_child_signal (const std::function<Callback_child_signal> &callback);
   bool                          sig_child_signal (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ChildInheritingSignalsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ChildInheritingSignalsHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface AnotherChild
  * See also the corresponding C++ class AnotherChildHandle (client side). */
@@ -764,10 +764,10 @@ public:
   template<class SmartHandle>
   static AnotherChildHandle     down_cast (SmartHandle smh) { return smh._is_null() ? AnotherChildHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      AnotherChildHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnotherChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnotherChildHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface PropertyTester
  * See also the corresponding C++ class PropertyTesterHandle (client side). */
@@ -804,10 +804,10 @@ public:
   void                          self_prop      (PropertyTesterHandle);
   Rapicorn::Aida::Any           any_prop       () const;
   void                          any_prop       (const Rapicorn::Aida::Any&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PropertyTesterHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PropertyTesterHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 } // InterfaceTests
 
 namespace RapicornAidaTest {
@@ -849,10 +849,10 @@ public:
   typedef void                  Callback_activate ();
   Rapicorn::Aida::uint64_t      sig_activate (const std::function<Callback_activate> &callback);
   bool                          sig_activate (Rapicorn::Aida::uint64_t signal_id); ///< Disconnect Signal
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ButtonAreaHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ButtonAreaHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 class PureMethodsHandle;
 
@@ -870,10 +870,10 @@ public:
   static PureMethodsHandle      down_cast (SmartHandle smh) { return smh._is_null() ? PureMethodsHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      PureMethodsHandle ();
   int                           pure_method       (double f);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 enum MathExpressions {
   RESULT_2 = 2,
@@ -911,10 +911,10 @@ public:
   void                          args_from_other_namespace (const InterfaceTests::QuickRecordStruct &qr,
                                                            RapicornAidaTest::ClickType qe,
                                                            const OtherNamespace::SomeRecordStruct &sr);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 } // Other
 
 namespace BseTest {
@@ -936,10 +936,10 @@ public:
   void                          threshold (double);
   double                        ratio     () const;
   void                          ratio     (double);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface RecordForGroups
  * See also the corresponding C++ class RecordForGroupsStruct (client side). */
@@ -969,10 +969,10 @@ public:
   template<class SmartHandle>
   static SoundModuleHandle      down_cast (SmartHandle smh) { return smh._is_null() ? SoundModuleHandle() : _cast (smh, smh._down_cast_types()); }
   explicit                      SoundModuleHandle ();
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SoundModuleHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SoundModuleHandle&);
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 } // BseTest
 
 namespace Rapicorn {
