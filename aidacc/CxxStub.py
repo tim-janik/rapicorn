@@ -115,8 +115,8 @@ def reindent (prefix, lines):
 
 I_prefix_postfix = ('', '_Interface')
 
-class G4CLIENT: pass    # generate client side classes (smart handles)
-class G4SERVER: pass    # generate server side classes (interfaces)
+class G4STUB: pass    # generate stub classes (smart handles)
+class G4SERVANT: pass    # generate servants classes (interfaces)
 
 class Generator:
   def __init__ (self):
@@ -169,17 +169,17 @@ class Generator:
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
     mode = mode or self.gen_mode
-    if mode == G4SERVER:
+    if mode == G4SERVANT:
       return self.C4server (type_node)
-    else: # G4CLIENT
+    else: # G4STUB
       return self.C4client (type_node)
   def R (self, type_node):                              # construct Return type
     tname = self.C (type_node)
-    if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
+    if self.gen_mode == G4SERVANT and type_node.storage == Decls.INTERFACE:
       tname += '*'
     return tname
   def M (self, type_node):                              # construct Member type
-    if self.gen_mode == G4CLIENT and type_node.storage == Decls.INTERFACE:
+    if self.gen_mode == G4STUB and type_node.storage == Decls.INTERFACE:
       classH = self.C4client (type_node) # smart handle class name
       classC = self.C4server (type_node) # servant class name
       return 'Rapicorn::Aida::SmartMember<%s>' % classH # classC
@@ -189,7 +189,7 @@ class Generator:
     s = ''
     s += self.C (type_node)
     s = self.F (s, f_delta)
-    if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
+    if self.gen_mode == G4SERVANT and type_node.storage == Decls.INTERFACE:
       s += '*'
     else:
       s += ' '
@@ -220,7 +220,7 @@ class Generator:
       l += [ self.A (prefix + a[0], a[1]) ]
     return (',\n' + argindent * ' ').join (l)
   def U (self, ident, type_node):                       # construct function call argument Use
-    s = '*' if type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER else ''
+    s = '*' if type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVANT else ''
     return s + ident
   def F (self, string, delta = 0):                      # Format string to tab stop
     return string + ' ' * max (1, self.ntab + delta - len (string))
@@ -433,20 +433,22 @@ class Generator:
     aida_smarthandle, ddc = 'Rapicorn::Aida::SmartHandle', False
     l = self.interface_class_ancestors (type_info)
     l = [self.C (pr) for pr in l] # types -> names
-    if   self.gen_mode == G4SERVER and l:
-      heritage = 'public virtual'
-    elif self.gen_mode == G4SERVER and not l:
-      l = [self.iface_base]
-      heritage = 'public virtual'
-    elif self.gen_mode == G4CLIENT and l:
-      heritage = 'public'
-    elif self.gen_mode == G4CLIENT and not l:
-      l, ddc = [aida_smarthandle], True
-      heritage = 'public virtual'
-    if self.gen_mode == G4CLIENT:
-      cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
+    if self.gen_mode == G4SERVANT:
+      if l:
+        heritage = 'public virtual'
+      else:
+        l = [self.iface_base]
+        heritage = 'public virtual'
     else:
+      if l:
+        heritage = 'public'
+      else:
+        l, ddc = [aida_smarthandle], True
+        heritage = 'public virtual'
+    if self.gen_mode == G4SERVANT:
       cl = []
+    else:
+      cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
   def generate_interface_class (self, type_info):
     s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
@@ -457,20 +459,20 @@ class Generator:
     precls, heritage, cl, ddc = self.interface_class_inheritance (type_info)
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (precls) + '\n'
     s += '{\n'
-    if self.gen_mode == G4CLIENT:
+    if self.gen_mode == G4STUB:
       s += '  ' + self.F ('static %s' % classC) + '_cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
       s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '_type ();\n'
     # constructors
     s += 'protected:\n'
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
-    else: # G4CLIENT
+    else: # G4STUB
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList') + '_down_cast_types();\n'
       s += '  template<class SmartHandle>\n'
@@ -486,12 +488,12 @@ class Generator:
     for fl in type_info.fields:
       s += self.generate_property_prototype (fl[0], fl[1], il)
     # signals
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       for sg in type_info.signals:
         s += '  ' + self.generate_server_signal_typedef (sg, type_info)
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_typename (sg, type_info) + ' sig_%s;\n' % sg.name
-    else: # G4CLIENT
+    else: # G4STUB
       for sg in type_info.signals:
         s += self.generate_client_signal_decl (sg, type_info)
     # methods
@@ -502,7 +504,7 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (m, il)
     # impl()
-    if self.gen_mode == G4SERVER and self.object_impl:
+    if self.gen_mode == G4SERVANT and self.object_impl:
       impl_method, ppwrap = self.object_impl
       implname = ppwrap[0] + type_info.name + ppwrap[1]
       s += '  inline %s&       impl () ' % implname
@@ -510,18 +512,18 @@ class Generator:
       s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s&);\n' % self.C (type_info)
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s*);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
-    else: # G4CLIENT
+    else: # G4STUB
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
     # conversion operators
-    if self.gen_mode == G4SERVER:       # ->* _servant and ->* _handle operators
+    if self.gen_mode == G4SERVANT:       # ->* _servant and ->* _handle operators
       s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
       s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
-    else: # self.gen_mode == G4CLIENT
+    else: # self.gen_mode == G4STUB
       s += '//' + self.F ('inline', -9)
       s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
@@ -530,9 +532,9 @@ class Generator:
     return s
   def generate_shortdoc (self, type_info):      # doxygen snippets
     classC = self.C (type_info) # class name
-    xside = 'server side' if self.gen_mode == G4SERVER else 'client side'
+    xkind = 'servant' if self.gen_mode == G4SERVANT else 'stub'
     s  = '/** @interface %s\n' % type_info.name
-    s += ' * See also the corresponding C++ class %s (%s). */\n' % (classC, xside)
+    s += ' * See also the corresponding C++ %s class %s. */\n' % (xkind, classC)
     s += '/// See also the corresponding IDL class %s.\n' % type_info.name
     return s
   def generate_shortalias (self, type_info):
@@ -541,9 +543,9 @@ class Generator:
     s = ''
     alias = self.type2cpp (type_info)
     if type_info.storage == Decls.INTERFACE:
-      if self.gen_mode == G4SERVER:
+      if self.gen_mode == G4SERVANT:
         s += '// '
-      else: # G4CLIENT
+      else: # G4STUB
         alias += 'H'
     s += 'typedef %s %s;' % (self.C (type_info), alias)
     s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
@@ -554,7 +556,7 @@ class Generator:
     return s
   def generate_method_decl (self, functype, pad):
     s = '  '
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       s += 'virtual '
     s += self.F (self.R (functype.rtype))
     s += functype.name
@@ -566,7 +568,7 @@ class Generator:
       l += [ self.A (a[0], a[1], a[2]) ]
     s += (',\n' + argindent * ' ').join (l)
     s += ')'
-    if self.gen_mode == G4SERVER and functype.pure:
+    if self.gen_mode == G4SERVANT and functype.pure:
       s += ' = 0'
     s += ';\n'
     return s
@@ -619,7 +621,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_class_methods (self, class_info):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
     s += '%s::%s ()' % (classC, classC) # ctor
     l = [] # constructor agument list
@@ -658,7 +660,7 @@ class Generator:
   def generate_server_property_list (self, class_info):
     if not self.property_list:
       return ''
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
     s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
@@ -705,7 +707,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_stub (self, class_info, mtype, reglines):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_call__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
@@ -743,7 +745,7 @@ class Generator:
     return s
   def generate_property_prototype (self, fident, ftype, pad = 0):
     s, v, v0, ptr = '', '', '', ''
-    if self.gen_mode == G4SERVER:
+    if self.gen_mode == G4SERVANT:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     pid = fident + ' ' * max (0, pad - len (fident))
@@ -794,7 +796,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_property_setter (self, class_info, fident, ftype, reglines):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_set__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
@@ -817,7 +819,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_property_getter (self, class_info, fident, ftype, reglines):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_get__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
@@ -843,7 +845,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_list_types (self, class_info, reglines):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_types__%s' % class_info.name
     reglines += [ (self.list_types_digest (class_info), self.namespaced_identifier (dispatcher_name)) ]
@@ -877,7 +879,7 @@ class Generator:
     s += ')'
     return (r, s)
   def generate_client_signal_decl (self, functype, ctype):
-    assert self.gen_mode == G4CLIENT
+    assert self.gen_mode == G4STUB
     s, cbtname, u64 = '', self.generate_signal_typename (functype, ctype, 'Callback'), 'Rapicorn::Aida::uint64_t'
     sigret, sigfunc = self.generate_signal_signature_tuple (functype, cbtname)
     s += '  ' + self.F ('typedef ' + sigret) + sigfunc + ';\n'
@@ -885,7 +887,7 @@ class Generator:
     s += '  ' + self.F ('bool ') + 'sig_' + functype.name + ' (%s signal_id); ///< Disconnect Signal\n' % u64
     return s
   def generate_client_signal_def (self, class_info, functype):
-    assert self.gen_mode == G4CLIENT
+    assert self.gen_mode == G4STUB
     s, cbtname, classH = '', self.generate_signal_typename (functype, class_info, 'Callback'), self.C4client (class_info)
     (sigret, sigfunc), u64 = self.generate_signal_signature_tuple (functype, cbtname), 'Rapicorn::Aida::uint64_t'
     emitfunc = '__AIDA_emit__%s__%s' % (classH, functype.name)
@@ -923,7 +925,7 @@ class Generator:
     s += '> ' + prefix + signame + ';\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_signal__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
@@ -989,7 +991,7 @@ class Generator:
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
   def generate_virtual_method_skel (self, functype, type_info):
-    assert self.gen_mode == G4SERVER
+    assert self.gen_mode == G4SERVANT
     s = ''
     if functype.pure:
       return s
@@ -1079,7 +1081,7 @@ class Generator:
     def text_expand (txt):
       txt = txt.replace ('$AIDA_iface_base$', self.iface_base)
       return txt
-    self.gen_mode = G4SERVER if self.gen_serverhh or self.gen_servercc else G4CLIENT
+    self.gen_mode = G4SERVANT if self.gen_serverhh or self.gen_servercc else G4STUB
     s = '// --- Generated by AidaCxxStub ---\n'
     # CPP guard
     if self.cppguard:
@@ -1117,28 +1119,28 @@ class Generator:
         types += [ tp ]
     # generate client/server decls
     if self.gen_clienthh or self.gen_serverhh:
-      self.gen_mode = G4SERVER if self.gen_serverhh else G4CLIENT
+      self.gen_mode = G4SERVANT if self.gen_serverhh else G4STUB
       s += '\n// --- Interfaces (class declarations) ---\n'
       spc_enums = []
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
           if self.gen_serverhh:
-            s += 'class %s;\n' % self.C (tp)    # G4SERVER
-            self.gen_mode = G4SERVER
+            s += 'class %s;\n' % self.C (tp)    # G4SERVANT
+            self.gen_mode = G4SERVANT
           elif self.gen_clienthh:
-            s += 'class %s;\n' % self.C (tp)    # G4CLIENT
+            s += 'class %s;\n' % self.C (tp)    # G4STUB
         elif tp.typedef_origin:
           s += self.open_namespace (tp) + '\n'
           s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
-        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4CLIENT:
+        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4STUB:
           if self.gen_serverhh:
             s += self.open_namespace (tp)
             s += self.generate_recseq_decl (tp)
           if self.gen_clienthh:
             s += self.open_namespace (tp)
             s += self.generate_recseq_decl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4CLIENT:
+        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_enum_decl (tp)
           spc_enums += [ tp ]
@@ -1161,18 +1163,18 @@ class Generator:
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
-      self.gen_mode = G4SERVER if self.gen_servercc else G4CLIENT
+      self.gen_mode = G4SERVANT if self.gen_servercc else G4STUB
       s += '\n// --- Implementations ---\n'
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
-        if tp.storage == Decls.RECORD and self.gen_mode == G4CLIENT:
+        if tp.storage == Decls.RECORD and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_record_impl (tp)
-        elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4CLIENT:
+        elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4CLIENT:
+        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
@@ -1195,7 +1197,7 @@ class Generator:
               s += self.generate_client_method_stub (tp, m)
     # generate unmarshalling server calls
     if self.gen_servercc:
-      self.gen_mode = G4SERVER
+      self.gen_mode = G4SERVANT
       s += '\n// --- Method Dispatchers & Registry ---\n'
       reglines = []
       for tp in types:
@@ -1217,7 +1219,7 @@ class Generator:
     # generate interface method skeletons
     if self.gen_server_skel:
       s += self.open_namespace (None)
-      self.gen_mode = G4SERVER
+      self.gen_mode = G4SERVANT
       s += '\n// --- Interface Skeletons ---\n'
       for tp in types:
         if tp.typedef_origin or tp.is_forward:

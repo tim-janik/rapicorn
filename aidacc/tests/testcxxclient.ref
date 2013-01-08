@@ -173,7 +173,7 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ExtensiveEnum  e) { f
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 
 /** @interface FirstInterface
- * See also the corresponding C++ class FirstInterfaceHandle (client side). */
+ * See also the corresponding C++ stub class FirstInterfaceHandle. */
 /// See also the corresponding IDL class FirstInterface.
 class FirstInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -192,7 +192,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface XFooRecord
- * See also the corresponding C++ class XFooRecordStruct (client side). */
+ * See also the corresponding C++ stub class XFooRecordStruct. */
 /// See also the corresponding IDL class XFooRecord.
 struct XFooRecordStruct
 {
@@ -220,7 +220,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecordStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecordStruct&);
 
 /** @interface XFooSequence
- * See also the corresponding C++ class XFooSequenceStruct (client side). */
+ * See also the corresponding C++ stub class XFooSequenceStruct. */
 /// See also the corresponding IDL class XFooSequence.
 struct XFooSequenceStruct : public std::vector<bool>
 {
@@ -231,7 +231,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequenceStruct&);
 
 /** @interface IntSequence
- * See also the corresponding C++ class IntSequenceStruct (client side). */
+ * See also the corresponding C++ stub class IntSequenceStruct. */
 /// See also the corresponding IDL class IntSequence.
 struct IntSequenceStruct : public std::vector<int>
 {
@@ -242,7 +242,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequenceStruct&);
 
 /** @interface FloatSequence
- * See also the corresponding C++ class FloatSequenceStruct (client side). */
+ * See also the corresponding C++ stub class FloatSequenceStruct. */
 /// See also the corresponding IDL class FloatSequence.
 struct FloatSequenceStruct : public std::vector<double>
 {
@@ -253,7 +253,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequenceStruct&);
 
 /** @interface StringSequence
- * See also the corresponding C++ class StringSequenceStruct (client side). */
+ * See also the corresponding C++ stub class StringSequenceStruct. */
 /// See also the corresponding IDL class StringSequence.
 struct StringSequenceStruct : public std::vector<std::string>
 {
@@ -264,7 +264,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequenceStruct&);
 
 /** @interface ExtensiveEnumSequence
- * See also the corresponding C++ class ExtensiveEnumSequenceStruct (client side). */
+ * See also the corresponding C++ stub class ExtensiveEnumSequenceStruct. */
 /// See also the corresponding IDL class ExtensiveEnumSequence.
 struct ExtensiveEnumSequenceStruct : public std::vector<ExtensiveEnum>
 {
@@ -275,7 +275,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequenceStruc
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequenceStruct&);
 
 /** @interface RecordSequence
- * See also the corresponding C++ class RecordSequenceStruct (client side). */
+ * See also the corresponding C++ stub class RecordSequenceStruct. */
 /// See also the corresponding IDL class RecordSequence.
 struct RecordSequenceStruct : public std::vector<XFooRecordStruct>
 {
@@ -286,7 +286,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequenceStruct&);
 
 /** @interface SequenceSequence
- * See also the corresponding C++ class SequenceSequenceStruct (client side). */
+ * See also the corresponding C++ stub class SequenceSequenceStruct. */
 /// See also the corresponding IDL class SequenceSequence.
 struct SequenceSequenceStruct : public std::vector<IntSequenceStruct>
 {
@@ -297,7 +297,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequenceStruct&);
 
 /** @interface InterfaceSequence
- * See also the corresponding C++ class InterfaceSequenceStruct (client side). */
+ * See also the corresponding C++ stub class InterfaceSequenceStruct. */
 /// See also the corresponding IDL class InterfaceSequence.
 struct InterfaceSequenceStruct : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
 {
@@ -308,7 +308,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequenceStruct&);
 
 /** @interface AnySequence
- * See also the corresponding C++ class AnySequenceStruct (client side). */
+ * See also the corresponding C++ stub class AnySequenceStruct. */
 /// See also the corresponding IDL class AnySequence.
 struct AnySequenceStruct : public std::vector<Rapicorn::Aida::Any>
 {
@@ -319,7 +319,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequenceStruct&);
 
 /** @interface NestedTypesRec
- * See also the corresponding C++ class NestedTypesRecStruct (client side). */
+ * See also the corresponding C++ stub class NestedTypesRecStruct. */
 /// See also the corresponding IDL class NestedTypesRec.
 struct NestedTypesRecStruct
 {
@@ -331,7 +331,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRecStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRecStruct&);
 
 /** @interface NestedTypesSeq
- * See also the corresponding C++ class NestedTypesSeqStruct (client side). */
+ * See also the corresponding C++ stub class NestedTypesSeqStruct. */
 /// See also the corresponding IDL class NestedTypesSeq.
 struct NestedTypesSeqStruct : public std::vector<NestedTypesRecStruct>
 {
@@ -360,7 +360,7 @@ typedef XFooSequenceStruct AliasSequence;
 typedef ExtensiveEnum AliasEnum;
 
 /** @interface NewRecord
- * See also the corresponding C++ class NewRecordStruct (client side). */
+ * See also the corresponding C++ stub class NewRecordStruct. */
 /// See also the corresponding IDL class NewRecord.
 struct NewRecordStruct
 {
@@ -376,7 +376,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, NewRecordStruct&);
 namespace Inner {
 
 /** @interface InnerRecord
- * See also the corresponding C++ class InnerRecordStruct (client side). */
+ * See also the corresponding C++ stub class InnerRecordStruct. */
 /// See also the corresponding IDL class InnerRecord.
 struct InnerRecordStruct
 {
@@ -390,7 +390,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecordStruct&);
 } // Inner
 
 /** @interface Refer2Inner
- * See also the corresponding C++ class Refer2InnerStruct (client side). */
+ * See also the corresponding C++ stub class Refer2InnerStruct. */
 /// See also the corresponding IDL class Refer2Inner.
 struct Refer2InnerStruct
 {
@@ -404,7 +404,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, Refer2InnerStruct&);
 namespace OtherNamespace {
 
 /** @interface SomeRecord
- * See also the corresponding C++ class SomeRecordStruct (client side). */
+ * See also the corresponding C++ stub class SomeRecordStruct. */
 /// See also the corresponding IDL class SomeRecord.
 struct SomeRecordStruct
 {
@@ -434,7 +434,7 @@ typedef std::string AuxStr;
 namespace InterfaceTests {
 
 /** @interface UIWidgetArea
- * See also the corresponding C++ class UIWidgetAreaHandle (client side). */
+ * See also the corresponding C++ stub class UIWidgetAreaHandle. */
 /// See also the corresponding IDL class UIWidgetArea.
 class UIWidgetAreaHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -480,7 +480,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, UIWidgetAreaHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Parent
- * See also the corresponding C++ class ParentHandle (client side). */
+ * See also the corresponding C++ stub class ParentHandle. */
 /// See also the corresponding IDL class Parent.
 class ParentHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -498,7 +498,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ParentHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Child
- * See also the corresponding C++ class ChildHandle (client side). */
+ * See also the corresponding C++ stub class ChildHandle. */
 /// See also the corresponding IDL class Child.
 class ChildHandle : public ParentHandle
 {
@@ -516,7 +516,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ChildHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface Descendant
- * See also the corresponding C++ class DescendantHandle (client side). */
+ * See also the corresponding C++ stub class DescendantHandle. */
 /// See also the corresponding IDL class Descendant.
 class DescendantHandle : public ChildHandle
 {
@@ -534,7 +534,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, DescendantHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface GrandChild
- * See also the corresponding C++ class GrandChildHandle (client side). */
+ * See also the corresponding C++ stub class GrandChildHandle. */
 /// See also the corresponding IDL class GrandChild.
 class GrandChildHandle : public DescendantHandle
 {
@@ -558,7 +558,7 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
 /** @interface QuickRecord
- * See also the corresponding C++ class QuickRecordStruct (client side). */
+ * See also the corresponding C++ stub class QuickRecordStruct. */
 /// See also the corresponding IDL class QuickRecord.
 struct QuickRecordStruct
 {
@@ -570,7 +570,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecordStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecordStruct&);
 
 /** @interface QuickSequence
- * See also the corresponding C++ class QuickSequenceStruct (client side). */
+ * See also the corresponding C++ stub class QuickSequenceStruct. */
 /// See also the corresponding IDL class QuickSequence.
 struct QuickSequenceStruct : public std::vector<double>
 {
@@ -581,7 +581,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequenceStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequenceStruct&);
 
 /** @interface QuickIface
- * See also the corresponding C++ class QuickIfaceHandle (client side). */
+ * See also the corresponding C++ stub class QuickIfaceHandle. */
 /// See also the corresponding IDL class QuickIface.
 class QuickIfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -600,7 +600,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, QuickIfaceHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface MethodTestInterface
- * See also the corresponding C++ class MethodTestInterfaceHandle (client side). */
+ * See also the corresponding C++ stub class MethodTestInterfaceHandle. */
 /// See also the corresponding IDL class MethodTestInterface.
 class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -641,7 +641,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, MethodTestInterfaceHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface SignalTestInterface
- * See also the corresponding C++ class SignalTestInterfaceHandle (client side). */
+ * See also the corresponding C++ stub class SignalTestInterfaceHandle. */
 /// See also the corresponding IDL class SignalTestInterface.
 class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -731,7 +731,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SignalTestInterfaceHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface ChildInheritingSignals
- * See also the corresponding C++ class ChildInheritingSignalsHandle (client side). */
+ * See also the corresponding C++ stub class ChildInheritingSignalsHandle. */
 /// See also the corresponding IDL class ChildInheritingSignals.
 class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
 {
@@ -752,7 +752,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ChildInheritingSignalsHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface AnotherChild
- * See also the corresponding C++ class AnotherChildHandle (client side). */
+ * See also the corresponding C++ stub class AnotherChildHandle. */
 /// See also the corresponding IDL class AnotherChild.
 class AnotherChildHandle : public SignalTestInterfaceHandle
 {
@@ -770,7 +770,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, AnotherChildHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface PropertyTester
- * See also the corresponding C++ class PropertyTesterHandle (client side). */
+ * See also the corresponding C++ stub class PropertyTesterHandle. */
 /// See also the corresponding IDL class PropertyTester.
 class PropertyTesterHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -823,7 +823,7 @@ inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ClickType  e) { fb <<
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 
 /** @interface ButtonArea
- * See also the corresponding C++ class ButtonAreaHandle (client side). */
+ * See also the corresponding C++ stub class ButtonAreaHandle. */
 /// See also the corresponding IDL class ButtonArea.
 class ButtonAreaHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -857,7 +857,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ButtonAreaHandle&);
 class PureMethodsHandle;
 
 /** @interface PureMethods
- * See also the corresponding C++ class PureMethodsHandle (client side). */
+ * See also the corresponding C++ stub class PureMethodsHandle. */
 /// See also the corresponding IDL class PureMethods.
 class PureMethodsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -896,7 +896,7 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) {
 namespace Other {
 
 /** @interface NameTests
- * See also the corresponding C++ class NameTestsHandle (client side). */
+ * See also the corresponding C++ stub class NameTestsHandle. */
 /// See also the corresponding IDL class NameTests.
 class NameTestsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -920,7 +920,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
 namespace BseTest {
 
 /** @interface Compressor
- * See also the corresponding C++ class CompressorHandle (client side). */
+ * See also the corresponding C++ stub class CompressorHandle. */
 /// See also the corresponding IDL class Compressor.
 class CompressorHandle : public virtual Rapicorn::Aida::SmartHandle
 {
@@ -942,7 +942,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 
 /** @interface RecordForGroups
- * See also the corresponding C++ class RecordForGroupsStruct (client side). */
+ * See also the corresponding C++ stub class RecordForGroupsStruct. */
 /// See also the corresponding IDL class RecordForGroups.
 struct RecordForGroupsStruct
 {
@@ -957,7 +957,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroupsStruct&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroupsStruct&);
 
 /** @interface SoundModule
- * See also the corresponding C++ class SoundModuleHandle (client side). */
+ * See also the corresponding C++ stub class SoundModuleHandle. */
 /// See also the corresponding IDL class SoundModule.
 class SoundModuleHandle : public virtual Rapicorn::Aida::SmartHandle
 {
