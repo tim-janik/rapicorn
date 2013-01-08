@@ -127,7 +127,6 @@ class Generator:
     self.ns_aida = None
     self.gen_inclusions = []
     self.skip_symbols = set()
-    self.skip_classes = []
     self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
     self.iface_base = self.test_iface_base
     self.property_list = 'Rapicorn::Aida::PropertyList'
@@ -1054,8 +1053,6 @@ class Generator:
     for line in f:
       m = (re.match ('(includes):\s*(//.*)?$', line) or
            re.match ('(class_scope:\w+):\s*(//.*)?$', line) or
-           re.match ('(filtered_class_hh:\w+):\s*(//.*)?$', line) or
-           re.match ('(filtered_class_cc:\w+):\s*(//.*)?$', line) or
            re.match ('(global_scope):\s*(//.*)?$', line))
       if not m:
         m = re.match ('(IGNORE):\s*(//.*)?$', line)
@@ -1133,17 +1130,8 @@ class Generator:
           s += self.generate_enum_decl (tp)
           spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
-          if self.gen_clienthh and not self.gen_serverhh:
-            s += self.open_namespace (tp)
-            s += self.generate_interface_class (tp)     # Class smart handle
-          if self.gen_serverhh:
-            if tp.name in self.skip_classes:
-              s += self.open_namespace (None) # close all namespaces
-              s += '\n'
-              s += self.insertion_text ('filtered_class_hh:' + tp.name)
-            else:
-              s += self.open_namespace (tp)
-              s += self.generate_interface_class (tp)   # Class_Interface server base
+          s += self.open_namespace (tp)
+          s += self.generate_interface_class (tp)     # Class smart handle
       if spc_enums:
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
@@ -1167,13 +1155,9 @@ class Generator:
           s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
-            if tp.name in self.skip_classes:
-              s += self.open_namespace (None) # close all namespaces
-              s += self.insertion_text ('filtered_class_cc:' + tp.name)
-            else:
-              s += self.open_namespace (tp)
-              s += self.generate_server_class_methods (tp)
-              s += self.generate_server_property_list (tp)
+            s += self.open_namespace (tp)
+            s += self.generate_server_class_methods (tp)
+            s += self.generate_server_property_list (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             for sg in tp.signals:
@@ -1192,7 +1176,7 @@ class Generator:
         if tp.typedef_origin or tp.is_forward:
           continue
         s += self.open_namespace (tp)
-        if tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
+        if tp.storage == Decls.INTERFACE:
           s += self.generate_server_list_types (tp, reglines)
           for fl in tp.fields:
             s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
@@ -1212,7 +1196,7 @@ class Generator:
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
-        elif tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
+        elif tp.storage == Decls.INTERFACE:
           s += self.generate_interface_skel (tp)
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
@@ -1253,8 +1237,6 @@ def generate (namespace_list, **args):
       gg.iface_base = opt[11:]
     if opt.startswith ('property-list=') and opt[14:].lower() in ('0', 'no', 'none', 'false'):
       gg.property_list = ""
-    if opt.startswith ('filter-out='):
-      gg.skip_classes += opt[11:].split (',')
   for ifile in config['insertions']:
     gg.insertion_file (ifile)
   for ssfile in config['skip-skels']:
