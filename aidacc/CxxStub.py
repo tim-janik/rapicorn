@@ -1121,21 +1121,13 @@ class Generator:
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
-          if self.gen_serverhh:
-            s += 'class %s;\n' % self.C (tp)    # G4SERVANT
-            self.gen_mode = G4SERVANT
-          elif self.gen_clienthh:
-            s += 'class %s;\n' % self.C (tp)    # G4STUB
+          s += 'class %s;\n' % self.C (tp)
         elif tp.typedef_origin:
           s += self.open_namespace (tp) + '\n'
           s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4STUB:
-          if self.gen_serverhh:
-            s += self.open_namespace (tp)
-            s += self.generate_recseq_decl (tp)
-          if self.gen_clienthh:
-            s += self.open_namespace (tp)
-            s += self.generate_recseq_decl (tp)
+          s += self.open_namespace (tp)
+          s += self.generate_recseq_decl (tp)
         elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_enum_decl (tp)
