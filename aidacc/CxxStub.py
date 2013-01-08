@@ -549,10 +549,6 @@ class Generator:
         alias += 'H'
     s += 'typedef %s %s;' % (self.C (type_info), alias)
     s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
-    if self.gen_sharedimpls:
-      # shared client & server impl
-      s += 'typedef %s %s; ///< Convenience alias for the IDL type %s.\n' % \
-          (self.C (type_info), self.C4server (type_info), type_info.name)
     return s
   def generate_method_decl (self, functype, pad):
     s = '  '
@@ -1252,7 +1248,6 @@ def generate (namespace_list, **args):
   gg.gen_clienthh = all or 'clienthh' in config['backend-options']
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
   gg.gen_shortalias = all or 'shortalias' in config['backend-options']
-  gg.gen_sharedimpls = all or 'sharedimpls' in config['backend-options']
   gg.gen_rapicornsignals = all or 'RapicornSignal' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
