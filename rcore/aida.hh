@@ -274,7 +274,7 @@ class SmartMember : public SmartHandle {
 public:
   explicit SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
   explicit SmartMember () : SmartHandle() {}
-  void     operator=   (const SmartMember &src) { SmartHandle::operator= (src); }
+  void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
 };
 
 // == ObjectBroker ==
