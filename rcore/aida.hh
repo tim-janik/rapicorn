@@ -277,6 +277,10 @@ public:
   void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
 };
 
+// == Conversion Type Tags ==
+constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from smart handle.
+constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle from servant.
+
 // == ObjectBroker ==
 class ObjectBroker {
 public:

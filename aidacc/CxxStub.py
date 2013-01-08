@@ -13,10 +13,6 @@ clienthh_boilerplate = r"""
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
-namespace Rapicorn { namespace Aida {
-constexpr struct _ServantType {} _servant;
-constexpr struct _HandleType {} _handle;
-} } // Rapicorn::Aida
 """
 
 serverhh_testcode = r"""

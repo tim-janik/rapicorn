@@ -2,10 +2,6 @@
 
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
-namespace Rapicorn { namespace Aida {
-constexpr struct _ServantType {} _servant;
-constexpr struct _HandleType {} _handle;
-} } // Rapicorn::Aida
 
 namespace Rapicorn { namespace Aida {
 class TestServerBase : public virtual PropertyHostInterface {
