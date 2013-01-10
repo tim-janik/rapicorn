@@ -70,10 +70,10 @@ such as glib-mkenums.pl, bse/mkcproc.pl, and many others.
 
 @par Missing
 -# In the IPC layer, all remote messages are identified via hashes, based on method signatures.
-Two 64 bit ints are used for IPC message IDs. The upper four bits encode the message type.
-The remaining 124 bits encode the method invocation identifier.
-Using a 124 bit hash keeps collision probabilities below 10^-19 for up to 2 billion inputs.
-The hash algorithm is based on SHA256 to ensure good distribution.
+The messages encode the target object ID and a 1 byte message ID as the first 64bit quantity.
+This is usually followed by two 64bit quantities that encode a target method hash.
+Using a 128 bit hash keeps collision probabilities in the order of 10^-20 for up to 2^32 inputs (4 billion).
+The hash algorithm is based on SHA224 to ensure good distribution.
 -# @UNIMPLEMENTED{TODO: Port Beast IDL property groups to Aida}
 -# The client/server split in the generated APIs ensure a clear separation of object locations.
 Instances are always allocated and reside on the server, clients can only invoke methods remotely
