@@ -579,13 +579,13 @@ class Generator:
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHashList\n'
     s += '%s::_down_cast_types()\n{\n' % classH
-    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid self
-    s += '  fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
+    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
+    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
-    s += '  frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+    s += '  frr.skip_header();\n'
     s += '  size_t len;\n'
     s += '  frr >>= len;\n'
     s += '  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");\n'
@@ -663,8 +663,9 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), mtype.name)
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
-    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # msgid self args
-    s += '  fb.add_msgid (%s); // msgid\n' % self.method_digest (mtype)
+    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
+    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
+    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
@@ -675,8 +676,7 @@ class Generator:
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
-      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
-      # FIXME: check return error and return type
+      s += '  frr.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
       s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       s += '  delete fr;\n'
@@ -693,9 +693,10 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + %u) return __AIDA_Local__::error ("invalid number of arguments");\n' % len (mtype.args)
+    s += '  if (fbr.remaining() != 3 + 1 + %u) return __AIDA_Local__::error ("invalid number of arguments");\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
+    s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # fetch args
@@ -713,7 +714,7 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
-      s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();\n'
+      s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % self.method_digest (mtype)
       rval = 'rval'
       s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
@@ -745,15 +746,14 @@ class Generator:
     s += tname + '\n'
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
-    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
-    s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
+    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;\n'
+    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
-      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
-      # FIXME: check return error and return type
+      s += '  frr.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
       s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       s += '  delete fr;\n'
@@ -765,13 +765,13 @@ class Generator:
       s += q + 'const ' + tname + ' &value)\n{\n'
     else:
       s += q + tname + ' value)\n{\n'
-    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;\n' # msgid self value
-    s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
+    s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
+    s += '  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, %s);\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
-    s += '  if (fr) delete fr;\n' # FIXME: check return error
+    s += '  if (fr) delete fr;\n'
     s += '}\n'
     return s
   def generate_server_property_setter (self, class_info, fident, ftype, reglines):
@@ -783,9 +783,10 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
+    s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # fetch property
@@ -806,9 +807,10 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
+    s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # return var
@@ -817,7 +819,7 @@ class Generator:
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();\n'
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % getter_hash
     rval = 'rval'
     s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
@@ -827,17 +829,20 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_types__%s' % class_info.name
-    reglines += [ (self.list_types_digest (class_info), self.namespaced_identifier (dispatcher_name)) ]
+    digest = self.list_types_digest (class_info)
+    reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
+    s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
+    # return: length (typehi, typelo)*length
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s, 1 + 2 * thl.size());\n' % digest
     s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb <<= thl[i];\n'
@@ -907,7 +912,8 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s = ''
     dispatcher_name = '__AIDA_signal__%s__%s' % (class_info.name, stype.name)
-    reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
+    digest = self.method_digest (stype)
+    reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
     s += '  Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;\n'
@@ -916,8 +922,8 @@ class Generator:
     s += '  %s (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
-    s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);\n' # msgid handler
-    s += '    fb.add_msgid (Rapicorn::Aida::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + handler
+    s += '    fb.add_header (Rapicorn::Aida::MSGID_DISCON, 0, %s);\n' % digest
     s += '    fb <<= m_handler;\n'
     s += '    m_connection.send_event (&fb);\n' # deletes fb
     s += '  }\n'
@@ -926,8 +932,8 @@ class Generator:
     s += '  handler ('
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
-    s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
-    s += '    fb.add_msgid (Rapicorn::Aida::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
+    s += '    fb.add_header (Rapicorn::Aida::MSGID_EVENT, 0, %s);\n' % digest
     s += '    fb <<= sp->m_handler;\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
@@ -941,8 +947,9 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)
+    s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Rapicorn::Aida::uint64_t handler_id, con_id, cid = 0;\n'
@@ -952,7 +959,7 @@ class Generator:
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (AIDA_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result();\n'
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % digest
     s += '  rb <<= cid;\n'
     s += '  return &rb;\n'
     s += '}\n'

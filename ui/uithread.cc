@@ -290,10 +290,12 @@ struct Callable {
 static std::deque<Callable*> syscall_queue;
 static Mutex                 syscall_mutex;
 
+#define UI_THREAD_SYSCALL_TWOWAY_HASH   (Aida::MSGID_TWOWAY | 0x0c0ffee01), 0x52617069636f726eULL
+
 static Aida::FieldBuffer*
 ui_thread_syscall_twoway (Aida::FieldReader &fbr)
 {
-  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result();
+  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result (UI_THREAD_SYSCALL_TWOWAY_HASH);
   int64 result = -1;
   syscall_mutex.lock();
   while (syscall_queue.size())
@@ -311,22 +313,22 @@ ui_thread_syscall_twoway (Aida::FieldReader &fbr)
 }
 
 static const Aida::ServerConnection::MethodEntry ui_thread_call_entries[] = {
-  { Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
+  { UI_THREAD_SYSCALL_TWOWAY_HASH, ui_thread_syscall_twoway, },
 };
 static Aida::ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
 
 static int64
 ui_thread_syscall (Callable *callable)
 {
-  Aida::FieldBuffer *fb = Aida::FieldBuffer::_new (2);
-  fb->add_msgid (Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
+  Aida::FieldBuffer *fb = Aida::FieldBuffer::_new (3);
+  fb->add_header (Aida::MSGID_TWOWAY, 0, UI_THREAD_SYSCALL_TWOWAY_HASH); // ui_thread_syscall_twoway
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
   Aida::FieldBuffer *fr = uithread_connection()->call_remote (fb); // deletes fb
   Aida::FieldReader frr (*fr);
   const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
-  frr.skip(); // FIXME: check full msgid
+  frr.skip(); frr.skip();
   int64 result = 0;
   if (Aida::msgid_is_result (msgid))
     result = frr.pop_int64();

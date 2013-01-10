@@ -1188,13 +1188,13 @@ FirstInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn:
 const Rapicorn::Aida::TypeHashList
 FirstInterfaceHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3cad22e1b186d8e6ULL, 0x23cfa997842f0221ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3cad22e1b186d8e6ULL, 0x23cfa997842f0221ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -1210,8 +1210,8 @@ FirstInterfaceHandle::_down_cast_types()
 void
 FirstInterfaceHandle::void_func ()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
-  fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
@@ -1677,13 +1677,13 @@ UIWidgetAreaHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::A
 const Rapicorn::Aida::TypeHashList
 UIWidgetAreaHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3fb268ab4c1fdceeULL, 0xa7ef7cb29317740fULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3fb268ab4c1fdceeULL, 0xa7ef7cb29317740fULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -1699,12 +1699,12 @@ UIWidgetAreaHandle::_down_cast_types()
 bool
 UIWidgetAreaHandle::dummy () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x311213c7f9f683fbULL, 0x5ce277b1d4ad5f84ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x311213c7f9f683fbULL, 0x5ce277b1d4ad5f84ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   bool  retval;
   frr >>= retval;
   delete fr;
@@ -1713,8 +1713,8 @@ UIWidgetAreaHandle::dummy () const
 void
 UIWidgetAreaHandle::dummy (bool value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2cd4545fdbf8e1bcULL, 0xf980e99fa9f34ab1ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2cd4545fdbf8e1bcULL, 0xf980e99fa9f34ab1ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -1723,12 +1723,12 @@ UIWidgetAreaHandle::dummy (bool value)
 std::string
 UIWidgetAreaHandle::on_click () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x389d73bb93692d3eULL, 0xe60676c6ab0ecd60ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x389d73bb93692d3eULL, 0xe60676c6ab0ecd60ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -1737,8 +1737,8 @@ UIWidgetAreaHandle::on_click () const
 void
 UIWidgetAreaHandle::on_click (const std::string &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x201f34e07478bbcbULL, 0x7fa4069706e6233aULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x201f34e07478bbcbULL, 0x7fa4069706e6233aULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -1747,12 +1747,12 @@ UIWidgetAreaHandle::on_click (const std::string &value)
 double
 UIWidgetAreaHandle::simple_method ()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
-  fb.add_msgid (0x3a2f8d1c42ac1785ULL, 0x58b20fa269c0bd5eULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3a2f8d1c42ac1785ULL, 0x58b20fa269c0bd5eULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1761,13 +1761,13 @@ UIWidgetAreaHandle::simple_method ()
 double
 UIWidgetAreaHandle::single_arg (int arg_n)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x3ea3da9f2d46a894ULL, 0xa37baf774b855c65ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3ea3da9f2d46a894ULL, 0xa37baf774b855c65ULL);
   fb <<= (*this);
   fb <<= arg_n;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1776,13 +1776,13 @@ UIWidgetAreaHandle::single_arg (int arg_n)
 double
 UIWidgetAreaHandle::single_arg2 (int arg_n)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x323870aec608428aULL, 0x3e4eb826e4565354ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x323870aec608428aULL, 0x3e4eb826e4565354ULL);
   fb <<= (*this);
   fb <<= arg_n;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1792,14 +1792,14 @@ double
 UIWidgetAreaHandle::two_args (int arg_n,
                               double arg_r)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x372d3445333b29d9ULL, 0x2a1b6a54e409ca63ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x372d3445333b29d9ULL, 0x2a1b6a54e409ca63ULL);
   fb <<= (*this);
   fb <<= arg_n;
   fb <<= arg_r;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1809,14 +1809,14 @@ double
 UIWidgetAreaHandle::two_args2 (int arg_n,
                                double arg_r)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3a5296dee6dca6f6ULL, 0xbe00f1270b1a7a1cULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3a5296dee6dca6f6ULL, 0xbe00f1270b1a7a1cULL);
   fb <<= (*this);
   fb <<= arg_n;
   fb <<= arg_r;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1830,8 +1830,8 @@ UIWidgetAreaHandle::multi_args (bool arg_b,
                                 const std::string &arg_s,
                                 double arg_y)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 6), *fr = NULL;
-  fb.add_msgid (0x3da25289fcf7fe26ULL, 0xf2dfa2d031dd302cULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3da25289fcf7fe26ULL, 0xf2dfa2d031dd302cULL);
   fb <<= (*this);
   fb <<= arg_b;
   fb <<= arg_n;
@@ -1841,7 +1841,7 @@ UIWidgetAreaHandle::multi_args (bool arg_b,
   fb <<= arg_y;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1851,14 +1851,14 @@ double
 UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
                                  UIWidgetAreaHandle &arg_ba2)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3b4bb0d6b3f38abdULL, 0x80e1a7b9347c576aULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3b4bb0d6b3f38abdULL, 0x80e1a7b9347c576aULL);
   fb <<= (*this);
   fb <<= arg_ba1;
   fb <<= arg_ba2;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -1867,8 +1867,8 @@ UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
 void
 UIWidgetAreaHandle::void_method ()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
-  fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2e02c52c84773703ULL, 0x00027e452edb615cULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
@@ -1876,12 +1876,12 @@ UIWidgetAreaHandle::void_method ()
 std::string
 UIWidgetAreaHandle::on_click2out ()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
-  fb.add_msgid (0x3550e7348466c129ULL, 0x1ea5baf75297246fULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3550e7348466c129ULL, 0x1ea5baf75297246fULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -1890,8 +1890,8 @@ UIWidgetAreaHandle::on_click2out ()
 void
 UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x24ee88e59b05bae4ULL, 0x879ebaad31e6d20eULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x24ee88e59b05bae4ULL, 0x879ebaad31e6d20eULL);
   fb <<= (*this);
   fb <<= arg_command;
   fr = __AIDA_Local__::invoke (&fb);
@@ -1927,13 +1927,13 @@ ParentHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::T
 const Rapicorn::Aida::TypeHashList
 ParentHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3327c0cc6ecd6a2dULL, 0x0de3e7721fabd150ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3327c0cc6ecd6a2dULL, 0x0de3e7721fabd150ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -1976,13 +1976,13 @@ ChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::Ty
 const Rapicorn::Aida::TypeHashList
 ChildHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3118068a57e2ee2aULL, 0xc4519ca878439f44ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3118068a57e2ee2aULL, 0xc4519ca878439f44ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -2025,13 +2025,13 @@ DescendantHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
 const Rapicorn::Aida::TypeHashList
 DescendantHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3fc1dfccbeb60bb3ULL, 0xbd418b9a2af4becbULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3fc1dfccbeb60bb3ULL, 0xbd418b9a2af4becbULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -2074,13 +2074,13 @@ GrandChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
 const Rapicorn::Aida::TypeHashList
 GrandChildHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3971e4cc3544a47cULL, 0xdea4e100c7a24298ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3971e4cc3544a47cULL, 0xdea4e100c7a24298ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -2170,13 +2170,13 @@ QuickIfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
 const Rapicorn::Aida::TypeHashList
 QuickIfaceHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x383dc33025fafcfaULL, 0xda0a2afdebee2319ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x383dc33025fafcfaULL, 0xda0a2afdebee2319ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -2192,8 +2192,8 @@ QuickIfaceHandle::_down_cast_types()
 void
 QuickIfaceHandle::simple_function (int arg_i)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2b860359fa7e3dceULL, 0x198d5fe242474308ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2b860359fa7e3dceULL, 0x198d5fe242474308ULL);
   fb <<= (*this);
   fb <<= arg_i;
   fr = __AIDA_Local__::invoke (&fb);
@@ -2229,13 +2229,13 @@ MethodTestInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapi
 const Rapicorn::Aida::TypeHashList
 MethodTestInterfaceHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3b0c3b9557d989c7ULL, 0xdc704105222c6a36ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3b0c3b9557d989c7ULL, 0xdc704105222c6a36ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -2251,8 +2251,8 @@ MethodTestInterfaceHandle::_down_cast_types()
 void
 MethodTestInterfaceHandle::method_with_void ()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
-  fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
@@ -2261,14 +2261,14 @@ bool
 MethodTestInterfaceHandle::method_with_bools (bool arg_input,
                                               bool arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   bool  retval;
   frr >>= retval;
   delete fr;
@@ -2278,14 +2278,14 @@ int
 MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
                                                int arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3c7dd838073a8a92ULL, 0xddd57eef6f36ab11ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3c7dd838073a8a92ULL, 0xddd57eef6f36ab11ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   int  retval;
   frr >>= retval;
   delete fr;
@@ -2295,14 +2295,14 @@ Rapicorn::Aida::int64_t
 MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64_t arg_input,
                                                Rapicorn::Aida::int64_t arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x394bb1c2a7be91fbULL, 0x3f077bb42a25d6e4ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x394bb1c2a7be91fbULL, 0x3f077bb42a25d6e4ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   Rapicorn::Aida::int64_t  retval;
   frr >>= retval;
   delete fr;
@@ -2312,14 +2312,14 @@ double
 MethodTestInterfaceHandle::method_with_floats (double arg_input,
                                                double arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x368776130b055120ULL, 0x64281c55fbfe5bb9ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x368776130b055120ULL, 0x64281c55fbfe5bb9ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -2329,14 +2329,14 @@ std::string
 MethodTestInterfaceHandle::method_with_string (const std::string &arg_input,
                                                const std::string &arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x378c9594060f2266ULL, 0x5331c53659132c99ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x378c9594060f2266ULL, 0x5331c53659132c99ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -2346,14 +2346,14 @@ QuickEnum
 MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
                                              QuickEnum arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickEnum  retval;
   frr >>= retval;
   delete fr;
@@ -2363,14 +2363,14 @@ QuickRecord
 MethodTestInterfaceHandle::method_with_record (const QuickRecord &arg_input,
                                                const QuickRecord &arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickRecord  retval;
   frr >>= retval;
   delete fr;
@@ -2380,14 +2380,14 @@ QuickSequence
 MethodTestInterfaceHandle::method_with_sequence (const QuickSequence &arg_input,
                                                  const QuickSequence &arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickSequence  retval;
   frr >>= retval;
   delete fr;
@@ -2397,14 +2397,14 @@ GrandChildHandle
 MethodTestInterfaceHandle::method_with_interface (GrandChildHandle &arg_input,
                                                   GrandChildHandle &arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x34619983babcee5bULL, 0x9875f78f28f381b7ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x34619983babcee5bULL, 0x9875f78f28f381b7ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   GrandChildHandle  retval;
   frr >>= retval;
   delete fr;
@@ -2414,14 +2414,14 @@ Rapicorn::Aida::Any
 MethodTestInterfaceHandle::method_with_anys (const Rapicorn::Aida::Any &arg_input,
                                              const Rapicorn::Aida::Any &arg_optval)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x362c672843766d85ULL, 0x6ed30851db440471ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x362c672843766d85ULL, 0x6ed30851db440471ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_optval;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   Rapicorn::Aida::Any  retval;
   frr >>= retval;
   delete fr;
@@ -2431,14 +2431,14 @@ QuickIfaceHandle
 MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
                                                    QuickIfaceHandle &arg_iface0)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
-  fb.add_msgid (0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL);
   fb <<= (*this);
   fb <<= arg_input;
   fb <<= arg_iface0;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickIfaceHandle  retval;
   frr >>= retval;
   delete fr;
@@ -2978,13 +2978,13 @@ SignalTestInterfaceHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapi
 const Rapicorn::Aida::TypeHashList
 SignalTestInterfaceHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3570023447b98293ULL, 0x7acb17b4ba84a625ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3570023447b98293ULL, 0x7acb17b4ba84a625ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3048,13 +3048,13 @@ ChildInheritingSignalsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const R
 const Rapicorn::Aida::TypeHashList
 ChildInheritingSignalsHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3de75b0bd290d267ULL, 0x69c1ca3c14a574bdULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3de75b0bd290d267ULL, 0x69c1ca3c14a574bdULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3097,13 +3097,13 @@ AnotherChildHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::A
 const Rapicorn::Aida::TypeHashList
 AnotherChildHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3151395e716b65e2ULL, 0x64194778ee7320bcULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3151395e716b65e2ULL, 0x64194778ee7320bcULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3146,13 +3146,13 @@ PropertyTesterHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn:
 const Rapicorn::Aida::TypeHashList
 PropertyTesterHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3538d51513b2455aULL, 0x2707341b320622dfULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3538d51513b2455aULL, 0x2707341b320622dfULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3168,12 +3168,12 @@ PropertyTesterHandle::_down_cast_types()
 bool
 PropertyTesterHandle::bool_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   bool  retval;
   frr >>= retval;
   delete fr;
@@ -3182,8 +3182,8 @@ PropertyTesterHandle::bool_prop () const
 void
 PropertyTesterHandle::bool_prop (bool value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3192,12 +3192,12 @@ PropertyTesterHandle::bool_prop (bool value)
 int
 PropertyTesterHandle::int32_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3fc09bee2af126a2ULL, 0xc3a6e67a53c81eb1ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3fc09bee2af126a2ULL, 0xc3a6e67a53c81eb1ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   int  retval;
   frr >>= retval;
   delete fr;
@@ -3206,8 +3206,8 @@ PropertyTesterHandle::int32_prop () const
 void
 PropertyTesterHandle::int32_prop (int value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x26fd925ece96e768ULL, 0xac82e725f914b79dULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x26fd925ece96e768ULL, 0xac82e725f914b79dULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3216,12 +3216,12 @@ PropertyTesterHandle::int32_prop (int value)
 Rapicorn::Aida::int64_t
 PropertyTesterHandle::int64_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3731039da4eac87cULL, 0x78ad56f71ec3500aULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3731039da4eac87cULL, 0x78ad56f71ec3500aULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   Rapicorn::Aida::int64_t  retval;
   frr >>= retval;
   delete fr;
@@ -3230,8 +3230,8 @@ PropertyTesterHandle::int64_prop () const
 void
 PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64_t value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2231b1bcd886b3c0ULL, 0x84a1427a737bc687ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2231b1bcd886b3c0ULL, 0x84a1427a737bc687ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3240,12 +3240,12 @@ PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64_t value)
 double
 PropertyTesterHandle::float64_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x36e831c918e287dfULL, 0x6bd2c7a7a75237faULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x36e831c918e287dfULL, 0x6bd2c7a7a75237faULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -3254,8 +3254,8 @@ PropertyTesterHandle::float64_prop () const
 void
 PropertyTesterHandle::float64_prop (double value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2e886d9d9b74fd50ULL, 0xf218d40a5edc2eb9ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2e886d9d9b74fd50ULL, 0xf218d40a5edc2eb9ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3264,12 +3264,12 @@ PropertyTesterHandle::float64_prop (double value)
 std::string
 PropertyTesterHandle::string_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x31541f027fda353dULL, 0x578dfb53a92c60edULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x31541f027fda353dULL, 0x578dfb53a92c60edULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -3278,8 +3278,8 @@ PropertyTesterHandle::string_prop () const
 void
 PropertyTesterHandle::string_prop (const std::string &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x28966e5a860d2cf1ULL, 0x23ba16b5fffc368dULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x28966e5a860d2cf1ULL, 0x23ba16b5fffc368dULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3288,12 +3288,12 @@ PropertyTesterHandle::string_prop (const std::string &value)
 QuickEnum
 PropertyTesterHandle::enum_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3d09e074f5d2f8edULL, 0x38e8a275e29c3fc2ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3d09e074f5d2f8edULL, 0x38e8a275e29c3fc2ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickEnum  retval;
   frr >>= retval;
   delete fr;
@@ -3302,8 +3302,8 @@ PropertyTesterHandle::enum_prop () const
 void
 PropertyTesterHandle::enum_prop (QuickEnum value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2b77a2f3a3c4d5b4ULL, 0x4d5b96d1adf5f7ccULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2b77a2f3a3c4d5b4ULL, 0x4d5b96d1adf5f7ccULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3312,12 +3312,12 @@ PropertyTesterHandle::enum_prop (QuickEnum value)
 QuickRecord
 PropertyTesterHandle::record_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x31443949c61d0fecULL, 0xeb221638d6ffd3cfULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x31443949c61d0fecULL, 0xeb221638d6ffd3cfULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickRecord  retval;
   frr >>= retval;
   delete fr;
@@ -3326,8 +3326,8 @@ PropertyTesterHandle::record_prop () const
 void
 PropertyTesterHandle::record_prop (const QuickRecord &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2a5f5c212625f446ULL, 0x30d24123307269ceULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2a5f5c212625f446ULL, 0x30d24123307269ceULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3336,12 +3336,12 @@ PropertyTesterHandle::record_prop (const QuickRecord &value)
 QuickSequence
 PropertyTesterHandle::sequence_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3f323c929c803ea8ULL, 0x6ebf49e977bfb699ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3f323c929c803ea8ULL, 0x6ebf49e977bfb699ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   QuickSequence  retval;
   frr >>= retval;
   delete fr;
@@ -3350,8 +3350,8 @@ PropertyTesterHandle::sequence_prop () const
 void
 PropertyTesterHandle::sequence_prop (const QuickSequence &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3360,12 +3360,12 @@ PropertyTesterHandle::sequence_prop (const QuickSequence &value)
 GrandChildHandle
 PropertyTesterHandle::interface_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x33a8b72ea92bb600ULL, 0x3837c1118556aaedULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x33a8b72ea92bb600ULL, 0x3837c1118556aaedULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   GrandChildHandle  retval;
   frr >>= retval;
   delete fr;
@@ -3374,8 +3374,8 @@ PropertyTesterHandle::interface_prop () const
 void
 PropertyTesterHandle::interface_prop (GrandChildHandle value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3384,12 +3384,12 @@ PropertyTesterHandle::interface_prop (GrandChildHandle value)
 PropertyTesterHandle
 PropertyTesterHandle::self_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   PropertyTesterHandle  retval;
   frr >>= retval;
   delete fr;
@@ -3398,8 +3398,8 @@ PropertyTesterHandle::self_prop () const
 void
 PropertyTesterHandle::self_prop (PropertyTesterHandle value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3408,12 +3408,12 @@ PropertyTesterHandle::self_prop (PropertyTesterHandle value)
 Rapicorn::Aida::Any
 PropertyTesterHandle::any_prop () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x385bac7894911455ULL, 0x4d74265aa4c9d3b8ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x385bac7894911455ULL, 0x4d74265aa4c9d3b8ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   Rapicorn::Aida::Any  retval;
   frr >>= retval;
   delete fr;
@@ -3422,8 +3422,8 @@ PropertyTesterHandle::any_prop () const
 void
 PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x25ed5049e1dab81dULL, 0x30b595a3c260b96fULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x25ed5049e1dab81dULL, 0x30b595a3c260b96fULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3515,13 +3515,13 @@ ButtonAreaHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
 const Rapicorn::Aida::TypeHashList
 ButtonAreaHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x397a884d8f22f463ULL, 0x3b07e25021b667fdULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x397a884d8f22f463ULL, 0x3b07e25021b667fdULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3537,12 +3537,12 @@ ButtonAreaHandle::_down_cast_types()
 std::string
 ButtonAreaHandle::on_click () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x30c3d3f2b33bf581ULL, 0x79478f015decbb26ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x30c3d3f2b33bf581ULL, 0x79478f015decbb26ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -3551,8 +3551,8 @@ ButtonAreaHandle::on_click () const
 void
 ButtonAreaHandle::on_click (const std::string &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2049371318a90eaeULL, 0xaad2e3187e219eaeULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2049371318a90eaeULL, 0xaad2e3187e219eaeULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3561,12 +3561,12 @@ ButtonAreaHandle::on_click (const std::string &value)
 std::string
 ButtonAreaHandle::on_click2 () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x35b46ed6cb8f24c3ULL, 0x261d8542336e8649ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x35b46ed6cb8f24c3ULL, 0x261d8542336e8649ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -3575,8 +3575,8 @@ ButtonAreaHandle::on_click2 () const
 void
 ButtonAreaHandle::on_click2 (const std::string &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x281a2b2347c96db8ULL, 0xa01a955774bc9430ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x281a2b2347c96db8ULL, 0xa01a955774bc9430ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3585,12 +3585,12 @@ ButtonAreaHandle::on_click2 (const std::string &value)
 std::string
 ButtonAreaHandle::on_click3 () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3a9709045f2195e3ULL, 0x8ac0eb7887c2a8eeULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3a9709045f2195e3ULL, 0x8ac0eb7887c2a8eeULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   std::string  retval;
   frr >>= retval;
   delete fr;
@@ -3599,8 +3599,8 @@ ButtonAreaHandle::on_click3 () const
 void
 ButtonAreaHandle::on_click3 (const std::string &value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x29abcf6a16721aabULL, 0xed1c45f01dbea439ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x29abcf6a16721aabULL, 0xed1c45f01dbea439ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3609,12 +3609,12 @@ ButtonAreaHandle::on_click3 (const std::string &value)
 ClickType
 ButtonAreaHandle::click_type () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x33032db41e62e30fULL, 0x92d90ac8cf899010ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x33032db41e62e30fULL, 0x92d90ac8cf899010ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   ClickType  retval;
   frr >>= retval;
   delete fr;
@@ -3623,8 +3623,8 @@ ButtonAreaHandle::click_type () const
 void
 ButtonAreaHandle::click_type (ClickType value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x21058465dc0b1d3fULL, 0x7e683383d0024c74ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x21058465dc0b1d3fULL, 0x7e683383d0024c74ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3660,13 +3660,13 @@ PureMethodsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Ai
 const Rapicorn::Aida::TypeHashList
 PureMethodsHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3969e9b8871ee6b7ULL, 0x71149dcf4b20bd8eULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3969e9b8871ee6b7ULL, 0x71149dcf4b20bd8eULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3682,13 +3682,13 @@ PureMethodsHandle::_down_cast_types()
 int
 PureMethodsHandle::pure_method (double arg_f)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x3e0c1c388c4a51a1ULL, 0x5f146e2e050f17e1ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3e0c1c388c4a51a1ULL, 0x5f146e2e050f17e1ULL);
   fb <<= (*this);
   fb <<= arg_f;
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   int  retval;
   frr >>= retval;
   delete fr;
@@ -3745,13 +3745,13 @@ NameTestsHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida
 const Rapicorn::Aida::TypeHashList
 NameTestsHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3676f9f233fd36dcULL, 0x9fbf4b5b329f3621ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3676f9f233fd36dcULL, 0x9fbf4b5b329f3621ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3769,8 +3769,8 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecord &a
                                             RapicornAidaTest::ClickType arg_qe,
                                             const OtherNamespace::SomeRecord &arg_sr)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 3), *fr = NULL;
-  fb.add_msgid (0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 3), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL);
   fb <<= (*this);
   fb <<= arg_qr;
   fb <<= arg_qe;
@@ -3811,13 +3811,13 @@ CompressorHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aid
 const Rapicorn::Aida::TypeHashList
 CompressorHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x31f198df574388e9ULL, 0xcf0b48010788bdd2ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x31f198df574388e9ULL, 0xcf0b48010788bdd2ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
@@ -3833,12 +3833,12 @@ CompressorHandle::_down_cast_types()
 double
 CompressorHandle::threshold () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3ffc3dfaef875d63ULL, 0xf6f4d889560ba297ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3ffc3dfaef875d63ULL, 0xf6f4d889560ba297ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -3847,8 +3847,8 @@ CompressorHandle::threshold () const
 void
 CompressorHandle::threshold (double value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2209f452a5de4de8ULL, 0x3fb166b528077900ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x2209f452a5de4de8ULL, 0x3fb166b528077900ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3857,12 +3857,12 @@ CompressorHandle::threshold (double value)
 double
 CompressorHandle::ratio () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3415341ee86f2c05ULL, 0xe5f3f6787cc5e436ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3415341ee86f2c05ULL, 0xe5f3f6787cc5e436ULL);
   fb <<= (*this);
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
+  frr.skip_header();
   double  retval;
   frr >>= retval;
   delete fr;
@@ -3871,8 +3871,8 @@ CompressorHandle::ratio () const
 void
 CompressorHandle::ratio (double value)
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL); // msgid
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x21b70e21f75fec8bULL, 0xbf3ad9293c93d072ULL);
   fb <<= (*this);
   fb <<= value;
   fr = __AIDA_Local__::invoke (&fb);
@@ -3929,13 +3929,13 @@ SoundModuleHandle::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Ai
 const Rapicorn::Aida::TypeHashList
 SoundModuleHandle::_down_cast_types()
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (2 + 1);
-  fb.add_msgid (0x3eb7a2dcce63f895ULL, 0x9370827685d22ef8ULL);
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x3eb7a2dcce63f895ULL, 0x9370827685d22ef8ULL);
   fb <<= (*this);
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
   Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: msgid for return?
+  frr.skip_header();
   size_t len;
   frr >>= len;
   AIDA_CHECK (frr.remaining() == len * 2, "result truncated");

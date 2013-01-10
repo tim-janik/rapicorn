@@ -51,7 +51,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
-  frr.pop_int64(); // hashl
+  frr.skip(); frr.skip(); // hashhigh hashlow
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
@@ -317,17 +317,17 @@ class Generator:
     s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  PyObject *callable = (PyObject*) data;\n'
     s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
-    if functype.args:
-      s += '  FieldReader fbr (*sfb);\n'
-      s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
-      s += '  fbr.pop_int64();  // skip handler_id\n'
     s += '  const uint length = %u;\n' % len (functype.args)
     s += '  PyObject *result = NULL, *tuple = PyTuple_New (length)%s;\n' % (', *item' if functype.args else '')
-    arg_counter = 0
-    for a in functype.args:
-      s += self.generate_proto_pop_py ('fbr', a[1], 'item')
-      s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
-      arg_counter += 1
+    if functype.args:
+      s += '  FieldReader fbr (*sfb);\n'
+      s += '  fbr.skip_header();\n'
+      s += '  fbr.skip();  // skip handler_id\n'
+      arg_counter = 0
+      for a in functype.args:
+        s += self.generate_proto_pop_py ('fbr', a[1], 'item')
+        s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
+        arg_counter += 1
     s += '  if (PyErr_Occurred()) goto error;\n'
     s += '  result = PyObject_Call (callable, tuple, NULL);\n'
     s += '  Py_XDECREF (result);\n'
@@ -369,9 +369,10 @@ class Generator:
     s += '_aida_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self args
-    s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
+    s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
+    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
+    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += self.generate_proto_add_py ('fb', class_info, 'item')
@@ -389,7 +390,7 @@ class Generator:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
       s += '    Rapicorn::Aida::FieldReader frr (*fr);\n'
-      s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+      s += '    frr.skip_header();\n'
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'
