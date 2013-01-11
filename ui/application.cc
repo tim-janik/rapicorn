@@ -5,6 +5,7 @@
 #include "screenwindow.hh"
 #include "image.hh"
 #include "uithread.hh"
+#include "internal.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -375,6 +376,12 @@ int
 ApplicationImpl::test_counter_inc_fetch ()
 {
   return ++m_tc;
+}
+
+int64
+ApplicationImpl::test_hook ()
+{
+  return server_app_test_hook();
 }
 
 } // Rapicorn
