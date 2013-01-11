@@ -834,19 +834,91 @@ public:
   {}
 };
 
+// == BaseConnection ==
+#define MAX_CONNECTIONS         8       ///< Arbitrary limit that can be extended if needed
+static Atomic<BaseConnection*>  global_connections[MAX_CONNECTIONS];
+
+static void
+register_connection (uint *indexp, BaseConnection *con)
+{
+  assert_return (*indexp == ~uint (0) && con);
+  for (size_t i = 0; i < MAX_CONNECTIONS; i++)
+    {
+      *indexp = i;
+      if (global_connections[i].cas (NULL, con))
+        return;
+    }
+  *indexp = ~uint (0);
+  error_printf ("MAX_CONNECTIONS limit reached");
+}
+
+static void
+unregister_connection (uint *indexp)
+{
+  assert_return (*indexp < MAX_CONNECTIONS && global_connections[*indexp]);
+  const uint index = *indexp;
+  *indexp = ~uint (0);
+  global_connections[index].store (NULL);
+}
+
+BaseConnection::BaseConnection () :
+  index_ (~uint (0))
+{}
+
+BaseConnection::~BaseConnection ()
+{
+  if (index_ < MAX_CONNECTIONS)
+    Aida::unregister_connection (&index_);
+}
+
+void
+BaseConnection::register_connection()
+{
+  assert_return (index_ > MAX_CONNECTIONS);
+  Aida::register_connection (&index_, this);
+}
+
+void
+BaseConnection::unregister_connection()
+{
+  assert_return (index_ < MAX_CONNECTIONS);
+  Aida::unregister_connection (&index_);
+}
+
+uint
+BaseConnection::connection_id ()
+{
+  return index_ < MAX_CONNECTIONS ? 1 + index_ : 0;
+}
+
+BaseConnection*
+BaseConnection::connection_from_id (uint id)
+{
+  return id && id <= MAX_CONNECTIONS ? global_connections[id-1].load() : NULL;
+}
+
 // == ClientConnection ==
 ClientConnection::ClientConnection (Connector &connector) :
   m_connector (&connector)
 {
   pthread_spin_init (&signal_spin_, 0 /* pshared */);
   m_connector->ref();
+  register_connection();
 }
 
 ClientConnection::~ClientConnection ()
 {
+  unregister_connection();
   m_connector->unref();
   m_connector = NULL;
   pthread_spin_destroy (&signal_spin_);
+}
+
+void
+ClientConnection::send_msg (FieldBuffer *fb)
+{
+  assert_return (fb);
+  // FIXME: implement for client queue
 }
 
 int          ClientConnection::notify_fd ()                  { return m_connector->notify_fd(); }
@@ -1147,10 +1219,21 @@ ServerConnectionImpl::dispatch ()
 
 // == ServerConnection ==
 ServerConnection::ServerConnection ()
-{}
+{
+  register_connection();
+}
 
 ServerConnection::~ServerConnection ()
-{}
+{
+  unregister_connection();
+}
+
+void
+ServerConnection::send_msg (FieldBuffer *fb)
+{
+  assert_return (fb);
+  // FIXME: implement for server queue
+}
 
 ServerConnection*
 ServerConnection::create_threaded ()

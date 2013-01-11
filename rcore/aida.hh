@@ -413,6 +413,21 @@ public:
 // == Connections ==
 class ClientConnection;
 
+/// Base connection context for ORB message exchange.
+class BaseConnection {
+  uint          index_;
+  RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
+protected:
+  void                   register_connection  ();
+  void                   unregister_connection();
+public:
+  explicit               BaseConnection  ();
+  virtual               ~BaseConnection  ();
+  virtual void           send_msg        (FieldBuffer*) = 0;    ///< Carry out a remote call syncronously, transfers memory.
+  uint                   connection_id   ();                    ///< Get unique conneciton ID (returns 0 if unregistered).
+  static BaseConnection* connection_from_id (uint id);          ///< Lookup for connection, used by ORB for message delivery.
+};
+
 /// Client and server connection interface.
 class Connector {
 public:
@@ -428,12 +443,14 @@ public:
 typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
 
 /// Connection context for IPC servers. @nosubgrouping
-class ServerConnection {
+class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 public: /// @name Construction
   static ServerConnection* create_threaded  ();
   virtual                 ~ServerConnection ();
-protected:                 ServerConnection ();
+protected:
+  explicit                 ServerConnection ();
+  virtual void             send_msg         (FieldBuffer*);
 public: /// @name API for remote calls
   virtual void       send_event (FieldBuffer*) = 0; ///< Send event to remote asyncronously, transfers memory.
   virtual int        notify_fd  () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
@@ -453,8 +470,10 @@ public:
 };
 
 /// Connection context for IPC clients. @nosubgrouping
-class ClientConnection {
+class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
+protected:
+  virtual void  send_msg    (FieldBuffer*);
 public: /// @name API for remote calls
   FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a remote call syncronously, transfers memory.
   int           notify_fd   ();             ///< Returns fd for POLLIN, to wake up on incomming events.
