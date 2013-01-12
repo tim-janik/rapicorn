@@ -5,7 +5,6 @@
 
 namespace Rapicorn {
 
-uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
 static void       clientglue_setup      (Rapicorn::Aida::ClientConnection *connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
@@ -39,15 +38,12 @@ init_app (const String       &app_ident,
   else if (app_ident != program_ident())
     fatal ("librapicornui: application identifier changed during ui initialization");
   // boot up UI thread
-  uint64 appid = uithread_bootup (argcp, argv, args);
-  assert (appid != 0);
+  ApplicationH app = uithread_bootup (argcp, argv, args);
+  assert (app._is_null() == false);
   // initialize clientglue bits
   clientglue_setup (uithread_connection());
-  // construct smart handle
-  Rapicorn::Aida::FieldBuffer8 fb (1);
-  fb.add_object (appid);
-  Rapicorn::Aida::FieldReader fbr (fb);
-  fbr >>= app_cached;
+  // assign global smart handle
+  app_cached = app;
   return app_cached;
 }
 

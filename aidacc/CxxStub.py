@@ -68,20 +68,37 @@ error (const char *format, ...)
 servercc_boilerplate = r"""
 namespace { // Anon
 namespace __AIDA_Local__ {
-  typedef ServerConnection::MethodRegistry MethodRegistry;
-  typedef ServerConnection::MethodEntry MethodEntry;
-  inline ptrdiff_t               obj2id  ($AIDA_iface_base$ *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-  template<class Object> Object* id2obj  (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<$AIDA_iface_base$*> (oid)); }
-  template<class Object> Object* smh2obj (const SmartHandle &sh)
-                                         { ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
-  template<class SMH> SMH        obj2smh ($AIDA_iface_base$ *self)
-  {
-    const ptrdiff_t orbid = obj2id (self);
-    SMH target;
-    const ptrdiff_t input[2] = { orbid, target._orbid() };
-    Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
-    return target;
-  }
+// types
+typedef ServerConnection::MethodRegistry MethodRegistry;
+typedef ServerConnection::MethodEntry MethodEntry;
+// objects
+template<class Object> static inline Object* id2obj (uint64_t oid)
+{
+  const ptrdiff_t addr = AIDA_CONNECTION().orbid2instance (oid);
+  $AIDA_iface_base$ *instance = reinterpret_cast<$AIDA_iface_base$*> (addr);
+  return dynamic_cast<Object*> (instance);
+}
+static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
+{ return AIDA_CONNECTION().instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+template<class Object> inline Object* smh2obj (const SmartHandle &sh)
+{ ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
+template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
+{
+  const ptrdiff_t orbid = obj2id (self);
+  SMH target;
+  const uint64_t input[2] = { orbid, target._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  return target;
+}
+// messages
+static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
+static inline void add_header1_discon (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline FieldBuffer* new_result (const FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+{ return FieldBuffer::new_result (ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+
 } } // Anon::__AIDA_Local__
 """
 
@@ -93,16 +110,23 @@ namespace { // Anon
 namespace __AIDA_Local__ {
 static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
-static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
-                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
+static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
+                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo,
+                                         sh._orbid(), AIDA_CONNECTION().connection_id(), seh, data); }
 inline ptrdiff_t        smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
-  const ptrdiff_t input[2] = { orbid, target._orbid() };
+  const uint64_t input[2] = { orbid, target._orbid() };
   Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
   return target;
 }
+static inline void add_header2 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
+                  AIDA_CONNECTION().connection_id(), h, l); }
+static inline void add_header1 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l); }
+
 } } // Anon::__AIDA_Local__
 """
 
@@ -580,7 +604,7 @@ class Generator:
     s += 'const Rapicorn::Aida::TypeHashList\n'
     s += '%s::_down_cast_types()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.list_types_digest (class_info)
+    s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
@@ -664,8 +688,8 @@ class Generator:
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
-    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
-    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
+    if hasret:  s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.method_digest (mtype)
+    else:       s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
@@ -714,7 +738,7 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
-      s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % self.method_digest (mtype)
+      s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % self.method_digest (mtype)
       rval = 'rval'
       s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
@@ -747,7 +771,7 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;\n'
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.getter_digest (class_info, fident, ftype)
+    s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
@@ -766,7 +790,7 @@ class Generator:
     else:
       s += q + tname + ' value)\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, %s);\n' % self.setter_digest (class_info, fident, ftype)
+    s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
@@ -819,7 +843,7 @@ class Generator:
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % getter_hash
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % getter_hash
     rval = 'rval'
     s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
@@ -842,7 +866,7 @@ class Generator:
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     # return: length (typehi, typelo)*length
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s, 1 + 2 * thl.size());\n' % digest
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s, 1 + 2 * thl.size());\n' % digest
     s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb <<= thl[i];\n'
@@ -884,7 +908,7 @@ class Generator:
     s += '}\n'
     s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)
     s += '  void *fptr = new std::function<%s> (func);\n' % cbtname
-    s += '  %s id = __AIDA_Local__::signal_connect (%s, __AIDA_Local__::smh2id (*this), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
+    s += '  %s id = __AIDA_Local__::signal_connect (%s, *this, %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
     s += '  return id;\n}\n'
     s += 'bool\n%s::sig_%s (%s signal_id)\n{\n' % (classH, functype.name, u64)
     s += '  const bool r = __AIDA_Local__::signal_disconnect (signal_id);\n'
@@ -923,9 +947,9 @@ class Generator:
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + handler
-    s += '    fb.add_header (Rapicorn::Aida::MSGID_DISCON, 0, %s);\n' % digest
+    s += '    __AIDA_Local__::add_header1_discon (fb, m_handler, %s);\n' % digest
     s += '    fb <<= m_handler;\n'
-    s += '    m_connection.send_event (&fb);\n' # deletes fb
+    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
@@ -933,13 +957,13 @@ class Generator:
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
-    s += '    fb.add_header (Rapicorn::Aida::MSGID_EVENT, 0, %s);\n' % digest
+    s += '    __AIDA_Local__::add_header1_event (fb, sp->m_handler, %s);\n' % digest
     s += '    fb <<= sp->m_handler;\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_connection.send_event (&fb);\n' # deletes fb
+    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'
@@ -952,14 +976,14 @@ class Generator:
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
-    s += '  Rapicorn::Aida::uint64_t handler_id, con_id, cid = 0;\n'
+    s += '  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
-    s += '  fbr >>= con_id;\n'
-    s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
+    s += '  fbr >>= signal_connection;\n'
+    s += '  if (signal_connection) self->sig_%s.disconnect (signal_connection);\n' % stype.name
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (AIDA_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % digest
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % digest
     s += '  rb <<= cid;\n'
     s += '  return &rb;\n'
     s += '}\n'

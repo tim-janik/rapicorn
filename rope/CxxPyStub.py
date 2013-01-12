@@ -351,7 +351,7 @@ class Generator:
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, AIDA_CONNECTION().connection_id(), %s, callable);\n' % (self.method_digest (functype), emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
@@ -368,14 +368,20 @@ class Generator:
     s += 'static PyObject*\n'
     s += '_aida_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
+    s += '  uint64_t item_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
-    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
-    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
-    s += self.generate_proto_add_py ('fb', class_info, 'item')
+    s += '  item_orbid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    if hasret:
+      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
+      s += ' AIDA_CONNECTION().connection_id(), %s);\n' % self.method_digest (mtype)
+    else:
+      s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY,'
+      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), %s);\n' % self.method_digest (mtype)
+    s += '  fb.add_object (item_orbid);\n'
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])

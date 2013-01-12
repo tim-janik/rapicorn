@@ -193,6 +193,8 @@ public:
 
 // == Type Declarations ==
 class ObjectBroker;
+class ClientConnection;
+class ServerConnection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -241,11 +243,11 @@ inline bool msgid_is_event      (MessageId mid) { return (mid & 0x70000000000000
 // == OrbObject ==
 /// Internal management structure for objects known to the ORB.
 class OrbObject {
-  ptrdiff_t     orbid_;
+  uint64_t      orbid_;
 protected:
-  explicit      OrbObject (ptrdiff_t orbid);
+  explicit      OrbObject       (uint64_t orbid);
 public:
-  ptrdiff_t     orbid     ()            { return orbid_; }
+  uint64_t      orbid           ()            { return orbid_; }
 };
 
 // == SmartHandle ==
@@ -284,8 +286,15 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle fro
 // == ObjectBroker ==
 class ObjectBroker {
 public:
-  static void pop_handle (FieldReader&, SmartHandle&);
-  static void dup_handle (const ptrdiff_t[2], SmartHandle&);
+  static void              pop_handle (FieldReader&, SmartHandle&);
+  static void              dup_handle (const uint64_t[2], SmartHandle&);
+  static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
+  static ServerConnection* new_server_connection     ();
+  static ClientConnection* new_client_connection     ();
+  static inline uint       connection_id_from_orbid  (uint64_t orbid)        { return orbid >> 32; }
+  static inline uint       connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint       sender_connection_id      (uint64_t msgid)        { return msgid & 0x0fffffff; }
+  static inline uint       receiver_connection_id    (uint64_t msgid)        { return (msgid >> 28) & 0x0fffffff; }
 };
 
 // == FieldBuffer ==
@@ -331,7 +340,8 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64_t objid)  { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
-  inline void add_header (uint64_t t, uint64_t o, uint64_t h, uint64_t l) { add_int64 (t | o); add_int64 (h); add_int64 (l); }
+  inline void add_header1 (uint64_t t, uint c, uint64_t h, uint64_t l) { add_int64 (t | c); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (uint64_t t, uint c, uint r, uint64_t h, uint64_t l) { add_int64 (t | c | (r << 28)); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32_t nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint32_t nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
@@ -340,7 +350,7 @@ public:
   static String       type_name (int field_type);
   static FieldBuffer* _new (uint32_t _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (uint64_t h, uint64_t l, uint32_t n = 1);
+  static FieldBuffer* new_result (uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
   inline void operator<<= (size_t v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64_t v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (int64_t  v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -371,6 +381,7 @@ class FieldReader { // read field buffer contents
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
 public:
   explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
+  inline const FieldBuffer* field_buffer() const { return m_fb; }
   inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint32_t           remaining  () { return n_types() - m_nth; }
@@ -411,8 +422,6 @@ public:
 };
 
 // == Connections ==
-class ClientConnection;
-
 /// Base connection context for ORB message exchange.
 class BaseConnection {
   uint          index_;
@@ -424,19 +433,8 @@ public:
   explicit               BaseConnection  ();
   virtual               ~BaseConnection  ();
   virtual void           send_msg        (FieldBuffer*) = 0;    ///< Carry out a remote call syncronously, transfers memory.
-  uint                   connection_id   ();                    ///< Get unique conneciton ID (returns 0 if unregistered).
+  uint                   connection_id   () const;              ///< Get unique conneciton ID (returns 0 if unregistered).
   static BaseConnection* connection_from_id (uint id);          ///< Lookup for connection, used by ORB for message delivery.
-};
-
-/// Client and server connection interface.
-class Connector {
-public:
-  virtual int          notify_fd   () = 0;      ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool         pending     () = 0;      ///< Indicate whether any incoming events are pending that need to be dispatched.
-  virtual FieldBuffer* pop         () = 0;      ///< Dispatch a single event if any is pending.
-  virtual FieldBuffer* call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  virtual void         ref         () = 0;
-  virtual void         unref       () = 0;
 };
 
 /// Function typoe for internal signal handling.
@@ -445,18 +443,15 @@ typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, v
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
-public: /// @name Construction
-  static ServerConnection* create_threaded  ();
-  virtual                 ~ServerConnection ();
 protected:
-  explicit                 ServerConnection ();
-  virtual void             send_msg         (FieldBuffer*);
+  /*ctor*/           ServerConnection ();
+  virtual           ~ServerConnection ();
 public: /// @name API for remote calls
-  virtual void       send_event (FieldBuffer*) = 0; ///< Send event to remote asyncronously, transfers memory.
   virtual int        notify_fd  () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool       pending    () = 0; ///< Indicate whether any incoming calls are pending that need to be dispatched.
   virtual void       dispatch   () = 0; ///< Dispatch a single call if any is pending.
-  virtual Connector& connector  () = 0;
+  virtual uint64_t   instance2orbid (ptrdiff_t) = 0;
+  virtual ptrdiff_t  orbid2instance (uint64_t) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
 public:
@@ -473,35 +468,24 @@ public:
 class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 protected:
-  virtual void  send_msg    (FieldBuffer*);
-public: /// @name API for remote calls
-  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a remote call syncronously, transfers memory.
-  int           notify_fd   ();             ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool          pending     ();             ///< Indicate whether any incoming events are pending that need to be dispatched.
-  void          dispatch    ();             ///< Dispatch a single event if any is pending.
-public: /// @name Lifetime
-  virtual      ~ClientConnection ();
-  /*ctor*/      ClientConnection (Connector&);
-public: /// @name API for event handler bookkeeping
-  uint64_t             signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data);
-  bool                 signal_disconnect (uint64_t signal_handler_id);
+  explicit              ClientConnection ();
+  virtual              ~ClientConnection ();
+public: /// @name API for remote calls.
+  virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual int           notify_fd   () = 0;             ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool          pending     () = 0;             ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual void          dispatch    () = 0;             ///< Dispatch a single event if any is pending.
+public: /// @name API for signal event handlers.
+  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rcon, SignalEmitHandler seh, void *data) = 0;
+  virtual bool          signal_disconnect (uint64_t signal_handler_id) = 0;
   struct EventHandler                       /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler ();
     virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
   };
-  uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
-  EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
-  bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
-private: /// @name Internals
-  Connector    *m_connector;
-  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
-  std::map<uint64_t,SignalHandler*> signal_handler_map_;
-  pthread_spinlock_t                signal_spin_;
-  SignalHandler*                    signal_lookup (uint64_t handler_id);
-  // client event handler
-  typedef std::set<uint64_t> UIntSet;
-  UIntSet                   ehandler_set;
+  virtual uint64_t      register_event_handler (EventHandler   *evh) = 0; ///< Register an event handler, transfers memory.
+  virtual EventHandler* find_event_handler     (uint64_t handler_id) = 0; ///< Find event handler by id.
+  virtual bool          delete_event_handler   (uint64_t handler_id) = 0; ///< Delete a registered event handler, returns success.
 };
 
 // == inline implementations ==

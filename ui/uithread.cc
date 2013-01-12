@@ -78,7 +78,7 @@ private:
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
   Aida::ServerConnection *server_connection;
-  Mutex mutex; Cond cond; uint64 app_id;
+  Mutex mutex; Cond cond; ApplicationH app;
 };
 
 static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
@@ -94,11 +94,11 @@ public:
   Aida::ClientConnection *client_connection_;
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
-    server_connection_ (*Aida::ServerConnection::create_threaded()),
+    server_connection_ (*Aida::ObjectBroker::new_server_connection()),
     main_loop_ (*ref_sink (MainLoop::_new()))
   {
     main_loop_.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
-    client_connection_ = new Aida::ClientConnection (server_connection_.connector());
+    client_connection_ = Aida::ObjectBroker::new_client_connection();
   }
   bool  running() const { return running_; }
   void
@@ -163,7 +163,7 @@ private:
     uithread_serverglue (server_connection_);
     // Complete initialization by signalling caller
     idata_->mutex.lock();
-    idata_->app_id = ptrdiff_t (&ApplicationImpl::the()); // FIXME: use AIDA_ORB.activate_object instead of __AIDA_Local__::obj2id
+    idata_->app = &ApplicationImpl::the()->*Aida::_handle;
     idata_->cond.signal();
     idata_->mutex.unlock();
     idata_ = NULL;
@@ -249,28 +249,27 @@ uithread_uncancelled_atexit()
 
 static void wrap_test_runner (void);
 
-uint64
-uithread_bootup (int *argcp, char **argv, const StringVector &args)
+ApplicationH
+uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
 {
-  assert_return (the_uithread == NULL, 0);
+  assert_return (the_uithread == NULL, ApplicationH());
   // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
   // setup client/server connection pair
   Initializer idata;
   // initialize and create UIThread
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args;
   // start and syncronize with thread
   idata.mutex.lock();
   the_uithread = new UIThread (&idata);
   the_uithread->start();
-  while (idata.app_id == 0)
+  while (idata.app._is_null())
     idata.cond.wait (idata.mutex);
-  uint64 app_id = idata.app_id;
   idata.mutex.unlock();
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  return app_id;
+  return idata.app;
 }
 
 } // Rapicorn

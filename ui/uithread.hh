@@ -37,7 +37,6 @@
 
 namespace Rapicorn {
 
-uint64               uithread_bootup       (int *argcp, char **argv, const StringVector &args);
 void                 uithread_test_trigger (void (*) ());
 MainLoop*            uithread_main_loop    ();
 bool                 uithread_is_current   ();
