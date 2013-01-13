@@ -1217,8 +1217,6 @@ ServerConnectionImpl::dispatch ()
   const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
-  if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
-    error_printf ("mismatch of result flag and receiver_connection: %016lx", msgid);
   const DispatchFunc method = find_method (hashhigh, hashlow);
   FieldBuffer *fr = NULL;
   if (method)
@@ -1332,6 +1330,10 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   BaseConnection *bcon = BaseConnection::connection_from_id (conid);
   if (!bcon)
     error_printf ("Message with invalid connection ID: %016lx (conid=0x%08x)", msgid, conid);
+  const bool needsresult = msgid_has_result (msgid);
+  const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
+  if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
+    error_printf ("mismatch of result flag and receiver_connection: %016lx", msgid);
   bcon->send_msg (fb);
 }
 
