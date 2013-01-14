@@ -81,10 +81,10 @@ template<class Object> static inline Object* id2obj (uint64_t oid)
 static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
 { return AIDA_CONNECTION().instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
 template<class Object> inline Object* smh2obj (const SmartHandle &sh)
-{ ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
+{ uint64_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
 template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 {
-  const ptrdiff_t orbid = obj2id (self);
+  const uint64_t orbid = obj2id (self);
   SMH target;
   const uint64_t input[2] = { orbid, target._orbid() };
   Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
@@ -113,9 +113,9 @@ static bool          signal_disconnect (uint64_t signal_handler_id) { return AID
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
                                        { return AIDA_CONNECTION().signal_connect (hhi, hlo,
                                          sh._orbid(), AIDA_CONNECTION().connection_id(), seh, data); }
-inline ptrdiff_t        smh2id (const SmartHandle &h) { return h._orbid(); }
+static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
-  const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
+  const uint64_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
   const uint64_t input[2] = { orbid, target._orbid() };
   Rapicorn::Aida::ObjectBroker::dup_handle (input, target);

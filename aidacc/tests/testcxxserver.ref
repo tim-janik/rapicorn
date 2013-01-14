@@ -62,10 +62,10 @@ template<class Object> static inline Object* id2obj (uint64_t oid)
 static inline uint64_t obj2id  (Rapicorn::Aida::TestServerBase *obj)
 { return AIDA_CONNECTION().instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
 template<class Object> inline Object* smh2obj (const SmartHandle &sh)
-{ ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
+{ uint64_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
 template<class SMH> static inline SMH obj2smh (Rapicorn::Aida::TestServerBase *self)
 {
-  const ptrdiff_t orbid = obj2id (self);
+  const uint64_t orbid = obj2id (self);
   SMH target;
   const uint64_t input[2] = { orbid, target._orbid() };
   Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
