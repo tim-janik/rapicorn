@@ -150,7 +150,6 @@ class Generator:
     self.iface_base = self.test_iface_base
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
-    self.object_impl = None # ('impl', ('', 'Impl'))
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -514,13 +513,6 @@ class Generator:
       il = max (il, len (self.C (type_info)))
     for m in type_info.methods:
       s += self.generate_method_decl (m, il)
-    # impl()
-    if self.gen_mode == G4SERVANT and self.object_impl:
-      impl_method, ppwrap = self.object_impl
-      implname = ppwrap[0] + type_info.name + ppwrap[1]
-      s += '  inline %s&       impl () ' % implname
-      s += '{ %s *_impl = dynamic_cast<%s*> (this); if (!_impl) throw std::bad_cast(); return *_impl; }\n' % (implname, implname)
-      s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
