@@ -3,6 +3,7 @@
 #include "uithread.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
+#include <unistd.h>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define VDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvent2", __VA_ARGS__) // verbose event debugging
@@ -1001,7 +1002,7 @@ X11Context::run()
   // ensure enqueued user commands are processed
   m_loop.exec_dispatcher (slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // ensure command_queue events are processed
-  m_command_queue.notifier ([&m_loop]() { m_loop.wakeup(); });
+  m_command_queue.notifier ([&]() { m_loop.wakeup(); });
   // process X11 events
   m_loop.run();
   // prevent wakeups on stale objects
