@@ -3,6 +3,7 @@
 #include "thread.hh"
 #include "strings.hh"
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 
