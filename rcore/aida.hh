@@ -499,7 +499,7 @@ public: /// @name API for remote calls.
   virtual bool          pending     () = 0;             ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void          dispatch    () = 0;             ///< Dispatch a single event if any is pending.
 public: /// @name API for signal event handlers.
-  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rcon, SignalEmitHandler seh, void *data) = 0;
+  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (uint64_t signal_handler_id) = 0;
 };
 

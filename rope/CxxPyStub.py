@@ -351,7 +351,7 @@ class Generator:
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, AIDA_CONNECTION().connection_id(), %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'

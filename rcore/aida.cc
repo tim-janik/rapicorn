@@ -926,7 +926,7 @@ class ClientConnectionImpl : public ClientConnection {
   TransportChannel              transport_channel_;     // messages sent to client
   sem_t                         transport_sem_;         // signal incomming results
   std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
-  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; uint rcon; };
+  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
   std::vector<SignalHandler*>   signal_handlers_;
   bool                          blocking_for_sem_;
   SignalHandler*                signal_lookup (uint64_t handler_id);
@@ -962,7 +962,7 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rcon, SignalEmitHandler seh, void *data);
+  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (uint64_t signal_handler_id);
 };
 
@@ -1069,19 +1069,17 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 }
 
 uint64_t
-ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rconnection, SignalEmitHandler seh, void *data)
+ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data)
 {
   assert_return (orbid > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
   assert_return (hlo > 0, 0);
-  assert_return (rconnection <= CONNECTION_MASK && rconnection, 0);
   assert_return (seh != NULL, 0);
   SignalHandler *shandler = new SignalHandler;
   shandler->hhi = hhi;
   shandler->hlo = hlo;
   shandler->oid = orbid;                        // emitting object
   shandler->cid = 0;
-  shandler->rcon = rconnection;
   shandler->seh = seh;
   shandler->data = data;
   pthread_spin_lock (&signal_spin_);
@@ -1091,7 +1089,7 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   const uint64_t handler_id = IdentifierParts (handler_index, connection_id()).vuint64; // see connection_id_from_orbid
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, shandler->rcon, shandler->hhi, shandler->hlo);
+  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
@@ -1119,7 +1117,7 @@ ClientConnectionImpl::signal_disconnect (uint64_t signal_handler_id)
   return_if (!shandler, false);
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, shandler->rcon, shandler->hhi, shandler->hlo);
+  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
