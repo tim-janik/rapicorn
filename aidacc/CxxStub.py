@@ -939,15 +939,15 @@ class Generator:
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;\n'
+    s += '  Rapicorn::Aida::uint64_t handler_;\n'
     s += 'public:\n'
     s += '  typedef std::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  %s (Rapicorn::Aida::uint64_t h) : handler_ (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + handler
-    s += '    __AIDA_Local__::add_header1_discon (fb, m_handler, %s);\n' % digest
-    s += '    fb <<= m_handler;\n'
+    s += '    __AIDA_Local__::add_header1_discon (fb, handler_, %s);\n' % digest
+    s += '    fb <<= handler_;\n'
     s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
@@ -956,8 +956,8 @@ class Generator:
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
-    s += '    __AIDA_Local__::add_header1_event (fb, sp->m_handler, %s);\n' % digest
-    s += '    fb <<= sp->m_handler;\n'
+    s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_, %s);\n' % digest
+    s += '    fb <<= sp->handler_;\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
@@ -980,7 +980,7 @@ class Generator:
     s += '  fbr >>= signal_connection;\n'
     s += '  if (signal_connection) self->sig_%s.disconnect (signal_connection);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (AIDA_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % digest
     s += '  rb <<= cid;\n'
