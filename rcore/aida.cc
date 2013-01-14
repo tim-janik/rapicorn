@@ -964,9 +964,6 @@ public:
   virtual void          dispatch          ();
   virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rcon, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (uint64_t signal_handler_id);
-  virtual uint64_t      register_event_handler (EventHandler   *evh);
-  virtual EventHandler* find_event_handler     (uint64_t handler_id);
-  virtual bool          delete_event_handler   (uint64_t handler_id);
 };
 
 FieldBuffer*
@@ -990,7 +987,6 @@ ClientConnectionImpl::dispatch ()
   if (msgid_is_event (msgid))
     {
       const uint64_t handler_id = fbr.pop_int64();
-      // ClientConnection::EventHandler *evh = find_event_handler (handler_id);
       SignalHandler *shandler = signal_lookup (handler_id);
       if (shandler)
         {
@@ -1020,7 +1016,7 @@ ClientConnectionImpl::dispatch ()
   else if (msgid_is_discon (msgid))
     {
       const uint64_t handler_id = fbr.pop_int64();
-      const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
+      const bool deleted = true; // FIXME: currently broken
       if (!deleted)
         warning_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id);
     }
@@ -1070,36 +1066,6 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
     }
   blocking_for_sem_ = false;
   return fr;
-}
-
-uint64_t
-ClientConnectionImpl::register_event_handler (EventHandler *evh)
-{
-  pthread_spin_lock (&signal_spin_);
-  const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
-  pthread_spin_unlock (&signal_spin_);
-  return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
-}
-
-ClientConnection::EventHandler*
-ClientConnectionImpl::find_event_handler (uint64_t handler_id)
-{
-  pthread_spin_lock (&signal_spin_);
-  UIntSet::iterator iter = ehandler_set.find (handler_id);
-  pthread_spin_unlock (&signal_spin_);
-  if (iter == ehandler_set.end())
-    return NULL; // unknown handler_id
-  EventHandler *evh = (EventHandler*) ptrdiff_t (handler_id);
-  return evh;
-}
-
-bool
-ClientConnectionImpl::delete_event_handler (uint64_t handler_id)
-{
-  pthread_spin_lock (&signal_spin_);
-  size_t nerased = ehandler_set.erase (handler_id);
-  pthread_spin_unlock (&signal_spin_);
-  return nerased > 0; // deletion successful?
 }
 
 uint64_t
@@ -1178,9 +1144,6 @@ ClientConnectionImpl::signal_lookup (uint64_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return shandler;
 }
-
-ClientConnection::EventHandler::~EventHandler()
-{}
 
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.

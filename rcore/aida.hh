@@ -501,14 +501,6 @@ public: /// @name API for remote calls.
 public: /// @name API for signal event handlers.
   virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, uint rcon, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (uint64_t signal_handler_id) = 0;
-  struct EventHandler                       /// Interface class used for client side signal emissions.
-  {
-    virtual             ~EventHandler ();
-    virtual FieldBuffer* handle_event (Aida::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
-  };
-  virtual uint64_t      register_event_handler (EventHandler   *evh) = 0; ///< Register an event handler, transfers memory.
-  virtual EventHandler* find_event_handler     (uint64_t handler_id) = 0; ///< Find event handler by id.
-  virtual bool          delete_event_handler   (uint64_t handler_id) = 0; ///< Delete a registered event handler, returns success.
 };
 
 // == inline implementations ==
