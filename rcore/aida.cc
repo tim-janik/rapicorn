@@ -1273,7 +1273,14 @@ operator< (const TypeHash &a, const TypeHash &b)
 {
   return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
 }
-typedef std::map<TypeHash, DispatchFunc> DispatcherMap;
+struct HashTypeHash {
+  inline size_t operator() (const TypeHash &t) const
+  {
+    return t.typehi ^ t.typelo;
+  }
+};
+
+typedef std::unordered_map<TypeHash, DispatchFunc, HashTypeHash> DispatcherMap;
 static DispatcherMap                    *dispatcher_map = NULL;
 static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool                              dispatcher_map_frozen = false;
