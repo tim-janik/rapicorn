@@ -619,7 +619,7 @@ FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (3 + 2);
-  const uint64_t MSGID_ERROR = 0x8000000000000000ULL;
+  const MessageId MSGID_ERROR = MessageId (0x8000000000000000ULL);
   fr->add_header1 (MSGID_ERROR, 0, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
@@ -629,9 +629,9 @@ FieldBuffer::new_error (const String &msg,
 FieldBuffer*
 FieldBuffer::new_result (uint rconnection, uint64_t h, uint64_t l, uint32_t n)
 {
-  assert_return (rconnection <= 0x0fffffff && rconnection, NULL);
+  assert_return (rconnection <= CONNECTION_MASK && rconnection, NULL);
   FieldBuffer *fr = FieldBuffer::_new (3 + n);
-  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  const MessageId MSGID_RESULT_MASK = MessageId (0x9000000000000000ULL);
   fr->add_header1 (MSGID_RESULT_MASK, rconnection, h, l);
   return fr;
 }
@@ -645,7 +645,7 @@ ObjectBroker::renew_into_result (FieldReader &fbr, uint rconnection, uint64_t h,
   fbr.reset();
   FieldBuffer *fr = const_cast<FieldBuffer*> (fb);
   fr->reset();
-  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  const MessageId MSGID_RESULT_MASK = MessageId (0x9000000000000000ULL);
   fr->add_header1 (MSGID_RESULT_MASK, rconnection, h, l);
   return fr;
 }
@@ -1108,7 +1108,7 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   assert_return (orbid > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
   assert_return (hlo > 0, 0);
-  assert_return (rconnection <= 0x0fffffff && rconnection, 0);
+  assert_return (rconnection <= CONNECTION_MASK && rconnection, 0);
   assert_return (seh != NULL, 0);
   SignalHandler *shandler = new SignalHandler;
   shandler->hhi = hhi;
@@ -1119,10 +1119,10 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   shandler->seh = seh;
   shandler->data = data;
   pthread_spin_lock (&signal_spin_);
-  const uint64_t handler_index = signal_handlers_.size();
+  const uint handler_index = signal_handlers_.size();
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
-  const uint64_t handler_id = (uint64_t (connection_id()) << 32) | handler_index; // see connection_id_from_orbid
+  const uint64_t handler_id = IdentifierParts (handler_index, connection_id()).vuint64; // see connection_id_from_orbid
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
   fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, shandler->rcon, shandler->hhi, shandler->hlo);
@@ -1213,7 +1213,7 @@ ServerConnectionImpl::instance2orbid (ptrdiff_t addr)
   const auto it = addr_map.find (addr);
   if (AIDA_LIKELY (it != addr_map.end()))
     return (*it).second;
-  const uint64_t orbid = addr_vector.size() | (uint64_t (connection_id()) << 32); // see connection_id_from_orbid
+  const uint64_t orbid = IdentifierParts (addr_vector.size(), connection_id()).vuint64; // see connection_id_from_orbid
   addr_vector.push_back (addr);
   addr_map[addr] = orbid;
   return orbid;

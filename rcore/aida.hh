@@ -240,6 +240,28 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
+union IdentifierParts {
+  uint64_t vuint64;
+  struct { // MessageId bits
+    uint   sender_connection : 16;
+    uint   msg_unused : 16;
+    uint   receiver_connection : 16;
+    uint   msg_unused2 : 8;
+    uint   message_id : 8;
+  };
+  struct { // OrbID bits
+    uint   orbid32 : 32;
+    uint   orbid_connection : 16;
+    uint   orbid_unused : 16;
+  };
+  IdentifierParts (uint64_t vu64) : vuint64 (vu64) {}
+  IdentifierParts (uint orbid_v32, uint orbid_con) : orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_unused (0) {}
+  IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
+    sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con), message_id (IdentifierParts (id).message_id)
+  {}
+};
+constexpr uint64_t CONNECTION_MASK = 0x0000ffff;
+
 // == OrbObject ==
 /// Internal management structure for objects known to the ORB.
 class OrbObject {
@@ -291,11 +313,11 @@ public:
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection     ();
   static ClientConnection* new_client_connection     ();
-  static inline uint       connection_id_from_orbid  (uint64_t orbid)        { return orbid >> 32; }
-  static inline uint       connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
-  static inline uint       sender_connection_id      (uint64_t msgid)        { return msgid & 0x0fffffff; }
-  static inline uint       receiver_connection_id    (uint64_t msgid)        { return (msgid >> 28) & 0x0fffffff; }
-  static FieldBuffer*      renew_into_result         (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  static inline uint  connection_id_from_orbid  (uint64_t orbid)        { return IdentifierParts (orbid).orbid_connection; }
+  static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
+  static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
+  static FieldBuffer* renew_into_result         (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
 };
 
 // == FieldBuffer ==
@@ -341,8 +363,8 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64_t objid)  { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
-  inline void add_header1 (uint64_t t, uint c, uint64_t h, uint64_t l) { add_int64 (t | c); add_int64 (h); add_int64 (l); }
-  inline void add_header2 (uint64_t t, uint c, uint r, uint64_t h, uint64_t l) { add_int64 (t | c | (r << 28)); add_int64 (h); add_int64 (l); }
+  inline void add_header1 (MessageId m, uint c, uint64_t h, uint64_t l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (MessageId m, uint c, uint r, uint64_t h, uint64_t l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32_t nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint32_t nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
