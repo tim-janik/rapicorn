@@ -308,7 +308,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_client_signal_def (self, class_info, functype, mdefs):
-    mdefs += [ '{ "_AIDA_%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
+    mdefs += [ '{ "_AIDA_pymarshal__%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (functype.ident_digest(), functype.ident_digest()) ]
     s, cbtname, classN = '', 'Callback' + '_' + functype.name, class_info.name
     u64 = 'Rapicorn::Aida::uint64_t'
@@ -362,7 +362,7 @@ class Generator:
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def generate_pycall_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_AIDA_%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
+    mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
