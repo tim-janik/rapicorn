@@ -12,16 +12,6 @@
 #include <set>
 #include <map>
 
-#ifndef _SHARED_PTR_H           // might require -std=c++0x
-#include <tr1/memory>           // import shared_ptr if needed
-namespace std {
-using std::tr1::bad_weak_ptr;
-using std::tr1::enable_shared_from_this;
-using std::tr1::shared_ptr;
-using std::tr1::weak_ptr;
-}
-#endif  // !_SHARED_PTR_H
-
 namespace Rapicorn { namespace Aida {
 
 // == Auxillary macros ==
