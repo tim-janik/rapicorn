@@ -80,7 +80,7 @@ template<class Object> static inline Object* id2obj (uint64_t oid)
 }
 static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
 { return AIDA_CONNECTION().instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
-template<class Object> inline Object* smh2obj (const SmartHandle &sh)
+template<class Object> static inline Object* smh2obj (const SmartHandle &sh)
 { uint64_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
 template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 {
