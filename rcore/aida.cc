@@ -1236,29 +1236,34 @@ ServerConnectionImpl::dispatch ()
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
   const bool needsresult = msgid_has_result (msgid);
-  const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   const DispatchFunc method = find_method (hashhigh, hashlow);
   FieldBuffer *fr = NULL;
-  if (method)
+  if (AIDA_LIKELY (method))
     {
       fbr.reset (*fb);
       fr = method (fbr);
-      if (fr == fb)
+      if (AIDA_LIKELY (fr == fb))
         fb = NULL;
-      const MessageId retid = MessageId (fr ? fr->first_id() : 0);
-      if (fr && (!needsresult || !msgid_is_result (retid)))
+      if (fr)
         {
-          warning_printf ("bogus result from method (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-          delete fr;
-          fr = NULL;
+          const MessageId retid = MessageId (fr->first_id());
+          if (!needsresult || !msgid_is_result (retid))
+            {
+              warning_printf ("bogus result from method (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
+              delete fr;
+              fr = NULL;
+            }
         }
     }
   else
     warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-  if (fb)
+  if (AIDA_UNLIKELY (fb))
     delete fb;
   if (needsresult)
-    ObjectBroker::post_msg (fr ? fr : FieldBuffer::new_result (receiver_connection, hashhigh, hashlow));
+    {
+      const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
+      ObjectBroker::post_msg (fr ? fr : FieldBuffer::new_result (receiver_connection, hashhigh, hashlow));
+    }
 }
 
 // == ServerConnection ==
