@@ -200,7 +200,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida__object__")); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__AIDA_pyobject__")); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ANY:
       s += '  %s.add_any (__AIDA_pyconvert__pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
@@ -341,7 +341,7 @@ class Generator:
     s += '  while (0) { error: return NULL; }\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
     s += '  %s result = 0;\n' % u64
     s += '  if (callable == Py_None) {\n'
@@ -374,7 +374,7 @@ class Generator:
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
-    s += '  item_orbid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    s += '  item_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     if hasret:
       s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
       s += ' AIDA_CONNECTION().connection_id(), %s);\n' % self.method_digest (mtype)
