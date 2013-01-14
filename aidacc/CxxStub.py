@@ -374,7 +374,7 @@ class Generator:
   def generate_enum_impl (self, type_info):
     s = '\n'
     ns, nm = self.namespaced_identifier (None), type_info.name
-    s += 'static Rapicorn::Init _Rapicorn_Aida__INIT__%s_ ([]() {\n' % nm
+    s += 'static Rapicorn::Init __AIDA_init__%s ([]() {\n' % nm
     s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
     for opt in type_info.options:
       (ident, label, blurb, number) = opt

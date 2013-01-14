@@ -1036,21 +1036,21 @@ template<> inline EnumInfo enum_info<RapicornAidaTest::MathExpressions>() { retu
 
 namespace MandatoryNamespace {
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum1_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum1 ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E1_A),
   };
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum1c_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum1c ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E1C_A),
   };
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1c", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum2 ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E2_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E2_B),
@@ -1058,7 +1058,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2c_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum2c ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_B),
@@ -1066,7 +1066,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum2c_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2c", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum3 ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E3_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E3_B),
@@ -1075,7 +1075,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3c_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum3c ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_B),
@@ -1084,7 +1084,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum3c_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3c", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4a_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum4a ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_B),
@@ -1094,7 +1094,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4a_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4a", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4b_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum4b ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_B),
@@ -1104,7 +1104,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4b_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4b", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4c_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum4c ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_B),
@@ -1114,7 +1114,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4c_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4c", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4d_ ([]() {
+static Rapicorn::Init __AIDA_init__Enum4d ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_A),
     RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_B),
@@ -1124,7 +1124,7 @@ static Rapicorn::Init _Rapicorn_Aida__INIT__Enum4d_ ([]() {
   Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4d", enum_values);
 });
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__ExtensiveEnum_ ([]() {
+static Rapicorn::Init __AIDA_init__ExtensiveEnum ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (V1a),
     RAPICORN_AIDA_ENUM_INFO_VALUE (V1b),
@@ -2100,7 +2100,7 @@ GrandChildHandle::_down_cast_types()
   return thl;
 }
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__QuickEnum_ ([]() {
+static Rapicorn::Init __AIDA_init__QuickEnum ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (ZERO),
   };
@@ -3439,7 +3439,7 @@ PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value)
 
 namespace RapicornAidaTest {
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__ClickType_ ([]() {
+static Rapicorn::Init __AIDA_init__ClickType ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_PRESS),
     RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_RELEASE),
@@ -3701,7 +3701,7 @@ PureMethodsHandle::pure_method (double arg_f)
   return retval;
 }
 
-static Rapicorn::Init _Rapicorn_Aida__INIT__MathExpressions_ ([]() {
+static Rapicorn::Init __AIDA_init__MathExpressions ([]() {
   static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
     RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_2),
     RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_5),
