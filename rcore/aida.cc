@@ -1030,9 +1030,12 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
   FieldBuffer *fr;
   while (needsresult)
     {
-      while (!transport_channel_.has_msg())
-        block_for_result ();
-      fr = transport_channel_.pop_msg();
+      fr = transport_channel_.fetch_msg();
+      while (AIDA_UNLIKELY (!fr))
+        {
+          block_for_result ();
+          fr = transport_channel_.fetch_msg();
+        }
       Aida::MessageId retid = Aida::MessageId (fr->first_id());
       if (Aida::msgid_is_error (retid))
         {
