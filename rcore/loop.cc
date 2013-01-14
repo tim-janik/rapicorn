@@ -748,7 +748,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     timeout_msecs = 1;
   if (!may_block || any_dispatchable)
     timeout_msecs = 0;
-  LookHooks lock_hooks = m_lock_hooks;
+  LockHooks lock_hooks = m_lock_hooks;
   m_lock_hooks_locked = true; // protect hooks from alterations
   main_mutex.unlock();
   int presult;

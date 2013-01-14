@@ -165,8 +165,8 @@ public:
   ///@cond
   void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:
-  struct LookHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
-  LookHooks m_lock_hooks; bool m_lock_hooks_locked;
+  struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
+  LockHooks m_lock_hooks; bool m_lock_hooks_locked;
   ///@endcond
 };
 
