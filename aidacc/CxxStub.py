@@ -96,8 +96,8 @@ static inline void add_header1_discon (FieldBuffer &fb, uint64_t orbid, uint64_t
 { fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
 static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
 { fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
-static inline FieldBuffer* new_result (const FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
-{ return FieldBuffer::new_result (ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+{ return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
 
 } } // Anon::__AIDA_Local__
 """

@@ -295,6 +295,7 @@ public:
   static inline uint       connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint       sender_connection_id      (uint64_t msgid)        { return msgid & 0x0fffffff; }
   static inline uint       receiver_connection_id    (uint64_t msgid)        { return (msgid >> 28) & 0x0fffffff; }
+  static FieldBuffer*      renew_into_result         (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
 };
 
 // == FieldBuffer ==
@@ -323,7 +324,6 @@ protected:
   inline uint32_t    offset () const { const uint32_t offs = 1 + (capacity() + 7) / 8; return offs; }
   inline TypeKind    type_at  (uint32_t n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline uint32_t    capacity () const       { return buffermem[0].capacity; }
   inline uint32_t    size () const           { return buffermem[0].index; }
   inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
@@ -332,7 +332,8 @@ protected:
   explicit           FieldBuffer (uint32_t, FieldUnion*, uint32_t);
 public:
   virtual     ~FieldBuffer();
-  inline uint64_t first_id () const { return buffermem && size() && type_at (0) == INT64 ? upeek (0).vint64 : 0; }
+  inline uint32_t capacity () const        { return buffermem[0].capacity; }
+  inline uint64_t first_id () const        { return buffermem && size() && type_at (0) == INT64 ? upeek (0).vint64 : 0; }
   inline void add_bool   (bool    vbool)   { FieldUnion &u = addu (BOOL); u.vint64 = vbool; }
   inline void add_int64  (int64_t vint64)  { FieldUnion &u = addu (INT64); u.vint64 = vint64; }
   inline void add_evalue (int64_t vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }

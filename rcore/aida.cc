@@ -636,6 +636,20 @@ FieldBuffer::new_result (uint rconnection, uint64_t h, uint64_t l, uint32_t n)
   return fr;
 }
 
+FieldBuffer*
+ObjectBroker::renew_into_result (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+{
+  const FieldBuffer *fb = fbr.field_buffer();
+  if (fb->capacity() < 3 + n)
+    return FieldBuffer::new_result (rconnection, h, l, n);
+  fbr.reset();
+  FieldBuffer *fr = const_cast<FieldBuffer*> (fb);
+  fr->reset();
+  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  fr->add_header1 (MSGID_RESULT_MASK, rconnection, h, l);
+  return fr;
+}
+
 class OneChunkFieldBuffer : public FieldBuffer {
   virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
   explicit OneChunkFieldBuffer (uint32_t    _ntypes,
@@ -981,6 +995,8 @@ ClientConnectionImpl::dispatch ()
       if (shandler)
         {
           FieldBuffer *fr = shandler->seh (*this, fb, shandler->data);
+          if (fr == fb)
+            fb = NULL;
           if (fr)
             {
               FieldReader frr (*fr);
@@ -1010,7 +1026,8 @@ ClientConnectionImpl::dispatch ()
     }
   else
     warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-  delete fb;
+  if (fb)
+    delete fb;
 }
 
 FieldBuffer*
@@ -1226,6 +1243,8 @@ ServerConnectionImpl::dispatch ()
     {
       fbr.reset (*fb);
       fr = method (fbr);
+      if (fr == fb)
+        fb = NULL;
       const MessageId retid = MessageId (fr ? fr->first_id() : 0);
       if (fr && (!needsresult || !msgid_is_result (retid)))
         {
@@ -1236,7 +1255,8 @@ ServerConnectionImpl::dispatch ()
     }
   else
     warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-  delete fb;
+  if (fb)
+    delete fb;
   if (needsresult)
     ObjectBroker::post_msg (fr ? fr : FieldBuffer::new_result (receiver_connection, hashhigh, hashlow));
 }
