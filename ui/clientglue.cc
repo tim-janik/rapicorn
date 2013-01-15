@@ -120,37 +120,6 @@ public:
 
 } // Rapicorn
 
-// === clientapi.cc helpers ===
-namespace { // Anon
-class ConnectionContext {
-  // this should one day be linked with the server side connection and implement Aida::BaseConnection itself
-  typedef std::map <Rapicorn::Aida::uint64_t, void*> ContextMap;
-  ContextMap context_map;
-public:
-  void*
-  find_context (Rapicorn::Aida::uint64_t ipcid)
-  {
-    ContextMap::iterator it = context_map.find (ipcid);
-    return LIKELY (it != context_map.end()) ? it->second : NULL;
-  }
-  void
-  add_context (Rapicorn::Aida::uint64_t ipcid, void *ctx)
-  {
-    context_map[ipcid] = ctx;
-  }
-};
-static __thread ConnectionContext *ccontext = NULL;
-template<class Context> static inline Context*
-connection_id2context (Rapicorn::Aida::uint64_t ipcid)
-{
-  void *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
-  if (UNLIKELY (!ctx))
-    ctx = new Context (ipcid);
-  return static_cast<Context*> (ctx);
-}
-
-} // Anon
-
 // compile client-side API
 #include "clientapi.cc"
 
@@ -242,6 +211,7 @@ ApplicationH::shutdown()
   uithread_shutdown();
 }
 
+// internal function for tests
 int64
 client_app_test_hook ()
 {
