@@ -990,7 +990,7 @@ ClientConnectionImpl::dispatch ()
       SignalHandler *shandler = signal_lookup (handler_id);
       if (shandler)
         {
-          FieldBuffer *fr = shandler->seh (*this, fb, shandler->data);
+          FieldBuffer *fr = shandler->seh (fb, shandler->data);
           if (fr == fb)
             fb = NULL;
           if (fr)
@@ -1128,7 +1128,7 @@ ClientConnectionImpl::signal_disconnect (uint64_t signal_handler_id)
       delete connection_result;
       critical_unless (connection_result == NULL);
     }
-  shandler->seh (*this, NULL, shandler->data);
+  shandler->seh (NULL, shandler->data);
   delete shandler;
   return true;
 }

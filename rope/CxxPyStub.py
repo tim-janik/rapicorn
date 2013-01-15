@@ -314,7 +314,7 @@ class Generator:
     u64 = 'Rapicorn::Aida::uint64_t'
     emitfunc = '__AIDA_pyemit__%s__%s' % (classN, functype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
-    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  PyObject *callable = (PyObject*) data;\n'
     s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
     s += '  const uint length = %u;\n' % len (functype.args)

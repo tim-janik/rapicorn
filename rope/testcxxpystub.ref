@@ -1318,7 +1318,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String (PyObject *
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__UIWidgetArea__void_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__UIWidgetArea__void_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1353,7 +1353,7 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyse
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__UIWidgetArea__sample_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1776,7 +1776,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_Inter
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__void_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__void_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1811,7 +1811,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void (PyObjec
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__bool_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__bool_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1846,7 +1846,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObjec
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int32_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__int32_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1881,7 +1881,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32 (PyObj
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int64_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__int64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1916,7 +1916,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_result_int64 (PyObj
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__float64_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__float64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1951,7 +1951,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_result_float64 (P
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__string_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__string_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -1986,7 +1986,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_result_String (PyO
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__enum_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__enum_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2021,7 +2021,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTest
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__record_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__record_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2056,7 +2056,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTe
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__sequence_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__sequence_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2091,7 +2091,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_result_Interface
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__interface_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__interface_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2126,7 +2126,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_result_Interfac
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__any_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__any_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2161,7 +2161,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_result_Any (PyObject 
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__self_result (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2196,7 +2196,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTest
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__void_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__void_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2231,7 +2231,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__bool_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__bool_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2271,7 +2271,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObj
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int32_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__int32_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2311,7 +2311,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_arg_void_int32 (PyO
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int64_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__int64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2351,7 +2351,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_arg_void_int64 (PyO
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__float64_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__float64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2391,7 +2391,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_arg_void_float64 
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__string_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__string_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2431,7 +2431,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_arg_void_String (P
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__enum_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2471,7 +2471,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTe
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__record_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__record_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2511,7 +2511,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_arg_void_Interface
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__sequence_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__sequence_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2551,7 +2551,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_arg_void_Interfa
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__interface_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2591,7 +2591,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interf
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__any_arg (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2631,7 +2631,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any (PyObjec
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__self_args (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2671,7 +2671,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceT
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ChildInheritingSignals__child_signal (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__ChildInheritingSignals__child_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2721,7 +2721,7 @@ __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Inte
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ButtonArea__check_activate (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__ButtonArea__check_activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
@@ -2756,7 +2756,7 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *p
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ButtonArea__activate (Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit__ButtonArea__activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }

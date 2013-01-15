@@ -455,7 +455,7 @@ public:
 };
 
 /// Function typoe for internal signal handling.
-typedef FieldBuffer* SignalEmitHandler (ClientConnection&, const FieldBuffer*, void*);
+typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection : public BaseConnection {
