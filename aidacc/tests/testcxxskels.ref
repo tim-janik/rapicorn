@@ -28,6 +28,7 @@ protected:
   explicit                               I_FirstInterface_Interface ();
   virtual /*Des*/                       ~I_FirstInterface_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          void_func                  ();
@@ -81,6 +82,7 @@ protected:
   explicit                               I_UIWidgetArea_Interface ();
   virtual /*Des*/                       ~I_UIWidgetArea_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          dummy    () const = 0;
@@ -125,6 +127,7 @@ protected:
   explicit                               I_Parent_Interface ();
   virtual /*Des*/                       ~I_Parent_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
@@ -197,6 +200,7 @@ protected:
   explicit                               I_QuickIface_Interface ();
   virtual /*Des*/                       ~I_QuickIface_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          simple_function        (int i = 9);
@@ -216,6 +220,7 @@ protected:
   explicit                               I_MethodTestInterface_Interface ();
   virtual /*Des*/                       ~I_MethodTestInterface_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          method_with_void                ();
@@ -257,6 +262,7 @@ protected:
   explicit                               I_SignalTestInterface_Interface ();
   virtual /*Des*/                       ~I_SignalTestInterface_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
@@ -361,6 +367,7 @@ protected:
   explicit                               I_PropertyTester_Interface ();
   virtual /*Des*/                       ~I_PropertyTester_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          bool_prop      () const = 0;
@@ -404,6 +411,7 @@ protected:
   explicit                               I_ButtonArea_Interface ();
   virtual /*Des*/                       ~I_ButtonArea_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual std::string                   on_click   () const = 0;
@@ -436,6 +444,7 @@ protected:
   explicit                               I_PureMethods_Interface ();
   virtual /*Des*/                       ~I_PureMethods_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual int                           pure_method             (double f) = 0;
@@ -458,6 +467,7 @@ protected:
   explicit                               I_NameTests_Interface ();
   virtual /*Des*/                       ~I_NameTests_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
@@ -482,6 +492,7 @@ protected:
   explicit                               I_Compressor_Interface ();
   virtual /*Des*/                       ~I_Compressor_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual double                        threshold () const = 0;
@@ -504,6 +515,7 @@ protected:
   explicit                               I_SoundModule_Interface ();
   virtual /*Des*/                       ~I_SoundModule_Interface () = 0;
 public:
+  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };

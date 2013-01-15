@@ -32,9 +32,6 @@ using Rapicorn::Signals::slot;
 """
 
 servercc_testcode = r"""
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-#endif // !AIDA_CONNECTION
 """
 
 gencc_boilerplate = r"""
@@ -71,15 +68,20 @@ namespace __AIDA_Local__ {
 // types
 typedef ServerConnection::MethodRegistry MethodRegistry;
 typedef ServerConnection::MethodEntry MethodEntry;
+// connection
+static Rapicorn::Aida::ServerConnection *server_connection = NULL;
+static Rapicorn::Init init_server_connection ([]() {
+  server_connection = ObjectBroker::new_server_connection();
+});
 // objects
 template<class Object> static inline Object* id2obj (uint64_t oid)
 {
-  const ptrdiff_t addr = AIDA_CONNECTION().orbid2instance (oid);
+  const ptrdiff_t addr = server_connection->orbid2instance (oid);
   $AIDA_iface_base$ *instance = reinterpret_cast<$AIDA_iface_base$*> (addr);
   return dynamic_cast<Object*> (instance);
 }
 static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
-{ return AIDA_CONNECTION().instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+{ return server_connection->instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
 template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
 template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 {
@@ -104,10 +106,12 @@ static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l,
 clientcc_boilerplate = r"""
 namespace { // Anon
 namespace __AIDA_Local__ {
+// connection
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 static Rapicorn::Init init_client_connection ([]() {
   client_connection = ObjectBroker::new_client_connection();
 });
+// helper
 static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
 static bool          signal_disconnect (uint64_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
@@ -447,7 +451,7 @@ class Generator:
       if l:
         heritage = 'public virtual'
       else:
-        l = [self.iface_base]
+        l, ddc = [self.iface_base], True
         heritage = 'public virtual'
     else:
       if l:
@@ -459,7 +463,7 @@ class Generator:
       cl = []
     else:
       cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
-    return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
+    return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_class (self, type_info):
     s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
     # declare
@@ -478,14 +482,14 @@ class Generator:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
+    c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
+    if ddc:
+      s += c
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB
-      c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
-      if ddc:
-        s += c
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_cast_types__();\n'
       s += '  template<class SmartHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
@@ -568,6 +572,19 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
+  def generate_aida_connection_impl (self, class_info):
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    s, classC = '', self.C (class_info)
+    if not ddc:
+      return s
+    s += 'Rapicorn::Aida::BaseConnection*\n'
+    s += '%s::__aida_connection__()\n{\n' % classC
+    if self.gen_mode == G4SERVANT:
+      s += '  return __AIDA_Local__::server_connection;\n'
+    else:
+      s += '  return __AIDA_Local__::client_connection;\n'
+    s += '}\n'
+    return s
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
@@ -594,12 +611,7 @@ class Generator:
     s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
     s += '  return %s();\n' % classH
     s += '}\n'
-    c  = 'Rapicorn::Aida::BaseConnection*\n'
-    c += '%s::__aida_connection__()\n{\n' % classH
-    c += '  return __AIDA_Local__::client_connection;\n'
-    c += '}\n'
-    if ddc:
-      s += c
+    s += self.generate_aida_connection_impl (class_info)
     s += 'const Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_cast_types__()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
@@ -651,6 +663,7 @@ class Generator:
     s += '%s\noperator->* (%s *obj, Rapicorn::Aida::_HandleType)\n{\n' % (classH, classC)
     s += '  return __AIDA_Local__::obj2smh<%s> (obj);\n' % classH
     s += '}\n'
+    s += self.generate_aida_connection_impl (class_info)
     s += 'void\n'
     s += '%s::_list_types (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)

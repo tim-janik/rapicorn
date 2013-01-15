@@ -11,18 +11,21 @@
 namespace Rapicorn {
 
 class ServerConnectionSource : public virtual EventLoop::Source {
+  static Aida::BaseConnection *connection_;
   const char             *WHERE;
-  Aida::ServerConnection &connection_;
   PollFD                  pollfd_;
   bool                    last_seen_primary_, need_check_primary_;
 public:
-  ServerConnectionSource (EventLoop &loop, Aida::ServerConnection &scon) :
+  ServerConnectionSource (EventLoop &loop) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
-    connection_ (scon), last_seen_primary_ (false), need_check_primary_ (false)
+    last_seen_primary_ (false), need_check_primary_ (false)
   {
+    assert (connection_ == NULL); // essentially allows only singletons
+    connection_ = ApplicationIface::__aida_connection__();
+    assert (connection_ != NULL); // essentially allows only singletons
     primary (false);
     loop.add (this, EventLoop::PRIORITY_NORMAL);
-    pollfd_.fd = connection_.notify_fd();
+    pollfd_.fd = connection_->notify_fd();
     pollfd_.events = PollFD::IN;
     pollfd_.revents = 0;
     add_poll (&pollfd_);
@@ -30,7 +33,7 @@ public:
   void
   wakeup () // allow external wakeups
   {
-    // FIXME: evil kludge, we're assuming Aida::ServerConnection.notify_fd() is an eventfd
+    // FIXME: evil kludge, we're assuming Aida::BaseConnection.notify_fd() is an eventfd
     eventfd_write (pollfd_.fd, 1);
   }
 private:
@@ -44,7 +47,7 @@ private:
   {
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
-    return need_check_primary_ || connection_.pending();
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -52,12 +55,12 @@ private:
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
     last_seen_primary_ = state.seen_primary;
-    return need_check_primary_ || connection_.pending();
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    connection_.dispatch();
+    connection_->dispatch();
     if (need_check_primary_)
       {
         need_check_primary_ = false;
@@ -75,9 +78,10 @@ private:
   }
 };
 
+Aida::BaseConnection *ServerConnectionSource::connection_ = NULL;
+
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Aida::ServerConnection *server_connection;
   Mutex mutex; Cond cond; ApplicationH app;
 };
 
@@ -88,12 +92,10 @@ class UIThread {
   pthread_mutex_t         thread_mutex_;
   volatile bool           running_;
   Initializer            *idata_;
-  Aida::ServerConnection &server_connection_;
   MainLoop               &main_loop_; // FIXME: non-NULL only while running
 public:
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
-    server_connection_ (*Aida::ObjectBroker::new_server_connection()),
     main_loop_ (*ref_sink (MainLoop::_new()))
   {
     main_loop_.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
@@ -132,7 +134,7 @@ private:
   ~UIThread ()
   {
     fatal ("UIThread singleton in dtor");
-    // FIXME: leaking ServerConnection ref count...
+    // FIXME: leaking ServerConnectionSource ref count...
   }
   void
   initialize ()
@@ -143,7 +145,7 @@ private:
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_, server_connection_));
+    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_));
     (void) server_source;
     // initialize sub systems
     struct InitHookCaller : public InitHook {
@@ -157,8 +159,6 @@ private:
     assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
-    // initialize uithread connection handling
-    uithread_serverglue (server_connection_);
     // Complete initialization by signalling caller
     idata_->mutex.lock();
     idata_->app = &ApplicationImpl::the()->*Aida::_handle;
