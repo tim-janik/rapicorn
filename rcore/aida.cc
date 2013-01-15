@@ -1163,8 +1163,8 @@ public:
 
 ServerConnectionImpl::ServerConnectionImpl ()
 {
-  instance2orbid (ptrdiff_t (0));                       // NULL instance mapping
-  assert (addr_vector.size() && addr_vector[0] == 0);
+  addr_map[0] = 0;                                      // lookiing up NULL yields uint64_t (0)
+  addr_vector.push_back (0);                            // orbid uint64_t (0) yields NULL
   register_connection();
 }
 
