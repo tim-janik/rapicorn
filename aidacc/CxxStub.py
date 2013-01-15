@@ -522,7 +522,6 @@ class Generator:
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
-      s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s&);\n' % self.C (type_info)
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s*);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
     else: # G4STUB
@@ -645,10 +644,6 @@ class Generator:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
-    s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s &obj)\n{\n' % classC
-    s += '  fb.add_object (__AIDA_Local__::obj2id (&obj));\n'
-    s += '}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  fb.add_object (__AIDA_Local__::obj2id (obj));\n'
@@ -971,7 +966,7 @@ class Generator:
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
     s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_, %s);\n' % digest
     s += '    fb <<= sp->handler_;\n'
-    ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
+    ident_type_args = [(('&arg_' if a[1].storage == Decls.INTERFACE else 'arg_')+ a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
