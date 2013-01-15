@@ -10,7 +10,6 @@
 
 namespace Rapicorn {
 
-Aida::ClientConnection* uithread_connection     (void); // Implemented in uithread.cc
 void                    uithread_shutdown       (void); // Implemented in uithread.cc
 void                    uithread_serverglue     (Aida::ServerConnection&); // Implemented in serverglue.cc
 int64                   client_app_test_hook    ();

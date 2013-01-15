@@ -91,14 +91,12 @@ class UIThread {
   Aida::ServerConnection &server_connection_;
   MainLoop               &main_loop_; // FIXME: non-NULL only while running
 public:
-  Aida::ClientConnection *client_connection_;
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
     server_connection_ (*Aida::ObjectBroker::new_server_connection()),
     main_loop_ (*ref_sink (MainLoop::_new()))
   {
     main_loop_.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
-    client_connection_ = Aida::ObjectBroker::new_client_connection();
   }
   bool  running() const { return running_; }
   void
@@ -200,12 +198,6 @@ public:
   }
 };
 static UIThread *the_uithread = NULL;
-
-Aida::ClientConnection*
-uithread_connection (void) // prototype in ui/internal.hh
-{
-  return the_uithread && the_uithread->running() ? the_uithread->client_connection_ : NULL;
-}
 
 MainLoop*
 uithread_main_loop ()

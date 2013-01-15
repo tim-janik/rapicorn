@@ -5,8 +5,6 @@
 
 namespace Rapicorn {
 
-static void       clientglue_setup      (Rapicorn::Aida::ClientConnection *connection);
-
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
 
@@ -40,8 +38,6 @@ init_app (const String       &app_ident,
   // boot up UI thread
   ApplicationH app = uithread_bootup (argcp, argv, args);
   assert (app._is_null() == false);
-  // initialize clientglue bits
-  clientglue_setup (uithread_connection());
   // assign global smart handle
   app_cached = app;
   return app_cached;
@@ -67,7 +63,7 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Rapicorn::Aida::ClientConnection &m_connection;
+  Rapicorn::Aida::BaseConnection &connection_;
   PollFD m_pfd;
   bool   last_seen_primary, need_check_primary;
   void
@@ -79,10 +75,10 @@ class AppSource : public EventLoop::Source {
       main_loop()->quit();
   }
 public:
-  AppSource (Rapicorn::Aida::ClientConnection &connection) :
-    m_connection (connection), last_seen_primary (false), need_check_primary (false)
+  AppSource (Rapicorn::Aida::BaseConnection &connection) :
+    connection_ (connection), last_seen_primary (false), need_check_primary (false)
   {
-    m_pfd.fd = m_connection.notify_fd();
+    m_pfd.fd = connection_.notify_fd();
     m_pfd.events = PollFD::IN;
     m_pfd.revents = 0;
     add_poll (&m_pfd);
@@ -93,7 +89,7 @@ public:
   prepare (const EventLoop::State &state,
            int64                  *timeout_usecs_p)
   {
-    return need_check_primary || m_connection.pending();
+    return need_check_primary || connection_.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -101,12 +97,12 @@ public:
     if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
-    return need_check_primary || m_connection.pending();
+    return need_check_primary || connection_.pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    m_connection.dispatch();
+    connection_.dispatch();
     if (need_check_primary)
       {
         need_check_primary = false;
@@ -126,9 +122,8 @@ public:
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Rapicorn::Aida::ClientConnection *clientglue_connection = NULL;
 class ConnectionContext {
-  // this should one day be linked with the server side connection and implement Aida::ClientConnection itself
+  // this should one day be linked with the server side connection and implement Aida::BaseConnection itself
   typedef std::map <Rapicorn::Aida::uint64_t, void*> ContextMap;
   ContextMap context_map;
 public:
@@ -154,7 +149,6 @@ connection_id2context (Rapicorn::Aida::uint64_t ipcid)
   return static_cast<Context*> (ctx);
 }
 
-#define AIDA_CONNECTION()       (*clientglue_connection)
 } // Anon
 
 // compile client-side API
@@ -165,18 +159,10 @@ connection_id2context (Rapicorn::Aida::uint64_t ipcid)
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {
-
-Rapicorn::Aida::ClientConnection*
-ApplicationH::ipc_connection()
-{
-  return &AIDA_CONNECTION();
-}
-
 MainLoop*
 ApplicationH::main_loop()
 {
   assert_return (the()._is_null() == false, NULL);
-  assert_return (clientglue_connection, NULL);
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;
@@ -186,7 +172,7 @@ ApplicationH::main_loop()
       ref_sink (mloop);
       slave = mloop->new_slave();
       ref_sink (slave);
-      source = new AppSource (*clientglue_connection);
+      source = new AppSource (*ApplicationHandle::__aida_connection__());
       ref_sink (source);
       slave->add (source);
       source->queue_check_primaries();
@@ -207,13 +193,6 @@ init_test_app (const String       &app_ident,
 {
   init_core_test (app_ident, argcp, argv, args);
   return init_app (app_ident, argcp, argv, args);
-}
-
-static void
-clientglue_setup (Rapicorn::Aida::ClientConnection *connection)
-{
-  assert_return (clientglue_connection == NULL);
-  clientglue_connection = connection;
 }
 
 /**

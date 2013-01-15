@@ -30,15 +30,16 @@ error (const char *format, ...)
 #endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
 
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-#endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
+static Rapicorn::Aida::ClientConnection *client_connection = NULL;
+static Rapicorn::Init init_client_connection ([]() {
+  client_connection = ObjectBroker::new_client_connection();
+});
+static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
+static bool          signal_disconnect (uint64_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
-                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, sh._orbid(), seh, data); }
+                                       { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
 static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const uint64_t orbid = __AIDA_Local__::smh2id (handle);
@@ -49,7 +50,7 @@ template<class SMH> SMH smh2cast (const SmartHandle &handle) {
 }
 static inline void add_header2 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
-                  AIDA_CONNECTION().connection_id(), h, l); }
+                  client_connection->connection_id(), h, l); }
 static inline void add_header1 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
 { fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l); }
 
@@ -1206,7 +1207,7 @@ FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const R
 Rapicorn::Aida::BaseConnection*
 FirstInterfaceHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 FirstInterfaceHandle::__aida_cast_types__()
@@ -1700,7 +1701,7 @@ UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rap
 Rapicorn::Aida::BaseConnection*
 UIWidgetAreaHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 UIWidgetAreaHandle::__aida_cast_types__()
@@ -1955,7 +1956,7 @@ ParentHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn:
 Rapicorn::Aida::BaseConnection*
 ParentHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 ParentHandle::__aida_cast_types__()
@@ -2203,7 +2204,7 @@ QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapic
 Rapicorn::Aida::BaseConnection*
 QuickIfaceHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 QuickIfaceHandle::__aida_cast_types__()
@@ -2267,7 +2268,7 @@ MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, co
 Rapicorn::Aida::BaseConnection*
 MethodTestInterfaceHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 MethodTestInterfaceHandle::__aida_cast_types__()
@@ -3021,7 +3022,7 @@ SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, co
 Rapicorn::Aida::BaseConnection*
 SignalTestInterfaceHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 SignalTestInterfaceHandle::__aida_cast_types__()
@@ -3194,7 +3195,7 @@ PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const R
 Rapicorn::Aida::BaseConnection*
 PropertyTesterHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 PropertyTesterHandle::__aida_cast_types__()
@@ -3568,7 +3569,7 @@ ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapic
 Rapicorn::Aida::BaseConnection*
 ButtonAreaHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 ButtonAreaHandle::__aida_cast_types__()
@@ -3718,7 +3719,7 @@ PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapi
 Rapicorn::Aida::BaseConnection*
 PureMethodsHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 PureMethodsHandle::__aida_cast_types__()
@@ -3808,7 +3809,7 @@ NameTestsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapico
 Rapicorn::Aida::BaseConnection*
 NameTestsHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 NameTestsHandle::__aida_cast_types__()
@@ -3879,7 +3880,7 @@ CompressorHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapic
 Rapicorn::Aida::BaseConnection*
 CompressorHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 CompressorHandle::__aida_cast_types__()
@@ -4002,7 +4003,7 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapi
 Rapicorn::Aida::BaseConnection*
 SoundModuleHandle::__aida_connection__()
 {
-  return &AIDA_CONNECTION();
+  return __AIDA_Local__::client_connection;
 }
 const Rapicorn::Aida::TypeHashList
 SoundModuleHandle::__aida_cast_types__()

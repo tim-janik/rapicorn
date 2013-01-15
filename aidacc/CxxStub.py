@@ -102,15 +102,16 @@ static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l,
 """
 
 clientcc_boilerplate = r"""
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-#endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
+static Rapicorn::Aida::ClientConnection *client_connection = NULL;
+static Rapicorn::Init init_client_connection ([]() {
+  client_connection = ObjectBroker::new_client_connection();
+});
+static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
+static bool          signal_disconnect (uint64_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
 static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
-                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, sh._orbid(), seh, data); }
+                                       { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
 static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const uint64_t orbid = __AIDA_Local__::smh2id (handle);
@@ -121,7 +122,7 @@ template<class SMH> SMH smh2cast (const SmartHandle &handle) {
 }
 static inline void add_header2 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
-                  AIDA_CONNECTION().connection_id(), h, l); }
+                  client_connection->connection_id(), h, l); }
 static inline void add_header1 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
 { fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l); }
 
@@ -595,7 +596,7 @@ class Generator:
     s += '}\n'
     c  = 'Rapicorn::Aida::BaseConnection*\n'
     c += '%s::__aida_connection__()\n{\n' % classH
-    c += '  return &AIDA_CONNECTION();\n'
+    c += '  return __AIDA_Local__::client_connection;\n'
     c += '}\n'
     if ddc:
       s += c

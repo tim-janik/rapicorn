@@ -78,7 +78,7 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   uint64 app_id = app._orbid();
   if (app_id == 0)
     ; // FIXME: throw exception
-  pyrope_connection = app.ipc_connection();
+  pyrope_connection = dynamic_cast<Aida::ClientConnection*> (app.__aida_connection__());
   atexit (shutdown_rapicorn_atexit);
   return PyLong_FromUnsignedLongLong (app_id);
 }
