@@ -469,8 +469,8 @@ class Generator:
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (precls) + '\n'
     s += '{\n'
     if self.gen_mode == G4STUB:
-      s += '  ' + self.F ('static %s' % classC) + '_cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
-      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '_type ();\n'
+      s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
+      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_type_hash__ ();\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVANT:
@@ -482,11 +482,13 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB
-      aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList') + '_down_cast_types();\n'
+      c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
+      if ddc:
+        s += c
+      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_cast_types__();\n'
       s += '  template<class SmartHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
-      s += '{ return smh._is_null() ? %s() : _cast (smh, smh._down_cast_types()); }\n' % classH
+      s += '{ return smh._is_null() ? %s() : __aida_cast__ (smh, smh.__aida_cast_types__()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -580,19 +582,25 @@ class Generator:
     s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
-    s += '%s::_type()\n{\n' % classH
+    s += '%s::__aida_type_hash__()\n{\n' % classH
     s += '  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (%s);\n' % self.class_digest (class_info)
     s += '  return type_hash;\n'
     s += '}\n'
-    s += '%s\n%s::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();\n'
+    s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
+    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type_hash__();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
     s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
     s += '  return %s();\n' % classH
     s += '}\n'
+    c  = 'Rapicorn::Aida::BaseConnection*\n'
+    c += '%s::__aida_connection__()\n{\n' % classH
+    c += '  return &AIDA_CONNECTION();\n'
+    c += '}\n'
+    if ddc:
+      s += c
     s += 'const Rapicorn::Aida::TypeHashList\n'
-    s += '%s::_down_cast_types()\n{\n' % classH
+    s += '%s::__aida_cast_types__()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
     s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
