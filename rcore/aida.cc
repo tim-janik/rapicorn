@@ -30,8 +30,6 @@
 #define AIDA_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } AIDA_CPP_PASTE2 (Aida_StaticAssertion_LINE, __LINE__)
 #define AIDA_STATIC_ASSERT(expr)                AIDA_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
-#define AIDA_THROW_IF_FAIL(expr)                do { if (AIDA_LIKELY (expr)) break; AIDA_THROW ("failed to assert (" + #expr + ")"); } while (0)
-#define AIDA_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
 namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
@@ -522,29 +520,18 @@ void
 FieldBuffer::check_internal ()
 {
   if (size() > capacity())
-    {
-      String msg = string_cprintf ("FieldBuffer(this=%p): capacity=%u size=%u",
-                                   this, capacity(), size());
-      throw std::out_of_range (msg);
-    }
+    error_printf ("FieldBuffer(this=%p): capacity=%u size=%u", this, capacity(), size());
 }
 
 void
 FieldReader::check_request (int type)
 {
   if (m_nth >= n_types())
-    {
-      String msg = string_cprintf ("FieldReader(this=%p): size=%u requested-index=%u",
-                                   this, n_types(), m_nth);
-      throw std::out_of_range (msg);
-    }
+    error_printf ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), m_nth);
   if (get_type() != type)
-    {
-      String msg = string_cprintf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
-                                   this, n_types(), m_nth,
-                                  FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
-      throw std::invalid_argument (msg);
-    }
+    error_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+                  this, n_types(), m_nth,
+                  FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
 }
 
 std::string
@@ -1029,7 +1016,7 @@ ClientConnectionImpl::dispatch ()
 FieldBuffer*
 ClientConnectionImpl::call_remote (FieldBuffer *fb)
 {
-  AIDA_THROW_IF_FAIL (fb != NULL);
+  assert (fb != NULL);
   // enqueue method call message
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
   const bool needsresult = Aida::msgid_has_result (msgid);
@@ -1284,7 +1271,7 @@ void
 ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
   ensure_dispatcher_map();
-  AIDA_THROW_IF_FAIL (dispatcher_map_frozen == false);
+  assert_return (dispatcher_map_frozen == false);
   pthread_mutex_lock (&dispatcher_mutex);
   DispatcherMap::size_type size_before = dispatcher_map->size();
   TypeHash typehash (mentry.hashhi, mentry.hashlo);
