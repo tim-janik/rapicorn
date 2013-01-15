@@ -852,7 +852,7 @@ public:
 
 // == BaseConnection ==
 #define MAX_CONNECTIONS         8       ///< Arbitrary limit that can be extended if needed
-static Atomic<BaseConnection*>  global_connections[MAX_CONNECTIONS];
+static Atomic<BaseConnection*>  global_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
 
 static void
 register_connection (uint *indexp, BaseConnection *con)
