@@ -616,7 +616,7 @@ class Generator:
     s += '%s::__aida_cast_types__()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
     s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.list_types_digest (class_info)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
@@ -703,7 +703,7 @@ class Generator:
     if hasret:  s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.method_digest (mtype)
     else:       s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     # call out
@@ -784,7 +784,7 @@ class Generator:
     s += q + ') const\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;\n'
     s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
@@ -803,7 +803,7 @@ class Generator:
       s += q + tname + ' value)\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
     s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
