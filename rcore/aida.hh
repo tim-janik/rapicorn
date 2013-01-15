@@ -438,16 +438,20 @@ public:
 /// Base connection context for ORB message exchange.
 class BaseConnection {
   uint          index_;
+  friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
   void                   register_connection  ();
   void                   unregister_connection();
-public:
   explicit               BaseConnection  ();
   virtual               ~BaseConnection  ();
-  virtual void           send_msg        (FieldBuffer*) = 0;    ///< Carry out a remote call syncronously, transfers memory.
-  uint                   connection_id   () const;              ///< Get unique conneciton ID (returns 0 if unregistered).
-  static BaseConnection* connection_from_id (uint id);          ///< Lookup for connection, used by ORB for message delivery.
+  virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  static BaseConnection* connection_from_id (uint id);  ///< Lookup for connection, used by ORB for message delivery.
+public:
+  uint                   connection_id      () const;   ///< Get unique conneciton ID (returns 0 if unregistered).
+  virtual int            notify_fd          () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool           pending            () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual void           dispatch           () = 0;     ///< Dispatch a single event if any is pending.
 };
 
 /// Function typoe for internal signal handling.
@@ -460,9 +464,6 @@ protected:
   /*ctor*/           ServerConnection ();
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
-  virtual int        notify_fd  () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool       pending    () = 0; ///< Indicate whether any incoming calls are pending that need to be dispatched.
-  virtual void       dispatch   () = 0; ///< Dispatch a single call if any is pending.
   virtual uint64_t   instance2orbid (ptrdiff_t) = 0;
   virtual ptrdiff_t  orbid2instance (uint64_t) = 0;
 protected: /// @name Registry for IPC method lookups
@@ -485,9 +486,6 @@ protected:
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  virtual int           notify_fd   () = 0;             ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool          pending     () = 0;             ///< Indicate whether any incoming events are pending that need to be dispatched.
-  virtual void          dispatch    () = 0;             ///< Dispatch a single event if any is pending.
 public: /// @name API for signal event handlers.
   virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (uint64_t signal_handler_id) = 0;
