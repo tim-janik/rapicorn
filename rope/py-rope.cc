@@ -10,9 +10,6 @@
 // --- Anonymous namespacing
 namespace {
 
-static Aida::ClientConnection *pyrope_connection;
-#define AIDA_CONNECTION()    (*pyrope_connection)
-
 // --- cpy2rope stubs (generated) ---
 #include "cpy2rope.cc"
 
@@ -39,7 +36,6 @@ shutdown_rapicorn_atexit (void)
 static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
-  assert_return (pyrope_connection == NULL, NULL);
   // parse args: application_name, cmdline_args
   const char *ns = NULL;
   unsigned int nl = 0;
@@ -78,7 +74,6 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   uint64 app_id = app._orbid();
   if (app_id == 0)
     ; // FIXME: throw exception
-  pyrope_connection = dynamic_cast<Aida::ClientConnection*> (app.__aida_connection__());
   atexit (shutdown_rapicorn_atexit);
   return PyLong_FromUnsignedLongLong (app_id);
 }
@@ -87,7 +82,7 @@ static PyObject*
 rope_event_fd (PyObject *self, PyObject *args)
 {
   PyObject *tuple = PyTuple_New (2);
-  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (AIDA_CONNECTION().notify_fd()));
+  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (__AIDA_local__client_connection->notify_fd()));
   PyTuple_SET_ITEM (tuple, 1, PyString_FromString ("i")); // POLLIN
   if (PyErr_Occurred())
     {
@@ -102,7 +97,7 @@ rope_event_check (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  bool hasevent = AIDA_CONNECTION().pending();
+  bool hasevent = __AIDA_local__client_connection->pending();
   PyObject *pybool = hasevent ? Py_True : Py_False;
   Py_INCREF (pybool);
   return pybool;
@@ -113,7 +108,7 @@ rope_event_dispatch (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  AIDA_CONNECTION().dispatch();
+  __AIDA_local__client_connection->dispatch();
   return PyErr_Occurred() ? NULL : None_INCREF();
 }
 

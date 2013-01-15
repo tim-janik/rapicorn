@@ -44,6 +44,11 @@ using ::uint64_t;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
 
+static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
+static Rapicorn::Init __AIDA_init__client_connection ([]() {
+  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection();
+});
+
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
@@ -154,10 +159,6 @@ __AIDA_pyfactory__create_from_orbid (const char *type_name, uint64_t orbid)
   }
   return result;
 }
-
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION() (*(Rapicorn::Aida::ClientConnection*)NULL)
-#endif
 """
 
 class Generator:
@@ -347,11 +348,11 @@ class Generator:
     s += '  if (callable == Py_None) {\n'
     s += '    PyObject *pyo = PyTuple_GET_ITEM (pyargs, 2);\n' # connection id for disconnect
     s += '    %s dc_id = PyIntLong_AsLongLong (pyo); ERRORifpy();\n' % u64
-    s += '    result = AIDA_CONNECTION().signal_disconnect (dc_id);\n'
+    s += '    result = __AIDA_local__client_connection->signal_disconnect (dc_id);\n'
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
@@ -377,7 +378,7 @@ class Generator:
     s += '  item_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     if hasret:
       s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
-      s += ' AIDA_CONNECTION().connection_id(), %s);\n' % self.method_digest (mtype)
+      s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % self.method_digest (mtype)
     else:
       s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY,'
       s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), %s);\n' % self.method_digest (mtype)
@@ -388,7 +389,7 @@ class Generator:
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
-    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
