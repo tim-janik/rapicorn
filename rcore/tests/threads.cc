@@ -17,6 +17,42 @@ template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
 namespace {
 using namespace Rapicorn;
 
+// == constexpr ctors ==
+// the following code checks constexpr initialization of types. these checks are run
+// before main(), so we have to roll our own assertion and cannot register a real test.
+#define QUICK_ASSERT(cond)      do {                                    \
+    if (cond) ; else { printerr ("\n%s:%d: assertion failed: %s\n", __FILE__, __LINE__, #cond); abort(); } \
+  } while (0)
+
+// demo to check for non-constexpr ctor behavior
+struct ComplexType { vector<int> v; int a; ComplexType (int a0) { v.push_back (a0); if (v.size()) a = a0; } };
+static ptrdiff_t    read_complex_int     ();
+static Init         complex_int_assert_0 ([]() { QUICK_ASSERT (read_complex_int() == 0); });    // first ctor, checks static mem (0)
+static ComplexType  complex_int          (1337);                                                // second ctor, assigns non-0
+static ptrdiff_t    read_complex_int     () { return complex_int.v.size() ? complex_int.a : 0; }
+static Init         complex_int_assert_1 ([]() { QUICK_ASSERT (read_complex_int() == 1337); }); // third ctor, checks non-0
+// check for constexpr ctor Atomic<int*>
+static ptrdiff_t    read_atomic_ptr     ();
+static Init         atomic_ptr_assert_0 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // first ctor, check constexpr mem
+static Atomic<int*> atomic_ptr          ((int*) 17);    // second ctor, constexpr affects static mem initialization
+static ptrdiff_t    read_atomic_ptr     () { return ptrdiff_t (atomic_ptr.load()); }
+static Init         atomic_ptr_assert_1 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // third ctor, runs last
+// check for constexpr ctor Atomic<ptrdiff_t>
+static ptrdiff_t    read_atomic_pdt     ();
+static Init         atomic_pdt_assert_0 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // first ctor, check constexpr mem
+static Atomic<int*> atomic_pdt          ((int*) 879);   // second ctor, constexpr affects static mem initialization
+static ptrdiff_t    read_atomic_pdt     () { return ptrdiff_t (atomic_pdt.load()); }
+static Init         atomic_pdt_assert_1 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // third ctor, runs last
+
+static void
+test_constexpr_ctors ()
+{
+  QUICK_ASSERT (read_complex_int() == 1337);
+  QUICK_ASSERT (read_atomic_ptr() == 17);
+  QUICK_ASSERT (read_atomic_pdt() == 879);
+}
+REGISTER_TEST ("Threads/Constexpr Constructors", test_constexpr_ctors);
+
 // == atomicity tests ==
 template<typename V> static void
 atomic_counter_func (Atomic<V> &ai, int niters, V d)

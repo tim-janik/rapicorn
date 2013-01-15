@@ -178,43 +178,43 @@ template<typename T> class Atomic;
 
 /// Atomic char type.
 template<> struct Atomic<char> : Lib::Atomic<char> {
-  Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
+  constexpr Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
   using Lib::Atomic<char>::operator=;
 };
 
 /// Atomic int8 type.
 template<> struct Atomic<int8> : Lib::Atomic<int8> {
-  Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
+  constexpr Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
   using Lib::Atomic<int8>::operator=;
 };
 
 /// Atomic uint8 type.
 template<> struct Atomic<uint8> : Lib::Atomic<uint8> {
-  Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
+  constexpr Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
   using Lib::Atomic<uint8>::operator=;
 };
 
 /// Atomic int32 type.
 template<> struct Atomic<int32> : Lib::Atomic<int32> {
-  Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
+  constexpr Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
   using Lib::Atomic<int32>::operator=;
 };
 
 /// Atomic uint32 type.
 template<> struct Atomic<uint32> : Lib::Atomic<uint32> {
-  Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
+  constexpr Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
   using Lib::Atomic<uint32>::operator=;
 };
 
 /// Atomic int64 type.
 template<> struct Atomic<int64> : Lib::Atomic<int64> {
-  Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
+  constexpr Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
   using Lib::Atomic<int64>::operator=;
 };
 
 /// Atomic uint64 type.
 template<> struct Atomic<uint64> : Lib::Atomic<uint64> {
-  Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
+  constexpr Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
   using Lib::Atomic<uint64>::operator=;
 };
 
