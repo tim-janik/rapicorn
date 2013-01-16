@@ -30,12 +30,6 @@ public:
     pollfd_.revents = 0;
     add_poll (&pollfd_);
   }
-  void
-  wakeup () // allow external wakeups
-  {
-    // FIXME: evil kludge, we're assuming Aida::BaseConnection.notify_fd() is an eventfd
-    eventfd_write (pollfd_.fd, 1);
-  }
 private:
   ~ServerConnectionSource ()
   {
