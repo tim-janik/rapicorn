@@ -126,39 +126,38 @@ class TypeInfo (BaseDecl):
     digest = self.string_digest()
     digest = re.sub ('[^a-zA-Z0-9]', '_', digest)
     return digest
-  def hash128digest (self, highnibble, prefix, postfix = ''):
-    sha256 = hashlib.sha256()
-    hash_feed = 'fc4676dd-248d-4958-a7fa-e170a4d8a68c | ' + prefix + ' | ' + self.string_digest() + postfix
+  def hash128digest (self, prefix, postfix = ''):
+    sha224 = hashlib.sha224()
+    hash_feed = '5e8398ff-75eb-466f-b256-213fc9de5b6e | ' + prefix + ' | ' + self.string_digest() + postfix
     # print >>sys.stderr, "HASH:", hash_feed
-    sha256.update (hash_feed)
-    hash120 = sha256.digest()[7:17] + sha256.digest()[26:31]
-    hash8 = (highnibble & 0xf0) + (ord (sha256.digest()[3]) & 0x0f)
-    return chr (hash8) + hash120
+    sha224.update (hash_feed)
+    hash128 = sha224.digest()[3:12] + sha224.digest()[16:23]
+    return hash128
   def type_hash (self):
     if self.storage == FUNC:
       if self.issignal:
-        highnibble, tag = 0x50, "sigcon"
+        tag = "sigcon"
       elif self.rtype.storage == VOID:
-        highnibble, tag = 0x20, "oneway"
+        tag = "oneway"
       else:
-        highnibble, tag = 0x30, "twoway"
+        tag = "twoway"
     else:
-      highnibble, tag = 0x00, "type"
-    bytes = self.hash128digest (highnibble, tag)
+      tag = "type"
+    bytes = self.hash128digest (tag)
     t = tuple ([ord (c) for c in bytes])
     return t
   def twoway_hash (self, special = ''):
-    highnibble, tag = 0x30, "twoway"
+    tag = "twoway"
     tag = '%s/%s' % (tag, special) if special else tag
-    bytes = self.hash128digest (highnibble, tag)
+    bytes = self.hash128digest (tag)
     return tuple ([ord (c) for c in bytes])
   def property_hash (self, field, setter):
     if setter:
-      highnibble, tag = 0x20, "setter" # oneway
+      tag = "setter" # oneway
     else:
-      highnibble, tag = 0x30, "getter" # twoway
+      tag = "getter" # twoway
     postfix = '::' + field[0] + ' ' + field[1].full_name()
-    bytes = self.hash128digest (highnibble, tag, postfix)
+    bytes = self.hash128digest (tag, postfix)
     t = tuple ([ord (c) for c in bytes])
     return t
   def clone (self, newname, isimpl):

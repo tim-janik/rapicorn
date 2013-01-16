@@ -420,16 +420,36 @@ struct OrbObjectImpl : public OrbObject {
 static const OrbObjectImpl aida_orb_object_null (0);
 
 // == SmartHandle ==
+static OrbObject* smart_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
+
 SmartHandle::SmartHandle (OrbObject &orbo) :
   orbo_ (&orbo)
 {
   assert (&orbo);
-  assert (0 != _orbid());
 }
 
 SmartHandle::SmartHandle() :
-  orbo_ (&const_cast<OrbObjectImpl&> (aida_orb_object_null))
+  orbo_ (smart_handle_null_orb_object())
 {}
+
+void
+SmartHandle::reset ()
+{
+  if (orbo_ != smart_handle_null_orb_object())
+    {
+      orbo_ = smart_handle_null_orb_object();
+    }
+}
+
+void
+SmartHandle::assign (const SmartHandle &src)
+{
+  if (orbo_ == src.orbo_)
+    return;
+  if (!_is_null())
+    reset();
+  orbo_ = src.orbo_;
+}
 
 SmartHandle::~SmartHandle()
 {}
@@ -448,7 +468,7 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.orbo_ = orbo;
+  sh.assign (SmartHandle (*orbo));
 }
 
 void
@@ -462,7 +482,7 @@ ObjectBroker::dup_handle (const ptrdiff_t fake[2], SmartHandle &sh)
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.orbo_ = orbo;
+  sh.assign (SmartHandle (*orbo));
 }
 
 // == FieldBuffer ==
@@ -597,20 +617,20 @@ FieldBuffer*
 FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
-  FieldBuffer *fr = FieldBuffer::_new (2 + 2);
+  FieldBuffer *fr = FieldBuffer::_new (3 + 2);
   const uint64_t MSGID_ERROR = 0x8000000000000000ULL;
-  fr->add_msgid (MSGID_ERROR, 0);
+  fr->add_header (MSGID_ERROR, 0, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
 }
 
 FieldBuffer*
-FieldBuffer::new_result (uint32_t n)
+FieldBuffer::new_result (uint64_t h, uint64_t l, uint32_t n)
 {
-  FieldBuffer *fr = FieldBuffer::_new (2 + n);
+  FieldBuffer *fr = FieldBuffer::_new (3 + n);
   const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
-  fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
+  fr->add_header (MSGID_RESULT_MASK, 0, h, l);
   return fr;
 }
 
@@ -840,7 +860,7 @@ ClientConnection::dispatch ()
   return_if (fb == NULL);
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t  hashlow = fbr.pop_int64();
+  const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
   if (msgid_is_event (msgid))
     {
       const uint64_t handler_id = fbr.pop_int64();
@@ -853,6 +873,7 @@ ClientConnection::dispatch ()
             {
               FieldReader frr (*fr);
               const MessageId retid = MessageId (frr.pop_int64());
+              frr.skip(); // msgid high
               frr.skip(); // msgid low
               if (msgid_is_error (retid))
                 {
@@ -876,7 +897,7 @@ ClientConnection::dispatch ()
         warning_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id);
     }
   else
-    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+    warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
   delete fb;
 }
 
@@ -923,7 +944,7 @@ ClientConnection::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t handle_id
   SignalHandler *shandler = new SignalHandler;
   shandler->hhi = hhi;
   shandler->hlo = hlo;
-  shandler->oid = handle_id;
+  shandler->oid = handle_id;                    // emitting object
   shandler->cid = 0;
   shandler->seh = seh;
   shandler->data = data;
@@ -931,15 +952,15 @@ ClientConnection::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t handle_id
   const uint64_t handler_id = ptrdiff_t (shandler);
   signal_handler_map_[handler_id] = shandler;
   pthread_spin_unlock (&signal_spin_);
-  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
-  fb.add_msgid (shandler->hhi, shandler->hlo);  // message id
+  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
+  fb.add_header (Rapicorn::Aida::MSGID_SIGCON, 0, shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
   Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
   Aida::FieldReader frr (*connection_result);
-  frr.skip_msgid();             // FIXME: check for signal id
+  frr.skip_header();
   pthread_spin_lock (&signal_spin_);
   frr >>= shandler->cid;
   pthread_spin_unlock (&signal_spin_);
@@ -961,8 +982,8 @@ ClientConnection::signal_disconnect (uint64_t signal_handler_id)
     }
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
-  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (2 + 1 + 2);
-  fb.add_msgid (shandler->hhi, shandler->hlo);  // message id
+  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
+  fb.add_header (Rapicorn::Aida::MSGID_SIGCON, 0, shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
@@ -1075,7 +1096,7 @@ ServerConnectionImpl::ServerConnector::call_remote (FieldBuffer *fb) // Connecto
       if (Aida::msgid_is_error (retid))
         {
           FieldReader fbr (*fr);
-          fbr.skip_msgid();
+          fbr.skip_header();
           std::string msg = fbr.pop_string();
           std::string dom = fbr.pop_string();
           warning_printf ("%s: %s", dom.c_str(), msg.c_str());
@@ -1097,28 +1118,29 @@ ServerConnectionImpl::dispatch ()
     return;
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t  hashlow = fbr.pop_int64();
+  const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
   const bool needsresult = msgid_has_result (msgid);
   struct Wrapper : ServerConnection { using ServerConnection::find_method; };
-  const DispatchFunc method = Wrapper::find_method (msgid, hashlow);
+  const DispatchFunc method = Wrapper::find_method (hashhigh, hashlow);
   FieldBuffer *fr = NULL;
   if (method)
     {
+      fbr.reset (*fb);
       fr = method (fbr);
       const MessageId retid = MessageId (fr ? fr->first_id() : 0);
       if (fr && (!needsresult || !msgid_is_result (retid)))
         {
-          warning_printf ("bogus result from method (%016lx%016llx): id=%016lx", msgid, hashlow, retid);
+          warning_printf ("bogus result from method (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
           delete fr;
           fr = NULL;
         }
     }
   else
-    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+    warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
   delete fb;
   if (needsresult)
     {
-      client_queue_.send_msg (fr ? fr : FieldBuffer::new_result(), false);
+      client_queue_.send_msg (fr ? fr : FieldBuffer::new_result (hashhigh, hashlow), false);
       notify_for_result();
     }
 }

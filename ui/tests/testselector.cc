@@ -374,14 +374,15 @@ test_query (ItemIface *iroot, const String &selector, ssize_t n, const String &t
   TASSERT (root != NULL);
 
   const char *l;
-  vector<ItemIface*> items;
+  ItemSeq itseq;
   ItemIface *qitem = NULL;
   switch (QUERY)
     {
     case UNIQUE: l = "UNIQUE"; qitem = root->query_selector_unique (selector); break;
     case FIRST:  l = "FIRST";  qitem = root->query_selector (selector); break;
-    case ALL:    l = "ALL";    items = root->query_selector_all (selector); break;
+    case ALL:    l = "ALL";    itseq = root->query_selector_all (selector); break;
     }
+  ItemIfaceVector items (itseq);
   if (qitem)
     items.push_back (qitem);
 

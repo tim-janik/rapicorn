@@ -219,14 +219,14 @@ DrawableImpl::size_request (Requisition &requisition)
 void
 DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  m_pixbuf = PixbufImpl();
+  m_pixbuf = Pixbuf();
   m_x = 0;
   m_y = 0;
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }
 
 void
-DrawableImpl::draw_rect (int x, int y, const PixbufImpl &pixbuf)
+DrawableImpl::draw_rect (int x, int y, const Pixbuf &pixbuf)
 {
   const Allocation &area = allocation();
   const size_t rowstride = pixbuf.width();
@@ -241,7 +241,7 @@ DrawableImpl::draw_rect (int x, int y, const PixbufImpl &pixbuf)
     }
   else if (m_pixbuf.width() > 0)
     {
-      m_pixbuf = PixbufImpl();
+      m_pixbuf = Pixbuf();
       m_x = 0;
       m_y = 0;
     }

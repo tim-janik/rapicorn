@@ -4,6 +4,7 @@
 
 includes:
 #include <ui/utilities.hh>
+#include <ui/clientapi.hh>
 namespace Rapicorn {
 using Aida::Any;
 class ItemImpl;
@@ -14,12 +15,12 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:StringSeq:
-  explicit StringSeqImpl () {}
-  /*ctor*/ StringSeqImpl (const std::vector<std::string> &strv) : Sequence (strv) {}
+  explicit StringSeq () {}
+  /*ctor*/ StringSeq (const std::vector<std::string> &strv) : Sequence (strv) {}
 
 class_scope:Pixbuf:
   /// Construct Pixbuf at given width and height.
-  explicit        PixbufImpl   (uint w, uint h) : row_length (0) { pixels.resize (w, h); }
+  explicit        Pixbuf   (uint w, uint h) : row_length (0) { pixels.resize (w, h); }
   /// Reset width and height and resize pixel sequence.
   void            resize       (uint w, uint h) { row_length = w; pixels.resize (row_length * h); }
   /// Access row as endian dependant ARGB integers.
@@ -59,5 +60,5 @@ IGNORE: // close last _scope
 }; // close dummy class scope
 
 global_scope:
-#define RAPICORN_PIXBUF_TYPE    Rapicorn::PixbufImpl
+// #define RAPICORN_PIXBUF_TYPE    Rapicorn::Pixbuf
 #include <ui/pixmap.hh>

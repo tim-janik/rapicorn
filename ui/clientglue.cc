@@ -267,4 +267,10 @@ ApplicationH::shutdown()
   uithread_shutdown();
 }
 
+int64
+client_app_test_hook ()
+{
+  return ApplicationH::the().test_hook();
+}
+
 } // Rapicorn

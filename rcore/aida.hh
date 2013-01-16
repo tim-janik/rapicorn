@@ -253,7 +253,9 @@ class SmartHandle {
   OrbObject     *orbo_;
   template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
-  friend class ObjectBroker;
+  friend  class ObjectBroker;
+  void    assign (const SmartHandle&);
+  void    reset ();
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
@@ -265,6 +267,19 @@ public:
   virtual                  ~SmartHandle ();
   static NullHandle         _null_handle()       { return NullHandle(); }
 };
+
+// == SmartMember ==
+template<class SmartHandle>
+class SmartMember : public SmartHandle {
+public:
+  inline   SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
+  explicit SmartMember () : SmartHandle() {}
+  void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
+};
+
+// == Conversion Type Tags ==
+constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from smart handle.
+constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {
@@ -316,7 +331,7 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64_t objid)  { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
-  inline void add_msgid  (uint64_t h, uint64_t l) { add_int64 (h); add_int64 (l); }
+  inline void add_header (uint64_t t, uint64_t o, uint64_t h, uint64_t l) { add_int64 (t | o); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32_t nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint32_t nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
@@ -325,7 +340,7 @@ public:
   static String       type_name (int field_type);
   static FieldBuffer* _new (uint32_t _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (uint32_t n = 1);
+  static FieldBuffer* new_result (uint64_t h, uint64_t l, uint32_t n = 1);
   inline void operator<<= (size_t v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64_t v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (int64_t  v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -360,7 +375,7 @@ public:
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint32_t           remaining  () { return n_types() - m_nth; }
   inline void               skip       () { if (AIDA_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
-  inline void               skip_msgid () { skip(); skip(); }
+  inline void               skip_header () { skip(); skip(); skip(); }
   inline uint32_t           n_types    () { return m_fb->size(); }
   inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
   inline int64_t            get_bool   () { FieldUnion &u = fb_getu (BOOL); return u.vint64; }

@@ -715,6 +715,6 @@ PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
 }
 
 // Explicitely force instantiation and compilation of this template
-template class PixmapT<RAPICORN_PIXBUF_TYPE>; // Instantiates client-side for PixbufStruct and server-side for PixbufImpl
+template class PixmapT<RAPICORN_PIXBUF_TYPE>; // Instantiates client-side for PixbufStruct and server-side for Pixbuf
 
 } // Rapicorn

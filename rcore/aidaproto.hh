@@ -9,8 +9,8 @@ field_buffer_emit_signal (const Aida::FieldBuffer &fb,
 {
   const size_t NARGS = 2;
   Aida::FieldReader fbr (fb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.skip();       // skip handler_id
+  fbr.skip_header();
+  fbr.skip();      // skip handler_id
   if (AIDA_UNLIKELY (fbr.remaining() != NARGS))
     Aida::error_printf ("invalid number of signal arguments");
   typename ValueType<A1>::T a1; typename ValueType<A2>::T a2;

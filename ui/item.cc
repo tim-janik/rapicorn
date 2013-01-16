@@ -317,7 +317,10 @@ ItemImpl::query_selector_all (const String &selector)
   vector<ItemImpl*> result = Selector::Matcher::query_selector_all (selector, *this);
   ItemSeq items;
   for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
-    items.push_back (*it);
+    {
+      ItemHandle ih = *it->*Aida::_handle;
+      items.push_back (ih);
+    }
   return items;
 }
 
@@ -1513,6 +1516,22 @@ ItemImpl::RenderContext::~RenderContext()
       cairo_surface_destroy (surfaces.back());
       surfaces.pop_back();
     }
+}
+
+// == ItemIfaceVector ==
+ItemIfaceVector::ItemIfaceVector (const ItemSeq &itemseq)
+{
+  for (auto it : itemseq)
+    push_back (it->*Aida::_servant);
+}
+
+ItemSeq
+ItemIfaceVector::to_item_seq () const
+{
+  ItemSeq itseq;
+  for (auto it : *this)
+    itseq.push_back (it->*Aida::_handle);
+  return itseq;
 }
 
 } // Rapicorn

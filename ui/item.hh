@@ -329,6 +329,14 @@ private:
 inline bool operator== (const ItemImpl &item1, const ItemImpl &item2) { return &item1 == &item2; }
 inline bool operator!= (const ItemImpl &item1, const ItemImpl &item2) { return &item1 != &item2; }
 
+// == ItemIfaceVector ==
+struct ItemIfaceVector : public std::vector<ItemIface*> {
+  explicit ItemIfaceVector (const ItemSeq &itemseq);
+  /*ctor*/ ItemIfaceVector () {}
+  ItemSeq  to_item_seq     () const;
+};
+
+// == Implementations ==
 template<class C> typename ItemImpl::InterfaceMatch<C>::Result
 ItemImpl::interface (const String         &ident,
                      const std::nothrow_t &nt) const

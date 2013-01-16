@@ -22,5 +22,5 @@ uithread_serverglue (Rapicorn::Aida::ServerConnection &connection)
 // compile server-side API
 #include "serverapi.cc"
 
-// compile server-side Pixmap<PixbufImpl> template
+// compile server-side Pixmap<Pixbuf> template
 #include "pixmap.cc"

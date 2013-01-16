@@ -27,7 +27,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
   const uint64_t msgid = frr.pop_int64();
-  frr.pop_int64(); // hashl
+  frr.skip(); frr.skip(); // hashhigh hashlow
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
@@ -1018,9 +1018,9 @@ static PyObject*
 _aida_rpc_MandatoryNamespace__FirstInterface__void_func_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1035,16 +1035,16 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__simple_method_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3a2f8d1c42ac1785ULL, 0x58b20fa269c0bd5eULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1060,9 +1060,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3ea3da9f2d46a894ULL, 0xa37baf774b855c65ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1071,7 +1071,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject *pyse
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1087,9 +1087,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x323870aec608428aULL, 0x3e4eb826e4565354ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1098,7 +1098,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject *pys
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1114,9 +1114,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x372d3445333b29d9ULL, 0x2a1b6a54e409ca63ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1127,7 +1127,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyObject
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1143,9 +1143,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3a5296dee6dca6f6ULL, 0xbe00f1270b1a7a1cULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1156,7 +1156,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (PyObjec
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1172,9 +1172,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_int32_String_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 6), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3da25289fcf7fe26ULL, 0xf2dfa2d031dd302cULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 6), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 6) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // b
@@ -1193,7 +1193,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_in
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1209,9 +1209,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3b4bb0d6b3f38abdULL, 0x80e1a7b9347c576aULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // ba1
@@ -1222,7 +1222,7 @@ _aida_rpc_InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWi
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1238,9 +1238,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__void_method_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1255,16 +1255,16 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__on_click2out_String (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3550e7348466c129ULL, 0x1ea5baf75297246fULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
     }
@@ -1280,9 +1280,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__UIWidgetArea__on_click2in_void_String (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x24ee88e59b05bae4ULL, 0x879ebaad31e6d20eULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // command
@@ -1325,7 +1325,7 @@ _aida_marshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself,
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL, oid, __AIDA_pyemit__UIWidgetArea__void_signal, callable);
+    result = AIDA_CONNECTION().signal_connect (0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, oid, __AIDA_pyemit__UIWidgetArea__void_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1335,11 +1335,11 @@ __AIDA_pyemit__UIWidgetArea__sample_signal (Rapicorn::Aida::ClientConnection &ai
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 2;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_PyObject_4uint64 ("UIWidgetArea", fbr.pop_object()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -1367,7 +1367,7 @@ _aida_marshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTest
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x506409a3044ac65eULL, 0xda804abb85f8c1e8ULL, oid, __AIDA_pyemit__UIWidgetArea__sample_signal, callable);
+    result = AIDA_CONNECTION().signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, oid, __AIDA_pyemit__UIWidgetArea__sample_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1376,9 +1376,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__QuickIface__simple_function_void_int32 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x2b860359fa7e3dceULL, 0x198d5fe242474308ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // i
@@ -1395,9 +1395,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_void_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 0), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb
@@ -1412,9 +1412,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1425,7 +1425,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool 
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_bool()); ERRORifpy ();
     }
@@ -1441,9 +1441,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_int32 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3c7dd838073a8a92ULL, 0xddd57eef6f36ab11ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1454,7 +1454,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_in
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
     }
@@ -1470,9 +1470,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_int64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x394bb1c2a7be91fbULL, 0x3f077bb42a25d6e4ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1483,7 +1483,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_in
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
     }
@@ -1499,9 +1499,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x368776130b055120ULL, 0x64281c55fbfe5bb9ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1512,7 +1512,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_floats_float64_float6
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
     }
@@ -1528,9 +1528,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_string_String_String_String (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x378c9594060f2266ULL, 0x5331c53659132c99ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1541,7 +1541,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_string_String_String_
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
     }
@@ -1557,9 +1557,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1570,7 +1570,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
     }
@@ -1586,9 +1586,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1599,7 +1599,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = aida_pyQuickRecord_proto_pop (frr); ERRORif (!pyfoR);
     }
@@ -1615,9 +1615,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1628,7 +1628,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTes
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = aida_pyQuickSequence_proto_pop (frr); ERRORif (!pyfoR);
     }
@@ -1644,9 +1644,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x34619983babcee5bULL, 0x9875f78f28f381b7ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1657,7 +1657,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTe
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = aida_PyObject_4uint64 ("GrandChild", frr.pop_object()); ERRORifpy();
     }
@@ -1673,9 +1673,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x362c672843766d85ULL, 0x6ed30851db440471ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1686,7 +1686,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any (PyO
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = __aida_pyany_from_any (frr.pop_any()); ERRORifpy();
     }
@@ -1702,9 +1702,9 @@ static PyObject*
 _aida_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1715,7 +1715,7 @@ _aida_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = aida_PyObject_4uint64 ("QuickIface", frr.pop_object()); ERRORifpy();
     }
@@ -1757,7 +1757,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL, oid, __AIDA_pyemit__SignalTestInterface__void_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, oid, __AIDA_pyemit__SignalTestInterface__void_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1792,7 +1792,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL, oid, __AIDA_pyemit__SignalTestInterface__bool_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, oid, __AIDA_pyemit__SignalTestInterface__bool_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1827,7 +1827,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__int32_result_int32 (PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x503a5722f565a9faULL, 0x0c5aed4d39b9ca12ULL, oid, __AIDA_pyemit__SignalTestInterface__int32_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, oid, __AIDA_pyemit__SignalTestInterface__int32_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1862,7 +1862,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__int64_result_int64 (PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5670d5594a24b2d9ULL, 0x8ad93cc1a1e9bb50ULL, oid, __AIDA_pyemit__SignalTestInterface__int64_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, oid, __AIDA_pyemit__SignalTestInterface__int64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1897,7 +1897,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__float64_result_float64 (PyOb
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x51aee1ad06b0e2ffULL, 0x0a7f816f9bdaf008ULL, oid, __AIDA_pyemit__SignalTestInterface__float64_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, oid, __AIDA_pyemit__SignalTestInterface__float64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1932,7 +1932,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__string_result_String (PyObje
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5daa2a4439deab5fULL, 0xc0580f71a4d7d1d6ULL, oid, __AIDA_pyemit__SignalTestInterface__string_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, oid, __AIDA_pyemit__SignalTestInterface__string_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1967,7 +1967,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL, oid, __AIDA_pyemit__SignalTestInterface__enum_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, oid, __AIDA_pyemit__SignalTestInterface__enum_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2002,7 +2002,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL, oid, __AIDA_pyemit__SignalTestInterface__record_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, oid, __AIDA_pyemit__SignalTestInterface__record_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2037,7 +2037,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTes
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2072,7 +2072,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL, oid, __AIDA_pyemit__SignalTestInterface__interface_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, oid, __AIDA_pyemit__SignalTestInterface__interface_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2107,7 +2107,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__any_result_Any (PyObject *py
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5ae2293e0b4f9854ULL, 0xbb549e7d52c43e50ULL, oid, __AIDA_pyemit__SignalTestInterface__any_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x296163d4220985ceULL, 0x40daacab4a841093ULL, oid, __AIDA_pyemit__SignalTestInterface__any_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2142,7 +2142,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL, oid, __AIDA_pyemit__SignalTestInterface__self_result, callable);
+    result = AIDA_CONNECTION().signal_connect (0x35828273200534f7ULL, 0x72873f1374d6093bULL, oid, __AIDA_pyemit__SignalTestInterface__self_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2177,7 +2177,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pys
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL, oid, __AIDA_pyemit__SignalTestInterface__void_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, oid, __AIDA_pyemit__SignalTestInterface__void_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2187,11 +2187,11 @@ __AIDA_pyemit__SignalTestInterface__bool_arg (Rapicorn::Aida::ClientConnection &
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyLong_FromLongLong (fbr.pop_bool()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2217,7 +2217,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL, oid, __AIDA_pyemit__SignalTestInterface__bool_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, oid, __AIDA_pyemit__SignalTestInterface__bool_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2227,11 +2227,11 @@ __AIDA_pyemit__SignalTestInterface__int32_arg (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2257,7 +2257,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__int32_arg_void_int32 (PyObje
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x583ed84bd4d820efULL, 0x87214001f1934890ULL, oid, __AIDA_pyemit__SignalTestInterface__int32_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, oid, __AIDA_pyemit__SignalTestInterface__int32_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2267,11 +2267,11 @@ __AIDA_pyemit__SignalTestInterface__int64_arg (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2297,7 +2297,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__int64_arg_void_int64 (PyObje
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5d6ed628b051e336ULL, 0x442670f1eba34b7bULL, oid, __AIDA_pyemit__SignalTestInterface__int64_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, oid, __AIDA_pyemit__SignalTestInterface__int64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2307,11 +2307,11 @@ __AIDA_pyemit__SignalTestInterface__float64_arg (Rapicorn::Aida::ClientConnectio
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2337,7 +2337,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__float64_arg_void_float64 (Py
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5d937b3a9a059ff0ULL, 0x641851b425c3f91cULL, oid, __AIDA_pyemit__SignalTestInterface__float64_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, oid, __AIDA_pyemit__SignalTestInterface__float64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2347,11 +2347,11 @@ __AIDA_pyemit__SignalTestInterface__string_arg (Rapicorn::Aida::ClientConnection
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyString_From_std_string (fbr.pop_string()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2377,7 +2377,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__string_arg_void_String (PyOb
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x524e550794aaa1e8ULL, 0x093b71ccace2863bULL, oid, __AIDA_pyemit__SignalTestInterface__string_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, oid, __AIDA_pyemit__SignalTestInterface__string_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2387,11 +2387,11 @@ __AIDA_pyemit__SignalTestInterface__enum_arg (Rapicorn::Aida::ClientConnection &
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = PyLong_FromLongLong (fbr.pop_evalue()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2417,7 +2417,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL, oid, __AIDA_pyemit__SignalTestInterface__enum_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, oid, __AIDA_pyemit__SignalTestInterface__enum_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2427,11 +2427,11 @@ __AIDA_pyemit__SignalTestInterface__record_arg (Rapicorn::Aida::ClientConnection
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_pyQuickRecord_proto_pop (fbr); ERRORif (!item);
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2457,7 +2457,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTes
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL, oid, __AIDA_pyemit__SignalTestInterface__record_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, oid, __AIDA_pyemit__SignalTestInterface__record_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2467,11 +2467,11 @@ __AIDA_pyemit__SignalTestInterface__sequence_arg (Rapicorn::Aida::ClientConnecti
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_pyQuickSequence_proto_pop (fbr); ERRORif (!item);
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2497,7 +2497,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceT
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2507,11 +2507,11 @@ __AIDA_pyemit__SignalTestInterface__interface_arg (Rapicorn::Aida::ClientConnect
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_PyObject_4uint64 ("GrandChild", fbr.pop_object()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2537,7 +2537,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, oid, __AIDA_pyemit__SignalTestInterface__interface_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, oid, __AIDA_pyemit__SignalTestInterface__interface_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2547,11 +2547,11 @@ __AIDA_pyemit__SignalTestInterface__any_arg (Rapicorn::Aida::ClientConnection &a
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = __aida_pyany_from_any (fbr.pop_any()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2577,7 +2577,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__any_arg_void_Any (PyObject *
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x51355ac177cc776eULL, 0x8b062ce8d8442de0ULL, oid, __AIDA_pyemit__SignalTestInterface__any_arg, callable);
+    result = AIDA_CONNECTION().signal_connect (0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, oid, __AIDA_pyemit__SignalTestInterface__any_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2587,11 +2587,11 @@ __AIDA_pyemit__SignalTestInterface__self_args (Rapicorn::Aida::ClientConnection 
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 1;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_PyObject_4uint64 ("SignalTestInterface", fbr.pop_object()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
@@ -2617,7 +2617,7 @@ _aida_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTest
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, oid, __AIDA_pyemit__SignalTestInterface__self_args, callable);
+    result = AIDA_CONNECTION().signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, oid, __AIDA_pyemit__SignalTestInterface__self_args, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2627,11 +2627,11 @@ __AIDA_pyemit__ChildInheritingSignals__child_signal (Rapicorn::Aida::ClientConne
 {
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
-  FieldReader fbr (*sfb);
-  fbr.skip_msgid(); // FIXME: check msgid
-  fbr.pop_int64();  // skip handler_id
   const uint length = 6;
   PyObject *result = NULL, *tuple = PyTuple_New (length), *item;
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
   item = aida_PyObject_4uint64 ("ChildInheritingSignals", fbr.pop_object()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   item = aida_PyObject_4uint64 ("SignalTestInterface", fbr.pop_object()); ERRORifpy();
@@ -2667,7 +2667,7 @@ _aida_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5ffad83b68b79139ULL, 0x7175e65d7705749fULL, oid, __AIDA_pyemit__ChildInheritingSignals__child_signal, callable);
+    result = AIDA_CONNECTION().signal_connect (0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, oid, __AIDA_pyemit__ChildInheritingSignals__child_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2702,7 +2702,7 @@ _aida_marshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *pyse
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x5ed315978fdefdcaULL, 0x9efe9e4845d8907eULL, oid, __AIDA_pyemit__ButtonArea__check_activate, callable);
+    result = AIDA_CONNECTION().signal_connect (0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, oid, __AIDA_pyemit__ButtonArea__check_activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2737,7 +2737,7 @@ _aida_marshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself, Py
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = AIDA_CONNECTION().signal_connect (0x57905c3b089b970eULL, 0x3774e2d97c70a48fULL, oid, __AIDA_pyemit__ButtonArea__activate, callable);
+    result = AIDA_CONNECTION().signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, oid, __AIDA_pyemit__ButtonArea__activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2746,9 +2746,9 @@ static PyObject*
 _aida_rpc_RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 1), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x3e0c1c388c4a51a1ULL, 0x5f146e2e050f17e1ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // f
@@ -2757,7 +2757,7 @@ _aida_rpc_RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObject *py
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
+    frr.skip_header();
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
     }
@@ -2773,9 +2773,9 @@ static PyObject*
 _aida_rpc_Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 3), &fb = *fm, *fr = NULL;
-  fb.add_msgid (0x211a5debfd86209cULL, 0x3ff87e4a8201e492ULL);
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 3), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 3) ERRORpy ("Aida: wrong number of arguments");
+  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__aida__object__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 1); // qr

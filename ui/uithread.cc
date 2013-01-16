@@ -8,10 +8,6 @@
 #include <deque>
 #include <set>
 
-namespace { // Anon
-static void wrap_test_runner  (void);
-} // Anon
-
 namespace Rapicorn {
 
 class ServerConnectionSource : public virtual EventLoop::Source {
@@ -251,6 +247,8 @@ uithread_uncancelled_atexit()
     }
 }
 
+static void wrap_test_runner (void);
+
 uint64
 uithread_bootup (int *argcp, char **argv, const StringVector &args)
 {
@@ -279,8 +277,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
 
 #include <rcore/testutils.hh>
 
-namespace { // Anon
-using namespace Rapicorn;
+namespace Rapicorn {
 
 // === UI-Thread Syscalls ===
 struct Callable {
@@ -290,10 +287,19 @@ struct Callable {
 static std::deque<Callable*> syscall_queue;
 static Mutex                 syscall_mutex;
 
-static Aida::FieldBuffer*
-ui_thread_syscall_twoway (Aida::FieldReader &fbr)
+static int64
+ui_thread_syscall (Callable *callable)
 {
-  Aida::FieldBuffer &rb = *Aida::FieldBuffer::new_result();
+  syscall_mutex.lock();
+  syscall_queue.push_back (callable);
+  syscall_mutex.unlock();
+  const int64 result = client_app_test_hook();
+  return result;
+}
+
+int64
+server_app_test_hook()
+{
   int64 result = -1;
   syscall_mutex.lock();
   while (syscall_queue.size())
@@ -306,31 +312,6 @@ ui_thread_syscall_twoway (Aida::FieldReader &fbr)
       syscall_mutex.lock();
     }
   syscall_mutex.unlock();
-  rb.add_int64 (result);
-  return &rb;
-}
-
-static const Aida::ServerConnection::MethodEntry ui_thread_call_entries[] = {
-  { Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
-};
-static Aida::ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
-
-static int64
-ui_thread_syscall (Callable *callable)
-{
-  Aida::FieldBuffer *fb = Aida::FieldBuffer::_new (2);
-  fb->add_msgid (Aida::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
-  syscall_mutex.lock();
-  syscall_queue.push_back (callable);
-  syscall_mutex.unlock();
-  Aida::FieldBuffer *fr = uithread_connection()->call_remote (fb); // deletes fb
-  Aida::FieldReader frr (*fr);
-  const Aida::MessageId msgid = Aida::MessageId (frr.pop_int64());
-  frr.skip(); // FIXME: check full msgid
-  int64 result = 0;
-  if (Aida::msgid_is_result (msgid))
-    result = frr.pop_int64();
-  delete fr;
   return result;
 }
 
@@ -348,16 +329,14 @@ wrap_test_runner (void)
   Test::RegisterTest::test_set_trigger (uithread_test_trigger);
 }
 
-} // Anon
-
 // === UI-Thread Test Trigger ===
-namespace Rapicorn {
 class SyscallTestTrigger : public Callable {
   void (*test_func) (void);
 public:
   SyscallTestTrigger (void (*tfunc) (void)) : test_func (tfunc) {}
   int64 operator()  ()                      { test_func(); return 0; }
 };
+
 void
 uithread_test_trigger (void (*test_func) ())
 {
@@ -368,4 +347,5 @@ uithread_test_trigger (void (*test_func) ())
   // ensure ui-thread shutdown
   uithread_shutdown();
 }
+
 } // Rapicorn

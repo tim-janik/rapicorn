@@ -5,6 +5,7 @@
 #include "screenwindow.hh"
 #include "image.hh"
 #include "uithread.hh"
+#include "internal.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -313,7 +314,7 @@ ApplicationImpl::query_windows (const String &selector)
   vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
   WindowList wlist;
   for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
-    wlist.push_back (dynamic_cast<WindowIface*> (*it));
+    wlist.push_back (dynamic_cast<WindowIface*> (*it)->*Aida::_handle);
   return wlist;
 }
 
@@ -322,7 +323,10 @@ ApplicationImpl::list_windows ()
 {
   WindowList wl;
   for (uint i = 0; i < m_windows.size(); i++)
-    wl.push_back (m_windows[i]);
+    {
+      WindowHandle wh = m_windows[i]->*Aida::_handle;
+      wl.push_back (wh);
+    }
   return wl;
 }
 
@@ -372,6 +376,12 @@ int
 ApplicationImpl::test_counter_inc_fetch ()
 {
   return ++m_tc;
+}
+
+int64
+ApplicationImpl::test_hook ()
+{
+  return server_app_test_hook();
 }
 
 } // Rapicorn

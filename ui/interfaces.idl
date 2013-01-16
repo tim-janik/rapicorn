@@ -378,8 +378,9 @@ interface Application {
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
   void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.
-  int32         test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
-  int32         test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
+  int32         test_counter_get        () = 0;           ///< Testing, retrieve the test counter value.
+  int32         test_counter_inc_fetch  () = 0;           ///< Testing, increment and return the resulting test counter value.
+  int64         test_hook               () = 0;
 };
 
 enum TestEnum {

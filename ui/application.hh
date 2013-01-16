@@ -35,6 +35,7 @@ public:
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();
   virtual int         test_counter_inc_fetch ();
+  virtual int64       test_hook              ();
   void                lost_primaries         ();
   static ApplicationImpl& the                ();
 };
