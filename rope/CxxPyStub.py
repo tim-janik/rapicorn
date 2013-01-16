@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Rapicorn-CxxPyStub - C-Python RPC glue generator
+"""Rapicorn-CxxPyStub - C++-Python glue generator
 
 More details at http://www.rapicorn.org
 """
@@ -43,6 +43,11 @@ base_code = """
 using ::uint64_t;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
+
+static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
+static Rapicorn::Init __AIDA_init__client_connection ([]() {
+  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection();
+});
 
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
@@ -108,23 +113,23 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
 }
 
 static inline Rapicorn::Aida::Any
-__aida_pyany_to_any (PyObject *pyany)
+__AIDA_pyconvert__pyany_to_any (PyObject *pyany)
 {
   return Rapicorn::Aida::Any(); // FIXME: pyany to Any
 }
 
 static inline PyObject*
-__aida_pyany_from_any (const Rapicorn::Aida::Any &any)
+__AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
 {
   return None_INCREF(); // FIXME: Any to pyany
 }
 
-static PyObject *_aida_object_factory_callable = NULL;
+static PyObject *__AIDA_pyfactory__global_callback = NULL;
 
 static PyObject*
-_aida___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
+__AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
 {
-  if (_aida_object_factory_callable)
+  if (__AIDA_pyfactory__global_callback)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
   if (PyTuple_Size (pyargs) != 1)
     return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
@@ -132,14 +137,14 @@ _aida___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
   if (!PyCallable_Check (item))
     return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
   Py_INCREF (item);
-  _aida_object_factory_callable = item;
+  __AIDA_pyfactory__global_callback = item;
   return None_INCREF();
 }
 
 static inline PyObject*
-aida_PyObject_4uint64 (const char *type_name, uint64_t orbid)
+__AIDA_pyfactory__create_from_orbid (const char *type_name, uint64_t orbid)
 {
-  if (!_aida_object_factory_callable)
+  if (!__AIDA_pyfactory__global_callback)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
   PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (orbid);
   if (pyid) {
@@ -147,17 +152,13 @@ aida_PyObject_4uint64 (const char *type_name, uint64_t orbid)
     if (tuple) {
       PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name));
       PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
-      result = PyObject_Call (_aida_object_factory_callable, tuple, NULL);
+      result = PyObject_Call (__AIDA_pyfactory__global_callback, tuple, NULL);
       Py_DECREF (tuple);
     }
     Py_XDECREF (pyid);
   }
   return result;
 }
-
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION() (*(Rapicorn::Aida::ClientConnection*)NULL)
-#endif
 """
 
 class Generator:
@@ -200,9 +201,9 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida__object__")); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__AIDA_pyobject__")); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ANY:
-      s += '  %s.add_any (__aida_pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_any (__AIDA_pyconvert__pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -223,9 +224,9 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s = aida_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
+      s += '  %s = __AIDA_pyfactory__create_from_orbid ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
     elif type.storage == Decls.ANY:
-      s += '  %s = __aida_pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -308,13 +309,13 @@ class Generator:
     s += '}\n'
     return s
   def generate_client_signal_def (self, class_info, functype, mdefs):
-    mdefs += [ '{ "_AIDA_%s", _aida_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
+    mdefs += [ '{ "_AIDA_pymarshal__%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (functype.ident_digest(), functype.ident_digest()) ]
     s, cbtname, classN = '', 'Callback' + '_' + functype.name, class_info.name
     u64 = 'Rapicorn::Aida::uint64_t'
     emitfunc = '__AIDA_pyemit__%s__%s' % (classN, functype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
-    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  PyObject *callable = (PyObject*) data;\n'
     s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
     s += '  const uint length = %u;\n' % len (functype.args)
@@ -336,22 +337,22 @@ class Generator:
     s += '  return NULL;\n'
     s += '}\n'
     s += 'static PyObject*\n'
-    s += '_aida_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % functype.ident_digest()
+    s += '__AIDA_pymarshal__%s (PyObject *pyself, PyObject *pyargs)\n' % functype.ident_digest()
     s += '{\n'
     s += '  while (0) { error: return NULL; }\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida__object__"); ERRORifpy();\n'
+    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
     s += '  %s result = 0;\n' % u64
     s += '  if (callable == Py_None) {\n'
     s += '    PyObject *pyo = PyTuple_GET_ITEM (pyargs, 2);\n' # connection id for disconnect
     s += '    %s dc_id = PyIntLong_AsLongLong (pyo); ERRORifpy();\n' % u64
-    s += '    result = AIDA_CONNECTION().signal_disconnect (dc_id);\n'
+    s += '    result = __AIDA_local__client_connection->signal_disconnect (dc_id);\n'
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = AIDA_CONNECTION().signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
@@ -360,29 +361,35 @@ class Generator:
   def method_digest (self, mtype):
     digest = mtype.type_hash()
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
-  def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
+  def generate_pycall_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_AIDA_%s", _aida_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
+    mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
-    s += '_aida_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '__AIDA_pycall__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
+    s += '  uint64_t item_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
-    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
-    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
-    s += self.generate_proto_add_py ('fb', class_info, 'item')
+    s += '  item_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
+    if hasret:
+      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
+      s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % self.method_digest (mtype)
+    else:
+      s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY,'
+      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), %s);\n' % self.method_digest (mtype)
+    s += '  fb.add_object (item_orbid);\n'
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
-    s += '  fm = NULL; fr = AIDA_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
@@ -446,12 +453,12 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         pass
         for m in tp.methods:
-          s += self.generate_rpc_call_wrapper (tp, m, mdefs)
+          s += self.generate_pycall_wrapper (tp, m, mdefs)
         for sg in tp.signals:
           s += self.generate_client_signal_def (tp, sg, mdefs)
     # method def array
     if mdefs:
-      aux = '{ "_AIDA___register_object_factory_callable", _aida___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
+      aux = '{ "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" }'
       s += '#define AIDA_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
 

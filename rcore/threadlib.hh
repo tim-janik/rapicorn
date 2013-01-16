@@ -22,6 +22,7 @@ template<typename T>
 class Atomic {
   T volatile v;
   /*ctor*/  Atomic    () = delete;
+  /*ctor*/  Atomic    (T&&) = delete;
 protected:
   constexpr Atomic    (T i) : v (i) {}
   Atomic<T>& operator=(Atomic<T> &o) { store (o.load()); return *this; }

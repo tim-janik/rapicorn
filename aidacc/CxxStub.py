@@ -32,9 +32,6 @@ using Rapicorn::Signals::slot;
 """
 
 servercc_testcode = r"""
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ServerConnection*)NULL)
-#endif // !AIDA_CONNECTION
 """
 
 gencc_boilerplate = r"""
@@ -68,41 +65,71 @@ error (const char *format, ...)
 servercc_boilerplate = r"""
 namespace { // Anon
 namespace __AIDA_Local__ {
-  typedef ServerConnection::MethodRegistry MethodRegistry;
-  typedef ServerConnection::MethodEntry MethodEntry;
-  inline ptrdiff_t               obj2id  ($AIDA_iface_base$ *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-  template<class Object> Object* id2obj  (ptrdiff_t oid) { return dynamic_cast<Object*> (reinterpret_cast<$AIDA_iface_base$*> (oid)); }
-  template<class Object> Object* smh2obj (const SmartHandle &sh)
-                                         { ptrdiff_t orbid = sh._orbid(); return (orbid & 0) ? NULL : id2obj<Object> (orbid); }
-  template<class SMH> SMH        obj2smh ($AIDA_iface_base$ *self)
-  {
-    const ptrdiff_t orbid = obj2id (self);
-    SMH target;
-    const ptrdiff_t input[2] = { orbid, target._orbid() };
-    Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
-    return target;
-  }
+// types
+typedef ServerConnection::MethodRegistry MethodRegistry;
+typedef ServerConnection::MethodEntry MethodEntry;
+// connection
+static Rapicorn::Aida::ServerConnection *server_connection = NULL;
+static Rapicorn::Init init_server_connection ([]() {
+  server_connection = ObjectBroker::new_server_connection();
+});
+// objects
+template<class Object> static inline Object* id2obj (uint64_t oid)
+{
+  const ptrdiff_t addr = server_connection->orbid2instance (oid);
+  $AIDA_iface_base$ *instance = reinterpret_cast<$AIDA_iface_base$*> (addr);
+  return dynamic_cast<Object*> (instance);
+}
+static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
+{ return server_connection->instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
+template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
+{
+  const uint64_t orbid = obj2id (self);
+  SMH target;
+  const uint64_t input[2] = { orbid, target._orbid() };
+  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  return target;
+}
+// messages
+static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
+static inline void add_header1_discon (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+{ return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+
 } } // Anon::__AIDA_Local__
 """
 
 clientcc_boilerplate = r"""
-#ifndef AIDA_CONNECTION
-#define AIDA_CONNECTION()       (*(Rapicorn::Aida::ClientConnection*)NULL)
-#endif // !AIDA_CONNECTION
 namespace { // Anon
 namespace __AIDA_Local__ {
-static FieldBuffer*  invoke (FieldBuffer *fb) { return AIDA_CONNECTION().call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (uint64_t signal_handler_id) { return AIDA_CONNECTION().signal_disconnect (signal_handler_id); }
-static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t handle_id, SignalEmitHandler seh, void *data)
-                                       { return AIDA_CONNECTION().signal_connect (hhi, hlo, handle_id, seh, data); }
-inline ptrdiff_t        smh2id (const SmartHandle &h) { return h._orbid(); }
+// connection
+static Rapicorn::Aida::ClientConnection *client_connection = NULL;
+static Rapicorn::Init init_client_connection ([]() {
+  client_connection = ObjectBroker::new_client_connection();
+});
+// helper
+static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
+static bool          signal_disconnect (uint64_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
+static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
+                                       { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
+static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
-  const ptrdiff_t orbid = __AIDA_Local__::smh2id (handle);
+  const uint64_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
-  const ptrdiff_t input[2] = { orbid, target._orbid() };
+  const uint64_t input[2] = { orbid, target._orbid() };
   Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
   return target;
 }
+static inline void add_header2 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
+                  client_connection->connection_id(), h, l); }
+static inline void add_header1 (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l); }
+
 } } // Anon::__AIDA_Local__
 """
 
@@ -127,7 +154,6 @@ class Generator:
     self.iface_base = self.test_iface_base
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
-    self.object_impl = None # ('impl', ('', 'Impl'))
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -351,7 +377,7 @@ class Generator:
   def generate_enum_impl (self, type_info):
     s = '\n'
     ns, nm = self.namespaced_identifier (None), type_info.name
-    s += 'static Rapicorn::Init _Rapicorn_Aida__INIT__%s_ ([]() {\n' % nm
+    s += 'static Rapicorn::Init __AIDA_init__%s ([]() {\n' % nm
     s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
@@ -425,7 +451,7 @@ class Generator:
       if l:
         heritage = 'public virtual'
       else:
-        l = [self.iface_base]
+        l, ddc = [self.iface_base], True
         heritage = 'public virtual'
     else:
       if l:
@@ -437,7 +463,7 @@ class Generator:
       cl = []
     else:
       cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
-    return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
+    return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_class (self, type_info):
     s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
     # declare
@@ -448,24 +474,26 @@ class Generator:
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (precls) + '\n'
     s += '{\n'
     if self.gen_mode == G4STUB:
-      s += '  ' + self.F ('static %s' % classC) + '_cast (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
-      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '_type ();\n'
+      s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
+      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_type_hash__ ();\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVANT:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
+    c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
+    if ddc:
+      s += c
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB
-      aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList') + '_down_cast_types();\n'
+      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_cast_types__();\n'
       s += '  template<class SmartHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
-      s += '{ return smh._is_null() ? %s() : _cast (smh, smh._down_cast_types()); }\n' % classH
+      s += '{ return smh._is_null() ? %s() : __aida_cast__ (smh, smh.__aida_cast_types__()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -491,17 +519,9 @@ class Generator:
       il = max (il, len (self.C (type_info)))
     for m in type_info.methods:
       s += self.generate_method_decl (m, il)
-    # impl()
-    if self.gen_mode == G4SERVANT and self.object_impl:
-      impl_method, ppwrap = self.object_impl
-      implname = ppwrap[0] + type_info.name + ppwrap[1]
-      s += '  inline %s&       impl () ' % implname
-      s += '{ %s *_impl = dynamic_cast<%s*> (this); if (!_impl) throw std::bad_cast(); return *_impl; }\n' % (implname, implname)
-      s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
-      s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s&);\n' % self.C (type_info)
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s*);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
     else: # G4STUB
@@ -551,6 +571,19 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
+  def generate_aida_connection_impl (self, class_info):
+    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    s, classC = '', self.C (class_info)
+    if not ddc:
+      return s
+    s += 'Rapicorn::Aida::BaseConnection*\n'
+    s += '%s::__aida_connection__()\n{\n' % classC
+    if self.gen_mode == G4SERVANT:
+      s += '  return __AIDA_Local__::server_connection;\n'
+    else:
+      s += '  return __AIDA_Local__::client_connection;\n'
+    s += '}\n'
+    return s
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
@@ -566,22 +599,23 @@ class Generator:
     s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
-    s += '%s::_type()\n{\n' % classH
+    s += '%s::__aida_type_hash__()\n{\n' % classH
     s += '  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (%s);\n' % self.class_digest (class_info)
     s += '  return type_hash;\n'
     s += '}\n'
-    s += '%s\n%s::_cast (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = _type();\n'
+    s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
+    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type_hash__();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
     s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
     s += '  return %s();\n' % classH
     s += '}\n'
+    s += self.generate_aida_connection_impl (class_info)
     s += 'const Rapicorn::Aida::TypeHashList\n'
-    s += '%s::_down_cast_types()\n{\n' % classH
+    s += '%s::__aida_cast_types__()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.list_types_digest (class_info)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.list_types_digest (class_info)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
@@ -611,10 +645,6 @@ class Generator:
     s += '\n{}\n'
     s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
     s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s &obj)\n{\n' % classC
-    s += '  fb.add_object (__AIDA_Local__::obj2id (&obj));\n'
-    s += '}\n'
-    s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  fb.add_object (__AIDA_Local__::obj2id (obj));\n'
     s += '}\n'
@@ -628,6 +658,7 @@ class Generator:
     s += '%s\noperator->* (%s *obj, Rapicorn::Aida::_HandleType)\n{\n' % (classH, classC)
     s += '  return __AIDA_Local__::obj2smh<%s> (obj);\n' % classH
     s += '}\n'
+    s += self.generate_aida_connection_impl (class_info)
     s += 'void\n'
     s += '%s::_list_types (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)
@@ -664,10 +695,10 @@ class Generator:
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
-    msg_kind = 'Rapicorn::Aida::MSGID_TWOWAY' if hasret else 'Rapicorn::Aida::MSGID_ONEWAY'
-    s += '  fb.add_header (%s, 0, %s);\n' % (msg_kind, self.method_digest (mtype))
+    if hasret:  s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.method_digest (mtype)
+    else:       s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     # call out
@@ -714,7 +745,7 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
-      s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % self.method_digest (mtype)
+      s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % self.method_digest (mtype)
       rval = 'rval'
       s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
@@ -747,8 +778,8 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;\n'
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_TWOWAY, 0, %s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  __AIDA_Local__::add_header2 (fb, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
@@ -766,8 +797,8 @@ class Generator:
     else:
       s += q + tname + ' value)\n{\n'
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
-    s += '  fb.add_header (Rapicorn::Aida::MSGID_ONEWAY, 0, %s);\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  __AIDA_Local__::add_header1 (fb, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
@@ -819,7 +850,7 @@ class Generator:
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % getter_hash
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % getter_hash
     rval = 'rval'
     s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
@@ -842,7 +873,7 @@ class Generator:
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     # return: length (typehi, typelo)*length
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s, 1 + 2 * thl.size());\n' % digest
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s, 1 + 2 * thl.size());\n' % digest
     s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb <<= thl[i];\n'
@@ -876,7 +907,7 @@ class Generator:
     (sigret, sigfunc), u64 = self.generate_signal_signature_tuple (functype, cbtname), 'Rapicorn::Aida::uint64_t'
     emitfunc = '__AIDA_emit__%s__%s' % (classH, functype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
-    s += '(Rapicorn::Aida::ClientConnection &aida_con, const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  auto fptr = (const std::function<%s::%s>*) data;\n' % (classH, cbtname)
     s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
     s += '  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr);\n'
@@ -884,7 +915,7 @@ class Generator:
     s += '}\n'
     s += u64 + '\n%s::sig_%s (const std::function<%s> &func)\n{\n' % (classH, functype.name, cbtname)
     s += '  void *fptr = new std::function<%s> (func);\n' % cbtname
-    s += '  %s id = __AIDA_Local__::signal_connect (%s, __AIDA_Local__::smh2id (*this), %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
+    s += '  %s id = __AIDA_Local__::signal_connect (%s, *this, %s, fptr);\n' % (u64, self.method_digest (functype), emitfunc)
     s += '  return id;\n}\n'
     s += 'bool\n%s::sig_%s (%s signal_id)\n{\n' % (classH, functype.name, u64)
     s += '  const bool r = __AIDA_Local__::signal_disconnect (signal_id);\n'
@@ -916,16 +947,16 @@ class Generator:
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  Rapicorn::Aida::ServerConnection &m_connection; Rapicorn::Aida::uint64_t m_handler;\n'
+    s += '  Rapicorn::Aida::uint64_t handler_;\n'
     s += 'public:\n'
     s += '  typedef std::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Rapicorn::Aida::ServerConnection &conn, Rapicorn::Aida::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  %s (Rapicorn::Aida::uint64_t h) : handler_ (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + handler
-    s += '    fb.add_header (Rapicorn::Aida::MSGID_DISCON, 0, %s);\n' % digest
-    s += '    fb <<= m_handler;\n'
-    s += '    m_connection.send_event (&fb);\n' # deletes fb
+    s += '    __AIDA_Local__::add_header1_discon (fb, handler_, %s);\n' % digest
+    s += '    fb <<= handler_;\n'
+    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
@@ -933,13 +964,13 @@ class Generator:
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
-    s += '    fb.add_header (Rapicorn::Aida::MSGID_EVENT, 0, %s);\n' % digest
-    s += '    fb <<= sp->m_handler;\n'
-    ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
+    s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_, %s);\n' % digest
+    s += '    fb <<= sp->handler_;\n'
+    ident_type_args = [(('&arg_' if a[1].storage == Decls.INTERFACE else 'arg_')+ a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_connection.send_event (&fb);\n' # deletes fb
+    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'
@@ -952,14 +983,14 @@ class Generator:
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
-    s += '  Rapicorn::Aida::uint64_t handler_id, con_id, cid = 0;\n'
+    s += '  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
-    s += '  fbr >>= con_id;\n'
-    s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
+    s += '  fbr >>= signal_connection;\n'
+    s += '  if (signal_connection) self->sig_%s.disconnect (signal_connection);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (AIDA_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  Rapicorn::Aida::FieldBuffer &rb = *Rapicorn::Aida::FieldBuffer::new_result (%s);\n' % digest
+    s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % digest
     s += '  rb <<= cid;\n'
     s += '  return &rb;\n'
     s += '}\n'

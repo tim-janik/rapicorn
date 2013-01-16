@@ -11,27 +11,24 @@
 namespace Rapicorn {
 
 class ServerConnectionSource : public virtual EventLoop::Source {
+  static Aida::BaseConnection *connection_;
   const char             *WHERE;
-  Aida::ServerConnection &connection_;
   PollFD                  pollfd_;
   bool                    last_seen_primary_, need_check_primary_;
 public:
-  ServerConnectionSource (EventLoop &loop, Aida::ServerConnection &scon) :
+  ServerConnectionSource (EventLoop &loop) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
-    connection_ (scon), last_seen_primary_ (false), need_check_primary_ (false)
+    last_seen_primary_ (false), need_check_primary_ (false)
   {
+    assert (connection_ == NULL); // essentially allows only singletons
+    connection_ = ApplicationIface::__aida_connection__();
+    assert (connection_ != NULL); // essentially allows only singletons
     primary (false);
     loop.add (this, EventLoop::PRIORITY_NORMAL);
-    pollfd_.fd = connection_.notify_fd();
+    pollfd_.fd = connection_->notify_fd();
     pollfd_.events = PollFD::IN;
     pollfd_.revents = 0;
     add_poll (&pollfd_);
-  }
-  void
-  wakeup () // allow external wakeups
-  {
-    // FIXME: evil kludge, we're assuming Aida::ServerConnection.notify_fd() is an eventfd
-    eventfd_write (pollfd_.fd, 1);
   }
 private:
   ~ServerConnectionSource ()
@@ -44,7 +41,7 @@ private:
   {
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
-    return need_check_primary_ || connection_.pending();
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -52,12 +49,12 @@ private:
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
     last_seen_primary_ = state.seen_primary;
-    return need_check_primary_ || connection_.pending();
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    connection_.dispatch();
+    connection_->dispatch();
     if (need_check_primary_)
       {
         need_check_primary_ = false;
@@ -75,10 +72,11 @@ private:
   }
 };
 
+Aida::BaseConnection *ServerConnectionSource::connection_ = NULL;
+
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Aida::ServerConnection *server_connection;
-  Mutex mutex; Cond cond; uint64 app_id;
+  Mutex mutex; Cond cond; ApplicationH app;
 };
 
 static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
@@ -88,17 +86,13 @@ class UIThread {
   pthread_mutex_t         thread_mutex_;
   volatile bool           running_;
   Initializer            *idata_;
-  Aida::ServerConnection &server_connection_;
   MainLoop               &main_loop_; // FIXME: non-NULL only while running
 public:
-  Aida::ClientConnection *client_connection_;
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
-    server_connection_ (*Aida::ServerConnection::create_threaded()),
     main_loop_ (*ref_sink (MainLoop::_new()))
   {
     main_loop_.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
-    client_connection_ = new Aida::ClientConnection (server_connection_.connector());
   }
   bool  running() const { return running_; }
   void
@@ -134,7 +128,7 @@ private:
   ~UIThread ()
   {
     fatal ("UIThread singleton in dtor");
-    // FIXME: leaking ServerConnection ref count...
+    // FIXME: leaking ServerConnectionSource ref count...
   }
   void
   initialize ()
@@ -145,7 +139,7 @@ private:
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_, server_connection_));
+    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_));
     (void) server_source;
     // initialize sub systems
     struct InitHookCaller : public InitHook {
@@ -159,11 +153,9 @@ private:
     assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
-    // initialize uithread connection handling
-    uithread_serverglue (server_connection_);
     // Complete initialization by signalling caller
     idata_->mutex.lock();
-    idata_->app_id = ptrdiff_t (&ApplicationImpl::the()); // FIXME: use AIDA_ORB.activate_object instead of __AIDA_Local__::obj2id
+    idata_->app = &ApplicationImpl::the()->*Aida::_handle;
     idata_->cond.signal();
     idata_->mutex.unlock();
     idata_ = NULL;
@@ -200,12 +192,6 @@ public:
   }
 };
 static UIThread *the_uithread = NULL;
-
-Aida::ClientConnection*
-uithread_connection (void) // prototype in ui/internal.hh
-{
-  return the_uithread && the_uithread->running() ? the_uithread->client_connection_ : NULL;
-}
 
 MainLoop*
 uithread_main_loop ()
@@ -249,28 +235,27 @@ uithread_uncancelled_atexit()
 
 static void wrap_test_runner (void);
 
-uint64
-uithread_bootup (int *argcp, char **argv, const StringVector &args)
+ApplicationH
+uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
 {
-  assert_return (the_uithread == NULL, 0);
+  assert_return (the_uithread == NULL, ApplicationH());
   // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
   // setup client/server connection pair
   Initializer idata;
   // initialize and create UIThread
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args;
   // start and syncronize with thread
   idata.mutex.lock();
   the_uithread = new UIThread (&idata);
   the_uithread->start();
-  while (idata.app_id == 0)
+  while (idata.app._is_null())
     idata.cond.wait (idata.mutex);
-  uint64 app_id = idata.app_id;
   idata.mutex.unlock();
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  return app_id;
+  return idata.app;
 }
 
 } // Rapicorn
