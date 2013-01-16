@@ -20,9 +20,18 @@ auxillary_initializers = {
 class Error (Exception):
   pass
 
+def auxillary_initializer_dict():
+  # we need to merge dicts no earlier than before the first call, to avoid depending on extension load order
+  if not hasattr (auxillary_initializer_dict, 'cached_dict'):
+    d = {}
+    d.update (__Aida__.auxillary_initializers)
+    d.update (auxillary_initializers)
+    auxillary_initializer_dict.cached_dict = d
+  return auxillary_initializer_dict.cached_dict
+
 def parse2dict (type, name, arglist):
   # find matching initializer
-  adef = auxillary_initializers.get ((type, name), None)
+  adef = auxillary_initializer_dict().get ((type, name), None)
   if not adef:
     raise Error ('invalid type definition: = %s%s%s' % (name, name and ' ', tuple (arglist)))
   if len (arglist) > len (adef):

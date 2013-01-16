@@ -17,10 +17,13 @@ class AidaMain:
   def __init__ (self):
     self.backends = {}  # { 'TypeMap' : (TypeMap.generate, __doc__) }
     self.default_backend = None
+    self.auxillary_initializers = {}
   def strip_name (self, name):
     name = os.path.basename (name)   # strip all directories
     name = re.sub ('\..*$', '', name) # strip all extensions
     return name
+  def add_auxillary_initializers (self, newdict):
+    self.auxillary_initializers.update (newdict)
   def add_backend (self, bname, bgenerate, doc):
     assert callable (bgenerate)
     name = self.strip_name (bname)
