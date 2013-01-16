@@ -11,8 +11,6 @@
 
 namespace Rapicorn {
 
-ApplicationIface::ApplicationMutex ApplicationIface::mutex;
-
 bool
 ApplicationIface::factory_window (const std::string &factory_definition)
 {
