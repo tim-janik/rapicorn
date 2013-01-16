@@ -204,7 +204,6 @@ ApplicationImpl::auto_path (const String  &file_name,
                             const String  &binary_path,
                             bool           search_vpath)
 {
-  assert (rapicorn_thread_entered());
   /* test absolute file_name */
   if (Path::isabs (file_name))
     return file_name;
