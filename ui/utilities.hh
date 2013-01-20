@@ -19,12 +19,6 @@
 
 namespace Rapicorn {
 
-/* --- init stuff --- */
-void          rapicorn_thread_enter     ();
-bool          rapicorn_thread_try_enter ();
-bool          rapicorn_thread_entered   ();
-void          rapicorn_thread_leave     ();
-
 /* --- standard utlities --- */
 //template<typename T> inline const T& min   (const T &a, const T &b) { return ::std::min<T> (a, b); }
 //template<typename T> inline const T& max   (const T &a, const T &b) { return ::std::min<T> (a, b); }

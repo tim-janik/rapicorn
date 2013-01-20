@@ -44,7 +44,6 @@ static uint test_containers_rendered = 0;
 uint
 TestContainer::seen_test_items ()
 {
-  assert (rapicorn_thread_entered());
   return test_containers_rendered;
 }
 
@@ -137,8 +136,6 @@ protected:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    assert (rapicorn_thread_entered());
-
     if (m_paint_allocation)
       {
         IRect ia = allocation();

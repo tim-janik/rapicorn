@@ -6,43 +6,6 @@
 
 namespace Rapicorn {
 
-static Mutex        thread_mutex;
-static Atomic<uint> thread_counter = 0;
-
-void
-rapicorn_thread_enter ()
-{
-  assert (rapicorn_thread_entered() == false);
-  thread_mutex.lock();
-  thread_counter++;
-}
-
-bool
-rapicorn_thread_try_enter ()
-{
-  if (thread_mutex.try_lock())
-    {
-      thread_counter++;
-      return true;
-    }
-  else
-    return false;
-}
-
-bool
-rapicorn_thread_entered ()
-{
-  return thread_counter.load() > 0;
-}
-
-void
-rapicorn_thread_leave ()
-{
-  assert (rapicorn_thread_entered());
-  thread_counter--;
-  thread_mutex.unlock();
-}
-
 /* --- exceptions --- */
 const std::nothrow_t dothrow = {};
 

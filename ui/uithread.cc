@@ -92,7 +92,7 @@ public:
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
     main_loop_ (*ref_sink (MainLoop::_new()))
   {
-    main_loop_.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
+    // main_loop_.set_lock_hooks (...);
   }
   bool  running() const { return running_; }
   void
@@ -134,8 +134,6 @@ private:
   initialize ()
   {
     assert_return (idata_ != NULL);
-    // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
-    assert (rapicorn_thread_entered() == true);
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
@@ -170,7 +168,6 @@ public:
     const bool running_twice = __sync_fetch_and_add (&running_, +1);
     assert (running_twice == false);
 
-    rapicorn_thread_enter();
     initialize();
     assert_return (idata_ == NULL);
     main_loop_.run();
@@ -180,7 +177,6 @@ public:
       if (!main_loop_.iterate (false))
         break;  // handle primary idle handlers like exec_now
     main_loop_.kill_loops();
-    rapicorn_thread_leave();
 
     assert (running_ == true);
     const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);
