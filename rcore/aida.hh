@@ -516,4 +516,7 @@ FieldBuffer::reset()
 
 } } // Rapicorn::Aida
 
+// == Signals ==
+#include "aidasignal.hh"
+
 #endif // __RAPICORN_AIDA_HH__

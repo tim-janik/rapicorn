@@ -17,7 +17,7 @@ rapicorn_public_headers = $(strip	\
 			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
-	cxxaux.hh	rcore.hh \
+	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
 	aida.cc		blobres.cc	inifile.cc	\
