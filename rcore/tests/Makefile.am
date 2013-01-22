@@ -72,11 +72,3 @@ check: check-process-handle
 check-unique-process: testrcore1
 	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-unique-process
-
-# process handle
-check-locatable-id: testrcore1
-	$(Q) test -n `./testrcore1 --print-locatable-id`; eval "$$TSTDIAGNOSE"
-check: check-locatable-id
-check-unique-id: testrcore1
-	$(Q) test `./testrcore1 --print-locatable-id` != `./testrcore1 --print-locatable-id`; eval "$$TSTDIAGNOSE"
-check: check-unique-id
