@@ -3,7 +3,6 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 
-#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -27,8 +26,6 @@
 #endif
 #define AIDA_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define AIDA_CPP_PASTE2(a,b)                    AIDA_CPP_PASTE2i (a,b)
-#define AIDA_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } AIDA_CPP_PASTE2 (Aida_StaticAssertion_LINE, __LINE__)
-#define AIDA_STATIC_ASSERT(expr)                AIDA_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
 
 namespace Rapicorn {
@@ -36,8 +33,8 @@ namespace Rapicorn {
 namespace Aida {
 
 // == FieldUnion ==
-AIDA_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
-AIDA_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
+static_assert (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes), "sizeof FieldUnion::smem");
+static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");
 
 /* === Prototypes === */
 static std::string string_cprintf (const char *format, ...) AIDA_PRINTF (1, 2);
@@ -467,7 +464,7 @@ static Mutex   orbo_mutex;
 void
 ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 {
-  assert (sh._is_null() == true);
+  AIDA_ASSERT (sh._is_null() == true);
   const uint64_t orbid = fr.pop_object();
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
@@ -479,7 +476,7 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 void
 ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
 {
-  assert (sh._is_null() == true);
+  AIDA_ASSERT (sh._is_null() == true);
   if (fake[1])
     return;
   const uint64_t orbid = fake[0];
@@ -494,7 +491,7 @@ ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
 {
-  AIDA_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
+  static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");
   // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
   const uint _offs = 1 + (_ntypes + 7) / 8;
   buffermem = new FieldUnion[_offs + _ntypes];
@@ -950,7 +947,7 @@ public:
     notify_for_result();
   }
   void                  notify_for_result ()            { if (blocking_for_sem_) sem_post (&transport_sem_); }
-  void                  block_for_result  ()            { assert (blocking_for_sem_); sem_wait (&transport_sem_); }
+  void                  block_for_result  ()            { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
   virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
   virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
@@ -1023,7 +1020,7 @@ ClientConnectionImpl::dispatch ()
 FieldBuffer*
 ClientConnectionImpl::call_remote (FieldBuffer *fb)
 {
-  assert (fb != NULL);
+  AIDA_ASSERT (fb != NULL);
   // enqueue method call message
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
   const bool needsresult = Aida::msgid_has_result (msgid);
