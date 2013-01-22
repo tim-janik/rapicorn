@@ -90,6 +90,12 @@ string_cprintf (const char *format, ...)
 }
 
 void
+assertion_error (const char *file, uint line, const char *expr)
+{
+  error_printf ("%s:%u: assertion failed: %s", file, line, expr);
+}
+
+void
 error_vprintf (const char *format, va_list args)
 {
   std::string s = string_vcprintf (format, args, true);
