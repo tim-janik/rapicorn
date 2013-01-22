@@ -187,9 +187,9 @@ WindowImpl::WindowImpl() :
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* create event loop (auto-starts) */
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   m_loop.flag_primary (false);
   ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
@@ -692,7 +692,7 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       if (!m_notify_displayed_id)
-        m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
+        m_notify_displayed_id = m_loop.exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -917,7 +917,7 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
               EventLoop *loop = get_loop();
               if (loop)
                 {
-                  loop->exec_timer (0, slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
+                  loop->exec_timer (0, Aida::slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
                   m_auto_close = false;
                 }
             }
@@ -1011,7 +1011,7 @@ WindowImpl::create_screen_window ()
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
       m_loop.flag_primary (true); // FIXME: depends on WM-managable
-      VoidSlot sl = slot (*this, &WindowImpl::idle_show);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
       m_loop.exec_now (sl);
     }
 }
@@ -1036,9 +1036,9 @@ WindowImpl::destroy_screen_window ()
   cancel_item_events (NULL);
   if (!finalizing())
     {
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
     }
   unref (this);
 }

@@ -114,7 +114,7 @@ public:
   queue_check_primaries()
   {
     if (m_loop)
-      m_loop->exec_background (slot (*this, &AppSource::check_primaries));
+      m_loop->exec_background (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 

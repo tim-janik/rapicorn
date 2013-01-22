@@ -939,33 +939,31 @@ EventLoop::Source::~Source ()
 }
 
 // == EventLoop::DispatcherSource ==
-EventLoop::DispatcherSource::DispatcherSource (Signals::Trampoline1<bool,const State&> &tr) :
-  m_trampoline (ref_sink (&tr))
+EventLoop::DispatcherSource::DispatcherSource (const DispatcherSlot &slot) :
+  slot_ (slot)
 {}
 
 EventLoop::DispatcherSource::~DispatcherSource ()
 {
-  Signals::Trampoline1<bool,const State&> *old_trampoline = m_trampoline;
-  m_trampoline = NULL;
-  unref (old_trampoline);
+  slot_ = NULL;
 }
 
 bool
 EventLoop::DispatcherSource::prepare (const State &state, int64 *timeout_usecs_p)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 bool
 EventLoop::DispatcherSource::check (const State &state)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 bool
 EventLoop::DispatcherSource::dispatch (const State &state)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 void
@@ -973,24 +971,20 @@ EventLoop::DispatcherSource::destroy()
 {
   State state;
   state.phase = state.DESTROY;
-  (*m_trampoline) (state);
+  slot_ (state);
 }
 
 // == EventLoop::TimedSource ==
-EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
-                                     uint initial_interval_msecs,
-                                     uint repeat_interval_msecs) :
+EventLoop::TimedSource::TimedSource (const VoidSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
   m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
-  m_oneshot (true), m_vtrampoline (ref_sink (&vt))
+  m_oneshot (true), void_slot_ (slot)
 {}
 
-EventLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
-                                     uint initial_interval_msecs,
-                                     uint repeat_interval_msecs) :
+EventLoop::TimedSource::TimedSource (const BoolSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
   m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
-  m_oneshot (false), m_btrampoline (ref_sink (&bt))
+  m_oneshot (false), bool_slot_ (slot)
 {}
 
 bool
@@ -1020,10 +1014,10 @@ EventLoop::TimedSource::dispatch (const State &state)
 {
   bool repeat = false;
   m_first_interval = false;
-  if (m_oneshot && m_vtrampoline->callable())
-    (*m_vtrampoline) ();
-  else if (!m_oneshot && m_btrampoline->callable())
-    repeat = (*m_btrampoline) ();
+  if (m_oneshot && void_slot_ != NULL)
+    void_slot_ ();
+  else if (!m_oneshot && bool_slot_ != NULL)
+    repeat = bool_slot_ ();
   if (repeat)
     m_expiration_usecs = timestamp_realtime() + 1000ULL * m_interval_msecs;
   return repeat;
@@ -1032,9 +1026,9 @@ EventLoop::TimedSource::dispatch (const State &state)
 EventLoop::TimedSource::~TimedSource ()
 {
   if (m_oneshot)
-    unref (m_vtrampoline);
+    void_slot_.~VoidSlot();
   else
-    unref (m_btrampoline);
+    bool_slot_.~BoolSlot();
 }
 
 // == EventLoop::PollFDSource ==
@@ -1051,26 +1045,22 @@ EventLoop::TimedSource::~TimedSource ()
  * @li @c "H" - ignore hangup (or auto destroy)
  * @li @c "C" - prevent auto close on destroy
  */
-EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
-                                       int                                 fd,
-                                       const String                       &mode) :
+EventLoop::PollFDSource::PollFDSource (const BPfdSlot &slot, int fd, const String &mode) :
   m_pfd ((PollFD) { fd, 0, 0 }),
   m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
   m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
   m_never_close (strchr (mode.c_str(), 'C') != NULL),
-  m_oneshot (false), m_btrampoline (ref_sink (&bt))
+  m_oneshot (false), bool_poll_slot_ (slot)
 {
   construct (mode);
 }
 
-EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
-                                       int                                 fd,
-                                       const String                       &mode) :
+EventLoop::PollFDSource::PollFDSource (const VPfdSlot &slot, int fd, const String &mode) :
   m_pfd ((PollFD) { fd, 0, 0 }),
   m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
   m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
   m_never_close (strchr (mode.c_str(), 'C') != NULL),
-  m_oneshot (true), m_vtrampoline (ref_sink (&vt))
+  m_oneshot (true), void_poll_slot_ (slot)
 {
   construct (mode);
 }
@@ -1124,10 +1114,10 @@ EventLoop::PollFDSource::dispatch (const State &state)
     ; // close down
   else if (m_pfd.fd >= 0 && !m_ignore_hangup && (m_pfd.revents & PollFD::HUP))
     ; // close down
-  else if (m_oneshot && m_vtrampoline->callable())
-    (*m_vtrampoline) (m_pfd);
-  else if (!m_oneshot && m_btrampoline->callable())
-    keep_alive = (*m_btrampoline) (m_pfd);
+  else if (m_oneshot && void_poll_slot_ != NULL)
+    void_poll_slot_ (m_pfd);
+  else if (!m_oneshot && bool_poll_slot_ != NULL)
+    keep_alive = bool_poll_slot_ (m_pfd);
   /* close down */
   if (!keep_alive)
     {
@@ -1150,9 +1140,9 @@ EventLoop::PollFDSource::destroy()
 EventLoop::PollFDSource::~PollFDSource ()
 {
   if (m_oneshot)
-    unref (m_vtrampoline);
+    void_poll_slot_.~VPfdSlot();
   else
-    unref (m_btrampoline);
+    bool_poll_slot_.~BPfdSlot();
 }
 
 } // Rapicorn
