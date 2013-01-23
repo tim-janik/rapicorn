@@ -5,8 +5,8 @@
 namespace Rapicorn {
 
 Adjustment::Adjustment() :
-  sig_value_changed (*this, &Adjustment::value_changed),
-  sig_range_changed (*this, &Adjustment::range_changed)
+  sig_value_changed (Aida::slot (*this, &Adjustment::value_changed)),
+  sig_range_changed (Aida::slot (*this, &Adjustment::range_changed))
 {}
 
 Adjustment::~Adjustment()

@@ -114,7 +114,8 @@ ItemListImpl::vadjustment () const
   if (!m_vadjustment)
     {
       m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
-      m_vadjustment->sig_value_changed += slot ((ItemImpl&) *this, &ItemImpl::queue_visual_update);
+      ItemListImpl &self = const_cast<ItemListImpl&> (*this);
+      m_vadjustment->sig_value_changed += Aida::slot (self, &ItemImpl::queue_visual_update);
     }
   return *m_vadjustment;
 }

@@ -71,13 +71,18 @@ SliderArea::_property_list()
 
 class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
   Adjustment          *m_adjustment;
+  size_t               avc_id_, arc_id_;
   AdjustmentSourceType m_adjustment_source;
   bool                 m_flip;
   void
   unset_adjustment()
   {
-    m_adjustment->sig_value_changed -= slot (sig_slider_changed);
-    m_adjustment->sig_range_changed -= slot (sig_slider_changed);
+    if (avc_id_)
+      m_adjustment->sig_value_changed -= avc_id_;
+    avc_id_ = 0;
+    if (arc_id_)
+      m_adjustment->sig_range_changed -= arc_id_;
+    arc_id_ = 0;
     m_adjustment->unref();
     m_adjustment = NULL;
   }
@@ -131,7 +136,7 @@ protected:
   }
 public:
   SliderAreaImpl() :
-    m_adjustment (NULL),
+    m_adjustment (NULL), avc_id_ (0), arc_id_ (0),
     m_adjustment_source (ADJUSTMENT_SOURCE_NONE),
     m_flip (false)
   {
@@ -146,8 +151,8 @@ public:
     if (m_adjustment)
       unset_adjustment();
     m_adjustment = &adjustment;
-    m_adjustment->sig_value_changed += slot (sig_slider_changed);
-    m_adjustment->sig_range_changed += slot (sig_slider_changed);
+    avc_id_ = m_adjustment->sig_value_changed += [this] () { sig_slider_changed.emit(); };
+    arc_id_ = m_adjustment->sig_range_changed += [this] () { sig_slider_changed.emit(); };
     changed();
   }
   virtual Adjustment*
