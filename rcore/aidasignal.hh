@@ -59,9 +59,11 @@ struct CollectorInvocation<Collector, void (Args...)> {
 /// ProtoSignal template specialised for the callback signature and collector.
 template<class Collector, class R, class... Args>
 class ProtoSignal<R (Args...), Collector> : private CollectorInvocation<Collector, R (Args...)> {
+protected:
   typedef std::function<R (Args...)> CbFunction;
   typedef typename CbFunction::result_type Result;
   typedef typename Collector::CollectorResult CollectorResult;
+private:
   /// SignalLink implements a doubly-linked ring with ref-counted nodes containing the signal handlers.
   struct SignalLink {
     SignalLink *next, *prev;
@@ -136,8 +138,8 @@ class ProtoSignal<R (Args...), Collector> : private CollectorInvocation<Collecto
       }
   }
 public:
-  /// ProtoSignal constructor, supports a default callback as argument.
-  ProtoSignal (const CbFunction &method = CbFunction()) :
+  /// ProtoSignal constructor, connects default callback if non-NULL.
+  ProtoSignal (const CbFunction &method) :
     callback_ring_ (NULL)
   {
     if (method != NULL)
@@ -211,7 +213,12 @@ public:
 template <typename SignalSignature, class Collector = Lib::CollectorDefault<typename std::function<SignalSignature>::result_type> >
 struct Signal /*final*/ :
     Lib::ProtoSignal<SignalSignature, Collector>
-{};
+{
+  typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
+  typedef typename ProtoSignal::CbFunction             CbFunction;
+  /// Signal constructor, supports a default callback as argument.
+  Signal (const CbFunction &method = CbFunction()) : ProtoSignal (method) {}
+};
 
 /// This function creates a std::function by binding @a object to the member function pointer @a method.
 template<class Class, class R, class... Args> std::function<R (Args...)>
