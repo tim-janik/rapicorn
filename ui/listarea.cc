@@ -82,9 +82,9 @@ ItemListImpl::constructed ()
       {
         m_model = store;
         ref_sink (m_model);
-        m_model->sig_inserted += slot (*this, &ItemListImpl::model_inserted);
-        m_model->sig_changed += slot (*this, &ItemListImpl::model_changed);
-        m_model->sig_removed += slot (*this, &ItemListImpl::model_removed);
+        m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
+        m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
+        m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
         m_n_cols = m_model->columns();
       }
       unref (ref_sink (store));
@@ -144,9 +144,9 @@ ItemListImpl::model (const String &modelurl)
   if (m_model)
     {
       ref_sink (m_model);
-      m_model->sig_inserted += slot (*this, &ItemListImpl::model_inserted);
-      m_model->sig_changed += slot (*this, &ItemListImpl::model_changed);
-      m_model->sig_removed += slot (*this, &ItemListImpl::model_removed);
+      m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
+      m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
+      m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
 #warning FIXME: missing: m_model->sig_selection_changed += slot (*this, &ItemListImpl::selection_changed);
     }
   if (oldmodel)

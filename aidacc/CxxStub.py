@@ -99,6 +99,12 @@ static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t
 { fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
 static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
 { return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+// slot
+template<class SharedPtr, class R, class... Args> std::function<R (Args...)>
+slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
+{
+  return [sp, fp] (Args... args) { return fp (sp, args...); };
+}
 
 } } // Anon::__AIDA_Local__
 """
@@ -637,11 +643,6 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
     s += '%s::%s ()' % (classC, classC) # ctor
-    l = [] # constructor agument list
-    for sg in class_info.signals:
-      l += ['sig_%s (*this)' % sg.name]
-    if l:
-      s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
     s += 'void\n'
@@ -924,7 +925,7 @@ class Generator:
   def generate_server_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
-    s += 'typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
+    s += 'typedef Rapicorn::Aida::Signal<%s (' % cpp_rtype
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
@@ -932,7 +933,7 @@ class Generator:
     s += ')'
     if functype.rtype.collector != 'void' or ancestor:
       colname = functype.rtype.collector if functype.rtype.collector != 'void' else 'Default'
-      s += ', Rapicorn::Signals::Collector' + colname.capitalize() + '<' + cpp_rtype + '>'
+      s += ', Rapicorn::Aida::Collector' + colname.capitalize() + '<' + cpp_rtype + '>'
       if ancestor:
         s += ', ' + ancestor
       else:
@@ -960,9 +961,8 @@ class Generator:
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
-    s += '  handler ('
-    s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
-    s += 'SharedPtr sp)\n  {\n'
+    s += '  handler (const SharedPtr &sp' + (',\n' if stype.args else '')
+    s += self.Args (stype, 'arg_', 11) + ')\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
     s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_, %s);\n' % digest
     s += '    fb <<= sp->handler_;\n'
@@ -986,10 +986,11 @@ class Generator:
     s += '  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
     s += '  fbr >>= signal_connection;\n'
-    s += '  if (signal_connection) self->sig_%s.disconnect (signal_connection);\n' % stype.name
+    s += '  if (signal_connection) self->sig_%s -= signal_connection;\n' % stype.name
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (handler_id));\n' % (closure_class, closure_class)
-    s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
+    s += '    cid = self->sig_%s += __AIDA_Local__::slot (sp, sp->handler);\n' % stype.name
+    s += '  }\n'
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % digest
     s += '  rb <<= cid;\n'
     s += '  return &rb;\n'

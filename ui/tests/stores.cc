@@ -98,8 +98,8 @@ test_basic_memory_store ()
   // check model/store identity (for memory stores)
   ListModelIface &m1 = *store;
   assert (&m1 == store);
-  store->sig_inserted += slot (store_inserted);
-  store->sig_changed += slot (store_changed);
+  store->sig_inserted += store_inserted;
+  store->sig_changed += store_changed;
   // basic store assertions
   assert (store->size() == 0);
   // insert first row
