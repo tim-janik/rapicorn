@@ -250,6 +250,22 @@ private:
   CollectorResult result_;
 };
 
+/// Keep signal emissions going while all handlers return 0 (false).
+template<typename Result>
+struct CollectorWhile0 {
+  typedef Result CollectorResult;
+  explicit                      CollectorWhile0 ()      : result_() {}
+  const CollectorResult&        result          ()      { return result_; }
+  inline bool
+  operator() (Result r)
+  {
+    result_ = r;
+    return result_ ? false : true;
+  }
+private:
+  CollectorResult result_;
+};
+
 /// CollectorVector returns the result of the all signal handlers from a signal emission in a std::vector.
 template<typename Result>
 struct CollectorVector {

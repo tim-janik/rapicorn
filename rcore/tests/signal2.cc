@@ -139,6 +139,28 @@ class TestCollectorUntil0 {
 };
 REGISTER_TEST ("Signal/CollectorUntil0", TestCollectorUntil0::run);
 
+class TestCollectorWhile0 {
+  bool check1, check2;
+  TestCollectorWhile0() : check1 (0), check2 (0) {}
+  bool handler_0     ()  { check1 = true; return false; }
+  bool handler_1     ()  { check2 = true; return true; }
+  bool handler_abort ()  { abort(); }
+  public:
+  static void
+  run ()
+  {
+    TestCollectorWhile0 self;
+    Aida::Signal<bool (), Aida::CollectorWhile0<bool>> sig_while0;
+    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_0);
+    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_1);
+    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_abort);
+    TASSERT (!self.check1 && !self.check2);
+    const bool result = sig_while0.emit();
+    TASSERT (result == true && self.check1 && self.check2);
+  }
+};
+REGISTER_TEST ("Signal/CollectorWhile0", TestCollectorWhile0::run);
+
 static void
 bench_callback_loop()
 {
