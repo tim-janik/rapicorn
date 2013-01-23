@@ -227,6 +227,22 @@ slot (Class *object, R (Class::*method) (Args...))
   return [object, method] (Args... args) { return (object ->* method) (args...); };
 }
 
+/// Keep signal emissions going while all handlers return !0 (true).
+template<typename Result>
+struct CollectorUntil0 {
+  typedef Result CollectorResult;
+  explicit                      CollectorUntil0 ()      : result_() {}
+  const CollectorResult&        result          ()      { return result_; }
+  inline bool
+  operator() (Result r)
+  {
+    result_ = r;
+    return result_ ? true : false;
+  }
+private:
+  CollectorResult result_;
+};
+
 /// CollectorVector returns the result of the all signal handlers from a signal emission in a std::vector.
 template<typename Result>
 struct CollectorVector {

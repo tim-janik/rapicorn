@@ -117,6 +117,28 @@ class TestCollectorVector {
 };
 REGISTER_TEST ("Signal/CollectorVector", TestCollectorVector::run);
 
+class TestCollectorUntil0 {
+  bool check1, check2;
+  TestCollectorUntil0() : check1 (0), check2 (0) {}
+  bool handler_true  ()  { check1 = true; return true; }
+  bool handler_false ()  { check2 = true; return false; }
+  bool handler_abort ()  { abort(); }
+  public:
+  static void
+  run ()
+  {
+    TestCollectorUntil0 self;
+    Aida::Signal<bool (), Aida::CollectorUntil0<bool>> sig_until0;
+    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_true);
+    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_false);
+    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_abort);
+    TASSERT (!self.check1 && !self.check2);
+    const bool result = sig_until0.emit();
+    TASSERT (!result && self.check1 && self.check2);
+  }
+};
+REGISTER_TEST ("Signal/CollectorUntil0", TestCollectorUntil0::run);
+
 static void
 bench_callback_loop()
 {
