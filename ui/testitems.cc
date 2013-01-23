@@ -9,9 +9,7 @@
 
 namespace Rapicorn {
 
-TestContainer::TestContainer() :
-  sig_assertion_ok (*this),
-  sig_assertions_passed (*this)
+TestContainer::TestContainer()
 {}
 
 #define DFLTEPS (1e-8)

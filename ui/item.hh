@@ -24,7 +24,7 @@ class ViewportImpl;
 
 /* --- event handler --- */
 class EventHandler : public virtual ReferenceCountable {
-  typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
+  typedef Aida::Signal<bool (const Event&), Aida::CollectorWhile0<bool>> EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
 public:
@@ -202,10 +202,10 @@ public:
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  SignalFinalize<ItemImpl>                sig_finalize;
-  Signal<ItemImpl, void ()>               sig_changed;
-  Signal<ItemImpl, void ()>               sig_invalidate;
-  Signal<ItemImpl, void (ItemImpl *oldt)> sig_hierarchy_changed;
+  Aida::Signal<void ()>                 sig_finalize;
+  Aida::Signal<void ()>                 sig_changed;
+  Aida::Signal<void ()>                 sig_invalidate;
+  Aida::Signal<void (ItemImpl *old)>    sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // item coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative

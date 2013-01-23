@@ -44,8 +44,8 @@ public:
   virtual EventLoop*    get_loop                                ();
   virtual void          enable_auto_close                       ();
   // signals
-  typedef Signal<WindowImpl, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
-  typedef Signal<WindowImpl, void ()> NotifySignal;
+  typedef Aida::Signal<bool (const String&, const StringVector&), CollectorWhile0<bool>> CommandSignal;
+  typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
   virtual bool          viewable                                ();
   virtual void          show                                    ();

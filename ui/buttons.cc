@@ -11,9 +11,7 @@ namespace Rapicorn {
 ButtonAreaImpl::ButtonAreaImpl() :
   m_button (0), m_repeater (0),
   m_click_type (CLICK_ON_RELEASE),
-  m_focus_frame (NULL),
-  sig_check_activate (*this),
-  sig_activate (*this)
+  m_focus_frame (NULL)
 {}
 
 const PropertyList&

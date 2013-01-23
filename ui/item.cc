@@ -17,7 +17,7 @@ struct ClassDoctor {
 };
 
 EventHandler::EventHandler() :
-  sig_event (*this, &EventHandler::handle_event)
+  sig_event (Aida::slot (*this, &EventHandler::handle_event))
 {}
 
 bool
@@ -50,10 +50,9 @@ ItemImpl::ItemImpl () :
   m_heritage (NULL),
   m_factory_context (NULL), // removing this breaks g++ pre-4.2.0 20060530
   m_ainfo (NULL),
-  sig_finalize (*this),
-  sig_changed (*this, &ItemImpl::do_changed),
-  sig_invalidate (*this, &ItemImpl::do_invalidate),
-  sig_hierarchy_changed (*this, &ItemImpl::hierarchy_changed)
+  sig_changed (Aida::slot (*this, &ItemImpl::do_changed)),
+  sig_invalidate (Aida::slot (*this, &ItemImpl::do_invalidate)),
+  sig_hierarchy_changed (Aida::slot (*this, &ItemImpl::hierarchy_changed))
 {}
 
 void

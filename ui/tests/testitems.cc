@@ -128,8 +128,8 @@ test_test_item ()
   WindowImpl &window = window_iface.impl();
   TestContainer *titem = window.interface<TestContainer*>();
   TASSERT (titem != NULL);
-  titem->sig_assertion_ok += slot (assertion_ok);
-  titem->sig_assertions_passed += slot (assertions_passed);
+  titem->sig_assertion_ok += assertion_ok;
+  titem->sig_assertions_passed += assertions_passed;
   titem->fatal_asserts (ServerTests::server_test_item_fatal_asserts);
   TOK();
   run_main_loop_recursive (false);
