@@ -13,7 +13,6 @@ public:
 } } // Rapicorn::Aida
 
 #include <rapicorn-core.hh> // for rcore/signal.hh
-using Rapicorn::Signals::slot;
 
 
 

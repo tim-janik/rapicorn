@@ -28,7 +28,6 @@ public:
 
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
-using Rapicorn::Signals::slot;
 """
 
 servercc_testcode = r"""
@@ -1118,8 +1117,7 @@ class Generator:
       s += serverhh_boilerplate
       if self.iface_base == self.test_iface_base:
         s += serverhh_testcode
-      if self.gen_rapicornsignals:
-        s += rapicornsignal_boilerplate
+      s += rapicornsignal_boilerplate
     if self.gen_servercc and self.iface_base == self.test_iface_base:
       s += servercc_testcode + '\n'
     if self.gen_servercc:
@@ -1246,7 +1244,6 @@ def generate (namespace_list, **args):
   gg.gen_server_skel = 'server-skel' in config['backend-options']
   gg.gen_clienthh = all or 'clienthh' in config['backend-options']
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
-  gg.gen_rapicornsignals = all or 'RapicornSignal' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
     if opt.startswith ('cppguard='):
