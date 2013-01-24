@@ -84,40 +84,58 @@ WindowImpl::custom_command (const String    &command_name,
   return handled;
 }
 
-static DataKey<ItemImpl*> focus_item_key;
+struct CurrentFocus {
+  ItemImpl *focus_item;
+  size_t    uncross_id;
+  CurrentFocus (ItemImpl *f = NULL, size_t i = 0) : focus_item (f), uncross_id (i) {}
+};
+static DataKey<CurrentFocus> focus_item_key;
+
+ItemImpl*
+WindowImpl::get_focus () const
+{
+  return get_data (&focus_item_key).focus_item;
+}
 
 void
 WindowImpl::uncross_focus (ItemImpl &fitem)
 {
-  assert (&fitem == get_data (&focus_item_key));
-  cross_unlink (fitem, slot (*this, &WindowImpl::uncross_focus));
-  ItemImpl *item = &fitem;
-  while (item)
+  CurrentFocus cfocus = get_data (&focus_item_key);
+  assert_return (&fitem == cfocus.focus_item);
+  if (cfocus.uncross_id)
     {
-      ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
-      ContainerImpl *fc = item->parent();
-      if (fc)
-        fc->set_focus_child (NULL);
-      item = fc;
+      set_data (&focus_item_key, CurrentFocus (cfocus.focus_item, 0)); // reset cfocus.uncross_id
+      cross_unlink (fitem, cfocus.uncross_id);
+      ItemImpl *item = &fitem;
+      while (item)
+        {
+          ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
+          ContainerImpl *fc = item->parent();
+          if (fc)
+            fc->set_focus_child (NULL);
+          item = fc;
+        }
+      cfocus = get_data (&focus_item_key);
+      assert_return (&fitem == cfocus.focus_item && cfocus.uncross_id == 0);
+      delete_data (&focus_item_key);
     }
-  assert (&fitem == get_data (&focus_item_key));
-  delete_data (&focus_item_key);
 }
 
 void
 WindowImpl::set_focus (ItemImpl *item)
 {
-  ItemImpl *old_focus = get_data (&focus_item_key);
-  if (item == old_focus)
+  CurrentFocus cfocus = get_data (&focus_item_key);
+  if (item == cfocus.focus_item)
     return;
-  if (old_focus)
-    uncross_focus (*old_focus);
+  if (cfocus.focus_item)
+    uncross_focus (*cfocus.focus_item);
   if (!item)
     return;
-  /* set new focus */
-  assert (item->has_ancestor (*this));
-  set_data (&focus_item_key, item);
-  cross_link (*item, slot (*this, &WindowImpl::uncross_focus));
+  // set new focus
+  assert_return (item->has_ancestor (*this));
+  cfocus.focus_item = item;
+  cfocus.uncross_id = cross_link (*cfocus.focus_item, Aida::slot (*this, &WindowImpl::uncross_focus));
+  set_data (&focus_item_key, cfocus);
   while (item)
     {
       ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
@@ -126,12 +144,6 @@ WindowImpl::set_focus (ItemImpl *item)
         fc->set_focus_child (item);
       item = fc;
     }
-}
-
-ItemImpl*
-WindowImpl::get_focus () const
-{
-  return get_data (&focus_item_key);
 }
 
 cairo_surface_t*
@@ -187,9 +199,9 @@ WindowImpl::WindowImpl() :
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* create event loop (auto-starts) */
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-  m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   m_loop.flag_primary (false);
   ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
@@ -692,7 +704,7 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       if (!m_notify_displayed_id)
-        m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
+        m_notify_displayed_id = m_loop.exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -917,7 +929,7 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
               EventLoop *loop = get_loop();
               if (loop)
                 {
-                  loop->exec_timer (0, slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
+                  loop->exec_timer (0, Aida::slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
                   m_auto_close = false;
                 }
             }
@@ -1011,7 +1023,7 @@ WindowImpl::create_screen_window ()
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
       m_loop.flag_primary (true); // FIXME: depends on WM-managable
-      VoidSlot sl = slot (*this, &WindowImpl::idle_show);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
       m_loop.exec_now (sl);
     }
 }
@@ -1036,9 +1048,9 @@ WindowImpl::destroy_screen_window ()
   cancel_item_events (NULL);
   if (!finalizing())
     {
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-      m_loop.exec_dispatcher (slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
     }
   unref (this);
 }

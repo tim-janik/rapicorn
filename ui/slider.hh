@@ -16,7 +16,7 @@ protected:
   virtual void          control           (const String   &command_name,
                                            const String   &arg) = 0;
   virtual void          slider_changed    ();
-  typedef Signal<SliderArea, void ()>     SignalSliderChanged;
+  typedef Aida::Signal<void ()> SignalSliderChanged;
 public:
   virtual bool          flipped           () const = 0;
   virtual void          flipped           (bool flip) = 0;

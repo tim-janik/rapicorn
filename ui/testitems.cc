@@ -9,9 +9,7 @@
 
 namespace Rapicorn {
 
-TestContainer::TestContainer() :
-  sig_assertion_ok (*this),
-  sig_assertions_passed (*this)
+TestContainer::TestContainer()
 {}
 
 #define DFLTEPS (1e-8)
@@ -233,7 +231,7 @@ public:
           {
             EventLoop *loop = witem->get_loop();
             if (loop)
-              m_handler_id = loop->exec_now (slot (*this, &TestBoxImpl::make_snapshot));
+              m_handler_id = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
           }
       }
   }

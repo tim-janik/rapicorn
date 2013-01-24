@@ -23,7 +23,7 @@ protected:
   int                   scroll_offset_x         () const { return m_xoffset; }
   int                   scroll_offset_y         () const { return m_yoffset; }
 public:
-  Signal<ViewportImpl, void ()> sig_scrolled;
+  Aida::Signal<void ()> sig_scrolled;
   void                  expose_child_region     (const Region &region);
   Allocation            child_viewport          ();
   explicit              ViewportImpl            ();

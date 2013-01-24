@@ -25,6 +25,7 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
 #define AIDA_ISLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 1)
 #define AIDA_UNLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 0)
+#define AIDA_ASSERT(expr)       do { if (__builtin_expect (!(expr), 0)) ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); } while (0)
 #else   // !__GNUC__
 #define AIDA_UNUSED
 #define AIDA_DEPRECATED
@@ -32,6 +33,7 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_PRINTF(fix, arx)
 #define AIDA_ISLIKELY(expr)     expr
 #define AIDA_UNLIKELY(expr)     expr
+#define AIDA_ASSERT(expr)       do { } while (0)
 #endif
 #define AIDA_LIKELY             AIDA_ISLIKELY
 
@@ -202,6 +204,7 @@ typedef std::vector<TypeHash> TypeHashList;
 // == Utilities ==
 template<class V> inline
 bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
+void    assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
 void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
 void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
 void    warning_printf  (const char *format, ...) AIDA_PRINTF (1, 2);
@@ -512,5 +515,8 @@ FieldBuffer::reset()
 }
 
 } } // Rapicorn::Aida
+
+// == Signals ==
+#include "aidasignal.hh"
 
 #endif // __RAPICORN_AIDA_HH__

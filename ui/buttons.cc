@@ -11,9 +11,7 @@ namespace Rapicorn {
 ButtonAreaImpl::ButtonAreaImpl() :
   m_button (0), m_repeater (0),
   m_click_type (CLICK_ON_RELEASE),
-  m_focus_frame (NULL),
-  sig_check_activate (*this),
-  sig_activate (*this)
+  m_focus_frame (NULL)
 {}
 
 const PropertyList&
@@ -64,11 +62,11 @@ ButtonAreaImpl::activate_click (int       button,
   if (need_repeat && !m_repeater)
     {
       if (m_click_type == CLICK_FAST_REPEAT)
-        m_repeater = exec_fast_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+        m_repeater = exec_fast_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
       else if (m_click_type == CLICK_SLOW_REPEAT)
-        m_repeater = exec_slow_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+        m_repeater = exec_slow_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
       else if (m_click_type == CLICK_KEY_REPEAT)
-        m_repeater = exec_key_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+        m_repeater = exec_key_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
     }
   else if (!need_repeat && m_repeater)
     {

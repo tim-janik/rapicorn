@@ -7,8 +7,8 @@
 namespace Rapicorn {
 
 class Adjustment : public virtual ReferenceCountable {
-  typedef Signal<Adjustment, void ()>	SignalValueChanged;
-  typedef Signal<Adjustment, void ()>	SignalRangeChanged;
+  typedef Aida::Signal<void ()> SignalValueChanged;
+  typedef Aida::Signal<void ()> SignalRangeChanged;
 protected:
   explicit              Adjustment      ();
   virtual               ~Adjustment     ();

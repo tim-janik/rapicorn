@@ -75,24 +75,27 @@ static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual ViewportImpl {
   Adjustment *m_hadjustment, *m_vadjustment;
+  size_t hadjustment_conid_, vadjustment_conid_;
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
-    if (m_hadjustment)
-      m_hadjustment->sig_value_changed -= slot (*this, &ScrollPortImpl::adjustment_changed);
+    if (m_hadjustment && hadjustment_conid_)
+      m_hadjustment->sig_value_changed -= hadjustment_conid_;
     m_hadjustment = NULL;
-    if (m_vadjustment)
-      m_vadjustment->sig_value_changed -= slot (*this, &ScrollPortImpl::adjustment_changed);
+    hadjustment_conid_ = 0;
+    if (m_vadjustment && vadjustment_conid_)
+      m_vadjustment->sig_value_changed -= vadjustment_conid_;
     m_vadjustment = NULL;
+    vadjustment_conid_ = 0;
     this->ViewportImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
         find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &m_hadjustment,
                           ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &m_vadjustment);
         if (m_hadjustment)
-          m_hadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
+          hadjustment_conid_ = m_hadjustment->sig_value_changed += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
         if (m_vadjustment)
-          m_vadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
+          vadjustment_conid_ = m_vadjustment->sig_value_changed += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
       }
   }
   virtual void
@@ -244,7 +247,7 @@ class ScrollPortImpl : public virtual ViewportImpl {
   }
 public:
   ScrollPortImpl() :
-    m_hadjustment (NULL), m_vadjustment (NULL)
+    m_hadjustment (NULL), m_vadjustment (NULL), hadjustment_conid_ (0), vadjustment_conid_ (0)
   {}
 };
 static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");

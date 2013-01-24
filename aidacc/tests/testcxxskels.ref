@@ -13,7 +13,6 @@ public:
 } } // Rapicorn::Aida
 
 #include <rapicorn-core.hh> // for rcore/signal.hh
-using Rapicorn::Signals::slot;
 
 // --- Interfaces (class declarations) ---
 
@@ -88,8 +87,8 @@ public:
   virtual void                          dummy    (bool) = 0;
   virtual std::string                   on_click () const = 0;
   virtual void                          on_click (const std::string&) = 0;
-  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Aida::Signal<void ()> Signal_void_signal;
+  typedef Rapicorn::Aida::Signal<double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
   virtual double                        simple_method            ();
@@ -257,30 +256,30 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int32_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, Rapicorn::Aida::int64_t ()> Signal_int64_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, double ()> Signal_float64_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, std::string ()> Signal_string_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecord ()> Signal_record_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickSequence ()> Signal_sequence_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_GrandChild_Interface* ()> Signal_interface_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, Rapicorn::Aida::Any ()> Signal_any_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_SignalTestInterface_Interface* ()> Signal_self_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (int i)> Signal_int32_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (double f)> Signal_float64_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const std::string &s)> Signal_string_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecord &r)> Signal_record_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickSequence &s)> Signal_sequence_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_GrandChild_Interface &i)> Signal_interface_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const Rapicorn::Aida::Any &a)> Signal_any_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
+  typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
+  typedef Rapicorn::Aida::Signal<bool ()> Signal_bool_result;
+  typedef Rapicorn::Aida::Signal<int ()> Signal_int32_result;
+  typedef Rapicorn::Aida::Signal<Rapicorn::Aida::int64_t ()> Signal_int64_result;
+  typedef Rapicorn::Aida::Signal<double ()> Signal_float64_result;
+  typedef Rapicorn::Aida::Signal<std::string ()> Signal_string_result;
+  typedef Rapicorn::Aida::Signal<QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Aida::Signal<QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Aida::Signal<QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Aida::Signal<I_GrandChild_Interface* ()> Signal_interface_result;
+  typedef Rapicorn::Aida::Signal<Rapicorn::Aida::Any ()> Signal_any_result;
+  typedef Rapicorn::Aida::Signal<I_SignalTestInterface_Interface* ()> Signal_self_result;
+  typedef Rapicorn::Aida::Signal<void ()> Signal_void_arg;
+  typedef Rapicorn::Aida::Signal<void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Aida::Signal<void (int i)> Signal_int32_arg;
+  typedef Rapicorn::Aida::Signal<void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
+  typedef Rapicorn::Aida::Signal<void (double f)> Signal_float64_arg;
+  typedef Rapicorn::Aida::Signal<void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Aida::Signal<void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Aida::Signal<void (const QuickRecord &r)> Signal_record_arg;
+  typedef Rapicorn::Aida::Signal<void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Aida::Signal<void (I_GrandChild_Interface &i)> Signal_interface_arg;
+  typedef Rapicorn::Aida::Signal<void (const Rapicorn::Aida::Any &a)> Signal_any_arg;
+  typedef Rapicorn::Aida::Signal<void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
   Signal_void_result sig_void_result;
   Signal_bool_result sig_bool_result;
   Signal_int32_result sig_int32_result;
@@ -322,7 +321,7 @@ protected:
 public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
-  typedef Rapicorn::Signals::Signal<I_ChildInheritingSignals_Interface, void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
+  typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignals_Interface*);
@@ -410,8 +409,8 @@ public:
   virtual void                          on_click3  (const std::string&) = 0;
   virtual ClickType                     click_type () const = 0;
   virtual void                          click_type (ClickType) = 0;
-  typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
-  typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
+  typedef Rapicorn::Aida::Signal<bool (), Rapicorn::Aida::CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Aida::Signal<void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };

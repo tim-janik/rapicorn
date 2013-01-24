@@ -18,7 +18,6 @@
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
 #include <rcore/math.hh>
-#include <rcore/signal.hh>
 #include <rcore/unicode.hh>
 #include <rcore/utilities.hh>
 #include <rcore/xmlnode.hh>

@@ -17,7 +17,7 @@ struct ClassDoctor {
 };
 
 EventHandler::EventHandler() :
-  sig_event (*this, &EventHandler::handle_event)
+  sig_event (Aida::slot (*this, &EventHandler::handle_event))
 {}
 
 bool
@@ -50,10 +50,9 @@ ItemImpl::ItemImpl () :
   m_heritage (NULL),
   m_factory_context (NULL), // removing this breaks g++ pre-4.2.0 20060530
   m_ainfo (NULL),
-  sig_finalize (*this),
-  sig_changed (*this, &ItemImpl::do_changed),
-  sig_invalidate (*this, &ItemImpl::do_invalidate),
-  sig_hierarchy_changed (*this, &ItemImpl::hierarchy_changed)
+  sig_changed (Aida::slot (*this, &ItemImpl::do_changed)),
+  sig_invalidate (Aida::slot (*this, &ItemImpl::do_invalidate)),
+  sig_hierarchy_changed (Aida::slot (*this, &ItemImpl::hierarchy_changed))
 {}
 
 void
@@ -243,24 +242,22 @@ ItemImpl::notify_key_error ()
     ritem->beep();
 }
 
-void
-ItemImpl::cross_link (ItemImpl           &link,
-                      const ItemSlot &uncross)
+size_t
+ItemImpl::cross_link (ItemImpl &link, const ItemSlot &uncross)
 {
-  assert (this != &link);
+  assert_return (this != &link, 0);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
-  assert (common_container != NULL);
-  common_container->item_cross_link (*this, link, uncross);
+  assert_return (common_container != NULL, 0);
+  return common_container->item_cross_link (*this, link, uncross);
 }
 
 void
-ItemImpl::cross_unlink (ItemImpl           &link,
-                        const ItemSlot &uncross)
+ItemImpl::cross_unlink (ItemImpl &link, size_t link_id)
 {
-  assert (this != &link);
+  assert_return (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
-  assert (common_container != NULL);
-  common_container->item_cross_unlink (*this, link, uncross);
+  assert_return (common_container != NULL);
+  common_container->item_cross_unlink (*this, link, link_id);
 }
 
 void
@@ -331,7 +328,7 @@ ItemImpl::query_selector_unique (const String &selector)
 }
 
 uint
-ItemImpl::exec_slow_repeater (const BoolSlot &sl)
+ItemImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
 {
   WindowImpl *ritem = get_window();
   if (ritem)
@@ -344,7 +341,7 @@ ItemImpl::exec_slow_repeater (const BoolSlot &sl)
 }
 
 uint
-ItemImpl::exec_fast_repeater (const BoolSlot &sl)
+ItemImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
 {
   WindowImpl *ritem = get_window();
   if (ritem)
@@ -357,7 +354,7 @@ ItemImpl::exec_fast_repeater (const BoolSlot &sl)
 }
 
 uint
-ItemImpl::exec_key_repeater (const BoolSlot &sl)
+ItemImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 {
   WindowImpl *ritem = get_window();
   if (ritem)
@@ -407,7 +404,7 @@ ItemImpl::queue_visual_update ()
           EventLoop *loop = ritem->get_loop();
           if (loop)
             {
-              timer_id = loop->exec_timer (20, slot (*this, &ItemImpl::force_visual_update));
+              timer_id = loop->exec_timer (20, Aida::slot (*this, &ItemImpl::force_visual_update));
               set_data (&visual_update_key, timer_id);
             }
         }

@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 SliderArea::SliderArea() :
-  sig_slider_changed (*this, &SliderArea::slider_changed)
+  sig_slider_changed (Aida::slot (*this, &SliderArea::slider_changed))
 {}
 
 void
@@ -71,13 +71,18 @@ SliderArea::_property_list()
 
 class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
   Adjustment          *m_adjustment;
+  size_t               avc_id_, arc_id_;
   AdjustmentSourceType m_adjustment_source;
   bool                 m_flip;
   void
   unset_adjustment()
   {
-    m_adjustment->sig_value_changed -= slot (sig_slider_changed);
-    m_adjustment->sig_range_changed -= slot (sig_slider_changed);
+    if (avc_id_)
+      m_adjustment->sig_value_changed -= avc_id_;
+    avc_id_ = 0;
+    if (arc_id_)
+      m_adjustment->sig_range_changed -= arc_id_;
+    arc_id_ = 0;
     m_adjustment->unref();
     m_adjustment = NULL;
   }
@@ -131,7 +136,7 @@ protected:
   }
 public:
   SliderAreaImpl() :
-    m_adjustment (NULL),
+    m_adjustment (NULL), avc_id_ (0), arc_id_ (0),
     m_adjustment_source (ADJUSTMENT_SOURCE_NONE),
     m_flip (false)
   {
@@ -146,8 +151,8 @@ public:
     if (m_adjustment)
       unset_adjustment();
     m_adjustment = &adjustment;
-    m_adjustment->sig_value_changed += slot (sig_slider_changed);
-    m_adjustment->sig_range_changed += slot (sig_slider_changed);
+    avc_id_ = m_adjustment->sig_value_changed += [this] () { sig_slider_changed.emit(); };
+    arc_id_ = m_adjustment->sig_range_changed += [this] () { sig_slider_changed.emit(); };
     changed();
   }
   virtual Adjustment*
@@ -166,14 +171,16 @@ static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory
 class SliderSkidImpl;
 
 class SliderTroughImpl : public virtual SingleContainerImpl, public virtual EventHandler {
+  SliderArea *slider_area_;
+  size_t slider_changed_conid_;
   bool
   flipped()
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    return slider_area ? slider_area->flipped() : false;
+    return slider_area_ ? slider_area_->flipped() : false;
   }
 public:
-  SliderTroughImpl()
+  SliderTroughImpl() :
+    slider_area_ (NULL), slider_changed_conid_ (0)
   {}
   ~SliderTroughImpl()
   {}
@@ -181,26 +188,27 @@ protected:
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    if (slider_area)
-      slider_area->sig_slider_changed -= slot (*this, &SliderTroughImpl::reallocate_child);
+    if (slider_area_ && slider_changed_conid_)
+      slider_area_->sig_slider_changed -= slider_changed_conid_;
+    slider_changed_conid_ = 0;
+    slider_area_ = NULL;
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        if (!slider_area)
-          throw Exception ("SliderTrough without SliderArea ancestor: ", name());
-        slider_area->sig_slider_changed += slot (*this, &SliderTroughImpl::reallocate_child);
+        slider_area_ = parent_interface<SliderArea*>();
+        slider_changed_conid_ = slider_area_->sig_slider_changed += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
       }
   }
   Adjustment*
   adjustment () const
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    return slider_area ? slider_area->adjustment() : NULL;
+    return slider_area_ ? slider_area_->adjustment() : NULL;
   }
   double
   nvalue()
   {
+    if (!slider_area_)
+      return 0;
     Adjustment &adj = *adjustment();
     return flipped() ? adj.flipped_nvalue() : adj.nvalue();
   }
@@ -232,8 +240,8 @@ protected:
       {
         if (child.hexpand())
           {
-            Adjustment &adj = *adjustment();
-            double cwidth = round (adj.abs_length() * area.width);
+            Adjustment *adj = adjustment();
+            double cwidth = adj ? round (adj->abs_length() * area.width) : 0;
             rq.width = MAX (cwidth, rq.width);
           }
         area.x += round (nvalue() * (area.width - rq.width));
@@ -243,8 +251,8 @@ protected:
       {
         if (child.vexpand())
           {
-            Adjustment &adj = *adjustment();
-            double cheight = round (adj.abs_length() * area.height);
+            Adjustment *adj = adjustment();
+            double cheight = adj ? round (adj->abs_length() * area.height) : 0;
             rq.height = MAX (cheight, rq.height);
           }
         area.y += round (nvalue() * (area.height - rq.height));

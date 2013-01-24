@@ -8,15 +8,15 @@
 namespace Rapicorn {
 
 struct Activatable : virtual BaseObject { // FIXME: remove this? /* ActivateModel */
-  SignalVoid<Activatable>       sig_changed;
+  Aida::Signal<void ()>         sig_changed;
   virtual bool                  check_activate ();
   virtual void                  activate       ();
 };
 
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonAreaIface,
                        public virtual EventHandler, public virtual FocusFrame::Client {
-  typedef Signal<ButtonAreaImpl, bool (), CollectorUntil0<bool> > SignalCheckActivate;
-  typedef Signal<ButtonAreaImpl, void ()>                         SignalActivate;
+  typedef Aida::Signal<bool (), Aida::CollectorUntil0<bool>> SignalCheckActivate;
+  typedef Aida::Signal<void ()>                              SignalActivate;
   uint          m_button, m_repeater;
   ClickType     m_click_type;
   FocusFrame   *m_focus_frame;

@@ -24,7 +24,7 @@ class ViewportImpl;
 
 /* --- event handler --- */
 class EventHandler : public virtual ReferenceCountable {
-  typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
+  typedef Aida::Signal<bool (const Event&), Aida::CollectorWhile0<bool>> EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
 public:
@@ -37,7 +37,6 @@ public:
 };
 
 /* --- ItemImpl --- */
-typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
 class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
@@ -100,9 +99,9 @@ protected:
   virtual void                do_invalidate     ();
   virtual void                do_changed        ();
   /* idlers & timers */
-  uint                        exec_fast_repeater   (const BoolSlot &sl);
-  uint                        exec_slow_repeater   (const BoolSlot &sl);
-  uint                        exec_key_repeater    (const BoolSlot &sl);
+  uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
+  uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
+  uint                        exec_key_repeater    (const EventLoop::BoolSlot &sl);
   bool                        remove_exec          (uint            exec_id);
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
@@ -187,11 +186,10 @@ public:
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;
   /* cross links */
-  void                        cross_link        (ItemImpl       &link,
-                                                 const ItemSlot &uncross);
-  void                        cross_unlink      (ItemImpl       &link,
-                                                 const ItemSlot &uncross);
-  void                        uncross_links     (ItemImpl       &link);
+  typedef std::function<void (ItemImpl&)> ItemSlot;
+  size_t                      cross_link        (ItemImpl &link, const ItemSlot &uncross);
+  void                        cross_unlink      (ItemImpl &link, size_t link_id);
+  void                        uncross_links     (ItemImpl &link);
   /* invalidation / changes */
   void                        invalidate        ();
   void                        invalidate_size   ();
@@ -202,10 +200,10 @@ public:
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  SignalFinalize<ItemImpl>                sig_finalize;
-  Signal<ItemImpl, void ()>               sig_changed;
-  Signal<ItemImpl, void ()>               sig_invalidate;
-  Signal<ItemImpl, void (ItemImpl *oldt)> sig_hierarchy_changed;
+  Aida::Signal<void ()>                 sig_finalize;
+  Aida::Signal<void ()>                 sig_changed;
+  Aida::Signal<void ()>                 sig_invalidate;
+  Aida::Signal<void (ItemImpl *old)>    sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // item coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative

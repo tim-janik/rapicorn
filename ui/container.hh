@@ -13,12 +13,12 @@ struct ContainerImpl : public virtual ItemImpl, public virtual ContainerIface {
   friend              class ItemImpl;
   friend              class WindowImpl;
   void                uncross_descendant(ItemImpl          &descendant);
-  void                item_cross_link   (ItemImpl           &owner,
+  size_t              item_cross_link   (ItemImpl           &owner,
                                          ItemImpl           &link,
                                          const ItemSlot &uncross);
   void                item_cross_unlink (ItemImpl           &owner,
                                          ItemImpl           &link,
-                                         const ItemSlot &uncross);
+                                         size_t              link_id);
   void                item_uncross_links(ItemImpl           &owner,
                                          ItemImpl           &link);
 protected:

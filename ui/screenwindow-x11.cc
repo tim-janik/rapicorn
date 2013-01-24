@@ -996,11 +996,11 @@ X11Context::run()
   // perform unlock/lock around poll() calls
   // m_loop.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
   // ensure X11 file descriptor changes are handled
-  m_loop.exec_io_handler (slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
+  m_loop.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
-  m_loop.exec_dispatcher (slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  m_loop.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
-  m_loop.exec_dispatcher (slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
+  m_loop.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // ensure command_queue events are processed
   m_command_queue.notifier ([&]() { m_loop.wakeup(); });
   // process X11 events
@@ -1156,7 +1156,7 @@ X11Context::queue_update (size_t xid)
   const bool need_handler = m_queued_updates.empty();
   m_queued_updates.push_back (xid);
   if (need_handler)
-    m_loop.exec_timer (50, slot (*this, &X11Context::process_updates));
+    m_loop.exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
 }
 
 } // Rapicorn

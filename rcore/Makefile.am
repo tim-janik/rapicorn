@@ -11,18 +11,18 @@ GLIB_MKENUMS = glib-mkenums
 rapicorn_public_headers = $(strip	\
 	aida.hh		blobres.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
-			signal.hh		math.hh			unicode.hh   \
+					math.hh				unicode.hh   \
 	objects.hh	aidaenums.hh	aidaprops.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
-	cxxaux.hh	rcore.hh \
+	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
 	aida.cc		blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
-			signal.cc		math.cc			unicode.cc   \
+					math.cc				unicode.cc   \
 	objects.cc	aidaenums.cc	aidaprops.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
@@ -34,13 +34,9 @@ rapicorn_impl_headers = $(strip 	\
 )
 rapicorn_generated_headers = $(strip	\
 	aidavariants.hh			\
-	signalvariants.hh		\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
-        signalslot.hh			\
-        signaltemplate.hh		\
-	mksignals.sh			\
 	aidabuiltins.cc			\
 	aidamap.cc			\
 )
@@ -205,15 +201,3 @@ aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
 	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
 CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
 EXTRA_DIST += aidaproto.hh xmanifold.py
-
-# === signalvariants.hh ===
-$(srcdir)/*.cc: signalvariants.hh
-signalvariants.hh: $(srcdir)/signalslot.hh $(srcdir)/signaltemplate.hh $(srcdir)/mksignals.sh
-	cd . \
-	&& echo "/* Signal Variants -- Generated from: $(^F) */"	 >xgen-sigs \
-	&& echo 						       	>>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/signalslot.hh     17	>>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/signaltemplate.hh 16	>>xgen-sigs \
-	&& cp xgen-sigs $@ \
-	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs signalvariants.hh xgen-signals.sed
