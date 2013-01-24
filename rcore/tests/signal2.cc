@@ -203,6 +203,7 @@ bench_aida_signal()
 }
 REGISTER_TEST ("Signal/SignalBench: Aida::Signal", bench_aida_signal);
 
+#if 0
 struct DummyObject {
   void  ref()   { /* dummy for signal emission */ }
   void  unref() { /* dummy for signal emission */ }
@@ -235,6 +236,7 @@ struct DummyObject {
   }
 };
 REGISTER_TEST ("Signal/SignalBench: Rapicorn::Signal", DummyObject::bench_old_signal);
+#endif
 
 uint64
 TestCounter::get ()

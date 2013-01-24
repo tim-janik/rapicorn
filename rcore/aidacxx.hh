@@ -3,7 +3,6 @@
 #define __AIDA_CXX_HH__
 
 #include <rcore/aida.hh>
-#include <rcore/signal.hh>
 #include <rcore/aidavariants.hh> // FieldBuffer signal emission templates
 
 namespace Rapicorn { namespace Aida {
