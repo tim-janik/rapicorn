@@ -68,15 +68,15 @@ check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
@@ -84,7 +84,7 @@ EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
 
 # == Test CxxStub Code Compilation ==
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxserver.cc
 	$(Q) cat $(srcdir)/testcxxserver.ref		>>testcxxserver.cc
@@ -95,7 +95,7 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
 check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g RapicornSignal \
+	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxskels.cc
 	$(Q) cat $(srcdir)/testcxxskels.ref		>>testcxxskels.cc
