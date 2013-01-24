@@ -84,40 +84,58 @@ WindowImpl::custom_command (const String    &command_name,
   return handled;
 }
 
-static DataKey<ItemImpl*> focus_item_key;
+struct CurrentFocus {
+  ItemImpl *focus_item;
+  size_t    uncross_id;
+  CurrentFocus (ItemImpl *f = NULL, size_t i = 0) : focus_item (f), uncross_id (i) {}
+};
+static DataKey<CurrentFocus> focus_item_key;
+
+ItemImpl*
+WindowImpl::get_focus () const
+{
+  return get_data (&focus_item_key).focus_item;
+}
 
 void
 WindowImpl::uncross_focus (ItemImpl &fitem)
 {
-  assert (&fitem == get_data (&focus_item_key));
-  cross_unlink (fitem, slot (*this, &WindowImpl::uncross_focus));
-  ItemImpl *item = &fitem;
-  while (item)
+  CurrentFocus cfocus = get_data (&focus_item_key);
+  assert_return (&fitem == cfocus.focus_item);
+  if (cfocus.uncross_id)
     {
-      ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
-      ContainerImpl *fc = item->parent();
-      if (fc)
-        fc->set_focus_child (NULL);
-      item = fc;
+      set_data (&focus_item_key, CurrentFocus (cfocus.focus_item, 0)); // reset cfocus.uncross_id
+      cross_unlink (fitem, cfocus.uncross_id);
+      ItemImpl *item = &fitem;
+      while (item)
+        {
+          ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
+          ContainerImpl *fc = item->parent();
+          if (fc)
+            fc->set_focus_child (NULL);
+          item = fc;
+        }
+      cfocus = get_data (&focus_item_key);
+      assert_return (&fitem == cfocus.focus_item && cfocus.uncross_id == 0);
+      delete_data (&focus_item_key);
     }
-  assert (&fitem == get_data (&focus_item_key));
-  delete_data (&focus_item_key);
 }
 
 void
 WindowImpl::set_focus (ItemImpl *item)
 {
-  ItemImpl *old_focus = get_data (&focus_item_key);
-  if (item == old_focus)
+  CurrentFocus cfocus = get_data (&focus_item_key);
+  if (item == cfocus.focus_item)
     return;
-  if (old_focus)
-    uncross_focus (*old_focus);
+  if (cfocus.focus_item)
+    uncross_focus (*cfocus.focus_item);
   if (!item)
     return;
-  /* set new focus */
-  assert (item->has_ancestor (*this));
-  set_data (&focus_item_key, item);
-  cross_link (*item, slot (*this, &WindowImpl::uncross_focus));
+  // set new focus
+  assert_return (item->has_ancestor (*this));
+  cfocus.focus_item = item;
+  cfocus.uncross_id = cross_link (*cfocus.focus_item, Aida::slot (*this, &WindowImpl::uncross_focus));
+  set_data (&focus_item_key, cfocus);
   while (item)
     {
       ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
@@ -126,12 +144,6 @@ WindowImpl::set_focus (ItemImpl *item)
         fc->set_focus_child (item);
       item = fc;
     }
-}
-
-ItemImpl*
-WindowImpl::get_focus () const
-{
-  return get_data (&focus_item_key);
 }
 
 cairo_surface_t*

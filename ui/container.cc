@@ -16,17 +16,13 @@ struct ClassDoctor {
 
 /* --- CrossLinks --- */
 struct CrossLink {
-  ItemImpl                             *owner, *link;
-  Signals::Trampoline1<void,ItemImpl&> *uncross;
-  CrossLink                            *next;
-  CrossLink (ItemImpl *o, ItemImpl *l, Signals::Trampoline1<void,ItemImpl&> &it) :
+  ItemImpl           *owner, *link;
+  ItemImpl::ItemSlot  uncross;
+  CrossLink          *next;
+  CrossLink (ItemImpl *o, ItemImpl *l, const ItemImpl::ItemSlot &slot) :
     owner (o), link (l),
-    uncross (ref_sink (&it)), next (NULL)
+    uncross (slot), next (NULL)
   {}
-  ~CrossLink()
-  {
-    unref (uncross);
-  }
   RAPICORN_CLASS_NON_COPYABLE (CrossLink);
 };
 struct CrossLinks {
@@ -48,9 +44,9 @@ struct CrossLinksKey : public DataKey<CrossLinks*> {
 static CrossLinksKey cross_links_key;
 
 struct UncrossNode {
-  UncrossNode *next;
-  ContainerImpl   *mutable_container;
-  CrossLink   *clink;
+  UncrossNode   *next;
+  ContainerImpl *mutable_container;
+  CrossLink     *clink;
   UncrossNode (ContainerImpl *xcontainer, CrossLink *xclink) :
     next (NULL), mutable_container (xcontainer), clink (xclink)
   {}
@@ -59,30 +55,27 @@ struct UncrossNode {
 static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;
 
-void
-ContainerImpl::item_cross_link (ItemImpl       &owner,
-                                ItemImpl       &link,
-                                const ItemSlot &uncross)
+size_t
+ContainerImpl::item_cross_link (ItemImpl &owner, ItemImpl &link, const ItemSlot &uncross)
 {
   assert (&owner != &link);
   assert (owner.common_ancestor (link) == this); // could be disabled for performance
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!clinks)
     {
-      clinks =  new CrossLinks();
+      clinks = new CrossLinks();
       clinks->container = this;
       clinks->links = NULL;
       set_data (&cross_links_key, clinks);
     }
-  CrossLink *clink = new CrossLink (&owner, &link, *uncross.get_trampoline());
+  CrossLink *clink = new CrossLink (&owner, &link, uncross);
   clink->next = clinks->links;
   clinks->links = clink;
+  return size_t (clink);
 }
 
 void
-ContainerImpl::item_cross_unlink (ItemImpl       &owner,
-                                  ItemImpl       &link,
-                                  const ItemSlot &uncross)
+ContainerImpl::item_cross_unlink (ItemImpl &owner, ItemImpl &link, size_t link_id)
 {
   bool found_one = false;
   ref (this);
@@ -93,10 +86,8 @@ ContainerImpl::item_cross_unlink (ItemImpl       &owner,
    */
   uncross_callback_stack_mutex.lock();
   for (UncrossNode *unode = uncross_callback_stack; unode; unode = unode->next)
-    if (unode->mutable_container == this &&
-        unode->clink->owner == &owner &&
-        unode->clink->link == &link &&
-        *unode->clink->uncross == *uncross.get_trampoline())
+    if (unode->mutable_container == this && link_id == size_t (unode->clink) &&
+        unode->clink->owner == &owner && unode->clink->link == &link)
       {
         unode->mutable_container = NULL; /* prevent more cross_unlink() calls */
         found_one = true;
@@ -107,9 +98,7 @@ ContainerImpl::item_cross_unlink (ItemImpl       &owner,
     {
       CrossLinks *clinks = get_data (&cross_links_key);
       for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
-        if (clink->owner == &owner &&
-            clink->link == &link &&
-            *clink->uncross == *uncross.get_trampoline())
+        if (link_id == size_t (clink) && clink->owner == &owner && clink->link == &link)
           {
             container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links, false);
             found_one = true;
@@ -223,7 +212,7 @@ container_uncross_link_R (ContainerImpl *container,
       uncross_callback_stack = &unode;
       uncross_callback_stack_mutex.unlock();
       /* exec callback, note that this may recurse */
-      (*clink->uncross) (*clink->link);
+      clink->uncross (*clink->link);
       /* unrecord execution */
       uncross_callback_stack_mutex.lock();
       UncrossNode *walk, *last = NULL;

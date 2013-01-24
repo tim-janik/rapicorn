@@ -37,7 +37,6 @@ public:
 };
 
 /* --- ItemImpl --- */
-typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
 class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
@@ -187,11 +186,10 @@ public:
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;
   /* cross links */
-  void                        cross_link        (ItemImpl       &link,
-                                                 const ItemSlot &uncross);
-  void                        cross_unlink      (ItemImpl       &link,
-                                                 const ItemSlot &uncross);
-  void                        uncross_links     (ItemImpl       &link);
+  typedef std::function<void (ItemImpl&)> ItemSlot;
+  size_t                      cross_link        (ItemImpl &link, const ItemSlot &uncross);
+  void                        cross_unlink      (ItemImpl &link, size_t link_id);
+  void                        uncross_links     (ItemImpl &link);
   /* invalidation / changes */
   void                        invalidate        ();
   void                        invalidate_size   ();

@@ -242,24 +242,22 @@ ItemImpl::notify_key_error ()
     ritem->beep();
 }
 
-void
-ItemImpl::cross_link (ItemImpl           &link,
-                      const ItemSlot &uncross)
+size_t
+ItemImpl::cross_link (ItemImpl &link, const ItemSlot &uncross)
 {
-  assert (this != &link);
+  assert_return (this != &link, 0);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
-  assert (common_container != NULL);
-  common_container->item_cross_link (*this, link, uncross);
+  assert_return (common_container != NULL, 0);
+  return common_container->item_cross_link (*this, link, uncross);
 }
 
 void
-ItemImpl::cross_unlink (ItemImpl           &link,
-                        const ItemSlot &uncross)
+ItemImpl::cross_unlink (ItemImpl &link, size_t link_id)
 {
-  assert (this != &link);
+  assert_return (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
-  assert (common_container != NULL);
-  common_container->item_cross_unlink (*this, link, uncross);
+  assert_return (common_container != NULL);
+  common_container->item_cross_unlink (*this, link, link_id);
 }
 
 void
