@@ -193,13 +193,12 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static FirstInterfaceHandle   down_cast (SmartHandle smh) { return smh._is_null() ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static FirstInterfaceHandle   down_cast (SmartHandle smh) { return smh == NULL ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      FirstInterfaceHandle ();
   void                          void_func            ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FirstInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
 
 /** @interface XFooRecord
@@ -456,7 +455,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static UIWidgetAreaHandle     down_cast (SmartHandle smh) { return smh._is_null() ? UIWidgetAreaHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static UIWidgetAreaHandle     down_cast (SmartHandle smh) { return smh == NULL ? UIWidgetAreaHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      UIWidgetAreaHandle ();
   bool                          dummy    () const;
   void                          dummy    (bool);
@@ -489,7 +488,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const UIWidgetAreaHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, UIWidgetAreaHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef UIWidgetAreaHandle UIWidgetAreaH; ///< Convenience alias for the IDL type UIWidgetArea.
 
 /** @interface Parent
@@ -504,12 +502,11 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static ParentHandle           down_cast (SmartHandle smh) { return smh._is_null() ? ParentHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static ParentHandle           down_cast (SmartHandle smh) { return smh == NULL ? ParentHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      ParentHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ParentHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ParentHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
 
 /** @interface Child
@@ -523,12 +520,11 @@ protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static ChildHandle            down_cast (SmartHandle smh) { return smh._is_null() ? ChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static ChildHandle            down_cast (SmartHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      ChildHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ChildHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef ChildHandle ChildH; ///< Convenience alias for the IDL type Child.
 
 /** @interface Descendant
@@ -542,12 +538,11 @@ protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static DescendantHandle       down_cast (SmartHandle smh) { return smh._is_null() ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static DescendantHandle       down_cast (SmartHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      DescendantHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const DescendantHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, DescendantHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef DescendantHandle DescendantH; ///< Convenience alias for the IDL type Descendant.
 
 /** @interface GrandChild
@@ -561,12 +556,11 @@ protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static GrandChildHandle       down_cast (SmartHandle smh) { return smh._is_null() ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static GrandChildHandle       down_cast (SmartHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      GrandChildHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const GrandChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, GrandChildHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef GrandChildHandle GrandChildH; ///< Convenience alias for the IDL type GrandChild.
 
 enum QuickEnum {
@@ -610,13 +604,12 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static QuickIfaceHandle       down_cast (SmartHandle smh) { return smh._is_null() ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static QuickIfaceHandle       down_cast (SmartHandle smh) { return smh == NULL ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      QuickIfaceHandle ();
   void                          simple_function  (int i = 9);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickIfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickIfaceHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef QuickIfaceHandle QuickIfaceH; ///< Convenience alias for the IDL type QuickIface.
 
 /** @interface MethodTestInterface
@@ -631,7 +624,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static MethodTestInterfaceHandle down_cast (SmartHandle smh) { return smh._is_null() ? MethodTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static MethodTestInterfaceHandle down_cast (SmartHandle smh) { return smh == NULL ? MethodTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      MethodTestInterfaceHandle ();
   void                          method_with_void          ();
   bool                          method_with_bools         (bool input,
@@ -659,7 +652,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const MethodTestInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, MethodTestInterfaceHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef MethodTestInterfaceHandle MethodTestInterfaceH; ///< Convenience alias for the IDL type MethodTestInterface.
 
 /** @interface SignalTestInterface
@@ -674,7 +666,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static SignalTestInterfaceHandle down_cast (SmartHandle smh) { return smh._is_null() ? SignalTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static SignalTestInterfaceHandle down_cast (SmartHandle smh) { return smh == NULL ? SignalTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      SignalTestInterfaceHandle ();
   typedef void                  Callback_void_result ();
   Rapicorn::Aida::uint64_t      sig_void_result (const std::function<Callback_void_result> &callback);
@@ -751,7 +743,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SignalTestInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SignalTestInterfaceHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef SignalTestInterfaceHandle SignalTestInterfaceH; ///< Convenience alias for the IDL type SignalTestInterface.
 
 /** @interface ChildInheritingSignals
@@ -765,7 +756,7 @@ protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static ChildInheritingSignalsHandle down_cast (SmartHandle smh) { return smh._is_null() ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static ChildInheritingSignalsHandle down_cast (SmartHandle smh) { return smh == NULL ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      ChildInheritingSignalsHandle ();
   typedef void                  Callback_child_signal (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s);
   Rapicorn::Aida::uint64_t      sig_child_signal (const std::function<Callback_child_signal> &callback);
@@ -773,7 +764,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ChildInheritingSignalsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ChildInheritingSignalsHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef ChildInheritingSignalsHandle ChildInheritingSignalsH; ///< Convenience alias for the IDL type ChildInheritingSignals.
 
 /** @interface AnotherChild
@@ -787,12 +777,11 @@ protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static AnotherChildHandle     down_cast (SmartHandle smh) { return smh._is_null() ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static AnotherChildHandle     down_cast (SmartHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      AnotherChildHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnotherChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnotherChildHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef AnotherChildHandle AnotherChildH; ///< Convenience alias for the IDL type AnotherChild.
 
 /** @interface PropertyTester
@@ -807,7 +796,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static PropertyTesterHandle   down_cast (SmartHandle smh) { return smh._is_null() ? PropertyTesterHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static PropertyTesterHandle   down_cast (SmartHandle smh) { return smh == NULL ? PropertyTesterHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      PropertyTesterHandle ();
   bool                          bool_prop      () const;
   void                          bool_prop      (bool);
@@ -834,7 +823,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PropertyTesterHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PropertyTesterHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef PropertyTesterHandle PropertyTesterH; ///< Convenience alias for the IDL type PropertyTester.
 } // InterfaceTests
 
@@ -862,7 +850,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static ButtonAreaHandle       down_cast (SmartHandle smh) { return smh._is_null() ? ButtonAreaHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static ButtonAreaHandle       down_cast (SmartHandle smh) { return smh == NULL ? ButtonAreaHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      ButtonAreaHandle ();
   std::string                   on_click   () const;
   void                          on_click   (const std::string&);
@@ -881,7 +869,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ButtonAreaHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ButtonAreaHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef ButtonAreaHandle ButtonAreaH; ///< Convenience alias for the IDL type ButtonArea.
 
 class PureMethodsHandle;
@@ -898,13 +885,12 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static PureMethodsHandle      down_cast (SmartHandle smh) { return smh._is_null() ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static PureMethodsHandle      down_cast (SmartHandle smh) { return smh == NULL ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      PureMethodsHandle ();
   int                           pure_method       (double f);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef PureMethodsHandle PureMethodsH; ///< Convenience alias for the IDL type PureMethods.
 
 enum MathExpressions {
@@ -939,7 +925,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static NameTestsHandle        down_cast (SmartHandle smh) { return smh._is_null() ? NameTestsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static NameTestsHandle        down_cast (SmartHandle smh) { return smh == NULL ? NameTestsHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      NameTestsHandle ();
   void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                            RapicornAidaTest::ClickType qe,
@@ -947,7 +933,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef NameTestsHandle NameTestsH; ///< Convenience alias for the IDL type NameTests.
 } // Other
 
@@ -965,7 +950,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static CompressorHandle       down_cast (SmartHandle smh) { return smh._is_null() ? CompressorHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static CompressorHandle       down_cast (SmartHandle smh) { return smh == NULL ? CompressorHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      CompressorHandle ();
   double                        threshold () const;
   void                          threshold (double);
@@ -974,7 +959,6 @@ public:
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef CompressorHandle CompressorH; ///< Convenience alias for the IDL type Compressor.
 
 /** @interface RecordForGroups
@@ -1004,12 +988,11 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_cast_types__();
   template<class SmartHandle>
-  static SoundModuleHandle      down_cast (SmartHandle smh) { return smh._is_null() ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
+  static SoundModuleHandle      down_cast (SmartHandle smh) { return smh == NULL ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_cast_types__()); }
   explicit                      SoundModuleHandle ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SoundModuleHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SoundModuleHandle&);
-//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type SoundModule.
 } // BseTest
 

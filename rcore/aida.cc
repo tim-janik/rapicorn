@@ -448,7 +448,7 @@ SmartHandle::assign (const SmartHandle &src)
 {
   if (orbo_ == src.orbo_)
     return;
-  if (!_is_null())
+  if (NULL != *this)
     reset();
   orbo_ = src.orbo_;
 }
@@ -464,7 +464,7 @@ static Mutex   orbo_mutex;
 void
 ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 {
-  AIDA_ASSERT (sh._is_null() == true);
+  AIDA_ASSERT (NULL == sh);
   const uint64_t orbid = fr.pop_object();
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
@@ -476,7 +476,7 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 void
 ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
 {
-  AIDA_ASSERT (sh._is_null() == true);
+  AIDA_ASSERT (sh == NULL);
   if (fake[1])
     return;
   const uint64_t orbid = fake[0];

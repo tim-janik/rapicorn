@@ -26,7 +26,7 @@ init_app (const String       &app_ident,
           char              **argv,
           const StringVector &args)
 {
-  assert_return (ApplicationH::the()._is_null() == true, app_cached);
+  assert_return (ApplicationH::the() == NULL, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
@@ -37,7 +37,7 @@ init_app (const String       &app_ident,
     fatal ("librapicornui: application identifier changed during ui initialization");
   // boot up UI thread
   ApplicationH app = uithread_bootup (argcp, argv, args);
-  assert (app._is_null() == false);
+  assert (app != NULL);
   // assign global smart handle
   app_cached = app;
   return app_cached;
@@ -131,7 +131,7 @@ namespace Rapicorn {
 MainLoop*
 ApplicationH::main_loop()
 {
-  assert_return (the()._is_null() == false, NULL);
+  assert_return (the() != NULL, NULL);
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;

@@ -245,7 +245,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   idata.mutex.lock();
   the_uithread = new UIThread (&idata);
   the_uithread->start();
-  while (idata.app._is_null())
+  while (idata.app == NULL)
     idata.cond.wait (idata.mutex);
   idata.mutex.unlock();
   assert (the_uithread->running());
