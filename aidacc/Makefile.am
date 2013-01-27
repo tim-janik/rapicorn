@@ -57,7 +57,7 @@ GPRINT      = @printf '  %-7s%s\n'
 # --cc-intern-file  converts the TypeMap into a C string.
 check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
 	@echo "  CHECK " builtins.idl
-	$(Q) ${AIDACC_VDEBUG} --system-typedefs $< -G TypeMap -o builtins.typ
+	$(Q) ${AIDACC_VDEBUG} --system-typedefs $< -x TypeMap -o builtins.typ
 	$(Q) ${AIDACC_VDEBUG} --cc-intern-file builtins.typ > builtins.cc
 	@echo "  VERIFY" aidabuiltins.cc
 	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
@@ -72,12 +72,13 @@ pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${ai
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
-	$(Q) ${AIDACC_VDEBUG} --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
+	$(Q) ${AIDACC_VDEBUG} -x TypeMap --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
 check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
 test-aidacc-installation:
-	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} --list-formats | fgrep -q CxxStub ; eval "$$TSTDIAGNOSE"
+	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} -x CxxStub -x TypeMap --list-formats >$(TSTOUT) && \
+	  fgrep -q CxxStub $(TSTOUT) && fgrep -q TypeMap $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 installcheck-local: test-aidacc-installation
 
 # == 'aidacc' executable link ==

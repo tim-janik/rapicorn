@@ -26,7 +26,7 @@ TESTPASS_AUXTESTS = --aux-test label=AuxF64 --aux-test AuxStr --aux-test Aux32 \
 ### Aida build rule for binary type maps
 %.typ: %.idl
 	$(AM_V_GEN)
-	$(Q) ${AIDACC} $< -G TypeMap -o xtmp-$(@F)
+	$(Q) ${AIDACC} $< -x TypeMap -o xtmp-$(@F)
 	$(Q) rm -f $@ && mv xtmp-$(@F) $@
 
 ### Aida installcheck
@@ -61,22 +61,22 @@ check-local: check-aida-standard-types
 
 # == Test TypeMap ==
 check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${AIDACC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'aidacc -G TypeMap'"
+	$(Q) ${AIDACC} $(srcdir)/testpass.idl -x TypeMap  ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
 	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f idltypes.map
 check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
@@ -84,7 +84,7 @@ EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
 
 # == Test CxxStub Code Compilation ==
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxserver.cc
 	$(Q) cat $(srcdir)/testcxxserver.ref		>>testcxxserver.cc
@@ -95,7 +95,7 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
 check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -G CxxStub -g iface-prefix=I_ -g clienthh \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxskels.cc
 	$(Q) cat $(srcdir)/testcxxskels.ref		>>testcxxskels.cc

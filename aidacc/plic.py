@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Aida - Abstract Interface Definition Architecture
 # Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
-import sys, os
+import sys, os, re
 pkginstall_configvars = {
   'AIDA_VERSION' : '0.0-uninstalled',
   'pyutilsdir'   : '.',
@@ -12,7 +12,37 @@ import yapps2runtime as runtime
 import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
 
-backends = [ 'TypeMap', 'CxxStub', ]
+
+class AidaMain:
+  def __init__ (self):
+    self.backends = {}  # { 'TypeMap' : (TypeMap.generate, __doc__) }
+    self.default_backend = None
+    self.auxillary_initializers = {}
+  def strip_name (self, name):
+    name = os.path.basename (name)   # strip all directories
+    name = re.sub ('\..*$', '', name) # strip all extensions
+    return name
+  def add_auxillary_initializers (self, newdict):
+    self.auxillary_initializers.update (newdict)
+  def add_backend (self, bname, bgenerate, doc):
+    assert callable (bgenerate)
+    name = self.strip_name (bname)
+    assert len (name)
+    self.backends[name] = (bgenerate, doc)
+  def set_default_backend (self, bname):
+    name = self.strip_name (bname)
+    assert self.backends[name]
+    self.default_backend = name
+  def list_backends (self):
+    return self.backends.keys()
+  def get_backend (self):
+    if self.default_backend:
+      return self.backends[self.default_backend]
+    elif len (self.backends) == 1:
+      return self.backends.values()[0]
+    else:
+      return None
+__builtins__.__Aida__ = AidaMain() # used by extensions
 
 class ParseError (Exception):
   def __init__ (self, msg = "Parse Error", kind = "ParseError"):
@@ -31,23 +61,23 @@ def parse_main (config, filepairs):
   return (nslist, impltypes, error, caret, inclist)
 
 def module_import (module_or_file):
-  if os.path.isabs (module_or_file):
-    module_dir, module_file = os.path.split (module_or_file)
-    module_name, module_ext = os.path.splitext (module_file)
-    savedpath = sys.path
-    sys.path = [ module_dir ]
-    try:
-      module_obj = __import__ (module_name)
-    except:
-      sys.path = savedpath
-      raise
+  apath = os.path.abspath (module_or_file)
+  module_dir, module_file = os.path.split (apath)
+  module_name, module_ext = os.path.splitext (module_file)
+  savedpath = sys.path
+  sys.path = [ module_dir ] + savedpath
+  try:
+    module_obj = __import__ (module_name)
+  except:
     sys.path = savedpath
-    return module_obj
-  else:
-    return __import__ (module_or_file)
+    raise
+  sys.path = savedpath
+  return module_obj
 
 def main():
+  # parse args and file names
   config = parse_files_and_args()
+  # parse IDL files
   files = config['files']
   if len (files) == 0: # interactive
     try:
@@ -64,6 +94,7 @@ def main():
       f = open (fname, 'r')
       filepairs += [ (fname, f.read()) ]
     nslist, impltypes, error, caret, inclist = parse_main (config, filepairs)
+  # display parsing errors
   if error:
     print >>sys.stderr, error
     if caret:
@@ -71,22 +102,25 @@ def main():
     for ix in inclist:
       print >>sys.stderr, ix
     sys.exit (7)
-  module_import (config['backend']).generate (nslist, implementation_types = impltypes, **config)
+  # call backend generation
+  backend = __Aida__.get_backend()
+  if backend:
+    generate = backend[0]
+    generate (nslist, implementation_types = impltypes, **config) # generate (namespace_list, implementation_types, configs...)
 
 def print_help (with_help = True):
   print "aidacc version", pkginstall_configvars["AIDA_VERSION"]
   if not with_help:
     return
-  print "Usage: %s [options] <idlfiles...>" % os.path.basename (sys.argv[0])
+  print "Usage: %s [options] idlfiles..." % os.path.basename (sys.argv[0])
   print "       %s [solitary-option]" % os.path.basename (sys.argv[0])
   print "Options:"
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
-  print "  --output-format=<oformat>"
-  print "  -I <dir>                  add include directory"
-  print "  -o=<outputfile>           output filename"
-  print "  -G=<oformat>              select output format"
-  print "  -g=<generator-option>     set output generator option"
+  print "  -I <directory>            add include directory"
+  print "  -o <outputfile>           output filename"
+  print "  -x <MODULE>               load extension MODULE"
+  print "  -G <generator-option>     set generator backend option"
   print "  --insertions=<insfile>    file for insertion points"
   print '  --inclusions=<"include">  include statements'
   print '  --skip-skels=<symfile>    symbols to skip skeletons for'
@@ -97,8 +131,8 @@ def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [], 'includedirs' : [],
              'insertions' : [], 'inclusions' : [], 'skip-skels' : [], 'system-typedefs' : False }
-  sop = 'vhG:g:o:I:'
-  lop = ['help', 'version', 'output-format=', 'list-formats',
+  sop = 'vhG:g:o:I:x:'
+  lop = ['help', 'version', 'list-formats',
          'aida-debug', 'cc-intern-file=',
          'insertions=', 'inclusions=', 'skip-skels=']
   if pkginstall_configvars.get ('INTERN', 0):
@@ -117,7 +151,8 @@ def parse_files_and_args():
     if arg == '--insertions': config['insertions'] += [ val ]
     if arg == '--inclusions': config['inclusions'] += [ val ]
     if arg == '--skip-skels': config['skip-skels'] += [ val ]
-    if arg == '-g': config['backend-options'] += [ val ]
+    if arg == '-G': config['backend-options'] += [ val ]
+    if arg == '-x': module_import (val)
     if arg == '--cc-intern-file':
       s, data = '', open (val).read()
       for c in data:
@@ -129,33 +164,16 @@ def parse_files_and_args():
       print '// This file is generated by aidacc. DO NOT EDIT.'
       print 'const char intern_%s[] =\n"%s";' % (re.sub (r'[^a-zA-Z0-9_]', '_', val), s)
       sys.exit (0)
-    if arg == '-G' or arg == '--generator':
-      if val[0] == '=': val = val[1:]
-      if val in backends:
-        config['backend'] = val
-      else:
-        ap = os.path.abspath (val)
-        if (ap.endswith (".py") and
-            os.access (ap, os.R_OK)):
-          config['backend'] = ap
-        elif os.access (ap + ".py", os.R_OK):
-          config['backend'] = ap + ".py"
-        elif os.access (ap + ".pyc", os.R_OK):
-          config['backend'] = ap + ".pyc"
-        else:
-          print >>sys.stderr, sys.argv[0] + ": unknown output format:", val
-          print_help(); sys.exit (1)
     if arg == '--list-formats':
       print "\nAvailable Output Formats:"
-      b = backends
-      if os.path.isabs (config['backend']):
-        b = b + [ config['backend'] ]
-      for be in b:
-        bedoc = module_import (be).__doc__.strip()
+      b = __Aida__.list_backends()
+      for bname in b:
+        bedoc = __Aida__.backends[bname][1]
         bedoc = re.sub ('\n\s*\n', '\n', bedoc)                         # remove empty lines
         bedoc = re.compile (r'^', re.MULTILINE).sub ('    ', bedoc)     # indent
-        print "  %s" % be
-        print bedoc
+        print "  %s" % bname
+        if bedoc:
+          print bedoc.rstrip()
       print
       sys.exit (0)
     if arg == '--system-typedefs':

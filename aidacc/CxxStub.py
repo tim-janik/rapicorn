@@ -1271,5 +1271,6 @@ def generate (namespace_list, **args):
   else:
     print textstring,
 
-# control module exports
-__all__ = ['generate']
+# register extension hooks
+__Aida__.add_backend (__file__, generate, __doc__)
+__Aida__.set_default_backend (__file__)
