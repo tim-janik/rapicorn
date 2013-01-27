@@ -981,10 +981,10 @@ class Generator:
     s += '  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
     s += '  fbr >>= signal_connection;\n'
-    s += '  if (signal_connection) self->sig_%s -= signal_connection;\n' % stype.name
+    s += '  if (signal_connection) self->sig_%s() -= signal_connection;\n' % stype.name
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (handler_id));\n' % (closure_class, closure_class)
-    s += '    cid = self->sig_%s += __AIDA_Local__::slot (sp, sp->handler);\n' % stype.name
+    s += '    cid = self->sig_%s() += __AIDA_Local__::slot (sp, sp->handler);\n' % stype.name
     s += '  }\n'
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, %s);\n' % digest
     s += '  rb <<= cid;\n'

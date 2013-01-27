@@ -80,11 +80,11 @@ class ScrollPortImpl : public virtual ViewportImpl {
   hierarchy_changed (ItemImpl *old_toplevel)
   {
     if (m_hadjustment && hadjustment_conid_)
-      m_hadjustment->sig_value_changed -= hadjustment_conid_;
+      m_hadjustment->sig_value_changed() -= hadjustment_conid_;
     m_hadjustment = NULL;
     hadjustment_conid_ = 0;
     if (m_vadjustment && vadjustment_conid_)
-      m_vadjustment->sig_value_changed -= vadjustment_conid_;
+      m_vadjustment->sig_value_changed() -= vadjustment_conid_;
     m_vadjustment = NULL;
     vadjustment_conid_ = 0;
     this->ViewportImpl::hierarchy_changed (old_toplevel);
@@ -93,9 +93,9 @@ class ScrollPortImpl : public virtual ViewportImpl {
         find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &m_hadjustment,
                           ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &m_vadjustment);
         if (m_hadjustment)
-          hadjustment_conid_ = m_hadjustment->sig_value_changed += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
+          hadjustment_conid_ = m_hadjustment->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
         if (m_vadjustment)
-          vadjustment_conid_ = m_vadjustment->sig_value_changed += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
+          vadjustment_conid_ = m_vadjustment->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
       }
   }
   virtual void

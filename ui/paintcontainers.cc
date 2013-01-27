@@ -383,7 +383,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
   {
     if (m_client)
       {
-        m_client->sig_changed -= client_conid_;
+        m_client->sig_changed() -= client_conid_;
         client_conid_ = 0;
         m_client->unregister_focus_frame (*this);
       }
@@ -395,7 +395,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
         if (client && client->register_focus_frame (*this))
           m_client = client;
         if (m_client)
-          client_conid_ = m_client->sig_changed += Aida::slot (*this, &FocusFrameImpl::client_changed);
+          client_conid_ = m_client->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
       }
   }
 protected:

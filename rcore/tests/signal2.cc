@@ -60,22 +60,22 @@ public:
   {
     accu = "";
     Aida::Signal<char (float, int, std::string)> sig1;
-    size_t id1 = sig1 += float_callback;
-    size_t id2 = sig1 += [] (float, int i, std::string) { accu += string_printf ("int: %d\n", i); return 0; };
-    size_t id3 = sig1 += [] (float, int, const std::string &s) { accu += string_printf ("string: %s\n", s.c_str()); return 0; };
+    size_t id1 = sig1() += float_callback;
+    size_t id2 = sig1() += [] (float, int i, std::string) { accu += string_printf ("int: %d\n", i); return 0; };
+    size_t id3 = sig1() += [] (float, int, const std::string &s) { accu += string_printf ("string: %s\n", s.c_str()); return 0; };
     sig1.emit (.3, 4, "huhu");
     bool success;
-    success = sig1 -= id1; assert (success == true);  success = sig1 -= id1; assert (success == false);
-    success = sig1 -= id2; assert (success == true);  success = sig1 -= id3; assert (success == true);
-    success = sig1 -= id3; assert (success == false); success = sig1 -= id2; assert (success == false);
+    success = sig1() -= id1; assert (success == true);  success = sig1() -= id1; assert (success == false);
+    success = sig1() -= id2; assert (success == true);  success = sig1() -= id3; assert (success == true);
+    success = sig1() -= id3; assert (success == false); success = sig1() -= id2; assert (success == false);
     Foo foo;
-    sig1 += Aida::slot (foo, &Foo::foo_bool);
-    sig1 += Aida::slot (&foo, &Foo::foo_bool);
+    sig1() += Aida::slot (foo, &Foo::foo_bool);
+    sig1() += Aida::slot (&foo, &Foo::foo_bool);
     sig1.emit (.5, 1, "12");
 
     Aida::Signal<void (std::string, int)> sig2;
-    sig2 += [] (std::string msg, int) { accu += string_printf ("msg: %s", msg.c_str()); };
-    sig2 += [] (std::string, int d)   { accu += string_printf (" *%d*\n", d); };
+    sig2() += [] (std::string msg, int) { accu += string_printf ("msg: %s", msg.c_str()); };
+    sig2() += [] (std::string, int d)   { accu += string_printf (" *%d*\n", d); };
     sig2.emit ("in sig2", 17);
 
     accu += "DONE";
@@ -104,11 +104,11 @@ class TestCollectorVector {
   run ()
   {
     Aida::Signal<int (), Aida::CollectorVector<int>> sig_vector;
-    sig_vector += handler777;
-    sig_vector += handler42;
-    sig_vector += handler1;
-    sig_vector += handler42;
-    sig_vector += handler777;
+    sig_vector() += handler777;
+    sig_vector() += handler42;
+    sig_vector() += handler1;
+    sig_vector() += handler42;
+    sig_vector() += handler777;
     vector<int> results = sig_vector.emit();
     const int reference_array[] = { 777, 42, 1, 42, 777, };
     const vector<int> reference = vector_from_array (reference_array);
@@ -129,9 +129,9 @@ class TestCollectorUntil0 {
   {
     TestCollectorUntil0 self;
     Aida::Signal<bool (), Aida::CollectorUntil0<bool>> sig_until0;
-    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_true);
-    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_false);
-    sig_until0 += Aida::slot (self, &TestCollectorUntil0::handler_abort);
+    sig_until0() += Aida::slot (self, &TestCollectorUntil0::handler_true);
+    sig_until0() += Aida::slot (self, &TestCollectorUntil0::handler_false);
+    sig_until0() += Aida::slot (self, &TestCollectorUntil0::handler_abort);
     TASSERT (!self.check1 && !self.check2);
     const bool result = sig_until0.emit();
     TASSERT (!result && self.check1 && self.check2);
@@ -151,9 +151,9 @@ class TestCollectorWhile0 {
   {
     TestCollectorWhile0 self;
     Aida::Signal<bool (), Aida::CollectorWhile0<bool>> sig_while0;
-    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_0);
-    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_1);
-    sig_while0 += Aida::slot (self, &TestCollectorWhile0::handler_abort);
+    sig_while0() += Aida::slot (self, &TestCollectorWhile0::handler_0);
+    sig_while0() += Aida::slot (self, &TestCollectorWhile0::handler_1);
+    sig_while0() += Aida::slot (self, &TestCollectorWhile0::handler_abort);
     TASSERT (!self.check1 && !self.check2);
     const bool result = sig_while0.emit();
     TASSERT (result == true && self.check1 && self.check2);
@@ -186,7 +186,7 @@ bench_aida_signal()
   szinfo ("old signal: before init");
   Aida::Signal<void (void*, uint64)> sig_increment;
   szinfo ("old signal: after init");
-  sig_increment += test_counter_add2;
+  sig_increment() += test_counter_add2;
   const uint64 start_counter = TestCounter::get();
   const uint64 benchstart = timestamp_benchmark();
   uint64 i;
@@ -219,7 +219,7 @@ struct DummyObject {
   bench_old_signal()
   {
     DummyObject dummy;
-    dummy.sig_increment += test_counter_add2;
+    dummy.sig_increment() += test_counter_add2;
     const uint64 start_counter = TestCounter::get();
     const uint64 benchstart = timestamp_benchmark();
     uint64 i;
