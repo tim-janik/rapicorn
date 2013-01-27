@@ -5,6 +5,7 @@
 #include "window.hh"
 #include "factory.hh"
 #include "selector.hh"
+#include "selob.hh"
 #include <errno.h>
 
 namespace Rapicorn {
@@ -44,8 +45,6 @@ TestContainer::seen_test_items ()
 {
   return test_containers_rendered;
 }
-
-static const Selector::CustomPseudoRegistry _test_pass ("test-pass", "The TestContainer:test-pass(arg) pseudo selector matches if 'arg' is a true boolean value.");
 
 class TestContainerImpl : public virtual SingleContainerImpl, public virtual TestContainer {
   String m_value, m_assert_value;
@@ -167,10 +166,15 @@ protected:
         test_containers_rendered++;
       }
   }
-  virtual bool
-  pseudo_selector (const String &ident, const String &arg, String &error)
+  virtual Selector::Selob*
+  pseudo_selector (Selector::Selob &selob, const String &ident, const String &arg, String &error)
   {
-    return ident == _test_pass.ident() ? string_to_bool (arg) : false;
+    if (ident == ":test-pass")
+      return string_to_bool (arg) ? Selector::Selob::true_match() : NULL;
+    else if (ident == "::test-parent")
+      return Selector::SelobAllocator::selob_allocator (selob)->item_selob (*parent());
+    else
+      return NULL;
   }
 };
 static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");

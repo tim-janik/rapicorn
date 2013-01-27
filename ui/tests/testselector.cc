@@ -365,46 +365,70 @@ test_selector_parser()
 }
 REGISTER_UITHREAD_TEST ("Selector/Combinator Parsing", test_selector_parser);
 
-enum QueryType { UNIQUE = 0, FIRST = 1, ALL = 2 };
+static void
+test_selector_validation ()
+{
+  const vector<Selector::Selob*> empty_selobs;
+  String errstr;
+  errstr = ""; Selector::Matcher::query_selector_objects ("Window * .VBox > Button:baz ~ Frame:bar(7) + Label::after!", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TASSERT_EMPTY (errstr);
+  errstr = ""; Selector::Matcher::query_selector_objects ("> >> ~", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TCMP (errstr, !=, ""); // snytax
+  errstr = ""; Selector::Matcher::query_selector_objects ("Window! VBox || <invalidchars>", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TCMP (errstr, !=, ""); // junk
+  errstr = ""; Selector::Matcher::query_selector_objects ("Window! VBox! Button", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TCMP (errstr, !=, ""); // multiple subjects
+  errstr = ""; Selector::Matcher::query_selector_objects ("Window::after > VBox", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TCMP (errstr, !=, ""); // combinator after pseudo
+  errstr = ""; Selector::Matcher::query_selector_objects ("Window! > VBox::after", empty_selobs.begin(), empty_selobs.end(), &errstr);
+  TCMP (errstr, !=, ""); // pseudo on non-subject
+}
+REGISTER_UITHREAD_TEST ("Selector/Validation", test_selector_validation);
 
-template<QueryType QUERY> static bool
-test_query (ItemIface *iroot, const String &selector, ssize_t n, const String &type = "")
+static void
+test_query (int line, ItemIface *iroot, const String &selector, ssize_t expect, const String &expected_type = "")
 {
   ItemImpl *root = dynamic_cast<ItemImpl*> (iroot);
   TASSERT (root != NULL);
 
-  const char *l;
-  ItemSeq itseq;
-  ItemIface *qitem = NULL;
-  switch (QUERY)
+  ItemIface *query_first = root->query_selector (selector);
+  ItemIface *query_unique = root->query_selector_unique (selector);
+  ItemSeq qa_itseq = root->query_selector_all (selector);
+  ItemIfaceVector query_all (qa_itseq);
+
+  if (Test::verbose())
     {
-    case UNIQUE: l = "UNIQUE"; qitem = root->query_selector_unique (selector); break;
-    case FIRST:  l = "FIRST";  qitem = root->query_selector (selector); break;
-    case ALL:    l = "ALL";    itseq = root->query_selector_all (selector); break;
+      if (query_all.empty())
+        printerr ("%s:%d:%s(expect=%zd): %s: %s\n", __FILE__, line, __func__, expect, string_to_cquote (selector).c_str(), "...none...");
+      else
+        for (size_t i = 0; i < query_all.size(); i++)
+          printerr ("%s:%d:%s(expect=%zd): %s: %s (%p)\n", __FILE__, line, i ? string_canonify (__func__, "", " ").c_str() : __func__,
+                    expect, string_to_cquote (selector).c_str(), query_all[i]->name().c_str(), query_all[i]);
     }
-  ItemIfaceVector items (itseq);
-  if (qitem)
-    items.push_back (qitem);
 
-  if (Test::verbose() && items.empty())
-    printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), "none...");
-  else if (Test::verbose())
-    for (size_t i = 0; i < items.size(); i++)
-      printerr ("MATCH<%s>: %s: %s\n", l, string_to_cquote (selector).c_str(), items[i]->name().c_str());
+  TASSERT_AT (__FILE__, line, expect == 0 || query_first != NULL);
+  TASSERT_AT (__FILE__, line, expect == 1 || query_unique == NULL);
+  TASSERT_AT (__FILE__, line, expect != 1 || query_unique != NULL);
+  TASSERT_AT (__FILE__, line, query_unique == NULL || query_unique == query_first);
+  TASSERT_AT (__FILE__, line, query_all.size() >= (query_first != NULL));
+  TASSERT_AT (__FILE__, line, query_first == NULL || query_all[0] == query_first); // query_all.size() >= 1
+  if (expect >= 0)
+    {
+      size_t expected = expect;
+      TASSERT_AT (__FILE__, line, query_all.size() == expected);
+    }
+  else // expect < 0
+    {
+      size_t expected = -expect;
+      TASSERT_AT (__FILE__, line, query_all.size() > expected);
+    }
 
-  if ((n >= 0 && items.size() != size_t (n)) ||
-      (n < 0 && items.size() < size_t (-n)))
-    return false;
-
-  if (!type.empty())
-    for (size_t i = 0; i < items.size(); i++)
-      if (!items[i]->match_selector (type))
-        return false;
-
-  return true;
+  if (!expected_type.empty())
+    for (size_t i = 0; i < query_all.size(); i++)
+      TASSERT_AT (__FILE__, line, query_all[i]->match_selector (expected_type));
 }
 
-static void     load_ui_defs    ();
+static void load_ui_defs ();
 
 static void
 test_selector_matching ()
@@ -423,110 +447,116 @@ test_selector_matching ()
   wl = app.query_windows ("*");
   TASSERT (wl.size() == prev_window_count + 1);
 
-  TASSERT (test_query<ALL>    (w, "/#", 0)); // invalid path
-  TASSERT (test_query<ALL>    (w, "X/#test-dialog", 0)); // invalid syntax (junk)
+  test_query (__LINE__, w, "/#", 0); // invalid path
+  test_query (__LINE__, w, "X/#test-dialog", 0); // invalid syntax (junk)
   // combinators
-  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label", 4, "Label")); // 4 from n
-  TASSERT (test_query<FIRST>  (w, "* VBox  Button > Frame Label", 1, "Label")); // 4 >= 1
-  TASSERT (test_query<UNIQUE> (w, "* VBox  Button > Frame Label", 0));          // 4 != 1
-  TASSERT (test_query<ALL>    (w, "* VBox Button! > Frame Label", 4, "Button"));
-  TASSERT (test_query<FIRST>  (w, "* VBox Button! > Frame Label", 1, "Button"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox Button! > Frame Label", 0));
-  TASSERT (test_query<ALL>    (w, "* VBox Button! > Frame #label1", 1, "Button"));
-  TASSERT (test_query<FIRST>  (w, "* VBox Button! > Frame #label1", 1, "Button"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox Button! > Frame #label1", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame #label1", 1, "Label"));
-  TASSERT (test_query<FIRST>  (w, "* VBox Button > Frame #label1", 1, "Label"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox Button > Frame #label1", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
-  TASSERT (test_query<FIRST>  (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
-  TASSERT (test_query<UNIQUE> (w, "* VBox Frame > #special-arrow", 1, "Arrow"));
+  test_query (__LINE__, w, "* VBox  Button > Frame Label", 4, "Label"); // 4 from n
+  test_query (__LINE__, w, "* VBox Button! > Frame Label", 4, "Button");
+  test_query (__LINE__, w, "* VBox Button! > Frame #label1", 1, "Button");
+  test_query (__LINE__, w, "* VBox Button! > Frame #label1", 1, "Button");
+  test_query (__LINE__, w, "* VBox Button! > Frame #label1", 1, "Button");
+  test_query (__LINE__, w, "* VBox Button > Frame #label1", 1, "Label");
+  test_query (__LINE__, w, "* VBox Button > Frame #label1", 1, "Label");
+  test_query (__LINE__, w, "* VBox  Button > Frame #label1", 1, "Label");
+  test_query (__LINE__, w, "* VBox Frame > #special-arrow", 1, "Arrow");
+  test_query (__LINE__, w, "* VBox Frame > #special-arrow", 1, "Arrow");
+  test_query (__LINE__, w, "* VBox Frame > #special-arrow", 1, "Arrow");
   // identifiers
-  TASSERT (test_query<ALL>    (w, "* #special-arrow", 1));
-  TASSERT (test_query<FIRST>  (w, "* #special-arrow", 1));
-  TASSERT (test_query<UNIQUE> (w, "* #special-arrow", 1));
-  TASSERT (test_query<ALL>    (w, "* Label #special-arrow", 0));
-  TASSERT (test_query<FIRST>  (w, "* Label #special-arrow", 0));
-  TASSERT (test_query<UNIQUE> (w, "* Label #special-arrow", 0));
+  test_query (__LINE__, w, "* #special-arrow", 1);
+  test_query (__LINE__, w, "* #special-arrow", 1);
+  test_query (__LINE__, w, "* #special-arrow", 1);
+  test_query (__LINE__, w, "* Label #special-arrow", 0);
+  test_query (__LINE__, w, "* Label #special-arrow", 0);
+  test_query (__LINE__, w, "* Label #special-arrow", 0);
   // attributes
-  TASSERT (test_query<ALL>    (w, "* #label123[frotz-xxxz]", 0)); // FAIL
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text=FAIL]", 0));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text=one-two-three]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text!=one-tWo-three]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text!=one-two-three]", 0)); // FAIL
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=one]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=oNe i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text^=FAIL]", 0));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=three]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=thREE i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text$=FAIL]", 0));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=one]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=OnE]", 0)); // FAIL
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=oNe i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text|=FAIL]", 0));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-two-t]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-TWO-t i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label123[plain-text*=e-TwO-t]", 0)); // FAIL
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='Label One']", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='label ONE' i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text='FAIL']", 0));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='Label One']", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='LABEL one' i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text=='FAIL']", 0));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=Label]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=laBEL i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=One]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=OnE i]", 1, "Label"));
-  TASSERT (test_query<ALL>    (w, "* #label1[plain-text~=oNe]", 0)); // FAIL
+  test_query (__LINE__, w, "* #label123[frotz-xxxz]", 0); // FAIL
+  test_query (__LINE__, w, "* #label123[plain-text]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text i]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text=FAIL]", 0);
+  test_query (__LINE__, w, "* #label123[plain-text=one-two-three]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text!=one-tWo-three]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text!=one-two-three]", 0); // FAIL
+  test_query (__LINE__, w, "* #label123[plain-text^=one]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text^=oNe i]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text^=FAIL]", 0);
+  test_query (__LINE__, w, "* #label123[plain-text$=three]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text$=thREE i]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text$=FAIL]", 0);
+  test_query (__LINE__, w, "* #label123[plain-text|=one]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text|=OnE]", 0); // FAIL
+  test_query (__LINE__, w, "* #label123[plain-text|=oNe i]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text|=FAIL]", 0);
+  test_query (__LINE__, w, "* #label123[plain-text*=e-two-t]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text*=e-TWO-t i]", 1, "Label");
+  test_query (__LINE__, w, "* #label123[plain-text*=e-TwO-t]", 0); // FAIL
+  test_query (__LINE__, w, "* #label1[plain-text='Label One']", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text='label ONE' i]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text='FAIL']", 0);
+  test_query (__LINE__, w, "* #label1[plain-text=='Label One']", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text=='LABEL one' i]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text=='FAIL']", 0);
+  test_query (__LINE__, w, "* #label1[plain-text~=Label]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text~=laBEL i]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text~=One]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text~=OnE i]", 1, "Label");
+  test_query (__LINE__, w, "* #label1[plain-text~=oNe]", 0); // FAIL
   // siblings
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA + Label + Frame  + Label + Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA + Label + Frame! + Label + Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA ~ Label ~ Frame  ~ Label ~ Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA ~ Label ~ Frame! ~ Label ~ Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Frame      ~     Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Frame!     ~     Button#ChildE", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button"));
-  TASSERT (test_query<ALL>    (w, "* Label!                      ~            Button#ChildE", 2, "Label"));
-  TASSERT (test_query<ALL>    (w, "* Button#ChildA     ~     Label!     ~     Button#ChildE", 2, "Label"));
-  TASSERT (test_query<ALL>    (w, "* Label             ~     Label      ~     Label", 0)); // FAIL
+  test_query (__LINE__, w, "* Button#ChildA + Label + Frame  + Label + Button#ChildE", 1, "Button");
+  test_query (__LINE__, w, "* Button#ChildA + Label + Frame! + Label + Button#ChildE", 1, "Frame");
+  test_query (__LINE__, w, "* Button#ChildA ~ Label ~ Frame  ~ Label ~ Button#ChildE", 1, "Button");
+  test_query (__LINE__, w, "* Button#ChildA ~ Label ~ Frame! ~ Label ~ Button#ChildE", 1, "Frame");
+  test_query (__LINE__, w, "* Button#ChildA     ~     Frame      ~     Button#ChildE", 1, "Button");
+  test_query (__LINE__, w, "* Button#ChildA     ~     Frame!     ~     Button#ChildE", 1, "Frame");
+  test_query (__LINE__, w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button");
+  test_query (__LINE__, w, "* Button#ChildA!              ~            Button#ChildE", 1, "Button");
+  test_query (__LINE__, w, "* Label!                      ~            Button#ChildE", 2, "Label");
+  test_query (__LINE__, w, "* Button#ChildA     ~     Label!     ~     Button#ChildE", 2, "Label");
+  test_query (__LINE__, w, "* Label             ~     Label      ~     Label", 0); // FAIL
   // :not pseudo class
-  TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(#ChildB)", 1, "Label#ChildD"));
-  TASSERT (test_query<ALL>    (w, ":not(*)", 0));
-  TASSERT (test_query<ALL>    (w, "#ChildA Frame:not(Label)", 1, "Frame"));
-  TASSERT (test_query<ALL>    (w, "VBox  Button > Frame Label:not(Button)", 4, "Label")); // 4 from n
-  TASSERT (test_query<ALL>    (w, "Button:not(Label# > Label)", 0)); // invalid combinator inside not()
-  TASSERT (test_query<ALL>    (w, ":not(Label > Label)", 0)); // invalid combinator inside not()
-  TASSERT (test_query<ALL>    (w, "Button#ChildA ~ Label:not(:not(#ChildB))", 1, "Label#ChildB")); // non-standard
-  TASSERT (test_query<ALL>    (w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience"));
+  test_query (__LINE__, w, "Button#ChildA ~ Label:not(#ChildB)", 1, "Label#ChildD");
+  test_query (__LINE__, w, ":not(*)", 0);
+  test_query (__LINE__, w, "#ChildA Frame:not(Label)", 1, "Frame");
+  test_query (__LINE__, w, "VBox  Button > Frame Label:not(Button)", 4, "Label"); // 4 from n
+  test_query (__LINE__, w, "Button:not(Label# > Label)", 0); // invalid combinator inside not()
+  test_query (__LINE__, w, ":not(Label > Label)", 0); // invalid combinator inside not()
+  test_query (__LINE__, w, "Button#ChildA ~ Label:not(:not(#ChildB))", 1, "Label#ChildB"); // non-standard
+  test_query (__LINE__, w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience");
   // classes
-  TASSERT (test_query<ALL>    (w, "*.Window", 1, "#test-dialog"));
-  TASSERT (test_query<ALL>    (w, "*", -10, ".Item"));
-  TASSERT (test_query<ALL>    (w, "*:not(:empty)", -10, ".Container"));
-  TASSERT (test_query<ALL>    (w, ".Item:not(.Container)", -5, ":empty"));
-  TASSERT (test_query<ALL>    (w, ".Label", -5, ".Item"));
-  TASSERT (test_query<ALL>    (w, ".VBox", -1, ".Container"));
-  TASSERT (test_query<ALL>    (w, ".Container", -10, ".Item"));
-  TASSERT (test_query<ALL>    (w, "*.Window.Container.Item", 1, ":root"));
-  TASSERT (test_query<ALL>    (w, "* > *", -20, ":not(.Window)"));
+  test_query (__LINE__, w, "*.Window", 1, "#test-dialog");
+  test_query (__LINE__, w, "*", -10, ".Item");
+  test_query (__LINE__, w, "*:not(:empty)", -10, ".Container");
+  test_query (__LINE__, w, ".Item:not(.Container)", -5, ":empty");
+  test_query (__LINE__, w, ".Label", -5, ".Item");
+  test_query (__LINE__, w, ".VBox", -1, ".Container");
+  test_query (__LINE__, w, ".Container", -10, ".Item");
+  test_query (__LINE__, w, "*.Window.Container.Item", 1, ":root");
+  test_query (__LINE__, w, "* > *", -20, ":not(.Window)");
   // pseudo classes :empty :only-child :root :first-child :last-child
-  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:empty", 4, "Label"));
-  TASSERT (test_query<ALL>    (w, "*:empty *", 0));
-  TASSERT (test_query<ALL>    (w, "* VBox  Button > Frame Label:only-child", 4, "Label"));
-  TASSERT (test_query<ALL>    (w, "*:root", 1, ".Window"));
-  TASSERT (test_query<ALL>    (w, "*:root > *:only-child", 1, "Ambience"));
-  TASSERT (test_query<ALL>    (w, "*:root > *:last-child:first-child", 1, "Ambience"));
-  TASSERT (test_query<ALL>    (w, "*:root *:only-child", -5));
-  TASSERT (test_query<ALL>    (w, "*:root *:first-child:last-child", -5));
-  TASSERT (test_query<ALL>    (w, "HBox#testbox > :first-child", 1, "Button#ChildA"));
-  TASSERT (test_query<ALL>    (w, "HBox#testbox > *:last-child", 1, "Button#ChildE"));
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:empty", 4, "Label");
+  test_query (__LINE__, w, "*:empty *", 0);
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:only-child", 4, "Label");
+  test_query (__LINE__, w, "*:root", 1, ".Window");
+  test_query (__LINE__, w, "*:root > *:only-child", 1, "Ambience");
+  test_query (__LINE__, w, "*:root > *:last-child:first-child", 1, "Ambience");
+  test_query (__LINE__, w, "*:root *:only-child", -5);
+  test_query (__LINE__, w, "*:root *:first-child:last-child", -5);
+  test_query (__LINE__, w, "HBox#testbox > :first-child", 1, "Button#ChildA");
+  test_query (__LINE__, w, "HBox#testbox > *:last-child", 1, "Button#ChildE");
   // custom pseudo selectors
-  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(1)", 1, "TestItem"));
-  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(0)", 0));
-  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(2)", 1, "TestItem"));
-  TASSERT (test_query<ALL>    (w, "#test-item:test-pass(yes)", 1, "TestItem"));
+  test_query (__LINE__, w, "#test-item:test-pass", 0);
+  test_query (__LINE__, w, "#test-item:test-pass(1)", 1, "TestItem");
+  test_query (__LINE__, w, "#test-item:test-pass(0)", 0);
+  test_query (__LINE__, w, "#test-item:test-pass(2)", 1, "TestItem");
+  test_query (__LINE__, w, "#test-item:test-pass(yes)", 1, "TestItem");
+  test_query (__LINE__, w, "#test-item:Test-PASS(true)", 1, "TestItem");
+  test_query (__LINE__, w, "#test-item:Test-PASS(false)", 0);
+  test_query (__LINE__, w, "HBox! > TestItem#test-item", 1, "HBox"); // TestItem parent is HBox
+  test_query (__LINE__, w, "TestItem#test-item::test-parent", 1, "HBox"); // access parent through pseudo element
+  test_query (__LINE__, w, "TestItem#test-item::test-parent:empty", 0); // classified pseudo element
+  test_query (__LINE__, w, "TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // classified matching pseudo element
+  test_query (__LINE__, w, "TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // pseudo element with subject indicator
+  test_query (__LINE__, w, "*.Window TestItem#test-item::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
+  test_query (__LINE__, w, "*.Window TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
 
   ItemIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
