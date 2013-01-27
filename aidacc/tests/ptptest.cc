@@ -152,14 +152,17 @@ standard_tests ()
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
   // SmartHandle
-  assert (SmartHandle::_null_handle()._is_null() == true);
+  assert (SmartHandle::_null_handle() == NULL);
+  assert (!SmartHandle::_null_handle());
   assert (SmartHandle::_null_handle()._orbid() == 0);
   struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
   struct OneHandle : SmartHandle { OneHandle (OrbObject &orbo) : SmartHandle (orbo) {} };
   TestOrbObject torbo (1);
-  assert (OneHandle (torbo)._is_null() == false);
+  assert (OneHandle (torbo) != NULL);
+  assert (OneHandle (torbo));
   assert (OneHandle (torbo)._orbid() == 1);
-  assert (OneHandle (torbo)._null_handle()._is_null() == true);
+  assert (OneHandle (torbo)._null_handle() == NULL);
+  assert (!OneHandle (torbo)._null_handle());
   assert (OneHandle (torbo)._null_handle()._orbid() == 0);
   printf ("  TEST   Aida standard types                                             OK\n");
 }

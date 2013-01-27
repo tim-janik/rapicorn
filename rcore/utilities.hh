@@ -3,6 +3,7 @@
 #define __RAPICORN_CORE_UTILITIES_HH__
 
 #include <rcore/cxxaux.hh>
+#include <rcore/aida.hh>
 #include <string>
 #include <vector>
 #include <map>
@@ -36,13 +37,14 @@
 
 namespace Rapicorn {
 
-/* --- convenient stdc++ types --- */
+// == Convenient stdc++ & Aida Types ==
 using std::vector;
 using std::map;
 typedef std::string String;             ///< Convenience alias for std::string.
 typedef vector<String> StringVector;    ///< Convenience alias for a std::vector of std::string.
+using Aida::Any;
 
-/* --- common (stdc++) utilities --- */
+// == Common (stdc++) Utilities ==
 using ::std::swap;
 using ::std::min;
 using ::std::max;

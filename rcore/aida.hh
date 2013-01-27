@@ -268,22 +268,25 @@ public:
 // == SmartHandle ==
 class SmartHandle {
   OrbObject     *orbo_;
-  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList cast_types () { return TypeHashList(); } };
+  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_cast_types__ () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
   friend  class ObjectBroker;
   void    assign (const SmartHandle&);
   void    reset ();
 protected:
-  typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
-  static inline _UnspecifiedBool _unspecified_bool_true ()      { return &Aida::SmartHandle::_is_null; }
-  explicit                  SmartHandle (OrbObject&);
-  explicit                  SmartHandle ();
+  explicit          SmartHandle (OrbObject&);
+  explicit          SmartHandle ();
 public:
-  uint64_t                  _orbid      () const { return orbo_->orbid(); }
-  bool                      _is_null    () const { return !orbo_->orbid(); }
-  virtual                  ~SmartHandle ();
-  static NullHandle         _null_handle()       { return NullHandle(); }
+  uint64_t          _orbid        () const { return orbo_->orbid(); }
+  virtual          ~SmartHandle   ();
+  static NullHandle _null_handle  ()       { return NullHandle(); }
+  // Determine if this SmartHandle contains an object or null handle.
+  explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
+  bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
+  bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
 };
+inline bool operator== (std::nullptr_t, const SmartHandle &shd) noexcept { return !static_cast<bool> (shd); }
+inline bool operator!= (std::nullptr_t, const SmartHandle &shd) noexcept { return static_cast<bool> (shd); }
 
 // == SmartMember ==
 template<class SmartHandle>

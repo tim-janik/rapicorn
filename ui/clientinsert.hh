@@ -5,7 +5,6 @@
 includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
-using Aida::Any;
 class ItemImpl; // FIXME
 class WindowImpl;
 }

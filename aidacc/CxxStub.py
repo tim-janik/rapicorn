@@ -498,7 +498,7 @@ class Generator:
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_cast_types__();\n'
       s += '  template<class SmartHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
-      s += '{ return smh._is_null() ? %s() : __aida_cast__ (smh, smh.__aida_cast_types__()); }\n' % classH
+      s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_cast_types__()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -536,10 +536,6 @@ class Generator:
     if self.gen_mode == G4SERVANT:       # ->* _servant and ->* _handle operators
       s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
       s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
-    else: # self.gen_mode == G4STUB
-      s += '//' + self.F ('inline', -9)
-      s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
-      s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     # typedef alias
     if self.gen_mode == G4STUB:
       s += self.generate_shortalias (type_info)
