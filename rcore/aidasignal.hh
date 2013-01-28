@@ -296,6 +296,21 @@ private:
   CollectorResult result_;
 };
 
+/// Connector provides a simple (dis-)connect interfaces for signals on SmartHandle
+template<class Object, class SignalSignature>
+class Connector {
+  typedef std::function<SignalSignature> CbFunction;
+  typedef size_t (Object::*PMF) (size_t, const CbFunction&);
+  Object &instance_;
+  PMF     method_;
+public:
+  Connector (Object &instance, PMF method) : instance_ (instance), method_ (method) {}
+  /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
+  size_t operator+= (const CbFunction &cb)              { return (instance_.*method_) (0, cb); }
+  /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+  bool   operator-= (size_t connection_id)              { return connection_id ? (instance_.*method_) (connection_id, *(CbFunction*) NULL) : false; }
+};
+
 } } // Rapicorn::Aida
 
 #endif // __RAPICORN_AIDA_SIGNAL_HH__
