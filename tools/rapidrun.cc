@@ -189,7 +189,7 @@ main (int   argc,
 
   // create window, hook up post-display handler
   WindowH window = app.create_window (dialog);
-  window.sig_displayed ([&window]() { window_displayed (window); });
+  window.sig_displayed() += [&window]() { window_displayed (window); };
 
   /* show window and process events */
   window.show();
