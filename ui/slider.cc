@@ -172,7 +172,7 @@ class SliderSkidImpl;
 
 class SliderTroughImpl : public virtual SingleContainerImpl, public virtual EventHandler {
   SliderArea *slider_area_;
-  size_t slider_changed_conid_;
+  size_t conid_slider_changed_;
   bool
   flipped()
   {
@@ -180,7 +180,7 @@ class SliderTroughImpl : public virtual SingleContainerImpl, public virtual Even
   }
 public:
   SliderTroughImpl() :
-    slider_area_ (NULL), slider_changed_conid_ (0)
+    slider_area_ (NULL), conid_slider_changed_ (0)
   {}
   ~SliderTroughImpl()
   {}
@@ -188,15 +188,15 @@ protected:
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
-    if (slider_area_ && slider_changed_conid_)
-      slider_area_->sig_slider_changed() -= slider_changed_conid_;
-    slider_changed_conid_ = 0;
+    if (slider_area_ && conid_slider_changed_)
+      slider_area_->sig_slider_changed() -= conid_slider_changed_;
+    conid_slider_changed_ = 0;
     slider_area_ = NULL;
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
         slider_area_ = parent_interface<SliderArea*>();
-        slider_changed_conid_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
+        conid_slider_changed_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
       }
   }
   Adjustment*
