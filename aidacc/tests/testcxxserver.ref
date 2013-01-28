@@ -73,10 +73,10 @@ template<class SMH> static inline SMH obj2smh (Rapicorn::Aida::TestServerBase *s
 }
 // messages
 static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
-static inline void add_header1_discon (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
-static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline void add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
+static inline void add_header1_event  (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
 static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
 { return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
 // slot
@@ -1598,23 +1598,23 @@ __AIDA_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 class __AIDA_Closure__UIWidgetArea__void_signal {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__UIWidgetArea__void_signal> SharedPtr;
-  __AIDA_Closure__UIWidgetArea__void_signal (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__UIWidgetArea__void_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__UIWidgetArea__void_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
@@ -1626,7 +1626,8 @@ __AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_void_signal() -= signal_connection;
@@ -1639,15 +1640,15 @@ __AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__UIWidgetArea__sample_signal {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__UIWidgetArea__sample_signal> SharedPtr;
-  __AIDA_Closure__UIWidgetArea__sample_signal (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__UIWidgetArea__sample_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__UIWidgetArea__sample_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static double
@@ -1656,8 +1657,8 @@ I_UIWidgetArea_Interface &arg_ba1,
            int arg_someint)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+    fb <<= sp->handler_id_;
     fb <<= &arg_ba1;
     fb <<= arg_someint;
     __AIDA_Local__::post_msg (&fb);
@@ -1672,7 +1673,8 @@ __AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_sample_signal() -= signal_connection;
@@ -2015,23 +2017,23 @@ __AIDA_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__void_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__void_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__void_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__void_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__void_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
@@ -2043,7 +2045,8 @@ __AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fb
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_void_result() -= signal_connection;
@@ -2056,23 +2059,23 @@ __AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fb
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__bool_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__bool_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__bool_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__bool_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__bool_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static bool
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2085,7 +2088,8 @@ __AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fb
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_bool_result() -= signal_connection;
@@ -2098,23 +2102,23 @@ __AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fb
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__int32_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int32_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__int32_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__int32_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int32_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static int
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2127,7 +2131,8 @@ __AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &f
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_int32_result() -= signal_connection;
@@ -2140,23 +2145,23 @@ __AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &f
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__int64_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int64_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__int64_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__int64_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int64_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static Rapicorn::Aida::int64_t
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2169,7 +2174,8 @@ __AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &f
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_int64_result() -= signal_connection;
@@ -2182,23 +2188,23 @@ __AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &f
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__float64_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__float64_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__float64_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__float64_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__float64_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static double
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2211,7 +2217,8 @@ __AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader 
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_float64_result() -= signal_connection;
@@ -2224,23 +2231,23 @@ __AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader 
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__string_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__string_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__string_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__string_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__string_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static std::string
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return "";
   }
@@ -2253,7 +2260,8 @@ __AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_string_result() -= signal_connection;
@@ -2266,23 +2274,23 @@ __AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__enum_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__enum_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__enum_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__enum_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__enum_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static QuickEnum
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return QuickEnum (0);
   }
@@ -2295,7 +2303,8 @@ __AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fb
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_enum_result() -= signal_connection;
@@ -2308,23 +2317,23 @@ __AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fb
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__record_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__record_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__record_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__record_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__record_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static QuickRecord
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return QuickRecord();
   }
@@ -2337,7 +2346,8 @@ __AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_record_result() -= signal_connection;
@@ -2350,23 +2360,23 @@ __AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__sequence_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__sequence_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__sequence_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__sequence_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__sequence_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static QuickSequence
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return QuickSequence();
   }
@@ -2379,7 +2389,8 @@ __AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_sequence_result() -= signal_connection;
@@ -2392,23 +2403,23 @@ __AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__interface_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__interface_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__interface_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__interface_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__interface_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static I_GrandChild_Interface*
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2421,7 +2432,8 @@ __AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReade
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_interface_result() -= signal_connection;
@@ -2434,23 +2446,23 @@ __AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReade
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__any_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__any_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__any_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__any_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__any_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static Rapicorn::Aida::Any
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return Rapicorn::Aida::Any();
   }
@@ -2463,7 +2475,8 @@ __AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_any_result() -= signal_connection;
@@ -2476,23 +2489,23 @@ __AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__self_result {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__self_result> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__self_result (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__self_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__self_result()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static I_SignalTestInterface_Interface*
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -2505,7 +2518,8 @@ __AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fb
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_self_result() -= signal_connection;
@@ -2518,23 +2532,23 @@ __AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fb
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__void_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__void_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__void_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__void_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__void_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
@@ -2546,7 +2560,8 @@ __AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_void_arg() -= signal_connection;
@@ -2559,15 +2574,15 @@ __AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__bool_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__bool_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__bool_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__bool_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__bool_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2575,8 +2590,8 @@ public:
 bool arg_b)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_b;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2589,7 +2604,8 @@ __AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_bool_arg() -= signal_connection;
@@ -2602,15 +2618,15 @@ __AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__int32_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int32_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__int32_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__int32_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int32_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2618,8 +2634,8 @@ public:
 int arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2632,7 +2648,8 @@ __AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_int32_arg() -= signal_connection;
@@ -2645,15 +2662,15 @@ __AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__int64_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__int64_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__int64_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__int64_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int64_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2661,8 +2678,8 @@ public:
 Rapicorn::Aida::int64_t arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2675,7 +2692,8 @@ __AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_int64_arg() -= signal_connection;
@@ -2688,15 +2706,15 @@ __AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__float64_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__float64_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__float64_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__float64_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__float64_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2704,8 +2722,8 @@ public:
 double arg_f)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_f;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2718,7 +2736,8 @@ __AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fb
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_float64_arg() -= signal_connection;
@@ -2731,15 +2750,15 @@ __AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fb
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__string_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__string_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__string_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__string_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__string_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2747,8 +2766,8 @@ public:
 const std::string &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_s;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2761,7 +2780,8 @@ __AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_string_arg() -= signal_connection;
@@ -2774,15 +2794,15 @@ __AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__enum_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__enum_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__enum_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__enum_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__enum_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2790,8 +2810,8 @@ public:
 QuickEnum arg_e)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_e;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2804,7 +2824,8 @@ __AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_enum_arg() -= signal_connection;
@@ -2817,15 +2838,15 @@ __AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__record_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__record_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__record_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__record_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__record_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2833,8 +2854,8 @@ public:
 const QuickRecord &arg_r)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_r;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2847,7 +2868,8 @@ __AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_record_arg() -= signal_connection;
@@ -2860,15 +2882,15 @@ __AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__sequence_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__sequence_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__sequence_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__sequence_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__sequence_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2876,8 +2898,8 @@ public:
 const QuickSequence &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_s;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2890,7 +2912,8 @@ __AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &f
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_sequence_arg() -= signal_connection;
@@ -2903,15 +2926,15 @@ __AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &f
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__interface_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__interface_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__interface_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__interface_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__interface_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2919,8 +2942,8 @@ public:
 I_GrandChild_Interface &arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+    fb <<= sp->handler_id_;
     fb <<= &arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2933,7 +2956,8 @@ __AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_interface_arg() -= signal_connection;
@@ -2946,15 +2970,15 @@ __AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__any_arg {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__any_arg> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__any_arg (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__any_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__any_arg()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -2962,8 +2986,8 @@ public:
 const Rapicorn::Aida::Any &arg_a)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+    fb <<= sp->handler_id_;
     fb <<= arg_a;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -2976,7 +3000,8 @@ __AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_any_arg() -= signal_connection;
@@ -2989,15 +3014,15 @@ __AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__SignalTestInterface__self_args {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__SignalTestInterface__self_args> SharedPtr;
-  __AIDA_Closure__SignalTestInterface__self_args (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__SignalTestInterface__self_args (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__self_args()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -3005,8 +3030,8 @@ public:
 I_SignalTestInterface_Interface &arg_self_)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+    fb <<= sp->handler_id_;
     fb <<= &arg_self_;
     __AIDA_Local__::post_msg (&fb);
   }
@@ -3019,7 +3044,8 @@ __AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_self_args() -= signal_connection;
@@ -3049,15 +3075,15 @@ __AIDA_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__ChildInheritingSignals__child_signal {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__ChildInheritingSignals__child_signal> SharedPtr;
-  __AIDA_Closure__ChildInheritingSignals__child_signal (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__ChildInheritingSignals__child_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ChildInheritingSignals__child_signal()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
@@ -3070,8 +3096,8 @@ I_ChildInheritingSignals_Interface &arg_c,
            const QuickSequence &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+    fb <<= sp->handler_id_;
     fb <<= &arg_c;
     fb <<= &arg_p;
     fb <<= arg_a;
@@ -3089,7 +3115,8 @@ __AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_child_signal() -= signal_connection;
@@ -3546,23 +3573,23 @@ __AIDA_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 class __AIDA_Closure__ButtonArea__check_activate {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__ButtonArea__check_activate> SharedPtr;
-  __AIDA_Closure__ButtonArea__check_activate (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__ButtonArea__check_activate (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ButtonArea__check_activate()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static bool
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
     return 0;
   }
@@ -3575,7 +3602,8 @@ __AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_check_activate() -= signal_connection;
@@ -3588,23 +3616,23 @@ __AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 class __AIDA_Closure__ButtonArea__activate {
-  Rapicorn::Aida::uint64_t handler_;
+  size_t handler_id_;
 public:
   typedef std::shared_ptr<__AIDA_Closure__ButtonArea__activate> SharedPtr;
-  __AIDA_Closure__ButtonArea__activate (Rapicorn::Aida::uint64_t h) : handler_ (h) {}
+  __AIDA_Closure__ButtonArea__activate (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ButtonArea__activate()
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, handler_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
-    fb <<= handler_;
+    __AIDA_Local__::add_header1_discon (fb, handler_id_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+    fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
   static void
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
-    fb <<= sp->handler_;
+    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+    fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
@@ -3616,7 +3644,8 @@ __AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;
+  size_t handler_id;
+  Rapicorn::Aida::uint64_t signal_connection, cid = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection) self->sig_activate() -= signal_connection;

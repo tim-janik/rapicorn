@@ -92,10 +92,10 @@ template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 }
 // messages
 static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
-static inline void add_header1_discon (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
-static inline void add_header1_event  (FieldBuffer &fb, uint64_t orbid, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_orbid (orbid), h, l); }
+static inline void add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
+static inline void add_header1_event  (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
 static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
 { return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
 // slot
@@ -118,8 +118,8 @@ static Rapicorn::Init init_client_connection ([]() {
 });
 // helper
 static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (uint64_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
-static uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
+static bool          signal_disconnect (size_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
+static size_t        signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
                                        { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
 static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
@@ -943,15 +943,15 @@ class Generator:
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  Rapicorn::Aida::uint64_t handler_;\n'
+    s += '  size_t handler_id_;\n'
     s += 'public:\n'
     s += '  typedef std::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Rapicorn::Aida::uint64_t h) : handler_ (h) {}\n' % closure_class # ctor
+    s += '  %s (size_t h) : handler_id_ (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + handler
-    s += '    __AIDA_Local__::add_header1_discon (fb, handler_, %s);\n' % digest
-    s += '    fb <<= handler_;\n'
+    s += '    __AIDA_Local__::add_header1_discon (fb, handler_id_, %s);\n' % digest
+    s += '    fb <<= handler_id_;\n'
     s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
@@ -959,8 +959,8 @@ class Generator:
     s += '  handler (const SharedPtr &sp' + (',\n' if stype.args else '')
     s += self.Args (stype, 'arg_', 11) + ')\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
-    s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_, %s);\n' % digest
-    s += '    fb <<= sp->handler_;\n'
+    s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, %s);\n' % digest
+    s += '    fb <<= sp->handler_id_;\n'
     ident_type_args = [(('&arg_' if a[1].storage == Decls.INTERFACE else 'arg_')+ a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
@@ -978,7 +978,8 @@ class Generator:
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
-    s += '  Rapicorn::Aida::uint64_t handler_id, signal_connection, cid = 0;\n'
+    s += '  size_t handler_id;\n'
+    s += '  Rapicorn::Aida::uint64_t signal_connection, cid = 0;\n'
     s += '  fbr >>= handler_id;\n'
     s += '  fbr >>= signal_connection;\n'
     s += '  if (signal_connection) self->sig_%s() -= signal_connection;\n' % stype.name
