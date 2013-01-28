@@ -1348,10 +1348,10 @@ ObjectBroker::post_msg (FieldBuffer *fb)
 {
   assert_return (fb);
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
-  const uint conid = ObjectBroker::sender_connection_id (msgid);
-  BaseConnection *bcon = BaseConnection::connection_from_id (conid);
+  const uint connection_id = ObjectBroker::sender_connection_id (msgid);
+  BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)
-    error_printf ("Message with invalid connection ID: %016lx (conid=0x%08x)", msgid, conid);
+    error_printf ("Message with invalid connection ID: %016lx (connection_id=0x%08x)", msgid, connection_id);
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
