@@ -35,11 +35,11 @@ void        use_ui_namespace    (const String           &uinamespace);
 
 typedef map<String,String>       VariableMap;
 
-String     factory_context_name      (FactoryContext *fc);
-String     factory_context_type      (FactoryContext *fc);
-StringSeq  factory_context_tags      (FactoryContext *fc);
-UserSource factory_context_source    (FactoryContext *fc);
-String     factory_context_impl_type (FactoryContext *fc);
+String           factory_context_name      (FactoryContext *fc);
+String           factory_context_type      (FactoryContext *fc);
+const StringSeq& factory_context_tags      (FactoryContext *fc);
+UserSource       factory_context_source    (FactoryContext *fc);
+String           factory_context_impl_type (FactoryContext *fc);
 
 /* --- item type registration --- */
 struct ItemTypeFactory : protected Deletable {

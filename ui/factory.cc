@@ -14,7 +14,9 @@ namespace Rapicorn {
 
 struct FactoryContext {
   const XmlNode *xnode;
-  FactoryContext (const XmlNode *xn) : xnode (xn) {}
+  StringSeq     *type_tags;
+  String         type;
+  FactoryContext (const XmlNode *xn) : xnode (xn), type_tags (NULL) {}
 };
 static std::map<const XmlNode*, FactoryContext*> factory_context_map; // FIXME: threads?
 
@@ -205,7 +207,7 @@ factory_context_source (FactoryContext *fc)
 }
 
 static void
-factory_context_list_types (StringSeq &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
+factory_context_list_types (StringVector &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
 {
   assert_return (xnode != NULL);
   if (xnode->name() != "tmpl:define") // lookup definition node from child node
@@ -242,24 +244,35 @@ factory_context_list_types (StringSeq &types, const XmlNode *xnode, const bool n
     }
 }
 
-StringSeq
+static void
+factory_context_update_cache (FactoryContext *fc)
+{
+  if (UNLIKELY (!fc->type_tags))
+    {
+      const XmlNode *xnode = fc->xnode;
+      fc->type_tags = new StringSeq;
+      StringVector &types = *fc->type_tags;
+      factory_context_list_types (types, xnode, false, false);
+      fc->type = types.size() ? types[types.size() - 1] : "";
+      types.clear();
+      factory_context_list_types (types, xnode, true, true);
+    }
+}
+
+const StringSeq&
 factory_context_tags (FactoryContext *fc)
 {
-  StringSeq types;
-  assert_return (fc != NULL, types);
-  const XmlNode *xnode = fc->xnode;
-  factory_context_list_types (types, xnode, true, true);
-  return types;
+  assert_return (fc != NULL, *(StringSeq*) NULL);
+  factory_context_update_cache (fc);
+  return *fc->type_tags;
 }
 
 String
 factory_context_impl_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  const XmlNode *xnode = fc->xnode;
-  StringSeq types;
-  factory_context_list_types (types, xnode, false, false);
-  return types.size() ? types[types.size() - 1] : "";
+  factory_context_update_cache (fc);
+  return fc->type;
 }
 
 #if 0
