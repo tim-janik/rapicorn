@@ -363,7 +363,7 @@ FocusFrame::_property_list()
 class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
   FrameType m_focus_frame;
   Client   *m_client;
-  size_t    client_conid_;
+  size_t    conid_client_;
   virtual void
   set_focus_child (ItemImpl *item)
   {
@@ -383,8 +383,8 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
   {
     if (m_client)
       {
-        m_client->sig_changed -= client_conid_;
-        client_conid_ = 0;
+        m_client->sig_changed() -= conid_client_;
+        conid_client_ = 0;
         m_client->unregister_focus_frame (*this);
       }
     m_client = NULL;
@@ -395,7 +395,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
         if (client && client->register_focus_frame (*this))
           m_client = client;
         if (m_client)
-          client_conid_ = m_client->sig_changed += Aida::slot (*this, &FocusFrameImpl::client_changed);
+          conid_client_ = m_client->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
       }
   }
 protected:
@@ -416,7 +416,7 @@ protected:
 public:
   explicit FocusFrameImpl() :
     m_focus_frame (FRAME_FOCUS),
-    m_client (NULL), client_conid_ (0)
+    m_client (NULL), conid_client_ (0)
   {}
 };
 static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");

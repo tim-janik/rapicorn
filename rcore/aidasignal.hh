@@ -161,9 +161,9 @@ public:
       }
   }
   /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
-  size_t operator+= (const CbFunction &cb)      { ensure_ring(); return callback_ring_->add_before (cb); }
+  size_t connect    (const CbFunction &cb)      { ensure_ring(); return callback_ring_->add_before (cb); }
   /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
-  bool   operator-= (size_t connection)         { return callback_ring_ ? callback_ring_->remove_sibling (connection) : false; }
+  bool   disconnect (size_t connection)         { return callback_ring_ ? callback_ring_->remove_sibling (connection) : false; }
   /// Emit a signal, i.e. invoke all its callbacks and collect return types with the Collector.
   CollectorResult
   emit (Args... args)
@@ -211,13 +211,28 @@ public:
  * Note that the Signal template types is non-copyable.
  */
 template <typename SignalSignature, class Collector = Lib::CollectorDefault<typename std::function<SignalSignature>::result_type> >
-struct Signal /*final*/ :
-    Lib::ProtoSignal<SignalSignature, Collector>
+class Signal /*final*/ :
+    protected Lib::ProtoSignal<SignalSignature, Collector>
 {
   typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
   typedef typename ProtoSignal::CbFunction             CbFunction;
+  class Connector {
+    Signal &signal_;
+    friend class Signal;
+    Connector& operator= (const Connector&) = delete;
+    explicit Connector (Signal &signal) : signal_ (signal) {}
+  public:
+    /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
+    size_t operator+= (const CbFunction &cb)              { return signal_.connect (cb); }
+    /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+    bool   operator-= (size_t connection_id)              { return signal_.disconnect (connection_id); }
+  };
+public:
+  using ProtoSignal::emit;
   /// Signal constructor, supports a default callback as argument.
   Signal (const CbFunction &method = CbFunction()) : ProtoSignal (method) {}
+  /// Retrieve a connector object with operator+= and operator-= to connect and disconnect signal handlers.
+  Connector operator() ()                                 { return Connector (*this); }
 };
 
 /// This function creates a std::function by binding @a object to the member function pointer @a method.
@@ -279,6 +294,21 @@ struct CollectorVector {
   }
 private:
   CollectorResult result_;
+};
+
+/// Connector provides a simple (dis-)connect interfaces for signals on SmartHandle
+template<class Object, class SignalSignature>
+class Connector {
+  typedef std::function<SignalSignature> CbFunction;
+  typedef size_t (Object::*PMF) (size_t, const CbFunction&);
+  Object &instance_;
+  PMF     method_;
+public:
+  Connector (Object &instance, PMF method) : instance_ (instance), method_ (method) {}
+  /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
+  size_t operator+= (const CbFunction &cb)              { return (instance_.*method_) (0, cb); }
+  /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+  bool   operator-= (size_t connection_id)              { return connection_id ? (instance_.*method_) (connection_id, *(CbFunction*) NULL) : false; }
 };
 
 } } // Rapicorn::Aida

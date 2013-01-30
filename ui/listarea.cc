@@ -82,9 +82,9 @@ ItemListImpl::constructed ()
       {
         m_model = store;
         ref_sink (m_model);
-        // m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
-        // m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
-        // m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
+        // m_model->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
+        // m_model->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
+        // m_model->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
         m_n_cols = m_model->columns();
       }
       unref (ref_sink (store));
@@ -115,7 +115,7 @@ ItemListImpl::vadjustment () const
     {
       m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
       ItemListImpl &self = const_cast<ItemListImpl&> (*this);
-      m_vadjustment->sig_value_changed += Aida::slot (self, &ItemImpl::queue_visual_update);
+      m_vadjustment->sig_value_changed() += Aida::slot (self, &ItemImpl::queue_visual_update);
     }
   return *m_vadjustment;
 }
@@ -145,10 +145,10 @@ ItemListImpl::model (const String &modelurl)
   if (m_model)
     {
       ref_sink (m_model);
-      // m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
-      // m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
-      // m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
-      // #warning FIXME: missing: m_model->sig_selection_changed += slot (*this, &ItemListImpl::selection_changed);
+      // m_model->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
+      // m_model->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
+      // m_model->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
+      // #warning FIXME: missing: m_model->sig_selection_changed() += slot (*this, &ItemListImpl::selection_changed);
     }
   if (oldmodel)
     {

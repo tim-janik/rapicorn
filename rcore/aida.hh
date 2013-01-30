@@ -309,6 +309,7 @@ public:
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection     ();
   static ClientConnection* new_client_connection     ();
+  static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64_t orbid)        { return IdentifierParts (orbid).orbid_connection; }
   static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
@@ -493,8 +494,8 @@ protected:
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
 public: /// @name API for signal event handlers.
-  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
-  virtual bool          signal_disconnect (uint64_t signal_handler_id) = 0;
+  virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
+  virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
 };
 
 // == inline implementations ==

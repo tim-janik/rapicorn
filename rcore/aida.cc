@@ -32,6 +32,30 @@ namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
+// == SignalHandlerIdParts ==
+union SignalHandlerIdParts {
+  size_t   vsize;
+  struct { // Bits
+#if __SIZEOF_SIZE_T__ == 8
+    uint   signal_handler_index : 24;
+    uint   unused1 : 8;
+    uint   unused2 : 16;
+    uint   orbid_connection : 16;
+#else // 4
+    uint   signal_handler_index : 16;
+    uint   orbid_connection : 16;
+#endif
+  };
+  SignalHandlerIdParts (size_t handler_id) : vsize (handler_id) {}
+  SignalHandlerIdParts (uint handler_index, uint connection_id) :
+    signal_handler_index (handler_index),
+#if __SIZEOF_SIZE_T__ == 8
+    unused1 (0), unused2 (0),
+#endif
+    orbid_connection (connection_id)
+  {}
+};
+
 // == FieldUnion ==
 static_assert (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes), "sizeof FieldUnion::smem");
 static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");
@@ -487,6 +511,14 @@ ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
   sh.assign (SmartHandle (*orbo));
 }
 
+uint
+ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
+{
+  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
+  const uint handler_index = handler_id_parts.signal_handler_index;
+  return handler_index ? handler_id_parts.orbid_connection : 0;
+}
+
 // == FieldBuffer ==
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
@@ -920,7 +952,7 @@ class ClientConnectionImpl : public ClientConnection {
   struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
   std::vector<SignalHandler*>   signal_handlers_;
   bool                          blocking_for_sem_;
-  SignalHandler*                signal_lookup (uint64_t handler_id);
+  SignalHandler*                signal_lookup (size_t handler_id);
   // client event handler
   typedef std::set<uint64_t> UIntSet;
   UIntSet                   ehandler_set;
@@ -953,8 +985,8 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual uint64_t      signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
-  virtual bool          signal_disconnect (uint64_t signal_handler_id);
+  virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
+  virtual bool          signal_disconnect (size_t signal_handler_id);
 };
 
 FieldBuffer*
@@ -977,7 +1009,7 @@ ClientConnectionImpl::dispatch ()
   const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
   if (msgid_is_event (msgid))
     {
-      const uint64_t handler_id = fbr.pop_int64();
+      const size_t handler_id = fbr.pop_int64();
       SignalHandler *shandler = signal_lookup (handler_id);
       if (shandler)
         {
@@ -1002,14 +1034,14 @@ ClientConnectionImpl::dispatch ()
             }
         }
       else
-        warning_printf ("invalid signal handler id in %s: %llu", "event", handler_id);
+        warning_printf ("invalid signal handler id in %s: %zu", "event", handler_id);
     }
   else if (msgid_is_discon (msgid))
     {
-      const uint64_t handler_id = fbr.pop_int64();
+      const size_t handler_id = fbr.pop_int64();
       const bool deleted = true; // FIXME: currently broken
       if (!deleted)
-        warning_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id);
+        warning_printf ("invalid signal handler id in %s: %zu", "disconnect", handler_id);
     }
   else
     warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
@@ -1059,7 +1091,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
   return fr;
 }
 
-uint64_t
+size_t
 ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data)
 {
   assert_return (orbid > 0, 0);
@@ -1077,7 +1109,7 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   const uint handler_index = signal_handlers_.size();
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
-  const uint64_t handler_id = IdentifierParts (handler_index, connection_id()).vuint64; // see connection_id_from_orbid
+  const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
   fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
@@ -1096,10 +1128,11 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
 }
 
 bool
-ClientConnectionImpl::signal_disconnect (uint64_t signal_handler_id)
+ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 {
-  assert_return (signal_handler_id > 0, 0);
-  const uint handler_index = signal_handler_id; // see connection_id_from_orbid
+  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
+  assert_return (handler_id_parts.orbid_connection == connection_id(), false);
+  const uint handler_index = handler_id_parts.signal_handler_index;
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   if (shandler)
@@ -1125,9 +1158,11 @@ ClientConnectionImpl::signal_disconnect (uint64_t signal_handler_id)
 }
 
 ClientConnectionImpl::SignalHandler*
-ClientConnectionImpl::signal_lookup (uint64_t signal_handler_id)
+ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 {
-  const uint handler_index = signal_handler_id; // see connection_id_from_orbid
+  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
+  assert_return (handler_id_parts.orbid_connection == connection_id(), NULL);
+  const uint handler_index = handler_id_parts.signal_handler_index;
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   pthread_spin_unlock (&signal_spin_);
@@ -1313,10 +1348,10 @@ ObjectBroker::post_msg (FieldBuffer *fb)
 {
   assert_return (fb);
   const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
-  const uint conid = ObjectBroker::sender_connection_id (msgid);
-  BaseConnection *bcon = BaseConnection::connection_from_id (conid);
+  const uint connection_id = ObjectBroker::sender_connection_id (msgid);
+  BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)
-    error_printf ("Message with invalid connection ID: %016lx (conid=0x%08x)", msgid, conid);
+    error_printf ("Message with invalid connection ID: %016lx (connection_id=0x%08x)", msgid, connection_id);
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
