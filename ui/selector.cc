@@ -1083,9 +1083,9 @@ Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
     case CLASS:         ; // pass through
     }
   // CLASS:
-  StringSeq tags = selob.get_type_list();
+  const StringVector &ctags = selob.get_type_list();
   bool result = false;
-  for (StringSeq::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
+  for (StringVector::const_iterator it = ctags.begin(); it != ctags.end() && !result; it++)
     {
       const String &tag = *it;
       size_t i = tag.rfind (snode.ident);
@@ -1096,7 +1096,7 @@ Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", tags).c_str(), result);
+  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
   return result;
 }
 
@@ -1367,14 +1367,10 @@ Matcher::query_selector_unique (const String &selector, Selob &selob, String *er
 }
 
 class SelobTrue : public Selob {
+  StringVector type_list_;
   virtual String       get_id          ()                     { return "true"; }
   virtual String       get_type        ()                     { return "Rapicorn::Selector::Selob::True"; }
-  virtual StringVector get_type_list   ()
-  {
-    StringVector sv;
-    sv.push_back (get_type());
-    return sv;
-  }
+  virtual ConstTypes&  get_type_list   ()                     { return type_list_; }
   virtual bool         has_property    (const String &name)   { return false; }
   virtual String       get_property    (const String &name)   { return ""; }
   virtual Selob*       get_parent      ()                     { return NULL; }
@@ -1384,6 +1380,8 @@ class SelobTrue : public Selob {
   virtual Selob*       get_child       (int64 index)          { return NULL; }
   virtual bool         is_nth_child    (int64 nth1based)      { return false; }
   virtual Selob*       pseudo_selector (const String &ident, const String &arg, String &error) { return false; }
+public:
+  explicit             SelobTrue       ()                     { type_list_.push_back (get_type()); }
 };
 
 Selob*

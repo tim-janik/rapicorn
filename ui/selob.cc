@@ -33,8 +33,8 @@ SelobItem::get_type ()
   return Factory::factory_context_type (m_item.factory_context());
 }
 
-StringVector
-SelobItem::get_type_list ()
+const StringVector&
+SelobItem::get_type_list()
 {
   return Factory::factory_context_tags (m_item.factory_context());
 }
@@ -211,12 +211,12 @@ SelobListModel::get_type ()
   return "Rapicorn::ListModel";
 }
 
-StringVector
-SelobListModel::get_type_list ()
+const StringVector&
+SelobListModel::get_type_list()
 {
-  StringVector sv;
-  sv.push_back (get_type());
-  return sv;
+  if (type_list_.empty())
+    type_list_.push_back (get_type());
+  return type_list_;
 }
 
 Selob*

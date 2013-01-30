@@ -12,7 +12,13 @@
 
 namespace Rapicorn {
 
-struct FactoryContext {}; // prototyped in primitives.hh
+struct FactoryContext {
+  const XmlNode *xnode;
+  StringSeq     *type_tags;
+  String         type;
+  FactoryContext (const XmlNode *xn) : xnode (xn), type_tags (NULL) {}
+};
+static std::map<const XmlNode*, FactoryContext*> factory_context_map; // FIXME: threads?
 
 static void initialize_factory_lazily (void);
 
@@ -164,7 +170,7 @@ String
 factory_context_name (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  const XmlNode *xnode = (XmlNode*) fc;
+  const XmlNode *xnode = fc->xnode;
   String s = xnode->name();
   if (s == "tmpl:define")
     return xnode->get_attribute ("id");
@@ -176,7 +182,7 @@ String
 factory_context_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  const XmlNode *xnode = (XmlNode*) fc;
+  const XmlNode *xnode = fc->xnode;
   if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
@@ -190,7 +196,7 @@ UserSource
 factory_context_source (FactoryContext *fc)
 {
   assert_return (fc != NULL, UserSource (""));
-  const XmlNode *xnode = (XmlNode*) fc;
+  const XmlNode *xnode = fc->xnode;
   if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
@@ -201,10 +207,9 @@ factory_context_source (FactoryContext *fc)
 }
 
 static void
-factory_context_list_types (StringSeq &types, FactoryContext *fc, const bool need_ids, const bool need_variants)
+factory_context_list_types (StringVector &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
 {
-  assert_return (fc != NULL);
-  const XmlNode *xnode = (XmlNode*) fc;
+  assert_return (xnode != NULL);
   if (xnode->name() != "tmpl:define") // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
@@ -239,22 +244,35 @@ factory_context_list_types (StringSeq &types, FactoryContext *fc, const bool nee
     }
 }
 
-StringSeq
+static void
+factory_context_update_cache (FactoryContext *fc)
+{
+  if (UNLIKELY (!fc->type_tags))
+    {
+      const XmlNode *xnode = fc->xnode;
+      fc->type_tags = new StringSeq;
+      StringVector &types = *fc->type_tags;
+      factory_context_list_types (types, xnode, false, false);
+      fc->type = types.size() ? types[types.size() - 1] : "";
+      types.clear();
+      factory_context_list_types (types, xnode, true, true);
+    }
+}
+
+const StringSeq&
 factory_context_tags (FactoryContext *fc)
 {
-  StringSeq types;
-  assert_return (fc != NULL, types);
-  factory_context_list_types (types, fc, true, true);
-  return types;
+  assert_return (fc != NULL, *(StringSeq*) NULL);
+  factory_context_update_cache (fc);
+  return *fc->type_tags;
 }
 
 String
 factory_context_impl_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  StringSeq types;
-  factory_context_list_types (types, fc, false, false);
-  return types.size() ? types[types.size() - 1] : "";
+  factory_context_update_cache (fc);
+  return fc->type;
 }
 
 #if 0
@@ -315,7 +333,7 @@ void
 Builder::build_children (ContainerImpl &container, vector<ItemImpl*> *children, const String &presuppose, int64 max_children)
 {
   assert_return (presuppose != "");
-  const XmlNode *dnode, *pnode = (XmlNode*) container.factory_context();
+  const XmlNode *dnode, *pnode = container.factory_context()->xnode;
   if (!pnode)
     return;
   while (pnode)
@@ -370,7 +388,13 @@ Builder::inherit_item (const String &item_identifier, const StringVector &call_n
           DEBUG ("%s: unknown widget type: %s", node_location (caller).c_str(), item_identifier.c_str());
           return NULL;
         }
-      ItemImpl *item = itfactory->create_item ((FactoryContext*) derived);
+      FactoryContext *fc = factory_context_map[derived];
+      if (!fc)
+        {
+          fc = new FactoryContext (derived);
+          factory_context_map[derived] = fc;
+        }
+      ItemImpl *item = itfactory->create_item (fc);
       builder.apply_args (*item, call_names, call_values, caller, true);
       return item;
     }

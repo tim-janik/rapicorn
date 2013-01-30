@@ -2,6 +2,7 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include <set>
+#include <unordered_map>
 #include <cstring>
 #include <malloc.h>
 
@@ -33,7 +34,7 @@ Property*
 PropertyHostInterface::_property_lookup (const String &property_name)
 {
   // provide PropertyMaps globally
-  typedef std::map<const String, Property*> PropertyMap;
+  typedef std::unordered_map<String, Property*> PropertyMap;
   static std::map<const PropertyList*,PropertyMap*> *plist_map = NULL;
   do_once {
     static uint64 space[sizeof (*plist_map) / sizeof (uint64)];

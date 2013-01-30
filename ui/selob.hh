@@ -24,7 +24,7 @@ public:
   virtual             ~SelobItem       ();
   virtual String       get_id          ();
   virtual String       get_type        ();
-  virtual StringVector get_type_list   ();
+  virtual ConstTypes&  get_type_list   ();
   virtual bool         has_property    (const String &name);
   virtual String       get_property    (const String &name);
   virtual Selob*       get_parent      ();
@@ -38,6 +38,7 @@ public:
 
 class SelobListModel : public Selob {
   ListModelIface      &m_lmodel;
+  StringVector         type_list_;
   String               m_row_constraint, m_col_constraint, m_value_constraint, m_type_constraint;
   uint                 f_row_constraint : 1, f_col_constraint : 1, f_value_constraint : 1, f_type_constraint : 1;
   explicit             SelobListModel  (SelobAllocator &allocator, ListModelIface &lmodel);
@@ -45,7 +46,7 @@ public:
   virtual             ~SelobListModel  ();
   virtual String       get_id          ();
   virtual String       get_type        ();
-  virtual StringVector get_type_list   ();
+  virtual ConstTypes&  get_type_list   ();
   virtual bool         has_property    (const String &name)     { return false; }
   virtual String       get_property    (const String &name)     { return ""; }
   virtual Selob*       get_parent      ()                       { return NULL; }
