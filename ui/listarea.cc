@@ -82,9 +82,9 @@ ItemListImpl::constructed ()
       {
         m_model = store;
         ref_sink (m_model);
-        m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
-        m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
-        m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
+        // m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
+        // m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
+        // m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
         m_n_cols = m_model->columns();
       }
       unref (ref_sink (store));
@@ -145,10 +145,10 @@ ItemListImpl::model (const String &modelurl)
   if (m_model)
     {
       ref_sink (m_model);
-      m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
-      m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
-      m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
-#warning FIXME: missing: m_model->sig_selection_changed += slot (*this, &ItemListImpl::selection_changed);
+      // m_model->sig_inserted += Aida::slot (*this, &ItemListImpl::model_inserted);
+      // m_model->sig_changed += Aida::slot (*this, &ItemListImpl::model_changed);
+      // m_model->sig_removed += Aida::slot (*this, &ItemListImpl::model_removed);
+      // #warning FIXME: missing: m_model->sig_selection_changed += slot (*this, &ItemListImpl::selection_changed);
     }
   if (oldmodel)
     {
@@ -274,7 +274,7 @@ ItemListImpl::size_request (Requisition &requisition)
 void
 ItemListImpl::size_allocate (Allocation area, bool changed)
 {
-  m_need_resize_scroll |= allocation() != area | changed;
+  m_need_resize_scroll = m_need_resize_scroll || allocation() != area || changed;
   if (m_need_resize_scroll)
     {
       measure_rows (area.height);
@@ -528,7 +528,6 @@ ItemListImpl::resize_scroll () // m_model->size() >= 1
   int64 current = min (mcount - 1, ifloor (m_vadjustment->nvalue() * mcount)); // FIXME
   ListRow *lr_current = fetch_row (current);
 
-  Allocation area = allocation();
   int64 current_y, currentupper, currentlower, listupper, listheight;
   int64 current_FIXME = scroll_row_layout (lr_current, &current_y, &currentupper, &currentlower, &listupper, &listheight);
   (void) current_FIXME;
