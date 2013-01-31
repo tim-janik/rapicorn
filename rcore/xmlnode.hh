@@ -54,7 +54,7 @@ public:
   bool                  break_after     () const;
   void                  break_within    (bool            newlines_around_chidlren);
   bool                  break_within    () const;
-  String                xml_string      (uint64          indent = 0, bool include_outer = true) const;
+  String                xml_string      (uint64          indent = 0, bool include_outer = true, uint64 recursion_depth = -1) const;
   /* nodes */
   static XmlNode*       create_text     (const String   &utf8text,
                                          uint            line,
