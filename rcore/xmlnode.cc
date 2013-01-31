@@ -264,7 +264,16 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
     if (current)
       current->add_child (*xnode);
     else
-      m_first = xnode;
+      {
+        if (m_first)
+          {
+            error.set (INVALID_ELEMENT, String() + "multiple toplevel elements: "
+                       "<" + escape_text (m_first->name()) + "/> <" + escape_text (element_name) + "/>");
+            unref (m_first); // prevent leaks
+            m_first = NULL;
+          }
+        m_first = xnode;
+      }
     m_node_stack.push_back (xnode);
   }
   virtual void
