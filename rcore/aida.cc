@@ -622,8 +622,8 @@ FieldBuffer::to_string() const
         case VOID:      s += string_cprintf (", %s", tn); fbr.skip();                               break;
         case BOOL:      s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_bool());                   break;
         case ENUM:      s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_evalue());                 break;
-        case INT32:     s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case INT64:     s += string_cprintf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case INT32:     s += string_cprintf (", %s: 0x%08llx", tn, fbr.pop_int64());                break;
+        case INT64:     s += string_cprintf (", %s: 0x%016llx", tn, fbr.pop_int64());               break;
         case FLOAT64:   s += string_cprintf (", %s: %.17g", tn, fbr.pop_double());                  break;
         case STRING:    s += string_cprintf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
         case SEQUENCE:  s += string_cprintf (", %s: %p", tn, &fbr.pop_seq());                       break;
