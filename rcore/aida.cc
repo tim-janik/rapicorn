@@ -1146,15 +1146,16 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
   Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
-  if (connection_result)
-    {
-      // FIXME: handle error message connection_result
-      delete connection_result;
-      critical_unless (connection_result == NULL);
-    }
-  shandler->seh (NULL, shandler->data);
+  assert_return (connection_result != NULL, false);
+  Aida::FieldReader frr (*connection_result);
+  frr.skip_header();
+  uint64_t disconnection_success;
+  frr >>= disconnection_success;
+  delete connection_result;
+  critical_unless (disconnection_success == true); // should always succeed due to the above guard; FIXME: possible race w/ ~Signal
+  shandler->seh (NULL, shandler->data); // handler deletion hook
   delete shandler;
-  return true;
+  return disconnection_success;
 }
 
 ClientConnectionImpl::SignalHandler*
