@@ -385,7 +385,7 @@ Builder::inherit_item (const String &item_identifier, const StringVector &call_n
       const ItemTypeFactory *itfactory = lookup_item_factory (item_identifier);
       if (!itfactory)
         {
-          DEBUG ("%s: unknown widget type: %s", node_location (caller).c_str(), item_identifier.c_str());
+          critical ("%s: unknown widget type: %s", node_location (caller).c_str(), item_identifier.c_str());
           return NULL;
         }
       FactoryContext *fc = factory_context_map[derived];
