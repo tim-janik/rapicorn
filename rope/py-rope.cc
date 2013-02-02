@@ -12,6 +12,7 @@ namespace {
 
 // --- cpy2rope stubs (generated) ---
 static PyObject *global_rapicorn_module = NULL;
+#define __AIDA_PYMODULE__OBJECT global_rapicorn_module
 #include "cpy2rope.cc"
 
 // --- PyC functions ---
