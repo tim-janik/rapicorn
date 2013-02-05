@@ -96,9 +96,9 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
 check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
-	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
-	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxskels.cc
+	  $(srcdir)/testpass.idl -o testcxxsrvskel-stub.hh
+	$(Q) echo '#include "testcxxsrvskel-stub.hh"'	 >testcxxskels.cc
 	$(Q) cat $(srcdir)/testcxxskels.ref		>>testcxxskels.cc
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxserver-stub.hh
+	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxsrvskel-stub.hh
 check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
