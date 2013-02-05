@@ -20,11 +20,13 @@
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 //#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
 #define STRLOC()         RAPICORN_STRLOC()          ///< Produces a const char C string, describing the current code location.
-#define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
-#define return_unless    RAPICORN_RETURN_UNLESS     ///< Return @a ... if @a condition is false.
+#ifndef assert                                      // guard against previous inclusion of assert.h
 #define assert           RAPICORN_ASSERT            ///< Assert @a condition to be true at runtime.
+#endif // assert
 #define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Assertion used to label unreachable code.
 #define assert_return    RAPICORN_ASSERT_RETURN     ///< Issue an assertion warning and return @a ... if @a condition is false.
+#define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
+#define return_unless    RAPICORN_RETURN_UNLESS     ///< Return @a ... if @a condition is false.
 #define fatal            RAPICORN_FATAL             ///< Abort the program with a fatal error message.
 #define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
 #define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
