@@ -264,7 +264,16 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
     if (current)
       current->add_child (*xnode);
     else
-      m_first = xnode;
+      {
+        if (m_first)
+          {
+            error.set (INVALID_ELEMENT, String() + "multiple toplevel elements: "
+                       "<" + escape_text (m_first->name()) + "/> <" + escape_text (element_name) + "/>");
+            unref (m_first); // prevent leaks
+            m_first = NULL;
+          }
+        m_first = xnode;
+      }
     m_node_stack.push_back (xnode);
   }
   virtual void
@@ -373,8 +382,10 @@ XmlNode::xml_escape (const String &input)
 }
 
 String
-XmlNode::xml_string (uint64 indent, bool include_outer) const
+XmlNode::xml_string (uint64 indent, bool include_outer, uint64 recursion_depth) const
 {
+  if (recursion_depth == 0)
+    return "";
   if (istext())
     return xml_escape (text());
   const String istr = string_multiply (" ", indent);
@@ -396,7 +407,7 @@ XmlNode::xml_string (uint64 indent, bool include_outer) const
         {
           if (need_break)
             s += "\n" + istr + "  ";
-          s += cl[i]->xml_string (indent + 2);
+          s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1);
           need_break = cl[i]->break_after();
         }
       if (include_outer && break_within())
