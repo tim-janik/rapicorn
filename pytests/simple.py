@@ -35,7 +35,10 @@ cid2 = window.sig_commands_connect (command_handler)
 assert cid != 0
 assert cid2 != 0
 assert cid != cid2
-window.sig_commands_disconnect (cid2)
+disconnected = window.sig_commands_disconnect (cid2)
+assert disconnected == True
+disconnected = window.sig_commands_disconnect (cid2)
+assert disconnected == False
 
 # show window on screen
 window.show()
