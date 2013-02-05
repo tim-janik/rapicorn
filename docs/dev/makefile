@@ -8,9 +8,9 @@ build-stamp:
 top_srcdir  = ../..
 git_stamp   = $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
 REL_VERSION   = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-CUR_VERSION   = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
+DSC_VERSION   = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
 PRJ_VERSION   = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
-DOC_VERSION = $(or $(CUR_VERSION), $(PRJ_VERSION))
+DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
 SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
 
 DOC_FILES   = rapicorn-core.hh rapicorn.hh
@@ -98,9 +98,9 @@ all-docs: $(git_stamp) doxygen.cfg
 
 # upload release versions directly, otherwise upload as latest/
 upload: all
-	$(Q) test "${REL_VERSION}" != "${DOC_VERSION}" || { set -x ; \
+	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "html/${DOC_VERSION}"  "testbit:/srv/dev/html/rapicorn/" ; }
-	$(Q) test "${REL_VERSION}" = "${DOC_VERSION}" || { set -x ; \
+	$(Q) test "${REL_VERSION}" = "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "html/${DOC_VERSION}/"  "testbit:/srv/dev/html/rapicorn/latest/" ; }
 
 clean:
