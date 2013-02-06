@@ -16,43 +16,20 @@ SliderArea::slider_changed()
 {}
 
 bool
-SliderArea::move (int distance)
+SliderArea::move (MoveType movement)
 {
   Adjustment *adj = adjustment();
-  double pi = adj->page_increment();
-  double si = adj->step_increment();
-  if (flipped())
-    {
-      pi = -pi;
-      si = -si;
-    }
-  switch (adj ? distance : 0)
-    {
-    case +2:
-      adj->value (adj->value() + pi);
-      return true;
-    case +1:
-      adj->value (adj->value() + si);
-      return true;
-    case -1:
-      adj->value (adj->value() - si);
-      return true;
-    case -2:
-      adj->value (adj->value() - pi);
-      return true;
-    default:
-      return false;
-    }
+  return flipped() ? adj->move_flipped (movement) : adj->move (movement);
 }
 
 const CommandList&
 SliderArea::list_commands ()
 {
   static Command *commands[] = {
-    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, +1),
-    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, -1),
-    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, +2),
-    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, -2),
+    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
+    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
+    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),
+    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, MOVE_PAGE_BACKWARD),
   };
   static const CommandList command_list (commands, ContainerImpl::list_commands());
   return command_list;
