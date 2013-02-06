@@ -73,7 +73,7 @@ ScrollAreaImpl::scroll_to (double x, double y)
 static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
 
 /* --- ScrollPortImpl --- */
-class ScrollPortImpl : public virtual ViewportImpl {
+class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
   Adjustment *m_hadjustment, *m_vadjustment;
   size_t conid_hadjustment_, conid_vadjustment_;
   virtual void
@@ -245,6 +245,48 @@ class ScrollPortImpl : public virtual ViewportImpl {
     m_hadjustment->thaw();
     m_vadjustment->thaw();
   }
+  bool
+  scroll (EventType scroll_dir)
+  {
+    switch (scroll_dir)
+      {
+      case SCROLL_UP:           return m_vadjustment ? m_vadjustment->move (MOVE_STEP_BACKWARD) : false;
+      case SCROLL_LEFT:         return m_hadjustment ? m_hadjustment->move (MOVE_STEP_BACKWARD) : false;
+      case SCROLL_DOWN:         return m_vadjustment ? m_vadjustment->move (MOVE_STEP_FORWARD) : false;
+      case SCROLL_RIGHT:        return m_hadjustment ? m_hadjustment->move (MOVE_STEP_FORWARD) : false;
+      default:                  ;
+      }
+    return false;
+  }
+  virtual const CommandList&
+  list_commands ()
+  {
+    static Command *commands[] = {
+      MakeNamedCommand (ScrollPortImpl, "scroll-up",    _("Scroll upwards"),    scroll, SCROLL_UP),
+      MakeNamedCommand (ScrollPortImpl, "scroll-left",  _("Scroll leftwards"),  scroll, SCROLL_LEFT),
+      MakeNamedCommand (ScrollPortImpl, "scroll-down",  _("Scroll downwards"),  scroll, SCROLL_DOWN),
+      MakeNamedCommand (ScrollPortImpl, "scroll-right", _("Scroll rightwards"), scroll, SCROLL_RIGHT),
+    };
+    static const CommandList command_list (commands, ViewportImpl::list_commands());
+    return command_list;
+  }
+  virtual bool
+  handle_event (const Event &event)
+  {
+    bool handled = false;
+    switch (event.type)
+      {
+      case SCROLL_UP:           handled = exec_command ("scroll-up");           break;
+      case SCROLL_LEFT:         handled = exec_command ("scroll-left");         break;
+      case SCROLL_DOWN:         handled = exec_command ("scroll-down");         break;
+      case SCROLL_RIGHT:        handled = exec_command ("scroll-right");        break;
+      default:                  break;
+      }
+    return handled;
+  }
+  virtual void
+  reset (ResetMode mode)
+  {}
 public:
   ScrollPortImpl() :
     m_hadjustment (NULL), m_vadjustment (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0)
