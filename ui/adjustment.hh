@@ -6,6 +6,14 @@
 
 namespace Rapicorn {
 
+enum MoveType {
+  MOVE_NONE,
+  MOVE_STEP_FORWARD,
+  MOVE_STEP_BACKWARD,
+  MOVE_PAGE_FORWARD,
+  MOVE_PAGE_BACKWARD,
+};
+
 class Adjustment : public virtual ReferenceCountable {
   typedef Aida::Signal<void ()> SignalValueChanged;
   typedef Aida::Signal<void ()> SignalRangeChanged;
@@ -44,6 +52,8 @@ public:
   SignalRangeChanged	sig_range_changed;
   double                abs_range       ();
   double                abs_length      ();
+  bool                  move            (MoveType move);
+  bool                  move_flipped    (MoveType move);
   String                string          ();
   /* factory */
   static Adjustment*    create          (double  value = 0,

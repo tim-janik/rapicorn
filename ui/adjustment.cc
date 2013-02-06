@@ -77,6 +77,42 @@ Adjustment::abs_length ()
   return ar > 0 ? p / ar : 0.0;
 }
 
+bool
+Adjustment::move_flipped (MoveType movet)
+{
+  switch (movet)
+    {
+    case MOVE_PAGE_FORWARD:     return move (MOVE_PAGE_BACKWARD);
+    case MOVE_STEP_FORWARD:     return move (MOVE_STEP_BACKWARD);
+    case MOVE_STEP_BACKWARD:    return move (MOVE_STEP_FORWARD);
+    case MOVE_PAGE_BACKWARD:    return move (MOVE_PAGE_FORWARD);
+    case MOVE_NONE:             ;
+    }
+  return false;
+}
+
+bool
+Adjustment::move (MoveType move)
+{
+  switch (move)
+    {
+    case MOVE_PAGE_FORWARD:
+      value (value() + page_increment());
+      return true;
+    case MOVE_STEP_FORWARD:
+      value (value() + step_increment());
+      return true;
+    case MOVE_STEP_BACKWARD:
+      value (value() - step_increment());
+      return true;
+    case MOVE_PAGE_BACKWARD:
+      value (value() - page_increment());
+      return true;
+    case MOVE_NONE: ;
+    }
+  return false;
+}
+
 String
 Adjustment::string ()
 {
