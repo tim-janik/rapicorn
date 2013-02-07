@@ -27,11 +27,20 @@ enum ModifierState {
 enum KeyValue {
 #include <ui/keysymbols.hh>
 };
-unichar      key_value_to_unichar     (uint32 keysym);
-bool         key_value_is_modifier    (uint32 keysym);
-bool         key_value_is_accelerator (uint32 keysym);
-FocusDirType key_value_to_focus_dir   (uint32 keysym);
-bool         key_value_is_focus_dir   (uint32 keysym);
+
+enum ActivateKeyType {
+  ACTIVATE_NONE = 0,
+  ACTIVATE_FOCUS,
+  ACTIVATE_DEFAULT
+};
+
+unichar         key_value_to_unichar      (uint32 keysym);
+bool            key_value_is_modifier     (uint32 keysym);
+bool            key_value_is_accelerator  (uint32 keysym);
+FocusDirType    key_value_to_focus_dir    (uint32 keysym);
+bool            key_value_is_focus_dir    (uint32 keysym);
+ActivateKeyType key_value_to_activation   (uint32 keysym);
+bool            key_value_is_cancellation (uint32 keysym);
 
 typedef enum {
   EVENT_NONE,

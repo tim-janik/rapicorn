@@ -334,6 +334,31 @@ key_value_is_focus_dir (uint32 keysym)
   return key_value_to_focus_dir (keysym) != 0;
 }
 
+ActivateKeyType
+key_value_to_activation (uint32 keysym)
+{
+  switch (keysym)
+    {
+    case KEY_KP_Space:                  return ACTIVATE_FOCUS;
+    case KEY_space:                     return ACTIVATE_FOCUS;
+    case KEY_Return:                    return ACTIVATE_DEFAULT;
+    case KEY_KP_Enter:                  return ACTIVATE_DEFAULT;
+    case KEY_ISO_Enter:                 return ACTIVATE_DEFAULT;
+    default:                            return ACTIVATE_NONE;
+    }
+}
+
+bool
+key_value_is_cancellation (uint32 keysym)
+{
+  switch (keysym)
+    {
+    case KEY_Cancel:                    return true;
+    case KEY_Escape:                    return true;
+    default:                            return false;
+    }
+}
+
 } // Rapicorn
 
 // implements XLib's KeySymToUcs4
