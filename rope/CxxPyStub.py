@@ -38,6 +38,9 @@ base_code = """
                                    AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \\
                                  PyErr_Format_from_AIDA_error (fr); \\
                                  goto error; } } while (0)
+#ifndef __AIDA_PYMODULE__OBJECT
+#define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
+#endif
 
 // using Rapicorn::Aida::uint64_t;
 using ::uint64_t;
@@ -112,16 +115,45 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline Rapicorn::Aida::Any
-__AIDA_pyconvert__pyany_to_any (PyObject *pyany)
+static void
+__AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
 {
-  return Rapicorn::Aida::Any(); // FIXME: pyany to Any
+  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
+  else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
+  else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
+  else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
+  else if (PyLong_Check (pyvalue))      any <<= PyLong_AsLongLong (pyvalue);
+  else if (PyFloat_Check (pyvalue))     any <<= PyFloat_AsDouble (pyvalue);
+  else {
+    std::string msg =
+      Rapicorn::string_printf ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
+    PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
+  }
 }
 
-static inline PyObject*
+static PyObject*
 __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
 {
-  return None_INCREF(); // FIXME: Any to pyany
+  using namespace Rapicorn::Aida;
+  switch (any.kind())
+    {
+    case UNTYPED:                               return None_INCREF();
+    case BOOL:          { bool b; any >>= b;    return PyBool_FromLong (b); }
+    case ENUM:  // chain
+    case INT32: // chain
+    case INT64:                                 return PyLong_FromLongLong (any.as_int());
+    case FLOAT64:                               return PyFloat_FromDouble (any.as_float());
+    case STRING:                                return PyString_From_std_string (any.as_string());
+    case SEQUENCE:      break;
+    case RECORD:        break;
+    case INSTANCE:      break;
+    case ANY:           break;
+    default:            break;
+    }
+  std::string msg =
+    Rapicorn::string_printf ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
+  PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
+  return NULL;
 }
 
 static PyObject *__AIDA_pyfactory__global_callback = NULL;
@@ -203,7 +235,9 @@ class Generator:
     elif type.storage == Decls.INTERFACE:
       s += '  %s.add_object (PyAttr_As_uint64 (%s, "__AIDA_pyobject__")); ERRORifpy();\n' % (fb, var)
     elif type.storage == Decls.ANY:
-      s += '  %s.add_any (__AIDA_pyconvert__pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  { Rapicorn::Aida::Any tmpany;\n'
+      s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); ERRORifpy();\n' % var
+      s += '    %s.add_any (tmpany); }\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -252,16 +286,18 @@ class Generator:
     s += 'static RAPICORN_UNUSED PyObject*\n'
     s += 'aida_py%s_proto_pop (Rapicorn::Aida::FieldReader &src)\n' % type_info.name
     s += '{\n'
-    s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
+    s += '  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
     s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("Aida: marshalling error: invalid record length");\n' % len (type_info.fields)
-    s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
+    s += '  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);\n'
+    s += '  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
     for fl in type_info.fields:
       s += self.generate_proto_pop_py ('fbr', fl[1], 'pyfoR')
       s += '  if (PyDict_Take_Item (dictR, "%s", &pyfoR) < 0) goto error;\n' % fl[0]
     s += '  pyret = pyinstR;\n'
     s += ' error:\n'
+    s += '  Py_XDECREF (pytypeR);\n'
     s += '  Py_XDECREF (pyfoR);\n'
     s += '  Py_XDECREF (dictR);\n'
     s += '  if (pyret != pyinstR)\n'

@@ -36,11 +36,6 @@ def reindent (prefix, lines):
 
 base_code = """
 
-def __AIDA_pymodule__init_once (cpy_module):
-  del globals()['__AIDA_pymodule__init_once'] # run once only
-  global _CPY
-  _CPY = cpy_module
-
 class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
@@ -55,6 +50,13 @@ class _BaseClass_ (object):
 class __Signal__:
   def __init__ (self, signame):
     self.name = signame
+
+def __AIDA_pymodule__init_once (cpy_module):
+  del globals()['__AIDA_pymodule__init_once'] # run once only
+  global _CPY
+  _CPY = cpy_module
+  _CPY.__AIDA_BaseRecord__ = _BaseRecord_
+
 """
 
 class Generator:

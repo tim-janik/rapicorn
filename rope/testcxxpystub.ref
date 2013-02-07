@@ -14,6 +14,9 @@
                                    AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \
                                  PyErr_Format_from_AIDA_error (fr); \
                                  goto error; } } while (0)
+#ifndef __AIDA_PYMODULE__OBJECT
+#define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
+#endif
 
 // using Rapicorn::Aida::uint64_t;
 using ::uint64_t;
@@ -88,16 +91,45 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline Rapicorn::Aida::Any
-__AIDA_pyconvert__pyany_to_any (PyObject *pyany)
+static void
+__AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
 {
-  return Rapicorn::Aida::Any(); // FIXME: pyany to Any
+  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
+  else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
+  else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
+  else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
+  else if (PyLong_Check (pyvalue))      any <<= PyLong_AsLongLong (pyvalue);
+  else if (PyFloat_Check (pyvalue))     any <<= PyFloat_AsDouble (pyvalue);
+  else {
+    std::string msg =
+      Rapicorn::string_printf ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
+    PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
+  }
 }
 
-static inline PyObject*
+static PyObject*
 __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
 {
-  return None_INCREF(); // FIXME: Any to pyany
+  using namespace Rapicorn::Aida;
+  switch (any.kind())
+    {
+    case UNTYPED:                               return None_INCREF();
+    case BOOL:          { bool b; any >>= b;    return PyBool_FromLong (b); }
+    case ENUM:  // chain
+    case INT32: // chain
+    case INT64:                                 return PyLong_FromLongLong (any.as_int());
+    case FLOAT64:                               return PyFloat_FromDouble (any.as_float());
+    case STRING:                                return PyString_From_std_string (any.as_string());
+    case SEQUENCE:      break;
+    case RECORD:        break;
+    case INSTANCE:      break;
+    case ANY:           break;
+    default:            break;
+    }
+  std::string msg =
+    Rapicorn::string_printf ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
+  PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
+  return NULL;
 }
 
 static PyObject *__AIDA_pyfactory__global_callback = NULL;
@@ -291,11 +323,17 @@ aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
   item = PyDict_GetItemString (dictR, "iface3"); ERRORif (!item);
   fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
   item = PyDict_GetItemString (dictR, "any1"); ERRORif (!item);
-  fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+    fb.add_any (tmpany); }
   item = PyDict_GetItemString (dictR, "any2"); ERRORif (!item);
-  fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+    fb.add_any (tmpany); }
   item = PyDict_GetItemString (dictR, "any3"); ERRORif (!item);
-  fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+    fb.add_any (tmpany); }
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -304,10 +342,11 @@ aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 18) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_bool()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "single_bool", &pyfoR) < 0) goto error;
@@ -347,6 +386,7 @@ aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "any3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -635,7 +675,9 @@ aida_pyAnySequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &ds
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
-    fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+    { Rapicorn::Aida::Any tmpany;
+      __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+      fb.add_any (tmpany); }
   }
   success = true;
  error:
@@ -679,10 +721,11 @@ aida_pyNestedTypesRec_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &d
 static RAPICORN_UNUSED PyObject*
 aida_pyNestedTypesRec_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyXFooRecord_proto_pop (fbr); ERRORif (!pyfoR);
   if (PyDict_Take_Item (dictR, "rec", &pyfoR) < 0) goto error;
@@ -690,6 +733,7 @@ aida_pyNestedTypesRec_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "seq", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -754,10 +798,11 @@ aida_pyNewRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pyNewRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "i", &pyfoR) < 0) goto error;
@@ -769,6 +814,7 @@ aida_pyNewRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "ntr", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -797,10 +843,11 @@ aida_pyInnerRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pyInnerRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 3) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "x", &pyfoR) < 0) goto error;
@@ -810,6 +857,7 @@ aida_pyInnerRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "rec", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -834,15 +882,17 @@ aida_pyRefer2Inner_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pyRefer2Inner_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 1) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyInnerRecord_proto_pop (fbr); ERRORif (!pyfoR);
   if (PyDict_Take_Item (dictR, "r", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -873,10 +923,11 @@ aida_pySomeRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pySomeRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyNewRecord_proto_pop (fbr); ERRORif (!pyfoR);
   if (PyDict_Take_Item (dictR, "r1", &pyfoR) < 0) goto error;
@@ -888,6 +939,7 @@ aida_pySomeRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "r4", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -914,10 +966,11 @@ aida_pyQuickRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
 static RAPICORN_UNUSED PyObject*
 aida_pyQuickRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "int1", &pyfoR) < 0) goto error;
@@ -925,6 +978,7 @@ aida_pyQuickRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "int2", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -991,10 +1045,11 @@ aida_pyRecordForGroups_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &
 static RAPICORN_UNUSED PyObject*
 aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
 {
-  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 5) ERRORpy ("Aida: marshalling error: invalid record length");
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "i", &pyfoR) < 0) goto error;
@@ -1008,6 +1063,7 @@ aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "threshold2", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
+  Py_XDECREF (pytypeR);
   Py_XDECREF (pyfoR);
   Py_XDECREF (dictR);
   if (pyret != pyinstR)
@@ -1726,9 +1782,13 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), __AIDA_local__client_connection->connection_id(), 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
   fb.add_object (item_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
-  fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+    fb.add_any (tmpany); }
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
-  fb.add_any (__AIDA_pyconvert__pyany_to_any (item)); ERRORifpy();
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
+    fb.add_any (tmpany); }
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {

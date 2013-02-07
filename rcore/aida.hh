@@ -135,7 +135,7 @@ public:
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
-  TypeCode  tyoe   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
+  TypeCode  type   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
   TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
   void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
   void      swap   (Any            &other);              ///< Swap the contents of @a this and @a other in constant time.

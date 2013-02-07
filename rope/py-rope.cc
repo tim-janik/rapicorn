@@ -11,6 +11,8 @@
 namespace {
 
 // --- cpy2rope stubs (generated) ---
+static PyObject *global_rapicorn_module = NULL;
+#define __AIDA_PYMODULE__OBJECT global_rapicorn_module
 #include "cpy2rope.cc"
 
 // --- PyC functions ---
@@ -134,9 +136,10 @@ static const char rapicorn_doc[] = "Rapicorn Python Language Binding Module.";
 PyMODINIT_FUNC
 MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 {
+  assert (global_rapicorn_module == NULL);
   // register module
-  PyObject *m = Py_InitModule3 (MODULE_NAME_STRING, rope_vtable, (char*) rapicorn_doc);
-  if (!m)
+  global_rapicorn_module = Py_InitModule3 (MODULE_NAME_STRING, rope_vtable, (char*) rapicorn_doc);
+  if (!global_rapicorn_module)
     return; // exception
 }
 // using global namespace for Python module initialization

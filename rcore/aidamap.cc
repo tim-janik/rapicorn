@@ -226,7 +226,7 @@ TypeMap::type (size_t index) const
 struct TypeRegistry {
   typedef std::vector<TypeMap> TypeMapVector;
   explicit  TypeRegistry() : builtins (load_builtins()) { pthread_spin_init (&typemap_spinlock, 0 /* pshared */); }
-  /*dtro*/ ~TypeRegistry()   { pthread_spin_destroy (&typemap_spinlock); }
+  /*dtor*/ ~TypeRegistry()   { pthread_spin_destroy (&typemap_spinlock); assert_unreached(); }
   size_t    size()           { lock(); size_t sz = typemaps.size(); unlock(); return sz; }
   TypeMap   nth (size_t n)   { lock(); TypeMap tp = n < typemaps.size() ? typemaps[n] : builtins; unlock(); return tp; }
   void      add (TypeMap tp) { lock(); typemaps.push_back (tp); unlock(); }
@@ -246,10 +246,9 @@ type_registry_initialize()
 {
   if (AIDA_UNLIKELY (!type_registry))
     {
-      TypeRegistry *tr = new TypeRegistry();
-      __sync_synchronize();
-      if (!__sync_bool_compare_and_swap (&type_registry, NULL, tr))
-        delete tr;
+      do_once {
+        type_registry = new TypeRegistry();
+      }
     }
 }
 
