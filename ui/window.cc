@@ -584,11 +584,22 @@ WindowImpl::dispatch_key_event (const Event &event)
   if (kevent && kevent->type == KEY_PRESS)
     {
       FocusDirType fdir = key_value_to_focus_dir (kevent->key);
-      if (fdir)
+      ActivateKeyType activate = key_value_to_activation (kevent->key);
+      if (!handled && fdir)
         {
           if (!move_focus_dir (fdir))
             notify_key_error();
           handled = true;
+        }
+      if (!handled && (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT))
+        {
+          ItemImpl *focus_item = get_focus();
+          if (focus_item && focus_item->sensitive())
+            {
+              if (!focus_item->activate())
+                notify_key_error();
+              handled = true;
+            }
         }
       if (0)
         {
