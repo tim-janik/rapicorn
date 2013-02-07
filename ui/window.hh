@@ -59,6 +59,7 @@ public:
                                                                  double     xalign = 0.5,
                                                                  double     yalign = 0.5);
   virtual bool          synthesize_delete                       ();
+  void                  draw_child                              (ItemImpl &child);
 private:
   void                  notify_displayed                        (void);
   virtual void          remove_grab_item                        (ItemImpl               &child);

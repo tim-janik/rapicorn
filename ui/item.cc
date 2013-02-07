@@ -235,6 +235,26 @@ ItemImpl::move_focus (FocusDirType fdir)
   return false;
 }
 
+bool
+ItemImpl::activate_item ()
+{
+  return false;
+}
+
+bool
+ItemImpl::activate ()
+{
+  if (!sensitive())
+    return false;
+  ContainerImpl *pcontainer = parent();
+  while (pcontainer)
+    {
+      pcontainer->scroll_to_child (*this);
+      pcontainer = pcontainer->parent();
+    }
+  return activate_item();
+}
+
 void
 ItemImpl::notify_key_error ()
 {

@@ -215,14 +215,20 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
       }
     if (!fitem)
       return;
-    /* adjust scroll area to fitem's area */
-    Rect farea = fitem->allocation();
-    if (!translate_from (*fitem, 1, &farea))
+    scroll_to_child (*fitem);
+  }
+  virtual void
+  scroll_to_child (ItemImpl &item)
+  {
+    const Rect area = allocation();
+    /* adjust scroll area to item's area */
+    Rect farea = item.allocation();
+    if (!translate_from (item, 1, &farea))
       return;           // not geographic descendant
     if (0)
       printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
-                area.string().c_str(), farea.string().c_str(), fitem,
-                fitem->allocation().string().c_str());
+                area.string().c_str(), farea.string().c_str(), &item,
+                item.allocation().string().c_str());
     /* calc new scroll position, giving precedence to lower left */
     double deltax = 0, deltay = 0;
     if (farea.upper_x() > area.upper_x() + deltax)

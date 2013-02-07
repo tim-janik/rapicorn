@@ -9,7 +9,7 @@
 namespace Rapicorn {
 
 ButtonAreaImpl::ButtonAreaImpl() :
-  m_button (0), m_repeater (0),
+  m_button (0), m_repeater (0), unpress_ (0),
   m_click_type (CLICK_ON_RELEASE),
   m_focus_frame (NULL)
 {}
@@ -32,15 +32,38 @@ ButtonAreaImpl::dump_private_data (TestStream &tstream)
 }
 
 bool
+ButtonAreaImpl::activate_item ()
+{
+  ButtonAreaImpl &view = *this;
+  WindowImpl *window = get_window();
+  EventLoop *loop = window ? window->get_loop() : NULL;
+  bool handled = false;
+  if (loop)
+    {
+      view.impressed (true);
+      window->draw_child (view);
+      handled = activate_button_command (1);
+      if (!unpress_)
+        unpress_ = loop->exec_timer (50, 0, [this, &view] () {
+            view.impressed (false);
+            remove_exec (unpress_);
+            unpress_ = 0;
+            return false;
+          });
+    }
+  return handled;
+}
+
+bool
 ButtonAreaImpl::activate_button_command (int button)
 {
   if (button >= 1 && button <= 3 && m_on_click[button - 1] != "")
     {
       exec_command (m_on_click[button - 1]);
-      return TRUE;
+      return true;
     }
   else
-    return FALSE;
+    return false;
 }
 
 bool
@@ -99,6 +122,10 @@ ButtonAreaImpl::unregister_focus_frame (FocusFrame &frame)
 void
 ButtonAreaImpl::reset (ResetMode mode)
 {
+  ButtonAreaImpl &view = *this;
+  view.impressed (false);
+  remove_exec (unpress_);
+  unpress_ = 0;
   remove_exec (m_repeater);
   m_repeater = 0;
   m_button = 0;

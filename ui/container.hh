@@ -34,6 +34,7 @@ protected:
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
   virtual void        set_focus_child   (ItemImpl           *item);
+  virtual void        scroll_to_child   (ItemImpl           &item);
   virtual void        dump_test_data    (TestStream     &tstream);
   static Allocation   layout_child      (ItemImpl         &child,
                                          const Allocation &carea);

@@ -584,11 +584,22 @@ WindowImpl::dispatch_key_event (const Event &event)
   if (kevent && kevent->type == KEY_PRESS)
     {
       FocusDirType fdir = key_value_to_focus_dir (kevent->key);
-      if (fdir)
+      ActivateKeyType activate = key_value_to_activation (kevent->key);
+      if (!handled && fdir)
         {
           if (!move_focus_dir (fdir))
             notify_key_error();
           handled = true;
+        }
+      if (!handled && (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT))
+        {
+          ItemImpl *focus_item = get_focus();
+          if (focus_item && focus_item->sensitive())
+            {
+              if (!focus_item->activate())
+                notify_key_error();
+              handled = true;
+            }
         }
       if (0)
         {
@@ -677,6 +688,15 @@ WindowImpl::notify_displayed()
 {
   // emit updates at exec_update() priority, so other high priority handlers run first (exec_now)
   sig_displayed.emit();
+}
+
+void
+WindowImpl::draw_child (ItemImpl &child)
+{
+  // FIXME: this should be optimized to just redraw the child in question
+  WindowImpl *child_window = child.get_window();
+  assert_return (child_window == this);
+  draw_now();
 }
 
 void
