@@ -141,6 +141,7 @@ public:
   virtual bool                can_focus         () const;
   bool                        has_focus         () const;
   bool                        grab_focus        ();
+  virtual bool                activate          ();
   bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
   bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }

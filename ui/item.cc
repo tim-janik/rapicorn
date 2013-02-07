@@ -235,6 +235,12 @@ ItemImpl::move_focus (FocusDirType fdir)
   return false;
 }
 
+bool
+ItemImpl::activate ()
+{
+  return false;
+}
+
 void
 ItemImpl::notify_key_error ()
 {
