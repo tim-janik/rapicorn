@@ -289,7 +289,7 @@ class Generator:
     s += '  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
     s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("Aida: marshalling error: invalid record length");\n' % len (type_info.fields)
-    s += '  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);\n'
+    s += '  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);\n'
     s += '  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
     for fl in type_info.fields:

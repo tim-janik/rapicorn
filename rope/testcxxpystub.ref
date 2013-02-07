@@ -345,7 +345,7 @@ aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 18) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_bool()); ERRORifpy ();
@@ -724,7 +724,7 @@ aida_pyNestedTypesRec_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyXFooRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -801,7 +801,7 @@ aida_pyNewRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -846,7 +846,7 @@ aida_pyInnerRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 3) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -885,7 +885,7 @@ aida_pyRefer2Inner_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 1) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyInnerRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -926,7 +926,7 @@ aida_pySomeRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = aida_pyNewRecord_proto_pop (fbr); ERRORif (!pyfoR);
@@ -969,7 +969,7 @@ aida_pyQuickRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -1048,7 +1048,7 @@ aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
   PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Rapicorn::Aida::FieldReader fbr (src.pop_rec());
   if (fbr.remaining() != 5) ERRORpy ("Aida: marshalling error: invalid record length");
-  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "_BaseRecord_"); AIDA_ASSERT (pytypeR != NULL);
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
   pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
