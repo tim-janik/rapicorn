@@ -680,6 +680,15 @@ WindowImpl::notify_displayed()
 }
 
 void
+WindowImpl::draw_child (ItemImpl &child)
+{
+  // FIXME: this should be optimized to just redraw the child in question
+  WindowImpl *child_window = child.get_window();
+  assert_return (child_window == this);
+  draw_now();
+}
+
+void
 WindowImpl::draw_now ()
 {
   if (m_screen_window)
