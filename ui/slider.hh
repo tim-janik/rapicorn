@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 class SliderArea : public virtual ContainerImpl {
-  bool                  move              (int);
+  bool                  move              (MoveType);
 protected:
   virtual const CommandList&    list_commands  ();
   virtual const PropertyList&   _property_list ();
