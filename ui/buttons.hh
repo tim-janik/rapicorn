@@ -9,7 +9,7 @@ namespace Rapicorn {
 
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonAreaIface,
                        public virtual EventHandler, public virtual FocusFrame::Client {
-  uint          m_button, m_repeater;
+  uint          m_button, m_repeater, unpress_;
   ClickType     m_click_type;
   FocusFrame   *m_focus_frame;
   String        m_on_click[3];
@@ -24,6 +24,7 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
   bool                  handle_event            (const Event &event);
 public:
   explicit              ButtonAreaImpl  ();
+  virtual bool          activate        ();
   virtual String        on_click        () const                { return m_on_click[0]; }
   virtual void          on_click        (const String &command) { m_on_click[0] = string_strip (command); }
   virtual String        on_click2       () const                { return m_on_click[1]; }
