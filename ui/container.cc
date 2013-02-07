@@ -382,6 +382,10 @@ ContainerImpl::set_focus_child (ItemImpl *item)
     }
 }
 
+void
+ContainerImpl::scroll_to_child (ItemImpl &item)
+{}
+
 ItemImpl*
 ContainerImpl::get_focus_child () const
 {
