@@ -24,7 +24,7 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
   bool                  handle_event            (const Event &event);
 public:
   explicit              ButtonAreaImpl  ();
-  virtual bool          activate        ();
+  virtual bool          activate_item   ();
   virtual String        on_click        () const                { return m_on_click[0]; }
   virtual void          on_click        (const String &command) { m_on_click[0] = string_strip (command); }
   virtual String        on_click2       () const                { return m_on_click[1]; }

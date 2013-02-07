@@ -32,7 +32,7 @@ ButtonAreaImpl::dump_private_data (TestStream &tstream)
 }
 
 bool
-ButtonAreaImpl::activate ()
+ButtonAreaImpl::activate_item ()
 {
   ButtonAreaImpl &view = *this;
   WindowImpl *window = get_window();

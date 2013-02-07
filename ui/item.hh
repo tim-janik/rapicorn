@@ -112,6 +112,7 @@ protected:
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                activate_item     ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
@@ -141,7 +142,7 @@ public:
   virtual bool                can_focus         () const;
   bool                        has_focus         () const;
   bool                        grab_focus        ();
-  virtual bool                activate          ();
+  bool                        activate          ();
   bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
   bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
