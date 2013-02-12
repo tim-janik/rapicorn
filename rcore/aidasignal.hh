@@ -39,7 +39,7 @@ struct CollectorDefault<void> {
 /// CollectorInvocation specialisation for regular signals.
 template<class Collector, class R, class... Args>
 struct CollectorInvocation<Collector, R (Args...)> {
-  inline bool
+  static inline bool
   invoke (Collector &collector, const std::function<R (Args...)> &cbf, Args... args)
   {
     return collector (cbf (args...));
@@ -49,7 +49,7 @@ struct CollectorInvocation<Collector, R (Args...)> {
 /// CollectorInvocation specialisation for signals with void return type.
 template<class Collector, class... Args>
 struct CollectorInvocation<Collector, void (Args...)> {
-  inline bool
+  static inline bool
   invoke (Collector &collector, const std::function<void (Args...)> &cbf, Args... args)
   {
     cbf (args...); return collector();
@@ -137,7 +137,7 @@ private:
         callback_ring_->prev = callback_ring_; // ring tail initialization
       }
   }
-public:
+protected:
   /// ProtoSignal constructor, connects default callback if non-NULL.
   ProtoSignal (const CbFunction &method) :
     callback_ring_ (NULL)
@@ -160,6 +160,7 @@ public:
         callback_ring_->decref();
       }
   }
+public:
   /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
   size_t connect    (const CbFunction &cb)      { ensure_ring(); return callback_ring_->add_before (cb); }
   /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
