@@ -9,6 +9,7 @@
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
 #include <memory>               // shared_ptr
+#include <future>
 #include <set>
 #include <map>
 
