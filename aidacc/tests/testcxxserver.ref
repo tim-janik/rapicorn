@@ -484,7 +484,7 @@ public:
   virtual void                          on_click3  (const std::string&) = 0;
   virtual ClickType                     click_type () const = 0;
   virtual void                          click_type (ClickType) = 0;
-  typedef Rapicorn::Aida::Signal<bool (), Rapicorn::Aida::CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Aida::Signal<bool ()> Signal_check_activate;
   typedef Rapicorn::Aida::Signal<void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;

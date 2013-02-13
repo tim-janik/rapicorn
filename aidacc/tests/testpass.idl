@@ -382,8 +382,8 @@ enum ClickType {
 
 interface ButtonArea // : public virtual Container, public virtual FocusFrame::Client
 {
-  signal<until0> bool check_activate  ();
-  signal void         activate        ();
+  signal bool check_activate ();
+  signal void activate       ();
   // protected: explicit              ButtonArea();
   String        on_click;
   String        on_click2;
