@@ -7,12 +7,18 @@ namespace Rapicorn { namespace Aida {
 namespace Lib {
 
 /// ProtoSignal is the template implementation for callback list.
-template<typename,typename> class ProtoSignal;   // undefined
+template<typename,typename> class ProtoSignal;  // left undefined
 
-/// CollectorInvocation invokes signal handlers differently depending on return type.
+/// AsyncSignal is the template implementation for callback lists with std::future returns.
+template<typename> class AsyncSignal;           // left undefined
+
+/// CollectorInvocation invokes handlers differently depending on return type.
 template<typename,typename> class CollectorInvocation;
 
-/// CollectorLast returns the result of the last signal handler from a signal emission.
+/// PromiseInvocation invokes handlers differently depending on the promise value type.
+template<typename,typename> class PromiseInvocation;
+
+/// CollectorLast returns the result of the last handler from a signal emission.
 template<typename Result>
 struct CollectorLast {
   typedef Result CollectorResult;
@@ -23,12 +29,12 @@ private:
   Result last_;
 };
 
-/// CollectorDefault implements the default signal handler collection behaviour.
+/// CollectorDefault implements the default handler collection behaviour.
 template<typename Result>
 struct CollectorDefault : CollectorLast<Result>
 {};
 
-/// CollectorDefault specialisation for signals with void return type.
+/// CollectorDefault specialisation for handlers with void return type.
 template<>
 struct CollectorDefault<void> {
   typedef void CollectorResult;
@@ -36,7 +42,7 @@ struct CollectorDefault<void> {
   inline bool           operator() (void)       { return true; }
 };
 
-/// CollectorInvocation specialisation for regular signals.
+/// CollectorInvocation specialisation for regular handlers.
 template<class Collector, class R, class... Args>
 struct CollectorInvocation<Collector, R (Args...)> {
   static inline bool
@@ -46,7 +52,7 @@ struct CollectorInvocation<Collector, R (Args...)> {
   }
 };
 
-/// CollectorInvocation specialisation for signals with void return type.
+/// CollectorInvocation specialisation for handlers with void return type.
 template<class Collector, class... Args>
 struct CollectorInvocation<Collector, void (Args...)> {
   static inline bool
@@ -163,7 +169,7 @@ protected:
 public:
   /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
   size_t connect    (const CbFunction &cb)      { ensure_ring(); return callback_ring_->add_before (cb); }
-  /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+  /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
   bool   disconnect (size_t connection)         { return callback_ring_ ? callback_ring_->remove_sibling (connection) : false; }
   /// Emit a signal, i.e. invoke all its callbacks and collect return types with the Collector.
   CollectorResult
@@ -190,6 +196,219 @@ public:
     while (link != callback_ring_);
     link->decref();
     return collector.result();
+  }
+};
+
+/// PromiseInvocation specialisation for regular handlers.
+template<class Promise, class R, class... Args>
+struct PromiseInvocation<Promise, R (Args...)> {
+  static inline void
+  invoke (Promise &promise, const std::function<R (Args...)> &callback, Args... args)
+  {
+    promise.set_value (callback (args...));
+  }
+};
+
+/// PromiseInvocation specialisation for handlers with void return type.
+template<class Promise, class... Args>
+struct PromiseInvocation<Promise, void (Args...)> {
+  static inline void
+  invoke (Promise &promise, const std::function<void (Args...)> &callback, Args... args)
+  {
+    callback (args...);
+    promise.set_value();
+  }
+};
+
+/// AsyncSignal template specialised for the callback signature.
+template<class R, class... Args>
+class AsyncSignal<R (Args...)> : private PromiseInvocation<std::promise<R>, R (Args...)> {
+protected:
+  typedef std::function<std::future<R> (Args...)> FutureFunction;
+  typedef std::function<R (Args...)>              CbFunction;
+private:
+  /// SignalLink implements a doubly-linked ring with ref-counted nodes containing the signal handlers.
+  struct SignalLink {
+    SignalLink    *next, *prev;
+    FutureFunction function;
+    int            ref_count;
+    explicit    SignalLink (const FutureFunction &futcbf) : next (NULL), prev (NULL), function (futcbf), ref_count (1) {}
+    /*dtor*/   ~SignalLink ()           { AIDA_ASSERT (ref_count == 0); }
+    void        incref     ()           { ref_count += 1; AIDA_ASSERT (ref_count > 0); }
+    void        decref     ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT (ref_count > 0); }
+    void
+    unlink ()
+    {
+      function = NULL;
+      if (next)
+        next->prev = prev;
+      if (prev)
+        prev->next = next;
+      decref();
+      // leave intact ->next, ->prev for stale iterators
+    }
+    size_t
+    add_before (const FutureFunction &futcb)
+    {
+      SignalLink *link = new SignalLink (futcb);
+      link->prev = prev; // link to last
+      link->next = this;
+      prev->next = link; // link from last
+      prev = link;
+      static_assert (sizeof (link) == sizeof (size_t), "sizeof size_t");
+      return size_t (link);
+    }
+    bool
+    deactivate (const FutureFunction &futcbf)
+    {
+      if (futcbf == function)
+        {
+          function = NULL;      // deactivate static head
+          return true;
+        }
+      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
+        if (futcbf == link->function)
+          {
+            link->unlink();     // deactivate and unlink sibling
+            return true;
+          }
+      return false;
+    }
+    bool
+    remove_sibling (size_t id)
+    {
+      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
+        if (id == size_t (link))
+          {
+            link->unlink();     // deactivate and unlink sibling
+            return true;
+          }
+      return false;
+    }
+  };
+  SignalLink   *callback_ring_; // linked ring of callback nodes
+  /*copy-ctor*/ AsyncSignal (const AsyncSignal&) = delete;
+  AsyncSignal&  operator=   (const AsyncSignal&) = delete;
+  void
+  ensure_ring ()
+  {
+    if (!callback_ring_)
+      {
+        callback_ring_ = new SignalLink (FutureFunction()); // ref_count = 1
+        callback_ring_->incref(); // ref_count = 2, head of ring, can be deactivated but not removed
+        callback_ring_->next = callback_ring_; // ring head initialization
+        callback_ring_->prev = callback_ring_; // ring tail initialization
+      }
+  }
+protected:
+  /// AsyncSignal constructor, connects default callback if non-NULL.
+  AsyncSignal (const FutureFunction &method) :
+    callback_ring_ (NULL)
+  {
+    if (method != NULL)
+      {
+        ensure_ring();
+        callback_ring_->function = method;
+      }
+  }
+  /// AsyncSignal destructor releases all resources associated with this signal.
+  ~AsyncSignal ()
+  {
+    if (callback_ring_)
+      {
+        while (callback_ring_->next != callback_ring_)
+          callback_ring_->next->unlink();
+        AIDA_ASSERT (callback_ring_->ref_count >= 2);
+        callback_ring_->decref();
+        callback_ring_->decref();
+      }
+  }
+public:
+  class Emission {
+    typedef std::function<std::future<R> (const FutureFunction&)> FunctionTrampoline;
+    std::vector<SignalLink*> links_;
+    size_t                   current_;
+    std::future<R>           future_;
+    FunctionTrampoline       trampoline_;
+  public:
+    Emission (SignalLink *start_link, Args... args) :
+      current_ (0)
+    {
+      SignalLink *link = start_link;
+      if (link)
+        do
+          {
+            if (link->function != NULL)
+              {
+                link->incref();
+                links_.push_back (link);
+              }
+            link = link->next;
+          }
+        while (link != start_link);
+      // wrap args into lambda for deferred execution
+      auto lambda =
+        [link] (const FutureFunction &ff, Args... args) // -> std::future<R>
+        {
+          return std::move (ff (args...));
+        };
+      // FIXME: instead of std::bind, use lambda capture: [args...](){return ff(args...);}, but see gcc bug #41933
+      trampoline_ = std::bind (lambda, std::placeholders::_1, args...);
+    }
+    ~Emission()
+    {
+      for (size_t i = 0; i < links_.size(); i++)
+        links_[i]->decref();
+    }
+    bool has_value ()   { return future_.valid() && future_ready(); }
+    R    get_value ()   { future_.wait(); return future_.get(); }
+    bool done      ()   { return current_ >= links_.size() && !future_.valid(); }
+    bool pending   ()   { return has_value() || (!future_.valid() && current_ < links_.size()); }
+    bool dispatch  ()   { emit_stepwise(); return !done(); }
+  private:
+    bool
+    future_ready ()
+    {
+#if __GNUC__ == 4 && __GNUC_MINOR__ == 6
+      return future_.wait_for (std::chrono::nanoseconds (0)) != false; // g++-4.6.2: work around experimental code
+#else
+      return future_.wait_for (std::chrono::nanoseconds (0)) == std::future_status::ready;
+#endif
+    }
+    inline void
+    emit_stepwise()
+    {
+      if (future_.valid())
+        return;                                         // processing handler, use has_value
+      if (current_ >= links_.size())
+        return;                                         // done
+      const FutureFunction &function = links_[current_]->function;
+      current_++;
+      if (AIDA_ISLIKELY (function != NULL))
+        future_ = std::move (trampoline_ (function));   // valid() == true
+    }
+    RAPICORN_CLASS_NON_COPYABLE (Emission);
+  };
+  /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
+  size_t connect_future (const FutureFunction &fcb) { ensure_ring(); return callback_ring_->add_before (fcb); }
+  size_t connect        (const CbFunction &callback)
+  {
+    auto lambda =
+      [this, callback] (Args... args) // -> std::future<R>
+      {
+        std::promise<R> promise;
+        this->invoke (promise, callback, args...);
+        return std::move (promise.get_future());
+      };
+    return connect_future (lambda);
+  }
+  /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
+  bool   disconnect (size_t connection)         { return callback_ring_ ? callback_ring_->remove_sibling (connection) : false; }
+  /// Create an asynchronous signal emission.
+  Emission*
+  emission (Args... args)
+  {
+    return new Emission (callback_ring_, args...);
   }
 };
 
@@ -225,7 +444,7 @@ class Signal /*final*/ :
   public:
     /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
     size_t operator+= (const CbFunction &cb)              { return signal_.connect (cb); }
-    /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+    /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
     bool   operator-= (size_t connection_id)              { return signal_.disconnect (connection_id); }
   };
 public:
@@ -308,8 +527,59 @@ public:
   Connector (Object &instance, PMF method) : instance_ (instance), method_ (method) {}
   /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
   size_t operator+= (const CbFunction &cb)              { return (instance_.*method_) (0, cb); }
-  /// Operator to remove a signal handler through it connection ID, returns if a handler was removed.
+  /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
   bool   operator-= (size_t connection_id)              { return connection_id ? (instance_.*method_) (connection_id, *(CbFunction*) NULL) : false; }
+};
+
+/**
+ * AsyncSignal is a Signal type with support for std::future returns from handlers.
+ * The API is genrally analogous to Signal, however handlers that return a std::future<ReturnValue>
+ * are supported via the connect_future() method, and emissions are handled differently.
+ * Note that even simple handlers are wrapped into std::promise/std::future constructs, which
+ * makes AsyncSignal emissions significantly slower than Signal.emit().
+ * The emisison() method creates an Emission object, subject to a delete() call later on.
+ * The general idiom for using emission objects is as follows:
+ * @code
+ * MySignal::Emission *emi = sig_my_signal.emission (args...);
+ * while (!emi->done()) {
+ *   if (emi->pending())
+ *     emi->dispatch();         // this calls signal handlers
+ *   if (emi->has_value())
+ *     use (emi->get_value());  // value return from a signal handler via resolved future
+ *   else
+ *     ThisThread::yield();     // allow for (asynchronous) signal handler execution
+ * }
+ * delete emi;
+ * @endcode
+ * Multiple emission objects may be created and used at the same time, and deletion of an
+ * emission before done() returns true is also supported.
+ */
+template <typename SignalSignature>
+class AsyncSignal /*final*/ : protected Lib::AsyncSignal<SignalSignature>
+{
+  typedef Lib::AsyncSignal<SignalSignature>   BaseSignal;
+  typedef typename BaseSignal::CbFunction     CbFunction;
+  typedef typename BaseSignal::FutureFunction FutureFunction;
+  class Connector {
+    AsyncSignal &signal_;
+    friend class AsyncSignal;
+    Connector& operator= (const Connector&) = delete;
+    explicit Connector (AsyncSignal &signal) : signal_ (signal) {}
+  public:
+    /// Method to add a new std::future<ReturnValue> function or lambda as signal handler, returns a handler connection ID.
+    size_t connect_future (const FutureFunction &ff)    { return signal_.connect_future (ff); }
+    /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
+    size_t operator+= (const CbFunction &cb)            { return signal_.connect (cb); }
+    /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
+    bool   operator-= (size_t connection_id)            { return signal_.disconnect (connection_id); }
+  };
+public:
+  using BaseSignal::Emission;
+  using BaseSignal::emission;
+  /// Signal constructor, supports a default callback as argument.
+  AsyncSignal (const FutureFunction &method = FutureFunction()) : BaseSignal (method) {}
+  /// Retrieve a connector object with operator+= and operator-= to connect and disconnect signal handlers.
+  Connector operator() ()                               { return Connector (*this); }
 };
 
 } } // Rapicorn::Aida
