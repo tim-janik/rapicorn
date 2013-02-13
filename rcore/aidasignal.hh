@@ -203,9 +203,9 @@ public:
 template<class Promise, class R, class... Args>
 struct PromiseInvocation<Promise, R (Args...)> {
   static inline void
-  invoke (Promise &promise, const std::function<R (Args...)> &callback, Args... args)
+  invoke (Promise &promise, const std::function<R (Args...)> &callback, Args&&... args)
   {
-    promise.set_value (callback (args...));
+    promise.set_value (callback (std::forward<Args> (args)...));
   }
 };
 
@@ -213,9 +213,9 @@ struct PromiseInvocation<Promise, R (Args...)> {
 template<class Promise, class... Args>
 struct PromiseInvocation<Promise, void (Args...)> {
   static inline void
-  invoke (Promise &promise, const std::function<void (Args...)> &callback, Args... args)
+  invoke (Promise &promise, const std::function<void (Args...)> &callback, Args&&... args)
   {
-    callback (args...);
+    callback (std::forward<Args> (args)...);
     promise.set_value();
   }
 };
@@ -331,7 +331,7 @@ public:
     std::future<R>           future_;
     FunctionTrampoline       trampoline_;
   public:
-    Emission (SignalLink *start_link, Args... args) :
+    Emission (SignalLink *start_link, Args&&... args) :
       current_ (0)
     {
       SignalLink *link = start_link;
@@ -353,7 +353,7 @@ public:
           return std::move (ff (args...));
         };
       // FIXME: instead of std::bind, use lambda capture: [args...](){return ff(args...);}, but see gcc bug #41933
-      trampoline_ = std::bind (lambda, std::placeholders::_1, args...);
+      trampoline_ = std::bind (lambda, std::placeholders::_1, std::forward<Args> (args)...);
     }
     ~Emission()
     {
@@ -394,10 +394,10 @@ public:
   size_t connect        (const CbFunction &callback)
   {
     auto lambda =
-      [this, callback] (Args... args) // -> std::future<R>
+      [this, callback] (Args&&... args) // -> std::future<R>
       {
         std::promise<R> promise;
-        this->invoke (promise, callback, args...);
+        this->invoke (promise, callback, std::forward<Args> (args)...);
         return std::move (promise.get_future());
       };
     return connect_future (lambda);
@@ -406,9 +406,9 @@ public:
   bool   disconnect (size_t connection)         { return callback_ring_ ? callback_ring_->remove_sibling (connection) : false; }
   /// Create an asynchronous signal emission.
   Emission*
-  emission (Args... args)
+  emission (Args&&... args)
   {
-    return new Emission (callback_ring_, args...);
+    return new Emission (callback_ring_, std::forward<Args> (args)...);
   }
 };
 
