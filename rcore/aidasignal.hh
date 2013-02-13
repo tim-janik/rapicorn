@@ -80,8 +80,8 @@ struct HandlerLink {
       next->prev = prev;
     if (prev)
       prev->next = next;
+    next = prev = NULL;
     decref();
-    // leave intact ->next, ->prev for stale iterators
   }
   size_t
   add_before (const Function &callback)
@@ -178,26 +178,45 @@ public:
   CollectorResult
   emit (Args... args)
   {
+    // check if an emission is needed
     Collector collector;
     if (!callback_ring_)
       return collector.result();
-    SignalLink *link = callback_ring_;
-    link->incref();
-    do
+    // capture and incref signal handler list
+    const bool have_link0 = callback_ring_->function != NULL;
+    size_t capacity = 1 * have_link0;
+    SignalLink *link;
+    for (link = callback_ring_->next; link != callback_ring_; link = link->next)
+      capacity++;       // capacity measuring is O(n), but we expect n to be small generally
+    SignalLink *links[capacity];
+    size_t nlinks = 0;
+    if (have_link0)
       {
-        if (link->function != NULL)
+        callback_ring_->incref();
+        links[nlinks++] = callback_ring_;
+      }
+    for (link = callback_ring_->next; link != callback_ring_; link = link->next)
+      {
+        link->incref();
+        links[nlinks++] = link;
+      }
+    AIDA_ASSERT (nlinks <= capacity);
+    // walk signal handler list, invoke and decref
+    size_t i;
+    for (i = 0; i < nlinks; i++)
+      {
+        SignalLink *link = links[i];
+        if (link->function)
           {
             const bool continue_emission = this->invoke (collector, link->function, args...);
             if (!continue_emission)
               break;
           }
-        SignalLink *old = link;
-        link = old->next;
-        link->incref();
-        old->decref();
+        link->decref();
       }
-    while (link != callback_ring_);
-    link->decref();
+    for (; i < nlinks; i++)
+      links[i]->decref();       // continue decref after 'break'
+    // done
     return collector.result();
   }
 };
