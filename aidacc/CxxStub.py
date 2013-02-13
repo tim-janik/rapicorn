@@ -925,23 +925,15 @@ class Generator:
     s += '  void *fptr = new std::function<%s %s> (func);\n' % (sigret, sigargs)
     s += '  return __AIDA_Local__::signal_connect (%s, *this, %s, fptr);\n}\n' % (self.method_digest (functype), emitfunc)
     return s
-  def generate_server_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
+  def generate_server_signal_typedef (self, functype, ctype, prefix = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)
-    cpp_rtype = self.R (functype.rtype)
-    s += 'typedef Rapicorn::Aida::Signal<%s (' % cpp_rtype
+    cpp_rtype, async = self.R (functype.rtype), functype.rtype.storage != Decls.VOID
+    s += 'typedef Rapicorn::Aida::%s<%s (' % (('AsyncSignal' if async else 'Signal'), cpp_rtype)
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
-    s += ')'
-    if functype.rtype.collector != 'void' or ancestor:
-      colname = functype.rtype.collector if functype.rtype.collector != 'void' else 'Default'
-      s += ', Rapicorn::Aida::Collector' + colname.capitalize() + '<' + cpp_rtype + '>'
-      if ancestor:
-        s += ', ' + ancestor
-      else:
-        s += ' '
-    s += '> ' + prefix + signame + ';\n'
+    s += ')> ' + prefix + signame + ';\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVANT

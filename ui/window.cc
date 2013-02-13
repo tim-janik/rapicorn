@@ -80,9 +80,6 @@ WindowImpl::custom_command (const String    &command_name,
 {
   bool handled = false;
   if (!handled)
-    handled = sig_commands.emit (command_name, command_args);
-#if 0
-  if (!handled)
     {
       Signal_commands::Emission *emi = sig_commands.emission (command_name, command_args);
       while (!emi->done())
@@ -104,7 +101,6 @@ WindowImpl::custom_command (const String    &command_name,
         }
       delete emi;
     }
-#endif
   return handled;
 }
 
