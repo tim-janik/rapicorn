@@ -956,8 +956,11 @@ class Generator:
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
-    s += '  handler (const SharedPtr &sp' + (',\n' if stype.args else '')
-    s += self.Args (stype, 'arg_', 11) + ')\n  {\n'
+    s += '  handler (const SharedPtr &sp'
+    if stype.args:
+      s += ',\n' + ' ' * 11
+      s += self.Args (stype, 'arg_', 11)
+    s += ')\n  {\n'
     s += '    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u);\n' % len (stype.args) # header + handler + args
     s += '    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, %s);\n' % digest
     s += '    fb <<= sp->handler_id_;\n'

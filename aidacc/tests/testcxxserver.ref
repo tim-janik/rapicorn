@@ -1654,7 +1654,7 @@ public:
   }
   static double
   handler (const SharedPtr &sp,
-I_UIWidgetArea_Interface &arg_ba1,
+           I_UIWidgetArea_Interface &arg_ba1,
            int arg_someint)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2);
@@ -2602,7 +2602,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-bool arg_b)
+           bool arg_b)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
@@ -2647,7 +2647,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-int arg_i)
+           int arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
@@ -2692,7 +2692,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-Rapicorn::Aida::int64_t arg_i)
+           Rapicorn::Aida::int64_t arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
@@ -2737,7 +2737,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-double arg_f)
+           double arg_f)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
@@ -2782,7 +2782,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const std::string &arg_s)
+           const std::string &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
@@ -2827,7 +2827,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-QuickEnum arg_e)
+           QuickEnum arg_e)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
@@ -2872,7 +2872,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const QuickRecord &arg_r)
+           const QuickRecord &arg_r)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
@@ -2917,7 +2917,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const QuickSequence &arg_s)
+           const QuickSequence &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
@@ -2962,7 +2962,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_GrandChild_Interface &arg_i)
+           I_GrandChild_Interface &arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
@@ -3007,7 +3007,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const Rapicorn::Aida::Any &arg_a)
+           const Rapicorn::Aida::Any &arg_a)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
@@ -3052,7 +3052,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_SignalTestInterface_Interface &arg_self_)
+           I_SignalTestInterface_Interface &arg_self_)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
     __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
@@ -3114,7 +3114,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_ChildInheritingSignals_Interface &arg_c,
+           I_ChildInheritingSignals_Interface &arg_c,
            I_SignalTestInterface_Interface &arg_p,
            const Rapicorn::Aida::Any &arg_a,
            int arg_i,
