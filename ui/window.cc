@@ -81,6 +81,30 @@ WindowImpl::custom_command (const String    &command_name,
   bool handled = false;
   if (!handled)
     handled = sig_commands.emit (command_name, command_args);
+#if 0
+  if (!handled)
+    {
+      Signal_commands::Emission *emi = sig_commands.emission (command_name, command_args);
+      while (!emi->done())
+        {
+          if (emi->pending())
+            emi->dispatch();            // this calls signal handlers
+          if (emi->has_value())
+            {                           // value return from a signal handler via resolved future
+              const bool handled = emi->get_value();
+              if (handled)
+                break;
+            }
+          else
+            {
+              ThisThread::yield();      // allow for (asynchronous) signal handler execution
+              if (!emi->has_value())    // HACK: avoid CPU burning by sleeping
+                std::this_thread::sleep_for (std::chrono::milliseconds (20));
+            }
+        }
+      delete emi;
+    }
+#endif
   return handled;
 }
 
