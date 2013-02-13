@@ -58,8 +58,9 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
-  const uint64_t msgid = frr.pop_int64();
+  const uint64_t msgid AIDA_UNUSED = frr.pop_int64();
   frr.skip(); frr.skip(); // hashhigh hashlow
+#if 0
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
     {
       std::string msg = frr.pop_string(), domain = frr.pop_string();
@@ -67,6 +68,7 @@ PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
     }
+#endif
   return PyErr_Format (PyExc_RuntimeError, "Aida: garbage return: 0x%s", fr->first_id_str().c_str());
 }
 
@@ -413,10 +415,10 @@ class Generator:
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += '  item_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     if hasret:
-      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
+      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
       s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % self.method_digest (mtype)
     else:
-      s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY,'
+      s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL,'
       s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), %s);\n' % self.method_digest (mtype)
     s += '  fb.add_object (item_orbid);\n'
     arg_counter += 1
