@@ -62,73 +62,76 @@ struct CollectorInvocation<Collector, void (Args...)> {
   }
 };
 
+/// HandlerLink implements a doubly-linked ring with ref-counted nodes containing callback links.
+template<class Function>
+struct HandlerLink {
+  HandlerLink *next, *prev;
+  Function     function;
+  int          ref_count;
+  explicit     HandlerLink (const Function &callback) : next (NULL), prev (NULL), function (callback), ref_count (1) {}
+  /*dtor*/    ~HandlerLink ()           { AIDA_ASSERT (ref_count == 0); }
+  void         incref      ()           { ref_count += 1; AIDA_ASSERT (ref_count > 0); }
+  void         decref      ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT (ref_count > 0); }
+  void
+  unlink ()
+  {
+    function = NULL;
+    if (next)
+      next->prev = prev;
+    if (prev)
+      prev->next = next;
+    decref();
+    // leave intact ->next, ->prev for stale iterators
+  }
+  size_t
+  add_before (const Function &callback)
+  {
+    HandlerLink *link = new HandlerLink (callback);
+    link->prev = prev; // link to last
+    link->next = this;
+    prev->next = link; // link from last
+    prev = link;
+    static_assert (sizeof (link) == sizeof (size_t), "sizeof size_t");
+    return size_t (link);
+  }
+  bool
+  deactivate (const Function &callback)
+  {
+    if (callback == function)
+      {
+        function = NULL;      // deactivate static head
+        return true;
+      }
+    for (HandlerLink *link = this->next ? this->next : this; link != this; link = link->next)
+      if (callback == link->function)
+        {
+          link->unlink();     // deactivate and unlink sibling
+          return true;
+        }
+    return false;
+  }
+  bool
+  remove_sibling (size_t id)
+  {
+    for (HandlerLink *link = this->next ? this->next : this; link != this; link = link->next)
+      if (id == size_t (link))
+        {
+          link->unlink();     // deactivate and unlink sibling
+          return true;
+        }
+    return false;
+  }
+};
+
 /// ProtoSignal template specialised for the callback signature and collector.
 template<class Collector, class R, class... Args>
 class ProtoSignal<R (Args...), Collector> : private CollectorInvocation<Collector, R (Args...)> {
 protected:
-  typedef std::function<R (Args...)> CbFunction;
-  typedef typename CbFunction::result_type Result;
+  typedef std::function<R (Args...)>          CbFunction;
+  typedef typename CbFunction::result_type    Result;
   typedef typename Collector::CollectorResult CollectorResult;
+  typedef HandlerLink<CbFunction>             SignalLink;
 private:
-  /// SignalLink implements a doubly-linked ring with ref-counted nodes containing the signal handlers.
-  struct SignalLink {
-    SignalLink *next, *prev;
-    CbFunction  function;
-    int         ref_count;
-    explicit    SignalLink (const CbFunction &cbf) : next (NULL), prev (NULL), function (cbf), ref_count (1) {}
-    /*dtor*/   ~SignalLink ()           { AIDA_ASSERT (ref_count == 0); }
-    void        incref     ()           { ref_count += 1; AIDA_ASSERT (ref_count > 0); }
-    void        decref     ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT (ref_count > 0); }
-    void
-    unlink ()
-    {
-      function = NULL;
-      if (next)
-        next->prev = prev;
-      if (prev)
-        prev->next = next;
-      decref();
-      // leave intact ->next, ->prev for stale iterators
-    }
-    size_t
-    add_before (const CbFunction &cb)
-    {
-      SignalLink *link = new SignalLink (cb);
-      link->prev = prev; // link to last
-      link->next = this;
-      prev->next = link; // link from last
-      prev = link;
-      static_assert (sizeof (link) == sizeof (size_t), "sizeof size_t");
-      return size_t (link);
-    }
-    bool
-    deactivate (const CbFunction &cbf)
-    {
-      if (cbf == function)
-        {
-          function = NULL;      // deactivate static head
-          return true;
-        }
-      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
-        if (cbf == link->function)
-          {
-            link->unlink();     // deactivate and unlink sibling
-            return true;
-          }
-      return false;
-    }
-    bool
-    remove_sibling (size_t id)
-    {
-      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
-        if (id == size_t (link))
-          {
-            link->unlink();     // deactivate and unlink sibling
-            return true;
-          }
-      return false;
-    }
-  };
   SignalLink   *callback_ring_; // linked ring of callback nodes
   /*copy-ctor*/ ProtoSignal (const ProtoSignal&) = delete;
   ProtoSignal&  operator=   (const ProtoSignal&) = delete;
@@ -226,66 +229,8 @@ class AsyncSignal<R (Args...)> : private PromiseInvocation<std::promise<R>, R (A
 protected:
   typedef std::function<std::future<R> (Args...)> FutureFunction;
   typedef std::function<R (Args...)>              CbFunction;
+  typedef HandlerLink<FutureFunction>             SignalLink;
 private:
-  /// SignalLink implements a doubly-linked ring with ref-counted nodes containing the signal handlers.
-  struct SignalLink {
-    SignalLink    *next, *prev;
-    FutureFunction function;
-    int            ref_count;
-    explicit    SignalLink (const FutureFunction &futcbf) : next (NULL), prev (NULL), function (futcbf), ref_count (1) {}
-    /*dtor*/   ~SignalLink ()           { AIDA_ASSERT (ref_count == 0); }
-    void        incref     ()           { ref_count += 1; AIDA_ASSERT (ref_count > 0); }
-    void        decref     ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT (ref_count > 0); }
-    void
-    unlink ()
-    {
-      function = NULL;
-      if (next)
-        next->prev = prev;
-      if (prev)
-        prev->next = next;
-      decref();
-      // leave intact ->next, ->prev for stale iterators
-    }
-    size_t
-    add_before (const FutureFunction &futcb)
-    {
-      SignalLink *link = new SignalLink (futcb);
-      link->prev = prev; // link to last
-      link->next = this;
-      prev->next = link; // link from last
-      prev = link;
-      static_assert (sizeof (link) == sizeof (size_t), "sizeof size_t");
-      return size_t (link);
-    }
-    bool
-    deactivate (const FutureFunction &futcbf)
-    {
-      if (futcbf == function)
-        {
-          function = NULL;      // deactivate static head
-          return true;
-        }
-      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
-        if (futcbf == link->function)
-          {
-            link->unlink();     // deactivate and unlink sibling
-            return true;
-          }
-      return false;
-    }
-    bool
-    remove_sibling (size_t id)
-    {
-      for (SignalLink *link = this->next ? this->next : this; link != this; link = link->next)
-        if (id == size_t (link))
-          {
-            link->unlink();     // deactivate and unlink sibling
-            return true;
-          }
-      return false;
-    }
-  };
   SignalLink   *callback_ring_; // linked ring of callback nodes
   /*copy-ctor*/ AsyncSignal (const AsyncSignal&) = delete;
   AsyncSignal&  operator=   (const AsyncSignal&) = delete;
