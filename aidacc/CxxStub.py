@@ -724,7 +724,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 3 + 1 + %u) return __AIDA_Local__::error ("invalid number of arguments");\n' % len (mtype.args)
+    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + %u);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
@@ -814,7 +814,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
@@ -838,7 +838,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
@@ -865,7 +865,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -978,7 +978,7 @@ class Generator:
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");\n'
+    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
