@@ -1339,7 +1339,7 @@ I_SoundModule_Interface::_property_list ()
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_FirstInterface_Interface *self;
@@ -1355,7 +1355,7 @@ __AIDA_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_FirstInterface_Interface *self;
@@ -1376,7 +1376,7 @@ namespace OtherNamespace {
 
 namespace InterfaceTests {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1392,7 +1392,7 @@ __AIDA_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1405,7 +1405,7 @@ __AIDA_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1418,7 +1418,7 @@ __AIDA_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1431,7 +1431,7 @@ __AIDA_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1444,7 +1444,7 @@ __AIDA_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
@@ -1457,7 +1457,7 @@ __AIDA_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1472,7 +1472,7 @@ __AIDA_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1487,7 +1487,7 @@ __AIDA_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
@@ -1504,7 +1504,7 @@ __AIDA_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
@@ -1521,7 +1521,7 @@ __AIDA_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 6);
   I_UIWidgetArea_Interface *self;
@@ -1546,7 +1546,7 @@ __AIDA_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
@@ -1563,7 +1563,7 @@ __AIDA_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
@@ -1574,7 +1574,7 @@ __AIDA_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
@@ -1587,7 +1587,7 @@ __AIDA_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
@@ -1621,7 +1621,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
@@ -1669,7 +1669,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
@@ -1692,7 +1692,7 @@ __AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Parent (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Parent (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Parent_Interface *self;
@@ -1709,7 +1709,7 @@ __AIDA_types__Parent (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Child (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Child (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Child_Interface *self;
@@ -1726,7 +1726,7 @@ __AIDA_types__Child (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Descendant (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Descendant_Interface *self;
@@ -1743,7 +1743,7 @@ __AIDA_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_GrandChild_Interface *self;
@@ -1760,7 +1760,7 @@ __AIDA_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__QuickIface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_QuickIface_Interface *self;
@@ -1776,7 +1776,7 @@ __AIDA_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_QuickIface_Interface *self;
@@ -1790,7 +1790,7 @@ __AIDA_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_MethodTestInterface_Interface *self;
@@ -1806,7 +1806,7 @@ __AIDA_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_MethodTestInterface_Interface *self;
@@ -1817,7 +1817,7 @@ __AIDA_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader 
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1834,7 +1834,7 @@ __AIDA_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1851,7 +1851,7 @@ __AIDA_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReade
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1868,7 +1868,7 @@ __AIDA_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReade
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1885,7 +1885,7 @@ __AIDA_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReade
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1902,7 +1902,7 @@ __AIDA_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReade
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1919,7 +1919,7 @@ __AIDA_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader 
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1936,7 +1936,7 @@ __AIDA_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReade
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1953,7 +1953,7 @@ __AIDA_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldRea
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1970,7 +1970,7 @@ __AIDA_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldRe
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -1987,7 +1987,7 @@ __AIDA_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader 
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
@@ -2005,7 +2005,7 @@ __AIDA_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldR
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_SignalTestInterface_Interface *self;
@@ -2042,7 +2042,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2086,7 +2086,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2130,7 +2130,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2174,7 +2174,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2218,7 +2218,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2262,7 +2262,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2306,7 +2306,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2350,7 +2350,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2394,7 +2394,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2438,7 +2438,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2482,7 +2482,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2526,7 +2526,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2569,7 +2569,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2614,7 +2614,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2659,7 +2659,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2704,7 +2704,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2749,7 +2749,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2794,7 +2794,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2839,7 +2839,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2884,7 +2884,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2929,7 +2929,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -2974,7 +2974,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -3019,7 +3019,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -3064,7 +3064,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
@@ -3087,7 +3087,7 @@ __AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ChildInheritingSignals_Interface *self;
@@ -3136,7 +3136,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ChildInheritingSignals_Interface *self;
@@ -3159,7 +3159,7 @@ __AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_AnotherChild_Interface *self;
@@ -3176,7 +3176,7 @@ __AIDA_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3192,7 +3192,7 @@ __AIDA_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3205,7 +3205,7 @@ __AIDA_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3218,7 +3218,7 @@ __AIDA_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3231,7 +3231,7 @@ __AIDA_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3244,7 +3244,7 @@ __AIDA_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3257,7 +3257,7 @@ __AIDA_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3270,7 +3270,7 @@ __AIDA_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3283,7 +3283,7 @@ __AIDA_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3296,7 +3296,7 @@ __AIDA_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3309,7 +3309,7 @@ __AIDA_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3322,7 +3322,7 @@ __AIDA_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3335,7 +3335,7 @@ __AIDA_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3348,7 +3348,7 @@ __AIDA_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3361,7 +3361,7 @@ __AIDA_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3374,7 +3374,7 @@ __AIDA_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3387,7 +3387,7 @@ __AIDA_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3400,7 +3400,7 @@ __AIDA_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3413,7 +3413,7 @@ __AIDA_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3426,7 +3426,7 @@ __AIDA_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3439,7 +3439,7 @@ __AIDA_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3452,7 +3452,7 @@ __AIDA_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
@@ -3465,7 +3465,7 @@ __AIDA_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
@@ -3482,7 +3482,7 @@ __AIDA_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 
 namespace RapicornAidaTest {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
@@ -3498,7 +3498,7 @@ __AIDA_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
@@ -3511,7 +3511,7 @@ __AIDA_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
@@ -3524,7 +3524,7 @@ __AIDA_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
@@ -3537,7 +3537,7 @@ __AIDA_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
@@ -3550,7 +3550,7 @@ __AIDA_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
@@ -3563,7 +3563,7 @@ __AIDA_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
@@ -3576,7 +3576,7 @@ __AIDA_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
@@ -3589,7 +3589,7 @@ __AIDA_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
@@ -3624,7 +3624,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ButtonArea_Interface *self;
@@ -3667,7 +3667,7 @@ public:
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ButtonArea_Interface *self;
@@ -3690,7 +3690,7 @@ __AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__PureMethods (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PureMethods_Interface *self;
@@ -3706,7 +3706,7 @@ __AIDA_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PureMethods_Interface *self;
@@ -3725,7 +3725,7 @@ __AIDA_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 
 namespace Other {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__NameTests (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_NameTests_Interface *self;
@@ -3741,7 +3741,7 @@ __AIDA_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 3);
   I_NameTests_Interface *self;
@@ -3762,7 +3762,7 @@ __AIDA_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &
 
 namespace BseTest {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Compressor (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
@@ -3778,7 +3778,7 @@ __AIDA_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
@@ -3791,7 +3791,7 @@ __AIDA_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_Compressor_Interface *self;
@@ -3804,7 +3804,7 @@ __AIDA_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
@@ -3817,7 +3817,7 @@ __AIDA_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_Compressor_Interface *self;
@@ -3831,7 +3831,7 @@ __AIDA_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_SoundModule_Interface *self;
@@ -3848,116 +3848,116 @@ __AIDA_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
-  { 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, MandatoryNamespace::__AIDA_types__FirstInterface, },
-  { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__AIDA_call__FirstInterface__void_func, },
-  { 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, InterfaceTests::__AIDA_types__UIWidgetArea, },
-  { 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL, InterfaceTests::__AIDA_get__UIWidgetArea__dummy, },
-  { 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL, InterfaceTests::__AIDA_set__UIWidgetArea__dummy, },
-  { 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL, InterfaceTests::__AIDA_get__UIWidgetArea__on_click, },
-  { 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL, InterfaceTests::__AIDA_set__UIWidgetArea__on_click, },
-  { 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL, InterfaceTests::__AIDA_call__UIWidgetArea__simple_method, },
-  { 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL, InterfaceTests::__AIDA_call__UIWidgetArea__single_arg, },
-  { 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL, InterfaceTests::__AIDA_call__UIWidgetArea__single_arg2, },
-  { 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL, InterfaceTests::__AIDA_call__UIWidgetArea__two_args, },
-  { 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL, InterfaceTests::__AIDA_call__UIWidgetArea__two_args2, },
-  { 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL, InterfaceTests::__AIDA_call__UIWidgetArea__multi_args, },
-  { 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL, InterfaceTests::__AIDA_call__UIWidgetArea__self_method, },
-  { 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL, InterfaceTests::__AIDA_call__UIWidgetArea__void_method, },
-  { 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL, InterfaceTests::__AIDA_call__UIWidgetArea__on_click2out, },
-  { 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL, InterfaceTests::__AIDA_call__UIWidgetArea__on_click2in, },
-  { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__AIDA_signal__UIWidgetArea__void_signal, },
-  { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__AIDA_signal__UIWidgetArea__sample_signal, },
-  { 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, InterfaceTests::__AIDA_types__Parent, },
-  { 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, InterfaceTests::__AIDA_types__Child, },
-  { 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, InterfaceTests::__AIDA_types__Descendant, },
-  { 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, InterfaceTests::__AIDA_types__GrandChild, },
-  { 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, InterfaceTests::__AIDA_types__QuickIface, },
-  { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__AIDA_call__QuickIface__simple_function, },
-  { 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, InterfaceTests::__AIDA_types__MethodTestInterface, },
-  { 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_void, },
-  { 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_bools, },
-  { 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_ints32, },
-  { 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_ints64, },
-  { 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_floats, },
-  { 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_string, },
-  { 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_enum, },
-  { 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_record, },
-  { 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_sequence, },
-  { 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_interface, },
-  { 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_anys, },
-  { 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_quickiface, },
-  { 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, InterfaceTests::__AIDA_types__SignalTestInterface, },
-  { 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, InterfaceTests::__AIDA_signal__SignalTestInterface__void_result, },
-  { 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, InterfaceTests::__AIDA_signal__SignalTestInterface__bool_result, },
-  { 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int32_result, },
-  { 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int64_result, },
-  { 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__float64_result, },
-  { 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__string_result, },
-  { 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, InterfaceTests::__AIDA_signal__SignalTestInterface__enum_result, },
-  { 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__record_result, },
-  { 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__sequence_result, },
-  { 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__interface_result, },
-  { 0x296163d4220985ceULL, 0x40daacab4a841093ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__any_result, },
-  { 0x35828273200534f7ULL, 0x72873f1374d6093bULL, InterfaceTests::__AIDA_signal__SignalTestInterface__self_result, },
-  { 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, InterfaceTests::__AIDA_signal__SignalTestInterface__void_arg, },
-  { 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__bool_arg, },
-  { 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int32_arg, },
-  { 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int64_arg, },
-  { 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, InterfaceTests::__AIDA_signal__SignalTestInterface__float64_arg, },
-  { 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__string_arg, },
-  { 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__enum_arg, },
-  { 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, InterfaceTests::__AIDA_signal__SignalTestInterface__record_arg, },
-  { 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__sequence_arg, },
-  { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__interface_arg, },
-  { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__any_arg, },
-  { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__AIDA_signal__SignalTestInterface__self_args, },
-  { 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, InterfaceTests::__AIDA_types__ChildInheritingSignals, },
-  { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__AIDA_signal__ChildInheritingSignals__child_signal, },
-  { 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, InterfaceTests::__AIDA_types__AnotherChild, },
-  { 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, InterfaceTests::__AIDA_types__PropertyTester, },
-  { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__AIDA_get__PropertyTester__bool_prop, },
-  { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__AIDA_set__PropertyTester__bool_prop, },
-  { 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL, InterfaceTests::__AIDA_get__PropertyTester__int32_prop, },
-  { 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL, InterfaceTests::__AIDA_set__PropertyTester__int32_prop, },
-  { 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL, InterfaceTests::__AIDA_get__PropertyTester__int64_prop, },
-  { 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL, InterfaceTests::__AIDA_set__PropertyTester__int64_prop, },
-  { 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL, InterfaceTests::__AIDA_get__PropertyTester__float64_prop, },
-  { 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL, InterfaceTests::__AIDA_set__PropertyTester__float64_prop, },
-  { 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL, InterfaceTests::__AIDA_get__PropertyTester__string_prop, },
-  { 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL, InterfaceTests::__AIDA_set__PropertyTester__string_prop, },
-  { 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL, InterfaceTests::__AIDA_get__PropertyTester__enum_prop, },
-  { 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL, InterfaceTests::__AIDA_set__PropertyTester__enum_prop, },
-  { 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL, InterfaceTests::__AIDA_get__PropertyTester__record_prop, },
-  { 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL, InterfaceTests::__AIDA_set__PropertyTester__record_prop, },
-  { 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL, InterfaceTests::__AIDA_get__PropertyTester__sequence_prop, },
-  { 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL, InterfaceTests::__AIDA_set__PropertyTester__sequence_prop, },
-  { 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL, InterfaceTests::__AIDA_get__PropertyTester__interface_prop, },
-  { 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL, InterfaceTests::__AIDA_set__PropertyTester__interface_prop, },
-  { 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL, InterfaceTests::__AIDA_get__PropertyTester__self_prop, },
-  { 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL, InterfaceTests::__AIDA_set__PropertyTester__self_prop, },
-  { 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL, InterfaceTests::__AIDA_get__PropertyTester__any_prop, },
-  { 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL, InterfaceTests::__AIDA_set__PropertyTester__any_prop, },
-  { 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, RapicornAidaTest::__AIDA_types__ButtonArea, },
-  { 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click, },
-  { 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click, },
-  { 0x1b448d91990181daULL, 0x9751c08ae956c729ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click2, },
-  { 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click2, },
-  { 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click3, },
-  { 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click3, },
-  { 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL, RapicornAidaTest::__AIDA_get__ButtonArea__click_type, },
-  { 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL, RapicornAidaTest::__AIDA_set__ButtonArea__click_type, },
-  { 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, RapicornAidaTest::__AIDA_signal__ButtonArea__check_activate, },
-  { 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, RapicornAidaTest::__AIDA_signal__ButtonArea__activate, },
-  { 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, RapicornAidaTest::__AIDA_types__PureMethods, },
-  { 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL, RapicornAidaTest::__AIDA_call__PureMethods__pure_method, },
-  { 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, Other::__AIDA_types__NameTests, },
-  { 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL, Other::__AIDA_call__NameTests__args_from_other_namespace, },
-  { 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, BseTest::__AIDA_types__Compressor, },
-  { 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL, BseTest::__AIDA_get__Compressor__threshold, },
-  { 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL, BseTest::__AIDA_set__Compressor__threshold, },
-  { 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL, BseTest::__AIDA_get__Compressor__ratio, },
-  { 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL, BseTest::__AIDA_set__Compressor__ratio, },
-  { 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, BseTest::__AIDA_types__SoundModule, },
+  { 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, MandatoryNamespace::__aida_typesof__FirstInterface, },
+  { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__aida_call__FirstInterface__void_func, },
+  { 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, InterfaceTests::__aida_typesof__UIWidgetArea, },
+  { 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL, InterfaceTests::__aida_get__UIWidgetArea__dummy, },
+  { 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL, InterfaceTests::__aida_set__UIWidgetArea__dummy, },
+  { 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL, InterfaceTests::__aida_get__UIWidgetArea__on_click, },
+  { 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL, InterfaceTests::__aida_set__UIWidgetArea__on_click, },
+  { 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL, InterfaceTests::__aida_call__UIWidgetArea__simple_method, },
+  { 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL, InterfaceTests::__aida_call__UIWidgetArea__single_arg, },
+  { 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL, InterfaceTests::__aida_call__UIWidgetArea__single_arg2, },
+  { 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL, InterfaceTests::__aida_call__UIWidgetArea__two_args, },
+  { 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL, InterfaceTests::__aida_call__UIWidgetArea__two_args2, },
+  { 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL, InterfaceTests::__aida_call__UIWidgetArea__multi_args, },
+  { 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL, InterfaceTests::__aida_call__UIWidgetArea__self_method, },
+  { 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL, InterfaceTests::__aida_call__UIWidgetArea__void_method, },
+  { 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL, InterfaceTests::__aida_call__UIWidgetArea__on_click2out, },
+  { 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL, InterfaceTests::__aida_call__UIWidgetArea__on_click2in, },
+  { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__aida_connect__UIWidgetArea__void_signal, },
+  { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__aida_connect__UIWidgetArea__sample_signal, },
+  { 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, InterfaceTests::__aida_typesof__Parent, },
+  { 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, InterfaceTests::__aida_typesof__Child, },
+  { 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, InterfaceTests::__aida_typesof__Descendant, },
+  { 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, InterfaceTests::__aida_typesof__GrandChild, },
+  { 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, InterfaceTests::__aida_typesof__QuickIface, },
+  { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__aida_call__QuickIface__simple_function, },
+  { 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, InterfaceTests::__aida_typesof__MethodTestInterface, },
+  { 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_void, },
+  { 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_bools, },
+  { 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_ints32, },
+  { 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_ints64, },
+  { 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_floats, },
+  { 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_string, },
+  { 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_enum, },
+  { 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_record, },
+  { 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_sequence, },
+  { 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_interface, },
+  { 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_anys, },
+  { 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_quickiface, },
+  { 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, InterfaceTests::__aida_typesof__SignalTestInterface, },
+  { 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, InterfaceTests::__aida_connect__SignalTestInterface__void_result, },
+  { 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, InterfaceTests::__aida_connect__SignalTestInterface__bool_result, },
+  { 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, InterfaceTests::__aida_connect__SignalTestInterface__int32_result, },
+  { 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, InterfaceTests::__aida_connect__SignalTestInterface__int64_result, },
+  { 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, InterfaceTests::__aida_connect__SignalTestInterface__float64_result, },
+  { 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, InterfaceTests::__aida_connect__SignalTestInterface__string_result, },
+  { 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, InterfaceTests::__aida_connect__SignalTestInterface__enum_result, },
+  { 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, InterfaceTests::__aida_connect__SignalTestInterface__record_result, },
+  { 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, InterfaceTests::__aida_connect__SignalTestInterface__sequence_result, },
+  { 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_result, },
+  { 0x296163d4220985ceULL, 0x40daacab4a841093ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_result, },
+  { 0x35828273200534f7ULL, 0x72873f1374d6093bULL, InterfaceTests::__aida_connect__SignalTestInterface__self_result, },
+  { 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, InterfaceTests::__aida_connect__SignalTestInterface__void_arg, },
+  { 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, InterfaceTests::__aida_connect__SignalTestInterface__bool_arg, },
+  { 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, InterfaceTests::__aida_connect__SignalTestInterface__int32_arg, },
+  { 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, InterfaceTests::__aida_connect__SignalTestInterface__int64_arg, },
+  { 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, InterfaceTests::__aida_connect__SignalTestInterface__float64_arg, },
+  { 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, InterfaceTests::__aida_connect__SignalTestInterface__string_arg, },
+  { 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, InterfaceTests::__aida_connect__SignalTestInterface__enum_arg, },
+  { 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, InterfaceTests::__aida_connect__SignalTestInterface__record_arg, },
+  { 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, InterfaceTests::__aida_connect__SignalTestInterface__sequence_arg, },
+  { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_arg, },
+  { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_arg, },
+  { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__aida_connect__SignalTestInterface__self_args, },
+  { 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, InterfaceTests::__aida_typesof__ChildInheritingSignals, },
+  { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__aida_connect__ChildInheritingSignals__child_signal, },
+  { 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, InterfaceTests::__aida_typesof__AnotherChild, },
+  { 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, InterfaceTests::__aida_typesof__PropertyTester, },
+  { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__aida_get__PropertyTester__bool_prop, },
+  { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__aida_set__PropertyTester__bool_prop, },
+  { 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL, InterfaceTests::__aida_get__PropertyTester__int32_prop, },
+  { 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL, InterfaceTests::__aida_set__PropertyTester__int32_prop, },
+  { 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL, InterfaceTests::__aida_get__PropertyTester__int64_prop, },
+  { 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL, InterfaceTests::__aida_set__PropertyTester__int64_prop, },
+  { 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL, InterfaceTests::__aida_get__PropertyTester__float64_prop, },
+  { 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL, InterfaceTests::__aida_set__PropertyTester__float64_prop, },
+  { 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL, InterfaceTests::__aida_get__PropertyTester__string_prop, },
+  { 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL, InterfaceTests::__aida_set__PropertyTester__string_prop, },
+  { 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL, InterfaceTests::__aida_get__PropertyTester__enum_prop, },
+  { 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL, InterfaceTests::__aida_set__PropertyTester__enum_prop, },
+  { 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL, InterfaceTests::__aida_get__PropertyTester__record_prop, },
+  { 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL, InterfaceTests::__aida_set__PropertyTester__record_prop, },
+  { 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL, InterfaceTests::__aida_get__PropertyTester__sequence_prop, },
+  { 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL, InterfaceTests::__aida_set__PropertyTester__sequence_prop, },
+  { 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL, InterfaceTests::__aida_get__PropertyTester__interface_prop, },
+  { 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL, InterfaceTests::__aida_set__PropertyTester__interface_prop, },
+  { 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL, InterfaceTests::__aida_get__PropertyTester__self_prop, },
+  { 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL, InterfaceTests::__aida_set__PropertyTester__self_prop, },
+  { 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL, InterfaceTests::__aida_get__PropertyTester__any_prop, },
+  { 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL, InterfaceTests::__aida_set__PropertyTester__any_prop, },
+  { 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, RapicornAidaTest::__aida_typesof__ButtonArea, },
+  { 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click, },
+  { 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL, RapicornAidaTest::__aida_set__ButtonArea__on_click, },
+  { 0x1b448d91990181daULL, 0x9751c08ae956c729ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click2, },
+  { 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL, RapicornAidaTest::__aida_set__ButtonArea__on_click2, },
+  { 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click3, },
+  { 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL, RapicornAidaTest::__aida_set__ButtonArea__on_click3, },
+  { 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL, RapicornAidaTest::__aida_get__ButtonArea__click_type, },
+  { 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL, RapicornAidaTest::__aida_set__ButtonArea__click_type, },
+  { 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, RapicornAidaTest::__aida_connect__ButtonArea__check_activate, },
+  { 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, RapicornAidaTest::__aida_connect__ButtonArea__activate, },
+  { 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, RapicornAidaTest::__aida_typesof__PureMethods, },
+  { 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL, RapicornAidaTest::__aida_call__PureMethods__pure_method, },
+  { 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, Other::__aida_typesof__NameTests, },
+  { 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL, Other::__aida_call__NameTests__args_from_other_namespace, },
+  { 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, BseTest::__aida_typesof__Compressor, },
+  { 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL, BseTest::__aida_get__Compressor__threshold, },
+  { 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL, BseTest::__aida_set__Compressor__threshold, },
+  { 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL, BseTest::__aida_get__Compressor__ratio, },
+  { 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL, BseTest::__aida_set__Compressor__ratio, },
+  { 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, BseTest::__aida_typesof__SoundModule, },
 };
 static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 

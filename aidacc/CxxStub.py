@@ -384,7 +384,7 @@ class Generator:
   def generate_enum_impl (self, type_info):
     s = '\n'
     ns, nm = self.namespaced_identifier (None), type_info.name
-    s += 'static Rapicorn::Init __AIDA_init__%s ([]() {\n' % nm
+    s += 'static Rapicorn::Init __aida_autoinit__%s ([]() {\n' % nm
     s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
@@ -484,7 +484,7 @@ class Generator:
       for sg in type_info.signals:
         s += self.generate_client_signal_decl (sg, type_info)
       s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
-      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_type_hash__ ();\n'
+      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_type__ ();\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVANT:
@@ -499,10 +499,10 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_cast_types__();\n'
+      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__();\n'
       s += '  template<class SmartHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
-      s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_cast_types__()); }\n' % classH
+      s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -604,12 +604,12 @@ class Generator:
     s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
-    s += '%s::__aida_type_hash__()\n{\n' % classH
+    s += '%s::__aida_type__()\n{\n' % classH
     s += '  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (%s);\n' % self.class_digest (class_info)
     s += '  return type_hash;\n'
     s += '}\n'
     s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type_hash__();\n'
+    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
     s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
@@ -617,7 +617,7 @@ class Generator:
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'const Rapicorn::Aida::TypeHashList\n'
-    s += '%s::__aida_cast_types__()\n{\n' % classH
+    s += '%s::__aida_typelist__()\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
     s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
@@ -719,7 +719,7 @@ class Generator:
   def generate_server_method_stub (self, class_info, mtype, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__AIDA_call__%s__%s' % (class_info.name, mtype.name)
+    dispatcher_name = '__aida_call__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
@@ -808,7 +808,7 @@ class Generator:
   def generate_server_property_setter (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__AIDA_set__%s__%s' % (class_info.name, fident)
+    dispatcher_name = '__aida_set__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -832,7 +832,7 @@ class Generator:
   def generate_server_property_getter (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__AIDA_get__%s__%s' % (class_info.name, fident)
+    dispatcher_name = '__aida_get__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -859,7 +859,7 @@ class Generator:
   def generate_server_list_types (self, class_info, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__AIDA_types__%s' % class_info.name
+    dispatcher_name = '__aida_typesof__%s' % class_info.name
     digest = self.list_types_digest (class_info)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -899,7 +899,7 @@ class Generator:
     sigret, sigargs = self.generate_signal_signature_tuple (functype)
     connector_name = '__Aida_Signal__%s' % functype.name
     s += '  ' + 'typedef Rapicorn::Aida::Connector<%s, %s %s> ' % (classH, sigret, sigargs) + connector_name + ';\n'
-    s += '  ' + self.F ('size_t') + '__aida_signal__' + functype.name + ' (size_t, const std::function<%s %s>&);\n' % (sigret, sigargs)
+    s += '  size_t ' + '__aida_connect__' + functype.name + ' (size_t, const std::function<%s %s>&);\n' % (sigret, sigargs)
     return s
   def generate_client_signal_api (self, functype, ctype):
     assert self.gen_mode == G4STUB
@@ -907,13 +907,13 @@ class Generator:
     sigret, sigargs = self.generate_signal_signature_tuple (functype)
     connector_name = '__Aida_Signal__%s' % functype.name
     s += '  ' + self.F (connector_name) + 'sig_' + functype.name + ' () '
-    s += '{ return %s (*this, &%s::__aida_signal__%s); }\n' % (connector_name, classH, functype.name)
+    s += '{ return %s (*this, &%s::__aida_connect__%s); }\n' % (connector_name, classH, functype.name)
     return s
   def generate_client_signal_def (self, class_info, functype):
     assert self.gen_mode == G4STUB
     s, classH = '', self.C4client (class_info)
     (sigret, sigargs) = self.generate_signal_signature_tuple (functype)
-    emitfunc = '__AIDA_emit__%s__%s' % (classH, functype.name)
+    emitfunc = '__aida_emit1__%s__%s' % (classH, functype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
     s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  auto fptr = (const std::function<%s %s>*) data;\n' % (sigret, sigargs)
@@ -921,7 +921,7 @@ class Generator:
     s += '  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr);\n'
     s += '  return NULL; // no support for remote signal returns atm\n'
     s += '}\n'
-    s += 'size_t\n%s::__aida_signal__%s (size_t signal_handler_id, const std::function<%s %s> &func)\n{\n' % (classH, functype.name, sigret, sigargs)
+    s += 'size_t\n%s::__aida_connect__%s (size_t signal_handler_id, const std::function<%s %s> &func)\n{\n' % (classH, functype.name, sigret, sigargs)
     s += '  if (signal_handler_id)\n'
     s += '    return __AIDA_Local__::signal_disconnect (signal_handler_id);\n'
     s += '  void *fptr = new std::function<%s %s> (func);\n' % (sigret, sigargs)
@@ -940,7 +940,7 @@ class Generator:
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__AIDA_signal__%s__%s' % (class_info.name, stype.name)
+    dispatcher_name = '__aida_connect__%s__%s' % (class_info.name, stype.name)
     digest = self.method_digest (stype)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
