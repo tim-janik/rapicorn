@@ -75,33 +75,49 @@ WindowImpl::set_parent (ContainerImpl *parent)
 }
 
 bool
-WindowImpl::custom_command (const String    &command_name,
-                            const StringSeq &command_args)
+WindowImpl::custom_command (const String &command_name, const StringSeq &command_args)
 {
-  bool handled = false;
-  if (!handled)
+  assert_return (commands_emission_ == NULL, false);
+  last_command_ = command_name;
+  commands_emission_ = sig_commands.emission (command_name, command_args);
+  return true;
+}
+
+bool
+WindowImpl::command_dispatcher (const EventLoop::State &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return commands_emission_ && commands_emission_->pending();
+  else if (state.phase == state.DISPATCH)
     {
-      Signal_commands::Emission *emi = sig_commands.emission (command_name, command_args);
-      while (!emi->done())
+      ref (this);
+      commands_emission_->dispatch();                   // invoke signal handlers
+      bool handled = false;
+      if (commands_emission_->has_value())
+        handled = commands_emission_->get_value();      // value returned from signal handler
+      if (handled || commands_emission_->done())
         {
-          if (emi->pending())
-            emi->dispatch();            // this calls signal handlers
-          if (emi->has_value())
-            {                           // value return from a signal handler via resolved future
-              const bool handled = emi->get_value();
-              if (handled)
-                break;
-            }
-          else
-            {
-              ThisThread::yield();      // allow for (asynchronous) signal handler execution
-              if (!emi->has_value())    // HACK: avoid CPU burning by sleeping
-                std::this_thread::sleep_for (std::chrono::milliseconds (20));
-            }
+          if (!handled)                                 // all handlers returned false
+            critical ("Command unhandled: %s", last_command_.c_str());
+          Signal_commands::Emission *emi = commands_emission_;
+          commands_emission_ = NULL;
+          delete emi;
+          last_command_ = "";
         }
-      delete emi;
+      unref (this);
+      return true;
     }
-  return handled;
+  else if (state.phase == state.DESTROY)
+    {
+      if (commands_emission_)
+        {
+          Signal_commands::Emission *emi = commands_emission_;
+          commands_emission_ = NULL;
+          delete emi;
+          last_command_ = "";
+        }
+    }
+  return false;
 }
 
 struct CurrentFocus {
@@ -206,9 +222,8 @@ WindowImpl::forcefully_close_all ()
 
 WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
-  m_screen_window (NULL),
-  m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true),
-  m_notify_displayed_id (0)
+  m_screen_window (NULL), commands_emission_ (NULL),
+  m_notify_displayed_id (0), m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true)
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
@@ -222,6 +237,7 @@ WindowImpl::WindowImpl() :
   m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
   m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   m_loop.flag_primary (false);
   ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
@@ -1091,6 +1107,7 @@ WindowImpl::destroy_screen_window ()
       m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
       m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
       m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
     }
   unref (this);
 }

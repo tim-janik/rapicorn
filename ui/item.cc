@@ -534,8 +534,7 @@ ItemImpl::exec_command (const String &command_call_string)
         return true;
       item = item->parent();
     }
-
-  critical ("Command unimplemented: %s", command_call_string.c_str());
+  critical ("toplevel failed to handle command"); // ultimately Window *always* handles commands
   return false;
 }
 
