@@ -8,7 +8,8 @@
 #include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
-#include <memory>               // shared_ptr
+#include <type_traits>
+#include <memory>
 #include <future>
 #include <set>
 #include <map>
@@ -320,6 +321,7 @@ public:
   static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
+  static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
 };
 
@@ -489,6 +491,8 @@ public:
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
+  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
+  virtual void emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
 };
 
 /// Connection context for IPC clients. @nosubgrouping
