@@ -500,8 +500,7 @@ rule method_args:
 rule field_stream_method_signal_decl:
                                                 {{ signal = false; pure = 0; fargs = []; daux = () }}
         [ 'signal'                              {{ signal = true; coll = 'void' }}
-          [ '<' IDENT '>'                       {{ coll = IDENT; ASC (coll) }}
-          ] ]
+          ]
         ( 'void'                                {{ dtname = 'void' }}
         | typename                              {{ dtname = typename }}
         )

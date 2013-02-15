@@ -8,7 +8,9 @@
 #include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
-#include <memory>               // shared_ptr
+#include <type_traits>
+#include <memory>
+#include <future>
 #include <set>
 #include <map>
 
@@ -216,22 +218,27 @@ template<class Y> struct ValueType<const Y&> { typedef Y T; };
 
 // == Message IDs ==
 enum MessageId {
-  MSGID_NONE        = 0,
-  MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
-  MSGID_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call ID, returns result message.
-  MSGID_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection ID.
-  MSGID_SIGCON      = 0x5000000000000000ULL,      ///< Signal connection/disconnection request ID, returns result message.
-  MSGID_EVENT       = 0x6000000000000000ULL,      ///< One-way signal event message ID.
-  // MSGID_SIGNAL   = 0x7000000000000000ULL,      ///< Two-way signal message ID, returns result message.
+  MSGID_NONE           = 0x0000000000000000ULL, ///< No message ID.
+  MSGID_ONEWAY_CALL    = 0x1000000000000000ULL, ///< One-way method call (void return).
+  MSGID_DISCONNECT     = 0x2000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
+  MSGID_EMIT_ONEWAY    = 0x3000000000000000ULL, ///< One-way signal emissions (void return).
+  MSGID_DROP_REFS      = 0x4000000000000000ULL, ///< FIXME: Unimplemented.
+  // unused            = 0x5
+  // unused            = 0x6
+  // unused            = 0x7
+  // unused (twoway)   = 0x8
+  MSGID_TWOWAY_CALL    = 0x9000000000000000ULL, ///< Two-way method call, returns result message.
+  MSGID_CONNECT        = 0xa000000000000000ULL, ///< Signal handler connection/disconnection request.
+  MSGID_EMIT_TWOWAY    = 0xb000000000000000ULL, ///< Two-way signal emissions, returns result message.
+  // unused (result)   = 0xc
+  MSGID_CALL_RESULT    = 0xd000000000000000ULL, ///< Result message for two-way call.
+  MSGID_CONNECT_RESULT = 0xe000000000000000ULL, ///< Result message for signal handler connection/disconnection.
+  MSGID_EMIT_RESULT    = 0xf000000000000000ULL, ///< Result message for two-way signal emissions.
 };
-inline bool msgid_has_result    (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
-inline bool msgid_is_result     (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x9000000000000000ULL; }
-inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x8000000000000000ULL; }
-inline bool msgid_is_oneway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_ONEWAY; }
-inline bool msgid_is_twoway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_TWOWAY; }
-inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_DISCON; }
-inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
-inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
+inline bool      msgid_has_result (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0x8000000000000000ULL; }
+inline bool      msgid_is_result  (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0xc000000000000000ULL; }
+inline MessageId msgid_as_result  (MessageId mid) { return MessageId (mid | 0x4000000000000000ULL); }
+inline uint64_t  msgid_mask       (uint64_t  mid) { return  mid & 0xf000000000000000ULL; }
 
 union IdentifierParts {
   uint64_t vuint64;
@@ -268,7 +275,7 @@ public:
 // == SmartHandle ==
 class SmartHandle {
   OrbObject     *orbo_;
-  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_cast_types__ () { return TypeHashList(); } };
+  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
   friend  class ObjectBroker;
   void    assign (const SmartHandle&);
@@ -314,7 +321,8 @@ public:
   static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
-  static FieldBuffer* renew_into_result         (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
 };
 
 // == FieldBuffer ==
@@ -369,8 +377,8 @@ public:
   String              to_string() const;
   static String       type_name (int field_type);
   static FieldBuffer* _new (uint32_t _ntypes); // Heap allocated FieldBuffer
-  static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  // static FieldBuffer* new_error (const String &msg, const String &domain = "");
+  static FieldBuffer* new_result (MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
   inline void operator<<= (size_t v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64_t v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (int64_t  v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -483,6 +491,8 @@ public:
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
+  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
+  virtual void emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
 };
 
 /// Connection context for IPC clients. @nosubgrouping

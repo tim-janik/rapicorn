@@ -637,40 +637,46 @@ FieldBuffer::to_string() const
   return s;
 }
 
+#if 0
 FieldBuffer*
 FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (3 + 2);
-  const MessageId MSGID_ERROR = MessageId (0x8000000000000000ULL);
   fr->add_header1 (MSGID_ERROR, 0, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
 }
+#endif
 
 FieldBuffer*
-FieldBuffer::new_result (uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+FieldBuffer::new_result (MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
 {
-  assert_return (rconnection <= CONNECTION_MASK && rconnection, NULL);
+  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   FieldBuffer *fr = FieldBuffer::_new (3 + n);
-  const MessageId MSGID_RESULT_MASK = MessageId (0x9000000000000000ULL);
-  fr->add_header1 (MSGID_RESULT_MASK, rconnection, h, l);
+  fr->add_header1 (m, rconnection, h, l);
   return fr;
 }
 
 FieldBuffer*
-ObjectBroker::renew_into_result (FieldReader &fbr, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
 {
-  const FieldBuffer *fb = fbr.field_buffer();
+  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
-    return FieldBuffer::new_result (rconnection, h, l, n);
-  fbr.reset();
-  FieldBuffer *fr = const_cast<FieldBuffer*> (fb);
+    return FieldBuffer::new_result (m, rconnection, h, l, n);
+  FieldBuffer *fr = fb;
   fr->reset();
-  const MessageId MSGID_RESULT_MASK = MessageId (0x9000000000000000ULL);
-  fr->add_header1 (MSGID_RESULT_MASK, rconnection, h, l);
+  fr->add_header1 (m, rconnection, h, l);
   return fr;
+}
+
+FieldBuffer*
+ObjectBroker::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+{
+  FieldBuffer *fb = const_cast<FieldBuffer*> (fbr.field_buffer());
+  fbr.reset();
+  return renew_into_result (fb, m, rconnection, h, l, n);
 }
 
 class OneChunkFieldBuffer : public FieldBuffer {
@@ -1006,46 +1012,46 @@ ClientConnectionImpl::dispatch ()
   return_if (fb == NULL);
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-  if (msgid_is_event (msgid))
+  const uint64_t  idmask = msgid_mask (msgid);
+  switch (idmask)
     {
-      const size_t handler_id = fbr.pop_int64();
-      SignalHandler *shandler = signal_lookup (handler_id);
-      if (shandler)
-        {
-          FieldBuffer *fr = shandler->seh (fb, shandler->data);
-          if (fr == fb)
-            fb = NULL;
-          if (fr)
-            {
-              FieldReader frr (*fr);
-              const MessageId retid = MessageId (frr.pop_int64());
-              frr.skip(); // msgid high
-              frr.skip(); // msgid low
-              if (msgid_is_error (retid))
-                {
-                  std::string msg = frr.pop_string(), domain = frr.pop_string();
-                  if (domain.size())
-                    domain += ": ";
-                  msg = domain + msg;
-                  warning_printf ("%s", msg.c_str());
-                }
-              delete fr;
-            }
-        }
-      else
-        warning_printf ("invalid signal handler id in %s: %zu", "event", handler_id);
+    case MSGID_EMIT_TWOWAY:
+    case MSGID_EMIT_ONEWAY:
+      {
+        fbr.skip(); // hashhigh
+        fbr.skip(); // hashlow
+        const size_t handler_id = fbr.pop_int64();
+        SignalHandler *client_signal_handler = signal_lookup (handler_id);
+        AIDA_ASSERT (client_signal_handler != NULL);
+        FieldBuffer *fr = client_signal_handler->seh (fb, client_signal_handler->data);
+        if (fr == fb)
+          fb = NULL; // prevent deletion
+        if (idmask == MSGID_EMIT_ONEWAY)
+          AIDA_ASSERT (fr == NULL);
+        else // MSGID_EMIT_TWOWAY
+          {
+            AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == MSGID_EMIT_RESULT);
+            ObjectBroker::post_msg (fr);
+          }
+      }
+      break;
+    case MSGID_DISCONNECT:
+      {
+        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const size_t handler_id = fbr.pop_int64();
+        const bool deleted = true; // FIXME: currently broken
+        if (!deleted)
+          warning_printf ("%s: invalid handler id (%016zx) in message: (%016lx, %016llx%016llx)",
+                          STRFUNC, handler_id, msgid, hashhigh, hashlow);
+      }
+      break;
+    case MSGID_CALL_RESULT:     // handled in call_remote
+    case MSGID_CONNECT_RESULT:  // handled in call_remote
+    default:
+      warning_printf ("%s: invalid message: %016lx", STRFUNC, msgid);
+      break;
     }
-  else if (msgid_is_discon (msgid))
-    {
-      const size_t handler_id = fbr.pop_int64();
-      const bool deleted = true; // FIXME: currently broken
-      if (!deleted)
-        warning_printf ("invalid signal handler id in %s: %zu", "disconnect", handler_id);
-    }
-  else
-    warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-  if (fb)
+  if (AIDA_UNLIKELY (fb))
     delete fb;
 }
 
@@ -1061,6 +1067,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
       ObjectBroker::post_msg (fb);
       return NULL;
     }
+  const Aida::MessageId resultid = MessageId (msgid_mask (msgid_as_result (msgid)));
   blocking_for_sem_ = true; // results will notify semaphore
   ObjectBroker::post_msg (fb);
   FieldBuffer *fr;
@@ -1072,8 +1079,11 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
           block_for_result ();
           fr = transport_channel_.fetch_msg();
         }
-      Aida::MessageId retid = Aida::MessageId (fr->first_id());
-      if (Aida::msgid_is_error (retid))
+      const uint64_t retmask = msgid_mask (fr->first_id());
+      if (retmask == resultid)
+        break;
+#if 0
+      else if (Aida::msgid_is_error (retmask))
         {
           FieldReader fbr (*fr);
           fbr.skip_header();
@@ -1082,10 +1092,15 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
           warning_printf ("%s: %s", dom.c_str(), msg.c_str());
           delete fr;
         }
-      else if (Aida::msgid_is_result (retid))
-        break;
-      else
+#endif
+      else if (retmask == MSGID_DISCONNECT || retmask == MSGID_EMIT_ONEWAY || retmask == MSGID_EMIT_TWOWAY)
         event_queue_.push_back (fr);
+      else
+        {
+          FieldReader frr (*fb);
+          const uint64_t retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
+          warning_printf ("%s: invalid reply: (%016llx, %016llx%016llx)", STRFUNC, retid, rethh, rethl);
+        }
     }
   blocking_for_sem_ = false;
   return fr;
@@ -1112,7 +1127,7 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (Rapicorn::Aida::MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
@@ -1141,7 +1156,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   return_if (!shandler, false);
   Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_SIGCON, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (Rapicorn::Aida::MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
@@ -1177,6 +1192,7 @@ class ServerConnectionImpl : public ServerConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
   std::unordered_map<ptrdiff_t,uint64_t> addr_map;
   std::vector<ptrdiff_t>                 addr_vector;
+  std::unordered_map<size_t, EmitResultHandler> emit_result_map;
 public:
   explicit              ServerConnectionImpl ();
   virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
@@ -1186,6 +1202,8 @@ public:
   virtual uint64_t      instance2orbid (ptrdiff_t);
   virtual ptrdiff_t     orbid2instance (uint64_t);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
+  virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
+  virtual EmitResultHandler emit_result_handler_pop (size_t id);
 };
 
 ServerConnectionImpl::ServerConnectionImpl ()
@@ -1222,36 +1240,71 @@ ServerConnectionImpl::dispatch ()
     return;
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-  const bool needsresult = msgid_has_result (msgid);
-  const DispatchFunc method = find_method (hashhigh, hashlow);
-  FieldBuffer *fr = NULL;
-  if (AIDA_LIKELY (method))
+  const uint64_t  idmask = msgid_mask (msgid);
+  switch (idmask)
     {
-      fbr.reset (*fb);
-      fr = method (fbr);
-      if (AIDA_LIKELY (fr == fb))
-        fb = NULL;
-      if (fr)
-        {
-          const MessageId retid = MessageId (fr->first_id());
-          if (!needsresult || !msgid_is_result (retid))
-            {
-              warning_printf ("bogus result from method (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
-              delete fr;
-              fr = NULL;
-            }
-        }
+    case MSGID_CONNECT:
+    case MSGID_TWOWAY_CALL:
+    case MSGID_ONEWAY_CALL:
+      {
+        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
+        FieldBuffer *fr = NULL;
+        AIDA_ASSERT (server_method_implementation != NULL);
+        fbr.reset (*fb);
+        fr = server_method_implementation (fbr);
+        if (AIDA_LIKELY (fr == fb))
+          fb = NULL; // prevent deletion
+        if (idmask == MSGID_ONEWAY_CALL)
+          AIDA_ASSERT (fr == NULL);
+        else // MSGID_TWOWAY_CALL
+          {
+            const uint64_t resultmask = msgid_as_result (MessageId (idmask));
+            AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
+            ObjectBroker::post_msg (fr);
+          }
+      }
+      break;
+    case MSGID_EMIT_RESULT:
+      {
+        fbr.skip(); // hashhigh
+        fbr.skip(); // hashlow
+        const uint64_t emit_result_id = fbr.pop_int64();
+        EmitResultHandler emit_result_handler = emit_result_handler_pop (emit_result_id);
+        AIDA_ASSERT (emit_result_handler != NULL);
+        emit_result_handler (fbr);
+      }
+      break;
+    default:
+      {
+        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        warning_printf ("%s: invalid message: (%016lx, %016llx%016llx)", STRFUNC, msgid, hashhigh, hashlow);
+      }
+      break;
     }
-  else
-    warning_printf ("unknown message (%016lx, %016llx%016llx)", msgid, hashhigh, hashlow);
   if (AIDA_UNLIKELY (fb))
     delete fb;
-  if (needsresult)
+}
+
+void
+ServerConnectionImpl::emit_result_handler_add (size_t id, const EmitResultHandler &handler)
+{
+  AIDA_ASSERT (emit_result_map.count (id) == 0);        // PARANOID
+  emit_result_map[id] = handler;
+}
+
+ServerConnectionImpl::EmitResultHandler
+ServerConnectionImpl::emit_result_handler_pop (size_t id)
+{
+  auto it = emit_result_map.find (id);
+  if (AIDA_LIKELY (it != emit_result_map.end()))
     {
-      const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
-      ObjectBroker::post_msg (fr ? fr : FieldBuffer::new_result (receiver_connection, hashhigh, hashlow));
+      EmitResultHandler emit_result_handler = it->second;
+      emit_result_map.erase (it);
+      return emit_result_handler;
     }
+  else
+    return EmitResultHandler();
 }
 
 // == ServerConnection ==

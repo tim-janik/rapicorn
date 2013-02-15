@@ -46,13 +46,17 @@ error (const char *format, ...)
 namespace { // Anon
 namespace __AIDA_Local__ {
 // types
-typedef ServerConnection::MethodRegistry MethodRegistry;
-typedef ServerConnection::MethodEntry MethodEntry;
+typedef ServerConnection::EmitResultHandler EmitResultHandler;
+typedef ServerConnection::MethodRegistry    MethodRegistry;
+typedef ServerConnection::MethodEntry       MethodEntry;
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
   server_connection = ObjectBroker::new_server_connection();
 });
+// EmitResultHandler
+static inline void erhandler_add (size_t id, const EmitResultHandler &function)
+{ return server_connection->emit_result_handler_add (id, function); }
 // objects
 template<class Object> static inline Object* id2obj (uint64_t oid)
 {
@@ -74,11 +78,16 @@ template<class SMH> static inline SMH obj2smh (Rapicorn::Aida::TestServerBase *s
 // messages
 static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
 static inline void add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCON, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
-static inline void add_header1_event  (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_EVENT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
-static inline FieldBuffer* new_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
-{ return ObjectBroker::renew_into_result (fbr, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
+static inline void add_header1_emit   (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
+static inline void add_header2_emit   (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+{ fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id),
+                  server_connection->connection_id(), h, l); }
+static inline FieldBuffer* new_call_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+{ return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
+static inline FieldBuffer* new_connect_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+{ return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
 // slot
 template<class SharedPtr, class R, class... Args> std::function<R (Args...)>
 slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
@@ -163,7 +172,7 @@ public:
   virtual std::string                   on_click () const = 0;
   virtual void                          on_click (const std::string&) = 0;
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_signal;
-  typedef Rapicorn::Aida::Signal<double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Aida::AsyncSignal<double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
   virtual double                        simple_method            ();
@@ -332,17 +341,17 @@ public:
   virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
-  typedef Rapicorn::Aida::Signal<bool ()> Signal_bool_result;
-  typedef Rapicorn::Aida::Signal<int ()> Signal_int32_result;
-  typedef Rapicorn::Aida::Signal<Rapicorn::Aida::int64_t ()> Signal_int64_result;
-  typedef Rapicorn::Aida::Signal<double ()> Signal_float64_result;
-  typedef Rapicorn::Aida::Signal<std::string ()> Signal_string_result;
-  typedef Rapicorn::Aida::Signal<QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Aida::Signal<QuickRecord ()> Signal_record_result;
-  typedef Rapicorn::Aida::Signal<QuickSequence ()> Signal_sequence_result;
-  typedef Rapicorn::Aida::Signal<I_GrandChild_Interface* ()> Signal_interface_result;
-  typedef Rapicorn::Aida::Signal<Rapicorn::Aida::Any ()> Signal_any_result;
-  typedef Rapicorn::Aida::Signal<I_SignalTestInterface_Interface* ()> Signal_self_result;
+  typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
+  typedef Rapicorn::Aida::AsyncSignal<int ()> Signal_int32_result;
+  typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::int64_t ()> Signal_int64_result;
+  typedef Rapicorn::Aida::AsyncSignal<double ()> Signal_float64_result;
+  typedef Rapicorn::Aida::AsyncSignal<std::string ()> Signal_string_result;
+  typedef Rapicorn::Aida::AsyncSignal<QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Aida::AsyncSignal<QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Aida::AsyncSignal<QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Aida::AsyncSignal<I_GrandChild_Interface* ()> Signal_interface_result;
+  typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::Any ()> Signal_any_result;
+  typedef Rapicorn::Aida::AsyncSignal<I_SignalTestInterface_Interface* ()> Signal_self_result;
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_arg;
   typedef Rapicorn::Aida::Signal<void (bool b)> Signal_bool_arg;
   typedef Rapicorn::Aida::Signal<void (int i)> Signal_int32_arg;
@@ -484,7 +493,7 @@ public:
   virtual void                          on_click3  (const std::string&) = 0;
   virtual ClickType                     click_type () const = 0;
   virtual void                          click_type (ClickType) = 0;
-  typedef Rapicorn::Aida::Signal<bool (), Rapicorn::Aida::CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_check_activate;
   typedef Rapicorn::Aida::Signal<void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
@@ -1337,25 +1346,25 @@ I_SoundModule_Interface::_property_list ()
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__FirstInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_FirstInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_FirstInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1374,38 +1383,38 @@ namespace OtherNamespace {
 
 namespace InterfaceTests {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__UIWidgetArea (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   bool  rval = self->dummy ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1416,22 +1425,22 @@ __AIDA_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1442,22 +1451,22 @@ __AIDA_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   double  rval = self->simple_method ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1465,14 +1474,14 @@ __AIDA_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
   int  arg_n;
   fbr >>= arg_n;
   double  rval = self->single_arg (arg_n);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1480,14 +1489,14 @@ __AIDA_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
   int  arg_n;
   fbr >>= arg_n;
   double  rval = self->single_arg2 (arg_n);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1497,14 +1506,14 @@ __AIDA_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
   double  arg_r;
   fbr >>= arg_r;
   double  rval = self->two_args (arg_n, arg_r);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1514,14 +1523,14 @@ __AIDA_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
   double  arg_r;
   fbr >>= arg_r;
   double  rval = self->two_args2 (arg_n, arg_r);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 6) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 6);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1539,14 +1548,14 @@ __AIDA_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
   double  arg_y;
   fbr >>= arg_y;
   double  rval = self->multi_args (arg_b, arg_n, arg_r, arg_i, arg_s, arg_y);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1556,14 +1565,14 @@ __AIDA_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetArea_Interface *arg_ba2;
   fbr >>= arg_ba2;
   double  rval = self->self_method (*arg_ba1, *arg_ba2);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1572,22 +1581,22 @@ __AIDA_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click2out ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1612,16 +1621,16 @@ public:
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
     fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1636,7 +1645,7 @@ __AIDA_signal__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__UIWidgetArea__void_signal::SharedPtr sp (new __AIDA_Closure__UIWidgetArea__void_signal (handler_id));
     result = self->sig_void_signal() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
   rb <<= result;
   return &rb;
 }
@@ -1652,24 +1661,34 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static double
+  static std::future<double>
   handler (const SharedPtr &sp,
-I_UIWidgetArea_Interface &arg_ba1,
+           I_UIWidgetArea_Interface &arg_ba1,
            int arg_someint)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<double>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      double  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     fb <<= &arg_ba1;
     fb <<= arg_someint;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_UIWidgetArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1682,24 +1701,24 @@ __AIDA_signal__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
     result = self->sig_sample_signal() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__UIWidgetArea__sample_signal::SharedPtr sp (new __AIDA_Closure__UIWidgetArea__sample_signal (handler_id));
-    result = self->sig_sample_signal() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_sample_signal().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
   rb <<= result;
   return &rb;
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Parent (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Parent (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Parent_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -1707,16 +1726,16 @@ __AIDA_types__Parent (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Child (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Child (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Child_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -1724,16 +1743,16 @@ __AIDA_types__Child (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Descendant (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Descendant_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -1741,16 +1760,16 @@ __AIDA_types__Descendant (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_GrandChild_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -1758,25 +1777,25 @@ __AIDA_types__GrandChild (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__QuickIface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__QuickIface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_QuickIface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_QuickIface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1788,25 +1807,25 @@ __AIDA_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__MethodTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 0) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1815,9 +1834,9 @@ __AIDA_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader 
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1827,14 +1846,14 @@ __AIDA_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader
   bool  arg_optval;
   fbr >>= arg_optval;
   bool  rval = self->method_with_bools (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1844,14 +1863,14 @@ __AIDA_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReade
   int  arg_optval;
   fbr >>= arg_optval;
   int  rval = self->method_with_ints32 (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1861,14 +1880,14 @@ __AIDA_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReade
   Rapicorn::Aida::int64_t  arg_optval;
   fbr >>= arg_optval;
   Rapicorn::Aida::int64_t  rval = self->method_with_ints64 (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1878,14 +1897,14 @@ __AIDA_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReade
   double  arg_optval;
   fbr >>= arg_optval;
   double  rval = self->method_with_floats (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1895,14 +1914,14 @@ __AIDA_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReade
   std::string  arg_optval;
   fbr >>= arg_optval;
   std::string  rval = self->method_with_string (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1912,14 +1931,14 @@ __AIDA_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader 
   QuickEnum  arg_optval;
   fbr >>= arg_optval;
   QuickEnum  rval = self->method_with_enum (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1929,14 +1948,14 @@ __AIDA_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReade
   QuickRecord  arg_optval;
   fbr >>= arg_optval;
   QuickRecord  rval = self->method_with_record (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1946,14 +1965,14 @@ __AIDA_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldRea
   QuickSequence  arg_optval;
   fbr >>= arg_optval;
   QuickSequence  rval = self->method_with_sequence (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1963,14 +1982,14 @@ __AIDA_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldRe
   I_GrandChild_Interface *arg_optval;
   fbr >>= arg_optval;
   I_GrandChild_Interface *rval = self->method_with_interface (*arg_input, *arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1980,14 +1999,14 @@ __AIDA_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader 
   Rapicorn::Aida::Any  arg_optval;
   fbr >>= arg_optval;
   Rapicorn::Aida::Any  rval = self->method_with_anys (arg_input, arg_optval);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_MethodTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -1997,22 +2016,22 @@ __AIDA_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldR
   I_QuickIface_Interface *arg_iface0;
   fbr >>= arg_iface0;
   I_QuickIface_Interface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
   rb <<= rval;
   return &rb;
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__SignalTestInterface (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -2033,16 +2052,16 @@ public:
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
     fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2057,7 +2076,7 @@ __AIDA_signal__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &fb
     __AIDA_Closure__SignalTestInterface__void_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__void_result (handler_id));
     result = self->sig_void_result() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
   rb <<= result;
   return &rb;
 }
@@ -2073,20 +2092,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static bool
+  static std::future<bool>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<bool>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      bool  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2099,9 +2128,9 @@ __AIDA_signal__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &fb
     result = self->sig_bool_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__bool_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__bool_result (handler_id));
-    result = self->sig_bool_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_bool_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
   rb <<= result;
   return &rb;
 }
@@ -2117,20 +2146,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static int
+  static std::future<int>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<int>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      int  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2143,9 +2182,9 @@ __AIDA_signal__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &f
     result = self->sig_int32_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__int32_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int32_result (handler_id));
-    result = self->sig_int32_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_int32_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
   rb <<= result;
   return &rb;
 }
@@ -2161,20 +2200,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static Rapicorn::Aida::int64_t
+  static std::future<Rapicorn::Aida::int64_t>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<Rapicorn::Aida::int64_t>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      Rapicorn::Aida::int64_t  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2187,9 +2236,9 @@ __AIDA_signal__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &f
     result = self->sig_int64_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__int64_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int64_result (handler_id));
-    result = self->sig_int64_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_int64_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
   rb <<= result;
   return &rb;
 }
@@ -2205,20 +2254,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static double
+  static std::future<double>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<double>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      double  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2231,9 +2290,9 @@ __AIDA_signal__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader 
     result = self->sig_float64_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__float64_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__float64_result (handler_id));
-    result = self->sig_float64_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_float64_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
   rb <<= result;
   return &rb;
 }
@@ -2249,20 +2308,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static std::string
+  static std::future<std::string>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<std::string>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      std::string  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return "";
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2275,9 +2344,9 @@ __AIDA_signal__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader &
     result = self->sig_string_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__string_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__string_result (handler_id));
-    result = self->sig_string_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_string_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
   rb <<= result;
   return &rb;
 }
@@ -2293,20 +2362,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static QuickEnum
+  static std::future<QuickEnum>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<QuickEnum>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      QuickEnum  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return QuickEnum (0);
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2319,9 +2398,9 @@ __AIDA_signal__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &fb
     result = self->sig_enum_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__enum_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__enum_result (handler_id));
-    result = self->sig_enum_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_enum_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
   rb <<= result;
   return &rb;
 }
@@ -2337,20 +2416,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static QuickRecord
+  static std::future<QuickRecord>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<QuickRecord>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      QuickRecord  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return QuickRecord();
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2363,9 +2452,9 @@ __AIDA_signal__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader &
     result = self->sig_record_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__record_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__record_result (handler_id));
-    result = self->sig_record_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_record_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
   rb <<= result;
   return &rb;
 }
@@ -2381,20 +2470,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static QuickSequence
+  static std::future<QuickSequence>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<QuickSequence>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      QuickSequence  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return QuickSequence();
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2407,9 +2506,9 @@ __AIDA_signal__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReader
     result = self->sig_sequence_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__sequence_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__sequence_result (handler_id));
-    result = self->sig_sequence_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_sequence_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
   rb <<= result;
   return &rb;
 }
@@ -2425,20 +2524,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static I_GrandChild_Interface*
+  static std::future<I_GrandChild_Interface*>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<I_GrandChild_Interface*>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      I_GrandChild_Interface *retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2451,9 +2560,9 @@ __AIDA_signal__SignalTestInterface__interface_result (Rapicorn::Aida::FieldReade
     result = self->sig_interface_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__interface_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__interface_result (handler_id));
-    result = self->sig_interface_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_interface_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
   rb <<= result;
   return &rb;
 }
@@ -2469,20 +2578,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static Rapicorn::Aida::Any
+  static std::future<Rapicorn::Aida::Any>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<Rapicorn::Aida::Any>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      Rapicorn::Aida::Any  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return Rapicorn::Aida::Any();
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2495,9 +2614,9 @@ __AIDA_signal__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fbr
     result = self->sig_any_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__any_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__any_result (handler_id));
-    result = self->sig_any_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_any_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
   rb <<= result;
   return &rb;
 }
@@ -2513,20 +2632,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static I_SignalTestInterface_Interface*
+  static std::future<I_SignalTestInterface_Interface*>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<I_SignalTestInterface_Interface*>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      I_SignalTestInterface_Interface *retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2539,9 +2668,9 @@ __AIDA_signal__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &fb
     result = self->sig_self_result() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__SignalTestInterface__self_result::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__self_result (handler_id));
-    result = self->sig_self_result() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_self_result().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
   rb <<= result;
   return &rb;
 }
@@ -2560,16 +2689,16 @@ public:
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
     fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2584,7 +2713,7 @@ __AIDA_signal__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__void_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__void_arg (handler_id));
     result = self->sig_void_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
   rb <<= result;
   return &rb;
 }
@@ -2602,19 +2731,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-bool arg_b)
+           bool arg_b)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_b;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2629,7 +2758,7 @@ __AIDA_signal__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__bool_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__bool_arg (handler_id));
     result = self->sig_bool_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
   rb <<= result;
   return &rb;
 }
@@ -2647,19 +2776,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-int arg_i)
+           int arg_i)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2674,7 +2803,7 @@ __AIDA_signal__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__int32_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int32_arg (handler_id));
     result = self->sig_int32_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
   rb <<= result;
   return &rb;
 }
@@ -2692,19 +2821,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-Rapicorn::Aida::int64_t arg_i)
+           Rapicorn::Aida::int64_t arg_i)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2719,7 +2848,7 @@ __AIDA_signal__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__int64_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__int64_arg (handler_id));
     result = self->sig_int64_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
   rb <<= result;
   return &rb;
 }
@@ -2737,19 +2866,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-double arg_f)
+           double arg_f)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
     fb <<= sp->handler_id_;
     fb <<= arg_f;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2764,7 +2893,7 @@ __AIDA_signal__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &fb
     __AIDA_Closure__SignalTestInterface__float64_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__float64_arg (handler_id));
     result = self->sig_float64_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
   rb <<= result;
   return &rb;
 }
@@ -2782,19 +2911,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const std::string &arg_s)
+           const std::string &arg_s)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_s;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2809,7 +2938,7 @@ __AIDA_signal__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fbr
     __AIDA_Closure__SignalTestInterface__string_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__string_arg (handler_id));
     result = self->sig_string_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
   rb <<= result;
   return &rb;
 }
@@ -2827,19 +2956,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-QuickEnum arg_e)
+           QuickEnum arg_e)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_e;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2854,7 +2983,7 @@ __AIDA_signal__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__enum_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__enum_arg (handler_id));
     result = self->sig_enum_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
   rb <<= result;
   return &rb;
 }
@@ -2872,19 +3001,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const QuickRecord &arg_r)
+           const QuickRecord &arg_r)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
     fb <<= sp->handler_id_;
     fb <<= arg_r;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2899,7 +3028,7 @@ __AIDA_signal__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fbr
     __AIDA_Closure__SignalTestInterface__record_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__record_arg (handler_id));
     result = self->sig_record_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
   rb <<= result;
   return &rb;
 }
@@ -2917,19 +3046,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const QuickSequence &arg_s)
+           const QuickSequence &arg_s)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_s;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2944,7 +3073,7 @@ __AIDA_signal__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &f
     __AIDA_Closure__SignalTestInterface__sequence_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__sequence_arg (handler_id));
     result = self->sig_sequence_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
   rb <<= result;
   return &rb;
 }
@@ -2962,19 +3091,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_GrandChild_Interface &arg_i)
+           I_GrandChild_Interface &arg_i)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
     fb <<= sp->handler_id_;
     fb <<= &arg_i;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -2989,7 +3118,7 @@ __AIDA_signal__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader &
     __AIDA_Closure__SignalTestInterface__interface_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__interface_arg (handler_id));
     result = self->sig_interface_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
   rb <<= result;
   return &rb;
 }
@@ -3007,19 +3136,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-const Rapicorn::Aida::Any &arg_a)
+           const Rapicorn::Aida::Any &arg_a)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
     fb <<= sp->handler_id_;
     fb <<= arg_a;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3034,7 +3163,7 @@ __AIDA_signal__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__any_arg::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__any_arg (handler_id));
     result = self->sig_any_arg() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
   rb <<= result;
   return &rb;
 }
@@ -3052,19 +3181,19 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_SignalTestInterface_Interface &arg_self_)
+           I_SignalTestInterface_Interface &arg_self_)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
     fb <<= sp->handler_id_;
     fb <<= &arg_self_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_SignalTestInterface_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3079,22 +3208,22 @@ __AIDA_signal__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__SignalTestInterface__self_args::SharedPtr sp (new __AIDA_Closure__SignalTestInterface__self_args (handler_id));
     result = self->sig_self_args() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
   rb <<= result;
   return &rb;
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__ChildInheritingSignals (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ChildInheritingSignals_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -3114,15 +3243,15 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-I_ChildInheritingSignals_Interface &arg_c,
+           I_ChildInheritingSignals_Interface &arg_c,
            I_SignalTestInterface_Interface &arg_p,
            const Rapicorn::Aida::Any &arg_a,
            int arg_i,
            const QuickRecord &arg_r,
            const QuickSequence &arg_s)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
     fb <<= sp->handler_id_;
     fb <<= &arg_c;
     fb <<= &arg_p;
@@ -3134,9 +3263,9 @@ I_ChildInheritingSignals_Interface &arg_c,
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ChildInheritingSignals_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3151,22 +3280,22 @@ __AIDA_signal__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReader
     __AIDA_Closure__ChildInheritingSignals__child_signal::SharedPtr sp (new __AIDA_Closure__ChildInheritingSignals__child_signal (handler_id));
     result = self->sig_child_signal() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
   rb <<= result;
   return &rb;
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_AnotherChild_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -3174,38 +3303,38 @@ __AIDA_types__AnotherChild (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__PropertyTester (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   bool  rval = self->bool_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3216,22 +3345,22 @@ __AIDA_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   int  rval = self->int32_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3242,22 +3371,22 @@ __AIDA_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::int64_t  rval = self->int64_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3268,22 +3397,22 @@ __AIDA_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   double  rval = self->float64_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3294,22 +3423,22 @@ __AIDA_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->string_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3320,22 +3449,22 @@ __AIDA_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   QuickEnum  rval = self->enum_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3346,22 +3475,22 @@ __AIDA_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   QuickRecord  rval = self->record_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3372,22 +3501,22 @@ __AIDA_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   QuickSequence  rval = self->sequence_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3398,22 +3527,22 @@ __AIDA_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   I_GrandChild_Interface *rval = self->interface_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3424,22 +3553,22 @@ __AIDA_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   I_PropertyTester_Interface *rval = self->self_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3450,22 +3579,22 @@ __AIDA_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::Any  rval = self->any_prop ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PropertyTester_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3480,38 +3609,38 @@ __AIDA_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
 
 namespace RapicornAidaTest {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__ButtonArea (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3522,22 +3651,22 @@ __AIDA_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click2 ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3548,22 +3677,22 @@ __AIDA_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click3 ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3574,22 +3703,22 @@ __AIDA_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   ClickType  rval = self->click_type ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3611,20 +3740,30 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static bool
+  static std::future<bool>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
     fb <<= sp->handler_id_;
+    auto promise = std::make_shared<std::promise<bool>> ();
+    auto future = promise->get_future();
+    const size_t lambda_id = 1 + size_t (promise.get());
+    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
+      bool  retval;
+      frr >>= retval;
+      promise->set_value (retval);
+    };
+    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    fb <<= lambda_id;
     __AIDA_Local__::post_msg (&fb);
-    return 0;
+    return future;
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3637,9 +3776,9 @@ __AIDA_signal__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
     result = self->sig_check_activate() -= signal_connection;
   if (handler_id) {
     __AIDA_Closure__ButtonArea__check_activate::SharedPtr sp (new __AIDA_Closure__ButtonArea__check_activate (handler_id));
-    result = self->sig_check_activate() += __AIDA_Local__::slot (sp, sp->handler);
+    result = self->sig_check_activate().connect_future (__AIDA_Local__::slot (sp, sp->handler));
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
   rb <<= result;
   return &rb;
 }
@@ -3658,16 +3797,16 @@ public:
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0);
-    __AIDA_Local__::add_header1_event (fb, sp->handler_id_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+    Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
     fb <<= sp->handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
 };
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
+__aida_connect__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 2) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
   I_ButtonArea_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3682,31 +3821,31 @@ __AIDA_signal__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
     __AIDA_Closure__ButtonArea__activate::SharedPtr sp (new __AIDA_Closure__ButtonArea__activate (handler_id));
     result = self->sig_activate() += __AIDA_Local__::slot (sp, sp->handler);
   }
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_connect_result (fbr, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
   rb <<= result;
   return &rb;
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__PureMethods (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__PureMethods (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_PureMethods_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_PureMethods_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3714,7 +3853,7 @@ __AIDA_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
   double  arg_f;
   fbr >>= arg_f;
   int  rval = self->pure_method (arg_f);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
   rb <<= rval;
   return &rb;
 }
@@ -3723,25 +3862,25 @@ __AIDA_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
 
 namespace Other {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__NameTests (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__NameTests (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_NameTests_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
+__aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 3) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 3);
   I_NameTests_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3760,38 +3899,38 @@ __AIDA_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &
 
 namespace BseTest {
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__Compressor (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__Compressor (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   double  rval = self->threshold ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_Compressor_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3802,22 +3941,22 @@ __AIDA_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
+__aida_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_Compressor_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   double  rval = self->ratio ();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
   rb <<= rval;
   return &rb;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
+__aida_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
   I_Compressor_Interface *self;
   fbr.skip_header();
   fbr >>= self;
@@ -3829,16 +3968,16 @@ __AIDA_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
+__aida_typesof__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 {
-  if (fbr.remaining() != 3 + 1) return __AIDA_Local__::error ("invalid number of arguments");
+  AIDA_ASSERT (fbr.remaining() == 3 + 1);
   I_SoundModule_Interface *self;
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   Rapicorn::Aida::TypeHashList thl;
   self->_list_types (thl);
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_result (fbr, 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, 1 + 2 * thl.size());
+  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
@@ -3846,116 +3985,116 @@ __AIDA_types__SoundModule (Rapicorn::Aida::FieldReader &fbr)
 }
 
 static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
-  { 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, MandatoryNamespace::__AIDA_types__FirstInterface, },
-  { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__AIDA_call__FirstInterface__void_func, },
-  { 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, InterfaceTests::__AIDA_types__UIWidgetArea, },
-  { 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL, InterfaceTests::__AIDA_get__UIWidgetArea__dummy, },
-  { 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL, InterfaceTests::__AIDA_set__UIWidgetArea__dummy, },
-  { 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL, InterfaceTests::__AIDA_get__UIWidgetArea__on_click, },
-  { 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL, InterfaceTests::__AIDA_set__UIWidgetArea__on_click, },
-  { 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL, InterfaceTests::__AIDA_call__UIWidgetArea__simple_method, },
-  { 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL, InterfaceTests::__AIDA_call__UIWidgetArea__single_arg, },
-  { 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL, InterfaceTests::__AIDA_call__UIWidgetArea__single_arg2, },
-  { 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL, InterfaceTests::__AIDA_call__UIWidgetArea__two_args, },
-  { 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL, InterfaceTests::__AIDA_call__UIWidgetArea__two_args2, },
-  { 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL, InterfaceTests::__AIDA_call__UIWidgetArea__multi_args, },
-  { 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL, InterfaceTests::__AIDA_call__UIWidgetArea__self_method, },
-  { 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL, InterfaceTests::__AIDA_call__UIWidgetArea__void_method, },
-  { 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL, InterfaceTests::__AIDA_call__UIWidgetArea__on_click2out, },
-  { 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL, InterfaceTests::__AIDA_call__UIWidgetArea__on_click2in, },
-  { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__AIDA_signal__UIWidgetArea__void_signal, },
-  { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__AIDA_signal__UIWidgetArea__sample_signal, },
-  { 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, InterfaceTests::__AIDA_types__Parent, },
-  { 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, InterfaceTests::__AIDA_types__Child, },
-  { 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, InterfaceTests::__AIDA_types__Descendant, },
-  { 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, InterfaceTests::__AIDA_types__GrandChild, },
-  { 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, InterfaceTests::__AIDA_types__QuickIface, },
-  { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__AIDA_call__QuickIface__simple_function, },
-  { 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, InterfaceTests::__AIDA_types__MethodTestInterface, },
-  { 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_void, },
-  { 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_bools, },
-  { 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_ints32, },
-  { 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_ints64, },
-  { 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_floats, },
-  { 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_string, },
-  { 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_enum, },
-  { 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_record, },
-  { 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_sequence, },
-  { 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_interface, },
-  { 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_anys, },
-  { 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL, InterfaceTests::__AIDA_call__MethodTestInterface__method_with_quickiface, },
-  { 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, InterfaceTests::__AIDA_types__SignalTestInterface, },
-  { 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, InterfaceTests::__AIDA_signal__SignalTestInterface__void_result, },
-  { 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, InterfaceTests::__AIDA_signal__SignalTestInterface__bool_result, },
-  { 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int32_result, },
-  { 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int64_result, },
-  { 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__float64_result, },
-  { 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__string_result, },
-  { 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, InterfaceTests::__AIDA_signal__SignalTestInterface__enum_result, },
-  { 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__record_result, },
-  { 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__sequence_result, },
-  { 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__interface_result, },
-  { 0x296163d4220985ceULL, 0x40daacab4a841093ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__any_result, },
-  { 0x35828273200534f7ULL, 0x72873f1374d6093bULL, InterfaceTests::__AIDA_signal__SignalTestInterface__self_result, },
-  { 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, InterfaceTests::__AIDA_signal__SignalTestInterface__void_arg, },
-  { 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__bool_arg, },
-  { 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int32_arg, },
-  { 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__int64_arg, },
-  { 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, InterfaceTests::__AIDA_signal__SignalTestInterface__float64_arg, },
-  { 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__string_arg, },
-  { 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__enum_arg, },
-  { 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, InterfaceTests::__AIDA_signal__SignalTestInterface__record_arg, },
-  { 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__sequence_arg, },
-  { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__interface_arg, },
-  { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__AIDA_signal__SignalTestInterface__any_arg, },
-  { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__AIDA_signal__SignalTestInterface__self_args, },
-  { 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, InterfaceTests::__AIDA_types__ChildInheritingSignals, },
-  { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__AIDA_signal__ChildInheritingSignals__child_signal, },
-  { 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, InterfaceTests::__AIDA_types__AnotherChild, },
-  { 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, InterfaceTests::__AIDA_types__PropertyTester, },
-  { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__AIDA_get__PropertyTester__bool_prop, },
-  { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__AIDA_set__PropertyTester__bool_prop, },
-  { 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL, InterfaceTests::__AIDA_get__PropertyTester__int32_prop, },
-  { 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL, InterfaceTests::__AIDA_set__PropertyTester__int32_prop, },
-  { 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL, InterfaceTests::__AIDA_get__PropertyTester__int64_prop, },
-  { 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL, InterfaceTests::__AIDA_set__PropertyTester__int64_prop, },
-  { 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL, InterfaceTests::__AIDA_get__PropertyTester__float64_prop, },
-  { 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL, InterfaceTests::__AIDA_set__PropertyTester__float64_prop, },
-  { 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL, InterfaceTests::__AIDA_get__PropertyTester__string_prop, },
-  { 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL, InterfaceTests::__AIDA_set__PropertyTester__string_prop, },
-  { 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL, InterfaceTests::__AIDA_get__PropertyTester__enum_prop, },
-  { 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL, InterfaceTests::__AIDA_set__PropertyTester__enum_prop, },
-  { 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL, InterfaceTests::__AIDA_get__PropertyTester__record_prop, },
-  { 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL, InterfaceTests::__AIDA_set__PropertyTester__record_prop, },
-  { 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL, InterfaceTests::__AIDA_get__PropertyTester__sequence_prop, },
-  { 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL, InterfaceTests::__AIDA_set__PropertyTester__sequence_prop, },
-  { 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL, InterfaceTests::__AIDA_get__PropertyTester__interface_prop, },
-  { 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL, InterfaceTests::__AIDA_set__PropertyTester__interface_prop, },
-  { 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL, InterfaceTests::__AIDA_get__PropertyTester__self_prop, },
-  { 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL, InterfaceTests::__AIDA_set__PropertyTester__self_prop, },
-  { 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL, InterfaceTests::__AIDA_get__PropertyTester__any_prop, },
-  { 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL, InterfaceTests::__AIDA_set__PropertyTester__any_prop, },
-  { 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, RapicornAidaTest::__AIDA_types__ButtonArea, },
-  { 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click, },
-  { 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click, },
-  { 0x1b448d91990181daULL, 0x9751c08ae956c729ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click2, },
-  { 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click2, },
-  { 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL, RapicornAidaTest::__AIDA_get__ButtonArea__on_click3, },
-  { 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL, RapicornAidaTest::__AIDA_set__ButtonArea__on_click3, },
-  { 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL, RapicornAidaTest::__AIDA_get__ButtonArea__click_type, },
-  { 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL, RapicornAidaTest::__AIDA_set__ButtonArea__click_type, },
-  { 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, RapicornAidaTest::__AIDA_signal__ButtonArea__check_activate, },
-  { 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, RapicornAidaTest::__AIDA_signal__ButtonArea__activate, },
-  { 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, RapicornAidaTest::__AIDA_types__PureMethods, },
-  { 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL, RapicornAidaTest::__AIDA_call__PureMethods__pure_method, },
-  { 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, Other::__AIDA_types__NameTests, },
-  { 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL, Other::__AIDA_call__NameTests__args_from_other_namespace, },
-  { 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, BseTest::__AIDA_types__Compressor, },
-  { 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL, BseTest::__AIDA_get__Compressor__threshold, },
-  { 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL, BseTest::__AIDA_set__Compressor__threshold, },
-  { 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL, BseTest::__AIDA_get__Compressor__ratio, },
-  { 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL, BseTest::__AIDA_set__Compressor__ratio, },
-  { 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, BseTest::__AIDA_types__SoundModule, },
+  { 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL, MandatoryNamespace::__aida_typesof__FirstInterface, },
+  { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__aida_call__FirstInterface__void_func, },
+  { 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL, InterfaceTests::__aida_typesof__UIWidgetArea, },
+  { 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL, InterfaceTests::__aida_get__UIWidgetArea__dummy, },
+  { 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL, InterfaceTests::__aida_set__UIWidgetArea__dummy, },
+  { 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL, InterfaceTests::__aida_get__UIWidgetArea__on_click, },
+  { 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL, InterfaceTests::__aida_set__UIWidgetArea__on_click, },
+  { 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL, InterfaceTests::__aida_call__UIWidgetArea__simple_method, },
+  { 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL, InterfaceTests::__aida_call__UIWidgetArea__single_arg, },
+  { 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL, InterfaceTests::__aida_call__UIWidgetArea__single_arg2, },
+  { 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL, InterfaceTests::__aida_call__UIWidgetArea__two_args, },
+  { 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL, InterfaceTests::__aida_call__UIWidgetArea__two_args2, },
+  { 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL, InterfaceTests::__aida_call__UIWidgetArea__multi_args, },
+  { 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL, InterfaceTests::__aida_call__UIWidgetArea__self_method, },
+  { 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL, InterfaceTests::__aida_call__UIWidgetArea__void_method, },
+  { 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL, InterfaceTests::__aida_call__UIWidgetArea__on_click2out, },
+  { 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL, InterfaceTests::__aida_call__UIWidgetArea__on_click2in, },
+  { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__aida_connect__UIWidgetArea__void_signal, },
+  { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__aida_connect__UIWidgetArea__sample_signal, },
+  { 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL, InterfaceTests::__aida_typesof__Parent, },
+  { 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL, InterfaceTests::__aida_typesof__Child, },
+  { 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL, InterfaceTests::__aida_typesof__Descendant, },
+  { 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL, InterfaceTests::__aida_typesof__GrandChild, },
+  { 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL, InterfaceTests::__aida_typesof__QuickIface, },
+  { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__aida_call__QuickIface__simple_function, },
+  { 0x61574837fdd015afULL, 0x893c7eca775ea115ULL, InterfaceTests::__aida_typesof__MethodTestInterface, },
+  { 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_void, },
+  { 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_bools, },
+  { 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_ints32, },
+  { 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_ints64, },
+  { 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_floats, },
+  { 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_string, },
+  { 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_enum, },
+  { 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_record, },
+  { 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_sequence, },
+  { 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_interface, },
+  { 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_anys, },
+  { 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_quickiface, },
+  { 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL, InterfaceTests::__aida_typesof__SignalTestInterface, },
+  { 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, InterfaceTests::__aida_connect__SignalTestInterface__void_result, },
+  { 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, InterfaceTests::__aida_connect__SignalTestInterface__bool_result, },
+  { 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, InterfaceTests::__aida_connect__SignalTestInterface__int32_result, },
+  { 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, InterfaceTests::__aida_connect__SignalTestInterface__int64_result, },
+  { 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, InterfaceTests::__aida_connect__SignalTestInterface__float64_result, },
+  { 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, InterfaceTests::__aida_connect__SignalTestInterface__string_result, },
+  { 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, InterfaceTests::__aida_connect__SignalTestInterface__enum_result, },
+  { 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, InterfaceTests::__aida_connect__SignalTestInterface__record_result, },
+  { 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, InterfaceTests::__aida_connect__SignalTestInterface__sequence_result, },
+  { 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_result, },
+  { 0x296163d4220985ceULL, 0x40daacab4a841093ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_result, },
+  { 0x35828273200534f7ULL, 0x72873f1374d6093bULL, InterfaceTests::__aida_connect__SignalTestInterface__self_result, },
+  { 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, InterfaceTests::__aida_connect__SignalTestInterface__void_arg, },
+  { 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, InterfaceTests::__aida_connect__SignalTestInterface__bool_arg, },
+  { 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, InterfaceTests::__aida_connect__SignalTestInterface__int32_arg, },
+  { 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, InterfaceTests::__aida_connect__SignalTestInterface__int64_arg, },
+  { 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, InterfaceTests::__aida_connect__SignalTestInterface__float64_arg, },
+  { 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, InterfaceTests::__aida_connect__SignalTestInterface__string_arg, },
+  { 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, InterfaceTests::__aida_connect__SignalTestInterface__enum_arg, },
+  { 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, InterfaceTests::__aida_connect__SignalTestInterface__record_arg, },
+  { 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, InterfaceTests::__aida_connect__SignalTestInterface__sequence_arg, },
+  { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_arg, },
+  { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_arg, },
+  { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__aida_connect__SignalTestInterface__self_args, },
+  { 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL, InterfaceTests::__aida_typesof__ChildInheritingSignals, },
+  { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__aida_connect__ChildInheritingSignals__child_signal, },
+  { 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL, InterfaceTests::__aida_typesof__AnotherChild, },
+  { 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL, InterfaceTests::__aida_typesof__PropertyTester, },
+  { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__aida_get__PropertyTester__bool_prop, },
+  { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__aida_set__PropertyTester__bool_prop, },
+  { 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL, InterfaceTests::__aida_get__PropertyTester__int32_prop, },
+  { 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL, InterfaceTests::__aida_set__PropertyTester__int32_prop, },
+  { 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL, InterfaceTests::__aida_get__PropertyTester__int64_prop, },
+  { 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL, InterfaceTests::__aida_set__PropertyTester__int64_prop, },
+  { 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL, InterfaceTests::__aida_get__PropertyTester__float64_prop, },
+  { 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL, InterfaceTests::__aida_set__PropertyTester__float64_prop, },
+  { 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL, InterfaceTests::__aida_get__PropertyTester__string_prop, },
+  { 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL, InterfaceTests::__aida_set__PropertyTester__string_prop, },
+  { 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL, InterfaceTests::__aida_get__PropertyTester__enum_prop, },
+  { 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL, InterfaceTests::__aida_set__PropertyTester__enum_prop, },
+  { 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL, InterfaceTests::__aida_get__PropertyTester__record_prop, },
+  { 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL, InterfaceTests::__aida_set__PropertyTester__record_prop, },
+  { 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL, InterfaceTests::__aida_get__PropertyTester__sequence_prop, },
+  { 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL, InterfaceTests::__aida_set__PropertyTester__sequence_prop, },
+  { 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL, InterfaceTests::__aida_get__PropertyTester__interface_prop, },
+  { 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL, InterfaceTests::__aida_set__PropertyTester__interface_prop, },
+  { 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL, InterfaceTests::__aida_get__PropertyTester__self_prop, },
+  { 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL, InterfaceTests::__aida_set__PropertyTester__self_prop, },
+  { 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL, InterfaceTests::__aida_get__PropertyTester__any_prop, },
+  { 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL, InterfaceTests::__aida_set__PropertyTester__any_prop, },
+  { 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL, RapicornAidaTest::__aida_typesof__ButtonArea, },
+  { 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click, },
+  { 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL, RapicornAidaTest::__aida_set__ButtonArea__on_click, },
+  { 0x1b448d91990181daULL, 0x9751c08ae956c729ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click2, },
+  { 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL, RapicornAidaTest::__aida_set__ButtonArea__on_click2, },
+  { 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click3, },
+  { 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL, RapicornAidaTest::__aida_set__ButtonArea__on_click3, },
+  { 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL, RapicornAidaTest::__aida_get__ButtonArea__click_type, },
+  { 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL, RapicornAidaTest::__aida_set__ButtonArea__click_type, },
+  { 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, RapicornAidaTest::__aida_connect__ButtonArea__check_activate, },
+  { 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, RapicornAidaTest::__aida_connect__ButtonArea__activate, },
+  { 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL, RapicornAidaTest::__aida_typesof__PureMethods, },
+  { 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL, RapicornAidaTest::__aida_call__PureMethods__pure_method, },
+  { 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL, Other::__aida_typesof__NameTests, },
+  { 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL, Other::__aida_call__NameTests__args_from_other_namespace, },
+  { 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL, BseTest::__aida_typesof__Compressor, },
+  { 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL, BseTest::__aida_get__Compressor__threshold, },
+  { 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL, BseTest::__aida_set__Compressor__threshold, },
+  { 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL, BseTest::__aida_get__Compressor__ratio, },
+  { 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL, BseTest::__aida_set__Compressor__ratio, },
+  { 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL, BseTest::__aida_typesof__SoundModule, },
 };
 static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 

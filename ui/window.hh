@@ -12,14 +12,16 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   friend class  ItemImpl;
   EventLoop            &m_loop;
   ScreenWindow*         m_screen_window;
+  EventContext          m_last_event_context;
+  Signal_commands::Emission *commands_emission_;
+  String                     last_command_;
+  vector<ItemImpl*>     m_last_entered_children;
+  ScreenWindow::Config  m_config;
+  uint                  m_notify_displayed_id;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   uint                  m_pending_win_size : 1;
   uint                  m_pending_expose : 1;
-  EventContext          m_last_event_context;
-  vector<ItemImpl*>     m_last_entered_children;
-  ScreenWindow::Config  m_config;
-  uint                  m_notify_displayed_id;
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
   void          set_focus               (ItemImpl         *item);
@@ -86,6 +88,7 @@ private:
   virtual bool          event_dispatcher                        (const EventLoop::State &state);
   virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
   virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
+  virtual bool          command_dispatcher                      (const EventLoop::State &state);
   virtual bool          prepare                                 (const EventLoop::State &state,
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (const EventLoop::State &state);

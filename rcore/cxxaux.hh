@@ -169,8 +169,8 @@ RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unich
 
 // == C++ Macros ==
 #define RAPICORN_CLASS_NON_COPYABLE(ClassName)                                  private: \
-  /*copy-ctor*/ ClassName  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))); \
-  ClassName&    operator=  (const ClassName&) __attribute__ ((error ("NON_COPYABLE")))
+  /*copy-ctor*/ ClassName  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))) = delete; \
+  ClassName&    operator=  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))) = delete
 
 // == C++ Helper Classes ==
 /// Simple helper class to call one-line lambda initializers as static constructor.

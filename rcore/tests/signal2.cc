@@ -162,6 +162,120 @@ class TestCollectorWhile0 {
 REGISTER_TEST ("Signal/CollectorWhile0", TestCollectorWhile0::run);
 
 static void
+async_signal_tests()
+{
+  typedef Aida::AsyncSignal<String (const String&, String&, String, double, int)> StringTestSignal;
+  String btag = "B";
+  // empty emission
+  StringTestSignal sig_string_test;
+  StringTestSignal::Emission *emi = sig_string_test.emission ("", btag, "", 0.0, 0);
+  TASSERT (emi->has_value() == false);
+  TASSERT (emi->pending() == false);
+  TASSERT (emi->dispatch() == false);
+  TASSERT (emi->done() == true);
+  delete emi;
+  // add simple handler
+  auto lambda1 =
+    [] (const String &a, String &b, String c, double d, long l) -> String
+    {
+      return "1" + a + b + c + string_printf ("%.0f%ld", d, l);
+    };
+  sig_string_test() += (lambda1);
+  // emission with handler
+  emi = sig_string_test.emission ("A", btag, "C", -3.0, 9);
+  TASSERT (emi->has_value() == false);
+  TASSERT (emi->done() == false);
+  TASSERT (emi->pending() == true);
+  TASSERT (emi->has_value() == false);
+  TASSERT (emi->dispatch() == true);          // value unreaped
+  TASSERT (emi->has_value() == true);
+  TASSERT (emi->get_value() == "1ABC-39");    // fetch and validate value
+  TASSERT (emi->has_value() == false);
+  TASSERT (emi->pending() == false);
+  TASSERT (emi->done() == true);
+  TASSERT (emi->dispatch() == false);
+  delete emi;
+  // add async handler with delay
+  Mutex handler2_lock;
+  auto lambda2 =
+    [&handler2_lock] (const String &a, String &b, String c, double d, int i) -> std::future<String>
+    { // need to turn (String &b) into (String b) copy for deferred execution
+      auto lambda =
+        [&handler2_lock] (const String &a, String b, String c, double d, int i) // -> String
+        {
+          std::this_thread::sleep_for (std::chrono::milliseconds (1)); // help race detection
+          handler2_lock.lock(); handler2_lock.unlock();                // force proper synchronization
+          return "2" + a + b + c + string_printf ("%.0f%d", d, i);
+        };
+      return std::async (std::launch::async, lambda, a, b, c, d, i); // execute in seperate thread
+    };
+  sig_string_test().connect_future (lambda2);
+  // emission with handler + async handler
+  emi = sig_string_test.emission ("a", btag, "c", -5, 7);
+  TASSERT (!emi->done() && !emi->has_value() && emi->pending());
+  TASSERT (emi->dispatch() == true);
+  TASSERT (!emi->done());
+  TASSERT (emi->has_value() == true);         // first handler result
+  TASSERT (emi->get_value() == "1aBc-57");    // fetch and validate value
+  TASSERT (!emi->done() && !emi->has_value() && emi->pending());
+  handler2_lock.lock();                       // block handler2
+  TASSERT (emi->dispatch() == true);          // second handler started
+  TASSERT (!emi->done());
+  TASSERT (emi->has_value() == false);        // asynchronous execution blocked
+  if (0) emi->get_value();                    // test deadlock...
+  handler2_lock.unlock();                     // unblock handler2
+  bool saved_pending = emi->pending();
+  while (emi->has_value() == false)           // waiting for async handler2 completion
+    {
+      TASSERT (saved_pending == false);
+      ThisThread::yield();                    // allow for async handler2 completion
+      saved_pending = emi->pending();
+    }
+  TASSERT (emi->pending() == true);           // pending, since has_value() == true
+  TASSERT (emi->get_value() == "2aBc-57");    // synchronize, fetch and validate value
+  TASSERT (!emi->has_value() && !emi->pending() && emi->done());
+  delete emi;
+  // add handler with promise
+  std::promise<String> result3;
+  auto lambda3 =
+    [&result3] (const String &a, String &b, String c, double d, int i) // -> std::future<String>
+    {
+      return result3.get_future();
+    };
+  sig_string_test().connect_future (lambda3);
+  // emission with handler + async handler + promise handler
+  emi = sig_string_test.emission ("_", btag, "_", -7, -6);
+  TASSERT (!emi->done() && !emi->has_value() && emi->pending());
+  TASSERT (emi->dispatch() && !emi->done() && emi->has_value());
+  TASSERT (emi->get_value() == "1_B_-7-6");    // fetch and validate value
+  TASSERT (!emi->done() && !emi->has_value() && emi->pending());
+  TASSERT (emi->dispatch() && !emi->done());
+  TASSERT (emi->get_value() == "2_B_-7-6");    // synchronize with handler2, fetch and validate value
+  TASSERT (!emi->done() && !emi->has_value() && emi->pending());
+  TASSERT (emi->dispatch() && !emi->done());
+  TASSERT (emi->has_value() == false);        // promise remains unset
+  result3.set_value ("future");
+  TASSERT (emi->has_value() == true);         // promise set, future resolved
+  TASSERT (emi->get_value() == "future");     // fetch and validate future
+  TASSERT (!emi->has_value() && !emi->pending() && emi->done());
+  delete emi;
+  emi = NULL;
+  // parallel and partial emissions
+  StringTestSignal::Emission *emi1 = sig_string_test.emission ("(1)", btag, "x", -1, -1);
+  StringTestSignal::Emission *emi2 = sig_string_test.emission ("(2)", btag, "x", -1, -1);
+  StringTestSignal::Emission *emi3 = sig_string_test.emission ("(3)", btag, "x", -1, -1);
+  TASSERT (emi1->dispatch() && emi2->dispatch() && emi3->dispatch());
+  TASSERT (emi1->get_value() == "1(1)Bx-1-1" && emi2->get_value() == "1(2)Bx-1-1" && emi3->get_value() == "1(3)Bx-1-1");
+  delete emi1;                                // aborting emission
+  TASSERT (emi2->dispatch() && emi3->dispatch());
+  TASSERT (emi2->get_value() == "2(2)Bx-1-1" && emi3->get_value() == "2(3)Bx-1-1");
+  delete emi3;
+  if (0) TASSERT (emi2->dispatch());          // avoid future_already_retrieved exception
+  delete emi2;
+}
+REGISTER_TEST ("Signal/AsyncSignal tests", async_signal_tests);
+
+static void
 bench_callback_loop()
 {
   void (*counter_increment) (void*, uint64) = test_counter_add2;
@@ -187,6 +301,7 @@ bench_aida_signal()
   Aida::Signal<void (void*, uint64)> sig_increment;
   szinfo ("old signal: after init");
   sig_increment() += test_counter_add2;
+  szinfo ("old signal: after connect");
   const uint64 start_counter = TestCounter::get();
   const uint64 benchstart = timestamp_benchmark();
   uint64 i;
@@ -202,6 +317,39 @@ bench_aida_signal()
               sizeof (sig_increment));
 }
 REGISTER_TEST ("Signal/SignalBench: Aida::Signal", bench_aida_signal);
+
+static void
+bench_async_signal()
+{
+  typedef Aida::AsyncSignal<void (void*, uint64)> TestSignal;
+  szinfo ("asnyc signal: before init");
+  TestSignal sig_increment;
+  szinfo ("async signal: after init");
+  sig_increment() += test_counter_add2;
+  szinfo ("async signal: after connect");
+  {
+    TestSignal::Emission *tmp = sig_increment.emission (NULL, 1);
+    szinfo ("async signal: after emission() creation");
+    delete tmp;
+  }
+  const uint64 start_counter = TestCounter::get();
+  const uint64 benchstart = timestamp_benchmark();
+  uint64 i;
+  for (i = 0; i < 999999; i++)
+    {
+      TestSignal::Emission *emi = sig_increment.emission (NULL, 1);
+      emi->dispatch();
+      emi->get_value();
+      delete emi;
+    }
+  const uint64 benchdone = timestamp_benchmark();
+  const uint64 end_counter = TestCounter::get();
+  TASSERT (end_counter - start_counter == i);
+  if (Test::verbose())
+    printout ("SignalBench: AsyncSignal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+              sizeof (sig_increment));
+}
+REGISTER_TEST ("Signal/SignalBench: AsyncSignal", bench_async_signal);
 
 #if 0
 struct DummyObject {

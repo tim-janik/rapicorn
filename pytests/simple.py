@@ -28,6 +28,7 @@ def command_handler (cmdname, args):
   global seen_click_command
   seen_click_command |= cmdname == "CLICK"
   ## print "in signal handler, args:", cmdname, args
+  return True # handled
 cid = window.sig_commands_connect (command_handler)
 
 # signal connection testing

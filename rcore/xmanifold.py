@@ -6,8 +6,10 @@ import sys, re
 
 rules = [
   (r'const size_t NARGS = 2;',        'const size_t NARGS = %i;'),
+  # pattern                           strip  repeat         join postfix
   (r'class A1, class A2',             ('',   'class A%i',   ', ', '')),
   (r'A1, A2',                         ('',   'A%i',         ', ', '')),
+  (r', a1, a2',                       (', ', 'a%i',         ', ', '')),
   (r'a1, a2',                         ('',   'a%i',         ', ', '')),
   (r'typename Type<A1>::T a1; '+
    r'typename Type<A2>::T a2;',       ('',   'typename Type<A%i>::T a%i', '; ', ';')),
