@@ -14,6 +14,16 @@
                                    AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \
                                  PyErr_Format_from_AIDA_error (fr); \
                                  goto error; } } while (0)
+#define ERROR_callable_ifpy(callable) do { if (PyErr_Occurred()) { \
+  PyObject *t, *v, *tb; \
+  PyErr_Fetch (&t, &v, &tb); \
+  PyObject *sc = PyObject_Repr (callable), *sv = PyObject_Str (v); \
+  PyErr_Format (PyExceptionClass_Check (t) ? t : PyExc_RuntimeError, \
+                "in return from %s: %s", PyString_AsString (sc), PyString_AsString (sv)); \
+  Py_XDECREF (sc); Py_XDECREF (sv); Py_XDECREF (t); Py_XDECREF (v); Py_XDECREF (tb); \
+  goto error; \
+} } while (0)
+
 #ifndef __AIDA_PYMODULE__OBJECT
 #define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
 #endif
@@ -1377,8 +1387,9 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String (PyObject *
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__UIWidgetArea__void_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__UIWidgetArea__void_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
@@ -1388,7 +1399,7 @@ __AIDA_pyemit__UIWidgetArea__void_signal (const Rapicorn::Aida::FieldBuffer *sfb
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself, PyObject *pyargs)
@@ -1406,14 +1417,15 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyse
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, oid, __AIDA_pyemit__UIWidgetArea__void_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, oid, __AIDA_pyemit1__UIWidgetArea__void_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 2;
@@ -1421,16 +1433,20 @@ __AIDA_pyemit__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *s
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   item = __AIDA_pyfactory__create_from_orbid ("UIWidgetArea", fbr.pop_object()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 1, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (PyObject *pyself, PyObject *pyargs)
@@ -1448,7 +1464,7 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceT
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, oid, __AIDA_pyemit__UIWidgetArea__sample_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, oid, __AIDA_pyemit2__UIWidgetArea__sample_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1839,8 +1855,9 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_Inter
   return NULL;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__void_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__void_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
@@ -1850,7 +1867,7 @@ __AIDA_pyemit__SignalTestInterface__void_result (const Rapicorn::Aida::FieldBuff
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *pyself, PyObject *pyargs)
@@ -1868,24 +1885,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void (PyObjec
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, oid, __AIDA_pyemit__SignalTestInterface__void_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, oid, __AIDA_pyemit1__SignalTestInterface__void_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__bool_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__bool_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *pyself, PyObject *pyargs)
@@ -1903,24 +1928,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObjec
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, oid, __AIDA_pyemit__SignalTestInterface__bool_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, oid, __AIDA_pyemit2__SignalTestInterface__bool_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int32_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__int32_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32 (PyObject *pyself, PyObject *pyargs)
@@ -1938,24 +1971,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32 (PyObj
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, oid, __AIDA_pyemit__SignalTestInterface__int32_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, oid, __AIDA_pyemit2__SignalTestInterface__int32_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__int64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_result_int64 (PyObject *pyself, PyObject *pyargs)
@@ -1973,24 +2014,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_result_int64 (PyObj
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, oid, __AIDA_pyemit__SignalTestInterface__int64_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, oid, __AIDA_pyemit2__SignalTestInterface__int64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__float64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__float64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_result_float64 (PyObject *pyself, PyObject *pyargs)
@@ -2008,24 +2057,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_result_float64 (P
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, oid, __AIDA_pyemit__SignalTestInterface__float64_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, oid, __AIDA_pyemit2__SignalTestInterface__float64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__string_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__string_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_string (PyString_As_std_string (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_result_String (PyObject *pyself, PyObject *pyargs)
@@ -2043,24 +2100,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_result_String (PyO
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, oid, __AIDA_pyemit__SignalTestInterface__string_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, oid, __AIDA_pyemit2__SignalTestInterface__string_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__enum_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__enum_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_evalue (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (PyObject *pyself, PyObject *pyargs)
@@ -2078,24 +2143,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTest
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, oid, __AIDA_pyemit__SignalTestInterface__enum_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, oid, __AIDA_pyemit2__SignalTestInterface__enum_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__record_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__record_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, 2);
+  *rb <<= emit_result_id;
+  if (!aida_pyQuickRecord_proto_add (result, (*rb))) goto error;
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (PyObject *pyself, PyObject *pyargs)
@@ -2113,24 +2186,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTe
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, oid, __AIDA_pyemit__SignalTestInterface__record_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, oid, __AIDA_pyemit2__SignalTestInterface__record_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__sequence_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__sequence_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, 2);
+  *rb <<= emit_result_id;
+  if (!aida_pyQuickSequence_proto_add (result, (*rb))) goto error;
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
@@ -2148,24 +2229,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_result_Interface
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, oid, __AIDA_pyemit2__SignalTestInterface__sequence_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__interface_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__interface_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (PyObject *pyself, PyObject *pyargs)
@@ -2183,24 +2272,34 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_result_Interfac
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, oid, __AIDA_pyemit__SignalTestInterface__interface_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, oid, __AIDA_pyemit2__SignalTestInterface__interface_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__any_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__any_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
+  *rb <<= emit_result_id;
+  { Rapicorn::Aida::Any tmpany;
+    __AIDA_pyconvert__pyany_to_any (tmpany, result); ERROR_callable_ifpy (callable);
+    (*rb).add_any (tmpany); }
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_result_Any (PyObject *pyself, PyObject *pyargs)
@@ -2218,24 +2317,32 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_result_Any (PyObject 
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x296163d4220985ceULL, 0x40daacab4a841093ULL, oid, __AIDA_pyemit__SignalTestInterface__any_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x296163d4220985ceULL, 0x40daacab4a841093ULL, oid, __AIDA_pyemit2__SignalTestInterface__any_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (PyObject *pyself, PyObject *pyargs)
@@ -2253,14 +2360,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTest
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x35828273200534f7ULL, 0x72873f1374d6093bULL, oid, __AIDA_pyemit__SignalTestInterface__self_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x35828273200534f7ULL, 0x72873f1374d6093bULL, oid, __AIDA_pyemit2__SignalTestInterface__self_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__void_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__void_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
@@ -2270,7 +2378,7 @@ __AIDA_pyemit__SignalTestInterface__void_arg (const Rapicorn::Aida::FieldBuffer 
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pyself, PyObject *pyargs)
@@ -2288,14 +2396,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, oid, __AIDA_pyemit__SignalTestInterface__void_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, oid, __AIDA_pyemit1__SignalTestInterface__void_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__bool_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__bool_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2310,7 +2419,7 @@ __AIDA_pyemit__SignalTestInterface__bool_arg (const Rapicorn::Aida::FieldBuffer 
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject *pyself, PyObject *pyargs)
@@ -2328,14 +2437,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObj
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, oid, __AIDA_pyemit__SignalTestInterface__bool_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, oid, __AIDA_pyemit1__SignalTestInterface__bool_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int32_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__int32_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2350,7 +2460,7 @@ __AIDA_pyemit__SignalTestInterface__int32_arg (const Rapicorn::Aida::FieldBuffer
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_arg_void_int32 (PyObject *pyself, PyObject *pyargs)
@@ -2368,14 +2478,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_arg_void_int32 (PyO
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, oid, __AIDA_pyemit__SignalTestInterface__int32_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, oid, __AIDA_pyemit1__SignalTestInterface__int32_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__int64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__int64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2390,7 +2501,7 @@ __AIDA_pyemit__SignalTestInterface__int64_arg (const Rapicorn::Aida::FieldBuffer
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_arg_void_int64 (PyObject *pyself, PyObject *pyargs)
@@ -2408,14 +2519,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_arg_void_int64 (PyO
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, oid, __AIDA_pyemit__SignalTestInterface__int64_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, oid, __AIDA_pyemit1__SignalTestInterface__int64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__float64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__float64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2430,7 +2542,7 @@ __AIDA_pyemit__SignalTestInterface__float64_arg (const Rapicorn::Aida::FieldBuff
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_arg_void_float64 (PyObject *pyself, PyObject *pyargs)
@@ -2448,14 +2560,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_arg_void_float64 
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, oid, __AIDA_pyemit__SignalTestInterface__float64_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, oid, __AIDA_pyemit1__SignalTestInterface__float64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__string_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__string_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2470,7 +2583,7 @@ __AIDA_pyemit__SignalTestInterface__string_arg (const Rapicorn::Aida::FieldBuffe
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_arg_void_String (PyObject *pyself, PyObject *pyargs)
@@ -2488,14 +2601,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_arg_void_String (P
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, oid, __AIDA_pyemit__SignalTestInterface__string_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, oid, __AIDA_pyemit1__SignalTestInterface__string_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2510,7 +2624,7 @@ __AIDA_pyemit__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer 
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (PyObject *pyself, PyObject *pyargs)
@@ -2528,14 +2642,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTe
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, oid, __AIDA_pyemit__SignalTestInterface__enum_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, oid, __AIDA_pyemit1__SignalTestInterface__enum_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__record_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__record_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2550,7 +2665,7 @@ __AIDA_pyemit__SignalTestInterface__record_arg (const Rapicorn::Aida::FieldBuffe
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (PyObject *pyself, PyObject *pyargs)
@@ -2568,14 +2683,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_arg_void_Interface
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, oid, __AIDA_pyemit__SignalTestInterface__record_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, oid, __AIDA_pyemit1__SignalTestInterface__record_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__sequence_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__sequence_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2590,7 +2706,7 @@ __AIDA_pyemit__SignalTestInterface__sequence_arg (const Rapicorn::Aida::FieldBuf
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
@@ -2608,14 +2724,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_arg_void_Interfa
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, oid, __AIDA_pyemit__SignalTestInterface__sequence_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, oid, __AIDA_pyemit1__SignalTestInterface__sequence_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2630,7 +2747,7 @@ __AIDA_pyemit__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldBu
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (PyObject *pyself, PyObject *pyargs)
@@ -2648,14 +2765,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interf
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, oid, __AIDA_pyemit__SignalTestInterface__interface_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, oid, __AIDA_pyemit1__SignalTestInterface__interface_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2670,7 +2788,7 @@ __AIDA_pyemit__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer *
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any (PyObject *pyself, PyObject *pyargs)
@@ -2688,14 +2806,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any (PyObjec
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, oid, __AIDA_pyemit__SignalTestInterface__any_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, oid, __AIDA_pyemit1__SignalTestInterface__any_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 1;
@@ -2710,7 +2829,7 @@ __AIDA_pyemit__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffer
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (PyObject *pyself, PyObject *pyargs)
@@ -2728,14 +2847,15 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceT
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, oid, __AIDA_pyemit__SignalTestInterface__self_args, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, oid, __AIDA_pyemit1__SignalTestInterface__self_args, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ChildInheritingSignals__child_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__ChildInheritingSignals__child_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 6;
@@ -2760,7 +2880,7 @@ __AIDA_pyemit__ChildInheritingSignals__child_signal (const Rapicorn::Aida::Field
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
@@ -2778,24 +2898,32 @@ __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Inte
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, oid, __AIDA_pyemit__ChildInheritingSignals__child_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, oid, __AIDA_pyemit1__ChildInheritingSignals__child_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ButtonArea__check_activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit2__ButtonArea__check_activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
   PyObject *result = NULL, *tuple = PyTuple_New (length);
+  FieldReader fbr (*sfb);
+  fbr.skip_header();
+  fbr.skip();  // skip handler_id
+  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
+  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, 2);
+  *rb <<= emit_result_id;
+  (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *pyself, PyObject *pyargs)
@@ -2813,14 +2941,15 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *p
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, oid, __AIDA_pyemit__ButtonArea__check_activate, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, oid, __AIDA_pyemit2__ButtonArea__check_activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
 static Rapicorn::Aida::FieldBuffer*
-__AIDA_pyemit__ButtonArea__activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
+__AIDA_pyemit1__ButtonArea__activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
+  Rapicorn::Aida::FieldBuffer *rb = NULL;
   PyObject *callable = (PyObject*) data;
   if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }
   const uint length = 0;
@@ -2830,7 +2959,7 @@ __AIDA_pyemit__ButtonArea__activate (const Rapicorn::Aida::FieldBuffer *sfb, voi
   Py_XDECREF (result);
  error:
   Py_XDECREF (tuple);
-  return NULL;
+  return rb;
 }
 static PyObject*
 __AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself, PyObject *pyargs)
@@ -2848,7 +2977,7 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself,
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, oid, __AIDA_pyemit__ButtonArea__activate, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, oid, __AIDA_pyemit1__ButtonArea__activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;

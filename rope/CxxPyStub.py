@@ -23,7 +23,11 @@ import Decls, GenUtils, re
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
-base_code = """
+# exception class:
+# const char *exclass = PyExceptionClass_Check (t) ? PyExceptionClass_Name (t) : "<unknown>";
+# exclass = strrchr (exclass, '.') ? strrchr (exclass, '.') + 1 : exclass;
+
+base_code = r"""
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
@@ -34,10 +38,20 @@ base_code = """
 #define ERRORif(cond)   if (cond) goto error
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
-#define ERRORifnotret(fr) do { if (AIDA_UNLIKELY (!fr) || \\
-                                   AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \\
-                                 PyErr_Format_from_AIDA_error (fr); \\
+#define ERRORifnotret(fr) do { if (AIDA_UNLIKELY (!fr) || \
+                                   AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \
+                                 PyErr_Format_from_AIDA_error (fr); \
                                  goto error; } } while (0)
+#define ERROR_callable_ifpy(callable) do { if (PyErr_Occurred()) { \
+  PyObject *t, *v, *tb; \
+  PyErr_Fetch (&t, &v, &tb); \
+  PyObject *sc = PyObject_Repr (callable), *sv = PyObject_Str (v); \
+  PyErr_Format (PyExceptionClass_Check (t) ? t : PyExc_RuntimeError, \
+                "in return from %s: %s", PyString_AsString (sc), PyString_AsString (sv)); \
+  Py_XDECREF (sc); Py_XDECREF (sv); Py_XDECREF (t); Py_XDECREF (v); Py_XDECREF (tb); \
+  goto error; \
+} } while (0)
+
 #ifndef __AIDA_PYMODULE__OBJECT
 #define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
 #endif
@@ -218,27 +232,27 @@ class Generator:
       s += '\n'
     s += '};'
     return s
-  def generate_proto_add_py (self, fb, type, var):
+  def generate_proto_add_py (self, fb, type, var, excheck = "ERRORifpy()"):
     s = ''
     if type.storage == Decls.BOOL:
-      s += '  %s.add_bool (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_bool (PyIntLong_AsLongLong (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.INT32:
-      s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.INT64:
-      s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.FLOAT64:
-      s += '  %s.add_double (PyFloat_AsDouble (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_double (PyFloat_AsDouble (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.ENUM:
-      s += '  %s.add_evalue (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_evalue (PyIntLong_AsLongLong (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.STRING:
-      s += '  %s.add_string (PyString_As_std_string (%s)); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_string (PyString_As_std_string (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__AIDA_pyobject__")); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__AIDA_pyobject__")); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.ANY:
       s += '  { Rapicorn::Aida::Any tmpany;\n'
-      s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); ERRORifpy();\n' % var
+      s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); %s;\n' % (var, excheck)
       s += '    %s.add_any (tmpany); }\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
@@ -346,36 +360,45 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_client_signal_def (self, class_info, functype, mdefs):
+  def generate_client_signal_def (self, class_info, stype, mdefs):
+    digest, async = self.method_digest (stype), stype.rtype.storage != Decls.VOID
     mdefs += [ '{ "_AIDA_pymarshal__%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
-               (functype.ident_digest(), functype.ident_digest()) ]
-    s, cbtname, classN = '', 'Callback' + '_' + functype.name, class_info.name
+               (stype.ident_digest(), stype.ident_digest()) ]
+    s, cbtname, classN = '', 'Callback' + '_' + stype.name, class_info.name
     u64 = 'Rapicorn::Aida::uint64_t'
-    emitfunc = '__AIDA_pyemit__%s__%s' % (classN, functype.name)
+    emitfunc = '__AIDA_pyemit%d__%s__%s' % (2 if async else 1, classN, stype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
     s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
+    s += '  Rapicorn::Aida::FieldBuffer *rb = NULL;\n'
     s += '  PyObject *callable = (PyObject*) data;\n'
     s += '  if (AIDA_UNLIKELY (!sfb)) { Py_DECREF (callable); return NULL; }\n'
-    s += '  const uint length = %u;\n' % len (functype.args)
-    s += '  PyObject *result = NULL, *tuple = PyTuple_New (length)%s;\n' % (', *item' if functype.args else '')
-    if functype.args:
+    s += '  const uint length = %u;\n' % len (stype.args)
+    s += '  PyObject *result = NULL, *tuple = PyTuple_New (length)%s;\n' % (', *item' if stype.args else '')
+    if stype.args or async:
       s += '  FieldReader fbr (*sfb);\n'
       s += '  fbr.skip_header();\n'
       s += '  fbr.skip();  // skip handler_id\n'
+      if async:
+        s += '  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();\n'
       arg_counter = 0
-      for a in functype.args:
+      for a in stype.args:
         s += self.generate_proto_pop_py ('fbr', a[1], 'item')
         s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
         arg_counter += 1
     s += '  if (PyErr_Occurred()) goto error;\n'
     s += '  result = PyObject_Call (callable, tuple, NULL);\n'
+    if async:
+      s += '  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
+      s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digest
+      s += '  *rb <<= emit_result_id;\n'
+      s += self.generate_proto_add_py ('(*rb)', stype.rtype, 'result', "ERROR_callable_ifpy (callable)")
     s += '  Py_XDECREF (result);\n'
     s += ' error:\n'
     s += '  Py_XDECREF (tuple);\n'
-    s += '  return NULL;\n'
+    s += '  return rb;\n'
     s += '}\n'
     s += 'static PyObject*\n'
-    s += '__AIDA_pymarshal__%s (PyObject *pyself, PyObject *pyargs)\n' % functype.ident_digest()
+    s += '__AIDA_pymarshal__%s (PyObject *pyself, PyObject *pyargs)\n' % stype.ident_digest()
     s += '{\n'
     s += '  while (0) { error: return NULL; }\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
@@ -390,7 +413,7 @@ class Generator:
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (self.method_digest (functype), emitfunc)
+    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (digest, emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
