@@ -232,6 +232,31 @@ class Generator:
       s += '\n'
     s += '};'
     return s
+  def generate_proto_add_0 (self, fb, type):
+    s = ''
+    if type.storage == Decls.BOOL:
+      s += '  %s.add_bool (0);\n' % fb
+    elif type.storage == Decls.INT32:
+      s += '  %s.add_int64 (0);\n' % fb
+    elif type.storage == Decls.INT64:
+      s += '  %s.add_int64 (0);\n' % fb
+    elif type.storage == Decls.FLOAT64:
+      s += '  %s.add_double (0);\n' % fb
+    elif type.storage == Decls.ENUM:
+      s += '  %s.add_evalue (0);\n' % fb
+    elif type.storage == Decls.STRING:
+      s += '  %s.add_string ("");\n' % fb
+    elif type.storage == Decls.RECORD:
+      s += '  %s.add_rec (0);\n' % fb
+    elif type.storage == Decls.SEQUENCE:
+      s += '  %s.add_seq (0);\n' % fb
+    elif type.storage == Decls.INTERFACE:
+      s += '  %s.add_object (NULL);\n' % fb
+    elif type.storage == Decls.ANY:
+      s += '  %s.add_any (Rapicorn::Aida::Any());\n' % fb
+    else: # FUNC VOID
+      raise RuntimeError ("marshalling not implemented: " + type.storage)
+    return s
   def generate_proto_add_py (self, fb, type, var, excheck = "ERRORifpy()"):
     s = ''
     if type.storage == Decls.BOOL:
@@ -386,14 +411,19 @@ class Generator:
         s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
         arg_counter += 1
     s += '  if (PyErr_Occurred()) goto error;\n'
-    s += '  result = PyObject_Call (callable, tuple, NULL);\n'
+    s += '  result = PyObject_Call (callable, tuple, NULL);\n' # we MUST return EMIT_RESULT to be PyException safe
     if async:
       s += '  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
       s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digest
       s += '  *rb <<= emit_result_id;\n'
-      s += self.generate_proto_add_py ('(*rb)', stype.rtype, 'result', "ERROR_callable_ifpy (callable)")
-    s += '  Py_XDECREF (result);\n'
+      s += '  if (PyErr_Occurred()) {\n'
+      s += '  ' + self.generate_proto_add_0 ('(*rb)', stype.rtype)
+      s += '    goto error;\n'
+      s += '  } else {\n'
+      s += '  ' + self.generate_proto_add_py ('(*rb)', stype.rtype, 'result', "ERROR_callable_ifpy (callable)")
+      s += '  }\n'
     s += ' error:\n'
+    s += '  Py_XDECREF (result);\n'
     s += '  Py_XDECREF (tuple);\n'
     s += '  return rb;\n'
     s += '}\n'

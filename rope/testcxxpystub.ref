@@ -1396,8 +1396,8 @@ __AIDA_pyemit1__UIWidgetArea__void_signal (const Rapicorn::Aida::FieldBuffer *sf
   PyObject *result = NULL, *tuple = PyTuple_New (length);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -1442,9 +1442,14 @@ __AIDA_pyemit2__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_double (0);
+    goto error;
+  } else {
+    (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -1864,8 +1869,8 @@ __AIDA_pyemit1__SignalTestInterface__void_result (const Rapicorn::Aida::FieldBuf
   PyObject *result = NULL, *tuple = PyTuple_New (length);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -1906,9 +1911,14 @@ __AIDA_pyemit2__SignalTestInterface__bool_result (const Rapicorn::Aida::FieldBuf
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_bool (0);
+    goto error;
+  } else {
+    (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -1949,9 +1959,14 @@ __AIDA_pyemit2__SignalTestInterface__int32_result (const Rapicorn::Aida::FieldBu
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_int64 (0);
+    goto error;
+  } else {
+    (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -1992,9 +2007,14 @@ __AIDA_pyemit2__SignalTestInterface__int64_result (const Rapicorn::Aida::FieldBu
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_int64 (0);
+    goto error;
+  } else {
+    (*rb).add_int64 (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2035,9 +2055,14 @@ __AIDA_pyemit2__SignalTestInterface__float64_result (const Rapicorn::Aida::Field
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_double (0);
+    goto error;
+  } else {
+    (*rb).add_double (PyFloat_AsDouble (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2078,9 +2103,14 @@ __AIDA_pyemit2__SignalTestInterface__string_result (const Rapicorn::Aida::FieldB
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_string (PyString_As_std_string (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_string ("");
+    goto error;
+  } else {
+    (*rb).add_string (PyString_As_std_string (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2121,9 +2151,14 @@ __AIDA_pyemit2__SignalTestInterface__enum_result (const Rapicorn::Aida::FieldBuf
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_evalue (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_evalue (0);
+    goto error;
+  } else {
+    (*rb).add_evalue (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2164,9 +2199,14 @@ __AIDA_pyemit2__SignalTestInterface__record_result (const Rapicorn::Aida::FieldB
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, 2);
   *rb <<= emit_result_id;
-  if (!aida_pyQuickRecord_proto_add (result, (*rb))) goto error;
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_rec (0);
+    goto error;
+  } else {
+    if (!aida_pyQuickRecord_proto_add (result, (*rb))) goto error;
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2207,9 +2247,14 @@ __AIDA_pyemit2__SignalTestInterface__sequence_result (const Rapicorn::Aida::Fiel
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, 2);
   *rb <<= emit_result_id;
-  if (!aida_pyQuickSequence_proto_add (result, (*rb))) goto error;
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_seq (0);
+    goto error;
+  } else {
+    if (!aida_pyQuickSequence_proto_add (result, (*rb))) goto error;
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2250,9 +2295,14 @@ __AIDA_pyemit2__SignalTestInterface__interface_result (const Rapicorn::Aida::Fie
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_object (NULL);
+    goto error;
+  } else {
+    (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2293,11 +2343,16 @@ __AIDA_pyemit2__SignalTestInterface__any_result (const Rapicorn::Aida::FieldBuff
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
   *rb <<= emit_result_id;
-  { Rapicorn::Aida::Any tmpany;
+  if (PyErr_Occurred()) {
+    (*rb).add_any (Rapicorn::Aida::Any());
+    goto error;
+  } else {
+    { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, result); ERROR_callable_ifpy (callable);
     (*rb).add_any (tmpany); }
-  Py_XDECREF (result);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2338,9 +2393,14 @@ __AIDA_pyemit2__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuf
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_object (NULL);
+    goto error;
+  } else {
+    (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2375,8 +2435,8 @@ __AIDA_pyemit1__SignalTestInterface__void_arg (const Rapicorn::Aida::FieldBuffer
   PyObject *result = NULL, *tuple = PyTuple_New (length);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2416,8 +2476,8 @@ __AIDA_pyemit1__SignalTestInterface__bool_arg (const Rapicorn::Aida::FieldBuffer
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2457,8 +2517,8 @@ __AIDA_pyemit1__SignalTestInterface__int32_arg (const Rapicorn::Aida::FieldBuffe
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2498,8 +2558,8 @@ __AIDA_pyemit1__SignalTestInterface__int64_arg (const Rapicorn::Aida::FieldBuffe
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2539,8 +2599,8 @@ __AIDA_pyemit1__SignalTestInterface__float64_arg (const Rapicorn::Aida::FieldBuf
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2580,8 +2640,8 @@ __AIDA_pyemit1__SignalTestInterface__string_arg (const Rapicorn::Aida::FieldBuff
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2621,8 +2681,8 @@ __AIDA_pyemit1__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2662,8 +2722,8 @@ __AIDA_pyemit1__SignalTestInterface__record_arg (const Rapicorn::Aida::FieldBuff
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2703,8 +2763,8 @@ __AIDA_pyemit1__SignalTestInterface__sequence_arg (const Rapicorn::Aida::FieldBu
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2744,8 +2804,8 @@ __AIDA_pyemit1__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldB
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2785,8 +2845,8 @@ __AIDA_pyemit1__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer 
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2826,8 +2886,8 @@ __AIDA_pyemit1__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffe
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2877,8 +2937,8 @@ __AIDA_pyemit1__ChildInheritingSignals__child_signal (const Rapicorn::Aida::Fiel
   PyTuple_SET_ITEM (tuple, 5, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2919,9 +2979,14 @@ __AIDA_pyemit2__ButtonArea__check_activate (const Rapicorn::Aida::FieldBuffer *s
   result = PyObject_Call (callable, tuple, NULL);
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, 2);
   *rb <<= emit_result_id;
-  (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
-  Py_XDECREF (result);
+  if (PyErr_Occurred()) {
+    (*rb).add_bool (0);
+    goto error;
+  } else {
+    (*rb).add_bool (PyIntLong_AsLongLong (result)); ERROR_callable_ifpy (callable);
+  }
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
@@ -2956,8 +3021,8 @@ __AIDA_pyemit1__ButtonArea__activate (const Rapicorn::Aida::FieldBuffer *sfb, vo
   PyObject *result = NULL, *tuple = PyTuple_New (length);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
-  Py_XDECREF (result);
  error:
+  Py_XDECREF (result);
   Py_XDECREF (tuple);
   return rb;
 }
