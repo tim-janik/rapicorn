@@ -274,7 +274,7 @@ public:
 // == SmartHandle ==
 class SmartHandle {
   OrbObject     *orbo_;
-  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_cast_types__ () { return TypeHashList(); } };
+  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
   typedef NullSmartHandle<SmartHandle> NullHandle;
   friend  class ObjectBroker;
   void    assign (const SmartHandle&);
