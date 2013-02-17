@@ -97,9 +97,9 @@ struct AnchorInfo {
 
 // == Resize Container ==
 class ResizeContainerImpl : public virtual SingleContainerImpl {
-  uint                  m_tunable_requisition_counter;
-  uint                  m_resizer;
-  AnchorInfo            m_anchor_info;
+  uint                  tunable_requisition_counter_;
+  uint                  resizer_;
+  AnchorInfo            anchor_info_;
   void                  idle_sizing             ();
   void                  update_anchor_info      ();
 protected:
@@ -109,8 +109,8 @@ protected:
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();
 public:
-  bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
-  AnchorInfo*           container_anchor_info   () { return &m_anchor_info; }
+  bool                  requisitions_tunable    () const { return tunable_requisition_counter_ > 0; }
+  AnchorInfo*           container_anchor_info   () { return &anchor_info_; }
 };
 
 // == Multi Child Container ==

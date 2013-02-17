@@ -767,16 +767,16 @@ SingleContainerImpl::~SingleContainerImpl()
 }
 
 ResizeContainerImpl::ResizeContainerImpl() :
-  m_tunable_requisition_counter (0), m_resizer (0)
+  tunable_requisition_counter_ (0), resizer_ (0)
 {
-  m_anchor_info.resize_container = this;
+  anchor_info_.resize_container = this;
   update_anchor_info();
 }
 
 ResizeContainerImpl::~ResizeContainerImpl()
 {
-  clear_exec (&m_resizer);
-  m_anchor_info.resize_container = NULL;
+  clear_exec (&resizer_);
+  anchor_info_.resize_container = NULL;
 }
 
 void
@@ -790,17 +790,17 @@ void
 ResizeContainerImpl::update_anchor_info ()
 {
   ItemImpl *last, *item;
-  m_anchor_info.viewport = NULL;
+  anchor_info_.viewport = NULL;
   // find first ViewportImpl
-  for (last = item = this; item && !m_anchor_info.viewport; last = item, item = last->parent())
-    m_anchor_info.viewport = dynamic_cast<ViewportImpl*> (item);
+  for (last = item = this; item && !anchor_info_.viewport; last = item, item = last->parent())
+    anchor_info_.viewport = dynamic_cast<ViewportImpl*> (item);
   // find topmost parent
   item = last;
   while (item)
     last = item, item = last->parent();
   item = last;
   // assign window iff one is found
-  m_anchor_info.window = dynamic_cast<WindowImpl*> (item);
+  anchor_info_.window = dynamic_cast<WindowImpl*> (item);
 }
 
 static inline String
@@ -816,8 +816,8 @@ impl_type (ItemImpl *item)
 void
 ResizeContainerImpl::idle_sizing ()
 {
-  assert_return (m_resizer != 0);
-  m_resizer = 0;
+  assert_return (resizer_ != 0);
+  resizer_ = 0;
   if (anchored() && drawable())
     {
       ContainerImpl *pc = parent();
@@ -849,13 +849,13 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
   /* this is the core of the resizing loop. via Item.tune_requisition(), we
    * allow items to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
-   * m_tunable_requisition_counter.
+   * tunable_requisition_counter_.
    * currently, we simply freeze the allocation after 3 iterations. for the
    * future it's possible to honor the tuned requisition only partially or
-   * proportionally as m_tunable_requisition_counter decreases, so to mimick
+   * proportionally as tunable_requisition_counter_ decreases, so to mimick
    * a simulated annealing process yielding the final layout.
    */
-  m_tunable_requisition_counter = 3;
+  tunable_requisition_counter_ = 3;
   while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Requisition creq = requisition(); // unsets INVALID_REQUISITION
@@ -866,10 +866,10 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
           area.height = creq.height;
         }
       set_allocation (area); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
-      if (m_tunable_requisition_counter)
-        m_tunable_requisition_counter--;
+      if (tunable_requisition_counter_)
+        tunable_requisition_counter_--;
     }
-  m_tunable_requisition_counter = 0;
+  tunable_requisition_counter_ = 0;
   if (need_debugging && !carea)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
 }
@@ -879,12 +879,12 @@ ResizeContainerImpl::invalidate_parent ()
 {
   if (anchored() && drawable())
     {
-      if (!m_resizer)
+      if (!resizer_)
         {
           WindowImpl *w = get_window();
           EventLoop *loop = w ? w->get_loop() : NULL;
           if (loop)
-            m_resizer = loop->exec_timer (0, Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
+            resizer_ = loop->exec_timer (0, Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
         }
       return;
     }
