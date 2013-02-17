@@ -144,8 +144,8 @@
   <tmpl:define id="HBox" inherit="Rapicorn::Factory::HBox" />
   <tmpl:define id="VBox" inherit="Rapicorn::Factory::VBox" />
 
-  <!-- IdlTestItem -->
-  <tmpl:define id="IdlTestItem" inherit="Rapicorn::Factory::IdlTestItem"/>
+  <!-- IdlTestWidget -->
+  <tmpl:define id="IdlTestWidget" inherit="Rapicorn::Factory::IdlTestWidget"/>
 
   <!-- TestBox -->
   <tmpl:define id="TestBox" inherit="Rapicorn::Factory::TestBox"/>
@@ -153,8 +153,8 @@
   <!-- TestContainer -->
   <tmpl:define id="TestContainer" inherit="Rapicorn::Factory::TestContainer"/>
 
-  <!-- TestItem -->
-  <tmpl:define id="TestItem" inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
+  <!-- TestWidget -->
+  <tmpl:define id="TestWidget" inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
 
   <!-- TextEditor -->
   <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::Text::Editor" />

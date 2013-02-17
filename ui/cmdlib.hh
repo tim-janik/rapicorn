@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-bool    command_lib_exec        (ItemImpl           &item,
+bool    command_lib_exec        (WidgetImpl           &widget,
                                  const String       &cmd_name,
                                  const StringSeq    &args);
 bool    command_scan            (const String       &input,

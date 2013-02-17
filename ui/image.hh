@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class Image : public virtual ItemImpl {
+class Image : public virtual WidgetImpl {
   virtual String        image_file      () const { RAPICORN_ASSERT_UNREACHED(); }
   virtual String        stock_pixmap    () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:

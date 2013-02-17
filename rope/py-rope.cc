@@ -52,10 +52,10 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   std::vector<String> strv;
   for (ssize_t k = 0; k < len; k++)
     {
-      PyObject *item = PyList_GET_ITEM (list, k);
+      PyObject *widget = PyList_GET_ITEM (list, k);
       char *as = NULL;
       Py_ssize_t al = 0;
-      if (PyString_AsStringAndSize (item, &as, &al) < 0)
+      if (PyString_AsStringAndSize (widget, &as, &al) < 0)
         return NULL;
       strv.push_back (String (as, al));
     }

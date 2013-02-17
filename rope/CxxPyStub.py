@@ -460,20 +460,20 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pycall__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
-    s += '  uint64_t item_orbid;\n'
+    s += '  uint64_t object_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
-    s += '  item_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
+    s += '  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();\n'
     if hasret:
-      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid),'
+      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid),'
       s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % self.method_digest (mtype)
     else:
       s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL,'
-      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (item_orbid), %s);\n' % self.method_digest (mtype)
-    s += '  fb.add_object (item_orbid);\n'
+      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), %s);\n' % self.method_digest (mtype)
+    s += '  fb.add_object (object_orbid);\n'
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])

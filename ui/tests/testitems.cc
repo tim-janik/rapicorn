@@ -47,39 +47,39 @@ test_factory ()
                  Path::vpath_find (factory_xml),        // GUI file name
                  program_file());
   TOK();
-  ItemImpl *item;
-  TestContainer *titem;
-  WindowIface &testwin = *app.create_window ("RapicornTest:test-TestItemL2");
+  WidgetImpl *widget;
+  TestContainer *twidget;
+  WindowIface &testwin = *app.create_window ("RapicornTest:test-TestWidgetL2");
   testwin.show();
   run_main_loop_recursive (false);
   TOK();
   WindowImpl *window = &testwin.impl();
-  item = window->interface<ItemImpl*> ("TestItemL2");
-  TASSERT (item != NULL);
-  titem = dynamic_cast<TestContainer*> (item);
-  TASSERT (titem != NULL);
+  widget = window->interface<WidgetImpl*> ("TestWidgetL2");
+  TASSERT (widget != NULL);
+  twidget = dynamic_cast<TestContainer*> (widget);
+  TASSERT (twidget != NULL);
   if (0)
     {
       printout ("\n");
-      printout ("TestContainer::accu: %s\n", titem->accu().c_str());
-      printout ("TestContainer::accu_history: %s\n", titem->accu_history().c_str());
+      printout ("TestContainer::accu: %s\n", twidget->accu().c_str());
+      printout ("TestContainer::accu_history: %s\n", twidget->accu_history().c_str());
     }
-  TASSERT (titem->accu_history() == "L0L1L2Instance");
+  TASSERT (twidget->accu_history() == "L0L1L2Instance");
   TOK();
-  // test Item::name()
-  TASSERT (item->name().empty() == false); // has factory default
-  String factory_default = item->name();
-  item->name ("FooBar_4356786453567");
-  TASSERT (item->name() == "FooBar_4356786453567");
-  item->name ("");
-  TASSERT (item->name() != "FooBar_4356786453567");
-  TASSERT (item->name().empty() == false); // back to factory default
-  TASSERT (item->name() == factory_default);
+  // test Widget::name()
+  TASSERT (widget->name().empty() == false); // has factory default
+  String factory_default = widget->name();
+  widget->name ("FooBar_4356786453567");
+  TASSERT (widget->name() == "FooBar_4356786453567");
+  widget->name ("");
+  TASSERT (widget->name() != "FooBar_4356786453567");
+  TASSERT (widget->name().empty() == false); // back to factory default
+  TASSERT (widget->name() == factory_default);
   TOK();
   testwin.close();
   TOK();
 }
-REGISTER_UITHREAD_TEST ("Factory/Test Item Factory", test_factory);
+REGISTER_UITHREAD_TEST ("Factory/Test Widget Factory", test_factory);
 
 static void
 test_cxx_server_gui ()
@@ -87,25 +87,25 @@ test_cxx_server_gui ()
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
-  ItemImpl &titem = Factory::create_ui_item ("TestItem");
+  WidgetImpl &twidget = Factory::create_ui_widget ("TestWidget");
   TOK();
-  window.impl().add (titem);
+  window.impl().add (twidget);
   TOK();
   /* close window (and exit main loop) after first expose */
   window.impl().enable_auto_close();
   TOK();
-  /* verify and assert at least one TestItem rendering */
-  uint old_seen_test = TestContainer::seen_test_items();
+  /* verify and assert at least one TestWidget rendering */
+  uint old_seen_test = TestContainer::seen_test_widgets();
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
   run_main_loop_recursive();
   TOK();
-  /* assert TestItem rendering */
-  uint seen_test = TestContainer::seen_test_items();
+  /* assert TestWidget rendering */
+  uint seen_test = TestContainer::seen_test_widgets();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
 }
-REGISTER_UITHREAD_TEST ("TestItem/Test C++ Server Side GUI", test_cxx_server_gui);
+REGISTER_UITHREAD_TEST ("TestWidget/Test C++ Server Side GUI", test_cxx_server_gui);
 
 static void
 assertion_ok (const String &assertion)
@@ -120,30 +120,30 @@ assertions_passed ()
 }
 
 static void
-test_test_item ()
+test_test_widget ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
-  TestContainer *titem = window.interface<TestContainer*>();
-  TASSERT (titem != NULL);
-  titem->sig_assertion_ok() += assertion_ok;
-  titem->sig_assertions_passed() += assertions_passed;
-  titem->fatal_asserts (ServerTests::server_test_item_fatal_asserts);
+  TestContainer *twidget = window.interface<TestContainer*>();
+  TASSERT (twidget != NULL);
+  twidget->sig_assertion_ok() += assertion_ok;
+  twidget->sig_assertions_passed() += assertions_passed;
+  twidget->fatal_asserts (ServerTests::server_test_widget_fatal_asserts);
   TOK();
   run_main_loop_recursive (false);
   /* close window (and exit main loop) after first expose */
   window.enable_auto_close();
-  /* verify and assert at least one TestItem rendering */
-  uint old_seen_test = TestContainer::seen_test_items();
+  /* verify and assert at least one TestWidget rendering */
+  uint old_seen_test = TestContainer::seen_test_widgets();
   window.show();
   run_main_loop_recursive();
-  uint seen_test = TestContainer::seen_test_items();
+  uint seen_test = TestContainer::seen_test_widgets();
   TASSERT (seen_test > old_seen_test);
-  /* test item rendering also executed various assertions */
+  /* test widget rendering also executed various assertions */
 }
-REGISTER_UITHREAD_TEST ("TestItem/Test GUI assertions (alignment-test)", test_test_item);
+REGISTER_UITHREAD_TEST ("TestWidget/Test GUI assertions (alignment-test)", test_test_widget);
 
 static void
 ensure_ui_file()
@@ -157,42 +157,42 @@ ensure_ui_file()
 }
 
 static void
-test_idl_test_item ()
+test_idl_test_widget ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("RapicornTest:test-item-window");
+  WindowIface &window_iface = *app.create_window ("RapicornTest:test-widget-window");
   TOK();
   WindowImpl &window = window_iface.impl();
-  IdlTestItemIface *titemp = window.interface<IdlTestItemIface*>();
-  TASSERT (titemp != NULL);
-  IdlTestItemIface &titem = *titemp;
-  titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
-  titem.bool_prop (1); TASSERT (titem.bool_prop() == 1);
-  titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
-  titem.int_prop (765760); TASSERT (titem.int_prop() == 765760);
-  titem.int_prop (-211232); TASSERT (titem.int_prop() == -211232);
+  IdlTestWidgetIface *twidgetp = window.interface<IdlTestWidgetIface*>();
+  TASSERT (twidgetp != NULL);
+  IdlTestWidgetIface &twidget = *twidgetp;
+  twidget.bool_prop (0); TASSERT (twidget.bool_prop() == 0);
+  twidget.bool_prop (1); TASSERT (twidget.bool_prop() == 1);
+  twidget.bool_prop (0); TASSERT (twidget.bool_prop() == 0);
+  twidget.int_prop (765760); TASSERT (twidget.int_prop() == 765760);
+  twidget.int_prop (-211232); TASSERT (twidget.int_prop() == -211232);
   double f = 32.1231;
-  titem.float_prop (f); TASSERT (abs (titem.float_prop() - f) < 1e-11); // assert double precision
-  titem.string_prop (""); TASSERT (titem.string_prop() == "");
-  titem.string_prop ("5768trzg"); TASSERT (titem.string_prop() == "5768trzg");
-  titem.string_prop ("äöü"); TASSERT (titem.string_prop() == "äöü");
-  titem.enum_prop (TEST_ENUM_VALUE1); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE1);
-  titem.enum_prop (TEST_ENUM_VALUE2); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE2);
-  titem.enum_prop (TEST_ENUM_VALUE3); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE3);
+  twidget.float_prop (f); TASSERT (abs (twidget.float_prop() - f) < 1e-11); // assert double precision
+  twidget.string_prop (""); TASSERT (twidget.string_prop() == "");
+  twidget.string_prop ("5768trzg"); TASSERT (twidget.string_prop() == "5768trzg");
+  twidget.string_prop ("äöü"); TASSERT (twidget.string_prop() == "äöü");
+  twidget.enum_prop (TEST_ENUM_VALUE1); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE1);
+  twidget.enum_prop (TEST_ENUM_VALUE2); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE2);
+  twidget.enum_prop (TEST_ENUM_VALUE3); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE3);
   Requisition r (123, 765);
-  titem.record_prop (r); TASSERT (titem.record_prop().width == r.width && titem.record_prop().height == r.height);
+  twidget.record_prop (r); TASSERT (twidget.record_prop().width == r.width && twidget.record_prop().height == r.height);
   StringSeq sl;
   sl.push_back ("one");
   sl.push_back ("2");
   sl.push_back ("THREE");
-  titem.sequence_prop (sl); StringSeq sv = titem.sequence_prop();
+  twidget.sequence_prop (sl); StringSeq sv = twidget.sequence_prop();
   TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
-  titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
-  titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
+  twidget.self_prop (NULL); TASSERT (twidget.self_prop() == NULL);
+  twidget.self_prop (twidgetp); TASSERT (twidget.self_prop() == twidgetp);
   window.close();
 }
-REGISTER_UITHREAD_TEST ("TestItem/Test TestItem (test-item-window)", test_idl_test_item);
+REGISTER_UITHREAD_TEST ("TestWidget/Test TestWidget (test-widget-window)", test_idl_test_widget);
 
 static void
 test_complex_dialog ()
@@ -215,34 +215,34 @@ test_complex_dialog ()
   windowp = app.query_window ("#complex-dialog"); // now existing window
   TASSERT (windowp != NULL);
 
-  ItemIface *item = window.query_selector_unique ("#complex-dialog");
+  WidgetIface *widget = window.query_selector_unique ("#complex-dialog");
   size_t count;
-  TASSERT (item != NULL);
-  item = window.query_selector_unique (".Item#complex-dialog");
-  TASSERT (item != NULL);
-  count = window.query_selector_all ("#complex-dialog .VBox .ScrollArea .Item").size();
+  TASSERT (widget != NULL);
+  widget = window.query_selector_unique (".Widget#complex-dialog");
+  TASSERT (widget != NULL);
+  count = window.query_selector_all ("#complex-dialog .VBox .ScrollArea .Widget").size();
   TASSERT (count > 0);
-  count = window.query_selector_all (":root .VBox .Item").size();
+  count = window.query_selector_all (":root .VBox .Widget").size();
   TASSERT (count > 0);
-  item = window.query_selector (":root .Alignment");
-  TASSERT (item != NULL);
-  item = window.query_selector (":root .Alignment .VBox");
-  TASSERT (item != NULL);
-  item = window.query_selector_unique (":root .Alignment .VBox #scroll-text");
-  TASSERT (item != NULL);
-  item = window.query_selector_unique (":root .Frame");
-  TASSERT (item == NULL); // not unique
-  item = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
-  TASSERT (item != NULL && dynamic_cast<Frame*> (item) != NULL);
-  item = window.query_selector_unique (":root .Button .Label");
-  TASSERT (item == NULL); // not unique
-  item = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
-  TASSERT (item != NULL && dynamic_cast<Text::Editor::Client*> (item) != NULL);
-  item = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
-  TASSERT (item != NULL && dynamic_cast<ButtonAreaImpl*> (item) != NULL && dynamic_cast<Text::Editor::Client*> (item) == NULL);
-  item = window.query_selector_unique ("/#"); // invalid path
-  TASSERT (item == NULL);
+  widget = window.query_selector (":root .Alignment");
+  TASSERT (widget != NULL);
+  widget = window.query_selector (":root .Alignment .VBox");
+  TASSERT (widget != NULL);
+  widget = window.query_selector_unique (":root .Alignment .VBox #scroll-text");
+  TASSERT (widget != NULL);
+  widget = window.query_selector_unique (":root .Frame");
+  TASSERT (widget == NULL); // not unique
+  widget = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
+  TASSERT (widget != NULL && dynamic_cast<Frame*> (widget) != NULL);
+  widget = window.query_selector_unique (":root .Button .Label");
+  TASSERT (widget == NULL); // not unique
+  widget = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
+  TASSERT (widget != NULL && dynamic_cast<Text::Editor::Client*> (widget) != NULL);
+  widget = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
+  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<Text::Editor::Client*> (widget) == NULL);
+  widget = window.query_selector_unique ("/#"); // invalid path
+  TASSERT (widget == NULL);
 }
-REGISTER_UITHREAD_TEST ("TestItem/Test Comples Dialog (complex-dialog)", test_complex_dialog);
+REGISTER_UITHREAD_TEST ("TestWidget/Test Comples Dialog (complex-dialog)", test_complex_dialog);
 
 } // Anon

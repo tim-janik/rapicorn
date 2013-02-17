@@ -70,14 +70,14 @@ ScrollAreaImpl::scroll_to (double x, double y)
   vadjustment_->thaw();
 }
 
-static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
+static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
 
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
   Adjustment *hadjustment_, *vadjustment_;
   size_t conid_hadjustment_, conid_vadjustment_;
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
     if (hadjustment_ && conid_hadjustment_)
       hadjustment_->sig_value_changed() -= conid_hadjustment_;
@@ -103,7 +103,7 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
   {
     if (!has_allocatable_child())
       return;
-    ItemImpl &child = get_child();
+    WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
     if (rq.width < area.width)
       {
@@ -173,62 +173,62 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
     scroll_offsets (xoffset, yoffset);
   }
   virtual void
-  set_focus_child (ItemImpl *item)
+  set_focus_child (WidgetImpl *widget)
   {
-    ViewportImpl::set_focus_child (item);
-    ItemImpl *fchild = get_focus_child();
+    ViewportImpl::set_focus_child (widget);
+    WidgetImpl *fchild = get_focus_child();
     if (!fchild)
       return;
     WindowImpl *rt = get_window();
     if (!rt)
       return;
-    ItemImpl *const rfitem = rt->get_focus();
-    ItemImpl *fitem = rfitem;
-    if (!fitem)
+    WidgetImpl *const rfwidget = rt->get_focus();
+    WidgetImpl *fwidget = rfwidget;
+    if (!fwidget)
       return;
-    /* list focus items between focus_item and out immediate child */
-    std::list<ItemImpl*> fitems;
-    while (fitem)
+    /* list focus widgets between focus_widget and out immediate child */
+    std::list<WidgetImpl*> fwidgets;
+    while (fwidget)
       {
-        fitems.push_back (fitem);
-        if (fitem == fchild)
+        fwidgets.push_back (fwidget);
+        if (fwidget == fchild)
           break;
-        fitem = fitem->parent();
+        fwidget = fwidget->parent();
       }
     /* find the first focus descendant that fits the scroll area */
-    fitem = rfitem; /* fallback to innermost focus item */
+    fwidget = rfwidget; /* fallback to innermost focus widget */
     const Rect area = allocation();
-    for (Walker<ItemImpl*> w = walker (fitems); w.has_next(); w++)
+    for (Walker<WidgetImpl*> w = walker (fwidgets); w.has_next(); w++)
       {
-        ItemImpl *item = *w;
-        Rect a = item->allocation();
-        if (!translate_from (*item, 1, &a))
+        WidgetImpl *widget = *w;
+        Rect a = widget->allocation();
+        if (!translate_from (*widget, 1, &a))
           {
-            fitem = NULL; // no geographic descendant
+            fwidget = NULL; // no geographic descendant
             break;
           }
         if (a.width <= area.width && a.height <= area.height)
           {
-            fitem = item;
+            fwidget = widget;
             break;
           }
       }
-    if (!fitem)
+    if (!fwidget)
       return;
-    scroll_to_child (*fitem);
+    scroll_to_child (*fwidget);
   }
   virtual void
-  scroll_to_child (ItemImpl &item)
+  scroll_to_child (WidgetImpl &widget)
   {
     const Rect area = allocation();
-    /* adjust scroll area to item's area */
-    Rect farea = item.allocation();
-    if (!translate_from (item, 1, &farea))
+    /* adjust scroll area to widget's area */
+    Rect farea = widget.allocation();
+    if (!translate_from (widget, 1, &farea))
       return;           // not geographic descendant
     if (0)
       printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
-                area.string().c_str(), farea.string().c_str(), &item,
-                item.allocation().string().c_str());
+                area.string().c_str(), farea.string().c_str(), &widget,
+                widget.allocation().string().c_str());
     /* calc new scroll position, giving precedence to lower left */
     double deltax = 0, deltay = 0;
     if (farea.upper_x() > area.upper_x() + deltax)
@@ -298,7 +298,7 @@ public:
     hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0)
   {}
 };
-static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");
+static const WidgetFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");
 
 
 } // Rapicorn

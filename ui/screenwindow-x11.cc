@@ -36,17 +36,17 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 
 namespace Rapicorn {
 
-// == X11Item ==
-struct X11Item {
-  explicit X11Item() {}
-  virtual ~X11Item() {}
+// == X11Widget ==
+struct X11Widget {
+  explicit X11Widget() {}
+  virtual ~X11Widget() {}
 };
 
 // == X11Context ==
 class X11Context {
   MainLoop             &loop_;
   vector<size_t>        queued_updates_; // XIDs
-  map<size_t, X11Item*> x11ids_;
+  map<size_t, X11Widget*> x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
   bool                  x11_dispatcher  (const EventLoop::State &state);
@@ -65,8 +65,8 @@ public:
   XIM                   input_method;
   XIMStyle              input_style;
   int8                  shared_mem_;
-  X11Item*              x11id_get   (size_t xid);
-  void                  x11id_set   (size_t xid, X11Item *x11item);
+  X11Widget*              x11id_get   (size_t xid);
+  void                  x11id_set   (size_t xid, X11Widget *x11widget);
   Atom                  atom         (const String &text, bool force_create = true);
   String                atom         (Atom atom) const;
   bool                  local_x11    ();
@@ -80,7 +80,7 @@ public:
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
 // == ScreenWindowX11 ==
-struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
+struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   X11Context           &x11context;
   Config                config_;
   State                 state_;
@@ -1055,10 +1055,10 @@ X11Context::process_x11()
       XEvent xevent = { 0, };
       XNextEvent (display, &xevent); // blocks if !XPending
       bool consumed = filter_event (xevent);
-      X11Item *xitem = x11id_get (xevent.xany.window);
-      if (xitem)
+      X11Widget *xwidget = x11id_get (xevent.xany.window);
+      if (xwidget)
         {
-          ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
+          ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xwidget);
           if (scw)
             consumed = scw->process_event (xevent);
         }
@@ -1080,8 +1080,8 @@ X11Context::process_updates ()
   xids.resize (it - xids.begin());
   for (auto id : xids)
     {
-      X11Item *xitem = x11id_get (id);
-      ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xitem);
+      X11Widget *xwidget = x11id_get (id);
+      ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xwidget);
       if (scw)
         scw->force_update (id);
     }
@@ -1101,21 +1101,21 @@ X11Context::filter_event (const XEvent &xevent)
 }
 
 void
-X11Context::x11id_set (size_t xid, X11Item *x11item)
+X11Context::x11id_set (size_t xid, X11Widget *x11widget)
 {
   auto it = x11ids_.find (xid);
-  if (!x11item)
+  if (!x11widget)
     {
       if (x11ids_.end() != it)
         x11ids_.erase (it);
       return;
     }
   if (x11ids_.end() != it)
-    fatal ("%s: x11id=%ld already in use for %p while setting to %p", STRFUNC, xid, it->second, x11item);
-  x11ids_[xid] = x11item;
+    fatal ("%s: x11id=%ld already in use for %p while setting to %p", STRFUNC, xid, it->second, x11widget);
+  x11ids_[xid] = x11widget;
 }
 
-X11Item*
+X11Widget*
 X11Context::x11id_get (size_t xid)
 {
   // do lookup without modifying x11ids

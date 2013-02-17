@@ -12,11 +12,11 @@ class ViewportImpl : public virtual ResizeContainerImpl {
   int                   xoffset_, yoffset_;
   void                  collapse_expose_region  ();
 protected:
-  virtual Affine        child_affine            (const ItemImpl &item);
+  virtual Affine        child_affine            (const WidgetImpl &widget);
   const Region&         peek_expose_region      () const { return expose_region_; }
   void                  discard_expose_region   () { expose_region_.clear(); }
   bool                  exposes_pending         () const { return !expose_region_.empty(); }
-  virtual void          render_item             (RenderContext &rcontext);
+  virtual void          render_widget             (RenderContext &rcontext);
   virtual void          render                  (RenderContext &rcontext, const Rect &rect);
   void                  scroll_offsets          (int deltax, int deltay);
   void                  do_scrolled             ();

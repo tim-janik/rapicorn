@@ -27,7 +27,7 @@ protected:
   virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_items) = 0;
+  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
   virtual uint  spacing         () const = 0;
   virtual void  spacing         (uint cspacing) = 0;
 };
@@ -37,7 +37,7 @@ protected:
   virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_items) = 0;
+  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
   virtual uint  spacing         () const = 0;
   virtual void  spacing         (uint cspacing) = 0;
 };

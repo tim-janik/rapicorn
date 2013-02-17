@@ -15,34 +15,34 @@ create_plain_window ()
 }
 
 static void
-test_item_usage()
+test_widget_usage()
 {
   WindowH window = create_plain_window();
-  ItemH item = window;
-  TASSERT (item != NULL);
-  ContainerH c = ContainerH::down_cast (item);
+  WidgetH widget = window;
+  TASSERT (widget != NULL);
+  ContainerH c = ContainerH::down_cast (widget);
   TASSERT (c != NULL);
   TASSERT (WindowH::down_cast (c) != NULL);
   window.close();
-  TASSERT (ItemH::down_cast (app) == NULL);
+  TASSERT (WidgetH::down_cast (app) == NULL);
   TASSERT (ContainerH::down_cast (app) == NULL);
   TASSERT (WindowH::down_cast (app) == NULL);
   const char *testname = "3e3b0d44-ded6-4fc5-a134-c16569c23d96";
-  String name = item.name();
+  String name = widget.name();
   TASSERT (name != testname);
-  item.name (testname);
-  name = item.name();
+  widget.name (testname);
+  name = widget.name();
   TASSERT (name == testname);
   window.name ("Test-Name");
-  TASSERT ("Test-Name" == item.name());
+  TASSERT ("Test-Name" == widget.name());
   TASSERT (c.component<WindowH> (".Window") != NULL);
   TASSERT (c.component<WindowH> (":root") != NULL);
   TASSERT (window.component<ContainerH> (".Window") != NULL);
-  TASSERT (item.component<ButtonAreaH> (".Window") == NULL);
-  TASSERT (item.component<ItemH> (".Window") != NULL);
-  TASSERT (item.component<ItemH> ("FrobodoNotHere") == NULL);
+  TASSERT (widget.component<ButtonAreaH> (".Window") == NULL);
+  TASSERT (widget.component<WidgetH> (".Window") != NULL);
+  TASSERT (widget.component<WidgetH> ("FrobodoNotHere") == NULL);
 }
-REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
+REGISTER_TEST ("Client/Basic Widget Usage", test_widget_usage);
 
 } // Anon
 

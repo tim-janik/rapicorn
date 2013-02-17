@@ -12,7 +12,7 @@ Const MAXINT32 = +4294967295;
 Const MAXINT31 = +2147483647;
 Const MININT31 = -2147483648;
 
-/// Enum used to specify how adjustments are picked from item ancestry.
+/// Enum used to specify how adjustments are picked from widget ancestry.
 enum AdjustmentSourceType {
   ADJUSTMENT_SOURCE_NONE = 0,
   ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL,
@@ -74,7 +74,7 @@ enum ColorType {
   COLOR_MAGENTA,
 };
 
-/// Enum used to specify the color schemes of items.
+/// Enum used to specify the color schemes of widgets.
 enum ColorSchemeType {
   COLOR_INHERIT = 0,    ///< Inherit color from parent component
   COLOR_NORMAL,         ///< Normal color specification
@@ -108,7 +108,7 @@ enum FocusDirType {
   FOCUS_DOWN
 };
 
-///< Enum type to discriminate various Frame item types.
+///< Enum type to discriminate various Frame widget types.
 enum FrameType {
   FRAME_NONE = 0,
   FRAME_BACKGROUND,
@@ -138,13 +138,13 @@ flags enum LightingType {
   LIGHTING_DARK_DIFFUSE      = LIGHTING_DARK_FLAG | LIGHTING_DIFFUSE,
 };
 
-///< Enum type for list item selection behaviour.
+///< Enum type for list widget selection behaviour.
 enum SelectionMode {
   SELECTION_NONE = 0,   ///< No selection possible
-  SELECTION_BROWSE,     ///< Browse by always forcing a single selected item
-  SELECTION_SINGLE,     ///< Allow selection toggling of a single item
-  SELECTION_INTERVAL,   ///< Allow selection of multiple consecutive items
-  SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected items
+  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
+  SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
+  SELECTION_INTERVAL,   ///< Allow selection of multiple consecutive widgets
+  SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
 };
 
 ///< Enum policy type for sizing trade offs.
@@ -154,7 +154,7 @@ enum SizePolicyType {
   SIZE_POLICY_HEIGHT_FROM_WIDTH,
 };
 
-///< Enum type for item states.
+///< Enum type for widget states.
 flags enum StateType {
   STATE_NORMAL          = 0,
   STATE_INSENSITIVE     = 1 << 0,
@@ -164,7 +164,7 @@ flags enum StateType {
   STATE_DEFAULT         = 1 << 4,
 };
 
-///< Enum type to discriminate various Text item types.
+///< Enum type to discriminate various Text widget types.
 enum TextMode {
   TEXT_MODE_WRAPPED = 1,
   TEXT_MODE_ELLIPSIZED,
@@ -262,50 +262,50 @@ record Requisition {
   float64 height;         ///< Request height.
 };
 
-interface Item;
+interface Widget;
 
-/// A sequence of Item objects.
-sequence ItemSeq { Item  items; };
+/// A sequence of Widget objects.
+sequence WidgetSeq { Widget  widgets; };
 
-/// Item is the base type for all UI elements.
-interface Item {
-  bool          match_selector          (String selector) = 0; //< Check if selector matches this item.
-  Item          query_selector          (String selector) = 0; //< Returns first selector match.
-  ItemSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
-  Item          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
+/// Widget is the base type for all UI elements.
+interface Widget {
+  bool          match_selector          (String selector) = 0; //< Check if selector matches this widget.
+  Widget          query_selector          (String selector) = 0; //< Returns first selector match.
+  WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
+  Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
   String	test_dump               () = 0;
-  String name = String (_("Name"), _("Identification name of the item"), "rw");
-  float64 width   = Range (_("Requested Width"),  _("The width to request from its container for this item, -1=automatic"),  "rw", -1, MAXINT31);
-  float64 height  = Range (_("Requested Height"), _("The height to request from its container for this item, -1=automatic"), "rw", -1, MAXINT31);
-  bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw");
-  bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this item vertically"), "rw");
-  bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw");
-  bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this item and all its parents vertically"), "rw");
-  bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw");
-  bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw");
-  bool  visible   = Bool (_("Visible"),   _("Whether this item is visible"), "rw");
-  bool  sensitive = Bool (_("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw");
-  float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the item"), "Prw", 0, 99999, 5);
-  float64 hspan     = Range (_("Horizontal Span"),     _("Horizontal span for item layout"), "Prw", 1, 100000, 5);
-  float64 vposition = Range (_("Vertical Position"),   _("Vertical layout position for the item"), "Prw", 0, 99999, 5);
-  float64 vspan     = Range (_("Vertical Span"),       _("Vertical span for item layout"), "Prw", 1, 100000, 5);
-  int32 left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the item's left side"),   "Prw", 0, 65535, 3);
-  int32 right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the item's right side"),  "Prw", 0, 65535, 3);
-  int32 bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), "Prw", 0, 65535, 3);
-  int32 top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the item's top side"),    "Prw", 0, 65535, 3);
+  String name = String (_("Name"), _("Identification name of the widget"), "rw");
+  float64 width   = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
+  float64 height  = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
+  bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
+  bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
+  bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this widget and all its parents horizontally"), "rw");
+  bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this widget and all its parents vertically"), "rw");
+  bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the widget may be shrunken horizontally"), "rw");
+  bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the widget may be shrunken vertically"), "rw");
+  bool  visible   = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
+  bool  sensitive = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the widget"), "Prw", 0, 99999, 5);
+  float64 hspan     = Range (_("Horizontal Span"),     _("Horizontal span for widget layout"), "Prw", 1, 100000, 5);
+  float64 vposition = Range (_("Vertical Position"),   _("Vertical layout position for the widget"), "Prw", 0, 99999, 5);
+  float64 vspan     = Range (_("Vertical Span"),       _("Vertical span for widget layout"), "Prw", 1, 100000, 5);
+  int32 left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, 65535, 3);
+  int32 right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, 65535, 3);
+  int32 bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
+  int32 top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
   float64 hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
   float64 vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float64 halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
   float64 hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
   float64 valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float64 vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
-  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this item"), "rw");
+  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
 };
 
-/// Container is a special type of Item that can contain other items.
-interface Container : Item {
-  /// Create a child item from the @a item_identifier template and add it to the container.
-  Item create_child (String item_identifier, StringSeq args = 0) = 0;
+/// Container is a special type of Widget that can contain other widgets.
+interface Container : Widget {
+  /// Create a child widget from the @a widget_identifier template and add it to the container.
+  Widget create_child (String widget_identifier, StringSeq args = 0) = 0;
 };
 
 /**
@@ -320,7 +320,7 @@ interface ButtonArea : Container {
 };
 
 /// The Drawable interface allows display of custom images, created by client-side rendering.
-interface Drawable : Item {
+interface Drawable : Widget {
   signal void redraw    (int32 x, int32 y, int32 w, int32 h);	        ///< Requests a redraw at @a width and @a height.
   void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
 };
@@ -338,7 +338,7 @@ interface Window : Container {
   bool          snapshot                (String     pngname) = 0;
   signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();
-  bool          synthesize_click        (Item       item,
+  bool          synthesize_click        (Widget       widget,
                                          int32        button,
                                          float64      xalign = 0.5,
                                          float64      yalign = 0.5) = 0;
@@ -395,7 +395,7 @@ enum TestEnum {
   TEST_ENUM_VALUE3,
 };
 
-interface IdlTestItem : Item {
+interface IdlTestWidget : Widget {
   bool           bool_prop;
   int32          int_prop;
   float64        float_prop;
@@ -403,7 +403,7 @@ interface IdlTestItem : Item {
   TestEnum       enum_prop;
   Requisition    record_prop;
   StringSeq      sequence_prop;
-  IdlTestItem    self_prop;
+  IdlTestWidget    self_prop;
 };
 
 } // Rapicorn

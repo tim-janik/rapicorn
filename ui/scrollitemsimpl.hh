@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#ifndef __RAPICORN_SCROLL_ITEMS_IMPL_HH__
-#define __RAPICORN_SCROLL_ITEMS_IMPL_HH__
+#ifndef __RAPICORN_SCROLL_WIDGETS_IMPL_HH__
+#define __RAPICORN_SCROLL_WIDGETS_IMPL_HH__
 
 #include <ui/scrollitems.hh>
 #include <ui/container.hh>
@@ -23,4 +23,4 @@ public:
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_SCROLL_ITEMS_IMPL_HH__ */
+#endif  /* __RAPICORN_SCROLL_WIDGETS_IMPL_HH__ */

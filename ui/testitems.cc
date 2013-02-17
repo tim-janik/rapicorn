@@ -22,12 +22,12 @@ TestContainer::_property_list()
   static Property *properties[] = {
     MakeProperty (TestContainer, value,         "Value",         "Store string value for assertion",           "rw"),
     MakeProperty (TestContainer, assert_value,  "Assert Value",  "Assert a particular string value",           "rw"),
-    MakeProperty (TestContainer, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestContainer, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestContainer, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestContainer, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestContainer, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestContainer, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_left,   "Assert-Left",   "Assert positioning of the left widget edge",   -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_right,  "Assert-Right",  "Assert positioning of the right widget edge",  -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom widget edge", -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_top,    "Assert-Top",    "Assert positioning of the top widget edge",    -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_width,  "Assert-Width",  "Assert amount of the widget width",            -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_height, "Assert-Height", "Assert amount of the widget height",           -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
     MakeProperty (TestContainer, paint_allocation, "Paint Allocation", "Fill allocation rectangle with a solid color",  "rw"),
     MakeProperty (TestContainer, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
@@ -41,7 +41,7 @@ TestContainer::_property_list()
 static uint test_containers_rendered = 0;
 
 uint
-TestContainer::seen_test_items ()
+TestContainer::seen_test_widgets ()
 {
   return test_containers_rendered;
 }
@@ -172,12 +172,12 @@ protected:
     if (ident == ":test-pass")
       return string_to_bool (arg) ? Selector::Selob::true_match() : NULL;
     else if (ident == "::test-parent")
-      return Selector::SelobAllocator::selob_allocator (selob)->item_selob (*parent());
+      return Selector::SelobAllocator::selob_allocator (selob)->widget_selob (*parent());
     else
       return NULL;
   }
 };
-static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
+static const WidgetFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 const PropertyList&
 TestBox::_property_list()
@@ -206,10 +206,10 @@ protected:
   void
   make_snapshot ()
   {
-    WindowImpl *witem = get_window();
-    if (snapshot_file_ != "" && witem)
+    WindowImpl *wwidget = get_window();
+    if (snapshot_file_ != "" && wwidget)
       {
-        cairo_surface_t *isurface = witem->create_snapshot (allocation());
+        cairo_surface_t *isurface = wwidget->create_snapshot (allocation());
         cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
         cairo_surface_destroy (isurface);
         String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
@@ -230,21 +230,21 @@ public:
   {
     if (!handler_id_)
       {
-        WindowImpl *witem = get_window();
-        if (witem)
+        WindowImpl *wwidget = get_window();
+        if (wwidget)
           {
-            EventLoop *loop = witem->get_loop();
+            EventLoop *loop = wwidget->get_loop();
             if (loop)
               handler_id_ = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
           }
       }
   }
 };
-static const ItemFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
+static const WidgetFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
 
-class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface {
+class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidgetIface {
   bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
-  Requisition rec_; StringSeq seq_; IdlTestItemIface *self_;
+  Requisition rec_; StringSeq seq_; IdlTestWidgetIface *self_;
   virtual bool          bool_prop () const                      { return bool_; }
   virtual void          bool_prop (bool b)                      { bool_ = b; }
   virtual int           int_prop () const                       { return int_; }
@@ -259,13 +259,13 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          record_prop (const Requisition &r)      { rec_ = r; }
   virtual StringSeq     sequence_prop () const                  { return seq_; }
   virtual void          sequence_prop (const StringSeq &s)      { seq_ = s; }
-  virtual IdlTestItemIface* self_prop () const                  { return self_; }
-  virtual void          self_prop (IdlTestItemIface *s)         { self_ = s; }
+  virtual IdlTestWidgetIface* self_prop () const                  { return self_; }
+  virtual void          self_prop (IdlTestWidgetIface *s)         { self_ = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}
-  virtual const PropertyList& _property_list () { return RAPICORN_AIDA_PROPERTY_CHAIN (ItemImpl::_property_list(), IdlTestItemIface::_property_list()); }
+  virtual const PropertyList& _property_list () { return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::_property_list(), IdlTestWidgetIface::_property_list()); }
 };
-static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
+static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::Factory::IdlTestWidget");
 
 } // Rapicorn

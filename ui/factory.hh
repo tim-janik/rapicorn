@@ -22,13 +22,13 @@ String      parse_ui_data       (const String           &uinamespace,
                                  const char             *data,
                                  const String           &i18n_domain = "",
                                  vector<String>         *definitions = NULL);
-ItemImpl&   create_ui_item      (const String           &item_identifier,
+WidgetImpl&   create_ui_widget      (const String           &widget_identifier,
                                  const ArgumentList     &arguments = ArgumentList());
 void        create_ui_children  (ContainerImpl          &container,
-                                 vector<ItemImpl*>      *children,
+                                 vector<WidgetImpl*>      *children,
                                  const String           &presuppose,
                                  int64                   max_children = -1);
-bool        check_ui_window     (const String           &item_identifier);
+bool        check_ui_window     (const String           &widget_identifier);
 void        use_ui_namespace    (const String           &uinamespace);
 
 // == Factory Contexts ==
@@ -41,17 +41,17 @@ const StringSeq& factory_context_tags      (FactoryContext *fc);
 UserSource       factory_context_source    (FactoryContext *fc);
 String           factory_context_impl_type (FactoryContext *fc);
 
-/* --- item type registration --- */
-struct ItemTypeFactory : protected Deletable {
+/* --- widget type registration --- */
+struct WidgetTypeFactory : protected Deletable {
   const String  qualified_type;
-  RAPICORN_CLASS_NON_COPYABLE (ItemTypeFactory);
+  RAPICORN_CLASS_NON_COPYABLE (WidgetTypeFactory);
 protected:
-  static void   register_item_factory   (const ItemTypeFactory  &itfactory);
+  static void   register_widget_factory   (const WidgetTypeFactory  &itfactory);
   static void   sanity_check_identifier (const char             *namespaced_ident);
 public:
-  explicit      ItemTypeFactory         (const char             *namespaced_ident,
+  explicit      WidgetTypeFactory         (const char             *namespaced_ident,
                                          bool _isevh, bool _iscontainer, bool);
-  virtual ItemImpl* create_item         (FactoryContext         *fc) const = 0;
+  virtual WidgetImpl* create_widget         (FactoryContext         *fc) const = 0;
   inline String type_name               () const { return qualified_type; }
   const bool iseventhandler, iscontainer;
 };
@@ -60,25 +60,25 @@ public:
 
 // namespace Rapicorn
 
-/* --- item factory template --- */
+/* --- widget factory template --- */
 template<class Type>
-class ItemFactory : Factory::ItemTypeFactory {
-  virtual ItemImpl*
-  create_item (FactoryContext *fc) const
+class WidgetFactory : Factory::WidgetTypeFactory {
+  virtual WidgetImpl*
+  create_widget (FactoryContext *fc) const
   {
-    ItemImpl *item = new Type();
-    item->factory_context (fc);
-    return item;
+    WidgetImpl *widget = new Type();
+    widget->factory_context (fc);
+    return widget;
   }
 public:
-  explicit ItemFactory (const char *namespaced_ident) :
-    ItemTypeFactory (namespaced_ident,
+  explicit WidgetFactory (const char *namespaced_ident) :
+    WidgetTypeFactory (namespaced_ident,
                      TraitConvertible<EventHandler,Type>::TRUTH,
                      TraitConvertible<ContainerImpl,Type>::TRUTH,
                      TraitConvertible<int,Type>::TRUTH)
   {
     sanity_check_identifier (namespaced_ident);
-    register_item_factory (*this);
+    register_widget_factory (*this);
   }
 };
 

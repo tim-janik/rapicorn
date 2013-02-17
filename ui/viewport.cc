@@ -45,7 +45,7 @@ ViewportImpl::child_viewport ()
 }
 
 Affine
-ViewportImpl::child_affine (const ItemImpl &item)
+ViewportImpl::child_affine (const WidgetImpl &widget)
 {
   const Allocation &area = allocation();
   const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
@@ -53,10 +53,10 @@ ViewportImpl::child_affine (const ItemImpl &item)
 }
 
 void
-ViewportImpl::render_item (RenderContext &rcontext)
+ViewportImpl::render_widget (RenderContext &rcontext)
 {
   // prevent recursive rendering of children
-  ItemImpl::render_item (rcontext);
+  WidgetImpl::render_widget (rcontext);
   // viewport children are rendered in render()
 }
 
@@ -66,7 +66,7 @@ ViewportImpl::render (RenderContext &rcontext, const Rect &rect)
   if (!has_drawable_child())
     return;
   const Allocation &area = allocation();
-  ItemImpl &child = get_child();
+  WidgetImpl &child = get_child();
   const int xoffset = xoffset_, yoffset = yoffset_;
   // constrain rendering within allocation
   Region what = rect;

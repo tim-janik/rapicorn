@@ -10,17 +10,17 @@
 namespace Rapicorn {
 
 const PropertyList&
-ItemList::_property_list()
+WidgetList::_property_list()
 {
   static Property *properties[] = {
-    MakeProperty (ItemList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
-    MakeProperty (ItemList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
+    MakeProperty (WidgetList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
+    MakeProperty (WidgetList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
   };
   static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
-ItemListImpl::ItemListImpl() :
+WidgetListImpl::WidgetListImpl() :
   model_ (NULL),
   hadjustment_ (NULL), vadjustment_ (NULL),
   browse_ (true), n_cols_ (0),
@@ -28,7 +28,7 @@ ItemListImpl::ItemListImpl() :
   current_row_ (18446744073709551615ULL)
 {}
 
-ItemListImpl::~ItemListImpl()
+WidgetListImpl::~WidgetListImpl()
 {
   /* remove model */
   ListModelIface *oldmodel = model_;
@@ -60,7 +60,7 @@ ItemListImpl::~ItemListImpl()
 }
 
 void
-ItemListImpl::constructed ()
+WidgetListImpl::constructed ()
 {
   if (!model_)
     {
@@ -82,9 +82,9 @@ ItemListImpl::constructed ()
       {
         model_ = store;
         ref_sink (model_);
-        // model_->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
-        // model_->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
-        // model_->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
+        // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
+        // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
+        // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
         n_cols_ = model_->columns();
       }
       unref (ref_sink (store));
@@ -93,7 +93,7 @@ ItemListImpl::constructed ()
 }
 
 void
-ItemListImpl::hierarchy_changed (ItemImpl *old_toplevel)
+WidgetListImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   MultiContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored())
@@ -101,7 +101,7 @@ ItemListImpl::hierarchy_changed (ItemImpl *old_toplevel)
 }
 
 Adjustment&
-ItemListImpl::hadjustment () const
+WidgetListImpl::hadjustment () const
 {
   if (!hadjustment_)
     hadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
@@ -109,19 +109,19 @@ ItemListImpl::hadjustment () const
 }
 
 Adjustment&
-ItemListImpl::vadjustment () const
+WidgetListImpl::vadjustment () const
 {
   if (!vadjustment_)
     {
       vadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
-      ItemListImpl &self = const_cast<ItemListImpl&> (*this);
-      vadjustment_->sig_value_changed() += Aida::slot (self, &ItemImpl::queue_visual_update);
+      WidgetListImpl &self = const_cast<WidgetListImpl&> (*this);
+      vadjustment_->sig_value_changed() += Aida::slot (self, &WidgetImpl::queue_visual_update);
     }
   return *vadjustment_;
 }
 
 Adjustment*
-ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
+WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source,
                               const String        &name)
 {
   switch (adj_source)
@@ -136,7 +136,7 @@ ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
 }
 
 void
-ItemListImpl::model (const String &modelurl)
+WidgetListImpl::model (const String &modelurl)
 {
   BaseObject *obj = NULL; // FIXME: plor_get (modelurl);
   ListModelIface *model = dynamic_cast<ListModelIface*> (obj);
@@ -145,10 +145,10 @@ ItemListImpl::model (const String &modelurl)
   if (model_)
     {
       ref_sink (model_);
-      // model_->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
-      // model_->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
-      // model_->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
-      // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &ItemListImpl::selection_changed);
+      // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
+      // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
+      // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
+      // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &WidgetListImpl::selection_changed);
     }
   if (oldmodel)
     {
@@ -162,13 +162,13 @@ ItemListImpl::model (const String &modelurl)
 }
 
 String
-ItemListImpl::model () const
+WidgetListImpl::model () const
 {
   return ""; // FIME: model_ ? model_->plor_name() : "";
 }
 
 void
-ItemListImpl::model_changed (int first, int last)
+WidgetListImpl::model_changed (int first, int last)
 {
 #warning FIXME: intersect changed rows with visible rows
   for (uint64 i = first; i <= uint64 (last); i++)
@@ -180,19 +180,19 @@ ItemListImpl::model_changed (int first, int last)
 }
 
 void
-ItemListImpl::model_inserted (int first, int last)
+WidgetListImpl::model_inserted (int first, int last)
 {
   invalidate_model (true, true);
 }
 
 void
-ItemListImpl::model_removed (int first, int last)
+WidgetListImpl::model_removed (int first, int last)
 {
   invalidate_model (true, true);
 }
 
 void
-ItemListImpl::toggle_selected (int row)
+WidgetListImpl::toggle_selected (int row)
 {
   if (selection_.size() <= size_t (row))
     selection_.resize (row + 1);
@@ -201,7 +201,7 @@ ItemListImpl::toggle_selected (int row)
 }
 
 void
-ItemListImpl::selection_changed (int first, int last)
+WidgetListImpl::selection_changed (int first, int last)
 {
   // FIXME: intersect with visible rows
   for (int i = first; i <= last; i++)
@@ -213,7 +213,7 @@ ItemListImpl::selection_changed (int first, int last)
 }
 
 void
-ItemListImpl::invalidate_model (bool invalidate_heights,
+WidgetListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
   need_resize_scroll_ = true;
@@ -222,7 +222,7 @@ ItemListImpl::invalidate_model (bool invalidate_heights,
 }
 
 void
-ItemListImpl::visual_update ()
+WidgetListImpl::visual_update ()
 {
   need_resize_scroll_ = true; // FIXME
   if (need_resize_scroll_)
@@ -238,14 +238,14 @@ ItemListImpl::visual_update ()
 }
 
 void
-ItemListImpl::invalidate_parent ()
+WidgetListImpl::invalidate_parent ()
 {
   if (!block_invalidate_)
     MultiContainerImpl::invalidate_parent();
 }
 
 void
-ItemListImpl::size_request (Requisition &requisition)
+WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
   measure_rows (4096); // FIXME: use monitor size
@@ -272,7 +272,7 @@ ItemListImpl::size_request (Requisition &requisition)
 }
 
 void
-ItemListImpl::size_allocate (Allocation area, bool changed)
+WidgetListImpl::size_allocate (Allocation area, bool changed)
 {
   need_resize_scroll_ = need_resize_scroll_ || allocation() != area || changed;
   if (need_resize_scroll_)
@@ -288,7 +288,7 @@ ItemListImpl::size_allocate (Allocation area, bool changed)
 }
 
 bool
-ItemListImpl::pixel_positioning (const int64       mcount,
+WidgetListImpl::pixel_positioning (const int64       mcount,
                                  const ModelSizes &ms) const
 {
   return 0;
@@ -296,7 +296,7 @@ ItemListImpl::pixel_positioning (const int64       mcount,
 }
 
 void
-ItemListImpl::measure_rows (int64 maxpixels)
+WidgetListImpl::measure_rows (int64 maxpixels)
 {
   ModelSizes &ms = model_sizes_;
   /* create measuring context */
@@ -336,7 +336,7 @@ ItemListImpl::measure_rows (int64 maxpixels)
 }
 
 int
-ItemListImpl::row_height (ModelSizes &ms,
+WidgetListImpl::row_height (ModelSizes &ms,
                           int64       list_row)
 {
   map<int64,int>::iterator it = ms.size_cache.find (list_row);
@@ -350,7 +350,7 @@ ItemListImpl::row_height (ModelSizes &ms,
 }
 
 int64 /* list bottom relative y for list_row */
-ItemListImpl::row_layout (double      vscrollpos,
+WidgetListImpl::row_layout (double      vscrollpos,
                           int64       mcount,
                           ModelSizes &ms,
                           int64       list_row)
@@ -373,7 +373,7 @@ ItemListImpl::row_layout (double      vscrollpos,
 }
 
 int64
-ItemListImpl::position2row (double   list_fraction,
+WidgetListImpl::position2row (double   list_fraction,
                             double  *row_fraction)
 {
   /* scroll position interpretation depends on the available vertical scroll
@@ -387,7 +387,7 @@ ItemListImpl::position2row (double   list_fraction,
    *    The scroll position is interpreted as a fractional pointer into the
    *    interval [0,rowcount[. So the integer part of the scroll position will
    *    always point at one particular row and the fractional part is
-   *    interpreted as an offset into the item's row, as [row_index.row_fraction].
+   *    interpreted as an offset into the widget's row, as [row_index.row_fraction].
    *    From this, the actual scroll position is interpolated so that the top
    *    of the first row and the bottom of the last row are aligned with top and
    *    bottom of the list view respectively.
@@ -426,7 +426,7 @@ ItemListImpl::position2row (double   list_fraction,
 }
 
 double
-ItemListImpl::row2position (const int64  list_row,
+WidgetListImpl::row2position (const int64  list_row,
                             const double list_alignment)
 {
   const int64 mcount = model_->size();
@@ -476,7 +476,7 @@ ItemListImpl::row2position (const int64  list_row,
 }
 
 int64
-ItemListImpl::scroll_row_layout (ListRow *lr_current,
+WidgetListImpl::scroll_row_layout (ListRow *lr_current,
                                  int64 *scrollrowy,
                                  int64 *scrollrowupper,
                                  int64 *scrollrowlower,
@@ -486,8 +486,8 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
   /* scroll position interpretation:
    * the current slider position is interpreted as a fractional pointer into the
    * interval [0,count[. so the integer part of the scroll position will always
-   * point at one particular item and the fractional part is interpreted as an
-   * offset into the item's row.
+   * point at one particular widget and the fractional part is interpreted as an
+   * offset into the widget's row.
    * Scrolling for large models works by interpreting the scroll adjustment
    * values as [row_index.row_fraction]. From this, a scroll position is
    * interpolated so that the top of the first row and the bottom of the last
@@ -496,16 +496,16 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
    */
   const double norm_value = vadjustment_->nvalue();            // 0..1 scroll position
   const double scroll_value = norm_value * model_->size();    // fraction into count()
-  const int64 scroll_item = MIN (model_->size() - 1, ifloor (scroll_value));
-  const double scroll_fraction = MIN (1.0, scroll_value - scroll_item); // fraction into scroll_item row
+  const int64 scroll_widget = MIN (model_->size() - 1, ifloor (scroll_value));
+  const double scroll_fraction = MIN (1.0, scroll_value - scroll_widget); // fraction into scroll_widget row
 
-  int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_item);
+  int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_widget);
   {
     Requisition requisition = lr_current->rowbox->requisition();
     rowheight = requisition.height;
   }
 
-  assert_return (rowheight > 0, scroll_item);
+  assert_return (rowheight > 0, scroll_widget);
   const int64 rowlower = rowheight * (1 - scroll_fraction);       // fractional lower row pixels
   const int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
   *scrollrowy = listlower - rowlower;
@@ -513,11 +513,11 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
   *scrollrowlower = rowlower;
   *listupperp = allocation().height - listlower;
   *listheightp = allocation().height;
-  return scroll_item;
+  return scroll_widget;
 }
 
 void
-ItemListImpl::resize_scroll () // model_->size() >= 1
+WidgetListImpl::resize_scroll () // model_->size() >= 1
 {
   const int64 mcount = model_->size();
 
@@ -594,7 +594,7 @@ ItemListImpl::resize_scroll () // model_->size() >= 1
 }
 
 void
-ItemListImpl::resize_scroll_preserving () // model_->size() >= 1
+WidgetListImpl::resize_scroll_preserving () // model_->size() >= 1
 {
   if (!block_invalidate_ && drawable() &&
       !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
@@ -610,7 +610,7 @@ ItemListImpl::resize_scroll_preserving () // model_->size() >= 1
 }
 
 void
-ItemListImpl::cache_row (ListRow *lr)
+WidgetListImpl::cache_row (ListRow *lr)
 {
   row_cache_.push_back (lr);
   lr->rowbox->visible (false);
@@ -620,25 +620,25 @@ ItemListImpl::cache_row (ListRow *lr)
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
 
 ListRow*
-ItemListImpl::create_row (uint64 nthrow,
+WidgetListImpl::create_row (uint64 nthrow,
                           bool   with_size_groups)
 {
   AnySeq row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   for (uint i = 0; i < row.size(); i++)
     {
-      ItemImpl *item = ref_sink (&Factory::create_ui_item ("Label"));
-      lr->cols.push_back (item);
+      WidgetImpl *widget = ref_sink (&Factory::create_ui_widget ("Label"));
+      lr->cols.push_back (widget);
     }
   IFDEBUG (dbg_created++);
-  lr->rowbox = &ref_sink (&Factory::create_ui_item ("ListRow"))->interface<ContainerImpl>();
+  lr->rowbox = &ref_sink (&Factory::create_ui_widget ("ListRow"))->interface<ContainerImpl>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
 
   while (size_groups_.size() < lr->cols.size())
     size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
   if (with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
-      size_groups_[i]->add_item (*lr->cols[i]);
+      size_groups_[i]->add_widget (*lr->cols[i]);
 
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->rowbox->add (lr->cols[i]);
@@ -647,7 +647,7 @@ ItemListImpl::create_row (uint64 nthrow,
 }
 
 void
-ItemListImpl::fill_row (ListRow *lr,
+WidgetListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
   AnySeq row = model_->row (nthrow);
@@ -663,7 +663,7 @@ ItemListImpl::fill_row (ListRow *lr,
 }
 
 ListRow*
-ItemListImpl::lookup_row (uint64 row)
+WidgetListImpl::lookup_row (uint64 row)
 {
   RowMap::iterator ri = row_map_.find (row);
   if (ri != row_map_.end())
@@ -673,7 +673,7 @@ ItemListImpl::lookup_row (uint64 row)
 }
 
 ListRow*
-ItemListImpl::fetch_row (uint64 row)
+WidgetListImpl::fetch_row (uint64 row)
 {
   bool filled = false;
   ListRow *lr;
@@ -700,7 +700,7 @@ ItemListImpl::fetch_row (uint64 row)
 }
 
 uint64 // FIXME: signed
-ItemListImpl::measure_row (ListRow *lr,
+WidgetListImpl::measure_row (ListRow *lr,
                            uint64  *allocation_offset)
 {
   if (allocation_offset)
@@ -721,13 +721,13 @@ ItemListImpl::measure_row (ListRow *lr,
 }
 
 void
-ItemListImpl::reset (ResetMode mode)
+WidgetListImpl::reset (ResetMode mode)
 {
   // current_row_ = 18446744073709551615ULL;
 }
 
 bool
-ItemListImpl::handle_event (const Event &event)
+WidgetListImpl::handle_event (const Event &event)
 {
   bool handled = false;
   if (!model_)
@@ -794,6 +794,6 @@ ItemListImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const ItemFactory<ItemListImpl> item_list_factory ("Rapicorn::Factory::ItemList");
+static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
 
 } // Rapicorn

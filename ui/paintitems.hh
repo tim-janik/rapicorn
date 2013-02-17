@@ -1,12 +1,12 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#ifndef __RAPICORN_PAINT_ITEMS_HH__
-#define __RAPICORN_PAINT_ITEMS_HH__
+#ifndef __RAPICORN_PAINT_WIDGETS_HH__
+#define __RAPICORN_PAINT_WIDGETS_HH__
 
 #include <ui/item.hh>
 
 namespace Rapicorn {
 
-class Arrow : public virtual ItemImpl {
+class Arrow : public virtual WidgetImpl {
 protected:
   virtual
   const PropertyList&    _property_list();
@@ -17,7 +17,7 @@ public:
   virtual SizePolicyType size_policy    () const = 0;
 };
 
-class DotGrid : public virtual ItemImpl {
+class DotGrid : public virtual WidgetImpl {
   FrameType             dot_type        () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
   virtual
@@ -42,7 +42,7 @@ public:
   virtual void          bottom_padding_dots (uint c)  = 0;
 };
 
-class DrawableImpl : public virtual ItemImpl, public virtual DrawableIface {
+class DrawableImpl : public virtual WidgetImpl, public virtual DrawableIface {
   Pixbuf pixbuf_; int x_, y_;
 protected:
   virtual void  draw_rect       (int x, int y, const Pixbuf &pixbuf);
@@ -56,4 +56,4 @@ public:
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_PAINT_ITEMS_HH__ */
+#endif  /* __RAPICORN_PAINT_WIDGETS_HH__ */

@@ -386,15 +386,15 @@ test_selector_validation ()
 REGISTER_UITHREAD_TEST ("Selector/Validation", test_selector_validation);
 
 static void
-test_query (int line, ItemIface *iroot, const String &selector, ssize_t expect, const String &expected_type = "")
+test_query (int line, WidgetIface *iroot, const String &selector, ssize_t expect, const String &expected_type = "")
 {
-  ItemImpl *root = dynamic_cast<ItemImpl*> (iroot);
+  WidgetImpl *root = dynamic_cast<WidgetImpl*> (iroot);
   TASSERT (root != NULL);
 
-  ItemIface *query_first = root->query_selector (selector);
-  ItemIface *query_unique = root->query_selector_unique (selector);
-  ItemSeq qa_itseq = root->query_selector_all (selector);
-  ItemIfaceVector query_all (qa_itseq);
+  WidgetIface *query_first = root->query_selector (selector);
+  WidgetIface *query_unique = root->query_selector_unique (selector);
+  WidgetSeq qa_itseq = root->query_selector_all (selector);
+  WidgetIfaceVector query_all (qa_itseq);
 
   if (Test::verbose())
     {
@@ -523,13 +523,13 @@ test_selector_matching ()
   test_query (__LINE__, w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience");
   // classes
   test_query (__LINE__, w, "*.Window", 1, "#test-dialog");
-  test_query (__LINE__, w, "*", -10, ".Item");
+  test_query (__LINE__, w, "*", -10, ".Widget");
   test_query (__LINE__, w, "*:not(:empty)", -10, ".Container");
-  test_query (__LINE__, w, ".Item:not(.Container)", -5, ":empty");
-  test_query (__LINE__, w, ".Label", -5, ".Item");
+  test_query (__LINE__, w, ".Widget:not(.Container)", -5, ":empty");
+  test_query (__LINE__, w, ".Label", -5, ".Widget");
   test_query (__LINE__, w, ".VBox", -1, ".Container");
-  test_query (__LINE__, w, ".Container", -10, ".Item");
-  test_query (__LINE__, w, "*.Window.Container.Item", 1, ":root");
+  test_query (__LINE__, w, ".Container", -10, ".Widget");
+  test_query (__LINE__, w, "*.Window.Container.Widget", 1, ":root");
   test_query (__LINE__, w, "* > *", -20, ":not(.Window)");
   // pseudo classes :empty :only-child :root :first-child :last-child
   test_query (__LINE__, w, "* VBox  Button > Frame Label:empty", 4, "Label");
@@ -543,22 +543,22 @@ test_selector_matching ()
   test_query (__LINE__, w, "HBox#testbox > :first-child", 1, "Button#ChildA");
   test_query (__LINE__, w, "HBox#testbox > *:last-child", 1, "Button#ChildE");
   // custom pseudo selectors
-  test_query (__LINE__, w, "#test-item:test-pass", 0);
-  test_query (__LINE__, w, "#test-item:test-pass(1)", 1, "TestItem");
-  test_query (__LINE__, w, "#test-item:test-pass(0)", 0);
-  test_query (__LINE__, w, "#test-item:test-pass(2)", 1, "TestItem");
-  test_query (__LINE__, w, "#test-item:test-pass(yes)", 1, "TestItem");
-  test_query (__LINE__, w, "#test-item:Test-PASS(true)", 1, "TestItem");
-  test_query (__LINE__, w, "#test-item:Test-PASS(false)", 0);
-  test_query (__LINE__, w, "HBox! > TestItem#test-item", 1, "HBox"); // TestItem parent is HBox
-  test_query (__LINE__, w, "TestItem#test-item::test-parent", 1, "HBox"); // access parent through pseudo element
-  test_query (__LINE__, w, "TestItem#test-item::test-parent:empty", 0); // classified pseudo element
-  test_query (__LINE__, w, "TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // classified matching pseudo element
-  test_query (__LINE__, w, "TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // pseudo element with subject indicator
-  test_query (__LINE__, w, "*.Window TestItem#test-item::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
-  test_query (__LINE__, w, "*.Window TestItem#test-item::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
+  test_query (__LINE__, w, "#test-widget:test-pass", 0);
+  test_query (__LINE__, w, "#test-widget:test-pass(1)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:test-pass(0)", 0);
+  test_query (__LINE__, w, "#test-widget:test-pass(2)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:test-pass(yes)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:Test-PASS(true)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:Test-PASS(false)", 0);
+  test_query (__LINE__, w, "HBox! > TestWidget#test-widget", 1, "HBox"); // TestWidget parent is HBox
+  test_query (__LINE__, w, "TestWidget#test-widget::test-parent", 1, "HBox"); // access parent through pseudo element
+  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:empty", 0); // classified pseudo element
+  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // classified matching pseudo element
+  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // pseudo element with subject indicator
+  test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
+  test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
 
-  ItemIface *i1 = w->query_selector ("#special-arrow");
+  WidgetIface *i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
   TASSERT (i1->query_selector_all ("*").size() == 1);
 
@@ -580,14 +580,14 @@ static const char test_dialog_xml[] =
   "          <Frame>\n"
   "            <VBox spacing='5'>\n"
   "              <Label markup-text='Test Buttons:'/>\n"
-  "              <Button on-click='Item::print(\"click on first button\")'>\n"
+  "              <Button on-click='Widget::print(\"click on first button\")'>\n"
   "                <Label id='label1' markup-text='Label One'/>\n"
   "              </Button>\n"
   "              <HBox hexpand='1' spacing='3'>\n"
-  "                <Button on-click='Item::print(\"Normal Button\")'>\n"
+  "                <Button on-click='Widget::print(\"Normal Button\")'>\n"
   "                  <Label id='label123' markup-text='one-two-three' />\n"
   "                </Button>\n"
-  "                <TestItem id='test-item'/>\n"
+  "                <TestWidget id='test-widget'/>\n"
   "              </HBox>\n"
   "            </VBox>\n"
   "          </Frame>\n"

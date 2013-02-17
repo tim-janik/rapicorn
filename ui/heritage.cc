@@ -109,21 +109,21 @@ colorset_base (StateType state,
 typedef Color (*ColorFunc) (StateType, ColorType);
 
 class Heritage::Internals {
-  ItemImpl &item_;
+  WidgetImpl &widget_;
   ColorFunc ncf, scf;
 public:
   Heritage *selected;
-  Internals (ItemImpl &item,
+  Internals (WidgetImpl &widget,
              ColorFunc normal_cf,
              ColorFunc selected_cf) :
-    item_ (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
+    widget_ (widget), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
   bool
-  match (ItemImpl &item,
+  match (WidgetImpl &widget,
          ColorFunc normal_cf,
          ColorFunc selected_cf)
   {
-    return item == item_ && normal_cf == ncf && selected_cf == scf;
+    return widget == widget_ && normal_cf == ncf && selected_cf == scf;
   }
   Color
   get_color (const Heritage *heritage,
@@ -155,10 +155,10 @@ Heritage::~Heritage ()
 
 Heritage*
 Heritage::create_heritage (WindowImpl     &window,
-                           ItemImpl       &item,
+                           WidgetImpl       &widget,
                            ColorSchemeType color_scheme)
 {
-  WindowImpl *iwindow = item.get_window();
+  WindowImpl *iwindow = widget.get_window();
   assert (iwindow == &window);
   ColorFunc cnorm = colorset_normal, csel = colorset_selected;
   switch (color_scheme)
@@ -167,13 +167,13 @@ Heritage::create_heritage (WindowImpl     &window,
     case COLOR_SELECTED:        cnorm = colorset_selected; break;
     case COLOR_NORMAL: case COLOR_INHERIT: ;
     }
-  Internals *internals = new Internals (item, cnorm, csel);
+  Internals *internals = new Internals (widget, cnorm, csel);
   Heritage *self = new Heritage (window, internals);
   return self;
 }
 
 Heritage*
-Heritage::adapt_heritage (ItemImpl       &item,
+Heritage::adapt_heritage (WidgetImpl       &widget,
                           ColorSchemeType color_scheme)
 {
   if (internals_)
@@ -186,13 +186,13 @@ Heritage::adapt_heritage (ItemImpl       &item,
         case COLOR_SELECTED:    cnorm = colorset_selected; break;
         case COLOR_NORMAL:      ;
         }
-      if (internals_->match (item, cnorm, csel))
+      if (internals_->match (widget, cnorm, csel))
         return this;
     }
-  WindowImpl *window = item.get_window();
+  WindowImpl *window = widget.get_window();
   if (!window)
-    fatal ("Heritage: create heritage without window item for: %s", item.name().c_str());
-  return create_heritage (*window, item, color_scheme);
+    fatal ("Heritage: create heritage without window widget for: %s", widget.name().c_str());
+  return create_heritage (*window, widget, color_scheme);
 }
 
 Heritage::Heritage (WindowImpl &window,

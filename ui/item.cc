@@ -14,7 +14,7 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void update_item_heritage (ItemImpl &item) { item.heritage (item.heritage()); }
+  static void update_widget_heritage (WidgetImpl &widget) { widget.heritage (widget.heritage()); }
 };
 
 EventHandler::EventHandler() :
@@ -27,53 +27,53 @@ EventHandler::handle_event (const Event &event)
   return false;
 }
 
-ItemImpl&
-ItemIface::impl ()
+WidgetImpl&
+WidgetIface::impl ()
 {
-  ItemImpl *iimpl = dynamic_cast<ItemImpl*> (this);
+  WidgetImpl *iimpl = dynamic_cast<WidgetImpl*> (this);
   if (!iimpl)
     throw std::bad_cast();
   return *iimpl;
 }
 
-const ItemImpl&
-ItemIface::impl () const
+const WidgetImpl&
+WidgetIface::impl () const
 {
-  const ItemImpl *iimpl = dynamic_cast<const ItemImpl*> (this);
+  const WidgetImpl *iimpl = dynamic_cast<const WidgetImpl*> (this);
   if (!iimpl)
     throw std::bad_cast();
   return *iimpl;
 }
 
-ItemImpl::ItemImpl () :
+WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE | SENSITIVE | ALLOCATABLE),
   parent_ (NULL),
   heritage_ (NULL),
   factory_context_ (NULL), // removing this breaks g++ pre-4.2.0 20060530
   ainfo_ (NULL),
-  sig_changed (Aida::slot (*this, &ItemImpl::do_changed)),
-  sig_invalidate (Aida::slot (*this, &ItemImpl::do_invalidate)),
-  sig_hierarchy_changed (Aida::slot (*this, &ItemImpl::hierarchy_changed))
+  sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
+  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
+  sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
 void
-ItemImpl::constructed()
+WidgetImpl::constructed()
 {}
 
 bool
-ItemImpl::viewable() const
+WidgetImpl::viewable() const
 {
   return drawable() && (!parent_ || parent_->viewable());
 }
 
 bool
-ItemImpl::self_visible () const
+WidgetImpl::self_visible () const
 {
   return false;
 }
 
 bool
-ItemImpl::change_flags_silently (uint32 mask,
+WidgetImpl::change_flags_silently (uint32 mask,
                                  bool   on)
 {
   uint32 old_flags = flags_;
@@ -86,7 +86,7 @@ ItemImpl::change_flags_silently (uint32 mask,
 }
 
 void
-ItemImpl::propagate_state (bool notify_changed)
+WidgetImpl::propagate_state (bool notify_changed)
 {
   change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
   const bool wasallocatable = allocatable();
@@ -103,7 +103,7 @@ ItemImpl::propagate_state (bool notify_changed)
 }
 
 void
-ItemImpl::set_flag (uint32 flag, bool on)
+WidgetImpl::set_flag (uint32 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
@@ -130,57 +130,57 @@ ItemImpl::set_flag (uint32 flag, bool on)
 }
 
 bool
-ItemImpl::grab_default () const
+WidgetImpl::grab_default () const
 {
   return false;
 }
 
 void
-ItemImpl::sensitive (bool b)
+WidgetImpl::sensitive (bool b)
 {
   set_flag (SENSITIVE, b);
 }
 
 void
-ItemImpl::prelight (bool b)
+WidgetImpl::prelight (bool b)
 {
   set_flag (PRELIGHT, b);
 }
 
 bool
-ItemImpl::branch_prelight () const
+WidgetImpl::branch_prelight () const
 {
-  const ItemImpl *item = this;
-  while (item)
+  const WidgetImpl *widget = this;
+  while (widget)
     {
-      if (item->prelight())
+      if (widget->prelight())
         return true;
-      item = item->parent();
+      widget = widget->parent();
     }
   return false;
 }
 
 void
-ItemImpl::impressed (bool b)
+WidgetImpl::impressed (bool b)
 {
   set_flag (IMPRESSED, b);
 }
 
 bool
-ItemImpl::branch_impressed () const
+WidgetImpl::branch_impressed () const
 {
-  const ItemImpl *item = this;
-  while (item)
+  const WidgetImpl *widget = this;
+  while (widget)
     {
-      if (item->impressed())
+      if (widget->impressed())
         return true;
-      item = item->parent();
+      widget = widget->parent();
     }
   return false;
 }
 
 StateType
-ItemImpl::state () const
+WidgetImpl::state () const
 {
   StateType st = StateType (0);
   st |= insensitive() ? STATE_INSENSITIVE : StateType (0);
@@ -192,43 +192,43 @@ ItemImpl::state () const
 }
 
 bool
-ItemImpl::has_focus () const
+WidgetImpl::has_focus () const
 {
   if (test_flags (FOCUS_CHAIN))
     {
-      WindowImpl *ritem = get_window();
-      if (ritem && ritem->get_focus() == this)
+      WindowImpl *rwidget = get_window();
+      if (rwidget && rwidget->get_focus() == this)
         return true;
     }
   return false;
 }
 
 bool
-ItemImpl::can_focus () const
+WidgetImpl::can_focus () const
 {
   return false;
 }
 
 bool
-ItemImpl::grab_focus ()
+WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
   if (!can_focus() || !sensitive() || !viewable())
     return false;
   /* unset old focus */
-  WindowImpl *ritem = get_window();
-  if (ritem)
-    ritem->set_focus (NULL);
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    rwidget->set_focus (NULL);
   /* set new focus */
-  ritem = get_window();
-  if (ritem && ritem->get_focus() == NULL)
-    ritem->set_focus (this);
-  return ritem->get_focus() == this;
+  rwidget = get_window();
+  if (rwidget && rwidget->get_focus() == NULL)
+    rwidget->set_focus (this);
+  return rwidget->get_focus() == this;
 }
 
 bool
-ItemImpl::move_focus (FocusDirType fdir)
+WidgetImpl::move_focus (FocusDirType fdir)
 {
   if (!has_focus() && can_focus())
     return grab_focus();
@@ -236,13 +236,13 @@ ItemImpl::move_focus (FocusDirType fdir)
 }
 
 bool
-ItemImpl::activate_item ()
+WidgetImpl::activate_widget ()
 {
   return false;
 }
 
 bool
-ItemImpl::activate ()
+WidgetImpl::activate ()
 {
   if (!sensitive())
     return false;
@@ -252,58 +252,58 @@ ItemImpl::activate ()
       pcontainer->scroll_to_child (*this);
       pcontainer = pcontainer->parent();
     }
-  return activate_item();
+  return activate_widget();
 }
 
 void
-ItemImpl::notify_key_error ()
+WidgetImpl::notify_key_error ()
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
-    ritem->beep();
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    rwidget->beep();
 }
 
 size_t
-ItemImpl::cross_link (ItemImpl &link, const ItemSlot &uncross)
+WidgetImpl::cross_link (WidgetImpl &link, const WidgetSlot &uncross)
 {
   assert_return (this != &link, 0);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert_return (common_container != NULL, 0);
-  return common_container->item_cross_link (*this, link, uncross);
+  return common_container->widget_cross_link (*this, link, uncross);
 }
 
 void
-ItemImpl::cross_unlink (ItemImpl &link, size_t link_id)
+WidgetImpl::cross_unlink (WidgetImpl &link, size_t link_id)
 {
   assert_return (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert_return (common_container != NULL);
-  common_container->item_cross_unlink (*this, link, link_id);
+  common_container->widget_cross_unlink (*this, link, link_id);
 }
 
 void
-ItemImpl::uncross_links (ItemImpl &link)
+WidgetImpl::uncross_links (WidgetImpl &link)
 {
   assert (this != &link);
   ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert (common_container != NULL);
-  common_container->item_uncross_links (*this, link);
+  common_container->widget_uncross_links (*this, link);
 }
 
 bool
-ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
+WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
 {
-  ItemImpl *self = const_cast<ItemImpl*> (this);
+  WidgetImpl *self = const_cast<WidgetImpl*> (this);
   if (wself && imatcher.match (self, name()))
     return true;
   if (wparent)
     {
-      ItemImpl *pitem = parent();
-      while (pitem)
+      WidgetImpl *pwidget = parent();
+      while (pwidget)
         {
-          if (imatcher.match (pitem, pitem->name()))
+          if (imatcher.match (pwidget, pwidget->name()))
             return true;
-          pitem = pitem->parent();
+          pwidget = pwidget->parent();
         }
     }
   if (children)
@@ -318,50 +318,50 @@ ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMat
 }
 
 bool
-ItemImpl::match_selector (const String &selector)
+WidgetImpl::match_selector (const String &selector)
 {
   Selector::SelobAllocator sallocator;
-  return Selector::Matcher::query_selector_bool (selector, *sallocator.item_selob (*this));
+  return Selector::Matcher::query_selector_bool (selector, *sallocator.widget_selob (*this));
 }
 
-ItemIface*
-ItemImpl::query_selector (const String &selector)
+WidgetIface*
+WidgetImpl::query_selector (const String &selector)
 {
   Selector::SelobAllocator sallocator;
-  Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.item_selob (*this));
-  return selob ? sallocator.selob_item (*selob) : NULL;
+  Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.widget_selob (*this));
+  return selob ? sallocator.selob_widget (*selob) : NULL;
 }
 
-ItemSeq
-ItemImpl::query_selector_all (const String &selector)
+WidgetSeq
+WidgetImpl::query_selector_all (const String &selector)
 {
   Selector::SelobAllocator sallocator;
-  vector<Selector::Selob*> result = Selector::Matcher::query_selector_all (selector, *sallocator.item_selob (*this));
-  ItemSeq items;
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_all (selector, *sallocator.widget_selob (*this));
+  WidgetSeq widgets;
   for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
     {
-      ItemImpl *item = sallocator.selob_item (**it);
-      if (item)
-        items.push_back (item->*Aida::_handle);
+      WidgetImpl *widget = sallocator.selob_widget (**it);
+      if (widget)
+        widgets.push_back (widget->*Aida::_handle);
     }
-  return items;
+  return widgets;
 }
 
-ItemIface*
-ItemImpl::query_selector_unique (const String &selector)
+WidgetIface*
+WidgetImpl::query_selector_unique (const String &selector)
 {
   Selector::SelobAllocator sallocator;
-  Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.item_selob (*this));
-  return selob ? sallocator.selob_item (*selob) : NULL;
+  Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.widget_selob (*this));
+  return selob ? sallocator.selob_widget (*selob) : NULL;
 }
 
 uint
-ItemImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
+WidgetImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
     {
-      EventLoop *loop = ritem->get_loop();
+      EventLoop *loop = rwidget->get_loop();
       if (loop)
         return loop->exec_timer (250, 50, sl, EventLoop::PRIORITY_NOW);
     }
@@ -369,12 +369,12 @@ ItemImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
 }
 
 uint
-ItemImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
+WidgetImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
     {
-      EventLoop *loop = ritem->get_loop();
+      EventLoop *loop = rwidget->get_loop();
       if (loop)
         return loop->exec_timer (200, 20, sl, EventLoop::PRIORITY_NOW);
     }
@@ -382,12 +382,12 @@ ItemImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
 }
 
 uint
-ItemImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
+WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
     {
-      EventLoop *loop = ritem->get_loop();
+      EventLoop *loop = rwidget->get_loop();
       if (loop)
         return loop->exec_timer (250, 33, sl, EventLoop::PRIORITY_NOW);
     }
@@ -395,12 +395,12 @@ ItemImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 }
 
 bool
-ItemImpl::remove_exec (uint exec_id)
+WidgetImpl::remove_exec (uint exec_id)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
     {
-      EventLoop *loop = ritem->get_loop();
+      EventLoop *loop = rwidget->get_loop();
       if (loop)
         return loop->try_remove (exec_id);
     }
@@ -408,7 +408,7 @@ ItemImpl::remove_exec (uint exec_id)
 }
 
 bool
-ItemImpl::clear_exec (uint *exec_id)
+WidgetImpl::clear_exec (uint *exec_id)
 {
   assert_return (exec_id != NULL, false);
   bool removed = false;
@@ -421,18 +421,18 @@ ItemImpl::clear_exec (uint *exec_id)
 static DataKey<uint> visual_update_key;
 
 void
-ItemImpl::queue_visual_update ()
+WidgetImpl::queue_visual_update ()
 {
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
     {
-      WindowImpl *ritem = get_window();
-      if (ritem)
+      WindowImpl *rwidget = get_window();
+      if (rwidget)
         {
-          EventLoop *loop = ritem->get_loop();
+          EventLoop *loop = rwidget->get_loop();
           if (loop)
             {
-              timer_id = loop->exec_timer (20, Aida::slot (*this, &ItemImpl::force_visual_update));
+              timer_id = loop->exec_timer (20, Aida::slot (*this, &WidgetImpl::force_visual_update));
               set_data (&visual_update_key, timer_id);
             }
         }
@@ -440,7 +440,7 @@ ItemImpl::queue_visual_update ()
 }
 
 void
-ItemImpl::force_visual_update ()
+WidgetImpl::force_visual_update ()
 {
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
@@ -452,18 +452,18 @@ ItemImpl::force_visual_update ()
 }
 
 void
-ItemImpl::visual_update ()
+WidgetImpl::visual_update ()
 {}
 
 void
-ItemImpl::finalize()
+WidgetImpl::finalize()
 {
   sig_finalize.emit();
 }
 
-ItemImpl::~ItemImpl()
+WidgetImpl::~WidgetImpl()
 {
-  SizeGroup::delete_item (*this);
+  SizeGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
   if (heritage_)
@@ -480,7 +480,7 @@ ItemImpl::~ItemImpl()
 }
 
 Command*
-ItemImpl::lookup_command (const String &command_name)
+WidgetImpl::lookup_command (const String &command_name)
 {
   typedef std::map<const String, Command*> CommandMap;
   static std::map<const CommandList*,CommandMap*> clist_map;
@@ -502,7 +502,7 @@ ItemImpl::lookup_command (const String &command_name)
 }
 
 bool
-ItemImpl::exec_command (const String &command_call_string)
+WidgetImpl::exec_command (const String &command_call_string)
 {
   String cmd_name;
   StringSeq args;
@@ -515,38 +515,38 @@ ItemImpl::exec_command (const String &command_call_string)
   if (cmd_name == "")
     return true;
 
-  ItemImpl *item = this;
-  while (item)
+  WidgetImpl *widget = this;
+  while (widget)
     {
-      Command *cmd = item->lookup_command (cmd_name);
+      Command *cmd = widget->lookup_command (cmd_name);
       if (cmd)
-        return cmd->exec (item, args);
-      item = item->parent();
+        return cmd->exec (widget, args);
+      widget = widget->parent();
     }
 
   if (command_lib_exec (*this, cmd_name, args))
     return true;
 
-  item = this;
-  while (item)
+  widget = this;
+  while (widget)
     {
-      if (item->custom_command (cmd_name, args))
+      if (widget->custom_command (cmd_name, args))
         return true;
-      item = item->parent();
+      widget = widget->parent();
     }
   critical ("toplevel failed to handle command"); // ultimately Window *always* handles commands
   return false;
 }
 
 bool
-ItemImpl::custom_command (const String    &command_name,
+WidgetImpl::custom_command (const String    &command_name,
                           const StringSeq &command_args)
 {
   return false;
 }
 
 const CommandList&
-ItemImpl::list_commands ()
+WidgetImpl::list_commands ()
 {
   static Command *commands[] = {
   };
@@ -555,32 +555,32 @@ ItemImpl::list_commands ()
 }
 
 Property*
-ItemImpl::lookup_property (const String &property_name)
+WidgetImpl::lookup_property (const String &property_name)
 {
   return _property_lookup (property_name);
 }
 
 String
-ItemImpl::get_property (const String &property_name)
+WidgetImpl::get_property (const String &property_name)
 {
   return _property_get (property_name);
 }
 
 void
-ItemImpl::set_property (const String &property_name, const String &value)
+WidgetImpl::set_property (const String &property_name, const String &value)
 {
   if (!_property_set (property_name, value))
     throw Exception ("no such property: " + name() + "::" + property_name);
 }
 
 const PropertyList&
-ItemImpl::list_properties ()
+WidgetImpl::list_properties ()
 {
   return _property_list();
 }
 
 bool
-ItemImpl::try_set_property (const String &property_name, const String &value)
+WidgetImpl::try_set_property (const String &property_name, const String &value)
 {
   return _property_set (property_name, value);
 }
@@ -594,14 +594,14 @@ static class OvrKey : public DataKey<Requisition> {
 } override_requisition;
 
 double
-ItemImpl::width () const
+WidgetImpl::width () const
 {
   Requisition ovr = get_data (&override_requisition);
   return ovr.width >= 0 ? ovr.width : -1;
 }
 
 void
-ItemImpl::width (double w)
+WidgetImpl::width (double w)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.width = w >= 0 ? w : -1;
@@ -610,14 +610,14 @@ ItemImpl::width (double w)
 }
 
 double
-ItemImpl::height () const
+WidgetImpl::height () const
 {
   Requisition ovr = get_data (&override_requisition);
   return ovr.height >= 0 ? ovr.height : -1;
 }
 
 void
-ItemImpl::height (double h)
+WidgetImpl::height (double h)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.height = h >= 0 ? h : -1;
@@ -626,7 +626,7 @@ ItemImpl::height (double h)
 }
 
 void
-ItemImpl::propagate_heritage ()
+WidgetImpl::propagate_heritage ()
 {
   ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
   if (container)
@@ -635,7 +635,7 @@ ItemImpl::propagate_heritage ()
 }
 
 void
-ItemImpl::heritage (Heritage *heritage)
+WidgetImpl::heritage (Heritage *heritage)
 {
   Heritage *old_heritage = heritage_;
   heritage_ = NULL;
@@ -654,8 +654,8 @@ ItemImpl::heritage (Heritage *heritage)
 }
 
 static bool
-translate_from_ancestor (ItemImpl         *ancestor,
-                         const ItemImpl   *child,
+translate_from_ancestor (WidgetImpl         *ancestor,
+                         const WidgetImpl   *child,
                          const uint    n_points,
                          Point        *points)
 {
@@ -670,22 +670,22 @@ translate_from_ancestor (ItemImpl         *ancestor,
 }
 
 bool
-ItemImpl::translate_from (const ItemImpl   &src_item,
+WidgetImpl::translate_from (const WidgetImpl   &src_widget,
                       const uint    n_points,
                       Point        *points) const
 {
-  ItemImpl *ca = common_ancestor (src_item);
+  WidgetImpl *ca = common_ancestor (src_widget);
   if (!ca)
     return false;
-  ItemImpl *item = const_cast<ItemImpl*> (&src_item);
-  while (item != ca)
+  WidgetImpl *widget = const_cast<WidgetImpl*> (&src_widget);
+  while (widget != ca)
     {
-      ContainerImpl *pc = item->parent();
-      Affine affine = pc->child_affine (*item);
+      ContainerImpl *pc = widget->parent();
+      Affine affine = pc->child_affine (*widget);
       affine.invert();
       for (uint i = 0; i < n_points; i++)
         points[i] = affine.point (points[i]);
-      item = pc;
+      widget = pc;
     }
   bool can_translate = translate_from_ancestor (ca, this, n_points, points);
   if (!can_translate)
@@ -694,15 +694,15 @@ ItemImpl::translate_from (const ItemImpl   &src_item,
 }
 
 bool
-ItemImpl::translate_to (const uint    n_points,
+WidgetImpl::translate_to (const uint    n_points,
                     Point        *points,
-                    const ItemImpl   &target_item) const
+                    const WidgetImpl   &target_widget) const
 {
-  return target_item.translate_from (*this, n_points, points);
+  return target_widget.translate_from (*this, n_points, points);
 }
 
 bool
-ItemImpl::translate_from (const ItemImpl   &src_item,
+WidgetImpl::translate_from (const WidgetImpl   &src_widget,
                       const uint    n_rects,
                       Rect         *rects) const
 {
@@ -714,7 +714,7 @@ ItemImpl::translate_from (const ItemImpl   &src_item,
       points.push_back (rects[i].upper_left());
       points.push_back (rects[i].upper_right());
     }
-  if (!translate_from (src_item, points.size(), &points[0]))
+  if (!translate_from (src_widget, points.size(), &points[0]))
     return false;
   for (uint i = 0; i < n_rects; i++)
     {
@@ -731,15 +731,15 @@ ItemImpl::translate_from (const ItemImpl   &src_item,
 }
 
 bool
-ItemImpl::translate_to (const uint    n_rects,
+WidgetImpl::translate_to (const uint    n_rects,
                     Rect         *rects,
-                    const ItemImpl   &target_item) const
+                    const WidgetImpl   &target_widget) const
 {
-  return target_item.translate_from (*this, n_rects, rects);
+  return target_widget.translate_from (*this, n_rects, rects);
 }
 
 Point
-ItemImpl::point_from_screen_window (Point window_point) /* window coordinates relative */
+WidgetImpl::point_from_screen_window (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
   ContainerImpl *pc = parent();
@@ -753,9 +753,9 @@ ItemImpl::point_from_screen_window (Point window_point) /* window coordinates re
 }
 
 Point
-ItemImpl::point_to_screen_window (Point item_point) /* item coordinates relative */
+WidgetImpl::point_to_screen_window (Point widget_point) /* widget coordinates relative */
 {
-  Point p = item_point;
+  Point p = widget_point;
   ContainerImpl *pc = parent();
   if (pc)
     {
@@ -767,7 +767,7 @@ ItemImpl::point_to_screen_window (Point item_point) /* item coordinates relative
 }
 
 Affine
-ItemImpl::affine_from_screen_window () /* screen_window => item affine */
+WidgetImpl::affine_from_screen_window () /* screen_window => widget affine */
 {
   Affine iaffine;
   ContainerImpl *pc = parent();
@@ -786,7 +786,7 @@ ItemImpl::affine_from_screen_window () /* screen_window => item affine */
 }
 
 Affine
-ItemImpl::affine_to_screen_window () /* item => screen_window affine */
+WidgetImpl::affine_to_screen_window () /* widget => screen_window affine */
 {
   Affine iaffine = affine_from_screen_window();
   if (!iaffine.is_identity())
@@ -795,7 +795,7 @@ ItemImpl::affine_to_screen_window () /* item => screen_window affine */
 }
 
 bool
-ItemImpl::process_event (const Event &event) /* item coordinates relative */
+WidgetImpl::process_event (const Event &event) /* widget coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -805,7 +805,7 @@ ItemImpl::process_event (const Event &event) /* item coordinates relative */
 }
 
 bool
-ItemImpl::process_screen_window_event (const Event &event) /* screen_window coordinates relative */
+WidgetImpl::process_screen_window_event (const Event &event) /* screen_window coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -825,13 +825,13 @@ ItemImpl::process_screen_window_event (const Event &event) /* screen_window coor
 }
 
 bool
-ItemImpl::screen_window_point (Point p) /* window coordinates relative */
+WidgetImpl::screen_window_point (Point p) /* window coordinates relative */
 {
   return point (point_from_screen_window (p));
 }
 
 bool
-ItemImpl::point (Point p) /* item coordinates relative */
+WidgetImpl::point (Point p) /* widget coordinates relative */
 {
   Allocation a = allocation();
   return (drawable() &&
@@ -840,13 +840,13 @@ ItemImpl::point (Point p) /* item coordinates relative */
 }
 
 void
-ItemImpl::hierarchy_changed (ItemImpl *old_toplevel)
+WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   anchored (old_toplevel == NULL);
 }
 
 void
-ItemImpl::set_parent (ContainerImpl *pcontainer)
+WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
@@ -869,9 +869,9 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
     }
   if (pcontainer)
     {
-      /* ensure parent items are always containers (see parent()) */
+      /* ensure parent widgets are always containers (see parent()) */
       if (!dynamic_cast<ContainerImpl*> (pcontainer))
-        throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
+        throw Exception ("not setting non-Container widget as parent: ", pcontainer->name());
       parent_ = pcontainer;
       ainfo_ = NULL;
       if (parent_->heritage())
@@ -884,59 +884,59 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
 }
 
 bool
-ItemImpl::has_ancestor (const ItemImpl &ancestor) const
+WidgetImpl::has_ancestor (const WidgetImpl &ancestor) const
 {
-  const ItemImpl *item = this;
-  while (item)
+  const WidgetImpl *widget = this;
+  while (widget)
     {
-      if (item == &ancestor)
+      if (widget == &ancestor)
         return true;
-      item = item->parent();
+      widget = widget->parent();
     }
   return false;
 }
 
-ItemImpl*
-ItemImpl::common_ancestor (const ItemImpl &other) const
+WidgetImpl*
+WidgetImpl::common_ancestor (const WidgetImpl &other) const
 {
-  ItemImpl *item1 = const_cast<ItemImpl*> (this);
+  WidgetImpl *widget1 = const_cast<WidgetImpl*> (this);
   do
     {
-      ItemImpl *item2 = const_cast<ItemImpl*> (&other);
+      WidgetImpl *widget2 = const_cast<WidgetImpl*> (&other);
       do
         {
-          if (item1 == item2)
-            return item1;
-          item2 = item2->parent();
+          if (widget1 == widget2)
+            return widget1;
+          widget2 = widget2->parent();
         }
-      while (item2);
-      item1 = item1->parent();
+      while (widget2);
+      widget1 = widget1->parent();
     }
-  while (item1);
+  while (widget1);
   return NULL;
 }
 
 WindowImpl*
-ItemImpl::get_window () const
+WidgetImpl::get_window () const
 {
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->window;
-  ItemImpl *item = const_cast<ItemImpl*> (this);
-  while (item->parent_)
-    item = item->parent_;
-  return dynamic_cast<WindowImpl*> (item); // NULL iff this is not type WindowImpl*
+  WidgetImpl *widget = const_cast<WidgetImpl*> (this);
+  while (widget->parent_)
+    widget = widget->parent_;
+  return dynamic_cast<WindowImpl*> (widget); // NULL iff this is not type WindowImpl*
 }
 
 ViewportImpl*
-ItemImpl::get_viewport () const
+WidgetImpl::get_viewport () const
 {
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->viewport;
-  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->parent_)
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget; widget = widget->parent_)
     {
-      ViewportImpl *v = dynamic_cast<ViewportImpl*> (item);
+      ViewportImpl *v = dynamic_cast<ViewportImpl*> (widget);
       if (v)
         return v;
     }
@@ -944,14 +944,14 @@ ItemImpl::get_viewport () const
 }
 
 ResizeContainerImpl*
-ItemImpl::get_resize_container () const
+WidgetImpl::get_resize_container () const
 {
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->resize_container;
-  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->parent_)
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget; widget = widget->parent_)
     {
-      ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (item);
+      ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (widget);
       if (c)
         return c;
     }
@@ -959,12 +959,12 @@ ItemImpl::get_resize_container () const
 }
 
 const AnchorInfo*
-ItemImpl::force_anchor_info () const
+WidgetImpl::force_anchor_info () const
 {
   if (ainfo_)
     return ainfo_;
   // find resize container
-  ItemImpl *parent = const_cast<ItemImpl*> (this);
+  WidgetImpl *parent = const_cast<WidgetImpl*> (this);
   ResizeContainerImpl *rc = NULL;
   while (parent)
     {
@@ -975,30 +975,30 @@ ItemImpl::force_anchor_info () const
     }
   static const AnchorInfo orphan_anchor_info;
   const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
-  const_cast<ItemImpl*> (this)->ainfo_ = ainfo;
+  const_cast<WidgetImpl*> (this)->ainfo_ = ainfo;
   if (anchored())
     assert (get_window() != NULL); // FIXME
   return ainfo;
 }
 
 void
-ItemImpl::changed()
+WidgetImpl::changed()
 {
   if (!finalizing())
     sig_changed.emit();
 }
 
 void
-ItemImpl::invalidate_parent ()
+WidgetImpl::invalidate_parent ()
 {
   /* propagate (size) invalidation from children to parents */
-  ItemImpl *p = parent();
+  WidgetImpl *p = parent();
   if (p)
     p->invalidate_size();
 }
 
 void
-ItemImpl::invalidate()
+WidgetImpl::invalidate()
 {
   const bool widget_state_invalidation = !test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   if (widget_state_invalidation)
@@ -1011,12 +1011,12 @@ ItemImpl::invalidate()
   if (widget_state_invalidation)
     {
       invalidate_parent(); /* need new size-request on parent */
-      SizeGroup::invalidate_item (*this);
+      SizeGroup::invalidate_widget (*this);
     }
 }
 
 void
-ItemImpl::invalidate_size()
+WidgetImpl::invalidate_size()
 {
   if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
@@ -1024,20 +1024,20 @@ ItemImpl::invalidate_size()
       if (!finalizing())
         sig_invalidate.emit();
       invalidate_parent(); /* need new size-request on parent */
-      SizeGroup::invalidate_item (*this);
+      SizeGroup::invalidate_widget (*this);
     }
 }
 
 Requisition
-ItemImpl::inner_size_request()
+WidgetImpl::inner_size_request()
 {
   /* loop until we gather a valid requisition, this explicitely allows for
-   * requisition invalidation during the size_request phase, item implementations
+   * requisition invalidation during the size_request phase, widget implementations
    * have to ensure we're not looping endlessly
    */
-  while (test_flags (ItemImpl::INVALID_REQUISITION))
+  while (test_flags (WidgetImpl::INVALID_REQUISITION))
     {
-      change_flags_silently (ItemImpl::INVALID_REQUISITION, false); // skip notification
+      change_flags_silently (WidgetImpl::INVALID_REQUISITION, false); // skip notification
       Requisition inner; // 0,0
       if (allocatable())
         {
@@ -1059,13 +1059,13 @@ ItemImpl::inner_size_request()
 }
 
 Requisition
-ItemImpl::requisition ()
+WidgetImpl::requisition ()
 {
-  return SizeGroup::item_requisition (*this);
+  return SizeGroup::widget_requisition (*this);
 }
 
 bool
-ItemImpl::tune_requisition (double new_width,
+WidgetImpl::tune_requisition (double new_width,
                             double new_height)
 {
   Requisition req = requisition();
@@ -1077,7 +1077,7 @@ ItemImpl::tune_requisition (double new_width,
 }
 
 void
-ItemImpl::expose_internal (const Region &region)
+WidgetImpl::expose_internal (const Region &region)
 {
   if (!region.empty())
     {
@@ -1089,7 +1089,7 @@ ItemImpl::expose_internal (const Region &region)
 }
 
 void
-ItemImpl::expose (const Region &region) // item relative
+WidgetImpl::expose (const Region &region) // widget relative
 {
   if (drawable() && !test_flags (INVALID_CONTENT))
     {
@@ -1100,13 +1100,13 @@ ItemImpl::expose (const Region &region) // item relative
 }
 
 void
-ItemImpl::type_cast_error (const char *dest_type)
+WidgetImpl::type_cast_error (const char *dest_type)
 {
-  fatal ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
+  fatal ("failed to dynamic_cast<%s> widget: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
 String
-ItemImpl::test_dump ()
+WidgetImpl::test_dump ()
 {
   TestStream *tstream = TestStream::create_test_stream();
   make_test_dump (*tstream);
@@ -1116,7 +1116,7 @@ ItemImpl::test_dump ()
 }
 
 void
-ItemImpl::make_test_dump (TestStream &tstream)
+WidgetImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
   const PropertyList &plist = list_properties();
@@ -1139,15 +1139,15 @@ ItemImpl::make_test_dump (TestStream &tstream)
 }
 
 void
-ItemImpl::dump_test_data (TestStream &tstream)
+WidgetImpl::dump_test_data (TestStream &tstream)
 {}
 
 void
-ItemImpl::dump_private_data (TestStream &tstream)
+WidgetImpl::dump_private_data (TestStream &tstream)
 {}
 
 void
-ItemImpl::find_adjustments (AdjustmentSourceType adjsrc1,
+WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
                         Adjustment         **adj1,
                         AdjustmentSourceType adjsrc2,
                         Adjustment         **adj2,
@@ -1156,9 +1156,9 @@ ItemImpl::find_adjustments (AdjustmentSourceType adjsrc1,
                         AdjustmentSourceType adjsrc4,
                         Adjustment         **adj4)
 {
-  for (ItemImpl *pitem = this->parent(); pitem; pitem = pitem->parent())
+  for (WidgetImpl *pwidget = this->parent(); pwidget; pwidget = pwidget->parent())
     {
-      AdjustmentSource *adjustment_source = pitem->interface<AdjustmentSource*>();
+      AdjustmentSource *adjustment_source = pwidget->interface<AdjustmentSource*>();
       if (!adjustment_source)
         continue;
       if (adj1 && !*adj1)
@@ -1178,7 +1178,7 @@ ItemImpl::find_adjustments (AdjustmentSourceType adjsrc1,
 }
 
 void
-ItemImpl::repack (const PackInfo &orig,
+WidgetImpl::repack (const PackInfo &orig,
               const PackInfo &pnew)
 {
   if (parent())
@@ -1186,8 +1186,8 @@ ItemImpl::repack (const PackInfo &orig,
   invalidate();
 }
 
-ItemImpl::PackInfo&
-ItemImpl::pack_info (bool create)
+WidgetImpl::PackInfo&
+WidgetImpl::pack_info (bool create)
 {
   static const PackInfo pack_info_defaults = {
     0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
@@ -1210,7 +1210,7 @@ ItemImpl::pack_info (bool create)
 }
 
 void
-ItemImpl::hposition (double d)
+WidgetImpl::hposition (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hposition = d;
@@ -1218,7 +1218,7 @@ ItemImpl::hposition (double d)
 }
 
 void
-ItemImpl::hspan (double d)
+WidgetImpl::hspan (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hspan = MAX (1, d);
@@ -1226,7 +1226,7 @@ ItemImpl::hspan (double d)
 }
 
 void
-ItemImpl::vposition (double d)
+WidgetImpl::vposition (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vposition = d;
@@ -1234,7 +1234,7 @@ ItemImpl::vposition (double d)
 }
 
 void
-ItemImpl::vspan (double d)
+WidgetImpl::vspan (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vspan = MAX (1, d);
@@ -1242,7 +1242,7 @@ ItemImpl::vspan (double d)
 }
 
 void
-ItemImpl::left_spacing (int s)
+WidgetImpl::left_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.left_spacing = MAX (0, s);
@@ -1250,7 +1250,7 @@ ItemImpl::left_spacing (int s)
 }
 
 void
-ItemImpl::right_spacing (int s)
+WidgetImpl::right_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.right_spacing = MAX (0, s);
@@ -1258,7 +1258,7 @@ ItemImpl::right_spacing (int s)
 }
 
 void
-ItemImpl::bottom_spacing (int s)
+WidgetImpl::bottom_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.bottom_spacing = MAX (0, s);
@@ -1266,7 +1266,7 @@ ItemImpl::bottom_spacing (int s)
 }
 
 void
-ItemImpl::top_spacing (int s)
+WidgetImpl::top_spacing (int s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.top_spacing = MAX (0, s);
@@ -1274,7 +1274,7 @@ ItemImpl::top_spacing (int s)
 }
 
 void
-ItemImpl::halign (double f)
+WidgetImpl::halign (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.halign = CLAMP (f, 0, 1);
@@ -1282,7 +1282,7 @@ ItemImpl::halign (double f)
 }
 
 void
-ItemImpl::hscale (double f)
+WidgetImpl::hscale (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hscale = f;
@@ -1290,7 +1290,7 @@ ItemImpl::hscale (double f)
 }
 
 void
-ItemImpl::valign (double f)
+WidgetImpl::valign (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.valign = CLAMP (f, 0, 1);
@@ -1298,7 +1298,7 @@ ItemImpl::valign (double f)
 }
 
 void
-ItemImpl::vscale (double f)
+WidgetImpl::vscale (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vscale = f;
@@ -1306,27 +1306,27 @@ ItemImpl::vscale (double f)
 }
 
 void
-ItemImpl::do_changed()
+WidgetImpl::do_changed()
 {
 }
 
 void
-ItemImpl::do_invalidate()
+WidgetImpl::do_invalidate()
 {
 }
 
 bool
-ItemImpl::do_event (const Event &event)
+WidgetImpl::do_event (const Event &event)
 {
   return false;
 }
 
-static DataKey<String> item_name_key;
+static DataKey<String> widget_name_key;
 
 String
-ItemImpl::name () const
+WidgetImpl::name () const
 {
-  String s = get_data (&item_name_key);
+  String s = get_data (&widget_name_key);
   if (s.empty())
     return Factory::factory_context_name (factory_context());
   else
@@ -1334,22 +1334,22 @@ ItemImpl::name () const
 }
 
 void
-ItemImpl::name (const String &str)
+WidgetImpl::name (const String &str)
 {
   if (str.empty())
-    delete_data (&item_name_key);
+    delete_data (&widget_name_key);
   else
-    set_data (&item_name_key, str);
+    set_data (&widget_name_key, str);
 }
 
 FactoryContext*
-ItemImpl::factory_context () const
+WidgetImpl::factory_context () const
 {
   return factory_context_;
 }
 
 void
-ItemImpl::factory_context (FactoryContext *fc)
+WidgetImpl::factory_context (FactoryContext *fc)
 {
   if (fc)
     assert_return (factory_context_ == NULL);
@@ -1357,36 +1357,36 @@ ItemImpl::factory_context (FactoryContext *fc)
 }
 
 UserSource
-ItemImpl::user_source () const
+WidgetImpl::user_source () const
 {
   return Factory::factory_context_source (factory_context());
 }
 
-static DataKey<ColorSchemeType> item_color_scheme_key;
+static DataKey<ColorSchemeType> widget_color_scheme_key;
 
 ColorSchemeType
-ItemImpl::color_scheme () const
+WidgetImpl::color_scheme () const
 {
-  return get_data (&item_color_scheme_key);
+  return get_data (&widget_color_scheme_key);
 }
 
 void
-ItemImpl::color_scheme (ColorSchemeType cst)
+WidgetImpl::color_scheme (ColorSchemeType cst)
 {
-  if (cst != get_data (&item_color_scheme_key))
+  if (cst != get_data (&widget_color_scheme_key))
     {
       if (!cst)
-        delete_data (&item_color_scheme_key);
+        delete_data (&widget_color_scheme_key);
       else
-        set_data (&item_color_scheme_key, cst);
-      ClassDoctor::update_item_heritage (*this);
+        set_data (&widget_color_scheme_key, cst);
+      ClassDoctor::update_widget_heritage (*this);
     }
 }
 
 bool
-ItemImpl::tune_requisition (Requisition requisition)
+WidgetImpl::tune_requisition (Requisition requisition)
 {
-  ItemImpl *p = parent();
+  WidgetImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
       ResizeContainerImpl *rc = p->get_resize_container();
@@ -1407,7 +1407,7 @@ ItemImpl::tune_requisition (Requisition requisition)
 }
 
 void
-ItemImpl::set_allocation (const Allocation &area)
+WidgetImpl::set_allocation (const Allocation &area)
 {
   Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
   const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
@@ -1443,8 +1443,8 @@ ItemImpl::set_allocation (const Allocation &area)
 }
 
 // == rendering ==
-class ItemImpl::RenderContext {
-  friend class ItemImpl;
+class WidgetImpl::RenderContext {
+  friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
   vector<cairo_t*>         cairos;
@@ -1454,14 +1454,14 @@ public:
 };
 
 void
-ItemImpl::render_into (cairo_t *cr, const Region &region)
+WidgetImpl::render_into (cairo_t *cr, const Region &region)
 {
   RenderContext rcontext;
   rcontext.render_area = allocation();
   rcontext.render_area.intersect (region);
   if (!rcontext.render_area.empty())
     {
-      render_item (rcontext);
+      render_widget (rcontext);
       cairo_save (cr);
       vector<Rect> rects;
       rcontext.render_area.list_rects (rects);
@@ -1479,7 +1479,7 @@ ItemImpl::render_into (cairo_t *cr, const Region &region)
 }
 
 void
-ItemImpl::render_item (RenderContext &rcontext)
+WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
   Rect area = allocation();
@@ -1493,17 +1493,17 @@ ItemImpl::render_item (RenderContext &rcontext)
 }
 
 void
-ItemImpl::render (RenderContext &rcontext, const Rect &rect)
+WidgetImpl::render (RenderContext &rcontext, const Rect &rect)
 {}
 
 const Region&
-ItemImpl::rendering_region (RenderContext &rcontext) const
+WidgetImpl::rendering_region (RenderContext &rcontext) const
 {
   return rcontext.render_area;
 }
 
 cairo_t*
-ItemImpl::cairo_context (RenderContext  &rcontext,
+WidgetImpl::cairo_context (RenderContext  &rcontext,
                          const Allocation &area)
 {
   Rect rect = area;
@@ -1527,7 +1527,7 @@ ItemImpl::cairo_context (RenderContext  &rcontext,
   return cr;
 }
 
-ItemImpl::RenderContext::~RenderContext()
+WidgetImpl::RenderContext::~RenderContext()
 {
   critical_unless (cairos.size() == 0);
   while (!cairos.empty())
@@ -1542,17 +1542,17 @@ ItemImpl::RenderContext::~RenderContext()
     }
 }
 
-// == ItemIfaceVector ==
-ItemIfaceVector::ItemIfaceVector (const ItemSeq &itemseq)
+// == WidgetIfaceVector ==
+WidgetIfaceVector::WidgetIfaceVector (const WidgetSeq &widgetseq)
 {
-  for (auto it : itemseq)
+  for (auto it : widgetseq)
     push_back (it->*Aida::_servant);
 }
 
-ItemSeq
-ItemIfaceVector::to_item_seq () const
+WidgetSeq
+WidgetIfaceVector::to_widget_seq () const
 {
-  ItemSeq itseq;
+  WidgetSeq itseq;
   for (auto it : *this)
     itseq.push_back (it->*Aida::_handle);
   return itseq;

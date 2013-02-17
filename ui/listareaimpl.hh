@@ -13,7 +13,7 @@
 namespace Rapicorn {
 
 struct ListRow {
-  vector<ItemImpl*> cols;
+  vector<WidgetImpl*> cols;
   ContainerImpl *rowbox;
   Allocation     area;
   uint           allocated : 1;
@@ -29,8 +29,8 @@ struct ModelSizes {
   void     clear     () { row_sizes.clear(); size_cache.clear(); total_height = 0; }
 };
 
-class ItemListImpl : public virtual MultiContainerImpl,
-                     public virtual ItemList,
+class WidgetListImpl : public virtual MultiContainerImpl,
+                     public virtual WidgetList,
                      public virtual AdjustmentSource,
                      public virtual EventHandler
 {
@@ -61,14 +61,14 @@ protected:
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
 public:
-  explicit              ItemListImpl            ();
-  virtual              ~ItemListImpl            ();
+  explicit              WidgetListImpl            ();
+  virtual              ~WidgetListImpl            ();
   virtual void          constructed             ();
   virtual bool          browse                  () const        { return browse_; }
   virtual void          browse                  (bool b)        { browse_ = b; invalidate(); }
   virtual void          model                   (const String &modelurl);
   virtual String        model                   () const;
-  virtual void          hierarchy_changed       (ItemImpl *old_toplevel);
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
   Adjustment&           hadjustment             () const;
   Adjustment&           vadjustment             () const;
   Adjustment*           get_adjustment          (AdjustmentSourceType adj_source,

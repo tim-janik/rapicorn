@@ -66,7 +66,7 @@ protected:
 public:
   virtual void                  focus_frame             (FrameType ft) = 0;
   virtual FrameType             focus_frame             () const = 0;
-  struct Client : public virtual ItemImpl {
+  struct Client : public virtual WidgetImpl {
     virtual bool                register_focus_frame    (FocusFrame &frame) = 0;
     virtual void                unregister_focus_frame  (FocusFrame &frame) = 0;
   };

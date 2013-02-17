@@ -189,13 +189,13 @@ WindowIface*
 ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringSeq      &arguments)
 {
-  ItemImpl &item = Factory::create_ui_item (window_identifier, arguments);
-  WindowIface *window = dynamic_cast<WindowIface*> (&item);
+  WidgetImpl &widget = Factory::create_ui_widget (window_identifier, arguments);
+  WindowIface *window = dynamic_cast<WindowIface*> (&widget);
   if (!window)
     {
-      ref_sink (item);
-      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), item.typeid_name().c_str());
-      unref (item);
+      ref_sink (widget);
+      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), widget.typeid_name().c_str());
+      unref (widget);
     }
   return window;
 }
@@ -290,13 +290,13 @@ ApplicationImpl::query_window (const String &selector)
   vector<Selector::Selob*> input;
   for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
-      if (item)
-        input.push_back (sallocator.item_selob (*item));
+      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      if (widget)
+        input.push_back (sallocator.widget_selob (*widget));
     }
   vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   if (result.size() == 1) // unique
-    return dynamic_cast<WindowIface*> (sallocator.selob_item (*result[0]));
+    return dynamic_cast<WindowIface*> (sallocator.selob_widget (*result[0]));
   return NULL;
 }
 
@@ -307,14 +307,14 @@ ApplicationImpl::query_windows (const String &selector)
   vector<Selector::Selob*> input;
   for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
-      if (item)
-        input.push_back (sallocator.item_selob (*item));
+      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      if (widget)
+        input.push_back (sallocator.widget_selob (*widget));
     }
   vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   WindowList wlist;
   for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
-    wlist.push_back (dynamic_cast<WindowIface*> (sallocator.selob_item (**it))->*Aida::_handle);
+    wlist.push_back (dynamic_cast<WindowIface*> (sallocator.selob_widget (**it))->*Aida::_handle);
   return wlist;
 }
 

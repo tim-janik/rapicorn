@@ -76,7 +76,7 @@ protected:
     adjustment_source_ = adj_source;
   }
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
     this->TableImpl::hierarchy_changed (old_toplevel);
     if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
@@ -143,7 +143,7 @@ public:
   {
   }
 };
-static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
+static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
 
 class SliderSkidImpl;
 
@@ -163,7 +163,7 @@ public:
   {}
 protected:
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
     if (slider_area_ && conid_slider_changed_)
       slider_area_->sig_slider_changed() -= conid_slider_changed_;
@@ -194,7 +194,7 @@ protected:
   {
     if (has_allocatable_child())
       {
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         requisition = child.requisition();
         /* we confine spreading to within the trough, so don't propagate hspread/vspread here */
       }
@@ -210,7 +210,7 @@ protected:
     Allocation area = allocation();
     if (!has_allocatable_child())
       return;
-    ItemImpl &child = get_child();
+    WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
     /* expand/scale child */
     if (area.width > rq.width && !child.hspread())
@@ -271,7 +271,7 @@ protected:
     return handled;
   }
 };
-static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
+static const WidgetFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
 
 class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventHandler {
   uint        button_;
@@ -312,7 +312,7 @@ protected:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         if (child.allocatable())
           {
             requisition = child.requisition();
@@ -435,6 +435,6 @@ private:
     return property_list;
   }
 };
-static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
+static const WidgetFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
 
 } // Rapicorn

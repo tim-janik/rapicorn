@@ -11,17 +11,17 @@ namespace Selector {
 
 class SelobAllocator;
 
-class SelobItem : public Selob {
-  ItemImpl       &item_;
-  SelobItem      *parent_;
+class SelobWidget : public Selob {
+  WidgetImpl       &widget_;
+  SelobWidget      *parent_;
   int64           n_children_;
   SelobAllocator &allocator_;
   friend class SelobAllocator;
-  explicit             SelobItem       (SelobAllocator &allocator, ItemImpl &item);
+  explicit             SelobWidget       (SelobAllocator &allocator, WidgetImpl &widget);
   void                 cache_parent    ();
   void                 cache_n_children();
 public:
-  virtual             ~SelobItem       ();
+  virtual             ~SelobWidget       ();
   virtual String       get_id          ();
   virtual String       get_type        ();
   virtual ConstTypes&  get_type_list   ();
@@ -59,12 +59,12 @@ public:
 };
 
 class SelobAllocator {
-  vector<SelobItem*> selobs_;
+  vector<SelobWidget*> selobs_;
 public:
   explicit               SelobAllocator  ();
   virtual               ~SelobAllocator  ();
-  SelobItem*             item_selob      (ItemImpl &item);
-  ItemImpl*              selob_item      (Selob    &selob);
+  SelobWidget*             widget_selob      (WidgetImpl &widget);
+  WidgetImpl*              selob_widget      (Selob    &selob);
   static SelobAllocator* selob_allocator (Selob    &selob);
 };
 

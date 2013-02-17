@@ -94,7 +94,7 @@ CofferImpl::size_allocate (Allocation area, bool changed)
           carea.width -= 2 * thickness;
           carea.height -= 2 * thickness;
         }
-      ItemImpl &child = get_child();
+      WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, carea);
       child.set_allocation (child_area);
     }
@@ -130,6 +130,6 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const ItemFactory<CofferImpl> coffer_factory ("Rapicorn::Factory::Coffer");
+static const WidgetFactory<CofferImpl> coffer_factory ("Rapicorn::Factory::Coffer");
 
 } // Rapicorn

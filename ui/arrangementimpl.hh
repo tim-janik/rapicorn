@@ -27,7 +27,7 @@ public:
 protected:
   virtual void                  size_request            (Requisition &requisition);
   virtual void                  size_allocate           (Allocation area, bool changed);
-  Allocation                    local_child_allocation  (ItemImpl &child,
+  Allocation                    local_child_allocation  (WidgetImpl &child,
                                                          double    width,
                                                          double    height);
 };

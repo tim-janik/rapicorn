@@ -79,7 +79,7 @@ REGISTER_UITHREAD_TEST ("labelmarkup/Test Markup Parser", test_markup_parser);
 static void
 test_text_markup()
 {
-  ItemImpl &label = Factory::create_ui_item ("Label");
+  WidgetImpl &label = Factory::create_ui_widget ("Label");
   TOK();
   TOK();
   String test_markup =

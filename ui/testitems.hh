@@ -33,7 +33,7 @@ public:
   virtual void   accu             (const String &val) = 0;
   virtual String accu_history     () const = 0;
   virtual void   accu_history     (const String &val) = 0;
-  static uint    seen_test_items  ();
+  static uint    seen_test_widgets  ();
   const PropertyList&                                    _property_list ();
   Aida::Signal<void (const String &assertion)>  sig_assertion_ok;
   Aida::Signal<void ()>                         sig_assertions_passed;

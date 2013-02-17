@@ -47,7 +47,7 @@
           sensitive="1"
           color_scheme="COLOR_INHERIT"
           >
-            <TestItem
+            <TestWidget
               value="19"
               assert_value="19"
               assert_left="-inf"
@@ -61,7 +61,7 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="TestItem"
+              name="TestWidget"
               width="10"
               height="10"
               hexpand="0"
@@ -74,8 +74,8 @@
               sensitive="1"
               color_scheme="COLOR_INHERIT"
             >
-            </TestItem>
-            <TestItem
+            </TestWidget>
+            <TestWidget
               value="17"
               assert_value="17"
               assert_left="-inf"
@@ -89,7 +89,7 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="TestItem"
+              name="TestWidget"
               width="10"
               height="10"
               hexpand="0"
@@ -102,7 +102,7 @@
               sensitive="1"
               color_scheme="COLOR_INHERIT"
             >
-            </TestItem>
+            </TestWidget>
         </VBox>
     </Alignment>
 </main-test>

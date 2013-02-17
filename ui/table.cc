@@ -8,13 +8,13 @@
 namespace Rapicorn {
 
 static uint
-left_attach (const ItemImpl::PackInfo &pi)
+left_attach (const WidgetImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.hposition));
 }
 
 static uint
-right_attach (const ItemImpl::PackInfo &pi)
+right_attach (const WidgetImpl::PackInfo &pi)
 {
   double r = pi.hposition + pi.hspan;
   double l = left_attach (pi);
@@ -22,13 +22,13 @@ right_attach (const ItemImpl::PackInfo &pi)
 }
 
 static uint
-bottom_attach (const ItemImpl::PackInfo &pi)
+bottom_attach (const WidgetImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.vposition));
 }
 
 static uint
-top_attach (const ItemImpl::PackInfo &pi)
+top_attach (const WidgetImpl::PackInfo &pi)
 {
   double t = pi.vposition + pi.vspan;
   double b = bottom_attach (pi);
@@ -38,7 +38,7 @@ top_attach (const ItemImpl::PackInfo &pi)
 TableImpl::TableImpl() :
   default_row_spacing (0),
   default_col_spacing (0),
-  homogeneous_items (false)
+  homogeneous_widgets (false)
 {
   resize_table (1, 1);
 }
@@ -161,14 +161,14 @@ TableImpl::~TableImpl()
 {}
 
 void
-TableImpl::repack_child (ItemImpl       &item,
+TableImpl::repack_child (WidgetImpl       &widget,
                          const PackInfo &orig,
                          const PackInfo &pnew)
 {
   uint n_cols = right_attach (pnew), n_rows = top_attach (pnew);
   if (n_cols > cols.size() || n_rows > rows.size())
     resize_table (n_cols, n_rows);
-  MultiContainerImpl::repack_child (item, orig, pnew);
+  MultiContainerImpl::repack_child (widget, orig, pnew);
 }
 
 void
@@ -810,6 +810,6 @@ TableImpl::size_allocate_pass2 ()
     }
 }
 
-static const ItemFactory<TableImpl> table_factory ("Rapicorn::Factory::Table");
+static const WidgetFactory<TableImpl> table_factory ("Rapicorn::Factory::Table");
 
 } // Rapicorn

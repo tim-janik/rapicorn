@@ -11,7 +11,7 @@ protected:
   virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_items) = 0;
+  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
   virtual uint  col_spacing     () const = 0;
   virtual void  col_spacing     (uint cspacing) = 0;
   virtual uint  row_spacing     () const = 0;

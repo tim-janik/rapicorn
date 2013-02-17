@@ -6,90 +6,90 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static inline Selector::Selob* item_pseudo_selector (Selector::Selob &selob, ItemImpl &item, const String &ident, const String &arg, String &error)
-  { return item.pseudo_selector (selob, ident, arg, error); }
+  static inline Selector::Selob* widget_pseudo_selector (Selector::Selob &selob, WidgetImpl &widget, const String &ident, const String &arg, String &error)
+  { return widget.pseudo_selector (selob, ident, arg, error); }
 };
 
 namespace Selector {
 
-SelobItem::SelobItem (SelobAllocator &allocator, ItemImpl &item) :
-  item_ (ref (item)), parent_ (NULL), n_children_ (-1), allocator_ (allocator)
+SelobWidget::SelobWidget (SelobAllocator &allocator, WidgetImpl &widget) :
+  widget_ (ref (widget)), parent_ (NULL), n_children_ (-1), allocator_ (allocator)
 {}
 
-SelobItem::~SelobItem ()
+SelobWidget::~SelobWidget ()
 {
-  unref (item_);
+  unref (widget_);
 }
 
 String
-SelobItem::get_id ()
+SelobWidget::get_id ()
 {
-  return item_.name();
+  return widget_.name();
 }
 
 String
-SelobItem::get_type ()
+SelobWidget::get_type ()
 {
-  return Factory::factory_context_type (item_.factory_context());
+  return Factory::factory_context_type (widget_.factory_context());
 }
 
 const StringVector&
-SelobItem::get_type_list()
+SelobWidget::get_type_list()
 {
-  return Factory::factory_context_tags (item_.factory_context());
+  return Factory::factory_context_tags (widget_.factory_context());
 }
 
 bool
-SelobItem::has_property (const String &name)
+SelobWidget::has_property (const String &name)
 {
-  return NULL != item_.lookup_property (name);
+  return NULL != widget_.lookup_property (name);
 }
 
 String
-SelobItem::get_property (const String &name)
+SelobWidget::get_property (const String &name)
 {
-  return item_.get_property (name);
+  return widget_.get_property (name);
 }
 
 void
-SelobItem::cache_parent ()
+SelobWidget::cache_parent ()
 {
   if (UNLIKELY (!parent_))
     {
-      ContainerImpl *parent = item_.parent();
+      ContainerImpl *parent = widget_.parent();
       if (parent)
-        parent_ = allocator_.item_selob (*parent);
+        parent_ = allocator_.widget_selob (*parent);
     }
 }
 
 Selob*
-SelobItem::get_parent ()
+SelobWidget::get_parent ()
 {
   cache_parent();
   return parent_;
 }
 
 Selob*
-SelobItem::get_sibling (int64 dir)
+SelobWidget::get_sibling (int64 dir)
 {
-  ContainerImpl *container = item_.parent();
+  ContainerImpl *container = widget_.parent();
   if (container && dir < 0)
     {
-      ItemImpl *last = NULL;
+      WidgetImpl *last = NULL;
       for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); last = &*cw, cw++)
-        if (&item_ == &*cw)
+        if (&widget_ == &*cw)
           break;
       if (last)
-        return allocator_.item_selob (*last);
+        return allocator_.widget_selob (*last);
     }
   else if (container && dir > 0)
     {
       for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
-        if (&item_ == &*cw)
+        if (&widget_ == &*cw)
           {
             cw++;
             if (cw.has_next())
-              return allocator_.item_selob (*cw);
+              return allocator_.widget_selob (*cw);
             break;
           }
     }
@@ -97,63 +97,63 @@ SelobItem::get_sibling (int64 dir)
 }
 
 void
-SelobItem::cache_n_children()
+SelobWidget::cache_n_children()
 {
   if (UNLIKELY (n_children_ < 0))
     {
-      ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item_);
+      ContainerImpl *container = dynamic_cast<ContainerImpl*> (&widget_);
       n_children_ = container ? container->n_children() : 0;
     }
 }
 
 bool
-SelobItem::has_children ()
+SelobWidget::has_children ()
 {
   cache_n_children();
   return n_children_ > 0;
 }
 
 int64
-SelobItem::n_children ()
+SelobWidget::n_children ()
 {
   cache_n_children();
   return n_children_;
 }
 
 Selob*
-SelobItem::get_child (int64 index)
+SelobWidget::get_child (int64 index)
 {
   if (n_children_ == 0)
     return NULL;
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item_);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&widget_);
   if (container)
     {
-      ItemImpl *child = container->nth_child (index);
+      WidgetImpl *child = container->nth_child (index);
       if (child)
-        return allocator_.item_selob (*child);
+        return allocator_.widget_selob (*child);
     }
   return NULL;
 }
 
 bool
-SelobItem::is_nth_child (int64 nth1based)
+SelobWidget::is_nth_child (int64 nth1based)
 {
-  ContainerImpl *container = item_.parent();
+  ContainerImpl *container = widget_.parent();
   if (container && nth1based > 0)
-    return container->nth_child (nth1based - 1) == &item_;
+    return container->nth_child (nth1based - 1) == &widget_;
   else if (container && nth1based < 0)
     {
       const size_t total = container->n_children();
       if (total >= size_t (-nth1based))
-        return container->nth_child (total + nth1based) == &item_;
+        return container->nth_child (total + nth1based) == &widget_;
     }
   return false;
 }
 
 Selob*
-SelobItem::pseudo_selector (const String &ident, const String &arg, String &error)
+SelobWidget::pseudo_selector (const String &ident, const String &arg, String &error)
 {
-  return ClassDoctor::item_pseudo_selector (*this, item_, string_tolower (ident), arg, error);
+  return ClassDoctor::widget_pseudo_selector (*this, widget_, string_tolower (ident), arg, error);
 }
 
 SelobAllocator::SelobAllocator ()
@@ -163,33 +163,33 @@ SelobAllocator::~SelobAllocator ()
 {
   while (selobs_.size())
     {
-      SelobItem *selob = selobs_.back();
+      SelobWidget *selob = selobs_.back();
       selobs_.pop_back();
       delete selob;
     }
 }
 
-SelobItem*
-SelobAllocator::item_selob (ItemImpl &item)
+SelobWidget*
+SelobAllocator::widget_selob (WidgetImpl &widget)
 {
-  assert_return (&item != NULL, NULL);
-  SelobItem *selob = new SelobItem (*this, item);
+  assert_return (&widget != NULL, NULL);
+  SelobWidget *selob = new SelobWidget (*this, widget);
   selobs_.push_back (selob);
   return selob;
 }
 
-ItemImpl*
-SelobAllocator::selob_item (Selob &selob)
+WidgetImpl*
+SelobAllocator::selob_widget (Selob &selob)
 {
-  SelobItem *selobitem = dynamic_cast<SelobItem*> (&selob);
-  return selobitem ? &selobitem->item_ : NULL;
+  SelobWidget *selobwidget = dynamic_cast<SelobWidget*> (&selob);
+  return selobwidget ? &selobwidget->widget_ : NULL;
 }
 
 SelobAllocator*
 SelobAllocator::selob_allocator (Selob &selob)
 {
-  SelobItem *selobitem = dynamic_cast<SelobItem*> (&selob);
-  return selobitem ? &selobitem->allocator_ : NULL;
+  SelobWidget *selobwidget = dynamic_cast<SelobWidget*> (&selob);
+  return selobwidget ? &selobwidget->allocator_ : NULL;
 }
 
 SelobListModel::SelobListModel (SelobAllocator &allocator, ListModelIface &lmodel) :

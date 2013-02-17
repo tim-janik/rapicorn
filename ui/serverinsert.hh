@@ -6,7 +6,7 @@ includes:
 #include <ui/utilities.hh>
 #include <ui/clientapi.hh>
 namespace Rapicorn {
-class ItemImpl;
+class WidgetImpl;
 class WindowImpl;
 }
 
@@ -34,9 +34,9 @@ class_scope:Pixbuf:
 class_scope:Requisition:
   inline RequisitionImpl (double w, double h) : width (w), height (h) {}
 
-class_scope:Item:
-  ItemImpl&       impl ();
-  const ItemImpl& impl () const;
+class_scope:Widget:
+  WidgetImpl&       impl ();
+  const WidgetImpl& impl () const;
 
 class_scope:Window:
   WindowImpl&       impl ();

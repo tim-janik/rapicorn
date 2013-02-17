@@ -13,7 +13,7 @@ Image::_property_list()
     MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "w"),
     MakeProperty (Image, stock_pixmap, _("Stock Image"), _("Load an image from stock, providing a stock name."), "w"),
   };
-  static const PropertyList property_list (properties, ItemImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::_property_list());
   return property_list;
 }
 
@@ -34,7 +34,7 @@ cairo_surface_from_pixmap (Pixmap pixmap)
   return isurface;
 }
 
-class ImageImpl : public virtual ItemImpl, public virtual Image {
+class ImageImpl : public virtual WidgetImpl, public virtual Image {
   Pixmap           pixmap_;
 public:
   explicit ImageImpl()
@@ -154,7 +154,7 @@ public:
       }
   }
 };
-static const ItemFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
+static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
 
 static const uint8*
 get_broken16_pixdata (void)

@@ -5,7 +5,7 @@
 includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
-class ItemImpl; // FIXME
+class WidgetImpl; // FIXME
 class WindowImpl;
 }
 
@@ -40,8 +40,8 @@ class_scope:UpdateRequest:
 class_scope:Requisition:
   inline Requisition (double w, double h) : width (w), height (h) {}
 
-class_scope:Item:
-  /// Carry out Item::query_selector_unique() and Target::down_cast() in one step, for type safe access to a descendant.
+class_scope:Widget:
+  /// Carry out Widget::query_selector_unique() and Target::down_cast() in one step, for type safe access to a descendant.
   template<class Target> Target component (const std::string &selector) { return Target::down_cast (query_selector_unique (selector)); }
 
 class_scope:Application:
