@@ -64,7 +64,7 @@ exit (int status)
 
 class AppSource : public EventLoop::Source {
   Rapicorn::Aida::BaseConnection &connection_;
-  PollFD m_pfd;
+  PollFD pfd_;
   bool   last_seen_primary, need_check_primary;
   void
   check_primaries()
@@ -78,10 +78,10 @@ public:
   AppSource (Rapicorn::Aida::BaseConnection &connection) :
     connection_ (connection), last_seen_primary (false), need_check_primary (false)
   {
-    m_pfd.fd = connection_.notify_fd();
-    m_pfd.events = PollFD::IN;
-    m_pfd.revents = 0;
-    add_poll (&m_pfd);
+    pfd_.fd = connection_.notify_fd();
+    pfd_.events = PollFD::IN;
+    pfd_.revents = 0;
+    add_poll (&pfd_);
     primary (false);
     ApplicationH::the().sig_missing_primary() += [this]() { queue_check_primaries(); };
   }
