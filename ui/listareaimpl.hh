@@ -36,18 +36,18 @@ class ItemListImpl : public virtual MultiContainerImpl,
 {
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
-  ListModelIface        *m_model;
-  vector<bool>           m_selection;
-  mutable Adjustment    *m_hadjustment, *m_vadjustment;
-  bool                   m_browse;
-  uint                   m_n_cols;
-  RowMap                 m_row_map;
-  vector<ListRow*>       m_row_cache;
-  vector<SizeGroup*>     m_size_groups;
-  bool                   m_need_resize_scroll;
-  bool                   m_block_invalidate;
-  uint64                 m_current_row;
-  ModelSizes             m_model_sizes;
+  ListModelIface        *model_;
+  vector<bool>           selection_;
+  mutable Adjustment    *hadjustment_, *vadjustment_;
+  bool                   browse_;
+  uint                   n_cols_;
+  RowMap                 row_map_;
+  vector<ListRow*>       row_cache_;
+  vector<SizeGroup*>     size_groups_;
+  bool                   need_resize_scroll_;
+  bool                   block_invalidate_;
+  uint64                 current_row_;
+  ModelSizes             model_sizes_;
   void                  model_inserted          (int first, int last);
   void                  model_changed           (int first, int last);
   void                  model_removed           (int first, int last);
@@ -58,14 +58,14 @@ protected:
   virtual void          reset                   (ResetMode       mode);
   virtual bool          can_focus               () const { return true; }
   SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }
-  bool                  selected                (int row) { return size_t (row) < m_selection.size() && m_selection[row]; }
+  bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
 public:
   explicit              ItemListImpl            ();
   virtual              ~ItemListImpl            ();
   virtual void          constructed             ();
-  virtual bool          browse                  () const        { return m_browse; }
-  virtual void          browse                  (bool b)        { m_browse = b; invalidate(); }
+  virtual bool          browse                  () const        { return browse_; }
+  virtual void          browse                  (bool b)        { browse_ = b; invalidate(); }
   virtual void          model                   (const String &modelurl);
   virtual String        model                   () const;
   virtual void          hierarchy_changed       (ItemImpl *old_toplevel);

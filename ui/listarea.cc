@@ -21,40 +21,40 @@ ItemList::_property_list()
 }
 
 ItemListImpl::ItemListImpl() :
-  m_model (NULL),
-  m_hadjustment (NULL), m_vadjustment (NULL),
-  m_browse (true), m_n_cols (0),
-  m_need_resize_scroll (false), m_block_invalidate (false),
-  m_current_row (18446744073709551615ULL)
+  model_ (NULL),
+  hadjustment_ (NULL), vadjustment_ (NULL),
+  browse_ (true), n_cols_ (0),
+  need_resize_scroll_ (false), block_invalidate_ (false),
+  current_row_ (18446744073709551615ULL)
 {}
 
 ItemListImpl::~ItemListImpl()
 {
   /* remove model */
-  ListModelIface *oldmodel = m_model;
-  m_model = NULL;
+  ListModelIface *oldmodel = model_;
+  model_ = NULL;
   if (oldmodel)
     unref (oldmodel);
   /* purge row map */
   RowMap rc; // empty
-  m_row_map.swap (rc);
+  row_map_.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
     cache_row (ri->second);
   /* destroy row cache */
-  while (m_row_cache.size())
+  while (row_cache_.size())
     {
-      ListRow *lr = m_row_cache.back();
-      m_row_cache.pop_back();
+      ListRow *lr = row_cache_.back();
+      row_cache_.pop_back();
       for (uint i = 0; i < lr->cols.size(); i++)
         unref (lr->cols[i]);
       unref (lr->rowbox);
       delete lr;
     }
   /* release size groups */
-  while (m_size_groups.size())
+  while (size_groups_.size())
     {
-      SizeGroup *sg = m_size_groups.back();
-      m_size_groups.pop_back();
+      SizeGroup *sg = size_groups_.back();
+      size_groups_.pop_back();
       unref (sg);
     }
 }
@@ -62,7 +62,7 @@ ItemListImpl::~ItemListImpl()
 void
 ItemListImpl::constructed ()
 {
-  if (!m_model)
+  if (!model_)
     {
       MemoryListStore *store = new MemoryListStore (5);
       for (uint i = 0; i < 20; i++)
@@ -80,12 +80,12 @@ ItemListImpl::constructed ()
           store->insert (-1, row);
         }
       {
-        m_model = store;
-        ref_sink (m_model);
-        // m_model->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
-        // m_model->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
-        // m_model->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
-        m_n_cols = m_model->columns();
+        model_ = store;
+        ref_sink (model_);
+        // model_->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
+        // model_->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
+        // model_->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
+        n_cols_ = model_->columns();
       }
       unref (ref_sink (store));
       invalidate_model (true, true);
@@ -103,21 +103,21 @@ ItemListImpl::hierarchy_changed (ItemImpl *old_toplevel)
 Adjustment&
 ItemListImpl::hadjustment () const
 {
-  if (!m_hadjustment)
-    m_hadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
-  return *m_hadjustment;
+  if (!hadjustment_)
+    hadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
+  return *hadjustment_;
 }
 
 Adjustment&
 ItemListImpl::vadjustment () const
 {
-  if (!m_vadjustment)
+  if (!vadjustment_)
     {
-      m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
+      vadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
       ItemListImpl &self = const_cast<ItemListImpl&> (*this);
-      m_vadjustment->sig_value_changed() += Aida::slot (self, &ItemImpl::queue_visual_update);
+      vadjustment_->sig_value_changed() += Aida::slot (self, &ItemImpl::queue_visual_update);
     }
-  return *m_vadjustment;
+  return *vadjustment_;
 }
 
 Adjustment*
@@ -140,31 +140,31 @@ ItemListImpl::model (const String &modelurl)
 {
   BaseObject *obj = NULL; // FIXME: plor_get (modelurl);
   ListModelIface *model = dynamic_cast<ListModelIface*> (obj);
-  ListModelIface *oldmodel = m_model;
-  m_model = model;
-  if (m_model)
+  ListModelIface *oldmodel = model_;
+  model_ = model;
+  if (model_)
     {
-      ref_sink (m_model);
-      // m_model->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
-      // m_model->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
-      // m_model->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
-      // #warning FIXME: missing: m_model->sig_selection_changed() += slot (*this, &ItemListImpl::selection_changed);
+      ref_sink (model_);
+      // model_->sig_inserted() += Aida::slot (*this, &ItemListImpl::model_inserted);
+      // model_->sig_changed() += Aida::slot (*this, &ItemListImpl::model_changed);
+      // model_->sig_removed() += Aida::slot (*this, &ItemListImpl::model_removed);
+      // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &ItemListImpl::selection_changed);
     }
   if (oldmodel)
     {
       unref (oldmodel);
     }
-  if (!m_model)
-    m_n_cols = 0;
+  if (!model_)
+    n_cols_ = 0;
   else
-    m_n_cols = m_model->columns();
+    n_cols_ = model_->columns();
   invalidate_model (true, true);
 }
 
 String
 ItemListImpl::model () const
 {
-  return ""; // FIME: m_model ? m_model->plor_name() : "";
+  return ""; // FIME: model_ ? model_->plor_name() : "";
 }
 
 void
@@ -194,9 +194,9 @@ ItemListImpl::model_removed (int first, int last)
 void
 ItemListImpl::toggle_selected (int row)
 {
-  if (m_selection.size() <= size_t (row))
-    m_selection.resize (row + 1);
-  m_selection[row] = !m_selection[row];
+  if (selection_.size() <= size_t (row))
+    selection_.resize (row + 1);
+  selection_[row] = !selection_[row];
   selection_changed (row, row);
 }
 
@@ -216,21 +216,21 @@ void
 ItemListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
-  m_need_resize_scroll = true;
-  m_model_sizes.clear();
+  need_resize_scroll_ = true;
+  model_sizes_.clear();
   invalidate();
 }
 
 void
 ItemListImpl::visual_update ()
 {
-  m_need_resize_scroll = true; // FIXME
-  if (m_need_resize_scroll)
+  need_resize_scroll_ = true; // FIXME
+  if (need_resize_scroll_)
     {
       measure_rows (allocation().height);
       resize_scroll_preserving();
     }
-  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
       lr->rowbox->set_allocation (lr->area);
@@ -240,7 +240,7 @@ ItemListImpl::visual_update ()
 void
 ItemListImpl::invalidate_parent ()
 {
-  if (!m_block_invalidate)
+  if (!block_invalidate_)
     MultiContainerImpl::invalidate_parent();
 }
 
@@ -261,8 +261,8 @@ ItemListImpl::size_request (Requisition &requisition)
       requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
-  if (m_model && m_model->size())
-    requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
+  if (model_ && model_->size())
+    requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (model_->count() * vadjustment_->nvalue())); // FIXME
   else
     requisition.height = -1;
   if (requisition.height < 0)
@@ -274,13 +274,13 @@ ItemListImpl::size_request (Requisition &requisition)
 void
 ItemListImpl::size_allocate (Allocation area, bool changed)
 {
-  m_need_resize_scroll = m_need_resize_scroll || allocation() != area || changed;
-  if (m_need_resize_scroll)
+  need_resize_scroll_ = need_resize_scroll_ || allocation() != area || changed;
+  if (need_resize_scroll_)
     {
       measure_rows (area.height);
       resize_scroll();
     }
-  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
       lr->rowbox->set_allocation (lr->area);
@@ -298,7 +298,7 @@ ItemListImpl::pixel_positioning (const int64       mcount,
 void
 ItemListImpl::measure_rows (int64 maxpixels)
 {
-  ModelSizes &ms = m_model_sizes;
+  ModelSizes &ms = model_sizes_;
   /* create measuring context */
   if (!ms.measurement_row)
     {
@@ -309,13 +309,13 @@ ItemListImpl::measure_rows (int64 maxpixels)
       ms.measurement_row->rowbox->set_allocation (area);
     }
   /* catch cases where measuring is useless */
-  if (!m_model || m_model->size() > maxpixels)
+  if (!model_ || model_->size() > maxpixels)
     {
       ms.clear();
       return;
     }
   /* check if measuring is needed */
-  const int64 mcount = m_model->size();
+  const int64 mcount = model_->size();
   if (ms.total_height > 0 && mcount == int64 (ms.row_sizes.size()))
     return;
 
@@ -393,8 +393,8 @@ ItemListImpl::position2row (double   list_fraction,
    *    bottom of the list view respectively.
    * Note that list rows increase downwards, pixel coordinates increase upwards.
    */
-  const int64 mcount = m_model->size();
-  const ModelSizes &ms = m_model_sizes;
+  const int64 mcount = model_->size();
+  const ModelSizes &ms = model_sizes_;
   if (pixel_positioning (mcount, ms))
     {
       /* pixel positioning */
@@ -429,10 +429,10 @@ double
 ItemListImpl::row2position (const int64  list_row,
                             const double list_alignment)
 {
-  const int64 mcount = m_model->size();
+  const int64 mcount = model_->size();
   if (list_row < 0 || list_row >= mcount)
     return -1; // invalid row
-  ModelSizes &ms = m_model_sizes;
+  ModelSizes &ms = model_sizes_;
   const int listheight = allocation().height;
   /* see position2row() for fractional positioning vs. pixel positioning */
   if (pixel_positioning (mcount, ms))
@@ -494,9 +494,9 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
    * row are aligned with top and bottom of the list view respectively.
    * Note that list rows increase downwards, pixel coordinates increase upwards.
    */
-  const double norm_value = m_vadjustment->nvalue();            // 0..1 scroll position
-  const double scroll_value = norm_value * m_model->size();    // fraction into count()
-  const int64 scroll_item = MIN (m_model->size() - 1, ifloor (scroll_value));
+  const double norm_value = vadjustment_->nvalue();            // 0..1 scroll position
+  const double scroll_value = norm_value * model_->size();    // fraction into count()
+  const int64 scroll_item = MIN (model_->size() - 1, ifloor (scroll_value));
   const double scroll_fraction = MIN (1.0, scroll_value - scroll_item); // fraction into scroll_item row
 
   int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_item);
@@ -517,15 +517,15 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
 }
 
 void
-ItemListImpl::resize_scroll () // m_model->size() >= 1
+ItemListImpl::resize_scroll () // model_->size() >= 1
 {
-  const int64 mcount = m_model->size();
+  const int64 mcount = model_->size();
 
   /* flag old rows */
-  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     it->second->allocated = 0; // FIXME
 
-  int64 current = min (mcount - 1, ifloor (m_vadjustment->nvalue() * mcount)); // FIXME
+  int64 current = min (mcount - 1, ifloor (vadjustment_->nvalue() * mcount)); // FIXME
   ListRow *lr_current = fetch_row (current);
 
   int64 current_y, currentupper, currentlower, listupper, listheight;
@@ -536,8 +536,8 @@ ItemListImpl::resize_scroll () // m_model->size() >= 1
   cache_row (lr_current); // FIXME
 
   /* deactivate size-groups to avoid excessive resizes upon measure_row() */
-  for (uint i = 0; i < m_size_groups.size(); i++)
-    m_size_groups[i]->active (false);
+  for (uint i = 0; i < size_groups_.size(); i++)
+    size_groups_[i]->active (false);
 
   /* allocate current row */
   int64 accu = 0;
@@ -572,14 +572,14 @@ ItemListImpl::resize_scroll () // m_model->size() >= 1
       accu += rowheight;
     }
   /* clean up remaining old rows */
-  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     cache_row (it->second);
-  m_row_map.swap (rmap);
+  row_map_.swap (rmap);
   /* layout new rows */
   accu = firstrowoffset;
   for (int64 ix = firstrow; ix <= lastrow; ix++)
     {
-      ListRow *lr = m_row_map[ix];
+      ListRow *lr = row_map_[ix];
       Allocation area = allocation();
       area.height = measure_row (lr);
       area.y = allocation().y + allocation().height - area.height - accu;
@@ -587,23 +587,23 @@ ItemListImpl::resize_scroll () // m_model->size() >= 1
       accu += area.height;
     }
   /* reactivate size-groups for proper size allocation */
-  for (uint i = 0; i < m_size_groups.size(); i++)
-    m_size_groups[i]->active (true);
+  for (uint i = 0; i < size_groups_.size(); i++)
+    size_groups_[i]->active (true);
   /* remember state */
-  m_need_resize_scroll = 0;
+  need_resize_scroll_ = 0;
 }
 
 void
-ItemListImpl::resize_scroll_preserving () // m_model->size() >= 1
+ItemListImpl::resize_scroll_preserving () // model_->size() >= 1
 {
-  if (!m_block_invalidate && drawable() &&
+  if (!block_invalidate_ && drawable() &&
       !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
     {
-      m_block_invalidate = true;
+      block_invalidate_ = true;
       resize_scroll();
       requisition();
       set_allocation (allocation());
-      m_block_invalidate = false;
+      block_invalidate_ = false;
     }
   else
     resize_scroll();
@@ -612,7 +612,7 @@ ItemListImpl::resize_scroll_preserving () // m_model->size() >= 1
 void
 ItemListImpl::cache_row (ListRow *lr)
 {
-  m_row_cache.push_back (lr);
+  row_cache_.push_back (lr);
   lr->rowbox->visible (false);
   lr->allocated = 0;
 }
@@ -623,7 +623,7 @@ ListRow*
 ItemListImpl::create_row (uint64 nthrow,
                           bool   with_size_groups)
 {
-  AnySeq row = m_model->row (nthrow);
+  AnySeq row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   for (uint i = 0; i < row.size(); i++)
     {
@@ -634,11 +634,11 @@ ItemListImpl::create_row (uint64 nthrow,
   lr->rowbox = &ref_sink (&Factory::create_ui_item ("ListRow"))->interface<ContainerImpl>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
 
-  while (m_size_groups.size() < lr->cols.size())
-    m_size_groups.push_back (ref_sink (SizeGroup::create_hgroup()));
+  while (size_groups_.size() < lr->cols.size())
+    size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
   if (with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
-      m_size_groups[i]->add_item (*lr->cols[i]);
+      size_groups_[i]->add_item (*lr->cols[i]);
 
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->rowbox->add (lr->cols[i]);
@@ -650,7 +650,7 @@ void
 ItemListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
-  AnySeq row = m_model->row (nthrow);
+  AnySeq row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", i < row.size() ? row[i].as_string() : "");
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
@@ -658,15 +658,15 @@ ItemListImpl::fill_row (ListRow *lr,
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
   Frame *frame = lr->rowbox->interface<Frame*>();
   if (frame)
-    frame->frame_type (nthrow == m_current_row ? FRAME_FOCUS : FRAME_NONE);
+    frame->frame_type (nthrow == current_row_ ? FRAME_FOCUS : FRAME_NONE);
   lr->rowbox->color_scheme (selected (nthrow) ? COLOR_SELECTED : COLOR_NORMAL);
 }
 
 ListRow*
 ItemListImpl::lookup_row (uint64 row)
 {
-  RowMap::iterator ri = m_row_map.find (row);
-  if (ri != m_row_map.end())
+  RowMap::iterator ri = row_map_.find (row);
+  if (ri != row_map_.end())
     return ri->second;
   else
     return NULL;
@@ -677,18 +677,18 @@ ItemListImpl::fetch_row (uint64 row)
 {
   bool filled = false;
   ListRow *lr;
-  RowMap::iterator ri = m_row_map.find (row);
-  if (ri != m_row_map.end())
+  RowMap::iterator ri = row_map_.find (row);
+  if (ri != row_map_.end())
     {
       lr = ri->second;
-      m_row_map.erase (ri);
+      row_map_.erase (ri);
       filled = true;
       IFDEBUG (dbg_cached++);
     }
-  else if (m_row_cache.size())
+  else if (row_cache_.size())
     {
-      lr = m_row_cache.back();
-      m_row_cache.pop_back();
+      lr = row_cache_.back();
+      row_cache_.pop_back();
       IFDEBUG (dbg_refilled++);
     }
   else /* create row */
@@ -723,16 +723,16 @@ ItemListImpl::measure_row (ListRow *lr,
 void
 ItemListImpl::reset (ResetMode mode)
 {
-  // m_current_row = 18446744073709551615ULL;
+  // current_row_ = 18446744073709551615ULL;
 }
 
 bool
 ItemListImpl::handle_event (const Event &event)
 {
   bool handled = false;
-  if (!m_model)
+  if (!model_)
     return handled;
-  uint64 saved_current_row = m_current_row;
+  uint64 saved_current_row = current_row_;
   switch (event.type)
     {
       const EventKey *kevent;
@@ -741,22 +741,22 @@ ItemListImpl::handle_event (const Event &event)
       switch (kevent->key)
         {
         case KEY_Down:
-          if (m_current_row < uint64 (m_model->size()))
-            m_current_row = MIN (int64 (m_current_row) + 1, m_model->size() - 1);
+          if (current_row_ < uint64 (model_->size()))
+            current_row_ = MIN (int64 (current_row_) + 1, model_->size() - 1);
           else
-            m_current_row = 0;
+            current_row_ = 0;
           handled = true;
           break;
         case KEY_Up:
-          if (m_current_row < uint64 (m_model->size()))
-            m_current_row = MAX (m_current_row, 1) - 1;
-          else if (m_model->size())
-            m_current_row = m_model->size() - 1;
+          if (current_row_ < uint64 (model_->size()))
+            current_row_ = MAX (current_row_, 1) - 1;
+          else if (model_->size())
+            current_row_ = model_->size() - 1;
           handled = true;
           break;
         case KEY_space:
-          if (m_current_row >= 0 && m_current_row < uint64 (m_model->size()))
-            toggle_selected (m_current_row);
+          if (current_row_ >= 0 && current_row_ < uint64 (model_->size()))
+            toggle_selected (current_row_);
           handled = true;
           break;
         }
@@ -764,7 +764,7 @@ ItemListImpl::handle_event (const Event &event)
     default:
       break;
     }
-  if (saved_current_row != m_current_row)
+  if (saved_current_row != current_row_)
     {
       ListRow *lr;
       lr = lookup_row (saved_current_row);
@@ -774,22 +774,22 @@ ItemListImpl::handle_event (const Event &event)
           if (frame)
             frame->frame_type (FRAME_NONE);
         }
-      lr = lookup_row (m_current_row);
+      lr = lookup_row (current_row_);
       if (lr)
         {
           Frame *frame = lr->rowbox->interface<Frame*>();
           if (frame)
             frame->frame_type (FRAME_FOCUS);
         }
-      double vscrollupper = row2position (m_current_row, 0.0) / m_model->size();
-      double vscrolllower = row2position (m_current_row, 1.0) / m_model->size();
-      double nvalue = CLAMP (m_vadjustment->nvalue(), vscrolllower, vscrollupper);
-      if (nvalue != m_vadjustment->nvalue())
-        m_vadjustment->nvalue (nvalue);
+      double vscrollupper = row2position (current_row_, 0.0) / model_->size();
+      double vscrolllower = row2position (current_row_, 1.0) / model_->size();
+      double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower, vscrollupper);
+      if (nvalue != vadjustment_->nvalue())
+        vadjustment_->nvalue (nvalue);
       if ((selection_mode() == SELECTION_SINGLE ||
            selection_mode() == SELECTION_BROWSE) &&
           selected (saved_current_row))
-        toggle_selected (m_current_row);
+        toggle_selected (current_row_);
     }
   return handled;
 }
