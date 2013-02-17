@@ -23,46 +23,46 @@ struct BlobResource {
 // == ByteBlob ==
 template<class Deleter>
 struct ByteBlob : public BlobResource {
-  const char           *m_data;
-  size_t                m_size;
-  String                m_name;
-  String                m_string;
-  Deleter               m_deleter;
+  const char           *data_;
+  size_t                size_;
+  String                name_;
+  String                string_;
+  Deleter               deleter_;
   explicit              ByteBlob        (const String &name, size_t dsize, const char *data, const Deleter &deleter);
-  virtual String        name            ()      { return m_name; }
-  virtual size_t        size            ()      { return m_size; }
-  virtual const char*   data            ()      { return m_data; }
+  virtual String        name            ()      { return name_; }
+  virtual size_t        size            ()      { return size_; }
+  virtual const char*   data            ()      { return data_; }
   virtual String        string          ();
   virtual              ~ByteBlob        ();
 };
 
 template<class Deleter>
 ByteBlob<Deleter>::ByteBlob (const String &name, size_t dsize, const char *data, const Deleter &deleter) :
-  m_data (data), m_size (dsize), m_name (name), m_deleter (deleter)
+  data_ (data), size_ (dsize), name_ (name), deleter_ (deleter)
 {}
 
 template<class Deleter>
 ByteBlob<Deleter>::~ByteBlob ()
 {
-  m_deleter (m_data);
+  deleter_ (data_);
 }
 
 template<class Deleter> String
 ByteBlob<Deleter>::string ()
 {
-  if (m_string.empty())
+  if (string_.empty())
     {
       static Mutex mutex;
       ScopedLock<Mutex> g (mutex);
-      if (m_string.empty())
+      if (string_.empty())
         {
-          size_t len = m_size;
-          while (len && m_data[len - 1] == 0)
+          size_t len = size_;
+          while (len && data_[len - 1] == 0)
             len--;
-          m_string = String (m_data, len);
+          string_ = String (data_, len);
         }
     }
-  return m_string;
+  return string_;
 }
 
 // == ResourceEntry ==
@@ -99,13 +99,13 @@ ResourceEntry::find_entry (const String &res_name)
 
 // == StringBlob ==
 struct StringBlob : public BlobResource {
-  String                m_name;
-  String                m_string;
-  explicit              StringBlob      (const String &name, const String &data) : m_name (name), m_string (data) {}
-  virtual String        name            ()      { return m_name; }
-  virtual size_t        size            ()      { return m_string.size(); }
-  virtual const char*   data            ()      { return m_string.c_str(); }
-  virtual String        string          ()      { return m_string; }
+  String                name_;
+  String                string_;
+  explicit              StringBlob      (const String &name, const String &data) : name_ (name), string_ (data) {}
+  virtual String        name            ()      { return name_; }
+  virtual size_t        size            ()      { return string_.size(); }
+  virtual const char*   data            ()      { return string_.c_str(); }
+  virtual String        string          ()      { return string_; }
   virtual              ~StringBlob      ()      {}
 };
 
@@ -136,18 +136,18 @@ string_read (const String &filename, const int fd, size_t guess)
 }
 
 // == Blob ==
-String          Blob::name   () const { return m_blob ? m_blob->name() : ""; }
-size_t          Blob::size   () const { return m_blob ? m_blob->size() : 0; }
-const char*     Blob::data   () const { return m_blob ? m_blob->data() : NULL; }
+String          Blob::name   () const { return blob_ ? blob_->name() : ""; }
+size_t          Blob::size   () const { return blob_ ? blob_->size() : 0; }
+const char*     Blob::data   () const { return blob_ ? blob_->data() : NULL; }
 const uint8*    Blob::bytes  () const { return reinterpret_cast<const uint8*> (data()); }
-String          Blob::string () const { return m_blob ? m_blob->string() : ""; }
+String          Blob::string () const { return blob_ ? blob_->string() : ""; }
 
 Blob::Blob (const std::shared_ptr<BlobResource> &initblob) :
-  m_blob (initblob)
+  blob_ (initblob)
 {}
 
 Blob::Blob() :
-  m_blob (std::shared_ptr<BlobResource> (nullptr))
+  blob_ (std::shared_ptr<BlobResource> (nullptr))
 {}
 
 #define ISASCIIWHITESPACE(c)    (c == ' ' || c == '\t' || (c >= 11 && c <= 13))    // ' \t\v\f\r'

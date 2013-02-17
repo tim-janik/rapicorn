@@ -10,10 +10,10 @@ namespace Rapicorn {
 // == Blob ==
 class BlobResource;
 class Blob {
-  std::shared_ptr<BlobResource> m_blob;
+  std::shared_ptr<BlobResource> blob_;
   typedef size_t (Blob::*_UBool) () const;              // unspecified-type-boolean for non-numeric operator bool() result
   static _UBool _ubool1 ()     { return &Blob::size; }  // unspecified-type-boolean true value
-  _UBool        _bool () const { return m_blob && size() ? _ubool1() : 0; }
+  _UBool        _bool () const { return blob_ && size() ? _ubool1() : 0; }
   explicit     Blob   (const std::shared_ptr<BlobResource> &initblob);
 public:
   explicit     Blob   ();                               ///< Default construct a NULL blob.
