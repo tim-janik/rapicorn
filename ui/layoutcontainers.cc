@@ -20,12 +20,12 @@ Alignment::_property_list()
 }
 
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
-  uint16 m_left_padding, m_right_padding;
-  uint16 m_bottom_padding, m_top_padding;
+  uint16 left_padding_, right_padding_;
+  uint16 bottom_padding_, top_padding_;
 public:
   AlignmentImpl() :
-    m_left_padding (0), m_right_padding (0),
-    m_bottom_padding (0), m_top_padding (0)
+    left_padding_ (0), right_padding_ (0),
+    bottom_padding_ (0), top_padding_ (0)
   {}
   virtual void
   size_request (Requisition &requisition)
@@ -75,18 +75,18 @@ public:
       }
     child.set_allocation (area);
   }
-  virtual uint  left_padding   () const  { return m_left_padding; }
-  virtual void  left_padding   (uint c)  { m_left_padding = c; invalidate(); }
-  virtual uint  right_padding  () const  { return m_right_padding; }
-  virtual void  right_padding  (uint c)  { m_right_padding = c; invalidate(); }
-  virtual uint  bottom_padding () const  { return m_bottom_padding; }
-  virtual void  bottom_padding (uint c)  { m_bottom_padding = c; invalidate(); }
-  virtual uint  top_padding    () const  { return m_top_padding; }
-  virtual void  top_padding    (uint c)  { m_top_padding = c; invalidate(); }
+  virtual uint  left_padding   () const  { return left_padding_; }
+  virtual void  left_padding   (uint c)  { left_padding_ = c; invalidate(); }
+  virtual uint  right_padding  () const  { return right_padding_; }
+  virtual void  right_padding  (uint c)  { right_padding_ = c; invalidate(); }
+  virtual uint  bottom_padding () const  { return bottom_padding_; }
+  virtual void  bottom_padding (uint c)  { bottom_padding_ = c; invalidate(); }
+  virtual uint  top_padding    () const  { return top_padding_; }
+  virtual void  top_padding    (uint c)  { top_padding_ = c; invalidate(); }
   virtual uint  padding        () const  { assert_unreached(); return 0; }
   virtual void  padding        (uint c)
   {
-    m_left_padding = m_right_padding = m_bottom_padding = m_top_padding = c;
+    left_padding_ = right_padding_ = bottom_padding_ = top_padding_ = c;
     invalidate();
   }
 };
