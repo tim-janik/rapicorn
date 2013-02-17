@@ -9,10 +9,10 @@ namespace Rapicorn {
 
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonAreaIface,
                        public virtual EventHandler, public virtual FocusFrame::Client {
-  uint          m_button, m_repeater, unpress_;
-  ClickType     m_click_type;
-  FocusFrame   *m_focus_frame;
-  String        m_on_click[3];
+  uint          button_, repeater_, unpress_;
+  ClickType     click_type_;
+  FocusFrame   *focus_frame_;
+  String        on_click_[3];
   virtual void          dump_private_data       (TestStream &tstream);
   bool                  activate_button_command (int button);
   bool                  activate_command        ();
@@ -25,14 +25,14 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
 public:
   explicit              ButtonAreaImpl  ();
   virtual bool          activate_item   ();
-  virtual String        on_click        () const                { return m_on_click[0]; }
-  virtual void          on_click        (const String &command) { m_on_click[0] = string_strip (command); }
-  virtual String        on_click2       () const                { return m_on_click[1]; }
-  virtual void          on_click2       (const String &command) { m_on_click[1] = string_strip (command); }
-  virtual String        on_click3       () const                { return m_on_click[2]; }
-  virtual void          on_click3       (const String &command) { m_on_click[2] = string_strip (command); }
-  virtual ClickType     click_type      () const                { return m_click_type; }
-  virtual void          click_type      (ClickType  click_type) { reset(); m_click_type = click_type; }
+  virtual String        on_click        () const                { return on_click_[0]; }
+  virtual void          on_click        (const String &command) { on_click_[0] = string_strip (command); }
+  virtual String        on_click2       () const                { return on_click_[1]; }
+  virtual void          on_click2       (const String &command) { on_click_[1] = string_strip (command); }
+  virtual String        on_click3       () const                { return on_click_[2]; }
+  virtual void          on_click3       (const String &command) { on_click_[2] = string_strip (command); }
+  virtual ClickType     click_type      () const                { return click_type_; }
+  virtual void          click_type      (ClickType  click_type) { reset(); click_type_ = click_type; }
   virtual const PropertyList& _property_list ();
 };
 
