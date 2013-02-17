@@ -422,92 +422,92 @@ REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 // == Atomic Ring Buffer
 template<typename T>
 class RingBuffer {
-  const uint    m_size;
-  Atomic<uint>  m_wmark, m_rmark;
-  T            *m_buffer;
+  const uint    size_;
+  Atomic<uint>  wmark_, rmark_;
+  T            *buffer_;
   RAPICORN_CLASS_NON_COPYABLE (RingBuffer);
 public:
   explicit
   RingBuffer (uint bsize) :
-    m_size (bsize + 1), m_wmark (0), m_rmark (0), m_buffer (new T[m_size])
+    size_ (bsize + 1), wmark_ (0), rmark_ (0), buffer_ (new T[size_])
   {}
   ~RingBuffer()
   {
-    // m_size = 0;
-    T *old = m_buffer;
-    m_buffer = NULL;
-    m_rmark = 0;
-    m_wmark = 0;
+    // size_ = 0;
+    T *old = buffer_;
+    buffer_ = NULL;
+    rmark_ = 0;
+    wmark_ = 0;
     delete[] old;
   }
   uint
   n_writable() const
   {
-    const uint rm = m_rmark.load();
-    const uint wm = m_wmark.load();
-    const uint space = (m_size - 1 + rm - wm) % m_size;
+    const uint rm = rmark_.load();
+    const uint wm = wmark_.load();
+    const uint space = (size_ - 1 + rm - wm) % size_;
     return space;
   }
   uint
   write (uint length, const T *data, bool partial = true)
   {
     const uint orig_length = length;
-    const uint rm = m_rmark.load();
-    uint wm = m_wmark.load();
-    uint space = (m_size - 1 + rm - wm) % m_size;
+    const uint rm = rmark_.load();
+    uint wm = wmark_.load();
+    uint space = (size_ - 1 + rm - wm) % size_;
     if (!partial && length > space)
       return 0;
     while (length)
       {
         if (rm <= wm)
-          space = m_size - wm + (rm == 0 ? -1 : 0);
+          space = size_ - wm + (rm == 0 ? -1 : 0);
         else
           space = rm - wm -1;
         if (!space)
           break;
         space = MIN (space, length);
-        std::copy (data, &data[space], &m_buffer[wm]);
-        wm = (wm + space) % m_size;
+        std::copy (data, &data[space], &buffer_[wm]);
+        wm = (wm + space) % size_;
         data += space;
         length -= space;
       }
-    RAPICORN_SFENCE; // wmb ensures m_buffer writes are made visible before the m_wmark update
-    m_wmark.store (wm);
+    RAPICORN_SFENCE; // wmb ensures buffer_ writes are made visible before the wmark_ update
+    wmark_.store (wm);
     return orig_length - length;
   }
   uint
   n_readable() const
   {
-    const uint wm = m_wmark.load();
-    const uint rm = m_rmark.load();
-    const uint space = (m_size + wm - rm) % m_size;
+    const uint wm = wmark_.load();
+    const uint rm = rmark_.load();
+    const uint space = (size_ + wm - rm) % size_;
     return space;
   }
   uint
   read (uint length, T *data, bool partial = true)
   {
     const uint orig_length = length;
-    RAPICORN_LFENCE; // rmb ensures m_buffer contents are seen before m_wmark updates
-    const uint wm = m_wmark.load();
-    uint rm = m_rmark.load();
-    uint space = (m_size + wm - rm) % m_size;
+    RAPICORN_LFENCE; // rmb ensures buffer_ contents are seen before wmark_ updates
+    const uint wm = wmark_.load();
+    uint rm = rmark_.load();
+    uint space = (size_ + wm - rm) % size_;
     if (!partial && length > space)
       return 0;
     while (length)
       {
         if (wm < rm)
-          space = m_size - rm;
+          space = size_ - rm;
         else
           space = wm - rm;
         if (!space)
           break;
         space = MIN (space, length);
-        std::copy (&m_buffer[rm], &m_buffer[rm + space], data);
-        rm = (rm + space) % m_size;
+        std::copy (&buffer_[rm], &buffer_[rm + space], data);
+        rm = (rm + space) % size_;
         data += space;
         length -= space;
       }
-    m_rmark.store (rm);
+    rmark_.store (rm);
     return orig_length - length;
   }
 };
