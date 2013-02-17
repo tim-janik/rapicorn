@@ -12,8 +12,8 @@ class ItemImpl;
 class Heritage : public virtual ReferenceCountable {
   friend        class ClassDoctor;
   class Internals;
-  Internals    *m_internals;
-  WindowImpl   &m_window;
+  Internals    *internals_;
+  WindowImpl   &window_;
   explicit      Heritage        (WindowImpl &window,
                                  Internals  *internals);
   /*Des*/      ~Heritage        ();
@@ -24,7 +24,7 @@ class Heritage : public virtual ReferenceCountable {
 public:
   Heritage*     adapt_heritage  (ItemImpl           &item,
                                  ColorSchemeType color_scheme);
-  WindowImpl&   window          () const { return m_window; }
+  WindowImpl&   window          () const { return window_; }
   /* colors */
   Color         get_color       (StateType state,
                                  ColorType ct) const;
