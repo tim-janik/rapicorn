@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_FACTORY_HH__
 #define __RAPICORN_FACTORY_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 #include <list>
 
 namespace Rapicorn {

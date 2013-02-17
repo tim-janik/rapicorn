@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_CONTAINER_HH__
 #define __RAPICORN_CONTAINER_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
@@ -133,7 +133,7 @@ protected:
 
 // == misc impl bits ==
 ContainerImpl*
-WidgetImpl::as_container () // see item.hh
+WidgetImpl::as_container () // see widget.hh
 {
   return dynamic_cast<ContainerImpl*> (this);
 }

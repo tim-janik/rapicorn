@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/item.hh> // unguarded, because item.hh includes commands.hh
+#include <ui/widget.hh> // unguarded, because item.hh includes commands.hh
 
 #ifndef __RAPICORN_COMMANDS_HH__
 #define __RAPICORN_COMMANDS_HH__

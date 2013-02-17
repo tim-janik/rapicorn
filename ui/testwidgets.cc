@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "testitems.hh"
+#include "testwidgets.hh"
 #include "container.hh"
 #include "painter.hh"
 #include "window.hh"

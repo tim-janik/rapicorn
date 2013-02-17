@@ -16,7 +16,7 @@
  */
 #include "servertests.hh"
 #include <ui/uithread.hh>
-#include <ui/testitems.hh>
+#include <ui/testwidgets.hh>
 
 namespace {
 using namespace Rapicorn;
@@ -152,7 +152,7 @@ ensure_ui_file()
     {
       // first, load required ui files
       ApplicationImpl &app = ApplicationImpl::the();
-      app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), program_file());
+      app.auto_load ("RapicornTest", Path::vpath_find ("testwidgets.xml"), program_file());
     }
 }
 

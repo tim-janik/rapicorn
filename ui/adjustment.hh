@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_ADJUSTMENT_HH__
 #define __RAPICORN_ADJUSTMENT_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 

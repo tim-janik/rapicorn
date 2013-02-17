@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "paintitems.hh"
+#include "paintwidgets.hh"
 #include "factory.hh"
 #include "painter.hh"
 

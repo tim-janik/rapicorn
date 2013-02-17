@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "heritage.hh"
-#include "item.hh"
+#include "widget.hh"
 
 namespace Rapicorn {
 

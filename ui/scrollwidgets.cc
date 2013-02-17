@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "scrollitemsimpl.hh"
+#include "scrollwidgetsimpl.hh"
 #include "window.hh"
 #include "factory.hh"
 

@@ -3,7 +3,7 @@
 #define __RAPICORN_SELOB_HH__
 
 #include <ui/selector.hh>
-#include <ui/item.hh>
+#include <ui/widget.hh>
 #include <ui/models.hh>
 
 namespace Rapicorn {

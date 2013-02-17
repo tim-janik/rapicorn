@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_SCROLL_WIDGETS_IMPL_HH__
 #define __RAPICORN_SCROLL_WIDGETS_IMPL_HH__
 
-#include <ui/scrollitems.hh>
+#include <ui/scrollwidgets.hh>
 #include <ui/container.hh>
 
 namespace Rapicorn {
