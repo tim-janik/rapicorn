@@ -71,7 +71,7 @@ class AppSource : public EventLoop::Source {
   {
     // seen_primary is merely a hint, need to check local and remote states
     if (ApplicationH::the().finishable() &&  // remote
-        main_loop()->finishable() && m_loop)            // local
+        main_loop()->finishable() && loop_)            // local
       main_loop()->quit();
   }
 public:
@@ -113,8 +113,8 @@ public:
   void
   queue_check_primaries()
   {
-    if (m_loop)
-      m_loop->exec_background (Aida::slot (*this, &AppSource::check_primaries));
+    if (loop_)
+      loop_->exec_background (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 

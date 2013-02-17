@@ -60,13 +60,13 @@ public:
   class State;
 protected:
   typedef std::vector<Source*>    SourceList;
-  MainLoop     &m_main_loop;
-  SourceList    m_sources;
-  int64         m_dispatch_priority;
-  QuickSourceArray &m_poll_sources;
+  MainLoop     &main_loop_;
+  SourceList    sources_;
+  int64         dispatch_priority_;
+  QuickSourceArray &poll_sources_;
   uint64        pollmem1[3];
   Source*       pollmem2[7];
-  bool          m_primary;
+  bool          primary_;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
   Source*       find_first_L     ();
@@ -114,7 +114,7 @@ public:
   uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with background priority (when idle), returning true repeats callback.
-  MainLoop* main_loop  () const { return &m_main_loop; }        ///< Get the main loop for this loop.
+  MainLoop* main_loop  () const { return &main_loop_; }        ///< Get the main loop for this loop.
   /// Execute a single dispatcher callback for prepare, check, dispatch.
   uint exec_dispatcher (const DispatcherSlot &sl, int priority = PRIORITY_NORMAL);
   /// Execute a callback after a specified timeout, returning true repeats callback.
@@ -133,12 +133,12 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
 {
   friend                class EventLoop;
   friend                class SlaveLoop;
-  Mutex                 m_mutex;
-  vector<EventLoop*>    m_loops;
-  EventFd               m_eventfd;
-  uint                  m_rr_index;
-  bool                  m_running;
-  int                   m_quit_code;
+  Mutex                 mutex_;
+  vector<EventLoop*>    loops_;
+  EventFd               eventfd_;
+  uint                  rr_index_;
+  bool                  running_;
+  int                   quit_code_;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
@@ -156,12 +156,12 @@ public:
   void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
   EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
-  inline Mutex&     mutex    () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
+  inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
   ///@cond
   void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:
   struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
-  LockHooks m_lock_hooks; bool m_lock_hooks_locked;
+  LockHooks lock_hooks_; bool lock_hooks_locked_;
   ///@endcond
 };
 
@@ -180,21 +180,21 @@ class EventLoop::Source : public virtual ReferenceCountable /// EventLoop source
   friend        class EventLoop;
   RAPICORN_CLASS_NON_COPYABLE (Source);
 protected:
-  EventLoop   *m_loop;
+  EventLoop   *loop_;
   struct {
     PollFD    *pfd;
     uint       idx;
-  }           *m_pfds;
-  uint         m_id;
-  int          m_priority;
-  uint16       m_loop_state;
-  uint         m_may_recurse : 1;
-  uint         m_dispatching : 1;
-  uint         m_was_dispatching : 1;
-  uint         m_primary : 1;
+  }           *pfds_;
+  uint         id_;
+  int          priority_;
+  uint16       loop_state_;
+  uint         may_recurse_ : 1;
+  uint         dispatching_ : 1;
+  uint         was_dispatching_ : 1;
+  uint         primary_ : 1;
   uint         n_pfds      ();
   explicit     Source      ();
-  uint         source_id   () { return m_loop ? m_id : 0; }
+  uint         source_id   () { return loop_ ? id_ : 0; }
 public:
   virtual     ~Source      ();
   virtual bool prepare     (const State &state,
@@ -210,7 +210,7 @@ public:
   void         add_poll    (PollFD * const pfd);            ///< Add a PollFD descriptors for poll(2) and check().
   void         remove_poll (PollFD * const pfd);            ///< Remove a previously added PollFD.
   void         loop_remove ();                              ///< Remove this source from its event loop if any.
-  MainLoop*    main_loop   () const { return m_loop ? m_loop->main_loop() : NULL; } ///< Get the main loop for this source.
+  MainLoop*    main_loop   () const { return loop_ ? loop_->main_loop() : NULL; } ///< Get the main loop for this source.
 };
 
 // === EventLoop::DispatcherSource ===
@@ -230,10 +230,10 @@ public:
 // === EventLoop::TimedSource ===
 class EventLoop::TimedSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
 {
-  uint64     m_expiration_usecs;
-  uint       m_interval_msecs;
-  bool       m_first_interval;
-  const bool m_oneshot;
+  uint64     expiration_usecs_;
+  uint       interval_msecs_;
+  bool       first_interval_;
+  const bool oneshot_;
   union {
     BoolSlot bool_slot_;
     VoidSlot void_slot_;
@@ -260,12 +260,12 @@ protected:
   virtual bool  check           (const State &state);
   virtual bool  dispatch        (const State &state);
   virtual void  destroy         ();
-  PollFD        m_pfd;
-  uint          m_ignore_errors : 1;    // 'E'
-  uint          m_ignore_hangup : 1;    // 'H'
-  uint          m_never_close : 1;      // 'C'
+  PollFD        pfd_;
+  uint          ignore_errors_ : 1;    // 'E'
+  uint          ignore_hangup_ : 1;    // 'H'
+  uint          never_close_ : 1;      // 'C'
 private:
-  const uint    m_oneshot : 1;
+  const uint    oneshot_ : 1;
   union {
     BPfdSlot bool_poll_slot_;
     VPfdSlot void_poll_slot_;
