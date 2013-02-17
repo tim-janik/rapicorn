@@ -42,16 +42,16 @@ class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
-  uint64                      m_flags;  // inlined for fast access
-  ContainerImpl              *m_parent; // inlined for fast access
-  Heritage                   *m_heritage;
-  Requisition                 m_requisition;
-  Allocation                  m_allocation;
-  FactoryContext             *m_factory_context;
-  const AnchorInfo           *m_ainfo;
+  uint64                      flags_;  // inlined for fast access
+  ContainerImpl              *parent_; // inlined for fast access
+  Heritage                   *heritage_;
+  Requisition                 requisition_;
+  Allocation                  allocation_;
+  FactoryContext             *factory_context_;
+  const AnchorInfo           *ainfo_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
-  ContainerImpl**             _parent_loc        () { return &m_parent; }
+  ContainerImpl**             _parent_loc        () { return &parent_; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
   void                        expose_internal    (const Region &region);
@@ -86,7 +86,7 @@ protected:
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
-  bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
+  bool                        test_flags        (uint32 mask) const { return (flags_ & mask) != 0; }
   virtual bool                self_visible      () const;
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
@@ -119,13 +119,13 @@ protected:
   void                        notify_key_error  ();
 public:
   explicit                    ItemImpl              ();
-  bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
+  bool                        test_all_flags    (uint32 mask) const { return (flags_ & mask) == mask; }
   bool                        test_any_flag     (uint32 mask) const { return test_flags (mask); }
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
   bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
-  bool                        drawable          () const { return visible() && m_allocation.width > 0 && m_allocation.height > 0; }
+  bool                        drawable          () const { return visible() && allocation_.width > 0 && allocation_.height > 0; }
   virtual bool                viewable          () const; // drawable() && parent->viewable();
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);
@@ -180,11 +180,11 @@ public:
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   /* parents */
-  ContainerImpl*              parent            () const { return m_parent; }
+  ContainerImpl*              parent            () const { return parent_; }
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
-  const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (m_ainfo) ? m_ainfo : force_anchor_info(); }
+  const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (ainfo_) ? ainfo_ : force_anchor_info(); }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;
@@ -242,10 +242,10 @@ public:
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area);       // assign new allocation
-  const Allocation&          allocation         () const { return m_allocation; } // current allocation
+  const Allocation&          allocation         () const { return allocation_; } // current allocation
   /* heritage / appearance */
   StateType             state                   () const;
-  Heritage*             heritage                () const { return m_heritage; }
+  Heritage*             heritage                () const { return heritage_; }
   Color                 foreground              () { return heritage()->foreground (state()); }
   Color                 background              () { return heritage()->background (state()); }
   Color                 dark_color              () { return heritage()->dark_color (state()); }

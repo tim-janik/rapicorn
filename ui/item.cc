@@ -46,11 +46,11 @@ ItemIface::impl () const
 }
 
 ItemImpl::ItemImpl () :
-  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
-  m_parent (NULL),
-  m_heritage (NULL),
-  m_factory_context (NULL), // removing this breaks g++ pre-4.2.0 20060530
-  m_ainfo (NULL),
+  flags_ (VISIBLE | SENSITIVE | ALLOCATABLE),
+  parent_ (NULL),
+  heritage_ (NULL),
+  factory_context_ (NULL), // removing this breaks g++ pre-4.2.0 20060530
+  ainfo_ (NULL),
   sig_changed (Aida::slot (*this, &ItemImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &ItemImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &ItemImpl::hierarchy_changed))
@@ -63,7 +63,7 @@ ItemImpl::constructed()
 bool
 ItemImpl::viewable() const
 {
-  return drawable() && (!m_parent || m_parent->viewable());
+  return drawable() && (!parent_ || parent_->viewable());
 }
 
 bool
@@ -76,13 +76,13 @@ bool
 ItemImpl::change_flags_silently (uint32 mask,
                                  bool   on)
 {
-  uint32 old_flags = m_flags;
+  uint32 old_flags = flags_;
   if (on)
-    m_flags |= mask;
+    flags_ |= mask;
   else
-    m_flags &= ~mask;
+    flags_ &= ~mask;
   /* omit change notification */
-  return old_flags != m_flags;
+  return old_flags != flags_;
 }
 
 void
@@ -466,10 +466,10 @@ ItemImpl::~ItemImpl()
   SizeGroup::delete_item (*this);
   if (parent())
     parent()->remove (this);
-  if (m_heritage)
+  if (heritage_)
     {
-      m_heritage->unref();
-      m_heritage = NULL;
+      heritage_->unref();
+      heritage_ = NULL;
     }
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
@@ -631,22 +631,22 @@ ItemImpl::propagate_heritage ()
   ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
   if (container)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->heritage (m_heritage);
+      it->heritage (heritage_);
 }
 
 void
 ItemImpl::heritage (Heritage *heritage)
 {
-  Heritage *old_heritage = m_heritage;
-  m_heritage = NULL;
+  Heritage *old_heritage = heritage_;
+  heritage_ = NULL;
   if (heritage)
     {
-      m_heritage = heritage->adapt_heritage (*this, color_scheme());
-      ref_sink (m_heritage);
+      heritage_ = heritage->adapt_heritage (*this, color_scheme());
+      ref_sink (heritage_);
     }
   if (old_heritage)
     old_heritage->unref();
-  if (m_heritage != old_heritage)
+  if (heritage_ != old_heritage)
     {
       invalidate();
       propagate_heritage ();
@@ -860,8 +860,8 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
       if (heritage())
         heritage (NULL);
       pc->unparent_child (*this);
-      m_parent = NULL;
-      m_ainfo = NULL;
+      parent_ = NULL;
+      ainfo_ = NULL;
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
@@ -872,13 +872,13 @@ ItemImpl::set_parent (ContainerImpl *pcontainer)
       /* ensure parent items are always containers (see parent()) */
       if (!dynamic_cast<ContainerImpl*> (pcontainer))
         throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
-      m_parent = pcontainer;
-      m_ainfo = NULL;
-      if (m_parent->heritage())
-        heritage (m_parent->heritage());
+      parent_ = pcontainer;
+      ainfo_ = NULL;
+      if (parent_->heritage())
+        heritage (parent_->heritage());
       invalidate();
       propagate_state (true);
-      if (m_parent->anchored() and !anchored())
+      if (parent_->anchored() and !anchored())
         sig_hierarchy_changed.emit (NULL);
     }
 }
@@ -923,8 +923,8 @@ ItemImpl::get_window () const
   if (ainfo)
     return ainfo->window;
   ItemImpl *item = const_cast<ItemImpl*> (this);
-  while (item->m_parent)
-    item = item->m_parent;
+  while (item->parent_)
+    item = item->parent_;
   return dynamic_cast<WindowImpl*> (item); // NULL iff this is not type WindowImpl*
 }
 
@@ -934,7 +934,7 @@ ItemImpl::get_viewport () const
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->viewport;
-  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->m_parent)
+  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->parent_)
     {
       ViewportImpl *v = dynamic_cast<ViewportImpl*> (item);
       if (v)
@@ -949,7 +949,7 @@ ItemImpl::get_resize_container () const
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->resize_container;
-  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->m_parent)
+  for (ItemImpl *item = const_cast<ItemImpl*> (this); item; item = item->parent_)
     {
       ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (item);
       if (c)
@@ -961,8 +961,8 @@ ItemImpl::get_resize_container () const
 const AnchorInfo*
 ItemImpl::force_anchor_info () const
 {
-  if (m_ainfo)
-    return m_ainfo;
+  if (ainfo_)
+    return ainfo_;
   // find resize container
   ItemImpl *parent = const_cast<ItemImpl*> (this);
   ResizeContainerImpl *rc = NULL;
@@ -975,7 +975,7 @@ ItemImpl::force_anchor_info () const
     }
   static const AnchorInfo orphan_anchor_info;
   const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
-  const_cast<ItemImpl*> (this)->m_ainfo = ainfo;
+  const_cast<ItemImpl*> (this)->ainfo_ = ainfo;
   if (anchored())
     assert (get_window() != NULL); // FIXME
   return ainfo;
@@ -1053,9 +1053,9 @@ ItemImpl::inner_size_request()
                    Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
                    inner.width, inner.height);
         }
-      m_requisition = inner;
+      requisition_ = inner;
     }
-  return allocatable() ? m_requisition : Requisition();
+  return allocatable() ? requisition_ : Requisition();
 }
 
 Requisition
@@ -1345,15 +1345,15 @@ ItemImpl::name (const String &str)
 FactoryContext*
 ItemImpl::factory_context () const
 {
-  return m_factory_context;
+  return factory_context_;
 }
 
 void
 ItemImpl::factory_context (FactoryContext *fc)
 {
   if (fc)
-    assert_return (m_factory_context == NULL);
-  m_factory_context = fc;
+    assert_return (factory_context_ == NULL);
+  factory_context_ = fc;
 }
 
 UserSource
@@ -1395,9 +1395,9 @@ ItemImpl::tune_requisition (Requisition requisition)
           Requisition ovr (width(), height());
           requisition.width = ovr.width >= 0 ? ovr.width : MAX (requisition.width, 0);
           requisition.height = ovr.height >= 0 ? ovr.height : MAX (requisition.height, 0);
-          if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
+          if (requisition.width != requisition_.width || requisition.height != requisition_.height)
             {
-              m_requisition = requisition;
+              requisition_ = requisition;
               invalidate_parent(); // need new size-request on parent
               return true;
             }
@@ -1421,9 +1421,9 @@ ItemImpl::set_allocation (const Allocation &area)
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   if (!allocatable())
     sarea = Allocation (0, 0, 0, 0);
-  const bool changed = m_allocation != sarea;
-  m_allocation = sarea;
-  size_allocate (m_allocation, changed);
+  const bool changed = allocation_ != sarea;
+  allocation_ = sarea;
+  size_allocate (allocation_, changed);
   Allocation a = allocation();
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); // skip notification
