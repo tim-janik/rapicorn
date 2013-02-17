@@ -297,7 +297,7 @@ IniFile::load_ini (const String &inputname, const String &data)
           if (strchr (section.c_str(), '=') || strchr (key.c_str(), '.'))
             DEBUG ("%s:%zd: invalid key name: %s.%s", inputname.c_str(), lineno, section.c_str(), k.c_str());
           else
-            m_sections[section].push_back (k + "=" + text);
+            sections_[section].push_back (k + "=" + text);
         }
       else if (skip_line (&p, &nextno, debugp))
         {
@@ -315,7 +315,7 @@ IniFile::IniFile (const String &res_ini)
   Blob blob = Blob::load (res_ini);
   if (blob)
     load_ini (blob.name(), blob.string());
-  if (m_sections.empty())
+  if (sections_.empty())
     DEBUG ("empty INI file %s: %s", CQUOTE (res_ini), strerror (errno));
 }
 
@@ -323,7 +323,7 @@ IniFile::IniFile (Blob blob)
 {
   if (blob)
     load_ini (blob.name(), blob.string());
-  if (m_sections.empty())
+  if (sections_.empty())
     DEBUG ("empty INI file %s: %s", CQUOTE (blob ? blob.name() : "<NULL>"), strerror (errno));
 }
 
@@ -335,21 +335,21 @@ IniFile::IniFile (const IniFile &source)
 IniFile&
 IniFile::operator= (const IniFile &source)
 {
-  m_sections  = source.m_sections;
+  sections_  = source.sections_;
   return *this;
 }
 
 bool
 IniFile::has_sections () const
 {
-  return !m_sections.empty();
+  return !sections_.empty();
 }
 
 const StringVector&
 IniFile::section (const String &name) const
 {
-  SectionMap::const_iterator cit = m_sections.find (name);
-  if (cit != m_sections.end())
+  SectionMap::const_iterator cit = sections_.find (name);
+  if (cit != sections_.end())
     return cit->second;
   static const StringVector *dummy = NULL;
   do_once {
@@ -362,15 +362,15 @@ IniFile::section (const String &name) const
 bool
 IniFile::has_section (const String &section) const
 {
-  SectionMap::const_iterator cit = m_sections.find (section);
-  return cit != m_sections.end();
+  SectionMap::const_iterator cit = sections_.find (section);
+  return cit != sections_.end();
 }
 
 StringVector
 IniFile::sections () const
 {
   StringVector secs;
-  for (auto it : m_sections)
+  for (auto it : sections_)
     secs.push_back (it.first);
   return secs;
 }
@@ -379,8 +379,8 @@ StringVector
 IniFile::attributes (const String &section) const
 {
   StringVector opts;
-  SectionMap::const_iterator cit = m_sections.find (section);
-  if (cit != m_sections.end())
+  SectionMap::const_iterator cit = sections_.find (section);
+  if (cit != sections_.end())
     for (auto s : cit->second)
       opts.push_back (s.substr (0, s.find ('=')));
   return opts;
@@ -389,8 +389,8 @@ IniFile::attributes (const String &section) const
 bool
 IniFile::has_attribute (const String &section, const String &key) const
 {
-  SectionMap::const_iterator cit = m_sections.find (section);
-  if (cit == m_sections.end())
+  SectionMap::const_iterator cit = sections_.find (section);
+  if (cit == sections_.end())
     return false;
   for (auto s : cit->second)
     if (s.size() > key.size() && s[key.size()] == '=' && memcmp (s.data(), key.data(), key.size()) == 0)
@@ -402,7 +402,7 @@ StringVector
 IniFile::raw_values () const
 {
   StringVector opts;
-  for (auto it : m_sections)
+  for (auto it : sections_)
     for (auto s : it.second)
       opts.push_back (it.first + "." + s);
   return opts;
