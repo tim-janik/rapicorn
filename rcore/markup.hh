@@ -73,10 +73,10 @@ protected:
   const String&         recap_string    () const;
 private:
   Context *context;
-  String   m_input_name;
-  String   m_recap;
-  uint     m_recap_depth;
-  bool     m_recap_outer;
+  String   input_name_;
+  String   recap_;
+  uint     recap_depth_;
+  bool     recap_outer_;
   void     recap_start_element   (const String   &element_name,
                                   ConstStrings   &attribute_names,
                                   ConstStrings   &attribute_values,
