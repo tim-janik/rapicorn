@@ -35,9 +35,9 @@ namespace Rapicorn {
 namespace Svg {
 
 struct Tweaker {
-  double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
+  double cx_, cy_, lx_, rx_, by_, ty_;
   explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty) :
-    m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty) {}
+    cx_ (cx), cy_ (cy), lx_ (lx), rx_ (rx), by_ (by), ty_ (ty) {}
   bool          point_tweak     (double vx, double vy, double *px, double *py);
   static void   thread_set      (Tweaker *tweaker);
 };
@@ -195,14 +195,14 @@ Tweaker::point_tweak (double vx, double vy, double *px, double *py)
   const double eps = 0.0001;
   // FIXME: for filters to work, the document page must grow so that it contains the tweaked
   // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
-  if (vx > m_cx + eps)
-    *px += m_lx + m_rx, mod = 1;
-  else if (vx >= m_cx - eps)
-    *px += m_lx, mod = 1;
-  if (vy > m_cy + eps)
-    *py += m_ty + m_by, mod = 1;
-  else if (vy >= m_cy - eps)
-    *py += m_ty, mod = 1;
+  if (vx > cx_ + eps)
+    *px += lx_ + rx_, mod = 1;
+  else if (vx >= cx_ - eps)
+    *px += lx_, mod = 1;
+  if (vy > cy_ + eps)
+    *py += ty_ + by_, mod = 1;
+  else if (vy >= cy_ - eps)
+    *py += ty_, mod = 1;
   return mod;
 }
 
