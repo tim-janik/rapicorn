@@ -47,51 +47,51 @@ TestContainer::seen_test_items ()
 }
 
 class TestContainerImpl : public virtual SingleContainerImpl, public virtual TestContainer {
-  String m_value, m_assert_value;
-  String m_accu, m_accu_history;
-  double m_assert_left, m_assert_right;
-  double m_assert_top, m_assert_bottom;
-  double m_assert_width, m_assert_height;
-  double m_epsilon;
-  bool   m_test_container_counted;
-  bool   m_fatal_asserts;
-  bool   m_paint_allocation;
+  String value_, assert_value_;
+  String accu_, accu_history_;
+  double assert_left_, assert_right_;
+  double assert_top_, assert_bottom_;
+  double assert_width_, assert_height_;
+  double epsilon_;
+  bool   test_container_counted_;
+  bool   fatal_asserts_;
+  bool   paint_allocation_;
 public:
   TestContainerImpl() :
-    m_value (""), m_assert_value (""),
-    m_accu (""), m_accu_history (""),
-    m_assert_left (-INFINITY), m_assert_right (-INFINITY),
-    m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
-    m_assert_width (-INFINITY), m_assert_height (-INFINITY),
-    m_epsilon (DFLTEPS), m_test_container_counted (false),
-    m_fatal_asserts (false), m_paint_allocation (false)
+    value_ (""), assert_value_ (""),
+    accu_ (""), accu_history_ (""),
+    assert_left_ (-INFINITY), assert_right_ (-INFINITY),
+    assert_top_ (-INFINITY), assert_bottom_ (-INFINITY),
+    assert_width_ (-INFINITY), assert_height_ (-INFINITY),
+    epsilon_ (DFLTEPS), test_container_counted_ (false),
+    fatal_asserts_ (false), paint_allocation_ (false)
   {}
-  virtual String value           () const            { return m_value; }
-  virtual void   value           (const String &val) { m_value = val; }
-  virtual String assert_value    () const            { return m_assert_value; }
-  virtual void   assert_value    (const String &val) { m_assert_value = val; }
-  virtual double assert_left     () const        { return m_assert_left  ; }
-  virtual void   assert_left     (double val)    { m_assert_left = val; invalidate(); }
-  virtual double assert_right    () const        { return m_assert_right ; }
-  virtual void   assert_right    (double val)    { m_assert_right = val; invalidate(); }
-  virtual double assert_top      () const        { return m_assert_top   ; }
-  virtual void   assert_top      (double val)    { m_assert_top = val; invalidate(); }
-  virtual double assert_bottom   () const        { return m_assert_bottom; }
-  virtual void   assert_bottom   (double val)    { m_assert_bottom = val; invalidate(); }
-  virtual double assert_width    () const        { return m_assert_width ; }
-  virtual void   assert_width    (double val)    { m_assert_width = val; invalidate(); }
-  virtual double assert_height   () const        { return m_assert_height; }
-  virtual void   assert_height   (double val)    { m_assert_height = val; invalidate(); }
-  virtual double epsilon         () const        { return m_epsilon  ; }
-  virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
-  virtual bool   paint_allocation() const        { return m_paint_allocation; }
-  virtual void   paint_allocation(bool   val)    { m_paint_allocation = val; invalidate(); }
-  virtual bool   fatal_asserts   () const        { return m_fatal_asserts; }
-  virtual void   fatal_asserts   (bool   val)    { m_fatal_asserts = val; invalidate(); }
-  virtual String accu            () const            { return m_accu; }
-  virtual void   accu            (const String &val) { m_accu = val; m_accu_history += val; }
-  virtual String accu_history    () const            { return m_accu_history; }
-  virtual void   accu_history    (const String &val) { m_accu_history = val; }
+  virtual String value           () const            { return value_; }
+  virtual void   value           (const String &val) { value_ = val; }
+  virtual String assert_value    () const            { return assert_value_; }
+  virtual void   assert_value    (const String &val) { assert_value_ = val; }
+  virtual double assert_left     () const        { return assert_left_  ; }
+  virtual void   assert_left     (double val)    { assert_left_ = val; invalidate(); }
+  virtual double assert_right    () const        { return assert_right_ ; }
+  virtual void   assert_right    (double val)    { assert_right_ = val; invalidate(); }
+  virtual double assert_top      () const        { return assert_top_   ; }
+  virtual void   assert_top      (double val)    { assert_top_ = val; invalidate(); }
+  virtual double assert_bottom   () const        { return assert_bottom_; }
+  virtual void   assert_bottom   (double val)    { assert_bottom_ = val; invalidate(); }
+  virtual double assert_width    () const        { return assert_width_ ; }
+  virtual void   assert_width    (double val)    { assert_width_ = val; invalidate(); }
+  virtual double assert_height   () const        { return assert_height_; }
+  virtual void   assert_height   (double val)    { assert_height_ = val; invalidate(); }
+  virtual double epsilon         () const        { return epsilon_  ; }
+  virtual void   epsilon         (double val)    { epsilon_ = val; invalidate(); }
+  virtual bool   paint_allocation() const        { return paint_allocation_; }
+  virtual void   paint_allocation(bool   val)    { paint_allocation_ = val; invalidate(); }
+  virtual bool   fatal_asserts   () const        { return fatal_asserts_; }
+  virtual void   fatal_asserts   (bool   val)    { fatal_asserts_ = val; invalidate(); }
+  virtual String accu            () const            { return accu_; }
+  virtual void   accu            (const String &val) { accu_ = val; accu_history_ += val; }
+  virtual String accu_history    () const            { return accu_history_; }
+  virtual void   accu_history    (const String &val) { accu_history_ = val; }
 protected:
   virtual void
   size_request (Requisition &requisition)
@@ -115,14 +115,14 @@ protected:
         value = fabs (value);
       }
     double delta = fabs (rvalue - value);
-    if (delta > m_epsilon)
+    if (delta > epsilon_)
       {
-        if (m_fatal_asserts)
+        if (fatal_asserts_)
           fatal ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
-                 assertion_name, value, rvalue, delta, m_epsilon);
+                 assertion_name, value, rvalue, delta, epsilon_);
         else
           critical ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
-                    assertion_name, value, rvalue, delta, m_epsilon);
+                    assertion_name, value, rvalue, delta, epsilon_);
       }
     else
       {
@@ -133,7 +133,7 @@ protected:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (m_paint_allocation)
+    if (paint_allocation_)
       {
         IRect ia = allocation();
         cairo_t *cr = cairo_context (rcontext, rect);
@@ -145,24 +145,24 @@ protected:
     double width = allocation().width, height = allocation().height;
     double x1 = allocation().x, x2 = rarea.width - x1 - width;
     double y1 = allocation().y, y2 = rarea.height - y1 - height;
-    assert_value ("assert-bottom", m_assert_bottom, y1, y2);
-    assert_value ("assert-right",  m_assert_right,  x1, x2);
-    assert_value ("assert-top",    m_assert_top,    y1, y2);
-    assert_value ("assert-left",   m_assert_left,   x1, x2);
-    assert_value ("assert-width",  m_assert_width, width, width);
-    assert_value ("assert-height", m_assert_height, height, height);
-    if (m_assert_value != m_value)
+    assert_value ("assert-bottom", assert_bottom_, y1, y2);
+    assert_value ("assert-right",  assert_right_,  x1, x2);
+    assert_value ("assert-top",    assert_top_,    y1, y2);
+    assert_value ("assert-left",   assert_left_,   x1, x2);
+    assert_value ("assert-width",  assert_width_, width, width);
+    assert_value ("assert-height", assert_height_, height, height);
+    if (assert_value_ != value_)
       {
-        if (m_fatal_asserts)
-          fatal ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+        if (fatal_asserts_)
+          fatal ("value has unexpected contents: %s (expected: %s)", value_.c_str(), assert_value_.c_str());
         else
-          critical ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+          critical ("value has unexpected contents: %s (expected: %s)", value_.c_str(), assert_value_.c_str());
       }
     sig_assertions_passed.emit ();
     /* count containers for seen_test_containers() */
-    if (!m_test_container_counted)
+    if (!test_container_counted_)
       {
-        m_test_container_counted = true;
+        test_container_counted_ = true;
         test_containers_rendered++;
       }
   }
@@ -190,52 +190,52 @@ TestBox::_property_list()
 }
 
 class TestBoxImpl : public virtual SingleContainerImpl, public virtual TestBox {
-  String m_snapshot_file;
-  uint   m_handler_id;
+  String snapshot_file_;
+  uint   handler_id_;
 protected:
-  virtual String snapshot_file () const                 { return m_snapshot_file; }
-  virtual void   snapshot_file (const String &val)      { m_snapshot_file = val; invalidate(); }
+  virtual String snapshot_file () const                 { return snapshot_file_; }
+  virtual void   snapshot_file (const String &val)      { snapshot_file_ = val; invalidate(); }
   ~TestBoxImpl()
   {
-    if (m_handler_id)
+    if (handler_id_)
       {
-        remove_exec (m_handler_id);
-        m_handler_id = 0;
+        remove_exec (handler_id_);
+        handler_id_ = 0;
       }
   }
   void
   make_snapshot ()
   {
     WindowImpl *witem = get_window();
-    if (m_snapshot_file != "" && witem)
+    if (snapshot_file_ != "" && witem)
       {
         cairo_surface_t *isurface = witem->create_snapshot (allocation());
-        cairo_status_t wstatus = cairo_surface_write_to_png (isurface, m_snapshot_file.c_str());
+        cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
         cairo_surface_destroy (isurface);
         String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-        printerr ("%s: wrote %s: %s\n", name().c_str(), m_snapshot_file.c_str(), err.c_str());
+        printerr ("%s: wrote %s: %s\n", name().c_str(), snapshot_file_.c_str(), err.c_str());
       }
-    if (m_handler_id)
+    if (handler_id_)
       {
-        remove_exec (m_handler_id);
-        m_handler_id = 0;
+        remove_exec (handler_id_);
+        handler_id_ = 0;
       }
   }
 public:
   explicit TestBoxImpl() :
-    m_handler_id (0)
+    handler_id_ (0)
   {}
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (!m_handler_id)
+    if (!handler_id_)
       {
         WindowImpl *witem = get_window();
         if (witem)
           {
             EventLoop *loop = witem->get_loop();
             if (loop)
-              m_handler_id = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
+              handler_id_ = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
           }
       }
   }
@@ -243,24 +243,24 @@ public:
 static const ItemFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
 
 class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface {
-  bool m_bool; int m_int; double m_float; std::string m_string; TestEnum m_enum;
-  Requisition m_rec; StringSeq m_seq; IdlTestItemIface *m_self;
-  virtual bool          bool_prop () const                      { return m_bool; }
-  virtual void          bool_prop (bool b)                      { m_bool = b; }
-  virtual int           int_prop () const                       { return m_int; }
-  virtual void          int_prop (int i)                        { m_int = i; }
-  virtual double        float_prop () const                     { return m_float; }
-  virtual void          float_prop (double f)                   { m_float = f; }
-  virtual std::string   string_prop () const                    { return m_string; }
-  virtual void          string_prop (const std::string &s)      { m_string = s; }
-  virtual TestEnum      enum_prop () const                      { return m_enum; }
-  virtual void          enum_prop (TestEnum v)                  { m_enum = v; }
-  virtual Requisition   record_prop () const                    { return m_rec; }
-  virtual void          record_prop (const Requisition &r)      { m_rec = r; }
-  virtual StringSeq     sequence_prop () const                  { return m_seq; }
-  virtual void          sequence_prop (const StringSeq &s)      { m_seq = s; }
-  virtual IdlTestItemIface* self_prop () const                  { return m_self; }
-  virtual void          self_prop (IdlTestItemIface *s)         { m_self = s; }
+  bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
+  Requisition rec_; StringSeq seq_; IdlTestItemIface *self_;
+  virtual bool          bool_prop () const                      { return bool_; }
+  virtual void          bool_prop (bool b)                      { bool_ = b; }
+  virtual int           int_prop () const                       { return int_; }
+  virtual void          int_prop (int i)                        { int_ = i; }
+  virtual double        float_prop () const                     { return float_; }
+  virtual void          float_prop (double f)                   { float_ = f; }
+  virtual std::string   string_prop () const                    { return string_; }
+  virtual void          string_prop (const std::string &s)      { string_ = s; }
+  virtual TestEnum      enum_prop () const                      { return enum_; }
+  virtual void          enum_prop (TestEnum v)                  { enum_ = v; }
+  virtual Requisition   record_prop () const                    { return rec_; }
+  virtual void          record_prop (const Requisition &r)      { rec_ = r; }
+  virtual StringSeq     sequence_prop () const                  { return seq_; }
+  virtual void          sequence_prop (const StringSeq &s)      { seq_ = s; }
+  virtual IdlTestItemIface* self_prop () const                  { return self_; }
+  virtual void          self_prop (IdlTestItemIface *s)         { self_ = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}
