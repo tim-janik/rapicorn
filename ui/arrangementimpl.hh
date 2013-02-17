@@ -8,21 +8,21 @@
 namespace Rapicorn {
 
 class ArrangementImpl : public virtual MultiContainerImpl, public virtual Arrangement {
-  Point         m_origin;
-  float         m_origin_hanchor;
-  float         m_origin_vanchor;
-  Rect          m_child_area;
+  Point         origin_;
+  float         origin_hanchor_;
+  float         origin_vanchor_;
+  Rect          child_area_;
 public:
   explicit                      ArrangementImpl         ();
   virtual                       ~ArrangementImpl        ();
-  virtual double                xorigin                 () const                { return m_origin.x; }
-  virtual void                  xorigin                 (double v)              { m_origin.x = v; invalidate(); }
-  virtual double                yorigin                 () const                { return m_origin.y; }
-  virtual void                  yorigin                 (double v)              { m_origin.y = v; invalidate(); }
-  virtual float                 origin_hanchor          () const                { return m_origin_hanchor; }
-  virtual void                  origin_hanchor          (float align)           { m_origin_hanchor = align; invalidate(); }
-  virtual float                 origin_vanchor          () const                { return m_origin_vanchor; }
-  virtual void                  origin_vanchor          (float align)           { m_origin_vanchor = align; invalidate(); }
+  virtual double                xorigin                 () const                { return origin_.x; }
+  virtual void                  xorigin                 (double v)              { origin_.x = v; invalidate(); }
+  virtual double                yorigin                 () const                { return origin_.y; }
+  virtual void                  yorigin                 (double v)              { origin_.y = v; invalidate(); }
+  virtual float                 origin_hanchor          () const                { return origin_hanchor_; }
+  virtual void                  origin_hanchor          (float align)           { origin_hanchor_ = align; invalidate(); }
+  virtual float                 origin_vanchor          () const                { return origin_vanchor_; }
+  virtual void                  origin_vanchor          (float align)           { origin_vanchor_ = align; invalidate(); }
   virtual Rect                  child_area              ();
 protected:
   virtual void                  size_request            (Requisition &requisition);
