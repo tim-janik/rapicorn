@@ -17,7 +17,7 @@ String  rapicorn_buildid ()     { return RAPICORN_BUILDID; }
 static InitHook *init_hooks = NULL;
 
 InitHook::InitHook (const String &fname, InitHookFunc func) :
-  next (NULL), hook (func), m_name (fname)
+  next (NULL), hook (func), name_ (fname)
 {
   next = init_hooks;
   init_hooks = this;
@@ -173,9 +173,9 @@ parse_bool_option (const String &s, const char *arg, bool *boolp)
 
 // === initialization ===
 struct VInitSettings : InitSettings {
-  bool& autonomous()    { return m_autonomous; }
-  uint& test_codes()    { return m_test_codes; }
-  VInitSettings() { m_autonomous = false; m_test_codes = 0; }
+  bool& autonomous()    { return autonomous_; }
+  uint& test_codes()    { return test_codes_; }
+  VInitSettings() { autonomous_ = false; test_codes_ = 0; }
 } static vsettings;
 static VInitSettings vinit_settings;
 const InitSettings  *InitSettings::sis = &vinit_settings;
