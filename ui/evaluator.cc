@@ -35,11 +35,11 @@ variable_map_list_lookup (const VariableMapList &env_maps,
 }
 
 class VariableMapListScope : public Sinfex::Scope {
-  const VariableMapList &m_vml;
+  const VariableMapList &vml_;
 public:
   typedef Sinfex::Value Value;
   VariableMapListScope (const VariableMapList &vml) :
-    m_vml (vml)
+    vml_ (vml)
   {}
   virtual Value
   resolve_variable (const String &entity,
@@ -47,7 +47,7 @@ public:
   {
     bool unknown = false;
     const String fullname = entity == "" ? name : entity + "." + name;
-    Value result = variable_map_list_lookup (m_vml, fullname, unknown);
+    Value result = variable_map_list_lookup (vml_, fullname, unknown);
     if (unknown)
       critical ("Evaluator: failed to resolve variable reference: %s", fullname.c_str());
     return result;
