@@ -21,8 +21,8 @@ Mutex::debug_locked()
 {
   const pthread_mutex_t unlocked_mutex1 = PTHREAD_MUTEX_INITIALIZER;
   const pthread_mutex_t unlocked_mutex2 = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-  return !(memcmp (&m_mutex, &unlocked_mutex1, sizeof (m_mutex)) == 0 ||
-           memcmp (&m_mutex, &unlocked_mutex2, sizeof (m_mutex)) == 0);
+  return !(memcmp (&mutex_, &unlocked_mutex1, sizeof (mutex_)) == 0 ||
+           memcmp (&mutex_, &unlocked_mutex2, sizeof (mutex_)) == 0);
 }
 
 static ThreadInfo *volatile     list_head = NULL;
@@ -117,7 +117,7 @@ ThreadInfo::create ()
 void
 ThreadInfo::reset_specific ()
 {
-  m_data_list.clear_like_destructor();
+  data_list_.clear_like_destructor();
   for (size_t i = 0; i < ARRAY_SIZE (hp); i++)
     hp[i] = NULL;
   self_cached = NULL;
@@ -125,7 +125,7 @@ ThreadInfo::reset_specific ()
   do
     assert (pttid == pth_thread_id);
   while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
-  m_data_list.clear_like_destructor(); // should be empty
+  data_list_.clear_like_destructor(); // should be empty
   // TESTED: printout ("resetted: %zx (%p)\n", pttid, this);
 }
 
@@ -170,14 +170,14 @@ String
 ThreadInfo::name ()
 {
   ScopedLock<Mutex> locker (thread_info_mutex);
-  return m_name.size() ? m_name : ident();
+  return name_.size() ? name_ : ident();
 }
 
 void
 ThreadInfo::name (const String &newname)
 {
   ScopedLock<Mutex> locker (thread_info_mutex);
-  m_name = newname;
+  name_ = newname;
 }
 
 struct timespec
