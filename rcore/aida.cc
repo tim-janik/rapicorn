@@ -561,11 +561,11 @@ FieldBuffer::check_internal ()
 void
 FieldReader::check_request (int type)
 {
-  if (m_nth >= n_types())
-    error_printf ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), m_nth);
+  if (nth_ >= n_types())
+    error_printf ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_);
   if (get_type() != type)
     error_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
-                  this, n_types(), m_nth,
+                  this, n_types(), nth_,
                   FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
 }
 
@@ -770,7 +770,7 @@ public:
 template<class Data> struct MpScQueueF {
   struct Node { Node *next; Data data; };
   MpScQueueF() :
-    m_head (NULL), m_local (NULL)
+    head_ (NULL), local_ (NULL)
   {}
   bool
   push (Data data)
@@ -779,8 +779,8 @@ template<class Data> struct MpScQueueF {
     node->data = data;
     Node *last_head;
     do
-      node->next = last_head = m_head;
-    while (!__sync_bool_compare_and_swap (&m_head, node->next, node));
+      node->next = last_head = head_;
+    while (!__sync_bool_compare_and_swap (&head_, node->next, node));
     return last_head == NULL; // was empty
   }
   Data
@@ -800,33 +800,33 @@ protected:
   Node*
   pop_node()
   {
-    if (AIDA_UNLIKELY (!m_local))
+    if (AIDA_UNLIKELY (!local_))
       {
         Node *prev, *next, *node;
         do
-          node = m_head;
-        while (!__sync_bool_compare_and_swap (&m_head, node, NULL));
+          node = head_;
+        while (!__sync_bool_compare_and_swap (&head_, node, NULL));
         for (prev = NULL; node; node = next)
           {
             next = node->next;
             node->next = prev;
             prev = node;
           }
-        m_local = prev;
+        local_ = prev;
       }
-    if (m_local)
+    if (local_)
       {
-        Node *node = m_local;
-        m_local = node->next;
+        Node *node = local_;
+        local_ = node->next;
         return node;
       }
     else
       return NULL;
   }
 private:
-  Node  *m_head __attribute__ ((aligned (64)));
+  Node  *head_ __attribute__ ((aligned (64)));
   // we pad/align with CPU_CACHE_LINE_SIZE to avoid false sharing between pushing and popping threads
-  Node  *m_local __attribute__ ((aligned (64)));
+  Node  *local_ __attribute__ ((aligned (64)));
 } __attribute__ ((aligned (64)));
 
 

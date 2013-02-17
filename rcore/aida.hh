@@ -95,13 +95,13 @@ private: // implementation bits
   explicit              TypeCode        (MapHandle*, InternalType*);
   static TypeCode       notype          (MapHandle*);
   friend class TypeMap;
-  MapHandle    *m_handle;
-  InternalType *m_type;
+  MapHandle    *handle_;
+  InternalType *type_;
 };
 
 class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
 {
-  TypeCode::MapHandle  *m_handle;     friend class TypeCode::MapHandle;
+  TypeCode::MapHandle  *handle_;     friend class TypeCode::MapHandle;
   explicit              TypeMap      (TypeCode::MapHandle*);
   static TypeMap        builtins     ();
 public:
@@ -401,22 +401,22 @@ public:
 
 class FieldReader { // read field buffer contents
   typedef std::string String;
-  const FieldBuffer *m_fb;
-  uint32_t           m_nth;
+  const FieldBuffer *fb_;
+  uint32_t           nth_;
   void               check_request (int type);
-  inline void        request (int t) { if (AIDA_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
-  inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
-  inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
+  inline void        request (int t) { if (AIDA_UNLIKELY (nth_ >= n_types() || get_type() != t)) check_request (t); }
+  inline FieldUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
+  inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = fb_->upeek (nth_++); return u; }
 public:
-  explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
-  inline const FieldBuffer* field_buffer() const { return m_fb; }
-  inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
-  inline void               reset      () { m_fb = NULL; m_nth = 0; }
-  inline uint32_t           remaining  () { return n_types() - m_nth; }
-  inline void               skip       () { if (AIDA_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
+  explicit                 FieldReader (const FieldBuffer &fb) : fb_ (&fb), nth_ (0) {}
+  inline const FieldBuffer* field_buffer() const { return fb_; }
+  inline void               reset      (const FieldBuffer &fb) { fb_ = &fb; nth_ = 0; }
+  inline void               reset      () { fb_ = NULL; nth_ = 0; }
+  inline uint32_t           remaining  () { return n_types() - nth_; }
+  inline void               skip       () { if (AIDA_UNLIKELY (nth_ >= n_types())) check_request (0); nth_++; }
   inline void               skip_header () { skip(); skip(); skip(); }
-  inline uint32_t           n_types    () { return m_fb->size(); }
-  inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
+  inline uint32_t           n_types    () { return fb_->size(); }
+  inline TypeKind           get_type   () { return fb_->type_at (nth_); }
   inline int64_t            get_bool   () { FieldUnion &u = fb_getu (BOOL); return u.vint64; }
   inline int64_t            get_int64  () { FieldUnion &u = fb_getu (INT64); return u.vint64; }
   inline int64_t            get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }

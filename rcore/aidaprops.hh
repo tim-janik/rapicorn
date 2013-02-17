@@ -41,22 +41,22 @@ struct PropertyList /// Container structure for property descriptions.
 {
   typedef Aida::Property Property; // make Property available as class member
 private:
-  size_t     m_n_properties;
-  Property **m_properties;
+  size_t     n_properties_;
+  Property **properties_;
   void       append_properties (size_t n_props, Property **props, const PropertyList &c0, const PropertyList &c1,
                                 const PropertyList &c2, const PropertyList &c3, const PropertyList &c4, const PropertyList &c5,
                                 const PropertyList &c6, const PropertyList &c7, const PropertyList &c8, const PropertyList &c9);
 public:
   Property** list_properties   (size_t *n_properties) const;
   /*dtor*/  ~PropertyList      ();
-  explicit   PropertyList      () : m_n_properties (0), m_properties (NULL) {}
+  explicit   PropertyList      () : n_properties_ (0), properties_ (NULL) {}
   template<typename Array>
   explicit   PropertyList      (Array &a, const PropertyList &c0 = PropertyList(), const PropertyList &c1 = PropertyList(),
                                 const PropertyList &c2 = PropertyList(), const PropertyList &c3 = PropertyList(),
                                 const PropertyList &c4 = PropertyList(), const PropertyList &c5 = PropertyList(),
                                 const PropertyList &c6 = PropertyList(), const PropertyList &c7 = PropertyList(),
                                 const PropertyList &c8 = PropertyList(), const PropertyList &c9 = PropertyList()) :
-    m_n_properties (0), m_properties (NULL)
+    n_properties_ (0), properties_ (NULL)
   {
     const size_t n_props = sizeof (a) / sizeof (a[0]);
     Property *props[n_props];

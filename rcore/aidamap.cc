@@ -82,12 +82,12 @@ static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalTy
 struct TypeCode::MapHandle {
   const InternalMap *const imap;
 private:
-  volatile uint32_t m_ref_count;
-  const size_t      m_length;
-  const bool        m_needs_free;
-  int               m_status;
+  volatile uint32_t ref_count_;
+  const size_t      length_;
+  const bool        needs_free_;
+  int               status_;
 public:
-  int             status          ()                { return m_status; }
+  int             status          ()                { return status_; }
   InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
   InternalType*   internal_type   (uint32_t offset) { return imap->internal_type (offset); }
   InternalString* internal_string (uint32_t offset) { return imap->internal_string (offset); }
@@ -100,19 +100,19 @@ public:
   MapHandle*
   ref()
   {
-    __sync_fetch_and_add (&m_ref_count, +1);
+    __sync_fetch_and_add (&ref_count_, +1);
     return this;
   }
   void
   unref()
   {
-    uint32_t o = __sync_fetch_and_add (&m_ref_count, -1);
+    uint32_t o = __sync_fetch_and_add (&ref_count_, -1);
     if (o -1 == 0)
       delete this;
   }
   ~MapHandle()
   {
-    if (m_needs_free)
+    if (needs_free_)
       free (const_cast<InternalMap*> (imap));
     memset (this, 0, sizeof (*this));
   }
@@ -120,25 +120,25 @@ public:
   create_type_map (void *addr, size_t length, bool needs_free)
   {
     MapHandle *handle = new MapHandle (addr, length, needs_free);
-    assert (handle->m_ref_count == 0);
+    assert (handle->ref_count_ == 0);
     TypeMap type_map (handle);
-    assert (handle->m_ref_count == 1);
+    assert (handle->ref_count_ == 1);
     return type_map;
   }
   static TypeMap
   create_error_type_map (int _status)
   {
     MapHandle *handle = new MapHandle (const_cast<char*> (zero_type_or_map), 0, false);
-    assert (handle->m_ref_count == 0);
-    handle->m_status = _status;
+    assert (handle->ref_count_ == 0);
+    handle->status_ = _status;
     TypeMap type_map (handle);
-    assert (handle->m_ref_count == 1);
+    assert (handle->ref_count_ == 1);
     return type_map;
   }
 private:
   MapHandle (void *addr, size_t length, bool needs_free) :
-    imap ((InternalMap*) addr), m_ref_count (0), m_length (length),
-    m_needs_free (needs_free), m_status (0)
+    imap ((InternalMap*) addr), ref_count_ (0), length_ (length),
+    needs_free_ (needs_free), status_ (0)
   {}
   explicit MapHandle (const MapHandle&);
   void     operator= (const MapHandle&);
@@ -175,52 +175,52 @@ InternalMap::internal_string (uint32_t offset) const
 }
 
 TypeMap::TypeMap (TypeCode::MapHandle *handle) :
-  m_handle (handle->ref())
+  handle_ (handle->ref())
 {}
 
 TypeMap::TypeMap (const TypeMap &src) :
-  m_handle (src.m_handle->ref())
+  handle_ (src.handle_->ref())
 {}
 
 TypeMap&
 TypeMap::operator= (const TypeMap &src)
 {
-  TypeCode::MapHandle *old = m_handle;
-  m_handle = src.m_handle->ref();
+  TypeCode::MapHandle *old = handle_;
+  handle_ = src.handle_->ref();
   old->unref();
   return *this;
 }
 
 TypeMap::~TypeMap ()
 {
-  m_handle->unref();
-  m_handle = NULL;
+  handle_->unref();
+  handle_ = NULL;
 }
 
 int
 TypeMap::error_status ()
 {
-  return m_handle->status();
+  return handle_->status();
 }
 
 size_t
 TypeMap::type_count () const
 {
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
+  InternalList *il = handle_->internal_list (handle_->imap->types);
   return il ? il->length : 0;
 }
 
 const TypeCode
 TypeMap::type (size_t index) const
 {
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
+  InternalList *il = handle_->internal_list (handle_->imap->types);
   if (il && index < il->length)
     {
-      Aida::InternalType *it = m_handle->internal_type (il->items[index]);
+      Aida::InternalType *it = handle_->internal_type (il->items[index]);
       if (it)
-        return TypeCode (m_handle, it);
+        return TypeCode (handle_, it);
     }
-  __AIDA_return_EFAULT (TypeCode::notype (m_handle));
+  __AIDA_return_EFAULT (TypeCode::notype (handle_));
 }
 
 struct TypeRegistry {
@@ -272,60 +272,60 @@ TypeMap::lookup (std::string name)
 TypeCode
 TypeMap::lookup_local (std::string name) const
 {
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
+  InternalList *il = handle_->internal_list (handle_->imap->types);
   const size_t clen = name.size();
   const char* cname = name.data(); // not 0-terminated
   if (AIDA_LIKELY (il))
     for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
       {
-        InternalType *it = m_handle->internal_type (il->items[i]);
-        InternalString *is = AIDA_LIKELY (it) ? m_handle->internal_string (it->name) : NULL;
+        InternalType *it = handle_->internal_type (il->items[i]);
+        InternalString *is = AIDA_LIKELY (it) ? handle_->internal_string (it->name) : NULL;
         if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
-          return TypeCode (m_handle, it);
+          return TypeCode (handle_, it);
       }
-  return TypeCode::notype (m_handle);
+  return TypeCode::notype (handle_);
 }
 
 TypeCode
 TypeMap::notype ()
 {
   type_registry_initialize();
-  return TypeCode (type_registry->standard().m_handle, (InternalType*) zero_type_or_map);
+  return TypeCode (type_registry->standard().handle_, (InternalType*) zero_type_or_map);
 }
 
 TypeCode::TypeCode (MapHandle *handle, InternalType *itype) :
-  m_handle (handle->ref()), m_type (itype)
+  handle_ (handle->ref()), type_ (itype)
 {}
 
 TypeCode::TypeCode (const TypeCode &clone) :
-  m_handle (clone.m_handle->ref()), m_type (clone.m_type)
+  handle_ (clone.handle_->ref()), type_ (clone.type_)
 {}
 
 TypeCode&
 TypeCode::operator= (const TypeCode &clone)
 {
-  m_handle->unref();
-  m_handle = clone.m_handle->ref();
-  m_type = clone.m_type;
+  handle_->unref();
+  handle_ = clone.handle_->ref();
+  type_ = clone.type_;
   return *this;
 }
 
 TypeCode::~TypeCode ()
 {
-  m_type = NULL;
-  m_handle->unref();
-  m_handle = NULL;
+  type_ = NULL;
+  handle_->unref();
+  handle_ = NULL;
 }
 
 void
 TypeCode::swap (TypeCode &other)
 {
-  MapHandle *b_handle = other.m_handle;
-  InternalType *b_type = other.m_type;
-  other.m_handle = m_handle;
-  other.m_type = m_type;
-  m_handle = b_handle;
-  m_type = b_type;
+  MapHandle *b_handle = other.handle_;
+  InternalType *b_type = other.type_;
+  other.handle_ = handle_;
+  other.type_ = type_;
+  handle_ = b_handle;
+  type_ = b_type;
 }
 
 TypeCode
@@ -337,7 +337,7 @@ TypeCode::notype (MapHandle *handle)
 bool
 TypeCode::untyped () const
 {
-  return m_handle == NULL || m_type == NULL || kind() == UNTYPED;
+  return handle_ == NULL || type_ == NULL || kind() == UNTYPED;
 }
 
 bool
@@ -349,7 +349,7 @@ TypeCode::operator!= (const TypeCode &o) const
 TypeKind
 TypeCode::kind () const
 {
-  return AIDA_LIKELY (m_type) ? TypeKind (m_type->tkind) : UNTYPED;
+  return AIDA_LIKELY (type_) ? TypeKind (type_->tkind) : UNTYPED;
 }
 
 std::string
@@ -361,25 +361,25 @@ TypeCode::kind_name () const
 std::string
 TypeCode::name () const
 {
-  return AIDA_LIKELY (m_handle) ? m_handle->simple_string (m_type->name) : "<broken>";
+  return AIDA_LIKELY (handle_) ? handle_->simple_string (type_->name) : "<broken>";
 }
 
 size_t
 TypeCode::aux_count () const
 {
-  if (AIDA_UNLIKELY (!m_handle) || AIDA_UNLIKELY (!m_type))
+  if (AIDA_UNLIKELY (!handle_) || AIDA_UNLIKELY (!type_))
     return 0;
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
+  InternalList *il = handle_->internal_list (type_->aux_strings);
   return il ? il->length : 0;
 }
 
 std::string
 TypeCode::aux_data (size_t index) const // name=utf8data string
 {
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
+  InternalList *il = handle_->internal_list (type_->aux_strings);
   if (!il || index > il->length)
     __AIDA_return_EFAULT ("");
-  return m_handle->simple_string (il->items[index]);
+  return handle_->simple_string (il->items[index]);
 }
 
 std::string
@@ -387,11 +387,11 @@ TypeCode::aux_value (std::string key) const // utf8data string
 {
   const size_t clen = key.size();
   const char* cname = key.data(); // not 0-terminated
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
+  InternalList *il = handle_->internal_list (type_->aux_strings);
   if (il)
     for (size_t i = 0; i < il->length; i++)
       {
-        InternalString *is = m_handle->internal_string (il->items[i]);
+        InternalString *is = handle_->internal_string (il->items[i]);
         if (is && clen < is->length && is->chars[clen] == '=' && strncmp (cname, is->chars, clen) == 0)
           return std::string (is->chars + clen + 1, is->length - clen - 1);
       }
@@ -414,7 +414,7 @@ TypeCode::enum_count () const
 {
   if (kind() != ENUM)
     return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
+  InternalList *il = handle_->internal_list (type_->custom);
   return il ? il->length / 3 : 0;
 }
 
@@ -424,12 +424,12 @@ TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
   std::vector<String> sv;
   if (kind() != ENUM)
     return sv;
-  InternalList *il = m_handle->internal_list (m_type->custom);
+  InternalList *il = handle_->internal_list (type_->custom);
   if (!il || index * 3 > il->length)
     __AIDA_return_EFAULT (sv);
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 0]));   // ident
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 1]));   // label
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 2]));   // blurb
+  sv.push_back (handle_->simple_string (il->items[index * 3 + 0]));   // ident
+  sv.push_back (handle_->simple_string (il->items[index * 3 + 1]));   // label
+  sv.push_back (handle_->simple_string (il->items[index * 3 + 2]));   // blurb
   return sv;
 }
 
@@ -438,7 +438,7 @@ TypeCode::prerequisite_count () const
 {
   if (kind() != INSTANCE)
     return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
+  InternalList *il = handle_->internal_list (type_->custom);
   return il ? il->length : 0;
 }
 
@@ -448,10 +448,10 @@ TypeCode::prerequisite (size_t index) const
   std::string s;
   if (kind() != INSTANCE)
     return s;
-  InternalList *il = m_handle->internal_list (m_type->custom);
+  InternalList *il = handle_->internal_list (type_->custom);
   if (!il || index > il->length)
     __AIDA_return_EFAULT (s);
-  return m_handle->simple_string (il->items[index]);
+  return handle_->simple_string (il->items[index]);
 }
 
 size_t
@@ -462,7 +462,7 @@ TypeCode::field_count () const
     return 1;
   if (k != RECORD)
     return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
+  InternalList *il = handle_->internal_list (type_->custom);
   return il ? il->length : 0;
 }
 
@@ -472,18 +472,18 @@ TypeCode::field (size_t index) const // RECORD or SEQUENCE
   TypeKind k = kind();
   uint32_t field_offset;
   if (k == SEQUENCE && index == 0)
-    field_offset = m_type->custom;
+    field_offset = type_->custom;
   else if (k == RECORD)
     {
-      InternalList *il = m_handle->internal_list (m_type->custom);
+      InternalList *il = handle_->internal_list (type_->custom);
       if (!il || index > il->length)
-        __AIDA_return_EFAULT (TypeCode::notype (m_handle));
+        __AIDA_return_EFAULT (TypeCode::notype (handle_));
       field_offset = il->items[index];
     }
   else
-    return TypeCode::notype (m_handle);
-  InternalType *it = m_handle->internal_type (field_offset);
-  return it ? TypeCode (m_handle, it) : TypeCode::notype (m_handle);
+    return TypeCode::notype (handle_);
+  InternalType *it = handle_->internal_type (field_offset);
+  return it ? TypeCode (handle_, it) : TypeCode::notype (handle_);
 }
 
 std::string
@@ -492,13 +492,13 @@ TypeCode::origin () const // type for TYPE_REFERENCE
   std::string s;
   if (kind() != TYPE_REFERENCE)
     return s;
-  return m_handle->simple_string (m_type->custom);
+  return handle_->simple_string (type_->custom);
 }
 
 bool
 TypeCode::operator== (const TypeCode &o) const
 {
-  return o.m_handle == m_handle && o.m_type == m_type;
+  return o.handle_ == handle_ && o.type_ == type_;
 }
 
 std::string
