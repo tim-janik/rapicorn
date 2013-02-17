@@ -35,30 +35,30 @@ rect2box (const Rect &src)
 inline void*
 Region::region_mem ()
 {
-  return &m_region;
+  return &region_;
 }
 
 inline const void*
 Region::region_mem () const
 {
-  return &m_region;
+  return &region_;
 }
 #define REGION(this)  ((RapicornRegion*) (this)->region_mem())
 
 Region::Region ()
 {
-  _rapicorn_region_init (REGION (this), sizeof (m_region));
+  _rapicorn_region_init (REGION (this), sizeof (region_));
 }
 
 Region::Region (const Region &src)
 {
-  _rapicorn_region_init (REGION (this), sizeof (m_region));
+  _rapicorn_region_init (REGION (this), sizeof (region_));
   _rapicorn_region_copy (REGION (this), REGION (&src));
 }
 
 Region::Region (const Rect &src)
 {
-  _rapicorn_region_init (REGION (this), sizeof (m_region));
+  _rapicorn_region_init (REGION (this), sizeof (region_));
   RapicornRegionBox box = rect2box (src);
   _rapicorn_region_union_rect (REGION (this), &box);
 }
@@ -66,7 +66,7 @@ Region::Region (const Rect &src)
 Region::Region (const Point          &rect_p1,
                 const Point          &rect_p2)
 {
-  _rapicorn_region_init (REGION (this), sizeof (m_region));
+  _rapicorn_region_init (REGION (this), sizeof (region_));
   RapicornRegionBox box = rect2box (Rect (rect_p1, rect_p2));
   _rapicorn_region_union_rect (REGION (this), &box);
 }
