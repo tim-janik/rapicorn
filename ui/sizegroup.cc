@@ -8,36 +8,36 @@ struct ClassDoctor {
 };
 
 class SizeGroupImpl : public SizeGroup {
-  Requisition           m_req;
-  vector<ItemImpl*>     m_items;
+  Requisition           req_;
+  vector<ItemImpl*>     items_;
 public:
-  uint                  m_hgroup : 1;
-  uint                  m_vgroup : 1;
+  uint                  hgroup_ : 1;
+  uint                  vgroup_ : 1;
 private:
-  uint                  m_active : 1;
-  uint                  m_all_dirty : 1;        // need resize
+  uint                  active_ : 1;
+  uint                  all_dirty_ : 1;        // need resize
   virtual       ~SizeGroupImpl          ();
   virtual void   add_item               (ItemImpl &item);
   virtual void   remove_item            (ItemImpl &item);
   void           update                 ();
 public:
-  virtual bool   active                 () const        { return m_active; }
-  virtual void   active                 (bool isactive) { m_active = isactive; m_all_dirty = false; invalidate_sizes(); }
+  virtual bool   active                 () const        { return active_; }
+  virtual void   active                 (bool isactive) { active_ = isactive; all_dirty_ = false; invalidate_sizes(); }
   void           invalidate_sizes       ();
   explicit                      SizeGroupImpl     (bool hgroup, bool vgroup);
   static vector<SizeGroupImpl*> list_groups       (ItemImpl &item);
-  virtual Requisition           group_requisition () { update(); return m_req; }
+  virtual Requisition           group_requisition () { update(); return req_; }
 };
 
 SizeGroupImpl::SizeGroupImpl (bool hgroup,
                               bool vgroup) :
-  m_hgroup (hgroup), m_vgroup (vgroup),
-  m_active (true), m_all_dirty (false)
+  hgroup_ (hgroup), vgroup_ (vgroup),
+  active_ (true), all_dirty_ (false)
 {}
 
 SizeGroupImpl::~SizeGroupImpl ()
 {
-  assert (m_items.size() == 0);
+  assert (items_.size() == 0);
 }
 
 static DataKey<vector<SizeGroupImpl*> > size_group_key;
@@ -52,7 +52,7 @@ void
 SizeGroupImpl::add_item (ItemImpl &item)
 {
   /* add item to size group's list */
-  m_items.push_back (&item);
+  items_.push_back (&item);
   ref (this);
   /* add size group to item's list */
   vector<SizeGroupImpl*> szv = item.get_data (&size_group_key);
@@ -76,10 +76,10 @@ SizeGroupImpl::remove_item (ItemImpl &item)
     }
   /* remove item from size group's list */
   bool found_one = false;
-  for (uint i = 0; i < m_items.size(); i++)
-    if (m_items[i] == &item)
+  for (uint i = 0; i < items_.size(); i++)
+    if (items_[i] == &item)
       {
-        m_items.erase (m_items.begin() + i);
+        items_.erase (items_.begin() + i);
         found_one = true;
         unref (this);
         break;
@@ -120,22 +120,22 @@ SizeGroup::create_vgroup ()
 void
 SizeGroupImpl::update()
 {
-  while (m_all_dirty)
+  while (all_dirty_)
     {
-      m_all_dirty = false;
-      m_req = Requisition();
-      size_request_items (m_items, m_req);
+      all_dirty_ = false;
+      req_ = Requisition();
+      size_request_items (items_, req_);
     }
 }
 
 void
 SizeGroupImpl::invalidate_sizes()
 {
-  if (m_all_dirty)
+  if (all_dirty_)
     return;
-  m_all_dirty = true;
-  for (uint i = 0; i < m_items.size(); i++)
-    m_items[i]->invalidate_size();
+  all_dirty_ = true;
+  for (uint i = 0; i < items_.size(); i++)
+    items_[i]->invalidate_size();
 }
 
 void
@@ -186,9 +186,9 @@ SizeGroup::item_requisition (ItemImpl &item)
           Requisition gr = sgl[i]->group_requisition();
           if (!sgl[i]->active())
             continue;
-          if (sgl[i]->m_hgroup)
+          if (sgl[i]->hgroup_)
             zreq.width = MAX (zreq.width, gr.width);
-          if (sgl[i]->m_vgroup)
+          if (sgl[i]->vgroup_)
             zreq.height = MAX (zreq.height, gr.height);
         }
     }
