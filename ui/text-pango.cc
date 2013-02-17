@@ -488,24 +488,24 @@ public:
 
 /* --- XmlToPango --- */
 class XmlToPango : Rapicorn::MarkupParser {
-  String                     m_plain_text;
-  std::list<PangoAttribute*> m_alist;
-  PangoLayout               *m_layout;
-  int                        m_scaling;
-  uint                       m_pre_count;
-  bool                       m_preserve_last_whitespace;
-  const char          *const m_whitspaces;
-  String                     m_error;
-  const XmlNode             *m_error_node;
+  String                     plain_text_;
+  std::list<PangoAttribute*> alist_;
+  PangoLayout               *layout_;
+  int                        scaling_;
+  uint                       pre_count_;
+  bool                       preserve_last_whitespace_;
+  const char          *const whitspaces_;
+  String                     error_;
+  const XmlNode             *error_node_;
   XmlToPango (PangoLayout   *playout,
               const String  &input_name) :
-    MarkupParser (input_name), m_layout (playout), m_scaling (0),
-    m_pre_count (0), m_preserve_last_whitespace (false), m_whitspaces (" \t\n\r\v\f"),
-    m_error (""), m_error_node (NULL)
+    MarkupParser (input_name), layout_ (playout), scaling_ (0),
+    pre_count_ (0), preserve_last_whitespace_ (false), whitspaces_ (" \t\n\r\v\f"),
+    error_ (""), error_node_ (NULL)
   {}
   ~XmlToPango()
   {
-    for (std::list<PangoAttribute*>::iterator it = m_alist.begin(); it != m_alist.end(); it++)
+    for (std::list<PangoAttribute*>::iterator it = alist_.begin(); it != alist_.end(); it++)
       if (*it)
         pango_attribute_destroy (*it);
   }
@@ -513,12 +513,12 @@ class XmlToPango : Rapicorn::MarkupParser {
   set_error (const String  &estring,
              const XmlNode *enode)
   {
-    if (m_error.size())
+    if (error_.size())
       critical ("%s: skipping second error: %s (%p)", G_STRFUNC, estring.c_str(), enode);
     else
       {
-        m_error = estring;
-        m_error_node = enode;
+        error_ = estring;
+        error_node_ = enode;
       }
   }
   static char
@@ -565,14 +565,14 @@ class XmlToPango : Rapicorn::MarkupParser {
     switch (token)
       {
       case ':':                                                                 break;  /* TEXT */
-      case '$': m_plain_text += "\n"; m_preserve_last_whitespace = true;        break;  /* BR */
-      case 'P': m_pre_count++;                                                  break;  /* PRE */
+      case '$': plain_text_ += "\n"; preserve_last_whitespace_ = true;        break;  /* BR */
+      case 'P': pre_count_++;                                                  break;  /* PRE */
       case 'B': pa = pango_attr_weight_new (PANGO_WEIGHT_BOLD);                 break;
       case 'I': pa = pango_attr_style_new (PANGO_STYLE_ITALIC);                 break;
       case 'U': pa = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);         break;
       case 'S': pa = pango_attr_strikethrough_new (true);                       break;
-      case '+': m_scaling++; pa = pango_attr_scale_new (pow (1.2, m_scaling));  break;
-      case '-': m_scaling--; pa = pango_attr_scale_new (pow (1.2, m_scaling));  break;
+      case '+': scaling_++; pa = pango_attr_scale_new (pow (1.2, scaling_));  break;
+      case '-': scaling_--; pa = pango_attr_scale_new (pow (1.2, scaling_));  break;
       case '=': pa = pango_attr_family_new (MONOSPACE_NAME.c_str());            break;
       case '#':
         {
@@ -611,22 +611,22 @@ class XmlToPango : Rapicorn::MarkupParser {
       }
     // open tag
     if (pa)
-      pa->start_index = m_plain_text.size();
+      pa->start_index = plain_text_.size();
     // apply tag contents
-    if (!m_error.size())
+    if (!error_.size())
       apply_tags (xnode.children());
     // close tag
     if (pa)
       {
-        pa->end_index = m_plain_text.size();
-        m_alist.push_front (pa);
+        pa->end_index = plain_text_.size();
+        alist_.push_front (pa);
       }
     // tag postamble
     switch (token)
       {
-      case 'P': m_pre_count--;  break;  /* PRE */
-      case '+': m_scaling--;    break;
-      case '-': m_scaling++;    break;
+      case 'P': pre_count_--;  break;  /* PRE */
+      case '+': scaling_--;    break;
+      case '-': scaling_++;    break;
       }
   }
   void
@@ -640,24 +640,24 @@ class XmlToPango : Rapicorn::MarkupParser {
           handle_tag (xnode);
         else /* text */
           {
-            if (m_pre_count)
+            if (pre_count_)
               {
-                m_plain_text += xnode.text();
-                m_preserve_last_whitespace = true;
+                plain_text_ += xnode.text();
+                preserve_last_whitespace_ = true;
               }
             else
               {
                 const String &text = xnode.text();
                 for (String::const_iterator it = text.begin(); it != text.end(); it++)
-                  if (!strchr (m_whitspaces, *it))
-                    m_plain_text += *it;
-                  else if (m_plain_text.size() && !strchr (m_whitspaces, m_plain_text[m_plain_text.size() - 1]))
-                    m_plain_text += ' ';
+                  if (!strchr (whitspaces_, *it))
+                    plain_text_ += *it;
+                  else if (plain_text_.size() && !strchr (whitspaces_, plain_text_[plain_text_.size() - 1]))
+                    plain_text_ += ' ';
                 if (text.size())
-                  m_preserve_last_whitespace = false; /* whether to preserve last whitespace */
+                  preserve_last_whitespace_ = false; /* whether to preserve last whitespace */
               }
           }
-        if (m_error.size())
+        if (error_.size())
           break;
       }
   }
@@ -669,26 +669,26 @@ class XmlToPango : Rapicorn::MarkupParser {
     nodes.push_back (&xnode);
     apply_tags (nodes);
     /* handle errors */
-    if (m_error.size())
+    if (error_.size())
       {
-        if (m_error_node)
-          return string_printf ("%s:%d:%d: %s", input_name().c_str(), m_error_node->parsed_line(), m_error_node->parsed_char(), m_error.c_str());
+        if (error_node_)
+          return string_printf ("%s:%d:%d: %s", input_name().c_str(), error_node_->parsed_line(), error_node_->parsed_char(), error_.c_str());
         else
-          return string_printf ("%s: %s", input_name().c_str(), m_error.c_str());
+          return string_printf ("%s: %s", input_name().c_str(), error_.c_str());
       }
     /* strip trailing whitespaces */
-    if (!m_preserve_last_whitespace && m_plain_text.size() &&
-        strchr (m_whitspaces, m_plain_text[m_plain_text.size() - 1]))
-      m_plain_text.resize (m_plain_text.size() - 1);
-    pango_layout_set_text (m_layout, &m_plain_text[0], m_plain_text.size());
+    if (!preserve_last_whitespace_ && plain_text_.size() &&
+        strchr (whitspaces_, plain_text_[plain_text_.size() - 1]))
+      plain_text_.resize (plain_text_.size() - 1);
+    pango_layout_set_text (layout_, &plain_text_[0], plain_text_.size());
     PangoAttrList *pal = pango_attr_list_new();
-    while (!m_alist.empty())
+    while (!alist_.empty())
       {
-        PangoAttribute *pa = m_alist.front();
-        m_alist.pop_front();
+        PangoAttribute *pa = alist_.front();
+        alist_.pop_front();
         pango_attr_list_change (pal, pa); /* assumes pa ownership */
       }
-    pango_layout_set_attributes (m_layout, pal);
+    pango_layout_set_attributes (layout_, pal);
     pango_attr_list_unref (pal);
     return "";
   }
@@ -705,41 +705,41 @@ public:
 
 /* --- TextPangoImpl (TextEditor::Client) --- */
 class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
-  PangoLayout    *m_layout;
-  int             m_mark, m_cursor;
-  double          m_scoffset;
-  TextMode        m_text_mode;
+  PangoLayout    *layout_;
+  int             mark_, cursor_;
+  double          scoffset_;
+  TextMode        text_mode_;
 protected:
-  virtual TextMode text_mode   () const               { return m_text_mode; }
+  virtual TextMode text_mode   () const               { return text_mode_; }
   virtual void
   text_mode (TextMode text_mode)
   {
-    if (text_mode != m_text_mode)
+    if (text_mode != text_mode_)
       {
-        m_text_mode = text_mode;
+        text_mode_ = text_mode;
         invalidate_size();
       }
   }
 public:
   TextPangoImpl() :
-    m_layout (NULL),
-    m_mark (-1), m_cursor (-1), m_scoffset (0),
-    m_text_mode (TEXT_MODE_ELLIPSIZED)
+    layout_ (NULL),
+    mark_ (-1), cursor_ (-1), scoffset_ (0),
+    text_mode_ (TEXT_MODE_ELLIPSIZED)
   {
     Text::ParaState pstate; // retrieve defaults
     rapicorn_pango_mutex.lock();
     // FIXME: using pstate.font_family as font_desc string here bypasses our default font settings
-    m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align,
+    layout_ = global_layout_cache.create_layout (pstate.font_family, pstate.align,
                                                   PANGO_WRAP_WORD_CHAR, pstate.ellipsize,
                                                   iround (pstate.indent), iround (pstate.line_spacing),
-                                                  m_text_mode == TEXT_MODE_SINGLE_LINE);
+                                                  text_mode_ == TEXT_MODE_SINGLE_LINE);
     rapicorn_pango_mutex.unlock();
   }
   ~TextPangoImpl()
   {
     rapicorn_pango_mutex.lock();
-    g_object_unref (m_layout);
-    m_layout = NULL;
+    g_object_unref (layout_);
+    layout_ = NULL;
     rapicorn_pango_mutex.unlock();
   }
   virtual void
@@ -748,12 +748,12 @@ public:
     Text::ParaState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
-    pango_layout_set_width (m_layout, -1);
-    pango_layout_set_ellipsize (m_layout,
-                                m_text_mode != TEXT_MODE_ELLIPSIZED ?
+    pango_layout_set_width (layout_, -1);
+    pango_layout_set_ellipsize (layout_,
+                                text_mode_ != TEXT_MODE_ELLIPSIZED ?
                                 PANGO_ELLIPSIZE_NONE :
                                 pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-    pango_layout_get_extents (m_layout, NULL, &rect);
+    pango_layout_get_extents (layout_, NULL, &rect);
     rapicorn_pango_mutex.unlock();
     /* pad requisition by 1 emboss pixel */
     requisition.width = ceil (1 + UNITS2PIXELS (rect.width));
@@ -765,15 +765,15 @@ public:
     Text::ParaState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
-    if (m_text_mode == TEXT_MODE_SINGLE_LINE)
-      pango_layout_set_width (m_layout, -1);
+    if (text_mode_ == TEXT_MODE_SINGLE_LINE)
+      pango_layout_set_width (layout_, -1);
     else
-      pango_layout_set_width (m_layout, ifloor (PIXELS2UNITS (area.width)));
-    pango_layout_set_ellipsize (m_layout,
-                                m_text_mode != TEXT_MODE_ELLIPSIZED ?
+      pango_layout_set_width (layout_, ifloor (PIXELS2UNITS (area.width)));
+    pango_layout_set_ellipsize (layout_,
+                                text_mode_ != TEXT_MODE_ELLIPSIZED ?
                                 PANGO_ELLIPSIZE_NONE :
                                 pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-    pango_layout_get_extents (m_layout, NULL, &rect);
+    pango_layout_get_extents (layout_, NULL, &rect);
     rapicorn_pango_mutex.unlock();
     tune_requisition (-1, ceil (1 + UNITS2PIXELS (rect.height)));
     scroll_to_cursor();
@@ -785,8 +785,8 @@ protected:
   {
     // FIXME: we need to setup a dummy cairo context here for pango_cairo_update_layout
     rapicorn_pango_mutex.lock();
-    PangoContext *pcontext = pango_layout_get_context (m_layout);
-    const PangoFontDescription *cfdesc = LayoutCache::font_description_from_layout (m_layout);
+    PangoContext *pcontext = pango_layout_get_context (layout_);
+    const PangoFontDescription *cfdesc = LayoutCache::font_description_from_layout (layout_);
     PangoFontMetrics *metrics = pango_context_get_metrics (pcontext, cfdesc, pango_context_get_language (pcontext));
     double char_width = pango_font_metrics_get_approximate_char_width (metrics);
     double digit_width = pango_font_metrics_get_approximate_digit_width (metrics);
@@ -796,17 +796,17 @@ protected:
     if (sample.size())
       {
         Text::ParaState pstate; // retrieve defaults
-        PangoLayout *playout = pango_layout_copy (m_layout);
+        PangoLayout *playout = pango_layout_copy (layout_);
         pango_layout_set_attributes (playout, NULL);
         pango_layout_set_tabs (playout, NULL);
         pango_layout_set_text (playout, sample.c_str(), -1);
-        pango_layout_set_width (m_layout, -1);
+        pango_layout_set_width (layout_, -1);
         PangoRectangle rect = { 0, 0 };
         pango_layout_set_ellipsize (playout,
-                                    m_text_mode != TEXT_MODE_ELLIPSIZED ?
+                                    text_mode_ != TEXT_MODE_ELLIPSIZED ?
                                     PANGO_ELLIPSIZE_NONE :
                                     pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-        pango_layout_get_extents (m_layout, NULL, &rect);
+        pango_layout_get_extents (layout_, NULL, &rect);
         g_object_unref (playout);
         extra_width += rect.width;
       }
@@ -818,7 +818,7 @@ protected:
   peek_text (int *byte_length)
   {
     rapicorn_pango_mutex.lock();
-    const char *str = pango_layout_get_text (m_layout);
+    const char *str = pango_layout_get_text (layout_);
     rapicorn_pango_mutex.unlock();
     if (byte_length)
       *byte_length = strlen (str);
@@ -829,13 +829,13 @@ protected:
   {
     Text::ParaState pstate;
     rapicorn_pango_mutex.lock();
-    pstate.align = align_type_from_pango_alignment (pango_layout_get_alignment (m_layout));
-    pstate.ellipsize = ellipsize_type_from_pango_ellipsize_mode (pango_layout_get_ellipsize (m_layout));
-    pstate.line_spacing = UNITS2PIXELS (pango_layout_get_spacing (m_layout));
-    pstate.indent = UNITS2PIXELS (pango_layout_get_indent (m_layout));
-    PangoFontDescription *fdesc = pango_font_description_copy_static (pango_context_get_font_description (pango_layout_get_context (m_layout)));
-    if (pango_layout_get_font_description (m_layout))
-      pango_font_description_merge_static (fdesc, pango_layout_get_font_description (m_layout), TRUE);
+    pstate.align = align_type_from_pango_alignment (pango_layout_get_alignment (layout_));
+    pstate.ellipsize = ellipsize_type_from_pango_ellipsize_mode (pango_layout_get_ellipsize (layout_));
+    pstate.line_spacing = UNITS2PIXELS (pango_layout_get_spacing (layout_));
+    pstate.indent = UNITS2PIXELS (pango_layout_get_indent (layout_));
+    PangoFontDescription *fdesc = pango_font_description_copy_static (pango_context_get_font_description (pango_layout_get_context (layout_)));
+    if (pango_layout_get_font_description (layout_))
+      pango_font_description_merge_static (fdesc, pango_layout_get_font_description (layout_), TRUE);
     pstate.font_family = pango_font_description_get_family (fdesc);
     pstate.font_size = UNITS2PIXELS (pango_font_description_get_size (fdesc));
     assert (pango_font_description_get_size_is_absolute (fdesc) == false);
@@ -847,10 +847,10 @@ protected:
   para_state (const Text::ParaState &pstate)
   {
     rapicorn_pango_mutex.lock();
-    pango_layout_set_alignment (m_layout, pango_alignment_from_align_type (pstate.align));
-    pango_layout_set_ellipsize (m_layout, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-    pango_layout_set_spacing (m_layout, iround (PIXELS2UNITS (pstate.line_spacing)));
-    pango_layout_set_indent (m_layout, iround (PIXELS2UNITS (pstate.indent)));
+    pango_layout_set_alignment (layout_, pango_alignment_from_align_type (pstate.align));
+    pango_layout_set_ellipsize (layout_, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
+    pango_layout_set_spacing (layout_, iround (PIXELS2UNITS (pstate.line_spacing)));
+    pango_layout_set_indent (layout_, iround (PIXELS2UNITS (pstate.indent)));
     if (pstate.font_family.size() || pstate.font_size)
       {
         PangoFontDescription *fdesc = pango_font_description_new();
@@ -858,7 +858,7 @@ protected:
           pango_font_description_set_family (fdesc, pstate.font_family.c_str());
         if (pstate.font_size)
           pango_font_description_set_size (fdesc, iround (PIXELS2UNITS (pstate.font_size)));
-        pango_layout_set_font_description (m_layout, fdesc);
+        pango_layout_set_font_description (layout_, fdesc);
         pango_font_description_free (fdesc);
       }
     rapicorn_pango_mutex.unlock();
@@ -881,7 +881,7 @@ protected:
   save_markup () const
   {
     rapicorn_pango_mutex.lock();
-    String output = MarkupDumper::dump_markup (m_layout);
+    String output = MarkupDumper::dump_markup (layout_);
     rapicorn_pango_mutex.unlock();
     return output;
   }
@@ -899,7 +899,7 @@ protected:
       {
         ref_sink (xnode);
         if (!err.size())
-          err = XmlToPango::apply_markup_tree (m_layout, *xnode, input_file);
+          err = XmlToPango::apply_markup_tree (layout_, *xnode, input_file);
         unref (xnode);
       }
     rapicorn_pango_mutex.unlock();
@@ -910,20 +910,20 @@ protected:
   virtual int
   mark () const /* byte_index */
   {
-    return m_mark;
+    return mark_;
   }
   virtual void
   mark (int byte_index)
   {
     rapicorn_pango_mutex.lock();
-    const char *c = pango_layout_get_text (m_layout);
+    const char *c = pango_layout_get_text (layout_);
     int l = strlen (c);
     if (byte_index < 0)
-      m_mark = l;
+      mark_ = l;
     else if (byte_index >= l)
-      m_mark = l;
+      mark_ = l;
     else
-      m_mark = utf8_align (c, c + byte_index) - c;
+      mark_ = utf8_align (c, c + byte_index) - c;
     rapicorn_pango_mutex.unlock();
     changed();
   }
@@ -931,10 +931,10 @@ protected:
   mark_at_end () const
   {
     rapicorn_pango_mutex.lock();
-    const char *c = pango_layout_get_text (m_layout);
+    const char *c = pango_layout_get_text (layout_);
     rapicorn_pango_mutex.unlock();
     int l = strlen (c);
-    return m_mark >= l;
+    return mark_ >= l;
   }
   virtual bool
   mark_to_coord (double x,
@@ -948,14 +948,14 @@ protected:
         x -= area.x;
         y -= area.y;
         /* offset by scroll position */
-        x += m_scoffset;
+        x += scoffset_;
         /* scale to pango */
         x = PIXELS2UNITS (x);
         y = PIXELS2UNITS (y);
         /* query pos */
         rapicorn_pango_mutex.lock();
-        bool texthit = pango_layout_xy_to_index (m_layout, iround (x), iround (y), &xmark, &trailing);
-        const char *c = pango_layout_get_text (m_layout);
+        bool texthit = pango_layout_xy_to_index (layout_, iround (x), iround (y), &xmark, &trailing);
+        const char *c = pango_layout_get_text (layout_);
         int l = strlen (c);
         rapicorn_pango_mutex.unlock();
         if (xmark >= 0 && xmark < l)    /* texthit is constrained to real text area */
@@ -973,25 +973,25 @@ protected:
   step_mark (int visual_direction)
   {
     rapicorn_pango_mutex.lock();
-    const char *c = pango_layout_get_text (m_layout);
+    const char *c = pango_layout_get_text (layout_);
     int l = strlen (c);
-    int xmark = m_mark, trailing;
-    pango_layout_move_cursor_visually (m_layout, TRUE, m_mark, 0, visual_direction, &xmark, &trailing);
+    int xmark = mark_, trailing;
+    pango_layout_move_cursor_visually (layout_, TRUE, mark_, 0, visual_direction, &xmark, &trailing);
     while (xmark < l && trailing--)
       xmark = utf8_next (c + xmark) - c;
     rapicorn_pango_mutex.unlock();
     if (xmark >= l)
-      m_mark = l;
+      mark_ = l;
     else
-      m_mark = MAX (0, xmark);
+      mark_ = MAX (0, xmark);
     changed();
   }
   virtual void
   mark2cursor ()
   {
-    if (m_cursor != m_mark)
+    if (cursor_ != mark_)
       {
-        m_cursor = m_mark;
+        cursor_ = mark_;
         expose();
         scroll_to_cursor();
         changed();
@@ -1000,9 +1000,9 @@ protected:
   virtual void
   hide_cursor ()
   {
-    if (m_cursor >= 0)
+    if (cursor_ >= 0)
       {
-        m_cursor = -1;
+        cursor_ = -1;
         expose();
         changed();
       }
@@ -1011,14 +1011,14 @@ protected:
   mark_delete (uint n_utf8_chars)
   {
     rapicorn_pango_mutex.lock();
-    const char *c = pango_layout_get_text (m_layout);
+    const char *c = pango_layout_get_text (layout_);
     int l = strlen (c);
-    int m = m_mark;
+    int m = mark_;
     while (m < l && n_utf8_chars--)
       m = utf8_next (c + m) - c;
     String s = c;
-    s.erase (m_mark, m - m_mark);
-    pango_layout_set_text (m_layout, s.c_str(), -1);
+    s.erase (mark_, m - mark_);
+    pango_layout_set_text (layout_, s.c_str(), -1);
     // FIXME: adjust attributes
     rapicorn_pango_mutex.unlock();
     invalidate();
@@ -1029,12 +1029,12 @@ protected:
                const Text::AttrState *astate = NULL)
   {
     rapicorn_pango_mutex.lock();
-    String s = pango_layout_get_text (m_layout);
+    String s = pango_layout_get_text (layout_);
     int s1 = s.size();
-    s.insert (m_mark, utf8string);
+    s.insert (mark_, utf8string);
     int s2 = s.size();
-    m_mark += s2 - s1;
-    pango_layout_set_text (m_layout, s.c_str(), -1);
+    mark_ += s2 - s1;
+    pango_layout_set_text (layout_, s.c_str(), -1);
     // FIXME: adjust attributes
     rapicorn_pango_mutex.unlock();
     invalidate();
@@ -1066,12 +1066,12 @@ protected:
                     double        layout_x,
                     double        layout_y)
   {
-    // const char *ptext = pango_layout_get_text (m_layout);
+    // const char *ptext = pango_layout_get_text (layout_);
     PangoRectangle crect1, crect2, irect, lrect;
-    pango_layout_get_extents (m_layout, &irect, &lrect);
-    if (m_cursor < 0)
+    pango_layout_get_extents (layout_, &irect, &lrect);
+    if (cursor_ < 0)
       return;
-    pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
+    pango_layout_get_cursor_pos (layout_, cursor_, &crect1, &crect2);
     double x = layout_rect.x + layout_x + UNITS2PIXELS (crect1.x);
     // double width = MIN (layout_rect.width, MAX (1, UNITS2PIXELS (crect1.width))); // FIXME: cursor width
     // double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
@@ -1105,22 +1105,22 @@ protected:
   void
   scroll_to_cursor ()
   {
-    if (m_cursor < 0)
+    if (cursor_ < 0)
       return;
     uint vdot_size;
     Rect layout_rect = layout_area (&vdot_size);
     rapicorn_pango_mutex.lock();
     PangoRectangle irect, lrect, crect1, crect2;
-    pango_layout_get_extents (m_layout, &irect, &lrect);
-    pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
+    pango_layout_get_extents (layout_, &irect, &lrect);
+    pango_layout_get_cursor_pos (layout_, cursor_, &crect1, &crect2);
     rapicorn_pango_mutex.unlock();
     double cw = 3; // symmetric cursor width left and right from center
     double cl = UNITS2PIXELS (crect1.x - lrect.x) - cw, cr = UNITS2PIXELS (crect1.x - lrect.x) + cw;
-    if (cr - m_scoffset > layout_rect.width)
-      m_scoffset = MAX (m_scoffset, cr - layout_rect.width);
-    if (cl - m_scoffset < 0)
-      m_scoffset = MIN (m_scoffset, cl); /* for position 0, this "indents" the text by the cursor width */
-    m_scoffset = MAX (0, m_scoffset); /* un-"indent" */
+    if (cr - scoffset_ > layout_rect.width)
+      scoffset_ = MAX (scoffset_, cr - layout_rect.width);
+    if (cl - scoffset_ < 0)
+      scoffset_ = MIN (scoffset_, cl); /* for position 0, this "indents" the text by the cursor width */
+    scoffset_ = MAX (0, scoffset_); /* un-"indent" */
   }
   void
   render_text_gL (cairo_t      *cairo,
@@ -1140,18 +1140,18 @@ protected:
       }
     /* render text */
     PangoRectangle lrect; /* logical (x,y) can be != 0, e.g. for RTL-layouts and fixed width set */
-    pango_layout_get_extents (m_layout, NULL, &lrect);
+    pango_layout_get_extents (layout_, NULL, &lrect);
     cairo_save (cairo);
     cairo_set_source_rgba (cairo, fg.red1(), fg.green1(), fg.blue1(), fg.alpha1());
     // translate cairo surface so current_point=(0,0) becomes layout origin
-    cairo_translate (cairo, layout_rect.x - m_scoffset, layout_rect.y);
+    cairo_translate (cairo, layout_rect.x - scoffset_, layout_rect.y);
     // clip to layout_rect, which has been shrunken to clip partial lines
-    cairo_rectangle (cairo, m_scoffset, 0, layout_rect.width, layout_rect.height);
+    cairo_rectangle (cairo, scoffset_, 0, layout_rect.width, layout_rect.height);
     cairo_clip (cairo);
-    pango_cairo_show_layout (cairo, m_layout);
+    pango_cairo_show_layout (cairo, layout_);
     cairo_restore (cairo);
     /* and cursor */
-    double lx = UNITS2PIXELS (lrect.x) - m_scoffset;
+    double lx = UNITS2PIXELS (lrect.x) - scoffset_;
     double ly = 0;
     render_cursor_gL (cairo, fg, layout_rect, lx, ly);
   }
@@ -1165,14 +1165,14 @@ protected:
     rapicorn_pango_mutex.lock();
     /* measure layout size */
     PangoRectangle lrect = { 0, 0 };
-    pango_layout_get_extents (m_layout, NULL, &lrect);
+    pango_layout_get_extents (layout_, NULL, &lrect);
     double vpixels = UNITS2PIXELS (lrect.height);
     /* decide vertical ellipsis */
     bool vellipsize = floor (vpixels) > area.height;
     if (vellipsize)
       {
-        gint last_height = 0, dotsize = LayoutCache::dot_size_from_layout (m_layout);
-        PangoLayoutIter *pli = pango_layout_get_iter (m_layout);
+        gint last_height = 0, dotsize = LayoutCache::dot_size_from_layout (layout_);
+        PangoLayoutIter *pli = pango_layout_get_iter (layout_);
         do
           {
             PangoRectangle nrect;
