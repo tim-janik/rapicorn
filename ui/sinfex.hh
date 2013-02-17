@@ -9,7 +9,7 @@ namespace Rapicorn {
 class Sinfex : public virtual ReferenceCountable {
   RAPICORN_CLASS_NON_COPYABLE (Sinfex);
 protected:
-  uint          *m_start;
+  uint          *start_;
   explicit       Sinfex ();
   virtual       ~Sinfex ();
 public:
@@ -25,18 +25,18 @@ public:
   virtual Value  eval     (Scope &scope) = 0;
   /* Sinfex::Value implementation */
   class Value {
-    String   m_string;
-    double   m_real;
-    bool     m_strflag;
+    String   string_;
+    double   real_;
+    bool     strflag_;
     String   real2string () const;
     double   string2real () const;
   public:
-    bool     isreal      () const { return !m_strflag; }
-    bool     isstring    () const { return m_strflag; }
-    double   real        () const { return !m_strflag ? m_real : string2real(); }
-    String   string      () const { return m_strflag ? m_string : real2string(); }
-    bool     asbool      () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
-    explicit Value       (double        d) : m_real (d), m_strflag (0) {}
+    bool     isreal      () const { return !strflag_; }
+    bool     isstring    () const { return strflag_; }
+    double   real        () const { return !strflag_ ? real_ : string2real(); }
+    String   string      () const { return strflag_ ? string_ : real2string(); }
+    bool     asbool      () const { return (!strflag_ && real_) || (strflag_ && string_ != ""); }
+    explicit Value       (double        d) : real_ (d), strflag_ (0) {}
     explicit Value       (const String &s);
   };
 };
