@@ -52,17 +52,17 @@ WindowImpl::_property_list ()
 String
 WindowImpl::title () const
 {
-  return m_config.title;
+  return config_.title;
 }
 
 void
 WindowImpl::title (const String &window_title)
 {
-  if (m_config.title != window_title)
+  if (config_.title != window_title)
     {
-      m_config.title = window_title;
-      if (m_screen_window)
-        m_screen_window->configure (m_config, false);
+      config_.title = window_title;
+      if (screen_window_)
+        screen_window_->configure (config_, false);
     }
 }
 
@@ -221,9 +221,9 @@ WindowImpl::forcefully_close_all ()
 }
 
 WindowImpl::WindowImpl() :
-  m_loop (*ref_sink (uithread_main_loop()->new_slave())),
-  m_screen_window (NULL), commands_emission_ (NULL),
-  m_notify_displayed_id (0), m_entered (false), m_auto_close (false), m_pending_win_size (false), m_pending_expose (true)
+  loop_ (*ref_sink (uithread_main_loop()->new_slave())),
+  screen_window_ (NULL), commands_emission_ (NULL),
+  notify_displayed_id_ (0), entered_ (false), auto_close_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
@@ -234,11 +234,11 @@ WindowImpl::WindowImpl() :
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* create event loop (auto-starts) */
-  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
-  m_loop.flag_primary (false);
+  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_.flag_primary (false);
   ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
@@ -252,15 +252,15 @@ WindowImpl::dispose ()
 WindowImpl::~WindowImpl()
 {
   WindowTrail::wleave (this);
-  if (m_notify_displayed_id)
+  if (notify_displayed_id_)
     {
-      m_loop.try_remove (m_notify_displayed_id);
-      m_notify_displayed_id = 0;
+      loop_.try_remove (notify_displayed_id_);
+      notify_displayed_id_ = 0;
     }
-  if (m_screen_window)
+  if (screen_window_)
     {
-      m_screen_window->destroy();
-      m_screen_window = NULL;
+      screen_window_->destroy();
+      screen_window_ = NULL;
     }
   /* make sure all children are removed while this is still of type WindowImpl.
    * necessary because C++ alters the object type during constructors and destructors
@@ -268,9 +268,9 @@ WindowImpl::~WindowImpl()
   if (has_children())
     remove (get_child());
   /* shutdown event loop */
-  m_loop.kill_sources();
+  loop_.kill_sources();
   /* this should be done last */
-  unref (&m_loop);
+  unref (&loop_);
   const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
 }
 
@@ -291,22 +291,22 @@ WindowImpl::resize_window (const Allocation *new_area)
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
   negotiate_size (new_area);
-  m_pending_expose = true;
+  pending_expose_ = true;
   if (new_area)
     goto done;  // only called for reallocating
   rsize = requisition();
 
   // grow screen window if needed
-  if (!m_screen_window)
+  if (!screen_window_)
     goto done;
-  state = m_screen_window->get_state();
+  state = screen_window_->get_state();
   if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
     {
-      m_config.request_width = rsize.width;
-      m_config.request_height = rsize.height;
-      m_pending_win_size = true;
+      config_.request_width = rsize.width;
+      config_.request_height = rsize.height;
+      pending_win_size_ = true;
       discard_expose_region(); // we request a new WIN_SIZE event in configure
-      m_screen_window->configure (m_config, true);
+      screen_window_->configure (config_, true);
       goto done;
     }
   // screen window size is good, allocate it
@@ -330,14 +330,14 @@ WindowImpl::do_invalidate ()
 {
   ViewportImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
-  m_loop.wakeup();
+  loop_.wakeup();
 }
 
 void
 WindowImpl::beep()
 {
-  if (m_screen_window)
-    m_screen_window->beep();
+  if (screen_window_)
+    screen_window_->beep();
 }
 
 vector<ItemImpl*>
@@ -357,7 +357,7 @@ WindowImpl::item_difference (const vector<ItemImpl*> &clist, /* preserves order 
 bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
-  m_last_event_context = event;
+  last_event_context_ = event;
   vector<ItemImpl*> pierced;
   /* figure all entered children */
   bool unconfined;
@@ -375,17 +375,17 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* window receives all mouse events */
-      if (m_entered)
+      if (entered_)
         screen_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
-  vector<ItemImpl*> left_children = item_difference (m_last_entered_children, pierced);
+  vector<ItemImpl*> left_children = item_difference (last_entered_children_, pierced);
   EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
   for (vector<ItemImpl*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
     (*it)->process_event (*leave_event);
   delete leave_event;
   /* send enter events */
-  vector<ItemImpl*> entered_children = item_difference (pierced, m_last_entered_children);
+  vector<ItemImpl*> entered_children = item_difference (pierced, last_entered_children_);
   EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
   for (vector<ItemImpl*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
     (*it)->process_event (*enter_event);
@@ -398,9 +398,9 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
       handled = (*it)->process_event (*move_event);
   delete move_event;
   /* cleanup */
-  for (vector<ItemImpl*>::reverse_iterator it = m_last_entered_children.rbegin(); it != m_last_entered_children.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = last_entered_children_.rbegin(); it != last_entered_children_.rend(); it++)
     (*it)->unref();
-  m_last_entered_children = pierced;
+  last_entered_children_ = pierced;
   return handled;
 }
 
@@ -434,17 +434,17 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
   /* figure all entered children */
-  const vector<ItemImpl*> &pierced = m_last_entered_children;
+  const vector<ItemImpl*> &pierced = last_entered_children_;
   /* send actual event */
   bool handled = false;
   for (vector<ItemImpl*>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
       {
         ButtonState bs (*it, bevent.button);
-        if (m_button_state_map[bs] == 0)                /* no press delivered for <button> on <item> yet */
+        if (button_state_map_[bs] == 0)                /* no press delivered for <button> on <item> yet */
           {
-            m_button_state_map[bs] = press_count;       /* record single press */
-            handled = (*it)->process_event (bevent);    // modifies m_last_entered_children + this
+            button_state_map_[bs] = press_count;       /* record single press */
+            handled = (*it)->process_event (bevent);    // modifies last_entered_children_ + this
           }
       }
   return handled;
@@ -455,8 +455,8 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
 {
   bool handled = false;
  restart:
-  for (map<ButtonState,uint>::iterator it = m_button_state_map.begin();
-       it != m_button_state_map.end(); it++)
+  for (map<ButtonState,uint>::iterator it = button_state_map_.begin();
+       it != button_state_map_.end(); it++)
     {
       const ButtonState bs = it->first;
       // uint press_count = it->second;
@@ -468,8 +468,8 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
           else if (press_count == 2)
             bevent.type = BUTTON_2RELEASE;
 #endif
-          m_button_state_map.erase (it);
-          handled |= bs.item->process_event (bevent); // modifies m_button_state_map + this
+          button_state_map_.erase (it);
+          handled |= bs.item->process_event (bevent); // modifies button_state_map_ + this
           goto restart; // restart bs.button search
         }
     }
@@ -481,28 +481,28 @@ void
 WindowImpl::cancel_item_events (ItemImpl *item)
 {
   /* cancel enter events */
-  for (int i = m_last_entered_children.size(); i > 0;)
+  for (int i = last_entered_children_.size(); i > 0;)
     {
-      ItemImpl *current = m_last_entered_children[--i]; /* walk backwards */
+      ItemImpl *current = last_entered_children_[--i]; /* walk backwards */
       if (item == current || !item)
         {
-          EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, m_last_event_context);
+          EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
           current->process_event (*mevent);
           delete mevent;
           current->unref();
-          m_last_entered_children.erase (m_last_entered_children.begin() + i);
+          last_entered_children_.erase (last_entered_children_.begin() + i);
         }
     }
   /* cancel button press events */
-  while (m_button_state_map.begin() != m_button_state_map.end())
+  while (button_state_map_.begin() != button_state_map_.end())
     {
-      map<ButtonState,uint>::iterator it = m_button_state_map.begin();
+      map<ButtonState,uint>::iterator it = button_state_map_.begin();
       const ButtonState bs = it->first;
-      m_button_state_map.erase (it);
+      button_state_map_.erase (it);
       if (bs.item == item || !item)
         {
-          EventButton *bevent = create_event_button (BUTTON_CANCELED, m_last_event_context, bs.button);
-          bs.item->process_event (*bevent); // modifies m_button_state_map + this
+          EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context_, bs.button);
+          bs.item->process_event (*bevent); // modifies button_state_map_ + this
           delete bevent;
         }
     }
@@ -518,7 +518,7 @@ WindowImpl::dispatch_cancel_event (const Event &event)
 bool
 WindowImpl::dispatch_enter_event (const EventMouse &mevent)
 {
-  m_entered = true;
+  entered_ = true;
   dispatch_mouse_movement (mevent);
   return false;
 }
@@ -534,16 +534,16 @@ bool
 WindowImpl::dispatch_leave_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
-  m_entered = false;
+  entered_ = false;
   if (get_grab ())
     ; /* leave events in grab mode are automatically calculated */
   else
     {
       /* send leave events */
-      while (m_last_entered_children.size())
+      while (last_entered_children_.size())
         {
-          ItemImpl *item = m_last_entered_children.back();
-          m_last_entered_children.pop_back();
+          ItemImpl *item = last_entered_children_.back();
+          last_entered_children_.pop_back();
           item->process_event (mevent);
           item->unref();
         }
@@ -666,14 +666,14 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      m_pending_win_size = wevent->intermediate || has_queued_win_size();
+      pending_win_size_ = wevent->intermediate || has_queued_win_size();
       EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
-              wevent->width, wevent->height, wevent->intermediate, m_pending_win_size);
+              wevent->width, wevent->height, wevent->intermediate, pending_win_size_);
       const Allocation area = allocation();
       if (wevent->width != area.width || wevent->height != area.height)
         {
           Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
-          if (!m_pending_win_size)
+          if (!pending_win_size_)
             {
 #if 0 // excessive resizing costs
               Allocation zzz = new_area;
@@ -691,10 +691,10 @@ WindowImpl::dispatch_win_size_event (const Event &event)
           else
             discard_expose_region(); // we'll get more WIN_SIZE events
         }
-      if (!m_pending_win_size && m_pending_expose)
+      if (!pending_win_size_ && pending_expose_)
         {
           expose();
-          m_pending_expose = false;
+          pending_expose_ = false;
         }
       handled = true;
     }
@@ -738,7 +738,7 @@ WindowImpl::draw_child (ItemImpl &child)
 void
 WindowImpl::draw_now ()
 {
-  if (m_screen_window)
+  if (screen_window_)
     {
       const uint64 start = timestamp_realtime();
       Rect area = allocation();
@@ -756,11 +756,11 @@ WindowImpl::draw_now ()
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
       render_into (cr, region);
-      m_screen_window->blit_surface (surface, region);
+      screen_window_->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
-      if (!m_notify_displayed_id)
-        m_notify_displayed_id = m_loop.exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
+      if (!notify_displayed_id_)
+        notify_displayed_id_ = loop_.exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -790,10 +790,10 @@ void
 WindowImpl::remove_grab_item (ItemImpl &child)
 {
   bool stack_changed = false;
-  for (int i = m_grab_stack.size() - 1; i >= 0; i--)
-    if (m_grab_stack[i].item == &child)
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].item == &child)
       {
-        m_grab_stack.erase (m_grab_stack.begin() + i);
+        grab_stack_.erase (grab_stack_.begin() + i);
         stack_changed = true;
       }
   if (stack_changed)
@@ -804,10 +804,10 @@ void
 WindowImpl::grab_stack_changed()
 {
   // FIXME: use idle handler for event synthesis
-  EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, m_last_event_context);
+  EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
   dispatch_mouse_movement (*mevent);
   /* synthesize neccessary leaves after grabbing */
-  if (!m_grab_stack.size() && !m_entered)
+  if (!grab_stack_.size() && !entered_)
     dispatch_event (*mevent);
   delete mevent;
 }
@@ -830,7 +830,7 @@ WindowImpl::add_grab (ItemImpl &child,
    * be contained by the grab-item, and only by the grab-item. events are
    * delivered to the grab-item and its children.
    */
-  m_grab_stack.push_back (GrabEntry (&child, unconfined));
+  grab_stack_.push_back (GrabEntry (&child, unconfined));
   // grab_stack_changed(); // FIXME: re-enable this, once grab_stack_changed() synthesizes from idler
 }
 
@@ -844,10 +844,10 @@ WindowImpl::remove_grab (ItemImpl *child)
 void
 WindowImpl::remove_grab (ItemImpl &child)
 {
-  for (int i = m_grab_stack.size() - 1; i >= 0; i--)
-    if (m_grab_stack[i].item == &child)
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].item == &child)
       {
-        m_grab_stack.erase (m_grab_stack.begin() + i);
+        grab_stack_.erase (grab_stack_.begin() + i);
         grab_stack_changed();
         return;
       }
@@ -857,12 +857,12 @@ WindowImpl::remove_grab (ItemImpl &child)
 ItemImpl*
 WindowImpl::get_grab (bool *unconfined)
 {
-  for (int i = m_grab_stack.size() - 1; i >= 0; i--)
-    if (m_grab_stack[i].item->visible())
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].item->visible())
       {
         if (unconfined)
-          *unconfined = m_grab_stack[i].unconfined;
-        return m_grab_stack[i].item;
+          *unconfined = grab_stack_[i].unconfined;
+        return grab_stack_[i].item;
       }
   return NULL;
 }
@@ -878,13 +878,13 @@ WindowImpl::dispose_item (ItemImpl &item)
 bool
 WindowImpl::has_queued_win_size ()
 {
-  return m_screen_window && m_screen_window->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
+  return screen_window_ && screen_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
 WindowImpl::dispatch_event (const Event &event)
 {
-  if (!m_screen_window)
+  if (!screen_window_)
     return false;       // we can only handle events on a screen_window
   EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
@@ -893,7 +893,7 @@ WindowImpl::dispatch_event (const Event &event)
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
     case MOUSE_MOVE:
-      if (m_screen_window->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
+      if (screen_window_->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
         return true; // coalesce multiple motion events
       else
         return dispatch_move_event (event);
@@ -927,11 +927,11 @@ bool
 WindowImpl::event_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return m_screen_window && m_screen_window->has_event();
+    return screen_window_ && screen_window_->has_event();
   else if (state.phase == state.DISPATCH)
     {
       ref (this);
-      Event *event = m_screen_window ? m_screen_window->pop_event() : NULL;
+      Event *event = screen_window_ ? screen_window_->pop_event() : NULL;
       if (event)
         {
           dispatch_event (*event);
@@ -948,7 +948,7 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
 bool
 WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 {
-  const bool can_resize = !m_pending_win_size && m_screen_window;
+  const bool can_resize = !pending_win_size_ && screen_window_;
   const bool need_resize = can_resize && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return need_resize;
@@ -966,7 +966,7 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 void
 WindowImpl::enable_auto_close ()
 {
-  m_auto_close = true;
+  auto_close_ = true;
 }
 
 bool
@@ -980,13 +980,13 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
       if (exposes_pending())
         {
           draw_now();
-          if (m_auto_close)
+          if (auto_close_)
             {
               EventLoop *loop = get_loop();
               if (loop)
                 {
                   loop->exec_timer (0, Aida::slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
-                  m_auto_close = false;
+                  auto_close_ = false;
                 }
             }
         }
@@ -1018,22 +1018,22 @@ WindowImpl::dispatch (const EventLoop::State &state)
 EventLoop*
 WindowImpl::get_loop ()
 {
-  return &m_loop;
+  return &loop_;
 }
 
 bool
 WindowImpl::viewable ()
 {
-  return visible() && m_screen_window && m_screen_window->viewable();
+  return visible() && screen_window_ && screen_window_->viewable();
 }
 
 void
 WindowImpl::idle_show()
 {
-  if (m_screen_window)
+  if (screen_window_)
     {
       // size request & show up
-      m_screen_window->show();
+      screen_window_->show();
     }
 }
 
@@ -1042,7 +1042,7 @@ WindowImpl::create_screen_window ()
 {
   if (!finalizing())
     {
-      if (!m_screen_window)
+      if (!screen_window_)
         {
           resize_window(); // ensure initial size requisition
           ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
@@ -1061,53 +1061,53 @@ WindowImpl::create_screen_window ()
                 setup.session_role += ":" + name();
               setup.bg_average = background();
               const Requisition rsize = requisition();
-              m_config.request_width = rsize.width;
-              m_config.request_height = rsize.height;
-              if (m_config.title.empty())
+              config_.request_width = rsize.width;
+              config_.request_height = rsize.height;
+              if (config_.title.empty())
                 {
                   // user_warning (this->user_source(), "window title is unset");
-                  m_config.title = setup.session_role;
+                  config_.title = setup.session_role;
                 }
-              if (m_config.alias.empty())
-                m_config.alias = program_alias();
-              m_pending_win_size = true;
-              m_screen_window = sdriver->create_screen_window (setup, m_config);
-              m_screen_window->set_event_wakeup ([this] () { m_loop.wakeup(); /* thread safe */ });
+              if (config_.alias.empty())
+                config_.alias = program_alias();
+              pending_win_size_ = true;
+              screen_window_ = sdriver->create_screen_window (setup, config_);
+              screen_window_->set_event_wakeup ([this] () { loop_.wakeup(); /* thread safe */ });
             }
           else
             fatal ("failed to find and open any screen driver");
         }
-      RAPICORN_ASSERT (m_screen_window != NULL);
-      m_loop.flag_primary (true); // FIXME: depends on WM-managable
+      RAPICORN_ASSERT (screen_window_ != NULL);
+      loop_.flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
-      m_loop.exec_now (sl);
+      loop_.exec_now (sl);
     }
 }
 
 bool
 WindowImpl::has_screen_window ()
 {
-  return !!m_screen_window;
+  return !!screen_window_;
 }
 
 void
 WindowImpl::destroy_screen_window ()
 {
-  if (!m_screen_window)
+  if (!screen_window_)
     return; // during destruction, ref_count == 0
   ref (this);
-  m_screen_window->destroy();
-  m_screen_window = NULL;
-  m_loop.flag_primary (false);
-  m_loop.kill_sources();
+  screen_window_->destroy();
+  screen_window_ = NULL;
+  loop_.flag_primary (false);
+  loop_.kill_sources();
   // reset item state where needed
   cancel_item_events (NULL);
   if (!finalizing())
     {
-      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-      m_loop.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
     }
   unref (this);
 }
@@ -1154,7 +1154,7 @@ WindowImpl::synthesize_enter (double xalign,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  m_screen_window->push_event (create_event_mouse (MOUSE_ENTER, ec));
+  screen_window_->push_event (create_event_mouse (MOUSE_ENTER, ec));
   return true;
 }
 
@@ -1164,7 +1164,7 @@ WindowImpl::synthesize_leave ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  m_screen_window->push_event (create_event_mouse (MOUSE_LEAVE, ec));
+  screen_window_->push_event (create_event_mouse (MOUSE_LEAVE, ec));
   return true;
 }
 
@@ -1184,8 +1184,8 @@ WindowImpl::synthesize_click (ItemIface &itemi,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  m_screen_window->push_event (create_event_button (BUTTON_RELEASE, ec, button));
-  m_screen_window->push_event (create_event_button (BUTTON_PRESS, ec, button));
+  screen_window_->push_event (create_event_button (BUTTON_RELEASE, ec, button));
+  screen_window_->push_event (create_event_button (BUTTON_PRESS, ec, button));
   return true;
 }
 
@@ -1195,7 +1195,7 @@ WindowImpl::synthesize_delete ()
   if (!has_screen_window())
     return false;
   EventContext ec;
-  m_screen_window->push_event (create_event_win_delete (ec));
+  screen_window_->push_event (create_event_win_delete (ec));
   return true;
 }
 
