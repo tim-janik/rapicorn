@@ -253,7 +253,7 @@ CairoContext::cairo_context_from_plane (Plane &plane)
 
 CairoPainter::CairoPainter (Plane &plane) :
   Painter (plane),
-  cc (*CairoContext::cairo_context_from_plane (m_plane))
+  cc (*CairoContext::cairo_context_from_plane (plane_))
 {}
 
 CairoPainter::~CairoPainter()
