@@ -16,16 +16,16 @@ struct RECURSIVE_LOCK {} constexpr RECURSIVE_LOCK {}; ///< Flag for recursive Mu
  * This class supports static construction.
  */
 class Mutex {
-  pthread_mutex_t m_mutex;
+  pthread_mutex_t mutex_;
 public:
-  constexpr Mutex       () : m_mutex (PTHREAD_MUTEX_INITIALIZER) {}
-  constexpr Mutex       (struct RECURSIVE_LOCK) : m_mutex (PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) {}
-  void      lock        ()      { pthread_mutex_lock (&m_mutex); }
-  void      unlock      ()      { pthread_mutex_unlock (&m_mutex); }
-  bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&m_mutex); }
+  constexpr Mutex       () : mutex_ (PTHREAD_MUTEX_INITIALIZER) {}
+  constexpr Mutex       (struct RECURSIVE_LOCK) : mutex_ (PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) {}
+  void      lock        ()      { pthread_mutex_lock (&mutex_); }
+  void      unlock      ()      { pthread_mutex_unlock (&mutex_); }
+  bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&mutex_); }
   bool      debug_locked();
   typedef pthread_mutex_t* native_handle_type;
-  native_handle_type native_handle() { return &m_mutex; }
+  native_handle_type native_handle() { return &mutex_; }
   /*ctor*/  Mutex       (const Mutex&) = delete;
   Mutex&    operator=   (const Mutex&) = delete;
 };
@@ -36,14 +36,14 @@ public:
  * This class supports static construction.
  */
 class Spinlock {
-  pthread_spinlock_t m_spinlock;
+  pthread_spinlock_t spinlock_;
 public:
-  constexpr Spinlock    () : m_spinlock RAPICORN_SPINLOCK_INITIALIZER {}
-  void      lock        ()      { pthread_spin_lock (&m_spinlock); }
-  void      unlock      ()      { pthread_spin_unlock (&m_spinlock); }
-  bool      try_lock    ()      { return 0 == pthread_spin_trylock (&m_spinlock); }
+  constexpr Spinlock    () : spinlock_ RAPICORN_SPINLOCK_INITIALIZER {}
+  void      lock        ()      { pthread_spin_lock (&spinlock_); }
+  void      unlock      ()      { pthread_spin_unlock (&spinlock_); }
+  bool      try_lock    ()      { return 0 == pthread_spin_trylock (&spinlock_); }
   typedef pthread_spinlock_t* native_handle_type;
-  native_handle_type native_handle() { return &m_spinlock; }
+  native_handle_type native_handle() { return &spinlock_; }
   /*ctor*/  Spinlock    (const Spinlock&) = delete;
   Mutex&    operator=   (const Spinlock&) = delete;
 };
@@ -63,18 +63,18 @@ struct ThreadInfo {
   /** @name Accessing custom data members
    * For further details, see DataListContainer.
    */
-  template<typename T> inline T    get_data    (DataKey<T> *key)         { tdl(); T d = m_data_list.get (key); tdu(); return d; }
-  template<typename T> inline void set_data    (DataKey<T> *key, T data) { tdl(); m_data_list.set (key, data); tdu(); }
-  template<typename T> inline void delete_data (DataKey<T> *key)         { tdl(); m_data_list.del (key); tdu(); }
-  template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = m_data_list.swap (key); tdu(); return d; }
-  template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = m_data_list.swap (key, data); tdu(); return d; }
+  template<typename T> inline T    get_data    (DataKey<T> *key)         { tdl(); T d = data_list_.get (key); tdu(); return d; }
+  template<typename T> inline void set_data    (DataKey<T> *key, T data) { tdl(); data_list_.set (key, data); tdu(); }
+  template<typename T> inline void delete_data (DataKey<T> *key)         { tdl(); data_list_.del (key); tdu(); }
+  template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = data_list_.swap (key); tdu(); return d; }
+  template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = data_list_.swap (key, data); tdu(); return d; }
 private:
   ThreadInfo        *volatile next;
   pthread_t                   pth_thread_id;
   char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
-  String                      m_name;
-  Mutex                       m_data_mutex;
-  DataList                    m_data_list;
+  String                      name_;
+  Mutex                       data_mutex_;
+  DataList                    data_list_;
   static ThreadInfo __thread *self_cached;
   /*ctor*/              ThreadInfo      ();
   /*ctor*/              ThreadInfo      (const ThreadInfo&) = delete;
@@ -84,8 +84,8 @@ private:
   void                  reset_specific  ();
   void                  setup_specific  ();
   static ThreadInfo*    create          ();
-  void                  tdl             () { m_data_mutex.lock(); }
-  void                  tdu             () { m_data_mutex.unlock(); }
+  void                  tdl             () { data_mutex_.lock(); }
+  void                  tdu             () { data_mutex_.unlock(); }
 };
 
 struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic locking of a ScopedLock<Mutex>.
@@ -106,15 +106,15 @@ struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {}; ///< Flag for balancing un
  */
 template<class MUTEX>
 class ScopedLock {
-  MUTEX         &m_mutex;
-  volatile int   m_count;
+  MUTEX         &mutex_;
+  volatile int   count_;
   RAPICORN_CLASS_NON_COPYABLE (ScopedLock);
 public:
-  inline     ~ScopedLock () { while (m_count < 0) lock(); while (m_count > 0) unlock(); }
-  inline void lock       () { m_mutex.lock(); m_count++; }
-  inline void unlock     () { m_count--; m_mutex.unlock(); }
-  inline      ScopedLock (MUTEX &mutex, struct AUTOMATIC_LOCK = AUTOMATIC_LOCK) : m_mutex (mutex), m_count (0) { lock(); }
-  inline      ScopedLock (MUTEX &mutex, struct BALANCED_LOCK) : m_mutex (mutex), m_count (0) {}
+  inline     ~ScopedLock () { while (count_ < 0) lock(); while (count_ > 0) unlock(); }
+  inline void lock       () { mutex_.lock(); count_++; }
+  inline void unlock     () { count_--; mutex_.unlock(); }
+  inline      ScopedLock (MUTEX &mutex, struct AUTOMATIC_LOCK = AUTOMATIC_LOCK) : mutex_ (mutex), count_ (0) { lock(); }
+  inline      ScopedLock (MUTEX &mutex, struct BALANCED_LOCK) : mutex_ (mutex), count_ (0) {}
 };
 
 /**
@@ -122,20 +122,20 @@ public:
  * This class supports static construction.
  */
 class Cond {
-  pthread_cond_t m_cond;
+  pthread_cond_t cond_;
   static struct timespec abstime (int64);
   /*ctor*/      Cond        (const Cond&) = delete;
   Cond&         operator=   (const Cond&) = delete;
 public:
-  constexpr     Cond        () : m_cond (PTHREAD_COND_INITIALIZER) {}
-  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&m_cond); }
-  void          signal      ()  { pthread_cond_signal (&m_cond); }
-  void          broadcast   ()  { pthread_cond_broadcast (&m_cond); }
-  void          wait        (Mutex &m)  { pthread_cond_wait (&m_cond, m.native_handle()); }
+  constexpr     Cond        () : cond_ (PTHREAD_COND_INITIALIZER) {}
+  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&cond_); }
+  void          signal      ()  { pthread_cond_signal (&cond_); }
+  void          broadcast   ()  { pthread_cond_broadcast (&cond_); }
+  void          wait        (Mutex &m)  { pthread_cond_wait (&cond_, m.native_handle()); }
   void          wait_timed  (Mutex &m, int64 max_usecs)
-  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&m_cond, m.native_handle(), &abs); }
+  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&cond_, m.native_handle(), &abs); }
   typedef pthread_cond_t* native_handle_type;
-  native_handle_type native_handle() { return &m_cond; }
+  native_handle_type native_handle() { return &cond_; }
 };
 
 /// The ThisThread namespace provides functions for the current thread of execution.
@@ -239,9 +239,9 @@ public:
  */
 template<class Value>
 class AsyncBlockingQueue {
-  Mutex            m_mutex;
-  Cond             m_cond;
-  std::list<Value> m_list;
+  Mutex            mutex_;
+  Cond             cond_;
+  std::list<Value> list_;
 public:
   void  push    (const Value &v);
   Value pop     ();
@@ -255,9 +255,9 @@ public:
  */
 template<class Value>
 class AsyncNotifyingQueue {
-  Mutex                 m_mutex;
-  std::function<void()> m_notifier;
-  std::list<Value>      m_list;
+  Mutex                 mutex_;
+  std::function<void()> notifier_;
+  std::list<Value>      list_;
 public:
   void  push     (const Value &v);
   Value pop      (Value fallback = 0);
@@ -270,84 +270,84 @@ public:
 template<class Value> void
 AsyncBlockingQueue<Value>::push (const Value &v)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.push_back (v);
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.push_back (v);
   if (RAPICORN_UNLIKELY (notify))
-    m_cond.broadcast();
+    cond_.broadcast();
 }
 
 template<class Value> Value
 AsyncBlockingQueue<Value>::pop ()
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  while (m_list.empty())
-    m_cond.wait (m_mutex);
-  Value v = m_list.front();
-  m_list.pop_front();
+  ScopedLock<Mutex> sl (mutex_);
+  while (list_.empty())
+    cond_.wait (mutex_);
+  Value v = list_.front();
+  list_.pop_front();
   return v;
 }
 
 template<class Value> bool
 AsyncBlockingQueue<Value>::pending()
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  return !m_list.empty();
+  ScopedLock<Mutex> sl (mutex_);
+  return !list_.empty();
 }
 
 template<class Value> void
 AsyncBlockingQueue<Value>::swap (std::list<Value> &list)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.swap (list);
-  if (notify && !m_list.empty())
-    m_cond.broadcast();
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.swap (list);
+  if (notify && !list_.empty())
+    cond_.broadcast();
 }
 
 template<class Value> void
 AsyncNotifyingQueue<Value>::push (const Value &v)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.push_back (v);
-  if (RAPICORN_UNLIKELY (notify) && m_notifier)
-    m_notifier();
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.push_back (v);
+  if (RAPICORN_UNLIKELY (notify) && notifier_)
+    notifier_();
 }
 
 template<class Value> Value
 AsyncNotifyingQueue<Value>::pop (Value fallback)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  if (RAPICORN_UNLIKELY (m_list.empty()))
+  ScopedLock<Mutex> sl (mutex_);
+  if (RAPICORN_UNLIKELY (list_.empty()))
     return fallback;
-  Value v = m_list.front();
-  m_list.pop_front();
+  Value v = list_.front();
+  list_.pop_front();
   return v;
 }
 
 template<class Value> bool
 AsyncNotifyingQueue<Value>::pending()
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  return !m_list.empty();
+  ScopedLock<Mutex> sl (mutex_);
+  return !list_.empty();
 }
 
 template<class Value> void
 AsyncNotifyingQueue<Value>::swap (std::list<Value> &list)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.swap (list);
-  if (notify && !m_list.empty() && m_notifier)
-    m_notifier();
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.swap (list);
+  if (notify && !list_.empty() && notifier_)
+    notifier_();
 }
 
 template<class Value> void
 AsyncNotifyingQueue<Value>::notifier (const std::function<void()> &notifier)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  m_notifier = notifier;
+  ScopedLock<Mutex> sl (mutex_);
+  notifier_ = notifier;
 }
 
 inline ThreadInfo&

@@ -9,15 +9,15 @@ namespace Rapicorn {
 
 // == ScreenWindow ==
 ScreenWindow::ScreenWindow () :
-  m_async_state_accessed (0)
+  async_state_accessed_ (0)
 {}
 
 ScreenWindow::~ScreenWindow ()
 {
   std::list<Event*> events;
   {
-    ScopedLock<Spinlock> sl (m_async_spin);
-    events.swap (m_async_event_queue);
+    ScopedLock<Spinlock> sl (async_spin_);
+    events.swap (async_event_queue_);
   }
   while (!events.empty())
     {
@@ -25,54 +25,54 @@ ScreenWindow::~ScreenWindow ()
       events.pop_front();
       delete e;
     }
-  critical_unless (m_async_event_queue.empty()); // this queue must not be accessed at this point
+  critical_unless (async_event_queue_.empty()); // this queue must not be accessed at this point
 }
 
 void
 ScreenWindow::enqueue_event (Event *event)
 {
   critical_unless (event);
-  ScopedLock<Spinlock> sl (m_async_spin);
-  const bool notify = m_async_event_queue.empty();
-  m_async_event_queue.push_back (event);
-  if (notify && m_async_wakeup)
-    m_async_wakeup();
+  ScopedLock<Spinlock> sl (async_spin_);
+  const bool notify = async_event_queue_.empty();
+  async_event_queue_.push_back (event);
+  if (notify && async_wakeup_)
+    async_wakeup_();
 }
 
 void
 ScreenWindow::push_event (Event *event)
 {
   critical_unless (event);
-  ScopedLock<Spinlock> sl (m_async_spin);
-  const bool notify = m_async_event_queue.empty();
-  m_async_event_queue.push_front (event);
-  if (notify && m_async_wakeup)
-    m_async_wakeup();
+  ScopedLock<Spinlock> sl (async_spin_);
+  const bool notify = async_event_queue_.empty();
+  async_event_queue_.push_front (event);
+  if (notify && async_wakeup_)
+    async_wakeup_();
 }
 
 Event*
 ScreenWindow::pop_event ()
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  if (m_async_event_queue.empty())
+  ScopedLock<Spinlock> sl (async_spin_);
+  if (async_event_queue_.empty())
     return NULL;
-  Event *event = m_async_event_queue.front();
-  m_async_event_queue.pop_front();
+  Event *event = async_event_queue_.front();
+  async_event_queue_.pop_front();
   return event;
 }
 
 bool
 ScreenWindow::has_event ()
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  return !m_async_event_queue.empty();
+  ScopedLock<Spinlock> sl (async_spin_);
+  return !async_event_queue_.empty();
 }
 
 bool
 ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  for (auto ep : m_async_event_queue)
+  ScopedLock<Spinlock> sl (async_spin_);
+  for (auto ep : async_event_queue_)
     if (pred (ep))
       return true;
   return false;
@@ -81,33 +81,33 @@ ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
 void
 ScreenWindow::set_event_wakeup (const std::function<void()> &wakeup)
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  m_async_wakeup = wakeup;
+  ScopedLock<Spinlock> sl (async_spin_);
+  async_wakeup_ = wakeup;
 }
 
 bool
 ScreenWindow::update_state (const State &state)
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  const bool accessed = m_async_state_accessed;
-  m_async_state_accessed = false;
-  m_async_state = state;
+  ScopedLock<Spinlock> sl (async_spin_);
+  const bool accessed = async_state_accessed_;
+  async_state_accessed_ = false;
+  async_state_ = state;
   return accessed;
 }
 
 ScreenWindow::State
 ScreenWindow::get_state ()
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  return m_async_state;
+  ScopedLock<Spinlock> sl (async_spin_);
+  return async_state_;
 }
 
 bool
 ScreenWindow::viewable ()
 {
-  ScopedLock<Spinlock> sl (m_async_spin);
-  bool viewable = m_async_state.visible;
-  viewable = viewable && !(m_async_state.window_flags & (ICONIFY | HIDDEN | SHADED));
+  ScopedLock<Spinlock> sl (async_spin_);
+  bool viewable = async_state_.visible;
+  viewable = viewable && !(async_state_.window_flags & (ICONIFY | HIDDEN | SHADED));
   return viewable;
 }
 
@@ -307,28 +307,28 @@ static Mutex                    screen_driver_mutex;
 static ScreenDriver            *screen_driver_chain = NULL;
 
 ScreenDriver::ScreenDriver (const String &name, int priority) :
-  m_sibling (NULL), m_name (name), m_priority (priority)
+  sibling_ (NULL), name_ (name), priority_ (priority)
 {
   ScopedLock<Mutex> locker (screen_driver_mutex);
-  m_sibling = screen_driver_chain;
+  sibling_ = screen_driver_chain;
   screen_driver_chain = this;
 }
 
 ScreenDriver::~ScreenDriver ()
 {
-  assert_return (m_command_queue.pending() == false);
-  assert_return (m_reply_queue.pending() == false);
-  assert_return (m_thread_handle.get_id() == std::thread::id());
+  assert_return (command_queue_.pending() == false);
+  assert_return (reply_queue_.pending() == false);
+  assert_return (thread_handle_.get_id() == std::thread::id());
 }
 
 bool
 ScreenDriver::open_L ()
 {
   assert_return (screen_driver_mutex.debug_locked(), false);
-  assert_return (m_thread_handle.get_id() == std::thread::id(), false);
-  assert_return (m_reply_queue.pending() == false, false);
-  m_thread_handle = std::thread (&ScreenDriver::run, this, std::ref (m_command_queue), std::ref (m_reply_queue));
-  ScreenCommand *reply = m_reply_queue.pop();
+  assert_return (thread_handle_.get_id() == std::thread::id(), false);
+  assert_return (reply_queue_.pending() == false, false);
+  thread_handle_ = std::thread (&ScreenDriver::run, this, std::ref (command_queue_), std::ref (reply_queue_));
+  ScreenCommand *reply = reply_queue_.pop();
   if (reply->type == ScreenCommand::OK)
     {
       delete reply;
@@ -337,7 +337,7 @@ ScreenDriver::open_L ()
   else if (reply->type == ScreenCommand::ERROR)
     {
       delete reply;
-      m_thread_handle.join();
+      thread_handle_.join();
       return false;
     }
   else
@@ -348,13 +348,13 @@ void
 ScreenDriver::close_L ()
 {
   assert_return (screen_driver_mutex.debug_locked());
-  assert_return (m_thread_handle.joinable());
-  assert_return (m_reply_queue.pending() == false);
-  m_command_queue.push (new ScreenCommand (ScreenCommand::SHUTDOWN, NULL));
-  ScreenCommand *reply = m_reply_queue.pop();
+  assert_return (thread_handle_.joinable());
+  assert_return (reply_queue_.pending() == false);
+  command_queue_.push (new ScreenCommand (ScreenCommand::SHUTDOWN, NULL));
+  ScreenCommand *reply = reply_queue_.pop();
   assert (reply->type == ScreenCommand::OK);
   delete reply;
-  m_thread_handle.join();
+  thread_handle_.join();
 }
 
 ScreenDriver*
@@ -362,20 +362,20 @@ ScreenDriver::retrieve_screen_driver (const String &backend_name)
 {
   ScopedLock<Mutex> locker (screen_driver_mutex);
   vector<ScreenDriver*> screen_driver_array;
-  for (ScreenDriver *it = screen_driver_chain; it; it = it->m_sibling)
+  for (ScreenDriver *it = screen_driver_chain; it; it = it->sibling_)
     screen_driver_array.push_back (it);
   SDEBUG ("trying to open 1/%zd screen drivers...", screen_driver_array.size());
   sort (screen_driver_array.begin(), screen_driver_array.end(), driver_priority_lesser);
   for (auto it : screen_driver_array)
     {
       const char *r;
-      if (it->m_name != backend_name && backend_name != "auto")
+      if (it->name_ != backend_name && backend_name != "auto")
         r = "not selected";
-      else if (it->m_thread_handle.joinable() || it->open_L())
+      else if (it->thread_handle_.joinable() || it->open_L())
         r = NULL;
       else
         r = "failed to open";
-      SDEBUG ("screen driver %s: %s", CQUOTE (it->m_name), r ? r : "success");
+      SDEBUG ("screen driver %s: %s", CQUOTE (it->name_), r ? r : "success");
       if (r == NULL)
         return it;
     }
@@ -386,33 +386,33 @@ void
 ScreenDriver::forcefully_close_all ()
 {
   ScopedLock<Mutex> locker (screen_driver_mutex);
-  for (ScreenDriver *screen_driver = screen_driver_chain; screen_driver; screen_driver = screen_driver->m_sibling)
-    if (screen_driver->m_thread_handle.joinable())
+  for (ScreenDriver *screen_driver = screen_driver_chain; screen_driver; screen_driver = screen_driver->sibling_)
+    if (screen_driver->thread_handle_.joinable())
       screen_driver->close_L();
 }
 
 bool
 ScreenDriver::driver_priority_lesser (const ScreenDriver *d1, const ScreenDriver *d2)
 {
-  return d1->m_priority < d2->m_priority;
+  return d1->priority_ < d2->priority_;
 }
 
 void
 ScreenDriver::queue_command (ScreenCommand *screen_command)
 {
-  assert_return (m_thread_handle.joinable());
+  assert_return (thread_handle_.joinable());
   assert_return (screen_command->screen_window != NULL);
   assert_return (ScreenCommand::reply_type (screen_command->type) == false);
-  m_command_queue.push (screen_command);
+  command_queue_.push (screen_command);
 }
 
 ScreenWindow*
 ScreenDriver::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
 {
-  assert_return (m_thread_handle.joinable(), NULL);
-  assert_return (m_reply_queue.pending() == false, NULL);
-  m_command_queue.push (new ScreenCommand (ScreenCommand::CREATE, NULL, setup, config));
-  ScreenCommand *reply = m_reply_queue.pop();
+  assert_return (thread_handle_.joinable(), NULL);
+  assert_return (reply_queue_.pending() == false, NULL);
+  command_queue_.push (new ScreenCommand (ScreenCommand::CREATE, NULL, setup, config));
+  ScreenCommand *reply = reply_queue_.pop();
   assert (reply->type == ScreenCommand::OK && reply->screen_window);
   ScreenWindow *screen_window = reply->screen_window;
   delete reply;

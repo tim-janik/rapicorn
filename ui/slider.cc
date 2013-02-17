@@ -47,47 +47,47 @@ SliderArea::_property_list()
 }
 
 class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
-  Adjustment          *m_adjustment;
+  Adjustment          *adjustment_;
   size_t               avc_id_, arc_id_;
-  AdjustmentSourceType m_adjustment_source;
-  bool                 m_flip;
+  AdjustmentSourceType adjustment_source_;
+  bool                 flip_;
   void
   unset_adjustment()
   {
     if (avc_id_)
-      m_adjustment->sig_value_changed() -= avc_id_;
+      adjustment_->sig_value_changed() -= avc_id_;
     avc_id_ = 0;
     if (arc_id_)
-      m_adjustment->sig_range_changed() -= arc_id_;
+      adjustment_->sig_range_changed() -= arc_id_;
     arc_id_ = 0;
-    m_adjustment->unref();
-    m_adjustment = NULL;
+    adjustment_->unref();
+    adjustment_ = NULL;
   }
   virtual const PropertyList& _property_list() { return SliderArea::_property_list(); }
 protected:
   virtual AdjustmentSourceType
   adjustment_source () const
   {
-    return m_adjustment_source;
+    return adjustment_source_;
   }
   virtual void
   adjustment_source (AdjustmentSourceType adj_source)
   {
-    m_adjustment_source = adj_source;
+    adjustment_source_ = adj_source;
   }
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
     this->TableImpl::hierarchy_changed (old_toplevel);
-    if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_NONE)
+    if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
       {
         Adjustment *adj = NULL;
-        find_adjustments (m_adjustment_source, &adj);
+        find_adjustments (adjustment_source_, &adj);
         if (!adj)
           {
             Aida::EnumInfo ast = Aida::enum_info<AdjustmentSourceType>();
             throw Exception ("SliderArea failed to get Adjustment (",
-                             ast.string (m_adjustment_source),
+                             ast.string (adjustment_source_),
                              ") from ancestors: ", name());
           }
         adjustment (*adj);
@@ -96,14 +96,14 @@ protected:
   virtual bool
   flipped () const
   {
-    return m_flip;
+    return flip_;
   }
   virtual void
   flipped (bool flip)
   {
-    if (m_flip != flip)
+    if (flip_ != flip)
       {
-        m_flip = flip;
+        flip_ = flip;
         changed();
       }
   }
@@ -113,9 +113,9 @@ protected:
   }
 public:
   SliderAreaImpl() :
-    m_adjustment (NULL), avc_id_ (0), arc_id_ (0),
-    m_adjustment_source (ADJUSTMENT_SOURCE_NONE),
-    m_flip (false)
+    adjustment_ (NULL), avc_id_ (0), arc_id_ (0),
+    adjustment_source_ (ADJUSTMENT_SOURCE_NONE),
+    flip_ (false)
   {
     Adjustment *adj = Adjustment::create();
     adjustment (*adj);
@@ -125,17 +125,17 @@ public:
   adjustment (Adjustment &adjustment)
   {
     adjustment.ref();
-    if (m_adjustment)
+    if (adjustment_)
       unset_adjustment();
-    m_adjustment = &adjustment;
-    avc_id_ = m_adjustment->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
-    arc_id_ = m_adjustment->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
+    adjustment_ = &adjustment;
+    avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
+    arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
     changed();
   }
   virtual Adjustment*
   adjustment () const
   {
-    return m_adjustment;
+    return adjustment_;
   }
   virtual void
   control (const String &command_name,
@@ -274,9 +274,9 @@ protected:
 static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
 
 class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventHandler {
-  uint        m_button;
-  double      m_coffset;
-  bool        m_vertical_skid;
+  uint        button_;
+  double      coffset_;
+  bool        vertical_skid_;
   bool
   flipped()
   {
@@ -286,22 +286,22 @@ class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventH
   bool
   vertical_skid () const
   {
-    return m_vertical_skid;
+    return vertical_skid_;
   }
   void
   vertical_skid (bool vs)
   {
-    if (m_vertical_skid != vs)
+    if (vertical_skid_ != vs)
       {
-        m_vertical_skid = vs;
+        vertical_skid_ = vs;
         changed();
       }
   }
 public:
   SliderSkidImpl() :
-    m_button (0),
-    m_coffset (0),
-    m_vertical_skid (false)
+    button_ (0),
+    coffset_ (0),
+    vertical_skid_ (false)
   {}
   ~SliderSkidImpl()
   {}
@@ -335,8 +335,8 @@ protected:
   virtual void
   reset (ResetMode mode = RESET_ALL)
   {
-    m_button = 0;
-    m_coffset = 0;
+    button_ = 0;
+    coffset_ = 0;
   }
   virtual bool
   handle_event (const Event &event)
@@ -357,22 +357,22 @@ protected:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
-        if (!m_button and (bevent->button == 1 or bevent->button == 2))
+        if (!button_ and (bevent->button == 1 or bevent->button == 2))
           {
-            m_button = bevent->button;
+            button_ = bevent->button;
             get_window()->add_grab (this, true);
             handled = true;
-            m_coffset = 0;
+            coffset_ = 0;
             double ep = vertical_skid() ? event.y : event.x;
             double cp = vertical_skid() ? ep - allocation().y : ep - allocation().x;
             double clength = vertical_skid() ? allocation().height : allocation().width;
             if (cp >= 0 && cp < clength)
-              m_coffset = cp / clength;
+              coffset_ = cp / clength;
             else
               {
-                m_coffset = 0.5;
+                coffset_ = 0.5;
                 // confine offset to not slip the skid off trough boundaries
-                cp = ep - clength * m_coffset;
+                cp = ep - clength * coffset_;
                 const Allocation &ta = trough.allocation();
                 double start_slip = (vertical_skid() ? ta.y : ta.x) - cp;
                 double tlength = vertical_skid() ? ta.y + ta.height : ta.x + ta.width;
@@ -381,12 +381,12 @@ protected:
                 cp += MAX (0, start_slip);
                 cp -= MAX (0, end_slip);
                 // recalculate offset
-                m_coffset = (ep - cp) / clength;
+                coffset_ = (ep - cp) / clength;
               }
           }
         break;
       case MOUSE_MOVE:
-        if (m_button)
+        if (button_)
           {
             double ep = vertical_skid() ? event.y : event.x;
             const Allocation &ta = trough.allocation();
@@ -395,7 +395,7 @@ protected:
             double tlength = vertical_skid() ? ta.height : ta.width;
             double clength = vertical_skid() ? allocation().height : allocation().width;
             tlength -= clength;
-            pos -= m_coffset * clength;
+            pos -= coffset_ * clength;
             if (tlength > 0)
               pos /= tlength;
             pos = CLAMP (pos, 0, 1);
@@ -411,11 +411,11 @@ protected:
         proper_release = true;
       case BUTTON_CANCELED:
         bevent = dynamic_cast<const EventButton*> (&event);
-        if (m_button == bevent->button)
+        if (button_ == bevent->button)
           {
             get_window()->remove_grab (this);
-            m_button = 0;
-            m_coffset = 0;
+            button_ = 0;
+            coffset_ = 0;
             handled = true;
           }
         (void) proper_release; // silence compiler

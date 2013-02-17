@@ -5,14 +5,14 @@ namespace Rapicorn {
 
 // == StockFile ==
 struct StockFile {
-  std::shared_ptr<IniFile> m_ifile;
-  String                   m_input;
+  std::shared_ptr<IniFile> ifile_;
+  String                   input_;
 public:
-  explicit StockFile       (Blob blob) : m_input (blob.name())          { m_ifile = std::make_shared<IniFile> (blob); }
-  String   stock_string    (const String &stock_id, const String &what) { return m_ifile->value_as_string (stock_id + "." + what); }
-  String   dir_path        ()                                           { return Path::dirname (m_input); }
+  explicit StockFile       (Blob blob) : input_ (blob.name())          { ifile_ = std::make_shared<IniFile> (blob); }
+  String   stock_string    (const String &stock_id, const String &what) { return ifile_->value_as_string (stock_id + "." + what); }
+  String   dir_path        ()                                           { return Path::dirname (input_); }
   String   file_path       (const String &file)                         { return Path::join (dir_path(), file); }
-  IniFile& ini_file        ()                                           { return *m_ifile; }
+  IniFile& ini_file        ()                                           { return *ifile_; }
 };
 
 // == Stock ==

@@ -10,15 +10,15 @@ XmlNode::XmlNode (const String &element_name,
                   uint          line,
                   uint          _char,
                   const String &file) :
-  m_name (element_name),
-  m_parent (NULL), m_file (file),
-  m_line (line), m_char (_char)
+  name_ (element_name),
+  parent_ (NULL), file_ (file),
+  line_ (line), char_ (_char)
 {}
 
 XmlNode::~XmlNode ()
 {
-  /* since parents own a reference on their children, m_parent must be NULL */
-  assert (m_parent == NULL);
+  /* since parents own a reference on their children, parent_ must be NULL */
+  assert (parent_ == NULL);
 }
 
 static inline vector<String>::const_iterator
@@ -43,16 +43,16 @@ XmlNode::set_attribute (const String &name,
                         const String &value,
                         bool          replace)
 {
-  vector<String>::const_iterator it = find_attribute (m_attribute_names, name, false);
-  if (it == m_attribute_names.end())
+  vector<String>::const_iterator it = find_attribute (attribute_names_, name, false);
+  if (it == attribute_names_.end())
     {
-      m_attribute_names.push_back (name);
-      m_attribute_values.push_back (value);
+      attribute_names_.push_back (name);
+      attribute_values_.push_back (value);
       return true;
     }
   else if (replace)
     {
-      m_attribute_values[it - m_attribute_names.begin()] = value;
+      attribute_values_[it - attribute_names_.begin()] = value;
       return true;
     }
   else
@@ -63,9 +63,9 @@ String
 XmlNode::get_attribute (const String &name,
                         bool          case_insensitive) const
 {
-  vector<String>::const_iterator it = find_attribute (m_attribute_names, name, case_insensitive);
-  if (it != m_attribute_names.end())
-    return m_attribute_values[it - m_attribute_names.begin()];
+  vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
+  if (it != attribute_names_.end())
+    return attribute_values_[it - attribute_names_.begin()];
   else
     return "";
 }
@@ -74,19 +74,19 @@ bool
 XmlNode::has_attribute (const String &name,
                         bool          case_insensitive) const
 {
-  vector<String>::const_iterator it = find_attribute (m_attribute_names, name, case_insensitive);
-  return it != m_attribute_names.end();
+  vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
+  return it != attribute_names_.end();
 }
 
 bool
 XmlNode::del_attribute (const String &name)
 {
-  vector<String>::const_iterator it = find_attribute (m_attribute_names, name, false);
-  if (it == m_attribute_names.end())
+  vector<String>::const_iterator it = find_attribute (attribute_names_, name, false);
+  if (it == attribute_names_.end())
     return false;
-  vector<String>::iterator eit = m_attribute_names.begin() + (it - m_attribute_names.begin());
-  m_attribute_names.erase (eit);
-  m_attribute_values.erase (eit);
+  vector<String>::iterator eit = attribute_names_.begin() + (it - attribute_names_.begin());
+  attribute_names_.erase (eit);
+  attribute_values_.erase (eit);
   return true;
 }
 
@@ -96,7 +96,7 @@ XmlNode::set_parent (XmlNode *c,
 {
   if (p)
     ref_sink (c);
-  c->m_parent = p;
+  c->parent_ = p;
   if (!p)
     unref (c);
 }
@@ -171,9 +171,9 @@ namespace { // Anon
 using namespace Rapicorn;
 
 class XmlNodeText : public virtual XmlNode {
-  String                m_text;
+  String                text_;
   // XmlNodeText
-  virtual String        text            () const         { return m_text; }
+  virtual String        text            () const         { return text_; }
   // XmlNodeParent
   virtual ConstNodes&   children        () const         { return *(ConstNodes*) NULL; }
   virtual bool          add_child       (XmlNode &child) { return false; }
@@ -183,28 +183,28 @@ public:
                uint          line,
                uint          _char,
                const String &file) :
-    XmlNode ("", line, _char, file), m_text (utf8text)
+    XmlNode ("", line, _char, file), text_ (utf8text)
   {}
 };
 
 class XmlNodeParent : public virtual XmlNode {
-  vector<XmlNode*>      m_children;
+  vector<XmlNode*>      children_;
   // XmlNodeText
   virtual String
   text () const
   {
     String result;
-    for (vector<XmlNode*>::const_iterator it = m_children.begin(); it != m_children.end(); it++)
+    for (vector<XmlNode*>::const_iterator it = children_.begin(); it != children_.end(); it++)
       result.append ((*it)->text());
     return result;
   }
   /* XmlNodeParent */
-  virtual ConstNodes&   children        () const        { return m_children; }
+  virtual ConstNodes&   children        () const        { return children_; }
   virtual bool
   add_child (XmlNode &child)
   {
     assert_return (child.parent() == NULL, false);
-    m_children.push_back (&child);
+    children_.push_back (&child);
     set_parent (&child, this);
     return true;
   }
@@ -212,12 +212,12 @@ class XmlNodeParent : public virtual XmlNode {
   del_child (XmlNode &child)
   {
     /* walk backwards so removing the last child is O(1) */
-    for (vector<XmlNode*>::reverse_iterator rit = m_children.rbegin(); rit != m_children.rend(); rit++)
+    for (vector<XmlNode*>::reverse_iterator rit = children_.rbegin(); rit != children_.rend(); rit++)
       if (&child == *rit)
         {
           vector<XmlNode*>::iterator it = (++rit).base(); // see reverse_iterator.base() documentation
           assert (&child == *it);
-          m_children.erase (it);
+          children_.erase (it);
           assert (child.parent() == this);
           set_parent (&child, NULL);
           return true;
@@ -226,8 +226,8 @@ class XmlNodeParent : public virtual XmlNode {
   }
   ~XmlNodeParent()
   {
-    while (m_children.size())
-      del_child (*m_children[m_children.size() - 1]);
+    while (children_.size())
+      del_child (*children_[children_.size() - 1]);
   }
 public:
   XmlNodeParent (const String &element_name,
@@ -239,10 +239,10 @@ public:
 };
 
 class XmlNodeParser : public Rapicorn::MarkupParser {
-  vector<XmlNode*> m_node_stack;
-  XmlNode         *m_first;
+  vector<XmlNode*> node_stack_;
+  XmlNode         *first_;
   XmlNodeParser (const String &input_name) :
-    MarkupParser (input_name), m_first (NULL)
+    MarkupParser (input_name), first_ (NULL)
   {}
   virtual
   ~XmlNodeParser()
@@ -253,7 +253,7 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
                  ConstStrings  &attribute_values,
                  Error         &error)
   {
-    XmlNode *current = m_node_stack.size() ? m_node_stack[m_node_stack.size() - 1] : NULL;
+    XmlNode *current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
     if (element_name.size() < 1 || !element_name[0]) /* paranoid checks */
       error.set (INVALID_ELEMENT, String() + "invalid element name: <" + escape_text (element_name) + "/>");
     int xline, xchar;
@@ -265,35 +265,35 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
       current->add_child (*xnode);
     else
       {
-        if (m_first)
+        if (first_)
           {
             error.set (INVALID_ELEMENT, String() + "multiple toplevel elements: "
-                       "<" + escape_text (m_first->name()) + "/> <" + escape_text (element_name) + "/>");
-            unref (m_first); // prevent leaks
-            m_first = NULL;
+                       "<" + escape_text (first_->name()) + "/> <" + escape_text (element_name) + "/>");
+            unref (first_); // prevent leaks
+            first_ = NULL;
           }
-        m_first = xnode;
+        first_ = xnode;
       }
-    m_node_stack.push_back (xnode);
+    node_stack_.push_back (xnode);
   }
   virtual void
   end_element (const String  &element_name,
                Error         &error)
   {
-    m_node_stack.pop_back();
+    node_stack_.pop_back();
   }
   virtual void
   text (const String  &text,
         Error         &error)
   {
-    XmlNode *current = m_node_stack.size() ? m_node_stack[m_node_stack.size() - 1] : NULL;
+    XmlNode *current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
     int xline, xchar;
     get_position (&xline, &xchar);
     XmlNode *xnode = XmlNode::create_text (text, xline, xchar, input_name());
     if (current)
       current->add_child (*xnode);
     else
-      m_first = xnode;
+      first_ = xnode;
   }
 public:
   static XmlNode*
@@ -315,7 +315,7 @@ public:
       xnp.end_parse (&error);
     if (!error.code)
       {}
-    return xnp.m_first;
+    return xnp.first_;
   }
 };
 

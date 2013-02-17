@@ -10,18 +10,18 @@ namespace Rapicorn {
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   friend class  ItemImpl;
-  EventLoop            &m_loop;
-  ScreenWindow*         m_screen_window;
-  EventContext          m_last_event_context;
+  EventLoop            &loop_;
+  ScreenWindow*         screen_window_;
+  EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
   String                     last_command_;
-  vector<ItemImpl*>     m_last_entered_children;
-  ScreenWindow::Config  m_config;
-  uint                  m_notify_displayed_id;
-  uint                  m_entered : 1;
-  uint                  m_auto_close : 1;
-  uint                  m_pending_win_size : 1;
-  uint                  m_pending_expose : 1;
+  vector<ItemImpl*>     last_entered_children_;
+  ScreenWindow::Config  config_;
+  uint                  notify_displayed_id_;
+  uint                  entered_ : 1;
+  uint                  auto_close_ : 1;
+  uint                  pending_win_size_ : 1;
+  uint                  pending_expose_ : 1;
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
   void          set_focus               (ItemImpl         *item);
@@ -122,7 +122,7 @@ private:
     bool  unconfined;
     explicit            GrabEntry (ItemImpl *i, bool uc) : item (i), unconfined (uc) {}
   };
-  vector<GrabEntry>     m_grab_stack;
+  vector<GrabEntry>     grab_stack_;
   /* --- ButtonState --- */
   struct ButtonState {
     ItemImpl           *item;
@@ -136,7 +136,7 @@ private:
                                      bs1.button < bs2.button);
     }
   };
-  map<ButtonState,uint> m_button_state_map;
+  map<ButtonState,uint> button_state_map_;
 };
 
 } // Rapicorn

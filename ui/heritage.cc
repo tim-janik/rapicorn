@@ -109,21 +109,21 @@ colorset_base (StateType state,
 typedef Color (*ColorFunc) (StateType, ColorType);
 
 class Heritage::Internals {
-  ItemImpl &m_item;
+  ItemImpl &item_;
   ColorFunc ncf, scf;
 public:
   Heritage *selected;
   Internals (ItemImpl &item,
              ColorFunc normal_cf,
              ColorFunc selected_cf) :
-    m_item (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
+    item_ (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
   bool
   match (ItemImpl &item,
          ColorFunc normal_cf,
          ColorFunc selected_cf)
   {
-    return item == m_item && normal_cf == ncf && selected_cf == scf;
+    return item == item_ && normal_cf == ncf && selected_cf == scf;
   }
   Color
   get_color (const Heritage *heritage,
@@ -139,16 +139,16 @@ public:
 
 Heritage::~Heritage ()
 {
-  if (m_internals)
+  if (internals_)
     {
-      if (m_internals->selected == this)
-        m_internals->selected = NULL;
+      if (internals_->selected == this)
+        internals_->selected = NULL;
       else
         {
-          if (m_internals->selected)
-            m_internals->selected->m_internals = NULL;
-          delete m_internals;
-          m_internals = NULL;
+          if (internals_->selected)
+            internals_->selected->internals_ = NULL;
+          delete internals_;
+          internals_ = NULL;
         }
     }
 }
@@ -176,7 +176,7 @@ Heritage*
 Heritage::adapt_heritage (ItemImpl       &item,
                           ColorSchemeType color_scheme)
 {
-  if (m_internals)
+  if (internals_)
     {
       ColorFunc cnorm = colorset_normal, csel = colorset_selected;
       switch (color_scheme)
@@ -186,7 +186,7 @@ Heritage::adapt_heritage (ItemImpl       &item,
         case COLOR_SELECTED:    cnorm = colorset_selected; break;
         case COLOR_NORMAL:      ;
         }
-      if (m_internals->match (item, cnorm, csel))
+      if (internals_->match (item, cnorm, csel))
         return this;
     }
   WindowImpl *window = item.get_window();
@@ -197,20 +197,20 @@ Heritage::adapt_heritage (ItemImpl       &item,
 
 Heritage::Heritage (WindowImpl &window,
                     Internals  *internals) :
-  m_internals (internals), m_window (window)
+  internals_ (internals), window_ (window)
 {}
 
 Heritage&
 Heritage::selected ()
 {
-  if (m_internals)
+  if (internals_)
     {
-      if (!m_internals->selected)
+      if (!internals_->selected)
         {
-          m_internals->selected = new Heritage (m_window, m_internals);
-          ref_sink (m_internals->selected);
+          internals_->selected = new Heritage (window_, internals_);
+          ref_sink (internals_->selected);
         }
-      return *m_internals->selected;
+      return *internals_->selected;
     }
   else
     return *this;
@@ -221,8 +221,8 @@ Heritage::get_color (StateType state,
                      ColorType color_type) const
 {
   Color c;
-  if (m_internals)
-    c = m_internals->get_color (this, state, color_type);
+  if (internals_)
+    c = internals_->get_color (this, state, color_type);
   return state_color (c, state, color_type);
 }
 

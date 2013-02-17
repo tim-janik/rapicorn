@@ -294,10 +294,10 @@ node_location (const XmlNode *xnode)
 
 class Builder {
   enum Flags { NONE = 0, INHERITED = 1, CHILD = 2 };
-  const XmlNode   *const m_dnode;               // definition of gadget to be created
-  String           m_child_container_name;
-  ContainerImpl   *m_child_container;           // captured m_child_container item during build phase
-  VariableMap      m_locals;
+  const XmlNode   *const dnode_;               // definition of gadget to be created
+  String           child_container_name_;
+  ContainerImpl   *child_container_;           // captured child_container_ item during build phase
+  VariableMap      locals_;
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
                              String *node_name, String *child_container_name, String *inherit_identifier);
   void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
@@ -317,16 +317,16 @@ public:
 };
 
 Builder::Builder (const String &item_identifier, const XmlNode *context_node) :
-  m_dnode (gadget_definition_lookup (item_identifier, context_node)), m_child_container (NULL)
+  dnode_ (gadget_definition_lookup (item_identifier, context_node)), child_container_ (NULL)
 {
-  if (!m_dnode)
+  if (!dnode_)
     return;
 }
 
 Builder::Builder (const XmlNode &definition_node) :
-  m_dnode (&definition_node), m_child_container (NULL)
+  dnode_ (&definition_node), child_container_ (NULL)
 {
-  assert_return (m_dnode->name() == "tmpl:define");
+  assert_return (dnode_->name() == "tmpl:define");
 }
 
 void
@@ -362,8 +362,8 @@ Builder::build_item (const String &item_identifier, const StringVector &call_nam
 {
   initialize_factory_lazily();
   Builder builder (item_identifier, NULL);
-  if (builder.m_dnode)
-    return builder.call_item (builder.m_dnode, call_names, call_values, NULL, NULL);
+  if (builder.dnode_)
+    return builder.call_item (builder.dnode_, call_names, call_values, NULL, NULL);
   else
     {
       FDEBUG ("%s: unknown type identifier: %s", "Builder::build_item", item_identifier.c_str());
@@ -378,8 +378,8 @@ Builder::inherit_item (const String &item_identifier, const StringVector &call_n
   assert_return (derived != NULL, NULL);
   assert_return (caller != NULL, NULL);
   Builder builder (item_identifier, caller);
-  if (builder.m_dnode)
-    return builder.call_item (builder.m_dnode, call_names, call_values, caller, derived);
+  if (builder.dnode_)
+    return builder.call_item (builder.dnode_, call_names, call_values, caller, derived);
   else
     {
       const ItemTypeFactory *itfactory = lookup_item_factory (item_identifier);
@@ -416,7 +416,7 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
   StringVector local_names, local_values;
   // setup definition args
   Evaluator env;
-  XmlNode::ConstNodes &children = m_dnode->children();
+  XmlNode::ConstNodes &children = dnode_->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
@@ -453,7 +453,7 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
         }
     }
   // prepare variable map for evaluator
-  Evaluator::populate_map (m_locals, local_names, local_values);
+  Evaluator::populate_map (locals_, local_names, local_values);
 }
 
 void
@@ -461,7 +461,7 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
                     String *node_name, String *child_container_name, String *inherit_identifier)
 {
   Evaluator env;
-  env.push_map (m_locals);
+  env.push_map (locals_);
   out_names.reserve (in_names.size());
   out_values.reserve (in_values.size());
   for (size_t i = 0; i < in_names.size(); i++)
@@ -489,7 +489,7 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
           out_values.push_back (rvalue);
         }
     }
-  env.pop_map (m_locals);
+  env.pop_map (locals_);
 }
 
 void
@@ -528,9 +528,9 @@ Builder::apply_props (const XmlNode *pnode, ItemImpl &item)
       if (value.find ('`') != String::npos && string_to_bool (cnode->get_attribute ("evaluate"), true))
         {
           Evaluator env;
-          env.push_map (m_locals);
+          env.push_map (locals_);
           value = env.parse_eval (value);
-          env.push_map (m_locals);
+          env.push_map (locals_);
         }
       if (aname == "name" || aname == "id")
         critical ("%s: internal-error, property should have been filtered: %s", node_location (cnode).c_str(), cnode->name().c_str());
@@ -546,15 +546,15 @@ Builder::call_item (const XmlNode *anode,
                     const StringVector &call_names, const StringVector &call_values, // evaluated args
                     const XmlNode *caller, const XmlNode *outmost_caller)
 {
-  assert_return (m_dnode != NULL, NULL);
+  assert_return (dnode_ != NULL, NULL);
   String name;
   StringVector prop_names, prop_values;
   parse_call_args (call_names, call_values, prop_names, prop_values, name, caller); // FIXME: catch:inherit+child-container
   // extract factory attributes and eval attributes
   StringVector parent_names, parent_values;
   String inherit;
-  assert (m_child_container_name.empty() == true);
-  eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &m_child_container_name, &inherit);
+  assert (child_container_name_.empty() == true);
+  eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &child_container_name_, &inherit);
   // create item
   ItemImpl *item = Builder::inherit_item (inherit, parent_names, parent_values, anode,
                                           outmost_caller ? outmost_caller : (caller ? caller : anode));
@@ -572,10 +572,10 @@ Builder::call_item (const XmlNode *anode,
       call_children (anode, item);
     }
   // assign child container
-  if (m_child_container)
-    item->as_container()->child_container (m_child_container);
-  else if (!m_child_container_name.empty())
-    critical ("%s: failed to find child container: %s", node_location (m_dnode).c_str(), m_child_container_name.c_str());
+  if (child_container_)
+    item->as_container()->child_container (child_container_);
+  else if (!child_container_name_.empty())
+    critical ("%s: failed to find child container: %s", node_location (dnode_).c_str(), child_container_name_.c_str());
   return item;
 }
 
@@ -584,7 +584,7 @@ Builder::call_child (const XmlNode *anode,
                      const StringVector &call_names, const StringVector &call_values, // evaluated args
                      const String &name, const XmlNode *caller)
 {
-  assert_return (m_dnode != NULL, NULL);
+  assert_return (dnode_ != NULL, NULL);
   // create item
   ItemImpl *item = Builder::inherit_item (anode->name(), call_names, call_values, anode, caller ? caller : anode);
   if (!item)
@@ -600,15 +600,15 @@ Builder::call_child (const XmlNode *anode,
       call_children (anode, item);
     }
   // find child container
-  if (!m_child_container_name.empty() && m_child_container_name == item->name())
+  if (!child_container_name_.empty() && child_container_name_ == item->name())
     {
       ContainerImpl *cc = item->as_container();
       if (cc)
         {
-          if (m_child_container)
-            critical ("%s: duplicate child containers: %s", node_location (m_dnode).c_str(), node_location (anode).c_str());
-          m_child_container = cc;
-          FDEBUG ("assign child-container for %s: %s", m_dnode->name().c_str(), m_child_container_name.c_str());
+          if (child_container_)
+            critical ("%s: duplicate child containers: %s", node_location (dnode_).c_str(), node_location (anode).c_str());
+          child_container_ = cc;
+          FDEBUG ("assign child-container for %s: %s", dnode_->name().c_str(), child_container_name_.c_str());
           // FIXME: mismatches occour, because child caller args are not passed as call_names/values
         }
     }

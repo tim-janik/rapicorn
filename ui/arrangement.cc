@@ -18,10 +18,10 @@ Arrangement::_property_list()
 }
 
 ArrangementImpl::ArrangementImpl() :
-  m_origin (0, 0),
-  m_origin_hanchor (0.5),
-  m_origin_vanchor (0.5),
-  m_child_area()
+  origin_ (0, 0),
+  origin_hanchor_ (0.5),
+  origin_vanchor_ (0.5),
+  child_area_()
 {}
 
 ArrangementImpl::~ArrangementImpl()
@@ -37,8 +37,8 @@ ArrangementImpl::local_child_allocation (ItemImpl &child,
   Allocation area;
   area.width = iceil (requisition.width);
   area.height = iceil (requisition.height);
-  double origin_x = width * m_origin_hanchor - m_origin.x;
-  double origin_y = height * m_origin_vanchor - m_origin.y;
+  double origin_x = width * origin_hanchor_ - origin_.x;
+  double origin_y = height * origin_vanchor_ - origin_.y;
   area.x = iround (origin_x + pi.hposition - pi.halign * area.width);
   area.y = iround (origin_y + pi.vposition - pi.valign * area.height);
   if (width > 0 && child.hexpand())

@@ -20,28 +20,28 @@ namespace Rapicorn {
 
 template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT() :
-  m_pixbuf (new Pixbuf())
+  pixbuf_ (new Pixbuf())
 {}
 
 template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT (uint w, uint h) :
-  m_pixbuf (new Pixbuf())
+  pixbuf_ (new Pixbuf())
 {
   assert (w <= MAXDIM);
   assert (h <= MAXDIM);
-  m_pixbuf->resize (w, h);
+  pixbuf_->resize (w, h);
 }
 
 template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT (const Pixbuf &source) :
-  m_pixbuf (new Pixbuf())
+  pixbuf_ (new Pixbuf())
 {
-  *m_pixbuf = source;
+  *pixbuf_ = source;
 }
 
 template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT (Blob &blob) :
-  m_pixbuf (new Pixbuf())
+  pixbuf_ (new Pixbuf())
 {
   errno = ENOENT;
   if (blob.size() && load_png (blob.size(), blob.data()))
@@ -52,7 +52,7 @@ PixmapT<Pixbuf>::PixmapT (Blob &blob) :
 
 template<class Pixbuf>
 PixmapT<Pixbuf>::PixmapT (const String &res_png) :
-  m_pixbuf (new Pixbuf())
+  pixbuf_ (new Pixbuf())
 {
   errno = ENOENT;
   Blob blob = Blob::load (res_png);
@@ -66,7 +66,7 @@ template<class Pixbuf>
 PixmapT<Pixbuf>&
 PixmapT<Pixbuf>::operator= (const Pixbuf &source)
 {
-  *m_pixbuf = source;
+  *pixbuf_ = source;
   return *this;
 }
 
@@ -75,7 +75,7 @@ PixmapT<Pixbuf>::resize (uint width, uint height)
 {
   assert (width <= MAXDIM);
   assert (height <= MAXDIM);
-  m_pixbuf->resize (width, height);
+  pixbuf_->resize (width, height);
 }
 
 template<class Pixbuf> bool
@@ -112,20 +112,20 @@ PixmapT<Pixbuf>::compare (const Pixbuf &source,
   if (nerrp) *nerrp = 0;
   if (npixp) *npixp = 0;
   if (sx >= size_t (source.width()) || sy >= size_t (source.height()) ||
-      tx >= size_t (m_pixbuf->width()) || ty >= size_t (m_pixbuf->height()))
+      tx >= size_t (pixbuf_->width()) || ty >= size_t (pixbuf_->height()))
     return false;
   if (swidth < 0)
     swidth = source.width();
   if (sheight < 0)
     sheight = source.height();
-  swidth = MIN (MIN (m_pixbuf->width() - int (tx), source.width() - int (sx)), swidth);
-  sheight = MIN (MIN (m_pixbuf->height() - int (ty), source.height() - int (sy)), sheight);
+  swidth = MIN (MIN (pixbuf_->width() - int (tx), source.width() - int (sx)), swidth);
+  sheight = MIN (MIN (pixbuf_->height() - int (ty), source.height() - int (sy)), sheight);
   const uint npix = sheight * swidth;
   uint nerr = 0;
   double erraccu = 0, errmax = 0;
   for (int k = 0; k < sheight; k++)
     {
-      const uint32 *r1 = m_pixbuf->row (ty + k);
+      const uint32 *r1 = pixbuf_->row (ty + k);
       const uint32 *r2 = source.row (sy + k);
       for (int j = 0; j < swidth; j++)
         if (r1[tx + j] != r2[sx + j])
@@ -201,21 +201,21 @@ find_attribute (const vector<String> &attributes, const String &name)
 template<class Pixbuf> void
 PixmapT<Pixbuf>::set_attribute (const String &name, const String &value)
 {
-  vector<String>::const_iterator it = find_attribute (m_pixbuf->variables, name);
-  if (it == m_pixbuf->variables.end())
-    m_pixbuf->variables.push_back (name + "=" + value);
+  vector<String>::const_iterator it = find_attribute (pixbuf_->variables, name);
+  if (it == pixbuf_->variables.end())
+    pixbuf_->variables.push_back (name + "=" + value);
   else
-    m_pixbuf->variables[it - m_pixbuf->variables.begin()] = name + "=" + value;
+    pixbuf_->variables[it - pixbuf_->variables.begin()] = name + "=" + value;
 }
 
 template<class Pixbuf> String
 PixmapT<Pixbuf>::get_attribute (const String &name) const
 {
-  vector<String>::const_iterator it = find_attribute (m_pixbuf->variables, name);
-  if (it == m_pixbuf->variables.end())
+  vector<String>::const_iterator it = find_attribute (pixbuf_->variables, name);
+  if (it == pixbuf_->variables.end())
     return "";
   else
-    return m_pixbuf->variables[it - m_pixbuf->variables.begin()].substr (name.size() + 1);
+    return pixbuf_->variables[it - pixbuf_->variables.begin()].substr (name.size() + 1);
 }
 
 static void
@@ -644,7 +644,7 @@ PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
       return false;
     }
   /* setup key=value pairs for PNG text section */
-  const StringVector &sv = m_pixbuf->variables;
+  const StringVector &sv = pixbuf_->variables;
   StringVector keys, values;
   for (uint i = 0; i < sv.size(); i++)
     {

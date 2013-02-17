@@ -132,24 +132,24 @@ class CheckSource : public virtual EventLoop::Source {
     FINALIZED,
     DESTRUCTED
   };
-  uint          m_state;
+  uint          state_;
 public:
   CheckSource () :
-    m_state (0)
+    state_ (0)
   {
-    RAPICORN_ASSERT (m_state == 0);
-    m_state = INITIALIZED;
+    RAPICORN_ASSERT (state_ == 0);
+    state_ = INITIALIZED;
     check_source_counter++;
   }
   virtual bool
   prepare (const EventLoop::State &state,
            int64 *timeout_usecs_p)
   {
-    RAPICORN_ASSERT (m_state == INITIALIZED ||
-                   m_state == PREPARED ||
-                   m_state == CHECKED ||
-                   m_state == DISPATCHED);
-    m_state = PREPARED;
+    RAPICORN_ASSERT (state_ == INITIALIZED ||
+                   state_ == PREPARED ||
+                   state_ == CHECKED ||
+                   state_ == DISPATCHED);
+    state_ = PREPARED;
     if (quick_rand32() & 0xfeedf00d)
       *timeout_usecs_p = quick_rand32() % 5000;
     return quick_rand32() & 0x00400200a;
@@ -157,42 +157,42 @@ public:
   virtual bool
   check (const EventLoop::State &state)
   {
-    RAPICORN_ASSERT (m_state == INITIALIZED ||
-                   m_state == PREPARED);
-    m_state = CHECKED;
+    RAPICORN_ASSERT (state_ == INITIALIZED ||
+                   state_ == PREPARED);
+    state_ = CHECKED;
     return quick_rand32() & 0xc0ffee;
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    RAPICORN_ASSERT (m_state == PREPARED ||
-                   m_state == CHECKED);
-    m_state = DISPATCHED;
+    RAPICORN_ASSERT (state_ == PREPARED ||
+                   state_ == CHECKED);
+    state_ = DISPATCHED;
     return (quick_rand32() % 131) != 0;
   }
   virtual void
   destroy ()
   {
-    RAPICORN_ASSERT (m_state == INITIALIZED ||
-                   m_state == PREPARED ||
-                   m_state == CHECKED ||
-                   m_state == DISPATCHED);
-    m_state = DESTROYED;
+    RAPICORN_ASSERT (state_ == INITIALIZED ||
+                   state_ == PREPARED ||
+                   state_ == CHECKED ||
+                   state_ == DISPATCHED);
+    state_ = DESTROYED;
     check_source_destroyed_counter++;
   }
   virtual void
   finalize ()
   {
-    RAPICORN_ASSERT (m_state == DESTROYED);
-    // RAPICORN_ASSERT (m_state == INITIALIZED || m_state == DESTROYED);
+    RAPICORN_ASSERT (state_ == DESTROYED);
+    // RAPICORN_ASSERT (state_ == INITIALIZED || state_ == DESTROYED);
     EventLoop::Source::finalize();
-    m_state = FINALIZED;
+    state_ = FINALIZED;
   }
   virtual
   ~CheckSource ()
   {
-    RAPICORN_ASSERT (m_state == FINALIZED);
-    m_state = DESTRUCTED;
+    RAPICORN_ASSERT (state_ == FINALIZED);
+    state_ = DESTRUCTED;
     check_source_counter--;
   }
 };

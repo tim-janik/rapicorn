@@ -8,12 +8,12 @@
 namespace Rapicorn {
 
 class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
-  String                m_name; // element name
-  XmlNode              *m_parent;
-  StringVector          m_attribute_names;
-  StringVector          m_attribute_values;
-  String                m_file;
-  uint                  m_line, m_char;
+  String                name_; // element name
+  XmlNode              *parent_;
+  StringVector          attribute_names_;
+  StringVector          attribute_values_;
+  String                file_;
+  uint                  line_, char_;
 protected:
   explicit              XmlNode         (const String&, uint, uint, const String&);
   uint64                flags           () const;
@@ -23,10 +23,10 @@ protected:
 public:
   typedef const vector<XmlNode*>     ConstNodes;
   typedef ConstNodes::const_iterator ConstChildIter;
-  String                name            () const                { return m_name; }
-  XmlNode*              parent          () const                { return m_parent; }
-  const StringVector&   list_attributes () const                { return m_attribute_names; }
-  const StringVector&   list_values     () const                { return m_attribute_values; }
+  String                name            () const                { return name_; }
+  XmlNode*              parent          () const                { return parent_; }
+  const StringVector&   list_attributes () const                { return attribute_names_; }
+  const StringVector&   list_values     () const                { return attribute_values_; }
   bool                  set_attribute   (const String   &name,
                                          const String   &value,
                                          bool            replace = true);
@@ -35,12 +35,12 @@ public:
   bool                  has_attribute   (const String   &name,
                                          bool            case_insensitive = false) const;
   bool                  del_attribute   (const String   &name);
-  String                parsed_file     () const                { return m_file; }
-  uint                  parsed_line     () const                { return m_line; }
-  uint                  parsed_char     () const                { return m_char; }
+  String                parsed_file     () const                { return file_; }
+  uint                  parsed_line     () const                { return line_; }
+  uint                  parsed_char     () const                { return char_; }
   /* text node */
   virtual String        text            () const = 0;
-  bool                  istext          () const                { return m_name.size() == 0; }
+  bool                  istext          () const                { return name_.size() == 0; }
   /* parent node */
   virtual ConstNodes&   children        () const = 0;
   ConstChildIter        children_begin  () const { return children().begin(); }

@@ -64,24 +64,24 @@ exit (int status)
 
 class AppSource : public EventLoop::Source {
   Rapicorn::Aida::BaseConnection &connection_;
-  PollFD m_pfd;
+  PollFD pfd_;
   bool   last_seen_primary, need_check_primary;
   void
   check_primaries()
   {
     // seen_primary is merely a hint, need to check local and remote states
     if (ApplicationH::the().finishable() &&  // remote
-        main_loop()->finishable() && m_loop)            // local
+        main_loop()->finishable() && loop_)            // local
       main_loop()->quit();
   }
 public:
   AppSource (Rapicorn::Aida::BaseConnection &connection) :
     connection_ (connection), last_seen_primary (false), need_check_primary (false)
   {
-    m_pfd.fd = connection_.notify_fd();
-    m_pfd.events = PollFD::IN;
-    m_pfd.revents = 0;
-    add_poll (&m_pfd);
+    pfd_.fd = connection_.notify_fd();
+    pfd_.events = PollFD::IN;
+    pfd_.revents = 0;
+    add_poll (&pfd_);
     primary (false);
     ApplicationH::the().sig_missing_primary() += [this]() { queue_check_primaries(); };
   }
@@ -113,8 +113,8 @@ public:
   void
   queue_check_primaries()
   {
-    if (m_loop)
-      m_loop->exec_background (Aida::slot (*this, &AppSource::check_primaries));
+    if (loop_)
+      loop_->exec_background (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 

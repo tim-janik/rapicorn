@@ -16,12 +16,12 @@ void    init_core               (const String       &app_ident,
                                  char              **argv,
                                  const StringVector &args = StringVector());
 struct InitSettings {
-  static bool  autonomous()    { return sis->m_autonomous; } ///< self-contained runtime, no rcfiles, boot scripts, etc
-  static uint  test_codes()    { return sis->m_test_codes; } // internal test flags
+  static bool  autonomous()    { return sis->autonomous_; } ///< self-contained runtime, no rcfiles, boot scripts, etc
+  static uint  test_codes()    { return sis->test_codes_; } // internal test flags
 protected:
   static const InitSettings *sis;
-  bool m_autonomous;
-  uint m_test_codes;
+  bool autonomous_;
+  uint test_codes_;
 };
 
 bool    arg_parse_option        (uint         argc,
@@ -50,12 +50,12 @@ class InitHook {
   typedef void (*InitHookFunc) (const StringVector &args);
   InitHook    *next;
   InitHookFunc hook;
-  const String m_name;
+  const String name_;
   RAPICORN_CLASS_NON_COPYABLE (InitHook);
 protected:
   static void  invoke_hooks (const String&, int*, char**, const StringVector&);
 public:
-  String       name () const { return m_name; }
+  String       name () const { return name_; }
   StringVector main_args () const;
   explicit     InitHook (const String &fname, InitHookFunc func);
 };

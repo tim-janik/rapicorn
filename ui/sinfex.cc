@@ -9,7 +9,7 @@ namespace Rapicorn {
 
 /* --- Sinfex standard functions --- */
 class StandardScope : public Sinfex::Scope {
-  Scope &m_chain_scope;
+  Scope &chain_scope_;
   typedef Sinfex::Value Value;
   double
   vdouble (const Value &v)
@@ -55,13 +55,13 @@ class StandardScope : public Sinfex::Scope {
   }
 public:
   StandardScope (Scope &chain) :
-    m_chain_scope (chain)
+    chain_scope_ (chain)
   {}
   virtual Value
   resolve_variable (const String        &entity,
                     const String        &name)
   {
-    return m_chain_scope.resolve_variable (entity, name);
+    return chain_scope_.resolve_variable (entity, name);
   }
 #define MATH1FUNC(func,args)    Value (({ double v = func (vdouble (args[0])); v; }))
 #define RETURN_IF_MATH1FUNC(func,args,nm)     ({ if (nm == #func) return MATH1FUNC (func, args); })
@@ -114,38 +114,38 @@ public:
         else if (name == "printerr")
           return printfunc (2, args);
       }
-    return m_chain_scope.call_function (entity, name, args);
+    return chain_scope_.call_function (entity, name, args);
   }
 };
 
 /* --- Sinfex Class --- */
 Sinfex::Sinfex () :
-  m_start (NULL)
+  start_ (NULL)
 {}
 
 Sinfex::~Sinfex ()
 {
-  if (m_start)
+  if (start_)
     {
-      delete[] m_start;
-      m_start = NULL;
+      delete[] start_;
+      start_ = NULL;
     }
 }
 
 Sinfex::Value::Value (const String &s) :
-  m_string (string_from_cquote (s)), m_real (0), m_strflag (1)
+  string_ (string_from_cquote (s)), real_ (0), strflag_ (1)
 {}
 
 String
 Sinfex::Value::real2string () const
 {
-  return string_from_double (m_real);
+  return string_from_double (real_);
 }
 
 double
 Sinfex::Value::string2real () const
 {
-  const char *str = m_string.c_str();
+  const char *str = string_.c_str();
   while (*str && (str[0] == ' ' || str[0] == '\t'))
     str++;
   if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
@@ -176,19 +176,19 @@ public:
     const uint *prog = estk.startmem();
     if (prog)
       {
-        m_start = new uint[prog[0] / sizeof (uint)];
-        memcpy (m_start, prog, prog[0]);
+        start_ = new uint[prog[0] / sizeof (uint)];
+        memcpy (start_, prog, prog[0]);
       }
   }
   virtual Value
   eval (Scope &scope)
   {
-    if (!m_start || !m_start[1])
+    if (!start_ || !start_[1])
       return Value (0);
     else
       {
         StandardScope stdscope (scope);
-        return eval_op (stdscope, m_start[1]);
+        return eval_op (stdscope, start_[1]);
       }
   }
 };
@@ -204,8 +204,8 @@ SinfexExpression::eval_op (Scope &scope,
     const double *dp;
   };
   Mark mark;
-  mark.up = m_start + opx;
-  assert (mark.up + 1 <= m_start + m_start[0]);
+  mark.up = start_ + opx;
+  assert (mark.up + 1 <= start_ + start_[0]);
   switch (*mark.up++)
     {
       uint ui;
@@ -322,13 +322,13 @@ SinfexExpression::eval_op (Scope &scope,
     case SINFEX_FUNCTION:
       {
         Mark arg;
-        arg.up = m_start + *mark.up++;
+        arg.up = start_ + *mark.up++;
         ui = *mark.up++;
         vector<Value> funcargs;
-        while (arg.up > m_start && *arg.up++ == SINFEX_ARG)
+        while (arg.up > start_ && *arg.up++ == SINFEX_ARG)
           {
             uint valindex = *arg.up++;
-            arg.up = m_start + *arg.up;
+            arg.up = start_ + *arg.up;
             funcargs.push_back (eval_op (scope, valindex));
           }
         String funcname = String (mark.cp, ui);
@@ -337,7 +337,7 @@ SinfexExpression::eval_op (Scope &scope,
       }
     case SINFEX_ARG: ;
     }
-  fatal ("Expression with invalid op code: (%p:%zu:%u)", m_start, mark.up - 1 - m_start, *(mark.up-1));
+  fatal ("Expression with invalid op code: (%p:%zu:%u)", start_, mark.up - 1 - start_, *(mark.up-1));
 }
 
 /* --- Parser Class --- */

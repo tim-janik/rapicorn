@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class IniFile {
   typedef std::map<String,StringVector> SectionMap;
-  SectionMap                    m_sections;
+  SectionMap                    sections_;
   void          load_ini        (const String &inputname, const String &data);
   //bool        set             (const String &section, const String &key, const String &value, const String &locale = "");
   //bool        del             (const String &section, const String &key, const String &locale = "*");

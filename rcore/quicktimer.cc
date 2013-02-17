@@ -118,8 +118,8 @@ QuickTimer::unref_timers()
 bool
 QuickTimer::time_elapsed ()
 {
-  uint64 s = timestamp_realtime(), d = MAX (m_start, s) - MIN (m_start, s);
-  return d >= m_usecs;
+  uint64 s = timestamp_realtime(), d = MAX (start_, s) - MIN (start_, s);
+  return d >= usecs_;
 }
 
 /**
@@ -128,8 +128,8 @@ QuickTimer::time_elapsed ()
 void
 QuickTimer::start ()
 {
-  m_start = timestamp_realtime();
-  m_mark = 0;
+  start_ = timestamp_realtime();
+  mark_ = 0;
   expired(); // calibrate
 }
 
@@ -139,7 +139,7 @@ QuickTimer::start ()
 void
 QuickTimer::start (uint64 usecs)
 {
-  m_usecs = usecs;
+  usecs_ = usecs;
   start();
 }
 
@@ -152,7 +152,7 @@ QuickTimer::~QuickTimer ()
  * Construct a QuickTimer object, suitable to expire after @a usecs micro seconds.
  */
 QuickTimer::QuickTimer (uint64 usecs) :
-  m_usecs (0), m_start (0), m_mark (0)
+  usecs_ (0), start_ (0), mark_ (0)
 {
   ref_timers();
   start (usecs);

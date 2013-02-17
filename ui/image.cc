@@ -35,14 +35,14 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 }
 
 class ImageImpl : public virtual ItemImpl, public virtual Image {
-  Pixmap           m_pixmap;
+  Pixmap           pixmap_;
 public:
   explicit ImageImpl()
   {}
   void
   reset ()
   {
-    m_pixmap = Pixmap();
+    pixmap_ = Pixmap();
     invalidate();
   }
   ~ImageImpl()
@@ -51,12 +51,12 @@ public:
   pixbuf (const Pixbuf &pixbuf)
   {
     reset();
-    m_pixmap = pixbuf;
+    pixmap_ = pixbuf;
   }
   virtual Pixbuf
   pixbuf()
   {
-    return m_pixmap;
+    return pixmap_;
   }
   virtual void
   stock_pixmap (const String &stock_name)
@@ -96,8 +96,8 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width += m_pixmap.width();
-    requisition.height += m_pixmap.height();
+    requisition.width += pixmap_.width();
+    requisition.height += pixmap_.height();
   }
   virtual void
   size_allocate (Allocation area, bool changed)
@@ -114,15 +114,15 @@ protected:
     const bool grow = true;
     PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
     const Allocation &area = allocation();
-    if (area.width < 1 || area.height < 1 || m_pixmap.width() < 1 || m_pixmap.height() < 1)
+    if (area.width < 1 || area.height < 1 || pixmap_.width() < 1 || pixmap_.height() < 1)
       return view;
-    view.xscale = m_pixmap.width() / area.width;
-    view.yscale = m_pixmap.height() / area.height;
+    view.xscale = pixmap_.width() / area.width;
+    view.yscale = pixmap_.height() / area.height;
     view.scale = max (view.xscale, view.yscale);
     if (!grow)
       view.scale = max (view.scale, 1.0);
-    view.pwidth = m_pixmap.width() / view.scale + 0.5;
-    view.pheight = m_pixmap.height() / view.scale + 0.5;
+    view.pwidth = pixmap_.width() / view.scale + 0.5;
+    view.pheight = pixmap_.height() / view.scale + 0.5;
     const PackInfo &pi = pack_info();
     view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
     view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
@@ -132,7 +132,7 @@ public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (m_pixmap.width() > 0 && m_pixmap.height() > 0)
+    if (pixmap_.width() > 0 && pixmap_.height() > 0)
       {
         const Allocation &area = allocation();
         PixView view = adjust_view();
@@ -140,7 +140,7 @@ public:
         Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
         erect.intersect (rect);
         cairo_t *cr = cairo_context (rcontext, erect);
-        cairo_surface_t *isurface = cairo_surface_from_pixmap (m_pixmap);
+        cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
         cairo_matrix_init_identity (&matrix);

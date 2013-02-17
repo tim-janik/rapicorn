@@ -25,15 +25,15 @@ Arrow::_property_list()
 }
 
 class ArrowImpl : public virtual ItemImpl, public virtual Arrow {
-  DirType m_dir;
+  DirType dir_;
 public:
   explicit ArrowImpl() :
-    m_dir (DIR_RIGHT)
+    dir_ (DIR_RIGHT)
   {}
   ~ArrowImpl()
   {}
-  virtual void    arrow_dir (DirType dir)       { m_dir = dir; expose(); }
-  virtual DirType arrow_dir () const            { return m_dir; }
+  virtual void    arrow_dir (DirType dir)       { dir_ = dir; expose(); }
+  virtual DirType arrow_dir () const            { return dir_; }
   virtual void
   size_policy (SizePolicyType spol)
   {
@@ -73,7 +73,7 @@ protected:
       {
         cairo_t *cr = cairo_context (rcontext, rect);
         CPainter painter (cr);
-        painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
+        painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
       }
   }
 };
@@ -105,44 +105,44 @@ DotGrid::_property_list()
 }
 
 class DotGridImpl : public virtual ItemImpl, public virtual DotGrid {
-  FrameType m_normal_dot, m_impressed_dot;
-  uint      m_n_hdots, m_n_vdots;
-  uint16    m_right_padding_dots, m_top_padding_dots, m_left_padding_dots, m_bottom_padding_dots;
+  FrameType normal_dot_, impressed_dot_;
+  uint      n_hdots_, n_vdots_;
+  uint16    right_padding_dots_, top_padding_dots_, left_padding_dots_, bottom_padding_dots_;
 public:
   explicit DotGridImpl() :
-    m_normal_dot (FRAME_IN),
-    m_impressed_dot (FRAME_IN),
-    m_n_hdots (1), m_n_vdots (1),
-    m_right_padding_dots (0), m_top_padding_dots (0),
-    m_left_padding_dots (0), m_bottom_padding_dots (0)
+    normal_dot_ (FRAME_IN),
+    impressed_dot_ (FRAME_IN),
+    n_hdots_ (1), n_vdots_ (1),
+    right_padding_dots_ (0), top_padding_dots_ (0),
+    left_padding_dots_ (0), bottom_padding_dots_ (0)
   {}
   ~DotGridImpl()
   {}
-  virtual void      impressed_dot (FrameType ft)        { m_impressed_dot = ft; expose(); }
-  virtual FrameType impressed_dot () const              { return m_impressed_dot; }
-  virtual void      normal_dot    (FrameType ft)        { m_normal_dot = ft; expose(); }
-  virtual FrameType normal_dot    () const              { return m_normal_dot; }
+  virtual void      impressed_dot (FrameType ft)        { impressed_dot_ = ft; expose(); }
+  virtual FrameType impressed_dot () const              { return impressed_dot_; }
+  virtual void      normal_dot    (FrameType ft)        { normal_dot_ = ft; expose(); }
+  virtual FrameType normal_dot    () const              { return normal_dot_; }
   FrameType         current_dot   () const              { return branch_impressed() ? impressed_dot() : normal_dot(); }
-  virtual void      n_hdots       (uint   num)          { m_n_hdots = num; expose(); }
-  virtual uint      n_hdots       () const              { return m_n_hdots; }
-  virtual void      n_vdots       (uint   num)          { m_n_vdots = num; expose(); }
-  virtual uint      n_vdots       () const              { return m_n_vdots; }
-  virtual uint      right_padding_dots () const         { return m_right_padding_dots; }
-  virtual void      right_padding_dots (uint c)         { m_right_padding_dots = c; expose(); }
-  virtual uint      top_padding_dots  () const          { return m_top_padding_dots; }
-  virtual void      top_padding_dots  (uint c)          { m_top_padding_dots = c; expose(); }
-  virtual uint      left_padding_dots  () const         { return m_left_padding_dots; }
-  virtual void      left_padding_dots  (uint c)         { m_left_padding_dots = c; expose(); }
-  virtual uint      bottom_padding_dots  () const       { return m_bottom_padding_dots; }
-  virtual void      bottom_padding_dots  (uint c)       { m_bottom_padding_dots = c; expose(); }
+  virtual void      n_hdots       (uint   num)          { n_hdots_ = num; expose(); }
+  virtual uint      n_hdots       () const              { return n_hdots_; }
+  virtual void      n_vdots       (uint   num)          { n_vdots_ = num; expose(); }
+  virtual uint      n_vdots       () const              { return n_vdots_; }
+  virtual uint      right_padding_dots () const         { return right_padding_dots_; }
+  virtual void      right_padding_dots (uint c)         { right_padding_dots_ = c; expose(); }
+  virtual uint      top_padding_dots  () const          { return top_padding_dots_; }
+  virtual void      top_padding_dots  (uint c)          { top_padding_dots_ = c; expose(); }
+  virtual uint      left_padding_dots  () const         { return left_padding_dots_; }
+  virtual void      left_padding_dots  (uint c)         { left_padding_dots_ = c; expose(); }
+  virtual uint      bottom_padding_dots  () const       { return bottom_padding_dots_; }
+  virtual void      bottom_padding_dots  (uint c)       { bottom_padding_dots_ = c; expose(); }
   virtual void
   size_request (Requisition &requisition)
   {
     uint ythick = 1, xthick = 1;
-    requisition.width = m_n_hdots * (xthick + xthick) + MAX (m_n_hdots - 1, 0) * xthick;
-    requisition.height = m_n_vdots * (ythick + ythick) + MAX (m_n_vdots - 1, 0) * ythick;
-    requisition.width += (m_right_padding_dots + m_left_padding_dots) * 3 * xthick;
-    requisition.height += (m_top_padding_dots + m_bottom_padding_dots) * 3 * ythick;
+    requisition.width = n_hdots_ * (xthick + xthick) + MAX (n_hdots_ - 1, 0) * xthick;
+    requisition.height = n_vdots_ * (ythick + ythick) + MAX (n_vdots_ - 1, 0) * ythick;
+    requisition.width += (right_padding_dots_ + left_padding_dots_) * 3 * xthick;
+    requisition.height += (top_padding_dots_ + bottom_padding_dots_) * 3 * ythick;
   }
   virtual void
   size_allocate (Allocation area, bool changed)
@@ -150,19 +150,19 @@ public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    int ythick = 1, xthick = 1, n_hdots = m_n_hdots, n_vdots = m_n_vdots;
+    int ythick = 1, xthick = 1, n_hdots = n_hdots_, n_vdots = n_vdots_;
     IRect ia = allocation();
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    int rq_width = m_n_hdots * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
-    int rq_height = m_n_vdots * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
+    int rq_width = n_hdots_ * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
+    int rq_height = n_vdots_ * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
     /* split up extra width */
-    uint hpadding = m_right_padding_dots + m_left_padding_dots;
-    double halign = hpadding ? m_left_padding_dots * 1.0 / hpadding : 0.5;
+    uint hpadding = right_padding_dots_ + left_padding_dots_;
+    double halign = hpadding ? left_padding_dots_ * 1.0 / hpadding : 0.5;
     if (rq_width < width)
       x += ifloor ((width - rq_width) * halign);
     /* split up extra height */
-    uint vpadding = m_top_padding_dots + m_bottom_padding_dots;
-    double valign = vpadding ? m_bottom_padding_dots * 1.0 / vpadding : 0.5;
+    uint vpadding = top_padding_dots_ + bottom_padding_dots_;
+    double valign = vpadding ? bottom_padding_dots_ * 1.0 / vpadding : 0.5;
     if (rq_height < height)
       y += ifloor ((height - rq_height) * valign);
     /* draw dots */
@@ -200,7 +200,7 @@ static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotG
 
 // == DrawableImpl ==
 DrawableImpl::DrawableImpl() :
-  m_x (0), m_y (0)
+  x_ (0), y_ (0)
 {}
 
 const PropertyList&
@@ -219,9 +219,9 @@ DrawableImpl::size_request (Requisition &requisition)
 void
 DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  m_pixbuf = Pixbuf();
-  m_x = 0;
-  m_y = 0;
+  pixbuf_ = Pixbuf();
+  x_ = 0;
+  y_ = 0;
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }
 
@@ -235,15 +235,15 @@ DrawableImpl::draw_rect (int x, int y, const Pixbuf &pixbuf)
       y + pixbuf.height() <= area.y + area.height &&
       rowstride * pixbuf.height() <= pixbuf.pixels.size())
     {
-      m_x = x;
-      m_y = y;
-      m_pixbuf = pixbuf;
+      x_ = x;
+      y_ = y;
+      pixbuf_ = pixbuf;
     }
-  else if (m_pixbuf.width() > 0)
+  else if (pixbuf_.width() > 0)
     {
-      m_pixbuf = Pixbuf();
-      m_x = 0;
-      m_y = 0;
+      pixbuf_ = Pixbuf();
+      x_ = 0;
+      y_ = 0;
     }
   expose();
 }
@@ -282,13 +282,13 @@ DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
       cairo_restore (cr);
     }
   // handle user draw
-  if (m_pixbuf.width() > 0 && m_pixbuf.height() > 0)
+  if (pixbuf_.width() > 0 && pixbuf_.height() > 0)
     {
-      const int rowstride = m_pixbuf.width();
-      cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) m_pixbuf.pixels.data(), CAIRO_FORMAT_ARGB32,
-                                                                      m_pixbuf.width(), m_pixbuf.height(), rowstride * 4);
+      const int rowstride = pixbuf_.width();
+      cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) pixbuf_.pixels.data(), CAIRO_FORMAT_ARGB32,
+                                                                      pixbuf_.width(), pixbuf_.height(), rowstride * 4);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      cairo_set_source_surface (cr, surface, m_x, m_y);
+      cairo_set_source_surface (cr, surface, x_, y_);
       cairo_paint (cr);
       cairo_surface_destroy (surface);
     }

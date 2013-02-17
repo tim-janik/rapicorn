@@ -133,11 +133,11 @@ PropertyList::append_properties (size_t n_props, Property **props, const Propert
 {
   std::set<Property*> pset;
   std::vector<Property*> parray;
-  for (size_t i = 0; i < m_n_properties; i++)
-    if (pset.find (m_properties[i]) == pset.end())
+  for (size_t i = 0; i < n_properties_; i++)
+    if (pset.find (properties_[i]) == pset.end())
       {
-        pset.insert (m_properties[i]);
-        parray.push_back (m_properties[i]);
+        pset.insert (properties_[i]);
+        parray.push_back (properties_[i]);
       }
   for (size_t i = 0; i < n_props; i++)
     if (pset.find (props[i]) == pset.end())
@@ -147,17 +147,17 @@ PropertyList::append_properties (size_t n_props, Property **props, const Propert
       }
   const PropertyList *const chains[] = { &c0, &c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9 };
   for (size_t j = 0; j < sizeof (chains) / sizeof (chains[0]); j++)
-    for (size_t i = 0; i < chains[j]->m_n_properties; i++)
-      if (pset.find (chains[j]->m_properties[i]) == pset.end())
+    for (size_t i = 0; i < chains[j]->n_properties_; i++)
+      if (pset.find (chains[j]->properties_[i]) == pset.end())
         {
-          pset.insert (chains[j]->m_properties[i]);
-          parray.push_back (chains[j]->m_properties[i]);
+          pset.insert (chains[j]->properties_[i]);
+          parray.push_back (chains[j]->properties_[i]);
         }
-  delete[] m_properties;
-  m_n_properties = parray.size();
-  m_properties = new Property* [m_n_properties];
-  for (size_t i = 0; i < m_n_properties; i++)
-    m_properties[i] = parray[i];
+  delete[] properties_;
+  n_properties_ = parray.size();
+  properties_ = new Property* [n_properties_];
+  for (size_t i = 0; i < n_properties_; i++)
+    properties_[i] = parray[i];
 }
 
 Property**
@@ -165,8 +165,8 @@ PropertyList::list_properties (size_t *n_properties) const
 {
   if (n_properties)
     {
-      *n_properties = m_n_properties;
-      return m_properties;
+      *n_properties = n_properties_;
+      return properties_;
     }
   else
     return NULL;

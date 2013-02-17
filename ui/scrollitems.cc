@@ -11,23 +11,23 @@ ScrollArea::ScrollArea()
 
 /* --- ScrollAreaImpl --- */
 ScrollAreaImpl::ScrollAreaImpl() :
-  m_hadjustment (NULL), m_vadjustment (NULL)
+  hadjustment_ (NULL), vadjustment_ (NULL)
 {}
 
 Adjustment&
 ScrollAreaImpl::hadjustment () const
 {
-  if (!m_hadjustment)
-    m_hadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
-  return *m_hadjustment;
+  if (!hadjustment_)
+    hadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
+  return *hadjustment_;
 }
 
 Adjustment&
 ScrollAreaImpl::vadjustment () const
 {
-  if (!m_vadjustment)
-    m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
-  return *m_vadjustment;
+  if (!vadjustment_)
+    vadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
+  return *vadjustment_;
 }
 
 Adjustment*
@@ -62,40 +62,40 @@ ScrollAreaImpl::scroll_to (double x, double y)
 {
   hadjustment().freeze();
   vadjustment().freeze();
-  m_hadjustment->value (round (x));
-  m_vadjustment->value (round (y));
-  m_hadjustment->constrain();
-  m_vadjustment->constrain();
-  m_hadjustment->thaw();
-  m_vadjustment->thaw();
+  hadjustment_->value (round (x));
+  vadjustment_->value (round (y));
+  hadjustment_->constrain();
+  vadjustment_->constrain();
+  hadjustment_->thaw();
+  vadjustment_->thaw();
 }
 
 static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
 
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
-  Adjustment *m_hadjustment, *m_vadjustment;
+  Adjustment *hadjustment_, *vadjustment_;
   size_t conid_hadjustment_, conid_vadjustment_;
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
-    if (m_hadjustment && conid_hadjustment_)
-      m_hadjustment->sig_value_changed() -= conid_hadjustment_;
-    m_hadjustment = NULL;
+    if (hadjustment_ && conid_hadjustment_)
+      hadjustment_->sig_value_changed() -= conid_hadjustment_;
+    hadjustment_ = NULL;
     conid_hadjustment_ = 0;
-    if (m_vadjustment && conid_vadjustment_)
-      m_vadjustment->sig_value_changed() -= conid_vadjustment_;
-    m_vadjustment = NULL;
+    if (vadjustment_ && conid_vadjustment_)
+      vadjustment_->sig_value_changed() -= conid_vadjustment_;
+    vadjustment_ = NULL;
     conid_vadjustment_ = 0;
     this->ViewportImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &m_hadjustment,
-                          ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &m_vadjustment);
-        if (m_hadjustment)
-          conid_hadjustment_ = m_hadjustment->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
-        if (m_vadjustment)
-          conid_vadjustment_ = m_vadjustment->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
+        find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &hadjustment_,
+                          ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &vadjustment_);
+        if (hadjustment_)
+          conid_hadjustment_ = hadjustment_->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
+        if (vadjustment_)
+          conid_vadjustment_ = vadjustment_->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
       }
   }
   virtual void
@@ -123,53 +123,53 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
     child.set_allocation (area);
     area = child.allocation();
     const double small_step = 10;
-    if (m_hadjustment)
+    if (hadjustment_)
       {
-        m_hadjustment->freeze();
-        m_hadjustment->lower (0);
-        m_hadjustment->upper (area.width);
+        hadjustment_->freeze();
+        hadjustment_->lower (0);
+        hadjustment_->upper (area.width);
         double d, w = allocation().width, l = min (w, 1);
-        m_hadjustment->page (w);
-        m_hadjustment->step_increment (min (small_step, round (m_hadjustment->page() / 10)));
-        m_hadjustment->page_increment (max (small_step, round (m_hadjustment->page() / 3)));
-        w = MIN (m_hadjustment->page(), area.width);
-        d = m_hadjustment->step_increment ();
-        m_hadjustment->step_increment (CLAMP (d, l, w));
-        d = m_hadjustment->page_increment ();
-        m_hadjustment->page_increment (CLAMP (d, l, w));
+        hadjustment_->page (w);
+        hadjustment_->step_increment (min (small_step, round (hadjustment_->page() / 10)));
+        hadjustment_->page_increment (max (small_step, round (hadjustment_->page() / 3)));
+        w = MIN (hadjustment_->page(), area.width);
+        d = hadjustment_->step_increment ();
+        hadjustment_->step_increment (CLAMP (d, l, w));
+        d = hadjustment_->page_increment ();
+        hadjustment_->page_increment (CLAMP (d, l, w));
       }
-    if (m_vadjustment)
+    if (vadjustment_)
       {
-        m_vadjustment->freeze();
-        m_vadjustment->lower (0);
-        m_vadjustment->upper (area.height);
+        vadjustment_->freeze();
+        vadjustment_->lower (0);
+        vadjustment_->upper (area.height);
         double d, h = allocation().height, l = min (h, 1);
-        m_vadjustment->page (h);
-        m_vadjustment->step_increment (min (small_step, round (m_vadjustment->page() / 10)));
-        m_vadjustment->page_increment (max (small_step, round (m_vadjustment->page() / 3)));
-        h = MIN (m_vadjustment->page(), area.height);
-        d = m_vadjustment->step_increment ();
-        m_vadjustment->step_increment (CLAMP (d, l, h));
-        d = m_vadjustment->page_increment ();
-        m_vadjustment->page_increment (CLAMP (d, l, h));
+        vadjustment_->page (h);
+        vadjustment_->step_increment (min (small_step, round (vadjustment_->page() / 10)));
+        vadjustment_->page_increment (max (small_step, round (vadjustment_->page() / 3)));
+        h = MIN (vadjustment_->page(), area.height);
+        d = vadjustment_->step_increment ();
+        vadjustment_->step_increment (CLAMP (d, l, h));
+        d = vadjustment_->page_increment ();
+        vadjustment_->page_increment (CLAMP (d, l, h));
       }
-    if (m_hadjustment)
-      m_hadjustment->constrain();
-    if (m_vadjustment)
-      m_vadjustment->constrain();
-    if (m_hadjustment)
-      m_hadjustment->thaw();
-    if (m_vadjustment)
-      m_vadjustment->thaw();
-    const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
-    const int yoffset = m_vadjustment ? iround (m_vadjustment->value()) : 0;
+    if (hadjustment_)
+      hadjustment_->constrain();
+    if (vadjustment_)
+      vadjustment_->constrain();
+    if (hadjustment_)
+      hadjustment_->thaw();
+    if (vadjustment_)
+      vadjustment_->thaw();
+    const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
+    const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
     scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   }
   void
   adjustment_changed()
   {
-    const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
-    const int yoffset = m_vadjustment ? iround (m_vadjustment->value()) : 0;
+    const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
+    const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
     scroll_offsets (xoffset, yoffset);
   }
   virtual void
@@ -240,26 +240,26 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
     if (farea.y < area.y + deltay)
       deltay += farea.y - (area.y + deltay);
     /* scroll to new position */
-    m_hadjustment->freeze();
-    m_vadjustment->freeze();
+    hadjustment_->freeze();
+    vadjustment_->freeze();
     if (deltax)
-      m_hadjustment->value (m_hadjustment->value() + deltax);
+      hadjustment_->value (hadjustment_->value() + deltax);
     if (deltay)
-      m_vadjustment->value (m_vadjustment->value() + deltay);
-    m_hadjustment->constrain();
-    m_vadjustment->constrain();
-    m_hadjustment->thaw();
-    m_vadjustment->thaw();
+      vadjustment_->value (vadjustment_->value() + deltay);
+    hadjustment_->constrain();
+    vadjustment_->constrain();
+    hadjustment_->thaw();
+    vadjustment_->thaw();
   }
   bool
   scroll (EventType scroll_dir)
   {
     switch (scroll_dir)
       {
-      case SCROLL_UP:           return m_vadjustment ? m_vadjustment->move (MOVE_STEP_BACKWARD) : false;
-      case SCROLL_LEFT:         return m_hadjustment ? m_hadjustment->move (MOVE_STEP_BACKWARD) : false;
-      case SCROLL_DOWN:         return m_vadjustment ? m_vadjustment->move (MOVE_STEP_FORWARD) : false;
-      case SCROLL_RIGHT:        return m_hadjustment ? m_hadjustment->move (MOVE_STEP_FORWARD) : false;
+      case SCROLL_UP:           return vadjustment_ ? vadjustment_->move (MOVE_STEP_BACKWARD) : false;
+      case SCROLL_LEFT:         return hadjustment_ ? hadjustment_->move (MOVE_STEP_BACKWARD) : false;
+      case SCROLL_DOWN:         return vadjustment_ ? vadjustment_->move (MOVE_STEP_FORWARD) : false;
+      case SCROLL_RIGHT:        return hadjustment_ ? hadjustment_->move (MOVE_STEP_FORWARD) : false;
       default:                  ;
       }
     return false;
@@ -295,7 +295,7 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
   {}
 public:
   ScrollPortImpl() :
-    m_hadjustment (NULL), m_vadjustment (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0)
+    hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0)
   {}
 };
 static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");

@@ -16,7 +16,7 @@ namespace Rapicorn {
 namespace Test {
 
 Timer::Timer (double deadline_in_secs) :
-  m_deadline (deadline_in_secs), m_test_duration (0), m_n_runs (0)
+  deadline_ (deadline_in_secs), test_duration_ (0), n_runs_ (0)
 {}
 
 Timer::~Timer ()
@@ -34,41 +34,41 @@ Timer::bench_time ()
 int64
 Timer::loops_needed () const
 {
-  if (m_samples.size() < 7)
-    return m_n_runs + 1;        // force significant number of test runs
+  if (samples_.size() < 7)
+    return n_runs_ + 1;        // force significant number of test runs
   double resolution = timestamp_resolution() / 1000000000.0;
-  const double deadline = MAX (m_deadline == 0.0 ? 0.005 : m_deadline, resolution * 10000.0);
-  if (m_test_duration > deadline * 0.5)
+  const double deadline = MAX (deadline_ == 0.0 ? 0.005 : deadline_, resolution * 10000.0);
+  if (test_duration_ > deadline * 0.5)
     return 0;                   // time for testing exceeded
   // we double the number of tests per run, to gain more accuracy: 0+1, 1+1, 3+1, 7+1, ...
-  return m_n_runs + 1;
+  return n_runs_ + 1;
 }
 
 void
 Timer::reset()
 {
-  m_samples.resize (0);
-  m_test_duration = 0;
-  m_n_runs = 0;
+  samples_.resize (0);
+  test_duration_ = 0;
+  n_runs_ = 0;
 }
 
 void
 Timer::submit (double elapsed,
                int64  repetitions)
 {
-  m_test_duration += elapsed;
-  m_n_runs += repetitions;
+  test_duration_ += elapsed;
+  n_runs_ += repetitions;
   double resolution = timestamp_resolution() / 1000000000.0;
   if (elapsed >= resolution * 100.0) // force error below 1%
-    m_samples.push_back (elapsed / repetitions);
+    samples_.push_back (elapsed / repetitions);
 }
 
 double
 Timer::min_elapsed () const
 {
   double m = DBL_MAX;
-  for (size_t i = 0; i < m_samples.size(); i++)
-    m = MIN (m, m_samples[i]);
+  for (size_t i = 0; i < samples_.size(); i++)
+    m = MIN (m, samples_[i]);
   return m;
 }
 
@@ -76,8 +76,8 @@ double
 Timer::max_elapsed () const
 {
   double m = 0;
-  for (size_t i = 0; i < m_samples.size(); i++)
-    m = MAX (m, m_samples[i]);
+  for (size_t i = 0; i < samples_.size(); i++)
+    m = MAX (m, samples_[i]);
   return m;
 }
 

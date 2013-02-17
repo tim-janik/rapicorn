@@ -12,10 +12,10 @@ namespace Selector {
 class SelobAllocator;
 
 class SelobItem : public Selob {
-  ItemImpl       &m_item;
-  SelobItem      *m_parent;
-  int64           m_n_children;
-  SelobAllocator &m_allocator;
+  ItemImpl       &item_;
+  SelobItem      *parent_;
+  int64           n_children_;
+  SelobAllocator &allocator_;
   friend class SelobAllocator;
   explicit             SelobItem       (SelobAllocator &allocator, ItemImpl &item);
   void                 cache_parent    ();
@@ -37,9 +37,9 @@ public:
 };
 
 class SelobListModel : public Selob {
-  ListModelIface      &m_lmodel;
+  ListModelIface      &lmodel_;
   StringVector         type_list_;
-  String               m_row_constraint, m_col_constraint, m_value_constraint, m_type_constraint;
+  String               row_constraint_, col_constraint_, value_constraint_, type_constraint_;
   uint                 f_row_constraint : 1, f_col_constraint : 1, f_value_constraint : 1, f_type_constraint : 1;
   explicit             SelobListModel  (SelobAllocator &allocator, ListModelIface &lmodel);
 public:
@@ -59,7 +59,7 @@ public:
 };
 
 class SelobAllocator {
-  vector<SelobItem*> m_selobs;
+  vector<SelobItem*> selobs_;
 public:
   explicit               SelobAllocator  ();
   virtual               ~SelobAllocator  ();

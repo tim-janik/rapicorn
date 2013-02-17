@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 class ScrollAreaImpl : public virtual SingleContainerImpl, public virtual ScrollArea {
-  mutable Adjustment   *m_hadjustment, *m_vadjustment;
+  mutable Adjustment   *hadjustment_, *vadjustment_;
   Adjustment&           hadjustment() const;
   Adjustment&           vadjustment() const;
 public:

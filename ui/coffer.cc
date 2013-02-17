@@ -14,9 +14,9 @@
 namespace Rapicorn {
 
 class CofferImpl : public virtual SingleContainerImpl, public virtual Coffer {
-  String        m_element;
-  Svg::Element  m_sel;
-  bool          m_overlap_child;
+  String        element_;
+  Svg::Element  sel_;
+  bool          overlap_child_;
 protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
@@ -25,10 +25,10 @@ protected:
 public:
   explicit              CofferImpl      ();
   virtual              ~CofferImpl      ();
-  virtual String        element         () const                { return m_element; }
-  virtual void          element         (const String &id)      { m_element = id; invalidate(); }
-  virtual bool          overlap_child   () const                { return m_overlap_child; }
-  virtual void          overlap_child   (bool overlap)          { m_overlap_child = overlap; invalidate(); }
+  virtual String        element         () const                { return element_; }
+  virtual void          element         (const String &id)      { element_ = id; invalidate(); }
+  virtual bool          overlap_child   () const                { return overlap_child_; }
+  virtual void          overlap_child   (bool overlap)          { overlap_child_ = overlap; invalidate(); }
 };
 
 const PropertyList&
@@ -43,7 +43,7 @@ Coffer::_property_list()
 }
 
 CofferImpl::CofferImpl() :
-  m_overlap_child (false)
+  overlap_child_ (false)
 {}
 
 CofferImpl::~CofferImpl()
@@ -52,27 +52,27 @@ CofferImpl::~CofferImpl()
 void
 CofferImpl::do_invalidate()
 {
-  if (m_element.empty())
+  if (element_.empty())
     {
-      m_sel = m_sel.none();
+      sel_ = sel_.none();
       return;
     }
-  Svg::Element e = Svg::Library::lookup_element (m_element);
+  Svg::Element e = Svg::Library::lookup_element (element_);
   if (e.is_null())
     return;
-  m_sel = e;
+  sel_ = e;
 }
 
 void
 CofferImpl::size_request (Requisition &requisition)
 {
   SingleContainerImpl::size_request (requisition);
-  if (m_sel)
+  if (sel_)
     {
-      requisition.width = m_sel.allocation().width;
-      requisition.height = m_sel.allocation().height;
+      requisition.width = sel_.allocation().width;
+      requisition.height = sel_.allocation().height;
       int thickness = 2; // FIXME: use real border marks
-      if (!m_overlap_child)
+      if (!overlap_child_)
         {
           requisition.width += 2 * thickness;
           requisition.height += 2 * thickness;
@@ -86,7 +86,7 @@ CofferImpl::size_allocate (Allocation area, bool changed)
   if (has_allocatable_child())
     {
       Allocation carea = area;
-      if (!m_overlap_child)
+      if (!overlap_child_)
         {
           int thickness = 2; // FIXME: use real border marks
           carea.x += thickness;
@@ -103,7 +103,7 @@ CofferImpl::size_allocate (Allocation area, bool changed)
 void
 CofferImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  if (m_sel)
+  if (sel_)
     {
       const Allocation &area = allocation();
       const int aw = area.width, ah = area.height;
@@ -111,7 +111,7 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
       memset (pixels, 0, aw * ah * 4);
       cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, aw, ah, 4 * aw);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      bool rendered = m_sel.render (surface, Svg::Allocation (0, 0, aw, ah));
+      bool rendered = sel_.render (surface, Svg::Allocation (0, 0, aw, ah));
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);
@@ -124,7 +124,7 @@ CofferImpl::render (RenderContext &rcontext, const Rect &rect)
           cairo_paint (cr);
         }
       else
-        critical ("Failed to render SVG element: %s", m_element.c_str());
+        critical ("Failed to render SVG element: %s", element_.c_str());
       cairo_surface_destroy (surface);
       delete[] pixels;
     }
