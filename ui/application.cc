@@ -31,8 +31,8 @@ struct XurlNode : public Deletable::DeletionHook {
 class XurlMap {
   typedef std::map<String,XurlNode*>           StringMap;
   typedef std::map<const Deletable*,XurlNode*> ObjectMap;
-  StringMap     m_smap;
-  ObjectMap     m_omap;
+  StringMap     smap_;
+  ObjectMap     omap_;
   XurlNode*     lookup_node (const String *xurl, const Deletable *object);
 public:
   Deletable*    lookup (const String &xurl)     { XurlNode *xnode = lookup_node (&xurl, NULL); return xnode ? xnode->object : NULL; }
@@ -49,22 +49,22 @@ XurlMap::add (String xurl, Deletable *obj)
   if (xnode)
     return false;
   xnode = new XurlNode (xurl, obj);
-  m_smap[xnode->xurl] = xnode;
-  m_omap[xnode->object] = xnode;
+  smap_[xnode->xurl] = xnode;
+  omap_[xnode->object] = xnode;
   return true;
 }
 
 bool
 XurlMap::remove (String xurl)
 {
-  auto sit = m_smap.find (xurl);
-  if (sit == m_smap.end())
+  auto sit = smap_.find (xurl);
+  if (sit == smap_.end())
     return false;
   XurlNode *xnode = sit->second;
-  auto oit = m_omap.find (xnode->object);
-  assert (oit != m_omap.end());
-  m_smap.erase (sit);
-  m_omap.erase (oit);
+  auto oit = omap_.find (xnode->object);
+  assert (oit != omap_.end());
+  smap_.erase (sit);
+  omap_.erase (oit);
   delete xnode;
   return true;
 }
@@ -72,14 +72,14 @@ XurlMap::remove (String xurl)
 bool
 XurlMap::remove (Deletable *obj)
 {
-  auto oit = m_omap.find (obj);
-  if (oit == m_omap.end())
+  auto oit = omap_.find (obj);
+  if (oit == omap_.end())
     return false;
   XurlNode *xnode = oit->second;
-  auto sit = m_smap.find (xnode->xurl);
-  assert (sit != m_smap.end());
-  m_smap.erase (sit);
-  m_omap.erase (oit);
+  auto sit = smap_.find (xnode->xurl);
+  assert (sit != smap_.end());
+  smap_.erase (sit);
+  omap_.erase (oit);
   delete xnode;
   return true;
 }
@@ -89,14 +89,14 @@ XurlMap::lookup_node (const String *xurl, const Deletable *object)
 {
   if (xurl)
     {
-      auto it = m_smap.find (*xurl);
-      if (it != m_smap.end())
+      auto it = smap_.find (*xurl);
+      if (it != smap_.end())
         return it->second;
     }
   if (object)
     {
-      auto it = m_omap.find (object);
-      if (it != m_omap.end())
+      auto it = omap_.find (object);
+      if (it != omap_.end())
         return it->second;
     }
   return NULL;
@@ -164,7 +164,7 @@ ApplicationIface::xurl_path (const ListModelIface &model)
 }
 
 ApplicationImpl::ApplicationImpl() :
-  m_tc (0)
+  tc_ (0)
 {}
 
 static ApplicationImpl *the_app = NULL;
@@ -273,11 +273,11 @@ ApplicationIface::finishable ()
 void
 ApplicationImpl::close_all ()
 {
-  vector<WindowIface*> candidates = m_windows;
+  vector<WindowIface*> candidates = windows_;
   for (auto wip : candidates)
     {
-      auto alive = find (m_windows.begin(), m_windows.end(), wip);
-      if (alive != m_windows.end())
+      auto alive = find (windows_.begin(), windows_.end(), wip);
+      if (alive != windows_.end())
         wip->close();
     }
   // FIXME: use WindowImpl::close_all
@@ -288,7 +288,7 @@ ApplicationImpl::query_window (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
       ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
       if (item)
@@ -305,7 +305,7 @@ ApplicationImpl::query_windows (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
       ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
       if (item)
@@ -322,9 +322,9 @@ WindowList
 ApplicationImpl::list_windows ()
 {
   WindowList wl;
-  for (uint i = 0; i < m_windows.size(); i++)
+  for (uint i = 0; i < windows_.size(); i++)
     {
-      WindowHandle wh = m_windows[i]->*Aida::_handle;
+      WindowHandle wh = windows_[i]->*Aida::_handle;
       wl.push_back (wh);
     }
   return wl;
@@ -334,7 +334,7 @@ void
 ApplicationImpl::add_window (WindowIface &window)
 {
   ref_sink (window);
-  m_windows.push_back (&window);
+  windows_.push_back (&window);
 }
 
 void
@@ -346,10 +346,10 @@ ApplicationImpl::lost_primaries()
 bool
 ApplicationImpl::remove_window (WindowIface &window)
 {
-  vector<WindowIface*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
-  if (it == m_windows.end())
+  vector<WindowIface*>::iterator it = std::find (windows_.begin(), windows_.end(), &window);
+  if (it == windows_.end())
     return false;
-  m_windows.erase (it);
+  windows_.erase (it);
   unref (window);
   return true;
 }
@@ -357,25 +357,25 @@ ApplicationImpl::remove_window (WindowIface &window)
 void
 ApplicationImpl::test_counter_set (int val)
 {
-  m_tc = val;
+  tc_ = val;
 }
 
 void
 ApplicationImpl::test_counter_add (int val)
 {
-  m_tc += val;
+  tc_ += val;
 }
 
 int
 ApplicationImpl::test_counter_get ()
 {
-  return m_tc;
+  return tc_;
 }
 
 int
 ApplicationImpl::test_counter_inc_fetch ()
 {
-  return ++m_tc;
+  return ++tc_;
 }
 
 int64
