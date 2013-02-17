@@ -95,11 +95,11 @@ protected:
   bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
   void                  queue_command           (ScreenCommand *command);       ///< Helper to queue commands on ScreenDriver.
 private:
-  State                 m_async_state;
-  bool                  m_async_state_accessed;
-  Spinlock              m_async_spin;
-  std::list<Event*>     m_async_event_queue;
-  std::function<void()> m_async_wakeup;
+  State                 async_state_;
+  bool                  async_state_accessed_;
+  Spinlock              async_spin_;
+  std::list<Event*>     async_event_queue_;
+  std::function<void()> async_wakeup_;
 };
 typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
@@ -127,14 +127,14 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
 
 /// Management class for ScreenWindow driver implementations.
 class ScreenDriver {
-  AsyncNotifyingQueue<ScreenCommand*> m_command_queue;
-  AsyncBlockingQueue<ScreenCommand*>  m_reply_queue;
-  std::thread                         m_thread_handle;
+  AsyncNotifyingQueue<ScreenCommand*> command_queue_;
+  AsyncBlockingQueue<ScreenCommand*>  reply_queue_;
+  std::thread                         thread_handle_;
   RAPICORN_CLASS_NON_COPYABLE (ScreenDriver);
 protected:
-  ScreenDriver         *m_sibling;
-  String                m_name;
-  int                   m_priority;
+  ScreenDriver         *sibling_;
+  String                name_;
+  int                   priority_;
   virtual void          run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue) = 0;
   /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
   explicit              ScreenDriver            (const String &name, int priority = 0);

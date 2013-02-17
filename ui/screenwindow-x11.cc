@@ -44,11 +44,11 @@ struct X11Item {
 
 // == X11Context ==
 class X11Context {
-  MainLoop             &m_loop;
-  vector<size_t>        m_queued_updates; // XIDs
-  map<size_t, X11Item*> m_x11ids;
-  AsyncNotifyingQueue<ScreenCommand*> &m_command_queue;
-  AsyncBlockingQueue<ScreenCommand*>  &m_reply_queue;
+  MainLoop             &loop_;
+  vector<size_t>        queued_updates_; // XIDs
+  map<size_t, X11Item*> x11ids_;
+  AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
+  AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
   bool                  x11_dispatcher  (const EventLoop::State &state);
   bool                  x11_io_handler  (PollFD &pfd);
   void                  process_x11     ();
@@ -64,7 +64,7 @@ public:
   Window                root_window;
   XIM                   input_method;
   XIMStyle              input_style;
-  int8                  m_shared_mem;
+  int8                  shared_mem_;
   X11Item*              x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Item *x11item);
   Atom                  atom         (const String &text, bool force_create = true);
@@ -82,17 +82,17 @@ static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
   X11Context           &x11context;
-  Config                m_config;
-  State                 m_state;
-  Window                m_window;
-  XIC                   m_input_context;
-  XPixmap               m_wm_icon;
-  EventContext          m_event_context;
-  Rapicorn::Region      m_expose_region;
-  cairo_surface_t      *m_expose_surface;
-  int                   m_last_motion_time, m_pending_configures, m_pending_exposes;
-  bool                  m_override_redirect, m_crossing_focus;
-  vector<uint32>        m_queued_updates;       // "atoms" not yet updated
+  Config                config_;
+  State                 state_;
+  Window                window_;
+  XIC                   input_context_;
+  XPixmap               wm_icon_;
+  EventContext          event_context_;
+  Rapicorn::Region      expose_region_;
+  cairo_surface_t      *expose_surface_;
+  int                   last_motion_time_, pending_configures_, pending_exposes_;
+  bool                  override_redirect_, crossing_focus_;
+  vector<uint32>        queued_updates_;       // "atoms" not yet updated
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   void                  destroy_x11_resources   ();
@@ -110,16 +110,16 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Item {
 
 ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
-  m_window (None), m_input_context (NULL), m_wm_icon (None), m_expose_surface (NULL),
-  m_last_motion_time (0), m_pending_configures (0), m_pending_exposes (0),
-  m_override_redirect (false), m_crossing_focus (false)
+  window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
+  last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
+  override_redirect_ (false), crossing_focus_ (false)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
 {
-  if (m_expose_surface || m_wm_icon || m_input_context || m_window)
+  if (expose_surface_ || wm_icon_ || input_context_ || window_)
     {
-      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%lx im=%p w=0x%lx", STRFUNC, m_expose_surface, m_wm_icon, m_input_context, m_window);
+      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%lx im=%p w=0x%lx", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
 }
@@ -127,36 +127,36 @@ ScreenWindowX11::~ScreenWindowX11()
 void
 ScreenWindowX11::destroy_x11_resources()
 {
-  if (m_expose_surface)
+  if (expose_surface_)
     {
-      cairo_surface_destroy (m_expose_surface);
-      m_expose_surface = NULL;
+      cairo_surface_destroy (expose_surface_);
+      expose_surface_ = NULL;
     }
-  if (m_wm_icon)
+  if (wm_icon_)
     {
-      XFreePixmap (x11context.display, m_wm_icon);
-      m_wm_icon = None;
+      XFreePixmap (x11context.display, wm_icon_);
+      wm_icon_ = None;
     }
-  if (m_input_context)
+  if (input_context_)
     {
-      XDestroyIC (m_input_context);
-      m_input_context = NULL;
+      XDestroyIC (input_context_);
+      input_context_ = NULL;
     }
-  if (m_window)
+  if (window_)
     {
-      XDestroyWindow (x11context.display, m_window);
-      x11context.x11id_set (m_window, NULL);
-      m_window = 0;
+      XDestroyWindow (x11context.display, window_);
+      x11context.x11id_set (window_, NULL);
+      window_ = 0;
     }
 }
 
 void
 ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
 {
-  assert_return (!m_window && !m_expose_surface);
-  m_state.window_type = setup.window_type;
-  update_state (m_state);
-  m_override_redirect = (setup.window_type == WINDOW_TYPE_DESKTOP ||
+  assert_return (!window_ && !expose_surface_);
+  state_.window_type = setup.window_type;
+  update_state (state_);
+  override_redirect_ = (setup.window_type == WINDOW_TYPE_DESKTOP ||
                          setup.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
                          setup.window_type == WINDOW_TYPE_POPUP_MENU ||
                          setup.window_type == WINDOW_TYPE_TOOLTIP ||
@@ -170,10 +170,10 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
                                  0 * OwnerGrabButtonMask; // don't use owner_events for automatic grabs
   attributes.background_pixel  = XWhitePixel (x11context.display, x11context.screen);
   attributes.border_pixel      = XBlackPixel (x11context.display, x11context.screen);
-  attributes.override_redirect = m_override_redirect;
+  attributes.override_redirect = override_redirect_;
   // CWWinGravity: attributes.win_gravity - many WMs are buggy if this is not the default NorthWestGravity
   attributes.bit_gravity       = StaticGravity;
-  attributes.save_under        = m_override_redirect;
+  attributes.save_under        = override_redirect_;
   attributes.backing_store     = x11context.local_x11() ? NotUseful : WhenMapped;
   unsigned long attribute_mask = CWBitGravity | CWBackingStore | CWSaveUnder |
                                  CWBackPixel | CWBorderPixel | CWOverrideRedirect | CWEventMask;
@@ -181,33 +181,33 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   const int request_x = 0, request_y = 0;
   // create and register window
   const ulong create_serial = NextRequest (x11context.display);
-  m_window = XCreateWindow (x11context.display, x11context.root_window, request_x, request_y, request_width, request_height, border,
+  window_ = XCreateWindow (x11context.display, x11context.root_window, request_x, request_y, request_width, request_height, border,
                             x11context.depth, InputOutput, x11context.visual, attribute_mask, &attributes);
-  assert (m_window != 0);
-  x11context.x11id_set (m_window, this);
+  assert (window_ != 0);
+  x11context.x11id_set (window_, this);
   // adjust X hints & settings
   vector<Atom> atoms;
   atoms.push_back (x11context.atom ("WM_DELETE_WINDOW")); // request client messages instead of XKillClient
   atoms.push_back (x11context.atom ("WM_TAKE_FOCUS"));
   atoms.push_back (x11context.atom ("_NET_WM_PING"));
-  XSetWMProtocols (x11context.display, m_window, atoms.data(), atoms.size());
+  XSetWMProtocols (x11context.display, window_, atoms.data(), atoms.size());
   // initialize state
-  m_state.root_x = m_state.deco_x = request_x;
-  m_state.root_y = m_state.deco_y = request_y;
-  m_state.width = request_width;
-  m_state.height = request_height;
-  update_state (m_state);
+  state_.root_x = state_.deco_x = request_x;
+  state_.root_y = state_.deco_y = request_y;
+  state_.width = request_width;
+  state_.height = request_height;
+  update_state (state_);
   // window setup
   setup_window (setup);
   configure_window (config, true);
   // create input context if possible
-  String imerr = x11_input_context (x11context.display, m_window, attributes.event_mask,
-                                    x11context.input_method, x11context.input_style, &m_input_context);
+  String imerr = x11_input_context (x11context.display, window_, attributes.event_mask,
+                                    x11context.input_method, x11context.input_style, &input_context_);
   if (!imerr.empty())
-    XDEBUG ("XIM: window=%lu: %s", m_window, imerr.c_str());
+    XDEBUG ("XIM: window=%lu: %s", window_, imerr.c_str());
   // configure initial state for this window
-  XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, m_window, m_window,
-                          0, 0, request_width, request_height, border, /*above*/ 0, m_override_redirect, };
+  XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, window_, window_,
+                          0, 0, request_width, request_height, border, /*above*/ 0, override_redirect_, };
   XEvent xevent;
   xevent.xconfigure = xev;
   process_event (xevent);
@@ -244,10 +244,10 @@ check_pending (Display *display, Drawable window, int *pending_configures, int *
 bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
-  m_event_context.synthesized = xevent.xany.send_event;
-  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), m_window);
-  const char ss = m_event_context.synthesized ? 'S' : 's';
-  const char sf = !consumed ? ss : m_event_context.synthesized ? 'F' : 'f';
+  event_context_.synthesized = xevent.xany.send_event;
+  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), window_);
+  const char ss = event_context_.synthesized ? 'S' : 's';
+  const char sf = !consumed ? ss : event_context_.synthesized ? 'F' : 'f';
   switch (xevent.type)
     {
     case CreateNotify: {
@@ -257,41 +257,41 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ConfigureNotify: {
       const XConfigureEvent &xev = xevent.xconfigure;
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
       if (xev.send_event) // WM notification, x/y are given in root coordinates
         {
           // update our idea of the window position, assuming constant deco extents
-          m_state.deco_x += - m_state.root_x + xev.x;
-          m_state.deco_y += - m_state.root_y + xev.y;
-          m_state.root_x = xev.x;
-          m_state.root_y = xev.y;
-          update_state (m_state);
+          state_.deco_x += - state_.root_x + xev.x;
+          state_.deco_y += - state_.root_y + xev.y;
+          state_.root_x = xev.x;
+          state_.root_y = xev.y;
+          update_state (state_);
         }
-      else if (m_state.width != xev.width || m_state.height != xev.height)
+      else if (state_.width != xev.width || state_.height != xev.height)
         {
-          m_state.width = xev.width;
-          m_state.height = xev.height;
-          if (m_expose_surface)
+          state_.width = xev.width;
+          state_.height = xev.height;
+          if (expose_surface_)
             {
-              cairo_surface_destroy (m_expose_surface);
-              m_expose_surface = NULL;
+              cairo_surface_destroy (expose_surface_);
+              expose_surface_ = NULL;
             }
-          m_expose_region.clear();
-          update_state (m_state);
+          expose_region_.clear();
+          update_state (state_);
         }
-      if (m_pending_configures)
-        m_pending_configures--;
-      if (!m_pending_configures)
-        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
-      enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
-      if (!m_pending_configures)
+      if (pending_configures_)
+        pending_configures_--;
+      if (!pending_configures_)
+        check_pending (x11context.display, window_, &pending_configures_, &pending_exposes_);
+      enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
+      if (!pending_configures_)
         {
-          m_queued_updates.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
-          x11context.queue_update (m_window);
+          queued_updates_.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
+          x11context.queue_update (window_);
         }
-      EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d c=%d", ss, xev.serial, xev.window, m_state.root_x, m_state.root_y,
-              m_state.width, m_state.height, xev.border_width, m_pending_configures);
+      EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d c=%d", ss, xev.serial, xev.window, state_.root_x, state_.root_y,
+              state_.width, state_.height, xev.border_width, pending_configures_);
       consumed = true;
       break; }
     case GravityNotify: {
@@ -301,22 +301,22 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case MapNotify: {
       const XMapEvent &xev = xevent.xmap;
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
       EDEBUG ("Map  : %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
-      m_state.visible = true;
-      m_queued_updates.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
+      state_.visible = true;
+      queued_updates_.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
       force_update (xev.window); // immediately figure deco and root position
       consumed = true;
       break; }
     case UnmapNotify: {
       const XUnmapEvent &xev = xevent.xunmap;
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
       EDEBUG ("Unmap: %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
-      m_state.visible = false;
-      update_state (m_state);
-      enqueue_event (create_event_cancellation (m_event_context));
+      state_.visible = false;
+      update_state (state_);
+      enqueue_event (create_event_cancellation (event_context_));
       consumed = true;
       break; }
     case ReparentNotify:  {
@@ -333,22 +333,22 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XPropertyEvent &xev = xevent.xproperty;
       const bool deleted = xev.state == PropertyDelete;
       VDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
-      m_event_context.time = xev.time;
-      m_queued_updates.push_back (xev.atom);
-      x11context.queue_update (m_window);
+      event_context_.time = xev.time;
+      queued_updates_.push_back (xev.atom);
+      x11context.queue_update (window_);
       consumed = true;
       break; }
     case Expose: {
       const XExposeEvent &xev = xevent.xexpose;
       std::vector<Rect> rectangles;
-      m_expose_region.add (Rect (Point (xev.x, xev.y), xev.width, xev.height));
-      if (m_pending_exposes)
-        m_pending_exposes--;
-      if (!m_pending_exposes && xev.count == 0)
-        check_pending (x11context.display, m_window, &m_pending_configures, &m_pending_exposes);
-      String hint = m_pending_exposes ? " (E+)" : m_expose_surface ? "" : " (nodata)";
+      expose_region_.add (Rect (Point (xev.x, xev.y), xev.width, xev.height));
+      if (pending_exposes_)
+        pending_exposes_--;
+      if (!pending_exposes_ && xev.count == 0)
+        check_pending (x11context.display, window_, &pending_configures_, &pending_exposes_);
+      String hint = pending_exposes_ ? " (E+)" : expose_surface_ ? "" : " (nodata)";
       VDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
-      if (!m_pending_exposes && xev.count == 0)
+      if (!pending_exposes_ && xev.count == 0)
         blit_expose_region();
       consumed = true;
       break; }
@@ -359,8 +359,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       char buffer[512]; // dummy
       int n = 0;
       Status ximstatus = XBufferOverflow;
-      if (m_input_context && xevent.type == KeyPress)
-        n = Xutf8LookupString (m_input_context, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+      if (input_context_ && xevent.type == KeyPress)
+        n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
       if (ximstatus != XLookupKeySym && ximstatus != XLookupBoth)
         {
           n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
@@ -370,44 +370,44 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       char str[8];
       utf8_from_unichar (key_value_to_unichar (keysym), str);
       EDEBUG ("Key%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
-      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
+      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       if (!consumed && // might have been processed by input context already
           (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
-        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, m_event_context, KeyValue (keysym), str));
+        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), str));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
       const XButtonEvent &xev = xevent.xbutton;
       const char  *kind = xevent.type == ButtonPress ? "DN" : "UP";
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
       EDEBUG ("But%s: %c=%lu w=%lu c=%lu p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
-      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
+      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       if (xevent.type == ButtonPress)
         switch (xev.button)
           {
-          case 4:  enqueue_event (create_event_scroll (SCROLL_UP, m_event_context));                break;
-          case 5:  enqueue_event (create_event_scroll (SCROLL_DOWN, m_event_context));              break;
-          case 6:  enqueue_event (create_event_scroll (SCROLL_LEFT, m_event_context));              break;
-          case 7:  enqueue_event (create_event_scroll (SCROLL_RIGHT, m_event_context));             break;
-          default: enqueue_event (create_event_button (BUTTON_PRESS, m_event_context, xev.button)); break;
+          case 4:  enqueue_event (create_event_scroll (SCROLL_UP, event_context_));                break;
+          case 5:  enqueue_event (create_event_scroll (SCROLL_DOWN, event_context_));              break;
+          case 6:  enqueue_event (create_event_scroll (SCROLL_LEFT, event_context_));              break;
+          case 7:  enqueue_event (create_event_scroll (SCROLL_RIGHT, event_context_));             break;
+          default: enqueue_event (create_event_button (BUTTON_PRESS, event_context_, xev.button)); break;
           }
       else // ButtonRelease
         switch (xev.button)
           {
           case 4: case 5: case 6: case 7: break; // scrolling
-          default: enqueue_event (create_event_button (BUTTON_RELEASE, m_event_context, xev.button)); break;
+          default: enqueue_event (create_event_button (BUTTON_RELEASE, event_context_, xev.button)); break;
           }
       consumed = true;
       break; }
     case MotionNotify: {
       const XMotionEvent &xev = xevent.xmotion;
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
       if (xev.is_hint)
         {
           int nevents = 0;
-          XTimeCoord *xcoords = XGetMotionEvents (x11context.display, m_window, m_last_motion_time + 1, xev.time - 1, &nevents);
+          XTimeCoord *xcoords = XGetMotionEvents (x11context.display, window_, last_motion_time_ + 1, xev.time - 1, &nevents);
           if (xcoords)
             {
               for (int i = 0; i < nevents; ++i)
@@ -420,17 +420,17 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                   }
                 else
                   {
-                    m_event_context.time = xcoords[i].time; m_event_context.x = xcoords[i].x; m_event_context.y = xcoords[i].y;
-                    enqueue_event (create_event_mouse (MOUSE_MOVE, m_event_context));
+                    event_context_.time = xcoords[i].time; event_context_.x = xcoords[i].x; event_context_.y = xcoords[i].y;
+                    enqueue_event (create_event_mouse (MOUSE_MOVE, event_context_));
                     VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
               XFree (xcoords);
             }
         }
       VDEBUG ("Mtion: %c=%lu w=%lu c=%lu p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
-      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_event (create_event_mouse (MOUSE_MOVE, m_event_context));
-      m_last_motion_time = xev.time;
+      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
+      enqueue_event (create_event_mouse (MOUSE_MOVE, event_context_));
+      last_motion_time_ = xev.time;
       consumed = true;
       break; }
     case EnterNotify: case LeaveNotify: {
@@ -439,12 +439,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const char *kind = xevent.type == EnterNotify ? "Enter" : "Leave";
       EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d notify=%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
               notify_mode (xev.mode), notify_detail (xev.detail));
-      m_event_context.time = xev.time; m_event_context.x = xev.x; m_event_context.y = xev.y; m_event_context.modifiers = ModifierState (xev.state);
-      enqueue_event (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, m_event_context));
+      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
+      enqueue_event (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, event_context_));
       if (xev.detail != NotifyInferior)
         {
-          m_crossing_focus = xev.focus;
-          m_last_motion_time = xev.time;
+          crossing_focus_ = xev.focus;
+          last_motion_time_ = xev.time;
         }
       consumed = true;
       break; }
@@ -458,17 +458,17 @@ ScreenWindowX11::process_event (const XEvent &xevent)
             xev.detail == NotifyDetailNone))    // root focus is discarded
         {
           const bool now_focus = xevent.type == FocusIn;
-          if (now_focus != m_state.active)
+          if (now_focus != state_.active)
             {
-              m_state.active = now_focus;
-              update_state (m_state);
-              enqueue_event (create_event_focus (m_state.active ? FOCUS_IN : FOCUS_OUT, m_event_context));
-              if (m_input_context)
+              state_.active = now_focus;
+              update_state (state_);
+              enqueue_event (create_event_focus (state_.active ? FOCUS_IN : FOCUS_OUT, event_context_));
+              if (input_context_)
                 {
-                  if (m_state.active)
-                    XSetICFocus (m_input_context);
+                  if (state_.active)
+                    XSetICFocus (input_context_);
                   else
-                    XUnsetICFocus (m_input_context);
+                    XUnsetICFocus (input_context_);
                 }
             }
         }
@@ -486,11 +486,11 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case DestroyNotify: {
       const XDestroyWindowEvent &xev = xevent.xdestroywindow;
-      if (xev.window != m_window)
+      if (xev.window != window_)
         break;
-      x11context.x11id_set (m_window, NULL);
-      m_window = 0;
-      enqueue_event (create_event_win_destroy (m_event_context));
+      x11context.x11id_set (window_, NULL);
+      window_ = 0;
+      enqueue_event (create_event_win_destroy (event_context_));
       EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
       consumed = true;
       break; }
@@ -505,23 +505,23 @@ ScreenWindowX11::client_message (const XClientMessageEvent &xev)
   const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
   if      (mtype == x11context.atom ("WM_DELETE_WINDOW"))
     {
-      const uint32 saved_time = m_event_context.time;
-      m_event_context.time = xev.data.l[1];
-      enqueue_event (create_event_win_delete (m_event_context));
-      m_event_context.time = saved_time; // avoid time warps from client messages
+      const uint32 saved_time = event_context_.time;
+      event_context_.time = xev.data.l[1];
+      enqueue_event (create_event_win_delete (event_context_));
+      event_context_.time = saved_time; // avoid time warps from client messages
     }
   else if (mtype == x11context.atom ("WM_TAKE_FOCUS"))
     {
       XErrorEvent dummy = { 0, };
       x11_trap_errors (&dummy); // guard against being unmapped
-      XSetInputFocus (x11context.display, m_window, RevertToPointerRoot, xev.data.l[1]);
+      XSetInputFocus (x11context.display, window_, RevertToPointerRoot, xev.data.l[1]);
       XSync (x11context.display, False);
       x11_untrap_errors();
     }
   else if (mtype == x11context.atom ("_NET_WM_PING"))
     {
       XEvent xevent = *(XEvent*) &xev;
-      xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0; // [0]=_PING, [1]=time, [2]=m_window
+      xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0; // [0]=_PING, [1]=time, [2]=window_
       xevent.xclient.window = x11context.root_window;
       XSendEvent (x11context.display, xevent.xclient.window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
     }
@@ -530,30 +530,30 @@ ScreenWindowX11::client_message (const XClientMessageEvent &xev)
 void
 ScreenWindowX11::force_update (Window window)
 {
-  const State old_state = m_state;
-  std::stable_sort (m_queued_updates.begin(), m_queued_updates.end());
-  auto qend = std::unique (m_queued_updates.begin(), m_queued_updates.end());
-  m_queued_updates.resize (qend - m_queued_updates.begin());
+  const State old_state = state_;
+  std::stable_sort (queued_updates_.begin(), queued_updates_.end());
+  auto qend = std::unique (queued_updates_.begin(), queued_updates_.end());
+  queued_updates_.resize (qend - queued_updates_.begin());
   vector<String> updates;
-  for (auto it : m_queued_updates)
+  for (auto it : queued_updates_)
     updates.push_back (x11context.atom (it));
   uint ignored = 0;
   for (auto aname : updates)
     if (aname == "_NET_FRAME_EXTENTS")
-      window_deco_origin (x11context.display, m_window, &m_state.root_x, &m_state.root_y, &m_state.deco_x, &m_state.deco_y);
+      window_deco_origin (x11context.display, window_, &state_.root_x, &state_.root_y, &state_.deco_x, &state_.deco_y);
     else if (aname == "_NET_WM_VISIBLE_NAME")
-      m_state.visible_title = x11_get_string_property (x11context.display, m_window, x11context.atom (aname));
+      state_.visible_title = x11_get_string_property (x11context.display, window_, x11context.atom (aname));
     else if (aname == "_NET_WM_VISIBLE_ICON_NAME")
-      m_state.visible_alias = x11_get_string_property (x11context.display, m_window, x11context.atom (aname));
+      state_.visible_alias = x11_get_string_property (x11context.display, window_, x11context.atom (aname));
     else if (aname == "WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
         if (datav.size())
-          m_state.window_flags = Flags ((m_state.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
+          state_.window_flags = Flags ((state_.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
       }
     else if (aname == "_NET_WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, m_window, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
         uint32 f = 0;
         for (size_t i = 0; i < datav.size(); i++)
           if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
@@ -569,33 +569,33 @@ ScreenWindowX11::force_update (Window window)
           else if (datav[i] == x11context.atom ("_NET_WM_STATE_BELOW"))           f += BELOW_ALL;
           else if (datav[i] == x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION")) f += ATTENTION;
           else if (datav[i] == x11context.atom ("_NET_WM_STATE_FOCUSED"))         f += FOCUS_DECO;
-        m_state.window_flags = Flags ((m_state.window_flags & ~_WM_STATE_MASK) | f);
+        state_.window_flags = Flags ((state_.window_flags & ~_WM_STATE_MASK) | f);
       }
     else if (aname == "_MOTIF_WM_HINTS")
       {
         Mwm funcs = Mwm (FUNC_CLOSE | FUNC_MINIMIZE | FUNC_MAXIMIZE), deco = DECOR_ALL;
-        get_mwm_hints (x11context.display, m_window, &funcs, &deco);
+        get_mwm_hints (x11context.display, window_, &funcs, &deco);
         uint32 f = 0;
         if (funcs & FUNC_CLOSE)                                                   f += DELETABLE;
         if (funcs & FUNC_MINIMIZE || deco & DECOR_MINIMIZE)                       f += MINIMIZABLE;
         if (funcs & FUNC_MAXIMIZE || deco & DECOR_MAXIMIZE)                       f += MAXIMIZABLE;
         if (deco & (DECOR_ALL | DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE))      f += DECORATED;
-        m_state.window_flags = Flags ((m_state.window_flags & ~_DECO_MASK) | f);
+        state_.window_flags = Flags ((state_.window_flags & ~_DECO_MASK) | f);
       }
     else
       ignored++;
   if (ignored < updates.size())
     {
-      update_state (m_state);
+      update_state (state_);
       if (debug_enabled())
         {
           const unsigned long update_serial = XNextRequest (x11context.display) - 1;
-          if (old_state.visible_title != m_state.visible_title)
-            EDEBUG ("State: S=%lu w=%lu title=%s", update_serial, m_window, CQUOTE (m_state.visible_title));
-          if (old_state.visible_alias != m_state.visible_alias)
-            EDEBUG ("State: S=%lu w=%lu alias=%s", update_serial, m_window, CQUOTE (m_state.visible_alias));
-          EDEBUG ("State: S=%lu w=%lu r=%+d%+d o=%+d%+d flags=%s", update_serial, m_window, m_state.root_x, m_state.root_y,
-                  m_state.deco_x, m_state.deco_y, flags_name (m_state.window_flags).c_str());
+          if (old_state.visible_title != state_.visible_title)
+            EDEBUG ("State: S=%lu w=%lu title=%s", update_serial, window_, CQUOTE (state_.visible_title));
+          if (old_state.visible_alias != state_.visible_alias)
+            EDEBUG ("State: S=%lu w=%lu alias=%s", update_serial, window_, CQUOTE (state_.visible_alias));
+          EDEBUG ("State: S=%lu w=%lu r=%+d%+d o=%+d%+d flags=%s", update_serial, window_, state_.root_x, state_.root_y,
+                  state_.deco_x, state_.deco_y, flags_name (state_.window_flags).c_str());
         }
     }
 }
@@ -614,28 +614,28 @@ void
 ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
   CHECK_CAIRO_STATUS (surface);
-  if (!m_window)
+  if (!window_)
     return;
-  const Rect fullwindow = Rect (0, 0, m_state.width, m_state.height);
+  const Rect fullwindow = Rect (0, 0, state_.width, state_.height);
   if (region.count_rects() == 1 && fullwindow == region.extents() && fullwindow == cairo_image_surface_coverage (surface))
     {
       // special case, surface matches exactly the entire window
-      if (m_expose_surface)
-        cairo_surface_destroy (m_expose_surface);
-      m_expose_surface = cairo_surface_reference (surface);
+      if (expose_surface_)
+        cairo_surface_destroy (expose_surface_);
+      expose_surface_ = cairo_surface_reference (surface);
     }
   else
     {
-      if (!m_expose_surface)
-        m_expose_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, m_state.width, m_state.height);
-      cairo_t *cr = cairo_create (m_expose_surface);
+      if (!expose_surface_)
+        expose_surface_ = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, state_.width, state_.height);
+      cairo_t *cr = cairo_create (expose_surface_);
       // clip to region
       vector<Rect> rects;
       region.list_rects (rects);
       for (size_t i = 0; i < rects.size(); i++)
         cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
       cairo_clip (cr);
-      // render onto m_expose_surface
+      // render onto expose_surface_
       cairo_set_source_surface (cr, surface, 0, 0);
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_paint (cr);
@@ -643,29 +643,29 @@ ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
       cairo_destroy (cr);
     }
   // redraw expose region
-  m_expose_region.add (region);
+  expose_region_.add (region);
   blit_expose_region();
 }
 
 void
 ScreenWindowX11::blit_expose_region()
 {
-  if (!m_expose_surface || !m_state.visible)
+  if (!expose_surface_ || !state_.visible)
     {
-      m_expose_region.clear();
+      expose_region_.clear();
       return;
     }
-  CHECK_CAIRO_STATUS (m_expose_surface);
+  CHECK_CAIRO_STATUS (expose_surface_);
   const unsigned long blit_serial = XNextRequest (x11context.display) - 1;
   // surface for drawing on the X11 window
-  cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_window, x11context.visual, m_state.width, m_state.height);
+  cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, window_, x11context.visual, state_.width, state_.height);
   CHECK_CAIRO_STATUS (xsurface);
   // cairo context
   cairo_t *xcr = cairo_create (xsurface);
   CHECK_CAIRO_STATUS (xcr);
-  // clip to m_expose_region
+  // clip to expose_region_
   vector<Rect> rects;
-  m_expose_region.list_rects (rects);
+  expose_region_.list_rects (rects);
   uint coverage = 0;
   for (size_t i = 0; i < rects.size(); i++)
     {
@@ -673,8 +673,8 @@ ScreenWindowX11::blit_expose_region()
       coverage += rects[i].width * rects[i].height;
     }
   cairo_clip (xcr);
-  // paint m_expose_region
-  cairo_set_source_surface (xcr, m_expose_surface, 0, 0);
+  // paint expose_region_
+  cairo_set_source_surface (xcr, expose_surface_, 0, 0);
   cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
   cairo_paint (xcr);
   CHECK_CAIRO_STATUS (xcr);
@@ -682,13 +682,13 @@ ScreenWindowX11::blit_expose_region()
   // debugging info
   if (debug_enabled())
     {
-      const Rect extents = m_expose_region.extents();
-      VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, m_window,
+      const Rect extents = expose_region_.extents();
+      VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, window_,
               int (extents.x), int (extents.y), int (extents.width), int (extents.height),
-              rects.size(), coverage * 100.0 / (m_state.width * m_state.height));
+              rects.size(), coverage * 100.0 / (state_.width * state_.height));
     }
   // cleanup
-  m_expose_region.clear();
+  expose_region_.clear();
   cairo_destroy (xcr);
   cairo_surface_destroy (xsurface);
 }
@@ -762,14 +762,14 @@ cairo_surface_from_pixmap (Rapicorn::Pixmap pixmap)
 void
 ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 {
-  assert_return (m_state.visible == false);
-  assert_return (m_wm_icon == 0);
-  assert_return (m_state.window_type == setup.window_type);
+  assert_return (state_.visible == false);
+  assert_return (wm_icon_ == 0);
+  assert_return (state_.window_type == setup.window_type);
   vector<unsigned long> longs;
   // _NET_WM_WINDOW_TYPE
   longs.clear();
   longs.push_back (x11context.atom (window_type_atom_name (setup.window_type)));
-  XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_WINDOW_TYPE"),
+  XChangeProperty (x11context.display, window_, x11context.atom ("_NET_WM_WINDOW_TYPE"),
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   // _NET_WM_STATE
   longs.clear();
@@ -785,7 +785,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & ABOVE_ALL)    longs.push_back (x11context.atom ("_NET_WM_STATE_ABOVE"));
   if (f & BELOW_ALL)    longs.push_back (x11context.atom ("_NET_WM_STATE_BELOW"));
   if (f & ATTENTION)    longs.push_back (x11context.atom ("_NET_WM_STATE_DEMANDS_ATTENTION"));
-  XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_STATE"),
+  XChangeProperty (x11context.display, window_, x11context.atom ("_NET_WM_STATE"),
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   // Background
   Color c1 = setup.bg_average, c2 = setup.bg_average;
@@ -794,15 +794,15 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
       c1.tint (0, 0.96, 0.96);
       c2.tint (0, 1.03, 1.03);
     }
-  XPixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, m_window, x11context.depth, 8, c1, c2);
-  XSetWindowBackgroundPixmap (x11context.display, m_window, xpixmap);
+  XPixmap xpixmap = create_checkerboard_pixmap (x11context.display, x11context.visual, window_, x11context.depth, 8, c1, c2);
+  XSetWindowBackgroundPixmap (x11context.display, window_, xpixmap);
   XFreePixmap (x11context.display, xpixmap);
   // WM Icon
-  if (!m_wm_icon)
+  if (!wm_icon_)
     {
       Rapicorn::Pixmap iconpixmap ("res:icons/wm-gears.png");
-      m_wm_icon = XCreatePixmap (x11context.display, m_window, iconpixmap.width(), iconpixmap.height(), x11context.depth);
-      cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, m_wm_icon, x11context.visual, iconpixmap.width(), iconpixmap.height());
+      wm_icon_ = XCreatePixmap (x11context.display, window_, iconpixmap.width(), iconpixmap.height(), x11context.depth);
+      cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, wm_icon_, x11context.visual, iconpixmap.width(), iconpixmap.height());
       CHECK_CAIRO_STATUS (xsurface);
       cairo_t *xcr = cairo_create (xsurface);
       CHECK_CAIRO_STATUS (xcr);
@@ -816,14 +816,14 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
       cairo_surface_destroy (xsurface);
     }
   // WM_COMMAND WM_CLIENT_MACHINE WM_LOCALE_NAME WM_HINTS WM_CLASS
-  XWMHints wmhints = { InputHint | StateHint | IconPixmapHint, False, NormalState, m_wm_icon, 0, 0, 0, 0, 0, };
+  XWMHints wmhints = { InputHint | StateHint | IconPixmapHint, False, NormalState, wm_icon_, 0, 0, 0, 0, 0, };
   if (f & ATTENTION)
     wmhints.flags |= XUrgencyHint;
   if (f & (HIDDEN | ICONIFY))
     wmhints.initial_state = IconicState;
   const char *cmdv[2] = { program_file().c_str(), NULL };
   XClassHint class_hint = { const_cast<char*> (program_alias().c_str()), const_cast<char*> (program_ident().c_str()) };
-  Xutf8SetWMProperties (x11context.display, m_window, NULL, NULL, const_cast<char**> (cmdv), ARRAY_SIZE (cmdv) - 1,
+  Xutf8SetWMProperties (x11context.display, window_, NULL, NULL, const_cast<char**> (cmdv), ARRAY_SIZE (cmdv) - 1,
                         NULL, &wmhints, &class_hint);
   // _MOTIF_WM_HINTS
   uint32 funcs = FUNC_RESIZE | FUNC_MOVE, deco = 0;
@@ -831,18 +831,18 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
   if (f & MINIMIZABLE)  { funcs |= FUNC_MINIMIZE; deco |= DECOR_MINIMIZE; }
   if (f & MAXIMIZABLE)  { funcs |= FUNC_MAXIMIZE; deco |= DECOR_MAXIMIZE; }
   if (f & DELETABLE)    { funcs |= FUNC_CLOSE; deco |= DECOR_CLOSE; }
-  adjust_mwm_hints (x11context.display, m_window, Mwm (funcs), Mwm (deco));
+  adjust_mwm_hints (x11context.display, window_, Mwm (funcs), Mwm (deco));
   // WM_WINDOW_ROLE
-  set_text_property (x11context.display, m_window, x11context.atom ("WM_WINDOW_ROLE"),
+  set_text_property (x11context.display, window_, x11context.atom ("WM_WINDOW_ROLE"),
                      XStringStyle, setup.session_role, DELETE_EMPTY);
   // _NET_WM_PID
   longs.clear();
   longs.push_back (getpid());
   if (false)
-    XChangeProperty (x11context.display, m_window, x11context.atom ("_NET_WM_PID"),
+    XChangeProperty (x11context.display, window_, x11context.atom ("_NET_WM_PID"),
                      XA_CARDINAL, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   else // _NET_WM_PID is used for killing, we prefer an XKillClient() call however
-    XDeleteProperty (x11context.display, m_window, x11context.atom ("_NET_WM_PID"));
+    XDeleteProperty (x11context.display, window_, x11context.atom ("_NET_WM_PID"));
 }
 
 void
@@ -850,26 +850,26 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
 {
   // WM_NORMAL_HINTS, size & gravity
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
-  XSetWMNormalHints (x11context.display, m_window, &szhint);
+  XSetWMNormalHints (x11context.display, window_, &szhint);
   // title
-  if (config.title != m_config.title)
+  if (config.title != config_.title)
     {
-      set_text_property (x11context.display, m_window, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
-      set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
-      m_config.title = config.title;
-      m_state.visible_title = m_config.title;   // compensate for WMs not supporting _NET_WM_VISIBLE_NAME
+      set_text_property (x11context.display, window_, x11context.atom ("WM_NAME"), XStdICCTextStyle, config.title);      // ICCCM
+      set_text_property (x11context.display, window_, x11context.atom ("_NET_WM_NAME"), XUTF8StringStyle, config.title); // EWMH
+      config_.title = config.title;
+      state_.visible_title = config_.title;   // compensate for WMs not supporting _NET_WM_VISIBLE_NAME
     }
   // iconified title
-  if (config.alias != m_config.alias)
+  if (config.alias != config_.alias)
     {
-      set_text_property (x11context.display, m_window, x11context.atom ("WM_ICON_NAME"), XStdICCTextStyle, config.alias, DELETE_EMPTY);
-      set_text_property (x11context.display, m_window, x11context.atom ("_NET_WM_ICON_NAME"), XUTF8StringStyle, config.alias, DELETE_EMPTY);
-      m_config.alias = config.alias;
-      m_state.visible_alias = m_config.alias;   // compensate for WMs not supporting _NET_WM_VISIBLE_ICON_NAME
+      set_text_property (x11context.display, window_, x11context.atom ("WM_ICON_NAME"), XStdICCTextStyle, config.alias, DELETE_EMPTY);
+      set_text_property (x11context.display, window_, x11context.atom ("_NET_WM_ICON_NAME"), XUTF8StringStyle, config.alias, DELETE_EMPTY);
+      config_.alias = config.alias;
+      state_.visible_alias = config_.alias;   // compensate for WMs not supporting _NET_WM_VISIBLE_ICON_NAME
     }
-  force_update (m_window);
+  force_update (window_);
   if (sizeevent)
-    enqueue_event (create_event_win_size (m_event_context, m_state.width, m_state.height, m_pending_configures > 0));
+    enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
 }
 
 void
@@ -886,7 +886,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       XBell (x11context.display, 0);
       break;
     case ScreenCommand::SHOW:
-      XMapWindow (x11context.display, m_window);
+      XMapWindow (x11context.display, window_);
       break;
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
@@ -905,9 +905,9 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 // == X11Context ==
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
-  m_loop (*ref_sink (MainLoop::_new())), m_command_queue (command_queue), m_reply_queue (reply_queue),
+  loop_ (*ref_sink (MainLoop::_new())), command_queue_ (command_queue), reply_queue_ (reply_queue),
   screen_driver (driver), display (NULL), screen (0), visual (NULL), depth (0),
-  root_window (0), input_method (NULL), m_shared_mem (-1)
+  root_window (0), input_method (NULL), shared_mem_ (-1)
 {
   XDEBUG ("%s: X11Context started", STRFUNC);
   do_once {
@@ -920,17 +920,17 @@ X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*
 X11Context::~X11Context ()
 {
   assert_return (!display);
-  assert_return (m_x11ids.empty());
-  assert_return (m_command_queue.pending() == false);
-  m_loop.kill_sources();
-  unref (&m_loop);
+  assert_return (x11ids_.empty());
+  assert_return (command_queue_.pending() == false);
+  loop_.kill_sources();
+  unref (&loop_);
   XDEBUG ("%s: X11Context stopped", STRFUNC);
 }
 
 bool
 X11Context::connect()
 {
-  assert_return (!display && !screen && !visual && !depth && !root_window && !input_method && m_shared_mem < 0, false);
+  assert_return (!display && !screen && !visual && !depth && !root_window && !input_method && shared_mem_ < 0, false);
   const char *edsp = getenv ("DISPLAY");
   display = XOpenDisplay (edsp && edsp[0] ? edsp : NULL);
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (edsp ? edsp : ""), display ? "success" : "failed to connect");
@@ -953,10 +953,10 @@ bool
 X11Context::cmd_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return m_command_queue.pending();
+    return command_queue_.pending();
   else if (state.phase == state.DISPATCH)
     {
-      for (ScreenCommand *cmd = m_command_queue.pop(); cmd; cmd = m_command_queue.pop())
+      for (ScreenCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
         switch (cmd->type)
           {
             ScreenWindowX11 *screen_window;
@@ -964,13 +964,13 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
             screen_window = new ScreenWindowX11 (*this);
             screen_window->create_window (*cmd->setup, *cmd->config);
             delete cmd;
-            m_reply_queue.push (new ScreenCommand (ScreenCommand::OK, screen_window));
+            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, screen_window));
             break;
           case ScreenCommand::SHUTDOWN:
-            m_loop.quit();
+            loop_.quit();
             delete cmd;
-            m_reply_queue.push (new ScreenCommand (ScreenCommand::OK, NULL));
-            assert_return (m_x11ids.empty(), true);
+            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, NULL));
+            assert_return (x11ids_.empty(), true);
             break;
           default:
             screen_window = dynamic_cast<ScreenWindowX11*> (cmd->screen_window);
@@ -994,22 +994,22 @@ void
 X11Context::run()
 {
   // perform unlock/lock around poll() calls
-  // m_loop.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
+  // loop_.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
   // ensure X11 file descriptor changes are handled
-  m_loop.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
+  loop_.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
-  m_loop.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
-  m_loop.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // ensure command_queue events are processed
-  m_command_queue.notifier ([&]() { m_loop.wakeup(); });
+  command_queue_.notifier ([&]() { loop_.wakeup(); });
   // process X11 events
-  m_loop.run();
+  loop_.run();
   // prevent wakeups on stale objects
-  m_command_queue.notifier (NULL);
+  command_queue_.notifier (NULL);
   // close down
-  if (!m_x11ids.empty()) // ScreenWindowX11s unconditionally reference X11Context
-    fatal ("%s: stopped handling X11Context with %zd active windows", STRFUNC, m_x11ids.size());
+  if (!x11ids_.empty()) // ScreenWindowX11s unconditionally reference X11Context
+    fatal ("%s: stopped handling X11Context with %zd active windows", STRFUNC, x11ids_.size());
   if (input_method)
     {
       XCloseIM (input_method);
@@ -1022,7 +1022,7 @@ X11Context::run()
       display = NULL;
     }
   // remove sources and close Pfd file descriptor
-  m_loop.kill_sources();
+  loop_.kill_sources();
 }
 
 bool
@@ -1074,7 +1074,7 @@ void
 X11Context::process_updates ()
 {
   vector<size_t> xids;
-  xids.swap (m_queued_updates);
+  xids.swap (queued_updates_);
   std::stable_sort (xids.begin(), xids.end());
   auto it = std::unique (xids.begin(), xids.end());
   xids.resize (it - xids.begin());
@@ -1103,24 +1103,24 @@ X11Context::filter_event (const XEvent &xevent)
 void
 X11Context::x11id_set (size_t xid, X11Item *x11item)
 {
-  auto it = m_x11ids.find (xid);
+  auto it = x11ids_.find (xid);
   if (!x11item)
     {
-      if (m_x11ids.end() != it)
-        m_x11ids.erase (it);
+      if (x11ids_.end() != it)
+        x11ids_.erase (it);
       return;
     }
-  if (m_x11ids.end() != it)
+  if (x11ids_.end() != it)
     fatal ("%s: x11id=%ld already in use for %p while setting to %p", STRFUNC, xid, it->second, x11item);
-  m_x11ids[xid] = x11item;
+  x11ids_[xid] = x11item;
 }
 
 X11Item*
 X11Context::x11id_get (size_t xid)
 {
   // do lookup without modifying x11ids
-  auto it = m_x11ids.find (xid);
-  return m_x11ids.end() != it ? it->second : NULL;
+  auto it = x11ids_.find (xid);
+  return x11ids_.end() != it ? it->second : NULL;
 }
 
 Atom
@@ -1144,19 +1144,19 @@ X11Context::atom (Atom atom) const
 bool
 X11Context::local_x11()
 {
-  if (m_shared_mem < 0)
-    m_shared_mem = x11_check_shared_image (display, visual, depth);
-  XDEBUG ("XShmCreateImage: %s", m_shared_mem ? "ok" : "failed to attach");
-  return m_shared_mem;
+  if (shared_mem_ < 0)
+    shared_mem_ = x11_check_shared_image (display, visual, depth);
+  XDEBUG ("XShmCreateImage: %s", shared_mem_ ? "ok" : "failed to attach");
+  return shared_mem_;
 }
 
 void
 X11Context::queue_update (size_t xid)
 {
-  const bool need_handler = m_queued_updates.empty();
-  m_queued_updates.push_back (xid);
+  const bool need_handler = queued_updates_.empty();
+  queued_updates_.push_back (xid);
   if (need_handler)
-    m_loop.exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
+    loop_.exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
 }
 
 } // Rapicorn
