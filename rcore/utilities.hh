@@ -183,7 +183,7 @@ String      process_handle ();
 // == AssertionError ==
 class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
 {
-  const String m_msg;
+  const String msg_;
 public:
   explicit            AssertionError  (const String &expr, const String &file = "", size_t line = 0);
   virtual            ~AssertionError  () throw();

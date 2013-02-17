@@ -150,8 +150,8 @@ timestamp_format (uint64 stamp)
 // == KeyConfig ==
 struct KeyConfig {
   typedef std::map<String, String> StringMap;
-  Mutex         m_mutex;
-  StringMap     m_map;
+  Mutex         mutex_;
+  StringMap     map_;
 public:
   void          assign    (const String &key, const String &val);
   String        slookup   (const String &key, const String &dfl = "");
@@ -160,22 +160,22 @@ public:
 void
 KeyConfig::assign (const String &key, const String &val)
 {
-  ScopedLock<Mutex> locker (m_mutex);
-  m_map[key] = val;
+  ScopedLock<Mutex> locker (mutex_);
+  map_[key] = val;
 }
 String
 KeyConfig::slookup (const String &ckey, const String &dfl)
 {
   // alias: "verbose" -> "debug"
   String key = ckey == "verbose" ? "debug" : ckey;
-  ScopedLock<Mutex> locker (m_mutex);
-  StringMap::iterator it = m_map.find (key);
-  return it == m_map.end() ? dfl : it->second;
+  ScopedLock<Mutex> locker (mutex_);
+  StringMap::iterator it = map_.find (key);
+  return it == map_.end() ? dfl : it->second;
 }
 void
 KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   vector<String> onames, ovalues;
   string_options_split (colon_options, onames, ovalues, "1");
   for (size_t i = 0; i < onames.size(); i++)
@@ -192,7 +192,7 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
       // alias: "verbose" -> "debug", "V=1" -> "debug", "V=0" -> "no-debug"
       if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
         key = "debug";
-      m_map[key] = val;
+      map_[key] = val;
     }
 }
 
@@ -678,7 +678,7 @@ construct_error_msg (const String &file, size_t line, const char *error, const S
 }
 
 AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
-  m_msg (construct_error_msg (file, line, "assertion failed", expr))
+  msg_ (construct_error_msg (file, line, "assertion failed", expr))
 {}
 
 AssertionError::~AssertionError () throw()
@@ -687,7 +687,7 @@ AssertionError::~AssertionError () throw()
 const char*
 AssertionError::what () const throw()
 {
-  return m_msg.c_str();
+  return msg_.c_str();
 }
 
 // == Development Helpers ==
