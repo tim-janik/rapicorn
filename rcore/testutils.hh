@@ -39,10 +39,10 @@ namespace Test {
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
  */
 class Timer {
-  const double   m_deadline;
-  vector<double> m_samples;
-  double         m_test_duration;
-  int64          m_n_runs;
+  const double   deadline_;
+  vector<double> samples_;
+  double         test_duration_;
+  int64          n_runs_;
   int64          loops_needed () const;
   void           reset        ();
   void           submit       (double elapsed, int64 repetitions);
@@ -51,8 +51,8 @@ public:
   /// Create a Timer() instance, specifying an optional upper bound for test durations.
   explicit       Timer        (double deadline_in_secs = 0);
   virtual       ~Timer        ();
-  int64          n_runs       () const { return m_n_runs; }             ///< Number of benchmark runs executed
-  double         test_elapsed () const { return m_test_duration; }      ///< Seconds spent in benchmark()
+  int64          n_runs       () const { return n_runs_; }             ///< Number of benchmark runs executed
+  double         test_elapsed () const { return test_duration_; }      ///< Seconds spent in benchmark()
   double         min_elapsed  () const;         ///< Minimum time benchmarked for a @a callee() call.
   double         max_elapsed  () const;         ///< Maximum time benchmarked for a @a callee() call.
   template<typename Callee>
