@@ -13,52 +13,52 @@ struct ClassDoctor {
 namespace Selector {
 
 SelobItem::SelobItem (SelobAllocator &allocator, ItemImpl &item) :
-  m_item (ref (item)), m_parent (NULL), m_n_children (-1), m_allocator (allocator)
+  item_ (ref (item)), parent_ (NULL), n_children_ (-1), allocator_ (allocator)
 {}
 
 SelobItem::~SelobItem ()
 {
-  unref (m_item);
+  unref (item_);
 }
 
 String
 SelobItem::get_id ()
 {
-  return m_item.name();
+  return item_.name();
 }
 
 String
 SelobItem::get_type ()
 {
-  return Factory::factory_context_type (m_item.factory_context());
+  return Factory::factory_context_type (item_.factory_context());
 }
 
 const StringVector&
 SelobItem::get_type_list()
 {
-  return Factory::factory_context_tags (m_item.factory_context());
+  return Factory::factory_context_tags (item_.factory_context());
 }
 
 bool
 SelobItem::has_property (const String &name)
 {
-  return NULL != m_item.lookup_property (name);
+  return NULL != item_.lookup_property (name);
 }
 
 String
 SelobItem::get_property (const String &name)
 {
-  return m_item.get_property (name);
+  return item_.get_property (name);
 }
 
 void
 SelobItem::cache_parent ()
 {
-  if (UNLIKELY (!m_parent))
+  if (UNLIKELY (!parent_))
     {
-      ContainerImpl *parent = m_item.parent();
+      ContainerImpl *parent = item_.parent();
       if (parent)
-        m_parent = m_allocator.item_selob (*parent);
+        parent_ = allocator_.item_selob (*parent);
     }
 }
 
@@ -66,30 +66,30 @@ Selob*
 SelobItem::get_parent ()
 {
   cache_parent();
-  return m_parent;
+  return parent_;
 }
 
 Selob*
 SelobItem::get_sibling (int64 dir)
 {
-  ContainerImpl *container = m_item.parent();
+  ContainerImpl *container = item_.parent();
   if (container && dir < 0)
     {
       ItemImpl *last = NULL;
       for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); last = &*cw, cw++)
-        if (&m_item == &*cw)
+        if (&item_ == &*cw)
           break;
       if (last)
-        return m_allocator.item_selob (*last);
+        return allocator_.item_selob (*last);
     }
   else if (container && dir > 0)
     {
       for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
-        if (&m_item == &*cw)
+        if (&item_ == &*cw)
           {
             cw++;
             if (cw.has_next())
-              return m_allocator.item_selob (*cw);
+              return allocator_.item_selob (*cw);
             break;
           }
     }
@@ -99,10 +99,10 @@ SelobItem::get_sibling (int64 dir)
 void
 SelobItem::cache_n_children()
 {
-  if (UNLIKELY (m_n_children < 0))
+  if (UNLIKELY (n_children_ < 0))
     {
-      ContainerImpl *container = dynamic_cast<ContainerImpl*> (&m_item);
-      m_n_children = container ? container->n_children() : 0;
+      ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item_);
+      n_children_ = container ? container->n_children() : 0;
     }
 }
 
@@ -110,27 +110,27 @@ bool
 SelobItem::has_children ()
 {
   cache_n_children();
-  return m_n_children > 0;
+  return n_children_ > 0;
 }
 
 int64
 SelobItem::n_children ()
 {
   cache_n_children();
-  return m_n_children;
+  return n_children_;
 }
 
 Selob*
 SelobItem::get_child (int64 index)
 {
-  if (m_n_children == 0)
+  if (n_children_ == 0)
     return NULL;
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&m_item);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item_);
   if (container)
     {
       ItemImpl *child = container->nth_child (index);
       if (child)
-        return m_allocator.item_selob (*child);
+        return allocator_.item_selob (*child);
     }
   return NULL;
 }
@@ -138,14 +138,14 @@ SelobItem::get_child (int64 index)
 bool
 SelobItem::is_nth_child (int64 nth1based)
 {
-  ContainerImpl *container = m_item.parent();
+  ContainerImpl *container = item_.parent();
   if (container && nth1based > 0)
-    return container->nth_child (nth1based - 1) == &m_item;
+    return container->nth_child (nth1based - 1) == &item_;
   else if (container && nth1based < 0)
     {
       const size_t total = container->n_children();
       if (total >= size_t (-nth1based))
-        return container->nth_child (total + nth1based) == &m_item;
+        return container->nth_child (total + nth1based) == &item_;
     }
   return false;
 }
@@ -153,7 +153,7 @@ SelobItem::is_nth_child (int64 nth1based)
 Selob*
 SelobItem::pseudo_selector (const String &ident, const String &arg, String &error)
 {
-  return ClassDoctor::item_pseudo_selector (*this, m_item, string_tolower (ident), arg, error);
+  return ClassDoctor::item_pseudo_selector (*this, item_, string_tolower (ident), arg, error);
 }
 
 SelobAllocator::SelobAllocator ()
@@ -161,10 +161,10 @@ SelobAllocator::SelobAllocator ()
 
 SelobAllocator::~SelobAllocator ()
 {
-  while (m_selobs.size())
+  while (selobs_.size())
     {
-      SelobItem *selob = m_selobs.back();
-      m_selobs.pop_back();
+      SelobItem *selob = selobs_.back();
+      selobs_.pop_back();
       delete selob;
     }
 }
@@ -174,7 +174,7 @@ SelobAllocator::item_selob (ItemImpl &item)
 {
   assert_return (&item != NULL, NULL);
   SelobItem *selob = new SelobItem (*this, item);
-  m_selobs.push_back (selob);
+  selobs_.push_back (selob);
   return selob;
 }
 
@@ -182,18 +182,18 @@ ItemImpl*
 SelobAllocator::selob_item (Selob &selob)
 {
   SelobItem *selobitem = dynamic_cast<SelobItem*> (&selob);
-  return selobitem ? &selobitem->m_item : NULL;
+  return selobitem ? &selobitem->item_ : NULL;
 }
 
 SelobAllocator*
 SelobAllocator::selob_allocator (Selob &selob)
 {
   SelobItem *selobitem = dynamic_cast<SelobItem*> (&selob);
-  return selobitem ? &selobitem->m_allocator : NULL;
+  return selobitem ? &selobitem->allocator_ : NULL;
 }
 
 SelobListModel::SelobListModel (SelobAllocator &allocator, ListModelIface &lmodel) :
-  m_lmodel (lmodel), f_row_constraint (0), f_col_constraint (0), f_value_constraint (0), f_type_constraint (0)
+  lmodel_ (lmodel), f_row_constraint (0), f_col_constraint (0), f_value_constraint (0), f_type_constraint (0)
 {}
 
 SelobListModel::~SelobListModel ()
@@ -227,14 +227,14 @@ SelobListModel::pseudo_selector (const String &ident, const String &arg, String 
       f_row_constraint = true;
       f_col_constraint = true;
       StringVector sv = string_split (arg, ",");
-      m_row_constraint = sv.size() >= 1 ? sv[0] : "";
-      m_col_constraint = sv.size() >= 2 ? sv[1] : "";
+      row_constraint_ = sv.size() >= 1 ? sv[0] : "";
+      col_constraint_ = sv.size() >= 2 ? sv[1] : "";
       return this;
     }
   else if (!f_row_constraint && ident == "::row")
-    { f_row_constraint = true; m_row_constraint = arg; return this; }
+    { f_row_constraint = true; row_constraint_ = arg; return this; }
   else if (!f_col_constraint && (ident == "::col" || ident == "::column"))
-    { f_col_constraint = true; m_col_constraint = arg; return this; }
+    { f_col_constraint = true; col_constraint_ = arg; return this; }
   return NULL;
 }
 
