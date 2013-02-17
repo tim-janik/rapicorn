@@ -96,23 +96,23 @@ typedef Aida::Property     Property;     // import Property from Aida namespace
 class NullInterface : std::exception {};
 
 struct BaseObject::InterfaceMatcher {
-  explicit      InterfaceMatcher (const String &ident) : m_ident (ident), m_match_found (false) {}
-  bool          done             () const { return m_match_found; }
+  explicit      InterfaceMatcher (const String &ident) : ident_ (ident), match_found_ (false) {}
+  bool          done             () const { return match_found_; }
   virtual  bool match            (BaseObject *object, const String &ident = String()) = 0;
   RAPICORN_CLASS_NON_COPYABLE (InterfaceMatcher);
 protected:
-  const String &m_ident;
-  bool          m_match_found;
+  const String &ident_;
+  bool          match_found_;
 };
 
 template<class C>
 struct BaseObject::InterfaceMatch : BaseObject::InterfaceMatcher {
   typedef C&    Result;
-  explicit      InterfaceMatch  (const String &ident) : InterfaceMatcher (ident), m_instance (NULL) {}
+  explicit      InterfaceMatch  (const String &ident) : InterfaceMatcher (ident), instance_ (NULL) {}
   C&            result          (bool may_throw) const;
   virtual bool  match           (BaseObject *obj, const String &ident);
 protected:
-  C            *m_instance;
+  C            *instance_;
 };
 template<class C>
 struct BaseObject::InterfaceMatch<C&> : InterfaceMatch<C> {
@@ -122,30 +122,30 @@ template<class C>
 struct BaseObject::InterfaceMatch<C*> : InterfaceMatch<C> {
   typedef C*    Result;
   explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
-  C*            result          (bool may_throw) const { return InterfaceMatch<C>::m_instance; }
+  C*            result          (bool may_throw) const { return InterfaceMatch<C>::instance_; }
 };
 
 template<class C> bool
 BaseObject::InterfaceMatch<C>::match (BaseObject *obj, const String &ident)
 {
-  if (!m_instance)
+  if (!instance_)
     {
-      const String &id = m_ident;
+      const String &id = ident_;
       if (id.empty() || id == ident)
         {
-          m_instance = dynamic_cast<C*> (obj);
-          m_match_found = m_instance != NULL;
+          instance_ = dynamic_cast<C*> (obj);
+          match_found_ = instance_ != NULL;
         }
     }
-  return m_match_found;
+  return match_found_;
 }
 
 template<class C> C&
 BaseObject::InterfaceMatch<C>::result (bool may_throw) const
 {
-  if (!this->m_instance && may_throw)
+  if (!this->instance_ && may_throw)
     throw NullInterface();
-  return *this->m_instance;
+  return *this->instance_;
 }
 
 // == ReferenceCountable ==
