@@ -253,7 +253,7 @@ interface ListModelRelay {
   ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
   void        fill   (int32 first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
   signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
-  void        relay  (UpdateRequest urequest) = 0;    ///< Issue model notification for row change, insertion and deletion.
+  void        update (UpdateRequest urequest) = 0;    ///< Issue model notification for row change, insertion and deletion.
 };
 
 /// Requisition information, providing requisition @a width and @a height.
