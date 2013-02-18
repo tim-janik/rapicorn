@@ -366,7 +366,7 @@ Builder::build_widget (const String &widget_identifier, const StringVector &call
     return builder.call_widget (builder.dnode_, call_names, call_values, NULL, NULL);
   else
     {
-      FDEBUG ("%s: unknown type identifier: %s", "Builder::build_widget", widget_identifier.c_str());
+      critical ("%s: unknown type identifier: %s", "Builder::build_widget", widget_identifier.c_str());
       return NULL;
     }
 }
@@ -378,6 +378,7 @@ Builder::inherit_widget (const String &widget_identifier, const StringVector &ca
   assert_return (derived != NULL, NULL);
   assert_return (caller != NULL, NULL);
   Builder builder (widget_identifier, caller);
+  FDEBUG ("lookup %s: dnode=%p itfactory=%p", widget_identifier.c_str(), builder.dnode_, lookup_widget_factory (widget_identifier));
   if (builder.dnode_)
     return builder.call_widget (builder.dnode_, call_names, call_values, caller, derived);
   else
