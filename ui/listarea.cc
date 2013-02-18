@@ -616,11 +616,12 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
 {
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
-  WidgetImpl *widget = ref_sink (&Factory::create_ui_widget ("Label"));
-  lr->cols.push_back (widget);
   IFDEBUG (dbg_created++);
-  lr->rowbox = &ref_sink (&Factory::create_ui_widget ("ListRow"))->interface<ContainerImpl>();
+  WidgetImpl *widget = &Factory::create_ui_child (*this, "ListRow", Factory::ArgumentList(), false);
+  lr->rowbox = ref_sink (widget)->interface<ContainerImpl*>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
+  widget = ref_sink (&Factory::create_ui_child (*lr->rowbox, "Label", Factory::ArgumentList()));
+  lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
     size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
@@ -628,8 +629,6 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);
 
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->rowbox->add (lr->cols[i]);
   add (lr->rowbox);
   return lr;
 }
