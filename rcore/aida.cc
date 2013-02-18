@@ -1249,10 +1249,9 @@ ServerConnectionImpl::dispatch ()
       {
         const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
-        FieldBuffer *fr = NULL;
         AIDA_ASSERT (server_method_implementation != NULL);
         fbr.reset (*fb);
-        fr = server_method_implementation (fbr);
+        FieldBuffer *fr = server_method_implementation (fbr);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         if (idmask == MSGID_ONEWAY_CALL)
@@ -1347,12 +1346,15 @@ DispatchFunc
 ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
-  ensure_dispatcher_map();
 #if 1 // avoid costly mutex locking
   if (AIDA_UNLIKELY (dispatcher_map_frozen == false))
-    dispatcher_map_frozen = true;
-  return (*dispatcher_map)[typehash];
+    {
+      ensure_dispatcher_map();
+      dispatcher_map_frozen = true;
+    }
+  return (*dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
 #else
+  ensure_dispatcher_map();
   pthread_mutex_lock (&dispatcher_mutex);
   DispatchFunc dispatcher_func = (*dispatcher_map)[typehash];
   pthread_mutex_unlock (&dispatcher_mutex);
