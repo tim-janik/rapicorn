@@ -3,6 +3,7 @@
 #include "sizegroup.hh"
 #include "paintcontainers.hh"
 #include "factory.hh"
+#include "application.hh"
 
 //#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
@@ -79,7 +80,7 @@ WidgetListImpl::constructed ()
       {
         model_ = store;
         ref_sink (model_);
-        // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
+        // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
         // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
         // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
       }
@@ -134,14 +135,13 @@ WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source,
 void
 WidgetListImpl::model (const String &modelurl)
 {
-  BaseObject *obj = NULL; // FIXME: plor_get (modelurl);
-  ListModelIface *model = dynamic_cast<ListModelIface*> (obj);
+  ListModelIface *lmi = ApplicationImpl::the().xurl_find (modelurl);
   ListModelIface *oldmodel = model_;
-  model_ = model;
+  model_ = lmi;
   if (model_)
     {
       ref_sink (model_);
-      // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
+      // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
       // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
       // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
       // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &WidgetListImpl::selection_changed);
