@@ -35,15 +35,6 @@ strcasestr (const char *haystack, const char *needle)
 
 Atomic<CustomPseudoRegistry*> CustomPseudoRegistry::stack_head = NULL;
 
-static bool
-find_custom_pseudo (const String &ident)
-{
-  for (CustomPseudoRegistry *node = CustomPseudoRegistry::head(); node; node = node->next())
-    if (strcasecmp (node->ident().c_str(), ident.c_str()) == 0)
-      return true;
-  return false;
-}
-
 bool
 parse_spaces (const char **stringp, int min_spaces)
 {
@@ -1379,7 +1370,7 @@ class SelobTrue : public Selob {
   virtual int64        n_children      ()                     { return 0; }
   virtual Selob*       get_child       (int64 index)          { return NULL; }
   virtual bool         is_nth_child    (int64 nth1based)      { return false; }
-  virtual Selob*       pseudo_selector (const String &ident, const String &arg, String &error) { return false; }
+  virtual Selob*       pseudo_selector (const String &ident, const String &arg, String &error) { return NULL; }
 public:
   explicit             SelobTrue       ()                     { type_list_.push_back (get_type()); }
 };
