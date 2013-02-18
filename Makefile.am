@@ -102,7 +102,7 @@ check-list_properties: # only public interfaces should export properties
 	$(Q) cd $(srcdir) \
 	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
 	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc \
-	     --exclude ui/item.cc --exclude ui/container.cc --exclude ui/buttons.cc --exclude ui/window.cc
+	     --exclude ui/widget.cc --exclude ui/container.cc --exclude ui/buttons.cc --exclude ui/window.cc
 check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
 # === automake fixes ===

@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 #if     RAPICORN_WITH_PANGO
-class TextLayout : public virtual ItemImpl {
+class TextLayout : public virtual WidgetImpl {
   virtual String      markup_text      () const = 0;
   virtual void        markup_text      (const String &markup) = 0;
 };

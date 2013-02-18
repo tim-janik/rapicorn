@@ -12,14 +12,14 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
 	cmdlib.hh	coffer.hh	commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	item.hh		keysymbols.hh	\
+	image.hh	widget.hh		keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
-	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	\
+	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
-	scrollitems.hh	selector.hh	selob.hh	\
+	scrollwidgets.hh	selector.hh	selob.hh	\
 	sinfex.hh	sizegroup.hh	slider.hh	\
 	stock.hh	\
-	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
+	table.hh	testwidgets.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
 	screenwindow.hh	\
 	$(rapicorn_impl_headers)	internal.hh	pixmap.hh	\
@@ -29,21 +29,21 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
 	cmdlib.cc	coffer.cc	commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
-	image.cc	item.cc		\
+	image.cc	widget.cc		\
 	layoutcontainers.cc	listarea.cc	models.cc	\
-	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	\
+	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\
-	scrollitems.cc	selector.cc	selob.cc	\
+	scrollwidgets.cc	selector.cc	selob.cc	\
 	sinfex.cc	sizegroup.cc	slider.cc	\
 	stock.cc	\
-	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
+	table.cc	testwidgets.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
 	screenwindow-x11.cc	screenwindow.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
 	listareaimpl.hh			\
-	scrollitemsimpl.hh		\
+	scrollwidgetsimpl.hh		\
 	sinfeximpl.hh			\
 	tableimpl.hh			\
 )
@@ -106,7 +106,7 @@ serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
 	${AIDACC} -x CxxStub -G servercc -G iface-base=Rapicorn::ReferenceCountable -G iface-postfix=Iface \
-	  --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
+	  --inclusions '"widget.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.hh

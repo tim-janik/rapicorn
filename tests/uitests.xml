@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- property test -->
-  <tmpl:define id="property-test" inherit="TestItem" assert_value="foobar">
+  <tmpl:define id="property-test" inherit="TestWidget" assert_value="foobar">
     <tmpl:property id="value">foobar</tmpl:property>
   </tmpl:define>
 
@@ -13,19 +13,19 @@
     <Alignment padding="10">
       <VBox>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> syntax:" />
-	<TestItem assert_value="frobnicate">
+	<TestWidget assert_value="frobnicate">
 	  <tmpl:property id="value">frobnicate</tmpl:property>
-	</TestItem>
+	</TestWidget>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> in definitions:" />
 	<property-test />
 	<Label plain-text="Checking &lt;arg:value default='...'/> syntax:" />
-	<TestItem assert_value="zonking" value="`zonk`" />
+	<TestWidget assert_value="zonking" value="`zonk`" />
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> evaluation:" />
-	<TestItem assert_value="zonking">
+	<TestWidget assert_value="zonking">
 	  <tmpl:property id="value">`zonk`</tmpl:property>
-	</TestItem>
+	</TestWidget>
 	<Label plain-text="Checking backtick in attributes:" />
-	<TestItem assert_value="``"><tmpl:property id="value" evaluate="false">&#x60;</tmpl:property></TestItem>
+	<TestWidget assert_value="``"><tmpl:property id="value" evaluate="false">&#x60;</tmpl:property></TestWidget>
       </VBox>
     </Alignment>
   </tmpl:define>

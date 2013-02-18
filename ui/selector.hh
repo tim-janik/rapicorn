@@ -68,7 +68,7 @@ public:
   virtual String       get_id          () = 0;
   virtual String       get_type        () = 0;                         // Factory::factory_context_type (selob.factory_context())
   virtual ConstTypes&  get_type_list   () = 0;
-  virtual bool         has_property    (const String &name) = 0;       // item.lookup_property
+  virtual bool         has_property    (const String &name) = 0;       // widget.lookup_property
   virtual String       get_property    (const String &name) = 0;
   virtual Selob*       get_parent      () = 0;
   virtual Selob*       get_sibling     (int64 dir) = 0;

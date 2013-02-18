@@ -32,7 +32,7 @@ ButtonAreaImpl::dump_private_data (TestStream &tstream)
 }
 
 bool
-ButtonAreaImpl::activate_item ()
+ButtonAreaImpl::activate_widget ()
 {
   ButtonAreaImpl &view = *this;
   WindowImpl *window = get_window();
@@ -192,6 +192,6 @@ ButtonAreaImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const ItemFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::Factory::ButtonArea");
+static const WidgetFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::Factory::ButtonArea");
 
 } // Rapicorn

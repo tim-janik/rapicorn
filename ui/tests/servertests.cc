@@ -6,7 +6,7 @@ using namespace Rapicorn;
 
 namespace ServerTests {
 
-bool server_test_item_fatal_asserts = true;
+bool server_test_widget_fatal_asserts = true;
 bool server_test_run_dialogs = false;
 
 } // ServerTests
@@ -19,7 +19,7 @@ main (int   argc,
 
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")
-      ServerTests::server_test_item_fatal_asserts = false;
+      ServerTests::server_test_widget_fatal_asserts = false;
     else if (String (argv[i]) == "--run")
       ServerTests::server_test_run_dialogs = true;
     else if (String (argv[i]) == "--shell")

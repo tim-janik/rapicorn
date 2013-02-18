@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "paintitems.hh"
+#include "paintwidgets.hh"
 #include "factory.hh"
 #include "painter.hh"
 
@@ -20,11 +20,11 @@ Arrow::_property_list()
     MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
     MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
   };
-  static const PropertyList property_list (properties, ItemImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::_property_list());
   return property_list;
 }
 
-class ArrowImpl : public virtual ItemImpl, public virtual Arrow {
+class ArrowImpl : public virtual WidgetImpl, public virtual Arrow {
   DirType dir_;
 public:
   explicit ArrowImpl() :
@@ -77,7 +77,7 @@ protected:
       }
   }
 };
-static const ItemFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
+static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
 
 void
 DotGrid::dot_type (FrameType ft)
@@ -100,11 +100,11 @@ DotGrid::_property_list()
     MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
     MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
   };
-  static const PropertyList property_list (properties, ItemImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::_property_list());
   return property_list;
 }
 
-class DotGridImpl : public virtual ItemImpl, public virtual DotGrid {
+class DotGridImpl : public virtual WidgetImpl, public virtual DotGrid {
   FrameType normal_dot_, impressed_dot_;
   uint      n_hdots_, n_vdots_;
   uint16    right_padding_dots_, top_padding_dots_, left_padding_dots_, bottom_padding_dots_;
@@ -196,7 +196,7 @@ public:
       }
   }
 };
-static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
+static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
 
 // == DrawableImpl ==
 DrawableImpl::DrawableImpl() :
@@ -206,7 +206,7 @@ DrawableImpl::DrawableImpl() :
 const PropertyList&
 DrawableImpl::_property_list ()
 {
-  return RAPICORN_AIDA_PROPERTY_CHAIN (ItemImpl::_property_list(), DrawableIface::_property_list());
+  return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::_property_list(), DrawableIface::_property_list());
 }
 
 void
@@ -294,6 +294,6 @@ DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const ItemFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");
+static const WidgetFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");
 
 } // Rapicorn

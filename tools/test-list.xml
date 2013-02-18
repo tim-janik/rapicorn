@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- list construction -->
-  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::ItemList"/>
+  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
   <tmpl:define id="ListAreaTable" inherit="Table" />
   <tmpl:define id="ListRow" inherit="Ambience" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
@@ -12,7 +12,7 @@
     </Frame>
   </tmpl:define>
 
-  <tmpl:define id="item-list" inherit="Alignment" >
+  <tmpl:define id="widget-list" inherit="Alignment" >
     <Table>
       <Frame     hposition="0" vposition="2" frame-type="in" hexpand="1" vexpand="1">
 	<ListArea/>
@@ -28,7 +28,7 @@
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >
-	  <item-list hspread="1" vspread="1"/>
+	  <widget-list hspread="1" vspread="1"/>
 	  <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	</VBox>
       </Alignment>

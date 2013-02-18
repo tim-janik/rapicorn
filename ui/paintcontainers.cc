@@ -186,7 +186,7 @@ public:
       render_shade (cr, x, y, width, height, normal_shade());
   }
 };
-static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
+static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
 void
 Frame::frame_type (FrameType ft)
@@ -275,7 +275,7 @@ protected:
             carea.width -= 2 * thickness;
             carea.height -= 2 * thickness;
           }
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         Allocation child_area = layout_child (child, carea);
         child.set_allocation (child_area);
       }
@@ -348,7 +348,7 @@ public:
       }
   }
 };
-static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
+static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 
 const PropertyList&
 FocusFrame::_property_list()
@@ -365,9 +365,9 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
   Client   *client_;
   size_t    conid_client_;
   virtual void
-  set_focus_child (ItemImpl *item)
+  set_focus_child (WidgetImpl *widget)
   {
-    FrameImpl::set_focus_child (item);
+    FrameImpl::set_focus_child (widget);
     expose_enclosure();
   }
   void
@@ -379,7 +379,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
       expose_enclosure();
   }
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
     if (client_)
       {
@@ -419,6 +419,6 @@ public:
     client_ (NULL), conid_client_ (0)
   {}
 };
-static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
+static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
 
 } // Rapicorn

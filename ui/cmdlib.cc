@@ -6,7 +6,7 @@ namespace Rapicorn {
 
 
 static void
-item_print (ItemImpl           &item,
+widget_print (WidgetImpl           &widget,
             const StringSeq    &args)
 {
   bool last_empty = false;
@@ -22,10 +22,10 @@ item_print (ItemImpl           &item,
 }
 
 static struct {
-  void      (*cmd) (ItemImpl&, const StringSeq&);
+  void      (*cmd) (WidgetImpl&, const StringSeq&);
   const char *name;
-} item_cmds[] = {
-  { item_print,         "Item::print" },
+} widget_cmds[] = {
+  { widget_print,         "Widget::print" },
 };
 
 static void
@@ -43,31 +43,31 @@ static struct {
 };
 
 static void
-application_close (ItemImpl          &item,
+application_close (WidgetImpl          &widget,
                    const StringSeq   &args)
 {
   printout ("app.close()\n");
 }
 
 static struct {
-  void      (*cmd) (ItemImpl&, const StringSeq&);
+  void      (*cmd) (WidgetImpl&, const StringSeq&);
   const char *name;
 } application_cmds[] = {
   { application_close,  "Application::close" },
 };
 
 bool
-command_lib_exec (ItemImpl          &item,
+command_lib_exec (WidgetImpl          &widget,
                   const String      &cmd_name,
                   const StringSeq   &args)
 {
-  for (uint ui = 0; ui < ARRAY_SIZE (item_cmds); ui++)
-    if (item_cmds[ui].name == cmd_name)
+  for (uint ui = 0; ui < ARRAY_SIZE (widget_cmds); ui++)
+    if (widget_cmds[ui].name == cmd_name)
       {
-        item_cmds[ui].cmd (item, args);
+        widget_cmds[ui].cmd (widget, args);
         return true;
       }
-  WindowImpl *window = item.get_window();
+  WindowImpl *window = widget.get_window();
   if (window)
     {
       for (uint ui = 0; ui < ARRAY_SIZE (window_cmds); ui++)
@@ -80,7 +80,7 @@ command_lib_exec (ItemImpl          &item,
   for (uint ui = 0; ui < ARRAY_SIZE (application_cmds); ui++)
     if (application_cmds[ui].name == cmd_name)
       {
-        application_cmds[ui].cmd (item, args);
+        application_cmds[ui].cmd (widget, args);
         return true;
       }
   return false;

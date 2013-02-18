@@ -28,7 +28,7 @@ ArrangementImpl::~ArrangementImpl()
 {}
 
 Allocation
-ArrangementImpl::local_child_allocation (ItemImpl &child,
+ArrangementImpl::local_child_allocation (WidgetImpl &child,
                                          double    width,
                                          double    height)
 {
@@ -61,7 +61,7 @@ ArrangementImpl::child_area ()
   Allocation parea = allocation();
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
+      WidgetImpl &child = *cw;
       Allocation area = local_child_allocation (child, parea.width, parea.height);
       rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
       rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
@@ -76,7 +76,7 @@ ArrangementImpl::size_request (Requisition &requisition)
   bool chspread = false, cvspread = false, need_origin = false;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
+      WidgetImpl &child = *cw;
       /* size request all children */
       // Requisition rq = child.requisition();
       if (!child.allocatable())
@@ -114,7 +114,7 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
+      WidgetImpl &child = *cw;
       if (!child.allocatable())
         continue;
       Allocation carea = local_child_allocation (child, area.width, area.height);
@@ -125,6 +125,6 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
     }
 }
 
-static const ItemFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Factory::Arrangement");
+static const WidgetFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Factory::Arrangement");
 
 } // Rapicorn

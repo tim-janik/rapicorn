@@ -6,7 +6,7 @@
   <tmpl:define id="button-test" inherit="Frame" frame-type="none">
     <VBox spacing="5">
       <Label markup-text="Test Buttons:"/>
-      <Button on-click="Item::print('click on Multiline Button')">
+      <Button on-click="Widget::print('click on Multiline Button')">
 	<Label>
 	  <tmpl:property id="markup-text">
 	    Multiline<br/>
@@ -16,13 +16,13 @@
 	</Label>
       </Button>
       <HBox hexpand="1" spacing="3">
-	<Button on-click="Item::print('Normal Button')">
+	<Button on-click="Widget::print('Normal Button')">
 	  <Label vexpand="0" markup-text="Normal Button" />
 	</Button>
-	<DefaultButton on-click="Item::print('Default Button')">
+	<DefaultButton on-click="Widget::print('Default Button')">
 	  <Label markup-text="Default Button" />
 	</DefaultButton>
-	<Button hspread="1" on-click="Item::print('HSpread-Button')">
+	<Button hspread="1" on-click="Widget::print('HSpread-Button')">
 	  <Label markup-text="HSpread Button" />
 	</Button>
 	<Button on-click="test_handler1" >
@@ -79,7 +79,7 @@
 	  </VBox>
 	  <Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
 	    <HBox spacing="5" homogeneous="0" >
-	      <Button hexpand="1" on-click='Item::print ("ok")' > <Label markup-text="Ok"/> </Button>
+	      <Button hexpand="1" on-click='Widget::print ("ok")' > <Label markup-text="Ok"/> </Button>
 	      <Button hexpand="1" on-click="testdump" > <Label markup-text="Test Dump"/> </Button>
 	      <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
 	    </HBox>

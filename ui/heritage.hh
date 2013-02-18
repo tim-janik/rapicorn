@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 class WindowImpl;
-class ItemImpl;
+class WidgetImpl;
 
 class Heritage : public virtual ReferenceCountable {
   friend        class ClassDoctor;
@@ -19,10 +19,10 @@ class Heritage : public virtual ReferenceCountable {
   /*Des*/      ~Heritage        ();
   static
   Heritage*     create_heritage (WindowImpl     &window,
-                                 ItemImpl       &item,
+                                 WidgetImpl       &widget,
                                  ColorSchemeType color_scheme);
 public:
-  Heritage*     adapt_heritage  (ItemImpl           &item,
+  Heritage*     adapt_heritage  (WidgetImpl           &widget,
                                  ColorSchemeType color_scheme);
   WindowImpl&   window          () const { return window_; }
   /* colors */

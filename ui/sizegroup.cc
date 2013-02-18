@@ -4,12 +4,12 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_parent (ItemImpl &item, ContainerImpl *parent) { item.set_parent (parent); }
+  static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
 };
 
 class SizeGroupImpl : public SizeGroup {
   Requisition           req_;
-  vector<ItemImpl*>     items_;
+  vector<WidgetImpl*>     widgets_;
 public:
   uint                  hgroup_ : 1;
   uint                  vgroup_ : 1;
@@ -17,15 +17,15 @@ private:
   uint                  active_ : 1;
   uint                  all_dirty_ : 1;        // need resize
   virtual       ~SizeGroupImpl          ();
-  virtual void   add_item               (ItemImpl &item);
-  virtual void   remove_item            (ItemImpl &item);
+  virtual void   add_widget               (WidgetImpl &widget);
+  virtual void   remove_widget            (WidgetImpl &widget);
   void           update                 ();
 public:
   virtual bool   active                 () const        { return active_; }
   virtual void   active                 (bool isactive) { active_ = isactive; all_dirty_ = false; invalidate_sizes(); }
   void           invalidate_sizes       ();
   explicit                      SizeGroupImpl     (bool hgroup, bool vgroup);
-  static vector<SizeGroupImpl*> list_groups       (ItemImpl &item);
+  static vector<SizeGroupImpl*> list_groups       (WidgetImpl &widget);
   virtual Requisition           group_requisition () { update(); return req_; }
 };
 
@@ -37,58 +37,58 @@ SizeGroupImpl::SizeGroupImpl (bool hgroup,
 
 SizeGroupImpl::~SizeGroupImpl ()
 {
-  assert (items_.size() == 0);
+  assert (widgets_.size() == 0);
 }
 
 static DataKey<vector<SizeGroupImpl*> > size_group_key;
 
 vector<SizeGroupImpl*>
-SizeGroupImpl::list_groups (ItemImpl &item)
+SizeGroupImpl::list_groups (WidgetImpl &widget)
 {
-  return item.get_data (&size_group_key);
+  return widget.get_data (&size_group_key);
 }
 
 void
-SizeGroupImpl::add_item (ItemImpl &item)
+SizeGroupImpl::add_widget (WidgetImpl &widget)
 {
-  /* add item to size group's list */
-  items_.push_back (&item);
+  /* add widget to size group's list */
+  widgets_.push_back (&widget);
   ref (this);
-  /* add size group to item's list */
-  vector<SizeGroupImpl*> szv = item.get_data (&size_group_key);
+  /* add size group to widget's list */
+  vector<SizeGroupImpl*> szv = widget.get_data (&size_group_key);
   szv.push_back (this);
-  item.set_data (&size_group_key, szv);
+  widget.set_data (&size_group_key, szv);
   if (active())
     {
       invalidate_sizes();
-      item.invalidate_size();
+      widget.invalidate_size();
     }
 }
 
 void
-SizeGroupImpl::remove_item (ItemImpl &item)
+SizeGroupImpl::remove_widget (WidgetImpl &widget)
 {
   ref (this);
   if (active())
     {
       invalidate_sizes();
-      item.invalidate_size();
+      widget.invalidate_size();
     }
-  /* remove item from size group's list */
+  /* remove widget from size group's list */
   bool found_one = false;
-  for (uint i = 0; i < items_.size(); i++)
-    if (items_[i] == &item)
+  for (uint i = 0; i < widgets_.size(); i++)
+    if (widgets_[i] == &widget)
       {
-        items_.erase (items_.begin() + i);
+        widgets_.erase (widgets_.begin() + i);
         found_one = true;
         unref (this);
         break;
       }
   if (!found_one)
-    critical ("%s: attempt to remove unknown item (%s) from size group: %p", STRFUNC, item.name().c_str(), this);
-  /* remove size group from item's list */
+    critical ("%s: attempt to remove unknown widget (%s) from size group: %p", STRFUNC, widget.name().c_str(), this);
+  /* remove size group from widget's list */
   found_one = false;
-  vector<SizeGroupImpl*> szv = item.get_data (&size_group_key);
+  vector<SizeGroupImpl*> szv = widget.get_data (&size_group_key);
   for (uint i = 0; i < szv.size(); i++)
     if (szv[i] == this)
       {
@@ -97,11 +97,11 @@ SizeGroupImpl::remove_item (ItemImpl &item)
         break;
       }
   if (!found_one)
-    critical ("%s: attempt to remove unknown size group (%p) from item: %s", STRFUNC, this, item.name().c_str());
+    critical ("%s: attempt to remove unknown size group (%p) from widget: %s", STRFUNC, this, widget.name().c_str());
   if (szv.size() == 0)
-    item.delete_data (&size_group_key);
+    widget.delete_data (&size_group_key);
   else
-    item.set_data (&size_group_key, szv);
+    widget.set_data (&size_group_key, szv);
   unref (this);
 }
 
@@ -124,7 +124,7 @@ SizeGroupImpl::update()
     {
       all_dirty_ = false;
       req_ = Requisition();
-      size_request_items (items_, req_);
+      size_request_widgets (widgets_, req_);
     }
 }
 
@@ -134,53 +134,53 @@ SizeGroupImpl::invalidate_sizes()
   if (all_dirty_)
     return;
   all_dirty_ = true;
-  for (uint i = 0; i < items_.size(); i++)
-    items_[i]->invalidate_size();
+  for (uint i = 0; i < widgets_.size(); i++)
+    widgets_[i]->invalidate_size();
 }
 
 void
-SizeGroup::size_request_items (const vector<ItemImpl*> items,
+SizeGroup::size_request_widgets (const vector<WidgetImpl*> widgets,
                                Requisition        &max_requisition)
 {
-  for (uint i = 0; i < items.size(); i++)
+  for (uint i = 0; i < widgets.size(); i++)
     {
-      ItemImpl &item = *items[i];
-      Requisition ireq = item.inner_size_request();
+      WidgetImpl &widget = *widgets[i];
+      Requisition ireq = widget.inner_size_request();
       max_requisition.width = MAX (max_requisition.width, ireq.width);
       max_requisition.height = MAX (max_requisition.height, ireq.height);
     }
 }
 
 void
-SizeGroup::delete_item (ItemImpl &item)
+SizeGroup::delete_widget (WidgetImpl &widget)
 {
   /* remove from all groups */
-  vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (item);
+  vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (widget);
   for (uint i = 0; i < sgl.size(); i++)
     {
       SizeGroup &sg = *sgl[i];
-      sg.remove_item (item);
+      sg.remove_widget (widget);
     }
 }
 
 void
-SizeGroup::invalidate_item (ItemImpl &item)
+SizeGroup::invalidate_widget (WidgetImpl &widget)
 {
   /* invalidate all active groups */
-  vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (item);
+  vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (widget);
   for (uint i = 0; i < sgl.size(); i++)
     if (sgl[i]->active())
       sgl[i]->invalidate_sizes();
 }
 
 Requisition
-SizeGroup::item_requisition (ItemImpl &item)
+SizeGroup::widget_requisition (WidgetImpl &widget)
 {
   /* size request all active groups */
   Requisition zreq; // 0,0
-  if (item.allocatable())
+  if (widget.allocatable())
     {
-      vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (item);
+      vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (widget);
       for (uint i = 0; i < sgl.size(); i++)
         {
           Requisition gr = sgl[i]->group_requisition();
@@ -192,8 +192,8 @@ SizeGroup::item_requisition (ItemImpl &item)
             zreq.height = MAX (zreq.height, gr.height);
         }
     }
-  /* size request ungrouped/unallocatable items */
-  Requisition ireq = item.inner_size_request();
+  /* size request ungrouped/unallocatable widgets */
+  Requisition ireq = widget.inner_size_request();
   /* determine final requisition */
   ireq.width = MAX (zreq.width, ireq.width);
   ireq.height = MAX (zreq.height, ireq.height);

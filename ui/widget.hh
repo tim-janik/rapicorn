@@ -1,8 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/serverapi.hh> // includes <ui/item.hh> after ItemIface declaration
+#include <ui/serverapi.hh> // includes <ui/widget.hh> after WidgetIface declaration
 
-#ifndef __RAPICORN_ITEM_HH_
-#define __RAPICORN_ITEM_HH_
+#ifndef __RAPICORN_WIDGET_HH_
+#define __RAPICORN_WIDGET_HH_
 
 #include <ui/events.hh>
 #include <ui/region.hh>
@@ -11,9 +11,9 @@
 
 namespace Rapicorn {
 
-/* --- Item structures and forward decls --- */
+/* --- Widget structures and forward decls --- */
 typedef Rect Allocation;
-class ItemImpl;
+class WidgetImpl;
 class AnchorInfo;
 class SizeGroup;
 class Adjustment;
@@ -37,8 +37,8 @@ public:
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
 
-/* --- ItemImpl --- */
-class ItemImpl : public virtual ItemIface, public virtual DataListContainer {
+/* --- WidgetImpl --- */
+class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
@@ -107,18 +107,18 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~ItemImpl         ();
+  virtual                     ~WidgetImpl         ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
-  virtual void                hierarchy_changed (ItemImpl *old_toplevel);
+  virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
-  virtual bool                activate_item     ();
+  virtual bool                activate_widget     ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:
-  explicit                    ItemImpl              ();
+  explicit                    WidgetImpl              ();
   bool                        test_all_flags    (uint32 mask) const { return (flags_ & mask) == mask; }
   bool                        test_any_flag     (uint32 mask) const { return test_flags (mask); }
   bool                        anchored          () const { return test_flags (ANCHORED); }
@@ -181,18 +181,18 @@ public:
   virtual const CommandList&  list_commands     ();
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
-  bool                        has_ancestor      (const ItemImpl &ancestor) const;
-  ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
-  ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
+  bool                        has_ancestor      (const WidgetImpl &ancestor) const;
+  WidgetImpl*                   common_ancestor   (const WidgetImpl &other) const;
+  WidgetImpl*                   common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
   const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (ainfo_) ? ainfo_ : force_anchor_info(); }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;
   /* cross links */
-  typedef std::function<void (ItemImpl&)> ItemSlot;
-  size_t                      cross_link        (ItemImpl &link, const ItemSlot &uncross);
-  void                        cross_unlink      (ItemImpl &link, size_t link_id);
-  void                        uncross_links     (ItemImpl &link);
+  typedef std::function<void (WidgetImpl&)> WidgetSlot;
+  size_t                      cross_link        (WidgetImpl &link, const WidgetSlot &uncross);
+  void                        cross_unlink      (WidgetImpl &link, size_t link_id);
+  void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
   void                        invalidate        ();
   void                        invalidate_size   ();
@@ -206,38 +206,38 @@ public:
   Aida::Signal<void ()>                 sig_finalize;
   Aida::Signal<void ()>                 sig_changed;
   Aida::Signal<void ()>                 sig_invalidate;
-  Aida::Signal<void (ItemImpl *old)>    sig_hierarchy_changed;
+  Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
-  bool                       process_event               (const Event &event);  // item coordinates relative
+  bool                       process_event               (const Event &event);  // widget coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
   /* coordinate handling */
 protected:
-  Affine                     affine_to_screen_window   ();                    // item => screen_window affine
-  Affine                     affine_from_screen_window ();                    // screen_window => item affine
+  Affine                     affine_to_screen_window   ();                    // widget => screen_window affine
+  Affine                     affine_from_screen_window ();                    // screen_window => widget affine
   // rendering
   class RenderContext;
-  virtual void               render_item               (RenderContext    &rcontext);
+  virtual void               render_widget               (RenderContext    &rcontext);
   virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
                                                         const Allocation &area = Allocation (-1, -1, 0, 0));
 public:
   void                       render_into               (cairo_t *cr, const Region &region);
-  virtual bool               point                     (Point        p);            // item coordinates relative
-  Point                      point_to_screen_window    (Point        item_point);   // item coordinates relative
+  virtual bool               point                     (Point        p);            // widget coordinates relative
+  Point                      point_to_screen_window    (Point        widget_point);   // widget coordinates relative
   Point                      point_from_screen_window  (Point        window_point); // screen_window coordinates relative
-  virtual bool               translate_from         (const ItemImpl   &src_item,
+  virtual bool               translate_from         (const WidgetImpl   &src_widget,
                                                      const uint    n_points,
                                                      Point        *points) const;
   bool                       translate_to           (const uint    n_points,
                                                      Point        *points,
-                                                     const ItemImpl   &target_item) const;
-  bool                       translate_from         (const ItemImpl   &src_item,
+                                                     const WidgetImpl   &target_widget) const;
+  bool                       translate_from         (const WidgetImpl   &src_widget,
                                                      const uint    n_rects,
                                                      Rect         *rects) const;
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
-                                                     const ItemImpl   &target_item) const;
+                                                     const WidgetImpl   &target_widget) const;
   bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
@@ -277,7 +277,7 @@ public: /* packing */
     uint left_spacing, right_spacing, bottom_spacing, top_spacing;
     double halign, hscale, valign, vscale;
   };
-  const PackInfo&    pack_info       () const   { return const_cast<ItemImpl*> (this)->pack_info (false); }
+  const PackInfo&    pack_info       () const   { return const_cast<WidgetImpl*> (this)->pack_info (false); }
   double             hposition       () const   { return pack_info ().hposition; }
   void               hposition       (double d);
   double             hspan           () const   { return pack_info ().hspan; }
@@ -311,9 +311,9 @@ private:
   PackInfo&          pack_info       (bool create);
 public:
   virtual bool       match_selector        (const String &selector);
-  virtual ItemIface* query_selector        (const String &selector);
-  virtual ItemSeq    query_selector_all    (const String &selector);
-  virtual ItemIface* query_selector_unique (const String &selector);
+  virtual WidgetIface* query_selector        (const String &selector);
+  virtual WidgetSeq    query_selector_all    (const String &selector);
+  virtual WidgetIface* query_selector_unique (const String &selector);
   inline ContainerImpl* as_container       (); // see container.hh
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
@@ -327,19 +327,19 @@ private:
   void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
-inline bool operator== (const ItemImpl &item1, const ItemImpl &item2) { return &item1 == &item2; }
-inline bool operator!= (const ItemImpl &item1, const ItemImpl &item2) { return &item1 != &item2; }
+inline bool operator== (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 == &widget2; }
+inline bool operator!= (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 != &widget2; }
 
-// == ItemIfaceVector ==
-struct ItemIfaceVector : public std::vector<ItemIface*> {
-  explicit ItemIfaceVector (const ItemSeq &itemseq);
-  /*ctor*/ ItemIfaceVector () {}
-  ItemSeq  to_item_seq     () const;
+// == WidgetIfaceVector ==
+struct WidgetIfaceVector : public std::vector<WidgetIface*> {
+  explicit WidgetIfaceVector (const WidgetSeq &widgetseq);
+  /*ctor*/ WidgetIfaceVector () {}
+  WidgetSeq  to_widget_seq     () const;
 };
 
 // == Implementations ==
-template<class C> typename ItemImpl::InterfaceMatch<C>::Result
-ItemImpl::interface (const String         &ident,
+template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
+WidgetImpl::interface (const String         &ident,
                      const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
@@ -347,8 +347,8 @@ ItemImpl::interface (const String         &ident,
   return interface_match.result (&nt == &dothrow);
 }
 
-template<class C> typename ItemImpl::InterfaceMatch<C>::Result
-ItemImpl::parent_interface (const String         &ident,
+template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
+WidgetImpl::parent_interface (const String         &ident,
                             const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
@@ -358,4 +358,4 @@ ItemImpl::parent_interface (const String         &ident,
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_ITEM_HH_ */
+#endif  /* __RAPICORN_WIDGET_HH_ */

@@ -34,7 +34,7 @@ public:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         if (child.allocatable())
           {
             Requisition cr = child.requisition();
@@ -53,7 +53,7 @@ public:
     // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
     if (!has_allocatable_child())
       return;
-    ItemImpl &child = get_child();
+    WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
     /* pad allocation */
     area.x += left_padding();
@@ -90,7 +90,7 @@ public:
     invalidate();
   }
 };
-static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
+static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 
 const PropertyList&
 HBox::_property_list()
@@ -106,20 +106,20 @@ HBox::_property_list()
 class HBoxImpl : public virtual TableImpl, public virtual HBox {
   virtual const PropertyList& _property_list() { return HBox::_property_list(); }
   virtual void
-  add_child (ItemImpl &item)
+  add_child (WidgetImpl &widget)
   {
     uint col = get_n_cols();
     while (col > 0 && !is_col_used (col - 1))
       col--;
     if (is_col_used (col))
       insert_cols (col, 1);     // should never be triggered
-    item.hposition (col);
-    item.hspan (1);
-    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
+    widget.hposition (col);
+    widget.hspan (1);
+    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
   virtual uint  spacing  () const                               { return col_spacing(); }
   virtual void  spacing  (uint cspacing)                        { col_spacing (cspacing); }
 public:
@@ -129,7 +129,7 @@ public:
   ~HBoxImpl()
   {}
 };
-static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
+static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
 
 const PropertyList&
 VBox::_property_list()
@@ -146,20 +146,20 @@ class VBoxImpl : public virtual TableImpl, public virtual VBox {
   /* pack properties */
   virtual const PropertyList& _property_list() { return VBox::_property_list(); }
   virtual void
-  add_child (ItemImpl &item)
+  add_child (WidgetImpl &widget)
   {
     uint row = get_n_rows();
     while (row > 0 && !is_row_used (row - 1))
       row--;
     if (is_row_used (row))
       insert_rows (row, 1);     // should never be triggered
-    item.vposition (row);
-    item.vspan (1);
-    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
+    widget.vposition (row);
+    widget.vspan (1);
+    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
   virtual uint  spacing  () const                               { return row_spacing(); }
   virtual void  spacing  (uint cspacing)                        { row_spacing (cspacing); }
 public:
@@ -169,6 +169,6 @@ public:
   ~VBoxImpl()
   {}
 };
-static const ItemFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
+static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
 
 } // Rapicorn

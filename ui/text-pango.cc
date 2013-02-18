@@ -283,7 +283,7 @@ static LayoutCache global_layout_cache; // protected by rapicorn_pango_mutex.loc
 /* --- LazyColorAttr --- */
 class LazyColorAttr {
   /* We need to implement our own color attribute here, because color names can
-   * only be resolved for anchored items which happens after parsing and span
+   * only be resolved for anchored widgets which happens after parsing and span
    * attribute assignments. And we need to be able to read the original color
    * string back from span attributes.
    */
@@ -704,7 +704,7 @@ public:
 };
 
 /* --- TextPangoImpl (TextEditor::Client) --- */
-class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
+class TextPangoImpl : public virtual WidgetImpl, public virtual Text::Editor::Client {
   PangoLayout    *layout_;
   int             mark_, cursor_;
   double          scoffset_;
@@ -1244,12 +1244,12 @@ protected:
   _property_list() // escape check-_property_list ';'
   {
     static Property *properties[] = {};
-    static const PropertyList property_list (properties, ItemImpl::_property_list(), Client::client__property_list());
+    static const PropertyList property_list (properties, WidgetImpl::_property_list(), Client::client__property_list());
     return property_list;
   }
 };
 
-static const ItemFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
+static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
 
 } // Rapicorn
 

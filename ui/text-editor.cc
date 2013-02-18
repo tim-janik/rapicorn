@@ -322,7 +322,7 @@ private:
   virtual uint     request_digits () const                      { return request_digits_; }
   virtual void     request_digits (uint nd)                     { request_digits_ = nd; invalidate_size(); }
 };
-static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
+static const WidgetFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 
 
 } // Text

@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_MODELS_HH__
 #define __RAPICORN_MODELS_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
