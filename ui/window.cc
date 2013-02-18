@@ -996,25 +996,6 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
   return false;
 }
 
-bool
-WindowImpl::prepare (const EventLoop::State &state,
-                     int64                  *timeout_usecs_p)
-{
-  return false;
-}
-
-bool
-WindowImpl::check (const EventLoop::State &state)
-{
-  return false;
-}
-
-bool
-WindowImpl::dispatch (const EventLoop::State &state)
-{
-  return false;
-}
-
 EventLoop*
 WindowImpl::get_loop ()
 {

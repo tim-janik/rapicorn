@@ -89,10 +89,6 @@ private:
   virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
   virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
   virtual bool          command_dispatcher                      (const EventLoop::State &state);
-  virtual bool          prepare                                 (const EventLoop::State &state,
-                                                                 int64                  *timeout_usecs_p);
-  virtual bool          check                                   (const EventLoop::State &state);
-  virtual bool          dispatch                                (const EventLoop::State &state);
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringSeq    &command_args);
   /* event handling */

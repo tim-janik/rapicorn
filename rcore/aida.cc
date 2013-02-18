@@ -1060,14 +1060,14 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 {
   AIDA_ASSERT (fb != NULL);
   // enqueue method call message
-  const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
-  const bool needsresult = Aida::msgid_has_result (msgid);
+  const MessageId msgid = MessageId (fb->first_id());
+  const bool needsresult = msgid_has_result (msgid);
   if (!needsresult)
     {
       ObjectBroker::post_msg (fb);
       return NULL;
     }
-  const Aida::MessageId resultid = MessageId (msgid_mask (msgid_as_result (msgid)));
+  const MessageId resultid = MessageId (msgid_mask (msgid_as_result (msgid)));
   blocking_for_sem_ = true; // results will notify semaphore
   ObjectBroker::post_msg (fb);
   FieldBuffer *fr;
@@ -1083,7 +1083,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
       if (retmask == resultid)
         break;
 #if 0
-      else if (Aida::msgid_is_error (retmask))
+      else if (msgid_is_error (retmask))
         {
           FieldReader fbr (*fr);
           fbr.skip_header();
@@ -1125,15 +1125,15 @@ ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
-  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
+  FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
-  Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  FieldBuffer *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
-  Aida::FieldReader frr (*connection_result);
+  FieldReader frr (*connection_result);
   frr.skip_header();
   pthread_spin_lock (&signal_spin_);
   frr >>= shandler->cid;
@@ -1154,15 +1154,15 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
     signal_handlers_[handler_index] = NULL;
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
-  Aida::FieldBuffer &fb = *Aida::FieldBuffer::_new (3 + 1 + 2);
+  FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
-  fb.add_header2 (Rapicorn::Aida::MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   fb.add_object (shandler->oid);                // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
-  Aida::FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  FieldBuffer *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, false);
-  Aida::FieldReader frr (*connection_result);
+  FieldReader frr (*connection_result);
   frr.skip_header();
   uint64_t disconnection_success;
   frr >>= disconnection_success;
@@ -1249,10 +1249,9 @@ ServerConnectionImpl::dispatch ()
       {
         const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
-        FieldBuffer *fr = NULL;
         AIDA_ASSERT (server_method_implementation != NULL);
         fbr.reset (*fb);
-        fr = server_method_implementation (fbr);
+        FieldBuffer *fr = server_method_implementation (fbr);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         if (idmask == MSGID_ONEWAY_CALL)
@@ -1347,12 +1346,15 @@ DispatchFunc
 ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
-  ensure_dispatcher_map();
 #if 1 // avoid costly mutex locking
   if (AIDA_UNLIKELY (dispatcher_map_frozen == false))
-    dispatcher_map_frozen = true;
-  return (*dispatcher_map)[typehash];
+    {
+      ensure_dispatcher_map();
+      dispatcher_map_frozen = true;
+    }
+  return (*dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
 #else
+  ensure_dispatcher_map();
   pthread_mutex_lock (&dispatcher_mutex);
   DispatchFunc dispatcher_func = (*dispatcher_map)[typehash];
   pthread_mutex_unlock (&dispatcher_mutex);
@@ -1401,7 +1403,7 @@ void
 ObjectBroker::post_msg (FieldBuffer *fb)
 {
   assert_return (fb);
-  const Aida::MessageId msgid = Aida::MessageId (fb->first_id());
+  const MessageId msgid = MessageId (fb->first_id());
   const uint connection_id = ObjectBroker::sender_connection_id (msgid);
   BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)

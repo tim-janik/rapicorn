@@ -33,7 +33,7 @@ ListModelRelayImpl::emit_updated (UpdateKind kind, uint start, uint length)
 }
 
 void
-ListModelRelayImpl::relay (const UpdateRequest &urequest)
+ListModelRelayImpl::update (const UpdateRequest &urequest)
 {
   switch (urequest.kind)
     {

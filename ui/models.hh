@@ -22,7 +22,7 @@ public:
   virtual AnySeq                row             (int n);
   virtual Any                   cell            (int r, int c);
   // relay API
-  virtual void                  relay           (const UpdateRequest &urequest);
+  virtual void                  update          (const UpdateRequest &urequest);
   virtual void                  fill            (int first, const AnySeqSeq &ss);
   virtual ListModelIface*       model           ()              { return this; }
   void                          refill          (int start, int length);

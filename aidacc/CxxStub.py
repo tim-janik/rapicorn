@@ -152,7 +152,7 @@ static inline FieldBuffer* new_emit_result (const FieldBuffer *fb, uint64_t h, u
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
-I_prefix_postfix = ('', '_Interface')
+I_prefix_postfix = ('', 'Iface')
 
 class G4STUB: pass    # generate stub classes (smart handles)
 class G4SERVANT: pass    # generate servants classes (interfaces)
