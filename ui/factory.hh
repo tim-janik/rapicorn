@@ -22,8 +22,11 @@ String      parse_ui_data       (const String           &uinamespace,
                                  const char             *data,
                                  const String           &i18n_domain = "",
                                  vector<String>         *definitions = NULL);
-WidgetImpl&   create_ui_widget      (const String           &widget_identifier,
+WidgetImpl& create_ui_widget    (const String           &widget_identifier,
                                  const ArgumentList     &arguments = ArgumentList());
+WidgetImpl& create_ui_child     (ContainerImpl &container, const String &widget_identifier,
+                                 const ArgumentList &arguments, bool autoadd = true);
+
 void        create_ui_children  (ContainerImpl          &container,
                                  vector<WidgetImpl*>      *children,
                                  const String           &presuppose,
