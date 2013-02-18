@@ -34,7 +34,7 @@ class_scope:UpdateSpan:
   explicit UpdateSpan (int _start, int _length) : start (_start), length (_length) {}
 
 class_scope:UpdateRequest:
-  explicit UpdateRequest (UpdateKind _kind, const UpdateSpan &rs, const UpdateSpan &cs) :
+  explicit UpdateRequest (UpdateKind _kind, const UpdateSpan &rs, const UpdateSpan &cs = UpdateSpan()) :
     kind (_kind), rowspan (rs), colspan (cs) {}
 
 class_scope:Requisition:

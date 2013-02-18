@@ -30,20 +30,19 @@ struct ModelSizes {
 };
 
 class WidgetListImpl : public virtual MultiContainerImpl,
-                     public virtual WidgetList,
-                     public virtual AdjustmentSource,
-                     public virtual EventHandler
+                       public virtual WidgetList,
+                       public virtual AdjustmentSource,
+                       public virtual EventHandler
 {
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
   ListModelIface        *model_;
   vector<bool>           selection_;
   mutable Adjustment    *hadjustment_, *vadjustment_;
-  bool                   browse_;
-  uint                   n_cols_;
   RowMap                 row_map_;
   vector<ListRow*>       row_cache_;
   vector<SizeGroup*>     size_groups_;
+  bool                   browse_;
   bool                   need_resize_scroll_;
   bool                   block_invalidate_;
   uint64                 current_row_;

@@ -23,7 +23,7 @@ WidgetList::_property_list()
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  browse_ (true), n_cols_ (0),
+  browse_ (true),
   need_resize_scroll_ (false), block_invalidate_ (false),
   current_row_ (18446744073709551615ULL)
 {}
@@ -67,16 +67,13 @@ WidgetListImpl::constructed ()
       MemoryListStore *store = new MemoryListStore (5);
       for (uint i = 0; i < 20; i++)
         {
-          AnySeq row;
-          row.resize (5);
+          Any row;
           String s;
           if (i && (i % 10) == 0)
             s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
           else
             s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row[0] <<= s;
-          for (uint j = 1; j < 4; j++)
-            row[j] <<= string_printf ("%u-%u", i + 1, j + 1);
+          row <<= s;
           store->insert (-1, row);
         }
       {
@@ -85,7 +82,6 @@ WidgetListImpl::constructed ()
         // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
         // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
         // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
-        n_cols_ = model_->columns();
       }
       unref (ref_sink (store));
       invalidate_model (true, true);
@@ -154,10 +150,6 @@ WidgetListImpl::model (const String &modelurl)
     {
       unref (oldmodel);
     }
-  if (!model_)
-    n_cols_ = 0;
-  else
-    n_cols_ = model_->columns();
   invalidate_model (true, true);
 }
 
@@ -261,7 +253,7 @@ WidgetListImpl::size_request (Requisition &requisition)
       requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
-  if (model_ && model_->size())
+  if (model_ && model_->count())
     requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (model_->count() * vadjustment_->nvalue())); // FIXME
   else
     requisition.height = -1;
@@ -309,13 +301,13 @@ WidgetListImpl::measure_rows (int64 maxpixels)
       ms.measurement_row->rowbox->set_allocation (area);
     }
   /* catch cases where measuring is useless */
-  if (!model_ || model_->size() > maxpixels)
+  if (!model_ || model_->count() > maxpixels)
     {
       ms.clear();
       return;
     }
   /* check if measuring is needed */
-  const int64 mcount = model_->size();
+  const int64 mcount = model_->count();
   if (ms.total_height > 0 && mcount == int64 (ms.row_sizes.size()))
     return;
 
@@ -393,7 +385,7 @@ WidgetListImpl::position2row (double   list_fraction,
    *    bottom of the list view respectively.
    * Note that list rows increase downwards, pixel coordinates increase upwards.
    */
-  const int64 mcount = model_->size();
+  const int64 mcount = model_->count();
   const ModelSizes &ms = model_sizes_;
   if (pixel_positioning (mcount, ms))
     {
@@ -429,7 +421,7 @@ double
 WidgetListImpl::row2position (const int64  list_row,
                             const double list_alignment)
 {
-  const int64 mcount = model_->size();
+  const int64 mcount = model_->count();
   if (list_row < 0 || list_row >= mcount)
     return -1; // invalid row
   ModelSizes &ms = model_sizes_;
@@ -495,8 +487,8 @@ WidgetListImpl::scroll_row_layout (ListRow *lr_current,
    * Note that list rows increase downwards, pixel coordinates increase upwards.
    */
   const double norm_value = vadjustment_->nvalue();            // 0..1 scroll position
-  const double scroll_value = norm_value * model_->size();    // fraction into count()
-  const int64 scroll_widget = MIN (model_->size() - 1, ifloor (scroll_value));
+  const double scroll_value = norm_value * model_->count();    // fraction into count()
+  const int64 scroll_widget = MIN (model_->count() - 1, ifloor (scroll_value));
   const double scroll_fraction = MIN (1.0, scroll_value - scroll_widget); // fraction into scroll_widget row
 
   int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_widget);
@@ -517,9 +509,9 @@ WidgetListImpl::scroll_row_layout (ListRow *lr_current,
 }
 
 void
-WidgetListImpl::resize_scroll () // model_->size() >= 1
+WidgetListImpl::resize_scroll () // model_->count() >= 1
 {
-  const int64 mcount = model_->size();
+  const int64 mcount = model_->count();
 
   /* flag old rows */
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
@@ -594,7 +586,7 @@ WidgetListImpl::resize_scroll () // model_->size() >= 1
 }
 
 void
-WidgetListImpl::resize_scroll_preserving () // model_->size() >= 1
+WidgetListImpl::resize_scroll_preserving () // model_->count() >= 1
 {
   if (!block_invalidate_ && drawable() &&
       !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
@@ -620,16 +612,12 @@ WidgetListImpl::cache_row (ListRow *lr)
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
 
 ListRow*
-WidgetListImpl::create_row (uint64 nthrow,
-                          bool   with_size_groups)
+WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
 {
-  AnySeq row = model_->row (nthrow);
+  Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
-  for (uint i = 0; i < row.size(); i++)
-    {
-      WidgetImpl *widget = ref_sink (&Factory::create_ui_widget ("Label"));
-      lr->cols.push_back (widget);
-    }
+  WidgetImpl *widget = ref_sink (&Factory::create_ui_widget ("Label"));
+  lr->cols.push_back (widget);
   IFDEBUG (dbg_created++);
   lr->rowbox = &ref_sink (&Factory::create_ui_widget ("ListRow"))->interface<ContainerImpl>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
@@ -647,12 +635,11 @@ WidgetListImpl::create_row (uint64 nthrow,
 }
 
 void
-WidgetListImpl::fill_row (ListRow *lr,
-                        uint64   nthrow)
+WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
 {
-  AnySeq row = model_->row (nthrow);
+  Any row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", i < row.size() ? row[i].as_string() : "");
+    lr->cols[i]->set_property ("markup_text", row.as_string());
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
@@ -741,21 +728,21 @@ WidgetListImpl::handle_event (const Event &event)
       switch (kevent->key)
         {
         case KEY_Down:
-          if (current_row_ < uint64 (model_->size()))
-            current_row_ = MIN (int64 (current_row_) + 1, model_->size() - 1);
+          if (current_row_ < uint64 (model_->count()))
+            current_row_ = MIN (int64 (current_row_) + 1, model_->count() - 1);
           else
             current_row_ = 0;
           handled = true;
           break;
         case KEY_Up:
-          if (current_row_ < uint64 (model_->size()))
+          if (current_row_ < uint64 (model_->count()))
             current_row_ = MAX (current_row_, 1) - 1;
-          else if (model_->size())
-            current_row_ = model_->size() - 1;
+          else if (model_->count())
+            current_row_ = model_->count() - 1;
           handled = true;
           break;
         case KEY_space:
-          if (current_row_ >= 0 && current_row_ < uint64 (model_->size()))
+          if (current_row_ >= 0 && current_row_ < uint64 (model_->count()))
             toggle_selected (current_row_);
           handled = true;
           break;
@@ -781,8 +768,8 @@ WidgetListImpl::handle_event (const Event &event)
           if (frame)
             frame->frame_type (FRAME_FOCUS);
         }
-      double vscrollupper = row2position (current_row_, 0.0) / model_->size();
-      double vscrolllower = row2position (current_row_, 1.0) / model_->size();
+      double vscrollupper = row2position (current_row_, 0.0) / model_->count();
+      double vscrolllower = row2position (current_row_, 1.0) / model_->count();
       double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower, vscrollupper);
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
