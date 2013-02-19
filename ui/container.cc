@@ -593,9 +593,8 @@ ContainerImpl::screen_window_point_children (Point                   p, /* scree
 }
 
 void
-ContainerImpl::render_widget (RenderContext &rcontext)
+ContainerImpl::render_recursive (RenderContext &rcontext)
 {
-  WidgetImpl::render_widget (rcontext);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;

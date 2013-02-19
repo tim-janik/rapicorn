@@ -16,7 +16,7 @@ protected:
   const Region&         peek_expose_region      () const { return expose_region_; }
   void                  discard_expose_region   () { expose_region_.clear(); }
   bool                  exposes_pending         () const { return !expose_region_.empty(); }
-  virtual void          render_widget             (RenderContext &rcontext);
+  virtual void          render_recursive        (RenderContext &rcontext);
   virtual void          render                  (RenderContext &rcontext, const Rect &rect);
   void                  scroll_offsets          (int deltax, int deltay);
   void                  do_scrolled             ();

@@ -58,7 +58,7 @@ public:
                                          std::vector<WidgetImpl*>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
                                          std::vector<WidgetImpl*>     &stack);
-  virtual void          render_widget     (RenderContext          &rcontext);
+  virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
   virtual WidgetIface*    create_child    (const std::string      &widget_identifier,

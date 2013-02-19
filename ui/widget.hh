@@ -93,6 +93,7 @@ protected:
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
   virtual void                invalidate_parent ();
+  void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (double       new_width,
                                                  double       new_height);
@@ -218,7 +219,8 @@ protected:
   Affine                     affine_from_screen_window ();                    // screen_window => widget affine
   // rendering
   class RenderContext;
-  virtual void               render_widget               (RenderContext    &rcontext);
+  virtual void               render_widget             (RenderContext    &rcontext);
+  virtual void               render_recursive          (RenderContext    &rcontext);
   virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
@@ -243,8 +245,10 @@ public:
   bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
-  void                       set_allocation     (const Allocation &area);       // assign new allocation
+  void                       set_allocation     (const Allocation &area,
+                                                 const Allocation *clip = NULL); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } // current allocation
+  const Allocation*          clip_area          () const;
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return heritage_; }

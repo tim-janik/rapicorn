@@ -1115,6 +1115,9 @@ WidgetImpl::expose (const Region &region) // widget relative
   if (drawable() && !test_flags (INVALID_CONTENT))
     {
       Region r (allocation());
+      const Rect *oc = clip_area();
+      if (oc)
+        r.intersect (*oc);
       r.intersect (region);
       expose_internal (r);
     }
@@ -1421,6 +1424,29 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
     }
 }
 
+class ClipAreaDataKey : public DataKey<Allocation*> {
+  virtual void destroy (Allocation *clip) override
+  {
+    delete clip;
+  }
+};
+static ClipAreaDataKey clip_area_key;
+
+const Allocation*
+WidgetImpl::clip_area () const
+{
+  return get_data (&clip_area_key);
+}
+
+void
+WidgetImpl::clip_area (const Allocation *clip)
+{
+  if (!clip)
+    delete_data (&clip_area_key);
+  else
+    set_data (&clip_area_key, new Rect (*clip));
+}
+
 bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
@@ -1445,7 +1471,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
 }
 
 void
-WidgetImpl::set_allocation (const Allocation &area)
+WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
   Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
   const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
@@ -1455,22 +1481,25 @@ WidgetImpl::set_allocation (const Allocation &area)
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation oa = allocation();
+  const Rect *oc = clip_area(), oc_copy = oc ? *oc : Rect();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   if (!allocatable())
     sarea = Allocation (0, 0, 0, 0);
   const bool changed = allocation_ != sarea;
   allocation_ = sarea;
+  clip_area (clip);     // invalidates *oc
   size_allocate (allocation_, changed);
   Allocation a = allocation();
-  bool need_expose = oa != a || test_flags (INVALID_CONTENT);
+  const bool need_expose = oa != a || oc != clip || test_flags (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); // skip notification
   // expose old area
   if (need_expose)
     {
-      // expose unclipped
       Region region (oa);
-      expose_internal (region);
+      if (oc)
+        region.intersect (oc_copy);
+      expose_internal (region); // don't intersect with new allocation
     }
   /* expose new area */
   if (need_expose)
@@ -1485,8 +1514,10 @@ class WidgetImpl::RenderContext {
   friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
+  Rect                    *hierarchical_clip;
   vector<cairo_t*>         cairos;
 public:
+  explicit      RenderContext() : hierarchical_clip (NULL) {}
   /*dtor*/     ~RenderContext();
   const Region& region() const { return render_area; }
 };
@@ -1521,8 +1552,20 @@ WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
   Rect area = allocation();
+  Rect *saved_hierarchical_clip = rcontext.hierarchical_clip;
+  Rect newclip;
+  const Rect *clip = clip_area();
+  if (clip)
+    {
+      newclip = *clip;
+      if (saved_hierarchical_clip)
+        newclip.intersect (*saved_hierarchical_clip);
+      rcontext.hierarchical_clip = &newclip;
+    }
   area.intersect (rendering_region (rcontext).extents());
   render (rcontext, area);
+  render_recursive (rcontext);
+  rcontext.hierarchical_clip = saved_hierarchical_clip;
   while (rcontext.cairos.size() > n_cairos)
     {
       cairo_destroy (rcontext.cairos.back());
@@ -1534,6 +1577,10 @@ void
 WidgetImpl::render (RenderContext &rcontext, const Rect &rect)
 {}
 
+void
+WidgetImpl::render_recursive (RenderContext &rcontext)
+{}
+
 const Region&
 WidgetImpl::rendering_region (RenderContext &rcontext) const
 {
@@ -1541,12 +1588,16 @@ WidgetImpl::rendering_region (RenderContext &rcontext) const
 }
 
 cairo_t*
-WidgetImpl::cairo_context (RenderContext  &rcontext,
-                         const Allocation &area)
+WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
   Rect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = allocation();
+  if (rcontext.hierarchical_clip)
+    {
+      const Rect s = rect;
+      rect.intersect (*rcontext.hierarchical_clip);
+    }
   const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels
   if (empty_dummy)
     rect.width = rect.height = 1;
