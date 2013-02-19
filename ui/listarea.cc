@@ -731,7 +731,7 @@ WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
   Frame *frame = lr->rowbox->interface<Frame*>();
   if (frame)
     frame->frame_type (nthrow == current_row_ ? FRAME_FOCUS : FRAME_NONE);
-  lr->rowbox->color_scheme (selected (nthrow) ? COLOR_SELECTED : COLOR_NORMAL);
+  lr->rowbox->color_scheme (selected (nthrow) ? COLOR_SELECTED : COLOR_BASE);
 }
 
 ListRow*
