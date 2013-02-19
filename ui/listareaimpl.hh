@@ -13,7 +13,7 @@
 namespace Rapicorn {
 
 struct ListRow {
-  vector<WidgetImpl*> cols;
+  vector<WidgetImpl*> cols; // FIXME
   ContainerImpl *rowbox;
   Allocation     area;
   uint           allocated : 1;
