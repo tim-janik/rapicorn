@@ -43,7 +43,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   vector<ListRow*>       row_cache_;
   vector<SizeGroup*>     size_groups_;
   bool                   browse_;
-  bool                   need_resize_scroll_;
+  bool                   need_scroll_layout_;
   bool                   block_invalidate_;
   uint64                 current_row_;
   ModelSizes             model_sizes_;
@@ -100,8 +100,8 @@ public:
                                                  int64 *scrollrowlower,
                                                  int64 *listupperp,
                                                  int64 *listheightp);
-  void                  resize_scroll           ();
-  void                  resize_scroll_preserving();
+  void                  vscroll_layout           ();
+  void                  vscroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);

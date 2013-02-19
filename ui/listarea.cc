@@ -25,7 +25,7 @@ WidgetListImpl::WidgetListImpl() :
   model_ (NULL),
   hadjustment_ (NULL), vadjustment_ (NULL),
   browse_ (true),
-  need_resize_scroll_ (false), block_invalidate_ (false),
+  need_scroll_layout_ (false), block_invalidate_ (false),
   current_row_ (18446744073709551615ULL)
 {}
 
@@ -209,7 +209,7 @@ void
 WidgetListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
-  need_resize_scroll_ = true;
+  need_scroll_layout_ = true;
   model_sizes_.clear();
   invalidate();
 }
@@ -217,11 +217,11 @@ WidgetListImpl::invalidate_model (bool invalidate_heights,
 void
 WidgetListImpl::visual_update ()
 {
-  need_resize_scroll_ = true; // FIXME
-  if (need_resize_scroll_)
+  need_scroll_layout_ = true; // FIXME
+  if (need_scroll_layout_)
     {
       measure_rows (allocation().height);
-      resize_scroll_preserving();
+      vscroll_layout_preserving();
     }
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
@@ -267,11 +267,11 @@ WidgetListImpl::size_request (Requisition &requisition)
 void
 WidgetListImpl::size_allocate (Allocation area, bool changed)
 {
-  need_resize_scroll_ = need_resize_scroll_ || allocation() != area || changed;
-  if (need_resize_scroll_)
+  need_scroll_layout_ = need_scroll_layout_ || allocation() != area || changed;
+  if (need_scroll_layout_)
     {
       measure_rows (area.height);
-      resize_scroll();
+      vscroll_layout();
     }
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
@@ -481,7 +481,7 @@ WidgetListImpl::row2position (const int64  list_row,
  * Note that list rows increase downwards and pixel coordinates increase downwards.
  */
 void
-WidgetListImpl::resize_scroll ()
+WidgetListImpl::vscroll_layout ()
 {
   const int64 mcount = model_->count();
   assert_return (mcount >= 1);
@@ -558,23 +558,23 @@ WidgetListImpl::resize_scroll ()
   for (uint i = 0; i < size_groups_.size(); i++)
     size_groups_[i]->active (true);
   // reset state
-  need_resize_scroll_ = 0;
+  need_scroll_layout_ = 0;
 }
 
 void
-WidgetListImpl::resize_scroll_preserving () // model_->count() >= 1
+WidgetListImpl::vscroll_layout_preserving () // model_->count() >= 1
 {
   if (!block_invalidate_ && drawable() &&
       !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
     {
       block_invalidate_ = true;
-      resize_scroll();
+      vscroll_layout();
       requisition();
       set_allocation (allocation());
       block_invalidate_ = false;
     }
   else
-    resize_scroll();
+    vscroll_layout();
 }
 
 void
