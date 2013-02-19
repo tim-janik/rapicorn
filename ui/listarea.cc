@@ -229,7 +229,7 @@ WidgetListImpl::visual_update ()
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area);
+      lr->rowbox->set_allocation (lr->area, &allocation());
     }
 }
 
@@ -279,7 +279,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area);
+      lr->rowbox->set_allocation (lr->area, &allocation());
     }
 }
 
@@ -337,7 +337,7 @@ WidgetListImpl::row_height (int nth_row)
 {
   const int64 mcount = model_->count();
   assert_return (nth_row < mcount, -1);
-  if (row_heights_.size() != mcount)    // FIXME: hack around missing updates
+  if (row_heights_.size() != (size_t) mcount)    // FIXME: hack around missing updates
     row_heights_.resize (model_->count(), -1);
   if (row_heights_[nth_row] < 0)
     {
