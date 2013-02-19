@@ -31,9 +31,12 @@ fill_store (ListStore &lstore, const String &dirname)
       row.append_back() <<= e->d_name;
 #endif
       Any row;
-      row <<= string_printf ("%zu) %s\n      %d %lu", i++, e->d_name, e->d_type, e->d_ino);
+      row <<= string_printf ("%zu) %s %s %d %lu", i, e->d_name,
+                             i % 10 == 0 ? string_multiply ("<br/>", 1 + i / 10).c_str() : "",
+                             e->d_type, e->d_ino);
       lstore.insert (lstore.count(), row);
       e = readdir (d);
+      i++;
     }
   closedir (d);
 }
