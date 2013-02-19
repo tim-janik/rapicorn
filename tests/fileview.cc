@@ -23,11 +23,15 @@ fill_store (ListStore &lstore, const String &dirname)
   size_t i = 0;
   while (e)
     {
+#if 0 // FIXME: need proper record support in Aida::Any
       AnySeq row;
       row.append_back() <<= ++i;
       row.append_back() <<= e->d_ino;
       row.append_back() <<= e->d_type;
       row.append_back() <<= e->d_name;
+#endif
+      Any row;
+      row <<= string_printf ("%zu) %s\n      %d %lu", ++i, e->d_name, e->d_type, e->d_ino);
       lstore.insert (lstore.count(), row);
       e = readdir (d);
     }
