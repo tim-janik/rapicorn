@@ -17,8 +17,9 @@ adjust_color (Color  color,
   return color;
 }
 
-static Color lighten (Color color) { return adjust_color (color, 1.0, 1.1); }
-static Color darken  (Color color) { return adjust_color (color, 1.0, 0.9); }
+static Color lighten   (Color color) { return adjust_color (color, 1.0, 1.1); }
+static Color darken    (Color color) { return adjust_color (color, 1.0, 0.9); }
+static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 static Color
 state_color (Color     color,
@@ -58,8 +59,8 @@ colorset_normal (StateType state,
     case COLOR_NONE:            return 0x00000000;
     case COLOR_FOREGROUND:      return 0xff000000;
     case COLOR_BACKGROUND:      return 0xffdfdcd8;
-    case COLOR_BACKGROUND_EVEN: return lighten (colorset_normal (state, COLOR_BACKGROUND));
-    case COLOR_BACKGROUND_ODD:  return darken  (colorset_normal (state, COLOR_BACKGROUND));
+    case COLOR_BACKGROUND_EVEN: return colorset_normal (state, COLOR_BACKGROUND);
+    case COLOR_BACKGROUND_ODD:  return alternate (colorset_normal (state, COLOR_BACKGROUND));
     case COLOR_DARK:            return 0xff9f9c98;
     case COLOR_DARK_SHADOW:     return adjust_color (colorset_normal (state, COLOR_DARK), 1, 0.9); // 0xff8f8c88
     case COLOR_DARK_GLINT:      return adjust_color (colorset_normal (state, COLOR_DARK), 1, 1.1); // 0xffafaca8
@@ -84,10 +85,10 @@ colorset_selected (StateType state,
 {
   switch (color_type)
     {
-    case COLOR_FOREGROUND:      return 0xffeeeeee;
-    case COLOR_BACKGROUND:      return 0xff111188;
-    case COLOR_BACKGROUND_EVEN: return lighten (colorset_selected (state, COLOR_BACKGROUND));
-    case COLOR_BACKGROUND_ODD:  return darken  (colorset_selected (state, COLOR_BACKGROUND));
+    case COLOR_FOREGROUND:      return 0xfffcfdfe;      // inactive: 0xff010203
+    case COLOR_BACKGROUND:      return 0xff2595e5;      // inactive: 0xff33aaff
+    case COLOR_BACKGROUND_EVEN: return colorset_selected (state, COLOR_BACKGROUND);
+    case COLOR_BACKGROUND_ODD:  return alternate (colorset_selected (state, COLOR_BACKGROUND));
     default:                    return colorset_normal (state, color_type);
     }
 }
@@ -100,8 +101,8 @@ colorset_base (StateType state,
     {
     case COLOR_FOREGROUND:      return 0xff101010;
     case COLOR_BACKGROUND:      return 0xfff4f4f4;
-    case COLOR_BACKGROUND_EVEN: return lighten (colorset_base (state, COLOR_BACKGROUND));
-    case COLOR_BACKGROUND_ODD:  return darken  (colorset_base (state, COLOR_BACKGROUND));
+    case COLOR_BACKGROUND_EVEN: return colorset_base (state, COLOR_BACKGROUND);
+    case COLOR_BACKGROUND_ODD:  return alternate (colorset_base (state, COLOR_BACKGROUND));
     default:                    return colorset_normal (state, color_type);
     }
 }
