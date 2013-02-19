@@ -38,6 +38,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   typedef std::deque<int>      SizeQueue;
   ListModelIface        *model_;
   vector<bool>           selection_;
+  vector<int>            row_heights_;
   mutable Adjustment    *hadjustment_, *vadjustment_;
   RowMap                 row_map_;
   vector<ListRow*>       row_cache_;
@@ -85,6 +86,7 @@ public:
                                                  double  *row_fraction);
   double                row2position            (int64    list_row,
                                                  double   list_alignment = 0.5);
+  int                   row_height              (int            nth_row);
   int                   row_height              (ModelSizes &ms,
                                                  int64       list_row);
   int64                 row_layout              (double      vscrollpos,
@@ -100,8 +102,11 @@ public:
                                                  int64 *scrollrowlower,
                                                  int64 *listupperp,
                                                  int64 *listheightp);
-  void                  vscroll_layout           ();
   void                  vscroll_layout_preserving();
+  void                  vscroll_layout           ();
+  int                   vscroll_row_yoffset     (const double value, const int target_row);
+  int                   vscroll_relative_find_row (const int src_row, int pixel_delta);
+  double                vscroll_row_position      (const int target_row, const double list_alignment);
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);

@@ -80,6 +80,7 @@ WidgetListImpl::constructed ()
       {
         model_ = store;
         ref_sink (model_);
+        row_heights_.resize (model_->count(), -1);
         // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
         // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
         // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
@@ -138,9 +139,11 @@ WidgetListImpl::model (const String &modelurl)
   ListModelIface *lmi = ApplicationImpl::the().xurl_find (modelurl);
   ListModelIface *oldmodel = model_;
   model_ = lmi;
+  row_heights_.clear();
   if (model_)
     {
       ref_sink (model_);
+      row_heights_.resize (model_->count(), -1);
       // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
       // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
       // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
@@ -330,6 +333,29 @@ WidgetListImpl::measure_rows (int64 maxpixels)
 }
 
 int
+WidgetListImpl::row_height (int nth_row)
+{
+  const int64 mcount = model_->count();
+  assert_return (nth_row < mcount, -1);
+  if (row_heights_.size() != mcount)    // FIXME: hack around missing updates
+    row_heights_.resize (model_->count(), -1);
+  if (row_heights_[nth_row] < 0)
+    {
+      ListRow *lr = lookup_row (nth_row);
+      bool keep_uncached = true;
+      if (!lr)
+        {
+          lr = fetch_row (nth_row);
+          keep_uncached = false;
+        }
+      row_heights_[nth_row] = lr->rowbox->requisition().height;
+      if (!keep_uncached)
+        cache_row (lr);
+    }
+  return row_heights_[nth_row];
+}
+
+int
 WidgetListImpl::row_height (ModelSizes &ms,
                           int64       list_row)
 {
@@ -385,7 +411,7 @@ WidgetListImpl::position2row (double   list_fraction,
    *    From this, the actual scroll position is interpolated so that the top
    *    of the first row and the bottom of the last row are aligned with top and
    *    bottom of the list view respectively.
-   * Note that list rows increase downwards, pixel coordinates increase upwards.
+   * Note that list rows increase downwards, pixel coordinates increase upwards. // FIXME
    */
   const int64 mcount = model_->count();
   const ModelSizes &ms = model_sizes_;
@@ -420,8 +446,7 @@ WidgetListImpl::position2row (double   list_fraction,
 }
 
 double
-WidgetListImpl::row2position (const int64  list_row,
-                            const double list_alignment)
+WidgetListImpl::row2position (const int64 list_row, const double list_alignment)
 {
   const int64 mcount = model_->count();
   if (list_row < 0 || list_row >= mcount)
@@ -469,6 +494,91 @@ WidgetListImpl::row2position (const int64  list_row,
     }
 }
 
+// determine y position for target_row, at vertical scroll position @a value
+int
+WidgetListImpl::vscroll_row_yoffset (const double value, const int target_row)
+{
+  const int mcount = model_->count();
+  assert_return (target_row >= 0 && target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  const double scroll_norm_value = value / mcount;                              // 0..1 scroll position
+  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
+  const int scroll_widget = min (mcount - 1, ifloor (scroll_value));            // index into mcount at scroll_norm_value
+  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
+  const int list_apoint = list_area.y + list_area.height * scroll_norm_value;   // list alignment point
+  const int scroll_apoint_height = row_height (scroll_widget) * scroll_fraction; // inner row alignment point
+  int current = scroll_widget;
+  int current_y = list_apoint - scroll_apoint_height;
+  // adjust for target_row > current
+  while (target_row > current)
+    {
+      current_y += row_height (current);
+      current++;
+    }
+  // adjust for target_row < current
+  while (target_row < current)
+    {
+      current--;
+      current_y -= row_height (current);
+    }
+  return current_y;
+}
+
+// determine target row when moving away from src_row by @a pixel_delta in either direction
+int
+WidgetListImpl::vscroll_relative_find_row (const int src_row, int pixel_delta)
+{
+  const int mcount = model_->count();
+  int current = src_row;
+  if (pixel_delta < 0)
+    while (pixel_delta < 0 && current > 0)
+      {
+        current--;
+        pixel_delta += row_height (current);
+      }
+  else // pixel_delta >= 0
+    while (pixel_delta > 0 && current + 1 < mcount)
+      {
+        current++;
+        pixel_delta -= row_height (current);
+      }
+  return current;
+}
+
+// find vertical value that aligns target_row most closely within the visible list area.
+double
+WidgetListImpl::vscroll_row_position (const int target_row, const double list_alignment)
+{
+  const int64 mcount = model_->count();
+  assert_return (target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  // determine scroll position bounds around target position
+  double lower = vscroll_relative_find_row (target_row, -list_area.height);
+  double upper = vscroll_relative_find_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
+  // calculate alignment points for vertical scroll layout
+  const int list_apoint = list_area.y + list_area.height * list_alignment;      // list alignment point
+  const int scroll_apoint_height = row_height (target_row) * list_alignment;    // inner target row alignment point
+  // approximation start value, picked so it positions target_row in the visible list area
+  double delta, value = target_row + 0.5;                                       // initial approximation
+  // refine approximation via bisection
+  do
+    {
+      const int target_y = vscroll_row_yoffset (value, target_row);
+      const int target_apoint = target_y + scroll_apoint_height;                // target row alignment point
+      if (target_apoint < list_apoint)
+        upper = value;                          // scroll value must shrink so target_apoint grows
+      else if (target_apoint > list_apoint)
+        lower = value;                          // scroll value must grow so target_apoint shrinks
+      else
+        break;
+      const double new_value = (lower + upper) / 2.0;
+      delta = value - new_value;
+      value = new_value;
+    }
+  while (fabs (delta) > 1 / (2.0 * row_height (min (mcount - 1, ifloor (value)))));
+  return value;                                 // aproximation for positioning target_row alignment point at list_alignment
+}
+
 /* scroll position interpretation:
  * the current slider position is interpreted as a fractional pointer into the
  * interval [0,count[. so the integer part of the scroll position will always
@@ -498,7 +608,7 @@ WidgetListImpl::vscroll_layout ()
   const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
   const int64 scroll_widget = min (mcount - 1, ifloor (scroll_value));          // index into mcount at scroll_norm_value
   const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
-  const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment point
+  const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
   assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
   int64 firstrow, lastrow;                                              // FIXME: unused?
   // allocate row at alignment point
@@ -615,7 +725,6 @@ WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
   Any row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", row.as_string());
-  printerr ("FILL(%llu): %s\n", nthrow, row.as_string().c_str());
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
@@ -743,9 +852,9 @@ WidgetListImpl::handle_event (const Event &event)
           if (frame)
             frame->frame_type (FRAME_FOCUS);
         }
-      double vscrollupper = row2position (current_row_, 0.0) / model_->count();
-      double vscrolllower = row2position (current_row_, 1.0) / model_->count();
-      double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower, vscrollupper);
+      double vscrolllower = vscroll_row_position (current_row_, 1.0); // lower scrollpos for current at visible bottom
+      double vscrollupper = vscroll_row_position (current_row_, 0.0); // upper scrollpos for current at visible top
+      double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
       if ((selection_mode() == SELECTION_SINGLE ||
