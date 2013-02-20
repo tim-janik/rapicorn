@@ -803,6 +803,8 @@ WidgetListImpl::handle_event (const Event &event)
   bool handled = false;
   if (!model_)
     return handled;
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0, handled);
   uint64 saved_current_row = current_row_;
   switch (event.type)
     {
@@ -854,7 +856,12 @@ WidgetListImpl::handle_event (const Event &event)
         }
       double vscrolllower = vscroll_row_position (current_row_, 1.0); // lower scrollpos for current at visible bottom
       double vscrollupper = vscroll_row_position (current_row_, 0.0); // upper scrollpos for current at visible top
-      double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
+      // fixup possible approximation error in first/last pixel via edge attraction
+      if (vscrollupper <= 1)                    // edge attraction at top
+        vscrolllower = vscrollupper = 0;
+      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
+        vscrolllower = vscrollupper = mcount;
+      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
       if ((selection_mode() == SELECTION_SINGLE ||
