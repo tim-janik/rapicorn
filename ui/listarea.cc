@@ -22,7 +22,7 @@ WidgetList::_property_list()
 }
 
 WidgetListImpl::WidgetListImpl() :
-  model_ (NULL),
+  model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
   browse_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
@@ -31,12 +31,10 @@ WidgetListImpl::WidgetListImpl() :
 
 WidgetListImpl::~WidgetListImpl()
 {
-  /* remove model */
-  ListModelIface *oldmodel = model_;
-  model_ = NULL;
-  if (oldmodel)
-    unref (oldmodel);
-  /* purge row map */
+  // remove model
+  model ("");
+  assert_return (model_ == NULL);
+  // purge row map
   RowMap rc; // empty
   row_map_.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
@@ -81,9 +79,7 @@ WidgetListImpl::constructed ()
         model_ = store;
         ref_sink (model_);
         row_heights_.resize (model_->count(), -1);
-        // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
-        // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
-        // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
+        conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
       }
       unref (ref_sink (store));
       invalidate_model (true, true);
@@ -140,20 +136,20 @@ WidgetListImpl::model (const String &modelurl)
   ListModelIface *oldmodel = model_;
   model_ = lmi;
   row_heights_.clear();
+  if (oldmodel)
+    {
+      model_->sig_updated() -= conid_updated_;
+      conid_updated_ = 0;
+      row_heights_.clear();
+    }
   if (model_)
     {
       ref_sink (model_);
       row_heights_.resize (model_->count(), -1);
-      // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted); // FIXME
-      // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
-      // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
-      // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &WidgetListImpl::selection_changed);
-      model_->sig_updated() += [] (const UpdateRequest &ur) { printerr ("MODEL updated...\n"); }; // FIXME
+      conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
     }
   if (oldmodel)
-    {
-      unref (oldmodel);
-    }
+    unref (oldmodel);
   invalidate_model (true, true);
 }
 
@@ -164,26 +160,24 @@ WidgetListImpl::model () const
 }
 
 void
-WidgetListImpl::model_changed (int first, int last)
+WidgetListImpl::model_updated (const UpdateRequest &urequest)
 {
-#warning FIXME: intersect changed rows with visible rows
-  for (uint64 i = first; i <= uint64 (last); i++)
+  switch (urequest.kind)
     {
-      ListRow *lr = lookup_row (i);
-      if (lr)
-        lr->rowbox->invalidate();
+    case UPDATE_READ:
+      break;
+    case UPDATE_INSERTION:
+      nuke_range (urequest.rowspan.start, ~size_t (0));
+      row_heights_.resize (model_->count(), -1);
+      break;
+    case UPDATE_CHANGE:
+      nuke_range (urequest.rowspan.start, urequest.rowspan.start + urequest.rowspan.length);
+      break;
+    case UPDATE_DELETION:
+      nuke_range (urequest.rowspan.start, ~size_t (0));
+      row_heights_.resize (model_->count(), -1);
+      break;
     }
-}
-
-void
-WidgetListImpl::model_inserted (int first, int last)
-{
-  invalidate_model (true, true);
-}
-
-void
-WidgetListImpl::model_removed (int first, int last)
-{
   invalidate_model (true, true);
 }
 
@@ -209,8 +203,7 @@ WidgetListImpl::selection_changed (int first, int last)
 }
 
 void
-WidgetListImpl::invalidate_model (bool invalidate_heights,
-                                bool invalidate_widgets)
+WidgetListImpl::invalidate_model (bool invalidate_heights, bool invalidate_widgets)
 {
   need_scroll_layout_ = true;
   model_sizes_.clear();
@@ -693,6 +686,25 @@ WidgetListImpl::cache_row (ListRow *lr)
   row_cache_.push_back (lr);
   lr->rowbox->visible (false);
   lr->allocated = 0;
+}
+
+void
+WidgetListImpl::nuke_range (size_t first, size_t bound)
+{
+  RowMap rmap;
+  for (auto it = row_map_.begin(); it != row_map_.end(); it++)
+    if (it->first < ssize_t (first) || it->first >= ssize_t (bound))
+      rmap[it->first] = it->second;                     // keep row
+    else
+      {
+        ListRow *lr = it->second;                       // retire
+        lr->rowbox->visible (false);
+        lr->allocated = 0;
+        row_cache_.push_back (lr);
+      }
+  for (size_t i = first; i < min (bound, row_heights_.size()); i++)
+    row_heights_[i] = -1;
+  row_map_.swap (rmap);
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
