@@ -73,7 +73,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  init_core_test (__SOURCE_COMPONENT__, &argc, argv);
+  init_core_test (__PRETTY_FILE__, &argc, argv);
 
   if (argc >= 2 || Test::logging())
     {
