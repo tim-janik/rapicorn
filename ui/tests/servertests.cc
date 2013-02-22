@@ -15,7 +15,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  init_test_app (__SOURCE_COMPONENT__, &argc, argv);
+  init_test_app (__PRETTY_FILE__, &argc, argv);
 
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")
