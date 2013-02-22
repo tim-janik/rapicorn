@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS	     = . rsvg tests
 
-INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
-DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
-	       -D__RAPICORN_BUILD__
+INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
@@ -46,7 +46,7 @@ rapicorn_generated_files = $(strip    	\
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === CPU flags ===
-AM_CXXFLAGS = @FPU_FLAGS@
+AM_CXXFLAGS += @FPU_FLAGS@
 
 # === libraries ===
 # librapicorn-core

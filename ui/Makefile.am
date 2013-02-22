@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS    = . tests
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
-	    $(RAPICORN_GUI_CFLAGS) -D__RAPICORN_BUILD__
+INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
@@ -66,7 +66,7 @@ CPU_FLAGS = $(or	\
 	$(patsubst %, @MMX_FLAGS@, $(findstring -mmx.cc, $(<F))), \
 	@FPU_FLAGS@	\
 )
-AM_CXXFLAGS = $(CPU_FLAGS)
+AM_CXXFLAGS += $(CPU_FLAGS)
 
 # === Libraries ===
 # librapicorn
