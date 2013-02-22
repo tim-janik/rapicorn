@@ -153,19 +153,19 @@ RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (i
 RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);
 
 // == File Path Handling ==
-#ifdef	RAPICORN_OS_WIN32
+#ifdef  _WIN32
 #define RAPICORN_DIR_SEPARATOR		  '\\'
 #define RAPICORN_DIR_SEPARATOR_S	  "\\"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ';'
 #define RAPICORN_SEARCHPATH_SEPARATOR_S	  ";"
-#else   // !RAPICORN_OS_WIN32
+#define RAPICORN_IS_ABSPATH(p)          (((p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) && p[1] == ':' && p[2] == '\\')
+#else   // !_WIN32
 #define RAPICORN_DIR_SEPARATOR		  '/'
 #define RAPICORN_DIR_SEPARATOR_S	  "/"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ':'
 #define RAPICORN_SEARCHPATH_SEPARATOR_S	  ":"
-#endif  // !RAPICORN_OS_WIN32
-#define	RAPICORN_IS_DIR_SEPARATOR(c)        (RAPICORN_DIR_SEPARATOR == (c))
-#define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) (RAPICORN_SEARCHPATH_SEPARATOR == (c))
+#define RAPICORN_IS_ABSPATH(p)            (p[0] == RAPICORN_DIR_SEPARATOR)
+#endif  // !_WIN32
 
 // == C++ Macros ==
 #define RAPICORN_CLASS_NON_COPYABLE(ClassName)                                  private: \
