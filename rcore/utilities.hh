@@ -94,7 +94,14 @@ struct UserSource {
 };
 
 // === source location strings ===
-#define RAPICORN_STRLOC()                       (__FILE__ ":" RAPICORN_STRINGIFY (__LINE__))    ///< Return "FILE:LINE"
+String  pretty_file                             (const char *file_dir, const char *file);
+#ifdef  __FILE_DIR__
+#define __PRETTY_FILE__                         (::Rapicorn::pretty_file (__FILE_DIR__, __FILE__).c_str())
+#else
+#define __FILE_DIR__                            ""
+#define __PRETTY_FILE__                         (::Rapicorn::String (__FILE__).c_str())
+#endif
+#define RAPICORN_STRLOC()                       ((__PRETTY_FILE__ + ::Rapicorn::String (":") + RAPICORN_STRINGIFY (__LINE__)).c_str()) ///< Return "FILE:LINE"
 #define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
 #define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string)        ///< Return stringiified argument
 
@@ -103,19 +110,19 @@ struct UserSource {
 #define RAPICORN_RETURN_UNLESS(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; return __VA_ARGS__; } while (0)
 
 // === Development Guards ===
-#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (__FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (__FILE__, __LINE__, #cond); } while (0)
-#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE__, __LINE__, #cond); return __VA_ARGS__; } while (0)
-#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (__FILE__, __LINE__, "code must not be reached"); } while (0)
+#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (__FILE_DIR__, __FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (__FILE_DIR__, __FILE__, __LINE__, #cond); } while (0)
+#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE_DIR__, __FILE__, __LINE__, #cond); return __VA_ARGS__; } while (0)
+#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (__FILE_DIR__, __FILE__, __LINE__, "code must not be reached"); } while (0)
 
 // === Development Messages ===
-#define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE__, __LINE__, #cond); } while (0)
-#define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (__FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (__FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (__FILE_DIR__, __FILE__, __LINE__, #cond); } while (0)
+#define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (__FILE_DIR__, __FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (__FILE_DIR__, __FILE__, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_general (__FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (__FILE__, __LINE__, __k_, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_general (__FILE_DIR__, __FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (__FILE_DIR__, __FILE__, __LINE__, __k_, __VA_ARGS__); } while (0)
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
@@ -145,25 +152,18 @@ public:
 };
 
 // implementation prototypes
-void        debug_assert     (const char*, int, const char*);
-void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
-void        debug_fatal      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
-void        debug_critical   (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_fixit      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_general    (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_keymsg     (const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (4, 5);
+void        debug_assert     (const char*, const char*, int, const char*);
+void        debug_fassert    (const char*, const char*, int, const char*) RAPICORN_NORETURN;
+void        debug_fatal      (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5) RAPICORN_NORETURN;
+void        debug_critical   (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+void        debug_fixit      (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+void        debug_general    (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+void        debug_keymsg     (const char*, const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (5, 6);
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg
 #define RAPICORN_STARTUP_ASSERTi(e, _N) namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
 #define RAPICORN_STARTUP_ASSERT(expr)   RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
-#ifdef  __SOURCE_COMPONENT__
-#define RAPICORN__SOURCE_COMPONENT__            __SOURCE_COMPONENT__
-#elif   defined __BASE_FILE__
-#define RAPICORN__SOURCE_COMPONENT__            __BASE_FILE__
-#else
-#define RAPICORN__SOURCE_COMPONENT__            __FILE__
-#endif
 #if (defined __i386__ || defined __x86_64__)
 inline void breakpoint() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__
