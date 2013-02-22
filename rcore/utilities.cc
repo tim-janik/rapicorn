@@ -428,7 +428,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     }
   if (f & DO_STDERR)
     {
-      printerr ("%s[%u]:%s%s%s", program_alias().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), emsg.c_str());
+      printerr ("%s%s[%u]:%s: %s%s", where.c_str(), program_alias().c_str(), thread_pid(), what, msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         printerr ("Aborting...\n");
     }
