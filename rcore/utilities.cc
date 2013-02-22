@@ -202,7 +202,7 @@ bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup defa
 static Atomic<char>         conftest_general_debugging = false;
 static Atomic<char>         conftest_key_debugging = false;
 static Atomic<KeyConfig*>   conftest_map = NULL;
-static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
+static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
 
 static inline KeyConfig&
 conftest_procure ()
@@ -270,6 +270,7 @@ debug_help ()
   s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
   s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
   s += "  :devel:           Enable development version behavior.\n";
+  s += "  :color:           Colorize error messages, can be 'never', 'always', 'auto'.\n";
   s += "  :verbose:         Enable general information and diagnostic messages.\n";
   s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
   s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
@@ -369,6 +370,96 @@ dbg_prefix (const String &fileline)
 // export debug_handler() symbol for debugging stacktraces and gdb
 extern void debug_handler (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
 
+// check for colorization only once
+static inline bool
+colorize_stderr()
+{
+  Atomic<char> conftest_colorize = -1; // initially unknown
+  char vbool = conftest_colorize.load();
+  if (UNLIKELY (vbool == -1))
+    {
+      String value = debug_confstring ("color");
+      if (value == "always")
+        vbool = true;
+      else if (value == "never")
+        vbool = false;
+      else if (value == "auto")
+        {
+          vbool = false;
+          if (isatty (1) && isatty (2))
+            {
+              char *term = getenv ("TERM");
+              if (term && strcmp (term, "dumb") != 0)
+                vbool = true;
+            }
+        }
+      else
+        vbool = string_to_bool (value, 0);
+      conftest_colorize.cas (-1, vbool); // prevent overiding of existing values
+      vbool = conftest_colorize.load();
+    }
+  return vbool;
+}
+
+enum AnsiColors {
+  ANSI_NONE,
+  ANSI_RESET,
+  ANSI_BOLD, ANSI_BOLD_OFF,
+  ANSI_ITALICS, ANSI_ITALICS_OFF,
+  ANSI_UNDERLINE, ANSI_UNDERLINE_OFF,
+  ANSI_INVERSE, ANSI_INVERSE_OFF,
+  ANSI_STRIKETHROUGH, ANSI_STRIKETHROUGH_OFF,
+  ANSI_FG_BLACK, ANSI_FG_RED, ANSI_FG_GREEN, ANSI_FG_YELLOW, ANSI_FG_BLUE, ANSI_FG_MAGENTA, ANSI_FG_CYAN, ANSI_FG_WHITE,
+  ANSI_FG_DEFAULT,
+  ANSI_BG_BLACK, ANSI_BG_RED, ANSI_BG_GREEN, ANSI_BG_YELLOW, ANSI_BG_BLUE, ANSI_BG_MAGENTA, ANSI_BG_CYAN, ANSI_BG_WHITE,
+  ANSI_BG_DEFAULT,
+};
+
+static const char*
+ansi_color (AnsiColors acolor)
+{
+  switch (acolor)
+    {
+    default: ;
+    case ANSI_NONE:             return "";
+    case ANSI_RESET:            return "\033[0m";
+    case ANSI_BOLD:             return "\033[1m";
+    case ANSI_BOLD_OFF:         return "\033[22m";
+    case ANSI_ITALICS:          return "\033[3m";
+    case ANSI_ITALICS_OFF:      return "\033[23m";
+    case ANSI_UNDERLINE:        return "\033[4m";
+    case ANSI_UNDERLINE_OFF:    return "\033[24m";
+    case ANSI_INVERSE:          return "\033[7m";
+    case ANSI_INVERSE_OFF:      return "\033[27m";
+    case ANSI_STRIKETHROUGH:    return "\033[9m";
+    case ANSI_STRIKETHROUGH_OFF:return "\033[29m";
+    case ANSI_FG_BLACK:         return "\033[30m";
+    case ANSI_FG_RED:           return "\033[31m";
+    case ANSI_FG_GREEN:         return "\033[32m";
+    case ANSI_FG_YELLOW:        return "\033[33m";
+    case ANSI_FG_BLUE:          return "\033[34m";
+    case ANSI_FG_MAGENTA:       return "\033[35m";
+    case ANSI_FG_CYAN:          return "\033[36m";
+    case ANSI_FG_WHITE:         return "\033[37m";
+    case ANSI_FG_DEFAULT:       return "\033[39m";
+    case ANSI_BG_BLACK:         return "\033[40m";
+    case ANSI_BG_RED:           return "\033[41m";
+    case ANSI_BG_GREEN:         return "\033[42m";
+    case ANSI_BG_YELLOW:        return "\033[43m";
+    case ANSI_BG_BLUE:          return "\033[44m";
+    case ANSI_BG_MAGENTA:       return "\033[45m";
+    case ANSI_BG_CYAN:          return "\033[46m";
+    case ANSI_BG_WHITE:         return "\033[47m";
+    case ANSI_BG_DEFAULT:       return "\033[49m";
+    }
+}
+
+static const char*
+color (AnsiColors acolor)
+{
+  return colorize_stderr() ? ansi_color (acolor) : "";
+}
+
 void // internal function, this + caller are skipped in backtraces
 debug_handler (const char dkind, const String &file_line, const String &message, const char *key)
 {
@@ -428,7 +519,25 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     }
   if (f & DO_STDERR)
     {
-      printerr ("%s%s[%u]:%s: %s%s", where.c_str(), program_alias().c_str(), thread_pid(), what, msg.c_str(), emsg.c_str());
+      const char *cy1 = color (ANSI_FG_CYAN), *cy0 = color (ANSI_FG_DEFAULT);
+      const char *bo1 = color (ANSI_BOLD), *bo0 = color (ANSI_BOLD_OFF);
+      const char *fgw = color (ANSI_FG_WHITE), *fgc1 = fgw, *fgc0 = color (ANSI_FG_DEFAULT), *fbo1 = "", *fbo0 = "";
+      switch (kind)
+        {
+        case 'F':
+          fgc1 = color (ANSI_FG_RED);
+          fbo1 = bo1;                           fbo0 = bo0;
+          break;
+        case 'C':
+          fgc1 = color (ANSI_FG_YELLOW);
+          break;
+        }
+      printerr ("%s%s%s%s%s%s%s%s[%u] %s%s%s:%s%s %s%s",
+                cy1, where.c_str(), cy0,
+                bo1, fgw, program_alias().c_str(), fgc0, bo0, thread_pid(),
+                fbo1, fgc1, what,
+                fgc0, fbo0,
+                msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         printerr ("Aborting...\n");
     }
