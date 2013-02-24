@@ -406,26 +406,26 @@ test_query (int line, WidgetIface *iroot, const String &selector, ssize_t expect
                     expect, string_to_cquote (selector).c_str(), query_all[i]->name().c_str(), query_all[i]);
     }
 
-  TASSERT_AT (__FILE__, line, expect == 0 || query_first != NULL);
-  TASSERT_AT (__FILE__, line, expect == 1 || query_unique == NULL);
-  TASSERT_AT (__FILE__, line, expect != 1 || query_unique != NULL);
-  TASSERT_AT (__FILE__, line, query_unique == NULL || query_unique == query_first);
-  TASSERT_AT (__FILE__, line, query_all.size() >= (query_first != NULL));
-  TASSERT_AT (__FILE__, line, query_first == NULL || query_all[0] == query_first); // query_all.size() >= 1
+  TASSERT_AT (line, expect == 0 || query_first != NULL);
+  TASSERT_AT (line, expect == 1 || query_unique == NULL);
+  TASSERT_AT (line, expect != 1 || query_unique != NULL);
+  TASSERT_AT (line, query_unique == NULL || query_unique == query_first);
+  TASSERT_AT (line, query_all.size() >= (query_first != NULL));
+  TASSERT_AT (line, query_first == NULL || query_all[0] == query_first); // query_all.size() >= 1
   if (expect >= 0)
     {
       size_t expected = expect;
-      TASSERT_AT (__FILE__, line, query_all.size() == expected);
+      TASSERT_AT (line, query_all.size() == expected);
     }
   else // expect < 0
     {
       size_t expected = -expect;
-      TASSERT_AT (__FILE__, line, query_all.size() > expected);
+      TASSERT_AT (line, query_all.size() > expected);
     }
 
   if (!expected_type.empty())
     for (size_t i = 0; i < query_all.size(); i++)
-      TASSERT_AT (__FILE__, line, query_all[i]->match_selector (expected_type));
+      TASSERT_AT (line, query_all[i]->match_selector (expected_type));
 }
 
 static void load_ui_defs ();
