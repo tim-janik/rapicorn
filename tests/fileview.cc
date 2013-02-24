@@ -106,6 +106,23 @@ app_bind_list_store (ListStore &store, const String &path)
   return true;
 }
 
+static void
+fill_test_store (ListStore &lstore)
+{
+  lstore.clear();
+  for (uint i = 0; i < 20; i++)
+    {
+      String s;
+      if (i && (i % 10) == 0)
+        s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
+      else
+        s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
+      Any row;
+      row <<= s;
+      lstore.insert (lstore.count(), row);
+    }
+}
+
 extern "C" int
 main (int   argc,
       char *argv[])
@@ -121,8 +138,15 @@ main (int   argc,
   bool bsuccess = app_bind_list_store (store, "//local/data/fileview/main");
   assert (bsuccess);
 
+  // create, bind and fill testing list store
+  ListStore &test_store = *new ListStore();
+  bsuccess = app_bind_list_store (test_store, "//local/data/fileview/test_store");
+  assert (bsuccess);
+  fill_test_store (test_store);
+
   // create main window
   WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/main"));
+  // WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/test_store"));
   window.show();
 
   // load directory data
