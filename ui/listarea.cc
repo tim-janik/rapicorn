@@ -59,34 +59,6 @@ WidgetListImpl::~WidgetListImpl()
 }
 
 void
-WidgetListImpl::constructed ()
-{
-  if (!model_)
-    {
-      MemoryListStore *store = new MemoryListStore (5);
-      for (uint i = 0; i < 20; i++)
-        {
-          Any row;
-          String s;
-          if (i && (i % 10) == 0)
-            s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
-          else
-            s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row <<= s;
-          store->insert (-1, row);
-        }
-      {
-        model_ = store;
-        ref_sink (model_);
-        row_heights_.resize (model_->count(), -1);
-        conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
-      }
-      unref (ref_sink (store));
-      invalidate_model (true, true);
-    }
-}
-
-void
 WidgetListImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   MultiContainerImpl::hierarchy_changed (old_toplevel);

@@ -62,7 +62,6 @@ protected:
 public:
   explicit              WidgetListImpl            ();
   virtual              ~WidgetListImpl            ();
-  virtual void          constructed             ();
   virtual bool          browse                  () const        { return browse_; }
   virtual void          browse                  (bool b)        { browse_ = b; invalidate(); }
   virtual void          model                   (const String &modelurl);
