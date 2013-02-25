@@ -272,75 +272,6 @@ WidgetListImpl::row_height (int nth_row)
   return row_heights_[nth_row];
 }
 
-int64
-WidgetListImpl::position2row (double   list_fraction,
-                            double  *row_fraction)
-{
-  /* scroll position interpretation depends on the available vertical scroll
-   * position resolution, which is derived from the number of pixels that
-   * are (possibly) vertically allocated for the list view:
-   * 1) Pixel size interpretation.
-   *    All list rows are measured to determine their height. The fractional
-   *    scroll position is then interpreted as a pointer into the total pixel
-   *    height of the list.
-   * 2) Positional interpretation (applicable for large models).
-   *    The scroll position is interpreted as a fractional pointer into the
-   *    interval [0,rowcount[. So the integer part of the scroll position will
-   *    always point at one particular row and the fractional part is
-   *    interpreted as an offset into the widget's row, as [row_index.row_fraction].
-   *    From this, the actual scroll position is interpolated so that the top
-   *    of the first row and the bottom of the last row are aligned with top and
-   *    bottom of the list view respectively.
-   * Note that list rows increase downwards, pixel coordinates increase upwards. // FIXME
-   */
-  const int64 mcount = model_->count();
-  const ModelSizes &ms = model_sizes_;
-  if (pixel_positioning (mcount, ms))
-    {
-      /* pixel positioning */
-      const int64 lpixel = list_fraction * ms.total_height;
-      int64 row, accu = 0;
-      for (row = 0; row < mcount; row++)
-        {
-          accu += ms.row_sizes[row];
-          if (lpixel < accu)
-            break;
-        }
-      if (row < mcount)
-        {
-          if (row_fraction)
-            *row_fraction = 1.0 - (accu - lpixel) / ms.row_sizes[row];
-          return row;
-        }
-      return -1; // invalid row
-    }
-  else
-    {
-      /* fractional positioning */
-      const double scroll_value = list_fraction * mcount;
-      const int64 row = min (mcount - 1, ifloor (scroll_value));
-      if (row_fraction)
-        *row_fraction = min (1.0, scroll_value - row);
-      return row;
-    }
-}
-
-void
-WidgetListImpl::scroll_layout_preserving () // model_->count() >= 1
-{
-  if (!block_invalidate_ && drawable() &&
-      !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
-    {
-      block_invalidate_ = true;
-      scroll_layout();
-      requisition();
-      set_allocation (allocation());
-      block_invalidate_ = false;
-    }
-  else
-    scroll_layout();
-}
-
 void
 WidgetListImpl::cache_row (ListRow *lr)
 {
@@ -545,16 +476,32 @@ WidgetListImpl::handle_event (const Event &event)
   return handled;
 }
 
-// == Pixel Accurate Scrolling ==
-/* scroll position interpretation:
- * the current slider position is interpreted as a fractional pointer into the
- * interval [0,count[. so the integer part of the scroll position will always
- * point at one particular widget and the fractional part is interpreted as an
- * offset into the widget's row.
- * Scrolling for large models works by interpreting the scroll adjustment
- * values as [row_index.row_fraction]. From this, a scroll position is
- * interpolated so that the top of the first row and the bottom of the last
- * row are aligned with top and bottom of the list view respectively.
+void
+WidgetListImpl::scroll_layout_preserving () // model_->count() >= 1
+{
+  if (!block_invalidate_ && drawable() && !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+    {
+      block_invalidate_ = true;
+      scroll_layout();
+      requisition();
+      set_allocation (allocation());
+      block_invalidate_ = false;
+    }
+  else
+    scroll_layout();
+}
+
+// == Virtual Position Scrolling ==
+/* Scroll position interpretation:
+ * The current slider position is interpreted as a fractional pointer into the
+ * interval [0,count[. The resulting integer part of the scroll position will always
+ * point at one particular row (<= count) and the fractional part is interpreted as a
+ * vertical offset into this particular row.
+ * From this, a scroll position is interpolated so that the top of the first row and
+ * the bottom of the last row are aligned with top and bottom of the list view
+ * respectively. This is achieved by using the vertical row offset as one alignment
+ * point within the row (the row alignment point), and using the current slider position
+ * via proportional indexing into the list view height as second (list) alignment point.
  * Note that list rows increase downwards and pixel coordinates increase downwards.
  */
 void
@@ -744,6 +691,46 @@ WidgetListImpl::pscroll_row_position (const int target_row, const double list_al
   accu -= listheight * list_alignment;              // fractional list to align
   accu = max (0, accu);                             // clamp row0 to list start
   return accu;
+
+  /* scroll position interpretation depends on the available vertical scroll
+   * position resolution, which is derived from the number of pixels that
+   * are (possibly) vertically allocated for the list view:
+   * 1) Pixel size interpretation.
+   *    All list rows are measured to determine their height. The fractional
+   *    scroll position is then interpreted as a pointer into the total pixel
+   *    height of the list.
+   * Note that list rows increase downwards and pixel coordinates increase downwards.
+   */
+  const int64 mcount = model_->count();
+  const ModelSizes &ms = model_sizes_;
+  if (pixel_positioning (mcount, ms))
+    {
+      /* pixel positioning */
+      const int64 lpixel = list_fraction * ms.total_height;
+      int64 row, accu = 0;
+      for (row = 0; row < mcount; row++)
+        {
+          accu += ms.row_sizes[row];
+          if (lpixel < accu)
+            break;
+        }
+      if (row < mcount)
+        {
+          if (row_fraction)
+            *row_fraction = 1.0 - (accu - lpixel) / ms.row_sizes[row];
+          return row;
+        }
+      return -1; // invalid row
+    }
+  else
+    {
+      /* fractional positioning */
+      const double scroll_value = list_fraction * mcount;
+      const int64 row = min (mcount - 1, ifloor (scroll_value));
+      if (row_fraction)
+        *row_fraction = min (1.0, scroll_value - row);
+      return row;
+    }
 #endif
 }
 

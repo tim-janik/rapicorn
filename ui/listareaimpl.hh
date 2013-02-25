@@ -80,8 +80,6 @@ public:
   /* sizing and positioning */
   bool                  pixel_positioning       (const int64       mcount,
                                                  const ModelSizes &ms) const;
-  int64                 position2row            (double   list_fraction,
-                                                 double  *row_fraction);
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
@@ -102,7 +100,7 @@ public:
   double        vscroll_row_position    (const int target_row, const double list_alignment);
   int           vscroll_row_yoffset     (const double value, const int target_row);
   int           vscroll_relative_row    (const int src_row, int pixel_delta);
-  // == Pixel accurate Scrolling ==
+  // == Pixel Accurate Scrolling ==
   void          pscroll_layout          ();
   double        pscroll_row_position    (const int target_row, const double list_alignment);
 };
