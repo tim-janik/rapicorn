@@ -20,15 +20,6 @@ struct ListRow {
   ListRow() : rowbox (NULL), allocated (0) {}
 };
 
-struct ModelSizes {
-  vector<int>    row_sizes;
-  map<int64,int> size_cache; // ca. 28bytes per node
-  int64          total_height;
-  ListRow       *measurement_row;
-  explicit ModelSizes() : total_height (0), measurement_row (NULL) {}
-  void     clear     () { row_sizes.clear(); size_cache.clear(); total_height = 0; }
-};
-
 class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual WidgetList,
                        public virtual AdjustmentSource,
@@ -45,11 +36,9 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
   bool                   virtualized_pixel_scrolling_;
-  bool                   browse_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
   uint64                 current_row_;
-  ModelSizes             model_sizes_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
@@ -63,8 +52,8 @@ protected:
 public:
   explicit              WidgetListImpl            ();
   virtual              ~WidgetListImpl            ();
-  virtual bool          browse                  () const        { return browse_; }
-  virtual void          browse                  (bool b)        { browse_ = b; invalidate(); }
+  virtual bool          browse                  () const        { return 0; } // FIXME
+  virtual void          browse                  (bool b)        { (void) b; invalidate(); } // FIXME
   virtual void          model                   (const String &modelurl);
   virtual String        model                   () const;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);

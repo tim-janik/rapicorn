@@ -24,7 +24,7 @@ WidgetList::_property_list()
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  virtualized_pixel_scrolling_ (true), browse_ (true),
+  virtualized_pixel_scrolling_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
   current_row_ (18446744073709551615ULL)
 {}
@@ -177,7 +177,7 @@ void
 WidgetListImpl::invalidate_model (bool invalidate_heights, bool invalidate_widgets)
 {
   need_scroll_layout_ = true;
-  model_sizes_.clear();
+  // FIXME: reset all cached row_heights_ here?
   invalidate();
 }
 
