@@ -44,6 +44,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   vector<ListRow*>       row_cache_;
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
+  bool                   virtualized_pixel_scrolling_;
   bool                   browse_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
@@ -79,7 +80,6 @@ public:
   /* sizing and positioning */
   bool                  pixel_positioning       (const int64       mcount,
                                                  const ModelSizes &ms) const;
-  void                  measure_rows            (int64    maxpixels);
   int64                 position2row            (double   list_fraction,
                                                  double  *row_fraction);
   double                row2position            (int64    list_row,
@@ -92,19 +92,7 @@ public:
                                                  ModelSizes &ms,
                                                  int64       list_row);
 
-  void                  measure_rows            (int64    maxpixels,
-                                                 double   fraction);
-  int64                 scroll_row_layout       (ListRow *lr_current,
-                                                 int64 *scrollrowy,
-                                                 int64 *scrollrowupper,
-                                                 int64 *scrollrowlower,
-                                                 int64 *listupperp,
-                                                 int64 *listheightp);
-  void                  vscroll_layout_preserving();
-  void                  vscroll_layout           ();
-  int                   vscroll_row_yoffset     (const double value, const int target_row);
-  int                   vscroll_relative_find_row (const int src_row, int pixel_delta);
-  double                vscroll_row_position      (const int target_row, const double list_alignment);
+  void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
   void                  nuke_range              (size_t first, size_t bound);
   void                  fill_row                (ListRow *lr,
@@ -115,6 +103,17 @@ public:
   ListRow*              fetch_row               (uint64 row);
   uint64                measure_row             (ListRow *lr,
                                                  uint64  *allocation_offset = NULL);
+  // == Scrolling Implementation ==
+  void          scroll_layout           ()                              { return virtualized_pixel_scrolling_ ? vscroll_layout() : pscroll_layout(); }
+  double        scroll_row_position     (const int r, const double a)   { return virtualized_pixel_scrolling_ ? vscroll_row_position (r, a) : pscroll_row_position (r, a); }
+  // == Virtualized Scrolling ==
+  void          vscroll_layout          ();
+  double        vscroll_row_position    (const int target_row, const double list_alignment);
+  int           vscroll_row_yoffset     (const double value, const int target_row);
+  int           vscroll_relative_row    (const int src_row, int pixel_delta);
+  // == Pixel accurate Scrolling ==
+  void          pscroll_layout          ();
+  double        pscroll_row_position    (const int target_row, const double list_alignment);
 };
 
 } // Rapicorn

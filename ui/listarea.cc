@@ -24,7 +24,7 @@ WidgetList::_property_list()
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  browse_ (true),
+  virtualized_pixel_scrolling_ (true), browse_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
   current_row_ (18446744073709551615ULL)
 {}
@@ -187,10 +187,7 @@ WidgetListImpl::visual_update ()
 {
   need_scroll_layout_ = true; // FIXME
   if (need_scroll_layout_)
-    {
-      measure_rows (allocation().height);
-      vscroll_layout_preserving();
-    }
+    scroll_layout_preserving();
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
@@ -209,7 +206,6 @@ void
 WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  measure_rows (4096); // FIXME: use monitor size
   // FIXME: this should only measure current row
   requisition.width = 0;
   requisition.height = -1;
@@ -237,10 +233,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
 {
   need_scroll_layout_ = need_scroll_layout_ || allocation() != area || changed;
   if (need_scroll_layout_)
-    {
-      measure_rows (area.height);
-      vscroll_layout();
-    }
+    vscroll_layout();
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
@@ -254,47 +247,6 @@ WidgetListImpl::pixel_positioning (const int64       mcount,
 {
   return 0;
   return mcount == int64 (ms.row_sizes.size());
-}
-
-void
-WidgetListImpl::measure_rows (int64 maxpixels)
-{
-  return; // FIXME: use case?
-  ModelSizes &ms = model_sizes_;
-  /* create measuring context */
-  if (!ms.measurement_row)
-    {
-      ms.measurement_row = create_row (0, false);
-      Allocation area;
-      area.x = area.y = -1;
-      area.width = area.height = 0;
-      ms.measurement_row->rowbox->set_allocation (area);
-    }
-  /* catch cases where measuring is useless */
-  if (!model_ || model_->count() > maxpixels)
-    {
-      ms.clear();
-      return;
-    }
-  /* check if measuring is needed */
-  const int64 mcount = model_->count();
-  if (ms.total_height > 0 && mcount == int64 (ms.row_sizes.size()))
-    return;
-
-  return; // FIXME
-
-  /* measure all rows */
-  ms.clear();
-  ms.row_sizes.resize (mcount);
-  ListRow *lr = ms.measurement_row;
-  for (int64 row = 0; row < mcount; row++)
-    {
-      printerr ("measure: %llu\n", row);
-      fill_row (lr, row);
-      int rowheight = measure_row (lr);
-      ms.row_sizes[row] = rowheight;
-      ms.total_height += rowheight;
-    }
 }
 
 int
@@ -491,7 +443,7 @@ WidgetListImpl::vscroll_row_yoffset (const double value, const int target_row)
 
 // determine target row when moving away from src_row by @a pixel_delta in either direction
 int
-WidgetListImpl::vscroll_relative_find_row (const int src_row, int pixel_delta)
+WidgetListImpl::vscroll_relative_row (const int src_row, int pixel_delta)
 {
   const int mcount = model_->count();
   int current = src_row;
@@ -518,8 +470,8 @@ WidgetListImpl::vscroll_row_position (const int target_row, const double list_al
   assert_return (target_row < mcount, 0);
   const Allocation list_area = allocation();
   // determine scroll position bounds around target position
-  double lower = vscroll_relative_find_row (target_row, -list_area.height);
-  double upper = vscroll_relative_find_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
+  double lower = vscroll_relative_row (target_row, -list_area.height);
+  double upper = vscroll_relative_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
   // calculate alignment points for vertical scroll layout
   const int list_apoint = list_area.y + list_area.height * list_alignment;      // list alignment point
   const int scroll_apoint_height = row_height (target_row) * list_alignment;    // inner target row alignment point
@@ -637,19 +589,19 @@ WidgetListImpl::vscroll_layout ()
 }
 
 void
-WidgetListImpl::vscroll_layout_preserving () // model_->count() >= 1
+WidgetListImpl::scroll_layout_preserving () // model_->count() >= 1
 {
   if (!block_invalidate_ && drawable() &&
       !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
     {
       block_invalidate_ = true;
-      vscroll_layout();
+      scroll_layout();
       requisition();
       set_allocation (allocation());
       block_invalidate_ = false;
     }
   else
-    vscroll_layout();
+    scroll_layout();
 }
 
 void
@@ -854,6 +806,19 @@ WidgetListImpl::handle_event (const Event &event)
         toggle_selected (current_row_);
     }
   return handled;
+}
+
+// == Pixel accurate Scrolling ==
+void
+WidgetListImpl::pscroll_layout ()
+{
+  fatal ("UNIMPLEMENTED");
+}
+
+double
+WidgetListImpl::pscroll_row_position (const int target_row, const double list_alignment)
+{
+  fatal ("UNIMPLEMENTED");
 }
 
 static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
