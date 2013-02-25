@@ -18,13 +18,13 @@
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
 #define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
 #define TASSERT_AT(L,cond)      do { if (RAPICORN_LIKELY (cond)) break; \
-                                     Rapicorn::debug_fassert (__FILE_DIR__, __FILE__, L, #cond); } while (0)
+                                     Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, L, #cond); } while (0)
 #define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
-    Rapicorn::debug_fatal (__FILE_DIR__, __FILE__, __LINE__, "error: %s", __s.c_str()); } while (0)
+    Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, "error: %s", __s.c_str()); } while (0)
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
   String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
   String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
-  Rapicorn::debug_fatal (__FILE_DIR__, __FILE__, __LINE__,              \
+  Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__,                \
                          "assertion failed: %s %s %s: %s %s %s",        \
                          sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
   } while (0)

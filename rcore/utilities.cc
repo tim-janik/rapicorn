@@ -603,51 +603,51 @@ debug_handler (const char dkind, const String &file_line, const String &message,
 }
 
 void
-debug_assert (const char *fdir, const char *file, const int line, const char *message)
+debug_assert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('C', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), string_printf ("assertion failed: %s", message));
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
 }
 
 void
-debug_fassert (const char *fdir, const char *file, const int line, const char *message)
+debug_fassert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('F', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), string_printf ("assertion failed: %s", message));
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
   ::abort();
 }
 
 void
-debug_fatal (const char *fdir, const char *file, const int line, const char *format, ...)
+debug_fatal (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), msg);
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
   ::abort();
 }
 
 void
-debug_critical (const char *fdir, const char *file, const int line, const char *format, ...)
+debug_critical (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), msg);
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_fixit (const char *fdir, const char *file, const int line, const char *format, ...)
+debug_fixit (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), msg);
+  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_general (const char *fdir, const char *file, const int line, const char *format, ...)
+debug_general (const char *file_path, const int line, const char *format, ...)
 {
   if (!conftest_general_debugging)
     return;
@@ -655,11 +655,11 @@ debug_general (const char *fdir, const char *file, const int line, const char *f
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('D', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), msg);
+  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_keymsg (const char *fdir, const char *file, const int line, const char *key, const char *format, ...)
+debug_keymsg (const char *file_path, const int line, const char *key, const char *format, ...)
 {
   if (!debug_enabled (key))
     return;
@@ -667,7 +667,7 @@ debug_keymsg (const char *fdir, const char *file, const int line, const char *ke
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('K', string_printf ("%s:%d", pretty_file (fdir, file).c_str(), line), msg, key);
+  debug_handler ('K', string_printf ("%s:%d", file_path, line), msg, key);
 }
 
 String
