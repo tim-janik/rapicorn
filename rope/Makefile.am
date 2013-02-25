@@ -3,9 +3,10 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . # tests
 
-DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
-	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
+INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS = $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
+
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl

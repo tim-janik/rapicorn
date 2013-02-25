@@ -1,8 +1,9 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
+INCLUDES   += -I$(top_srcdir)
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 
 noinst_PROGRAMS  = $(EXAMPLES)
 noinst_DATA      =

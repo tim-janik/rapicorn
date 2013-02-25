@@ -50,7 +50,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  app = init_test_app (__SOURCE_COMPONENT__, &argc, argv);
+  app = init_test_app (__PRETTY_FILE__, &argc, argv);
 
   return Test::run();
 }

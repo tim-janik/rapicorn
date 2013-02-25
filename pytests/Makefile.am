@@ -1,8 +1,8 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
+INCLUDES   += -I$(top_srcdir)
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 
 # variables
 noinst_PROGRAMS  = # auto-cleaned

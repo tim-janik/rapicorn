@@ -26,7 +26,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__PRETTY_FILE__, &argc, argv);
 
 #if 0 // FIMXE: test builtin images
   ApplicationIface::pixstream ("testimage-alpha-rle", alpha_rle);
