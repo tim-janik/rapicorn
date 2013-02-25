@@ -110,7 +110,7 @@ WidgetListImpl::model (const String &modelurl)
   row_heights_.clear();
   if (oldmodel)
     {
-      model_->sig_updated() -= conid_updated_;
+      oldmodel->sig_updated() -= conid_updated_;
       conid_updated_ = 0;
       row_heights_.clear();
     }
