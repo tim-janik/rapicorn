@@ -39,7 +39,7 @@ WidgetListImpl::~WidgetListImpl()
   row_map_.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
     cache_row (ri->second);
-  /* destroy row cache */
+  // destroy row cache
   while (row_cache_.size())
     {
       ListRow *lr = row_cache_.back();
@@ -49,7 +49,7 @@ WidgetListImpl::~WidgetListImpl()
       unref (lr->rowbox);
       delete lr;
     }
-  /* release size groups */
+  // release size groups
   while (size_groups_.size())
     {
       SizeGroup *sg = size_groups_.back();
@@ -87,8 +87,7 @@ WidgetListImpl::vadjustment () const
 }
 
 Adjustment*
-WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source,
-                              const String        &name)
+WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &name)
 {
   switch (adj_source)
     {
@@ -128,7 +127,7 @@ WidgetListImpl::model (const String &modelurl)
 String
 WidgetListImpl::model () const
 {
-  return ""; // FIME: model_ ? model_->plor_name() : "";
+  return ""; // FIME: use xurl_path (not model_->plor_name)
 }
 
 void
@@ -165,7 +164,7 @@ WidgetListImpl::toggle_selected (int row)
 void
 WidgetListImpl::selection_changed (int first, int last)
 {
-  // FIXME: intersect with visible rows
+  // FIXME: intersect with visible rows?
   for (int i = first; i <= last; i++)
     {
       ListRow *lr = lookup_row (i);
@@ -206,7 +205,7 @@ void
 WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  // FIXME: this should only measure current row
+  // FIXME: allow property to specify how many rows should be visible?
   requisition.width = 0;
   requisition.height = -1;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
@@ -242,11 +241,78 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
 }
 
 bool
-WidgetListImpl::pixel_positioning (const int64       mcount,
-                                 const ModelSizes &ms) const
+WidgetListImpl::handle_event (const Event &event)
 {
-  return 0;
-  return mcount == int64 (ms.row_sizes.size());
+  bool handled = false;
+  if (!model_)
+    return handled;
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0, handled);
+  uint64 saved_current_row = current_row_;
+  switch (event.type)
+    {
+      const EventKey *kevent;
+    case KEY_PRESS:
+      kevent = dynamic_cast<const EventKey*> (&event);
+      switch (kevent->key)
+        {
+        case KEY_Down:
+          if (current_row_ < uint64 (model_->count()))
+            current_row_ = MIN (int64 (current_row_) + 1, model_->count() - 1);
+          else
+            current_row_ = 0;
+          handled = true;
+          break;
+        case KEY_Up:
+          if (current_row_ < uint64 (model_->count()))
+            current_row_ = MAX (current_row_, 1) - 1;
+          else if (model_->count())
+            current_row_ = model_->count() - 1;
+          handled = true;
+          break;
+        case KEY_space:
+          if (current_row_ >= 0 && current_row_ < uint64 (model_->count()))
+            toggle_selected (current_row_);
+          handled = true;
+          break;
+        }
+    case KEY_RELEASE:
+    default:
+      break;
+    }
+  if (saved_current_row != current_row_)
+    {
+      ListRow *lr;
+      lr = lookup_row (saved_current_row);
+      if (lr)
+        {
+          Frame *frame = lr->rowbox->interface<Frame*>();
+          if (frame)
+            frame->frame_type (FRAME_NONE);
+        }
+      lr = lookup_row (current_row_);
+      if (lr)
+        {
+          Frame *frame = lr->rowbox->interface<Frame*>();
+          if (frame)
+            frame->frame_type (FRAME_FOCUS);
+        }
+      double vscrolllower = vscroll_row_position (current_row_, 1.0); // lower scrollpos for current at visible bottom
+      double vscrollupper = vscroll_row_position (current_row_, 0.0); // upper scrollpos for current at visible top
+      // fixup possible approximation error in first/last pixel via edge attraction
+      if (vscrollupper <= 1)                    // edge attraction at top
+        vscrolllower = vscrollupper = 0;
+      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
+        vscrolllower = vscrollupper = mcount;
+      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
+      if (nvalue != vadjustment_->nvalue())
+        vadjustment_->nvalue (nvalue);
+      if ((selection_mode() == SELECTION_SINGLE ||
+           selection_mode() == SELECTION_BROWSE) &&
+          selected (saved_current_row))
+        toggle_selected (current_row_);
+    }
+  return handled;
 }
 
 int
@@ -375,105 +441,10 @@ WidgetListImpl::fetch_row (uint64 row)
   return lr;
 }
 
-uint64 // FIXME: signed
-WidgetListImpl::measure_row (ListRow *lr, uint64 *allocation_offset)
-{
-  if (allocation_offset)
-    {
-      Allocation carea = lr->rowbox->allocation();
-      *allocation_offset = carea.y;
-      if (carea.height < 0)
-        assert_unreached(); // FIXME
-      return carea.height;
-    }
-  else
-    {
-      Requisition requisition = lr->rowbox->requisition();
-      if (requisition.height < 0)
-        assert_unreached(); // FIXME
-      return requisition.height;
-    }
-}
-
 void
 WidgetListImpl::reset (ResetMode mode)
 {
   // current_row_ = 18446744073709551615ULL;
-}
-
-bool
-WidgetListImpl::handle_event (const Event &event)
-{
-  bool handled = false;
-  if (!model_)
-    return handled;
-  const int64 mcount = model_->count();
-  return_unless (mcount > 0, handled);
-  uint64 saved_current_row = current_row_;
-  switch (event.type)
-    {
-      const EventKey *kevent;
-    case KEY_PRESS:
-      kevent = dynamic_cast<const EventKey*> (&event);
-      switch (kevent->key)
-        {
-        case KEY_Down:
-          if (current_row_ < uint64 (model_->count()))
-            current_row_ = MIN (int64 (current_row_) + 1, model_->count() - 1);
-          else
-            current_row_ = 0;
-          handled = true;
-          break;
-        case KEY_Up:
-          if (current_row_ < uint64 (model_->count()))
-            current_row_ = MAX (current_row_, 1) - 1;
-          else if (model_->count())
-            current_row_ = model_->count() - 1;
-          handled = true;
-          break;
-        case KEY_space:
-          if (current_row_ >= 0 && current_row_ < uint64 (model_->count()))
-            toggle_selected (current_row_);
-          handled = true;
-          break;
-        }
-    case KEY_RELEASE:
-    default:
-      break;
-    }
-  if (saved_current_row != current_row_)
-    {
-      ListRow *lr;
-      lr = lookup_row (saved_current_row);
-      if (lr)
-        {
-          Frame *frame = lr->rowbox->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_NONE);
-        }
-      lr = lookup_row (current_row_);
-      if (lr)
-        {
-          Frame *frame = lr->rowbox->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_FOCUS);
-        }
-      double vscrolllower = vscroll_row_position (current_row_, 1.0); // lower scrollpos for current at visible bottom
-      double vscrollupper = vscroll_row_position (current_row_, 0.0); // upper scrollpos for current at visible top
-      // fixup possible approximation error in first/last pixel via edge attraction
-      if (vscrollupper <= 1)                    // edge attraction at top
-        vscrolllower = vscrollupper = 0;
-      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
-        vscrolllower = vscrollupper = mcount;
-      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
-      if (nvalue != vadjustment_->nvalue())
-        vadjustment_->nvalue (nvalue);
-      if ((selection_mode() == SELECTION_SINGLE ||
-           selection_mode() == SELECTION_BROWSE) &&
-          selected (saved_current_row))
-        toggle_selected (current_row_);
-    }
-  return handled;
 }
 
 void
@@ -510,7 +481,7 @@ WidgetListImpl::vscroll_layout ()
   const int64 mcount = model_->count();
   assert_return (mcount >= 1);
   RowMap rmap;
-  // deactivate size-groups to avoid excessive resizes upon measure_row()
+  // deactivate size-groups to avoid excessive resizes upon row measuring
   for (uint i = 0; i < size_groups_.size(); i++)
     size_groups_[i]->active (false);
   // flag old rows

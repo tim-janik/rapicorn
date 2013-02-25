@@ -78,8 +78,6 @@ public:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   /* sizing and positioning */
-  bool                  pixel_positioning       (const int64       mcount,
-                                                 const ModelSizes &ms) const;
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
@@ -90,8 +88,6 @@ public:
                                                  bool   with_size_groups = true);
   ListRow*              lookup_row              (uint64 row);
   ListRow*              fetch_row               (uint64 row);
-  uint64                measure_row             (ListRow *lr,
-                                                 uint64  *allocation_offset = NULL);
   // == Scrolling Implementation ==
   void          scroll_layout           ()                              { return virtualized_pixel_scrolling_ ? vscroll_layout() : pscroll_layout(); }
   double        scroll_row_position     (const int r, const double a)   { return virtualized_pixel_scrolling_ ? vscroll_row_position (r, a) : pscroll_row_position (r, a); }
