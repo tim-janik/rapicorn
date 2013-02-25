@@ -272,43 +272,6 @@ WidgetListImpl::row_height (int nth_row)
   return row_heights_[nth_row];
 }
 
-int
-WidgetListImpl::row_height (ModelSizes &ms,
-                          int64       list_row)
-{
-  map<int64,int>::iterator it = ms.size_cache.find (list_row);
-  if (it != ms.size_cache.end())
-    return it->second;
-  fill_row (ms.measurement_row, list_row);
-  Requisition requisition = ms.measurement_row->rowbox->requisition();
-  ms.size_cache[list_row] = requisition.height;
-  // printerr ("CACHE: last=%lld size=%d\n", list_row, ms.size_cache.size());
-  return requisition.height;
-}
-
-int64 /* list bottom relative y for list_row */
-WidgetListImpl::row_layout (double      vscrollpos,
-                          int64       mcount,
-                          ModelSizes &ms,
-                          int64       list_row)
-{
-  /* allocate scroll position row (list bottom relative) */
-  const double list_alignment = vscrollpos / mcount;
-  const int listpos = allocation().height * (1.0 - list_alignment);
-  const int64 scrollrow = ifloor (vscrollpos);
-  const double scrollrow_alignment = vscrollpos - scrollrow;
-  const int scrollrow_lower = row_height (ms, scrollrow) * (1.0 - scrollrow_alignment);
-  const int scrollrow_y = listpos - scrollrow_lower;
-  int64 y = scrollrow_y;
-  if (scrollrow > list_row)
-    for (int64 row = list_row + 1; row <= scrollrow; row++)
-      y += row_height (ms, row);
-  else if (scrollrow < list_row)
-    for (int64 row = scrollrow + 1; row <= list_row; row++)
-      y -= row_height (ms, row);
-  return y;
-}
-
 int64
 WidgetListImpl::position2row (double   list_fraction,
                             double  *row_fraction)
@@ -360,232 +323,6 @@ WidgetListImpl::position2row (double   list_fraction,
         *row_fraction = min (1.0, scroll_value - row);
       return row;
     }
-}
-
-double
-WidgetListImpl::row2position (const int64 list_row, const double list_alignment)
-{
-  const int64 mcount = model_->count();
-  if (list_row < 0 || list_row >= mcount)
-    return -1; // invalid row
-  ModelSizes &ms = model_sizes_;
-  const int listheight = allocation().height;
-  /* see position2row() for fractional positioning vs. pixel positioning */
-  if (pixel_positioning (mcount, ms))
-    {
-      /* pixel positioning */
-      int64 row, accu = 0;
-      for (row = 0; row < list_row; row++)
-        accu += ms.row_sizes[row];
-      /* here: accu == real_scroll_position for list_alignment == 0 */
-      accu += ms.row_sizes[row] * list_alignment;       // fractional row to align
-      accu -= listheight * list_alignment;              // fractional list to align
-      accu = max (0, accu);                             // clamp row0 to list start
-      return accu;
-    }
-  else
-    {
-      /* fractional positioning */
-      const int listpos = listheight * (1.0 - list_alignment);
-      const int rowheight = row_height (ms, list_row);
-      const int maxstep = 16;                           // upper bound on O(row_layout())
-      int64 last_rowpos = listpos;
-      double lower = 0, upper = mcount;
-      double value = list_row + 0.5;
-      for (int i = 0; i <= max (56, listheight); i++)   // maximum usually unreached
-        {
-          int64 rowy = row_layout (value, mcount, ms, list_row); // rowy measure from list bottom
-          int64 rowpos = rowy + rowheight * (1.0 - list_alignment);
-          if (rowpos < listpos)
-            lower = value;      /* value must grow */
-          else if (rowpos > listpos)
-            upper = value;      /* value must shrink */
-          else
-            break;              /* value is ideal */
-          if (rowpos == last_rowpos)
-            break;              /* value cannot be refined */
-          last_rowpos = rowpos;
-          value = CLAMP (0.5 * (lower + upper), value - maxstep, value + maxstep);
-        }
-      return value;
-    }
-}
-
-// determine y position for target_row, at vertical scroll position @a value
-int
-WidgetListImpl::vscroll_row_yoffset (const double value, const int target_row)
-{
-  const int mcount = model_->count();
-  assert_return (target_row >= 0 && target_row < mcount, 0);
-  const Allocation list_area = allocation();
-  const double scroll_norm_value = value / mcount;                              // 0..1 scroll position
-  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
-  const int scroll_widget = min (mcount - 1, ifloor (scroll_value));            // index into mcount at scroll_norm_value
-  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
-  const int list_apoint = list_area.y + list_area.height * scroll_norm_value;   // list alignment point
-  const int scroll_apoint_height = row_height (scroll_widget) * scroll_fraction; // inner row alignment point
-  int current = scroll_widget;
-  int current_y = list_apoint - scroll_apoint_height;
-  // adjust for target_row > current
-  while (target_row > current)
-    {
-      current_y += row_height (current);
-      current++;
-    }
-  // adjust for target_row < current
-  while (target_row < current)
-    {
-      current--;
-      current_y -= row_height (current);
-    }
-  return current_y;
-}
-
-// determine target row when moving away from src_row by @a pixel_delta in either direction
-int
-WidgetListImpl::vscroll_relative_row (const int src_row, int pixel_delta)
-{
-  const int mcount = model_->count();
-  int current = src_row;
-  if (pixel_delta < 0)
-    while (pixel_delta < 0 && current > 0)
-      {
-        current--;
-        pixel_delta += row_height (current);
-      }
-  else // pixel_delta >= 0
-    while (pixel_delta > 0 && current + 1 < mcount)
-      {
-        current++;
-        pixel_delta -= row_height (current);
-      }
-  return current;
-}
-
-// find vertical value that aligns target_row most closely within the visible list area.
-double
-WidgetListImpl::vscroll_row_position (const int target_row, const double list_alignment)
-{
-  const int64 mcount = model_->count();
-  assert_return (target_row < mcount, 0);
-  const Allocation list_area = allocation();
-  // determine scroll position bounds around target position
-  double lower = vscroll_relative_row (target_row, -list_area.height);
-  double upper = vscroll_relative_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
-  // calculate alignment points for vertical scroll layout
-  const int list_apoint = list_area.y + list_area.height * list_alignment;      // list alignment point
-  const int scroll_apoint_height = row_height (target_row) * list_alignment;    // inner target row alignment point
-  // approximation start value, picked so it positions target_row in the visible list area
-  double delta, value = target_row + 0.5;                                       // initial approximation
-  // refine approximation via bisection
-  do
-    {
-      const int target_y = vscroll_row_yoffset (value, target_row);
-      const int target_apoint = target_y + scroll_apoint_height;                // target row alignment point
-      if (target_apoint < list_apoint)
-        upper = value;                          // scroll value must shrink so target_apoint grows
-      else if (target_apoint > list_apoint)
-        lower = value;                          // scroll value must grow so target_apoint shrinks
-      else
-        break;
-      const double new_value = (lower + upper) / 2.0;
-      delta = value - new_value;
-      value = new_value;
-    }
-  while (fabs (delta) > 1 / (2.0 * row_height (min (mcount - 1, ifloor (value)))));
-  return value;                                 // aproximation for positioning target_row alignment point at list_alignment
-}
-
-/* scroll position interpretation:
- * the current slider position is interpreted as a fractional pointer into the
- * interval [0,count[. so the integer part of the scroll position will always
- * point at one particular widget and the fractional part is interpreted as an
- * offset into the widget's row.
- * Scrolling for large models works by interpreting the scroll adjustment
- * values as [row_index.row_fraction]. From this, a scroll position is
- * interpolated so that the top of the first row and the bottom of the last
- * row are aligned with top and bottom of the list view respectively.
- * Note that list rows increase downwards and pixel coordinates increase downwards.
- */
-void
-WidgetListImpl::vscroll_layout ()
-{
-  const int64 mcount = model_->count();
-  assert_return (mcount >= 1);
-  RowMap rmap;
-  // deactivate size-groups to avoid excessive resizes upon measure_row()
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (false);
-  // flag old rows
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
-    it->second->allocated = 0;
-  // calculate alignment point for vertical scroll layout
-  const Allocation list_area = allocation();
-  const double scroll_norm_value = vadjustment_->nvalue();                      // 0..1 scroll position
-  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
-  const int64 scroll_widget = min (mcount - 1, ifloor (scroll_value));          // index into mcount at scroll_norm_value
-  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
-  const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
-  assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
-  int64 firstrow, lastrow;                                              // FIXME: unused?
-  // allocate row at alignment point
-  ListRow *lr_sw = fetch_row (scroll_widget);
-  {
-    const Requisition lr_requisition = lr_sw->rowbox->requisition();
-    const int64 rowheight = lr_requisition.height;
-    critical_unless (rowheight > 0);
-    const int64 row_apoint = rowheight * scroll_fraction;                       // row alignment point
-    lr_sw->area.y = list_apoint - row_apoint;
-    lr_sw->area.height = lr_requisition.height;
-    lr_sw->area.x = list_area.x;
-    lr_sw->area.width = list_area.width;
-    lr_sw->allocated = true; // FIXME: remove field?
-    rmap[scroll_widget] = lr_sw;
-    firstrow = lastrow = scroll_widget;
-  }
-  // allocate rows above scroll_widget
-  int64 accu = lr_sw->area.y;                                                   // upper pixel bound
-  int64 current = scroll_widget - 1;
-  while (current >= 0 && accu >= list_area.y)
-    {
-      ListRow *lr = fetch_row (current);
-      const Requisition lr_requisition = lr->rowbox->requisition();
-      critical_unless (lr_requisition.height > 0);
-      lr->area.height = lr_requisition.height;
-      accu -= lr->area.height;
-      lr->area.y = accu;
-      lr->area.x = list_area.x;
-      lr->area.width = list_area.width;
-      lr->allocated = true;
-      rmap[current] = lr;
-      firstrow = current--;
-    }
-  // allocate rows below scroll_widget
-  accu = lr_sw->area.y + lr_sw->area.height;                                    // lower pixel bound
-  current = scroll_widget + 1;
-  while (current < mcount && accu < list_area.y + list_area.height)
-    {
-      ListRow *lr = fetch_row (current);
-      const Requisition lr_requisition = lr->rowbox->requisition();
-      critical_unless (lr_requisition.height > 0);
-      lr->area.height = lr_requisition.height;
-      lr->area.y = accu;
-      accu += lr->area.height;
-      lr->area.x = list_area.x;
-      lr->area.width = list_area.width;
-      lr->allocated = true;
-      rmap[current] = lr;
-      lastrow = current++;
-    }
-  // clean up remaining old rows and put new row map into place
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
-    cache_row (it->second);
-  row_map_.swap (rmap);
-  // reactivate size-groups for proper size allocation
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (true);
-  // reset state
-  need_scroll_layout_ = 0;
 }
 
 void
@@ -808,7 +545,185 @@ WidgetListImpl::handle_event (const Event &event)
   return handled;
 }
 
-// == Pixel accurate Scrolling ==
+// == Pixel Accurate Scrolling ==
+/* scroll position interpretation:
+ * the current slider position is interpreted as a fractional pointer into the
+ * interval [0,count[. so the integer part of the scroll position will always
+ * point at one particular widget and the fractional part is interpreted as an
+ * offset into the widget's row.
+ * Scrolling for large models works by interpreting the scroll adjustment
+ * values as [row_index.row_fraction]. From this, a scroll position is
+ * interpolated so that the top of the first row and the bottom of the last
+ * row are aligned with top and bottom of the list view respectively.
+ * Note that list rows increase downwards and pixel coordinates increase downwards.
+ */
+void
+WidgetListImpl::vscroll_layout ()
+{
+  const int64 mcount = model_->count();
+  assert_return (mcount >= 1);
+  RowMap rmap;
+  // deactivate size-groups to avoid excessive resizes upon measure_row()
+  for (uint i = 0; i < size_groups_.size(); i++)
+    size_groups_[i]->active (false);
+  // flag old rows
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
+    it->second->allocated = 0;
+  // calculate alignment point for vertical scroll layout
+  const Allocation list_area = allocation();
+  const double scroll_norm_value = vadjustment_->nvalue();                      // 0..1 scroll position
+  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
+  const int64 scroll_widget = min (mcount - 1, ifloor (scroll_value));          // index into mcount at scroll_norm_value
+  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
+  const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
+  assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
+  int64 firstrow, lastrow;                                              // FIXME: unused?
+  // allocate row at alignment point
+  ListRow *lr_sw = fetch_row (scroll_widget);
+  {
+    const Requisition lr_requisition = lr_sw->rowbox->requisition();
+    const int64 rowheight = lr_requisition.height;
+    critical_unless (rowheight > 0);
+    const int64 row_apoint = rowheight * scroll_fraction;                       // row alignment point
+    lr_sw->area.y = list_apoint - row_apoint;
+    lr_sw->area.height = lr_requisition.height;
+    lr_sw->area.x = list_area.x;
+    lr_sw->area.width = list_area.width;
+    lr_sw->allocated = true; // FIXME: remove field?
+    rmap[scroll_widget] = lr_sw;
+    firstrow = lastrow = scroll_widget;
+  }
+  // allocate rows above scroll_widget
+  int64 accu = lr_sw->area.y;                                                   // upper pixel bound
+  int64 current = scroll_widget - 1;
+  while (current >= 0 && accu >= list_area.y)
+    {
+      ListRow *lr = fetch_row (current);
+      const Requisition lr_requisition = lr->rowbox->requisition();
+      critical_unless (lr_requisition.height > 0);
+      lr->area.height = lr_requisition.height;
+      accu -= lr->area.height;
+      lr->area.y = accu;
+      lr->area.x = list_area.x;
+      lr->area.width = list_area.width;
+      lr->allocated = true;
+      rmap[current] = lr;
+      firstrow = current--;
+    }
+  // allocate rows below scroll_widget
+  accu = lr_sw->area.y + lr_sw->area.height;                                    // lower pixel bound
+  current = scroll_widget + 1;
+  while (current < mcount && accu < list_area.y + list_area.height)
+    {
+      ListRow *lr = fetch_row (current);
+      const Requisition lr_requisition = lr->rowbox->requisition();
+      critical_unless (lr_requisition.height > 0);
+      lr->area.height = lr_requisition.height;
+      lr->area.y = accu;
+      accu += lr->area.height;
+      lr->area.x = list_area.x;
+      lr->area.width = list_area.width;
+      lr->allocated = true;
+      rmap[current] = lr;
+      lastrow = current++;
+    }
+  // clean up remaining old rows and put new row map into place
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
+    cache_row (it->second);
+  row_map_.swap (rmap);
+  // reactivate size-groups for proper size allocation
+  for (uint i = 0; i < size_groups_.size(); i++)
+    size_groups_[i]->active (true);
+  // reset state
+  need_scroll_layout_ = 0;
+}
+
+// determine y position for target_row, at vertical scroll position @a value
+int
+WidgetListImpl::vscroll_row_yoffset (const double value, const int target_row)
+{
+  const int mcount = model_->count();
+  assert_return (target_row >= 0 && target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  const double scroll_norm_value = value / mcount;                              // 0..1 scroll position
+  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
+  const int scroll_widget = min (mcount - 1, ifloor (scroll_value));            // index into mcount at scroll_norm_value
+  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
+  const int list_apoint = list_area.y + list_area.height * scroll_norm_value;   // list alignment point
+  const int scroll_apoint_height = row_height (scroll_widget) * scroll_fraction; // inner row alignment point
+  int current = scroll_widget;
+  int current_y = list_apoint - scroll_apoint_height;
+  // adjust for target_row > current
+  while (target_row > current)
+    {
+      current_y += row_height (current);
+      current++;
+    }
+  // adjust for target_row < current
+  while (target_row < current)
+    {
+      current--;
+      current_y -= row_height (current);
+    }
+  return current_y;
+}
+
+// determine target row when moving away from src_row by @a pixel_delta in either direction
+int
+WidgetListImpl::vscroll_relative_row (const int src_row, int pixel_delta)
+{
+  const int mcount = model_->count();
+  int current = src_row;
+  if (pixel_delta < 0)
+    while (pixel_delta < 0 && current > 0)
+      {
+        current--;
+        pixel_delta += row_height (current);
+      }
+  else // pixel_delta >= 0
+    while (pixel_delta > 0 && current + 1 < mcount)
+      {
+        current++;
+        pixel_delta -= row_height (current);
+      }
+  return current;
+}
+
+// find vertical value that aligns target_row most closely within the visible list area.
+double
+WidgetListImpl::vscroll_row_position (const int target_row, const double list_alignment)
+{
+  const int64 mcount = model_->count();
+  assert_return (target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  // determine scroll position bounds around target position
+  double lower = vscroll_relative_row (target_row, -list_area.height);
+  double upper = vscroll_relative_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
+  // calculate alignment points for vertical scroll layout
+  const int list_apoint = list_area.y + list_area.height * list_alignment;      // list alignment point
+  const int scroll_apoint_height = row_height (target_row) * list_alignment;    // inner target row alignment point
+  // approximation start value, picked so it positions target_row in the visible list area
+  double delta, value = target_row + 0.5;                                       // initial approximation
+  // refine approximation via bisection
+  do
+    {
+      const int target_y = vscroll_row_yoffset (value, target_row);
+      const int target_apoint = target_y + scroll_apoint_height;                // target row alignment point
+      if (target_apoint < list_apoint)
+        upper = value;                          // scroll value must shrink so target_apoint grows
+      else if (target_apoint > list_apoint)
+        lower = value;                          // scroll value must grow so target_apoint shrinks
+      else
+        break;
+      const double new_value = (lower + upper) / 2.0;
+      delta = value - new_value;
+      value = new_value;
+    }
+  while (fabs (delta) > 1 / (2.0 * row_height (min (mcount - 1, ifloor (value)))));
+  return value;                                 // aproximation for positioning target_row alignment point at list_alignment
+}
+
+// == Pixel Accurate Scrolling ==
 void
 WidgetListImpl::pscroll_layout ()
 {
@@ -819,6 +734,17 @@ double
 WidgetListImpl::pscroll_row_position (const int target_row, const double list_alignment)
 {
   fatal ("UNIMPLEMENTED");
+#if 0
+  /* pixel positioning */
+  int64 row, accu = 0;
+  for (row = 0; row < list_row; row++)
+    accu += ms.row_sizes[row];
+  /* here: accu == real_scroll_position for list_alignment == 0 */
+  accu += ms.row_sizes[row] * list_alignment;       // fractional row to align
+  accu -= listheight * list_alignment;              // fractional list to align
+  accu = max (0, accu);                             // clamp row0 to list start
+  return accu;
+#endif
 }
 
 static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");

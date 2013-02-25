@@ -82,16 +82,7 @@ public:
                                                  const ModelSizes &ms) const;
   int64                 position2row            (double   list_fraction,
                                                  double  *row_fraction);
-  double                row2position            (int64    list_row,
-                                                 double   list_alignment = 0.5);
   int                   row_height              (int            nth_row);
-  int                   row_height              (ModelSizes &ms,
-                                                 int64       list_row);
-  int64                 row_layout              (double      vscrollpos,
-                                                 int64       mcount,
-                                                 ModelSizes &ms,
-                                                 int64       list_row);
-
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
   void                  nuke_range              (size_t first, size_t bound);
