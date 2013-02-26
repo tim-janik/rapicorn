@@ -107,10 +107,10 @@ PyString_As_std_string (PyObject *pystr)
 static inline Rapicorn::Aida::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
-  PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
-  if (o)
-     return PyLong_AsUnsignedLongLong (o);
-  return 0;
+  PyObject *pyo = PyObject_GetAttrString (pyobj, attr_name);
+  Rapicorn::Aida::uint64_t uval = pyo ? PyLong_AsUnsignedLongLong (pyo) : 0;
+  Py_XDECREF (pyo);
+  return uval;
 }
 
 static inline PyObject*
@@ -363,6 +363,7 @@ class Generator:
     s += '  }\n'
     s += '  success = true;\n'
     s += ' error:\n'
+    s += '  Py_XDECREF (pyseq);\n'
     s += '  return success;\n'
     s += '}\n'
     # sequence proto pop

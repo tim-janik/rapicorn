@@ -79,10 +79,10 @@ PyString_As_std_string (PyObject *pystr)
 static inline Rapicorn::Aida::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
-  PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
-  if (o)
-     return PyLong_AsUnsignedLongLong (o);
-  return 0;
+  PyObject *pyo = PyObject_GetAttrString (pyobj, attr_name);
+  Rapicorn::Aida::uint64_t uval = pyo ? PyLong_AsUnsignedLongLong (pyo) : 0;
+  Py_XDECREF (pyo);
+  return uval;
 }
 
 static inline PyObject*
@@ -419,6 +419,7 @@ aida_pyXFooSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &d
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -453,6 +454,7 @@ aida_pyIntSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &ds
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -487,6 +489,7 @@ aida_pyFloatSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -521,6 +524,7 @@ aida_pyStringSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer 
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -555,6 +559,7 @@ aida_pyExtensiveEnumSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::Field
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -589,6 +594,7 @@ aida_pyRecordSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer 
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -623,6 +629,7 @@ aida_pySequenceSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffe
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -657,6 +664,7 @@ aida_pyInterfaceSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuff
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -693,6 +701,7 @@ aida_pyAnySequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &ds
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -766,6 +775,7 @@ aida_pyNestedTypesSeq_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer 
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
@@ -1011,6 +1021,7 @@ aida_pyQuickSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &
   }
   success = true;
  error:
+  Py_XDECREF (pyseq);
   return success;
 }
 static RAPICORN_UNUSED PyObject*
