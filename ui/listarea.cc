@@ -330,6 +330,30 @@ WidgetListImpl::handle_event (const Event &event)
             toggle_selected (current_row_);
           handled = true;
           break;
+        case KEY_Page_Up:
+          if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
+            {
+              // See KEY_Page_Down comment.
+              const Allocation list_area = allocation();
+              const int delta = list_area.height; // - row_height (current_row_) - 1;
+              const int jumprow = vscroll_relative_row (current_row_, -MAX (0, delta)) + 1;
+              current_row_ = CLAMP (MIN (jumprow, current_row_ - 1), 0, model_->count() - 1);
+            }
+          break;
+        case KEY_Page_Down:
+          if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
+            {
+              /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
+               * jumping more than a screenful of pixels, keep in mind that the view will be aligned
+               * to fit the target row fully. Also make sure to jump by at least single row so we keep
+               * moving regardless of view height (which might be less than current_row height).
+               */
+              const Allocation list_area = allocation();
+              const int delta = list_area.height; //  - row_height (current_row_) - 1;
+              const int jumprow = vscroll_relative_row (current_row_, +MAX (0, delta)) - 1;
+              current_row_ = CLAMP (MAX (jumprow, current_row_ + 1), 0, model_->count() - 1);
+            }
+          break;
         }
     case KEY_RELEASE:
     default:
