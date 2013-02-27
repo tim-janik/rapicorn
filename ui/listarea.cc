@@ -10,6 +10,7 @@
 
 namespace Rapicorn {
 
+// == WidgetList ==
 const PropertyList&
 WidgetList::_property_list()
 {
@@ -20,6 +21,40 @@ WidgetList::_property_list()
   static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
+
+// == WidgetListRowImpl ==
+class WidgetListRowImpl : public virtual SingleContainerImpl {
+  bool  selected_;
+protected:
+  virtual const PropertyList&
+  _property_list ()
+  {
+    static Property *properties[] = {
+      MakeProperty (WidgetListRowImpl, selected, _("Selected"), _("Indicates wether this row is selected"), "rw"),
+    };
+    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
+    return property_list;
+  }
+public:
+  WidgetListRowImpl() :
+    selected_ (false)
+  {
+    color_scheme (COLOR_BASE);
+  }
+  virtual bool          selected        () const        { return selected_; }
+  virtual void
+  selected (bool s)
+  {
+    return_if (selected_ == s);
+    selected_ = s;
+    color_scheme (selected_ ? COLOR_SELECTED : COLOR_BASE);
+  }
+};
+
+static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::Factory::WidgetListRow");
+
+// == WidgetListImpl ==
+static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
@@ -46,7 +81,7 @@ WidgetListImpl::~WidgetListImpl()
       row_cache_.pop_back();
       for (uint i = 0; i < lr->cols.size(); i++)
         unref (lr->cols[i]);
-      unref (lr->rowbox);
+      unref (lr->lrow);
       delete lr;
     }
   // release size groups
@@ -169,7 +204,7 @@ WidgetListImpl::selection_changed (int first, int last)
     {
       ListRow *lr = lookup_row (i);
       if (lr)
-        lr->rowbox->color_scheme (selected (i) ? COLOR_SELECTED : COLOR_NORMAL);
+        lr->lrow->selected (selected (i));
     }
 }
 
@@ -190,7 +225,7 @@ WidgetListImpl::visual_update ()
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area, &allocation());
+      lr->lrow->set_allocation (lr->area, &allocation());
     }
 }
 
@@ -236,7 +271,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area, &allocation());
+      lr->lrow->set_allocation (lr->area, &allocation());
     }
 }
 
@@ -286,14 +321,14 @@ WidgetListImpl::handle_event (const Event &event)
       lr = lookup_row (saved_current_row);
       if (lr)
         {
-          Frame *frame = lr->rowbox->interface<Frame*>();
+          Frame *frame = lr->lrow->interface<Frame*>();
           if (frame)
             frame->frame_type (FRAME_NONE);
         }
       lr = lookup_row (current_row_);
       if (lr)
         {
-          Frame *frame = lr->rowbox->interface<Frame*>();
+          Frame *frame = lr->lrow->interface<Frame*>();
           if (frame)
             frame->frame_type (FRAME_FOCUS);
         }
@@ -331,7 +366,7 @@ WidgetListImpl::row_height (int nth_row)
           lr = fetch_row (nth_row);
           keep_uncached = false;
         }
-      row_heights_[nth_row] = lr->rowbox->requisition().height;
+      row_heights_[nth_row] = lr->lrow->requisition().height;
       if (!keep_uncached)
         cache_row (lr);
     }
@@ -342,7 +377,7 @@ void
 WidgetListImpl::cache_row (ListRow *lr)
 {
   row_cache_.push_back (lr);
-  lr->rowbox->visible (false);
+  lr->lrow->visible (false);
   lr->allocated = 0;
 }
 
@@ -356,7 +391,7 @@ WidgetListImpl::nuke_range (size_t first, size_t bound)
     else
       {
         ListRow *lr = it->second;                       // retire
-        lr->rowbox->visible (false);
+        lr->lrow->visible (false);
         lr->allocated = 0;
         row_cache_.push_back (lr);
       }
@@ -373,10 +408,10 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
-  WidgetImpl *widget = &Factory::create_ui_child (*this, "ListRow", Factory::ArgumentList(), false);
-  lr->rowbox = ref_sink (widget)->interface<ContainerImpl*>();
-  lr->rowbox->interface<HBox>().spacing (5); // FIXME
-  widget = ref_sink (&Factory::create_ui_child (*lr->rowbox, "Label", Factory::ArgumentList()));
+  WidgetImpl *widget = &Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
+  lr->lrow = ref_sink (widget)->interface<WidgetListRowImpl*>();
+  lr->lrow->interface<HBox>().spacing (5); // FIXME
+  widget = ref_sink (&Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList()));
   lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
@@ -385,7 +420,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);
 
-  add (lr->rowbox);
+  add (lr->lrow);
   return lr;
 }
 
@@ -395,13 +430,13 @@ WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
   Any row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", row.as_string());
-  Ambience *ambience = lr->rowbox->interface<Ambience*>();
+  Ambience *ambience = lr->lrow->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
-  Frame *frame = lr->rowbox->interface<Frame*>();
+  Frame *frame = lr->lrow->interface<Frame*>();
   if (frame)
     frame->frame_type (nthrow == current_row_ ? FRAME_FOCUS : FRAME_NONE);
-  lr->rowbox->color_scheme (selected (nthrow) ? COLOR_SELECTED : COLOR_BASE);
+  lr->lrow->selected (selected (nthrow));
 }
 
 ListRow*
@@ -437,7 +472,7 @@ WidgetListImpl::fetch_row (uint64 row)
     lr = create_row (row);
   if (!filled)
     fill_row (lr, row);
-  lr->rowbox->visible (true);
+  lr->lrow->visible (true);
   return lr;
 }
 
@@ -499,7 +534,7 @@ WidgetListImpl::vscroll_layout ()
   // allocate row at alignment point
   ListRow *lr_sw = fetch_row (scroll_widget);
   {
-    const Requisition lr_requisition = lr_sw->rowbox->requisition();
+    const Requisition lr_requisition = lr_sw->lrow->requisition();
     const int64 rowheight = lr_requisition.height;
     critical_unless (rowheight > 0);
     const int64 row_apoint = rowheight * scroll_fraction;                       // row alignment point
@@ -517,7 +552,7 @@ WidgetListImpl::vscroll_layout ()
   while (current >= 0 && accu >= list_area.y)
     {
       ListRow *lr = fetch_row (current);
-      const Requisition lr_requisition = lr->rowbox->requisition();
+      const Requisition lr_requisition = lr->lrow->requisition();
       critical_unless (lr_requisition.height > 0);
       lr->area.height = lr_requisition.height;
       accu -= lr->area.height;
@@ -534,7 +569,7 @@ WidgetListImpl::vscroll_layout ()
   while (current < mcount && accu < list_area.y + list_area.height)
     {
       ListRow *lr = fetch_row (current);
-      const Requisition lr_requisition = lr->rowbox->requisition();
+      const Requisition lr_requisition = lr->lrow->requisition();
       critical_unless (lr_requisition.height > 0);
       lr->area.height = lr_requisition.height;
       lr->area.y = accu;
@@ -704,7 +739,5 @@ WidgetListImpl::pscroll_row_position (const int target_row, const double list_al
     }
 #endif
 }
-
-static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
 
 } // Rapicorn

@@ -12,12 +12,14 @@
 
 namespace Rapicorn {
 
+class WidgetListRowImpl;
+
 struct ListRow {
   vector<WidgetImpl*> cols; // FIXME
-  ContainerImpl *rowbox;
+  WidgetListRowImpl *lrow;
   Allocation     area;
   uint           allocated : 1;
-  ListRow() : rowbox (NULL), allocated (0) {}
+  ListRow() : lrow (NULL), allocated (0) {}
 };
 
 class WidgetListImpl : public virtual MultiContainerImpl,
