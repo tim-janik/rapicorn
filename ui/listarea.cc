@@ -81,7 +81,7 @@ WidgetListImpl::WidgetListImpl() :
   hadjustment_ (NULL), vadjustment_ (NULL),
   virtualized_pixel_scrolling_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
-  current_row_ (18446744073709551615ULL)
+  current_row_ (INT_MIN)
 {}
 
 WidgetListImpl::~WidgetListImpl()
@@ -303,7 +303,7 @@ WidgetListImpl::handle_event (const Event &event)
     return handled;
   const int64 mcount = model_->count();
   return_unless (mcount > 0, handled);
-  uint64 saved_current_row = current_row_;
+  const int saved_current_row = current_row_;
   switch (event.type)
     {
       const EventKey *kevent;
@@ -312,21 +312,21 @@ WidgetListImpl::handle_event (const Event &event)
       switch (kevent->key)
         {
         case KEY_Down:
-          if (current_row_ < uint64 (model_->count()))
-            current_row_ = MIN (int64 (current_row_) + 1, model_->count() - 1);
+          if (current_row_ >= 0 && current_row_ < model_->count())
+            current_row_ = MIN (current_row_ + 1, model_->count() - 1);
           else
             current_row_ = 0;
           handled = true;
           break;
         case KEY_Up:
-          if (current_row_ < uint64 (model_->count()))
+          if (current_row_ >= 0 && current_row_ < model_->count())
             current_row_ = MAX (current_row_, 1) - 1;
           else if (model_->count())
             current_row_ = model_->count() - 1;
           handled = true;
           break;
         case KEY_space:
-          if (current_row_ >= 0 && current_row_ < uint64 (model_->count()))
+          if (current_row_ >= 0 && current_row_ < model_->count())
             toggle_selected (current_row_);
           handled = true;
           break;
@@ -445,7 +445,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
 }
 
 void
-WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
+WidgetListImpl::fill_row (ListRow *lr, uint nthrow)
 {
   Any row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
@@ -455,7 +455,7 @@ WidgetListImpl::fill_row (ListRow *lr, uint64 nthrow)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
   Frame *frame = lr->lrow->interface<Frame*>();
   if (frame)
-    frame->frame_type (nthrow == current_row_ ? FRAME_FOCUS : FRAME_NONE);
+    frame->frame_type (nthrow == uint (current_row_) ? FRAME_FOCUS : FRAME_NONE);
   lr->lrow->selected (selected (nthrow));
 }
 
@@ -499,7 +499,7 @@ WidgetListImpl::fetch_row (uint64 row)
 void
 WidgetListImpl::reset (ResetMode mode)
 {
-  // current_row_ = 18446744073709551615ULL;
+  // first_row_ = last_row_ = current_row_ = MIN_INT;
 }
 
 void
@@ -550,7 +550,6 @@ WidgetListImpl::vscroll_layout ()
   const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
   const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
   assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
-  int64 firstrow, lastrow;                                              // FIXME: unused?
   // allocate row at alignment point
   ListRow *lr_sw = fetch_row (scroll_widget);
   {
@@ -564,7 +563,7 @@ WidgetListImpl::vscroll_layout ()
     lr_sw->area.width = list_area.width;
     lr_sw->allocated = true; // FIXME: remove field?
     rmap[scroll_widget] = lr_sw;
-    firstrow = lastrow = scroll_widget;
+    first_row_ = last_row_ = scroll_widget;
   }
   // allocate rows above scroll_widget
   int64 accu = lr_sw->area.y;                                                   // upper pixel bound
@@ -581,7 +580,7 @@ WidgetListImpl::vscroll_layout ()
       lr->area.width = list_area.width;
       lr->allocated = true;
       rmap[current] = lr;
-      firstrow = current--;
+      first_row_ = current--;
     }
   // allocate rows below scroll_widget
   accu = lr_sw->area.y + lr_sw->area.height;                                    // lower pixel bound
@@ -598,7 +597,7 @@ WidgetListImpl::vscroll_layout ()
       lr->area.width = list_area.width;
       lr->allocated = true;
       rmap[current] = lr;
-      lastrow = current++;
+      last_row_ = current++;
     }
   // clean up remaining old rows and put new row map into place
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)

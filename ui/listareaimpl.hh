@@ -41,7 +41,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
-  uint64                 current_row_;
+  int                   first_row_, last_row_, current_row_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
@@ -74,8 +74,7 @@ public:
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
   void                  nuke_range              (size_t first, size_t bound);
-  void                  fill_row                (ListRow *lr,
-                                                 uint64   row);
+  void                  fill_row                (ListRow *lr, uint row);
   ListRow*              create_row              (uint64 row,
                                                  bool   with_size_groups = true);
   ListRow*              lookup_row              (uint64 row);
