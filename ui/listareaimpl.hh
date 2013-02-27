@@ -27,6 +27,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual AdjustmentSource,
                        public virtual EventHandler
 {
+  friend class WidgetListRowImpl;
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
   ListModelIface        *model_;

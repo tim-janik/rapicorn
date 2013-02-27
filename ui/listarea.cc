@@ -24,7 +24,8 @@ WidgetList::_property_list()
 
 // == WidgetListRowImpl ==
 class WidgetListRowImpl : public virtual SingleContainerImpl {
-  bool  selected_;
+  int   index_;
+  WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
 protected:
   virtual const PropertyList&
   _property_list ()
@@ -37,17 +38,36 @@ protected:
   }
 public:
   WidgetListRowImpl() :
-    selected_ (false)
+    index_ (INT_MIN)
   {
     color_scheme (COLOR_BASE);
   }
-  virtual bool          selected        () const        { return selected_; }
+  int           row_index() const       { return index_; }
+  void
+  row_index (int i)
+  {
+    index_ = i >= 0 ? i : INT_MIN;
+    WidgetListImpl *list = widget_list();
+    if (list && index_ >= 0)
+      color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+    visible (index_ >= 0);
+  }
+  virtual bool
+  selected () const
+  {
+    WidgetListImpl *list = widget_list();
+    return list && index_ >= 0 ? list->selected (index_) : false;
+  }
   virtual void
   selected (bool s)
   {
-    return_if (selected_ == s);
-    selected_ = s;
-    color_scheme (selected_ ? COLOR_SELECTED : COLOR_BASE);
+    WidgetListImpl *list = widget_list();
+    if (list && index_ >= 0)
+      {
+        if (list->selected (index_) != s)
+          list->toggle_selected (index_);
+        color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+      }
   }
 };
 
@@ -377,7 +397,7 @@ void
 WidgetListImpl::cache_row (ListRow *lr)
 {
   row_cache_.push_back (lr);
-  lr->lrow->visible (false);
+  lr->lrow->row_index (-1); // visible=false
   lr->allocated = 0;
 }
 
@@ -391,7 +411,7 @@ WidgetListImpl::nuke_range (size_t first, size_t bound)
     else
       {
         ListRow *lr = it->second;                       // retire
-        lr->lrow->visible (false);
+        lr->lrow->row_index (-1); // visible=false
         lr->allocated = 0;
         row_cache_.push_back (lr);
       }
@@ -472,7 +492,7 @@ WidgetListImpl::fetch_row (uint64 row)
     lr = create_row (row);
   if (!filled)
     fill_row (lr, row);
-  lr->lrow->visible (true);
+  lr->lrow->row_index (row); // visible=true
   return lr;
 }
 
