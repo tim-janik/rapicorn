@@ -425,17 +425,13 @@ WidgetListImpl::key_press_event (const EventKey &event)
       break;
     case KEY_Down:
       if (current_focus + 1 < mcount)
-        {
-          current_focus = CLAMP (current_focus + 1, 0, mcount - 1);
-          handled = true;
-        }
+        current_focus = MAX (current_focus + 1, 0);
+      handled = true;
       break;
     case KEY_Up:
       if (current_focus > 0)
-        {
-          current_focus = CLAMP (current_focus - 1, 0, mcount - 1);
-          handled = true;
-        }
+        current_focus = current_focus - 1;
+      handled = true;
       break;
     case KEY_Page_Up:
       if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
