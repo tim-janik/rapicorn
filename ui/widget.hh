@@ -126,7 +126,7 @@ public:
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
   bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
-  bool                        drawable          () const { return visible() && allocation_.width > 0 && allocation_.height > 0; }
+  bool                        drawable          () const; // visible() && allocation_.width && allocation_.height
   virtual bool                viewable          () const; // drawable() && parent->viewable();
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);

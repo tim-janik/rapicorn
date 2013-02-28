@@ -1618,6 +1618,24 @@ WidgetImpl::RenderContext::~RenderContext()
     }
 }
 
+bool
+WidgetImpl::drawable () const
+{
+  if (visible() && allocation_.width > 0 && allocation_.height > 0)
+    {
+      const Allocation *clip = clip_area();
+      if (clip)
+        {
+          Allocation carea = allocation_;
+          carea.intersect (*clip);
+          if (carea.width <= 0 || carea.height <= 0)
+            return false;
+        }
+      return true;
+    }
+  return false;
+}
+
 // == WidgetIfaceVector ==
 WidgetIfaceVector::WidgetIfaceVector (const WidgetSeq &widgetseq)
 {
