@@ -110,7 +110,8 @@ WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL), cached_focus_ (NULL),
   virtualized_pixel_scrolling_ (true),
-  need_scroll_layout_ (false), block_invalidate_ (false)
+  need_scroll_layout_ (false), block_invalidate_ (false),
+  first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
 {}
 
 WidgetListImpl::~WidgetListImpl()
@@ -253,6 +254,14 @@ WidgetListImpl::toggle_selected (int row)
 }
 
 void
+WidgetListImpl::deselect_all ()
+{
+  selection_.assign (selection_.size(), 0);
+  if (selection_.size())
+    selection_changed (0, selection_.size() - 1);
+}
+
+void
 WidgetListImpl::selection_changed (int first, int last)
 {
   // FIXME: intersect with visible rows?
@@ -339,33 +348,94 @@ WidgetListImpl::focus_row()
   return lrow ? lrow->row_index() : -1;
 }
 
+void
+WidgetListImpl::change_selection (const int previous, const int current, const bool toggle, const bool range, const bool preserve)
+{
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0);
+  return_unless (previous < mcount);
+  return_unless (current < mcount);
+  switch (selection_mode())
+    {
+      int sel, old;
+    case SELECTION_NONE:                // nothing to select ever
+      break;
+    case SELECTION_BROWSE:              // always maintain a single selection
+      sel = MAX (0, current >= 0 ? current : previous);
+      old = focus_row();
+      if (sel != old)
+        {
+          if (old >= 0 && selected (old))
+            toggle_selected (old);
+          if (!selected (sel))
+            toggle_selected (sel);
+        }
+      break;
+    case SELECTION_SINGLE:
+      if (toggle)
+        toggle_selected (current);
+      else if (!preserve)
+        {
+          deselect_all();
+          if (current >= 0)
+            toggle_selected (current);
+        }
+      break;
+    case SELECTION_MULTIPLE:
+      if (!preserve)
+        deselect_all();
+      if (current < 0)
+        ;               // nothing to select
+      else if (toggle)
+        toggle_selected (current);
+      else if (range)
+        {
+          if (multi_sel_range_start_ < 0)
+            multi_sel_range_start_ = previous >= 0 ? previous : current;
+          for (int i = MAX (0, MIN (multi_sel_range_start_, current)); i <= MAX (multi_sel_range_start_, current); i++)
+            if (!selected (i))
+              toggle_selected (i);
+        }
+      else if (!preserve)
+        toggle_selected (current);
+      if (!range)
+        multi_sel_range_start_ = -1;
+      break;
+    }
+}
+
 bool
 WidgetListImpl::key_press_event (const EventKey &event)
 {
   const int64 mcount = model_->count();
   bool handled = false;
+  bool preserve_old_selection = event.key_state & MOD_CONTROL;
+  bool toggle_selection = false, range_selection = event.key_state & MOD_SHIFT;
   int current_focus = focus_row();
   const int saved_current_row = current_focus;
   switch (event.key)
     {
-    case KEY_Down:
-      if (current_focus >= 0 && current_focus < mcount)
-        current_focus = CLAMP (current_focus + 1, 0, mcount - 1);
-      else
-        current_focus = 0;
-      handled = true;
-      break;
-    case KEY_Up:
-      if (current_focus >= 0 && current_focus < mcount)
-        current_focus = CLAMP (current_focus - 1, 0, mcount - 1);
-      else if (mcount)
-        current_focus = mcount - 1;
-      handled = true;
-      break;
     case KEY_space:
       if (current_focus >= 0 && current_focus < mcount)
-        toggle_selected (current_focus);
+        {
+          toggle_selection = true;
+          range_selection = false;
+        }
       handled = true;
+      break;
+    case KEY_Down:
+      if (current_focus + 1 < mcount)
+        {
+          current_focus = CLAMP (current_focus + 1, 0, mcount - 1);
+          handled = true;
+        }
+      break;
+    case KEY_Up:
+      if (current_focus > 0)
+        {
+          current_focus = CLAMP (current_focus - 1, 0, mcount - 1);
+          handled = true;
+        }
       break;
     case KEY_Page_Up:
       if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
@@ -394,7 +464,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
       handled = true;
       break;
     }
-  if (saved_current_row != current_focus)
+  if (handled)
     {
       ListRow *lr = lookup_row (current_focus);
       if (lr)
@@ -424,10 +494,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
       const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
-      if ((selection_mode() == SELECTION_SINGLE ||
-           selection_mode() == SELECTION_BROWSE) &&
-          selected (saved_current_row))
-        toggle_selected (current_focus);
+      change_selection (saved_current_row, current_focus, toggle_selection, range_selection, preserve_old_selection);
     }
   return handled;
 }

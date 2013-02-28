@@ -42,11 +42,12 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
-  int                   first_row_, last_row_;
+  int                   first_row_, last_row_, multi_sel_range_start_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
 protected:
+  void                  change_selection        (int previous, int current, bool toggle, bool range, bool preserve);
   virtual bool          key_press_event         (const EventKey &event);
   virtual bool          handle_event            (const Event    &event);
   virtual bool          row_event               (const Event    &event, WidgetListRowImpl *lrow, int index);
@@ -55,6 +56,7 @@ protected:
   SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
+  void                  deselect_all            ();
 public:
   explicit              WidgetListImpl            ();
   virtual              ~WidgetListImpl            ();
