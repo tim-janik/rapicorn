@@ -143,7 +143,6 @@ enum SelectionMode {
   SELECTION_NONE = 0,   ///< No selection possible
   SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
   SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
-  SELECTION_INTERVAL,   ///< Allow selection of multiple consecutive widgets
   SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
 };
 
