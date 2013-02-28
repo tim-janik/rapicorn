@@ -23,8 +23,9 @@ WidgetList::_property_list()
 }
 
 // == WidgetListRowImpl ==
-class WidgetListRowImpl : public virtual SingleContainerImpl {
-  int   index_;
+class WidgetListRowImpl : public virtual SingleContainerImpl, public virtual FocusFrame::Client {
+  FocusFrame     *focus_frame_;
+  int             index_;
   WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
 protected:
   virtual const PropertyList&
@@ -36,9 +37,27 @@ protected:
     static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
   }
+  virtual bool
+  can_focus () const
+  {
+    return focus_frame_ != NULL;
+  }
+  virtual bool
+  register_focus_frame (FocusFrame &frame)
+  {
+    if (!focus_frame_)
+      focus_frame_ = &frame;
+    return focus_frame_ == &frame;
+  }
+  virtual void
+  unregister_focus_frame (FocusFrame &frame)
+  {
+    if (focus_frame_ == &frame)
+      focus_frame_ = NULL;
+  }
 public:
   WidgetListRowImpl() :
-    index_ (INT_MIN)
+    focus_frame_ (NULL), index_ (INT_MIN)
   {
     color_scheme (COLOR_BASE);
   }
@@ -78,10 +97,9 @@ static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Facto
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
-  hadjustment_ (NULL), vadjustment_ (NULL),
+  hadjustment_ (NULL), vadjustment_ (NULL), cached_focus_ (NULL),
   virtualized_pixel_scrolling_ (true),
-  need_scroll_layout_ (false), block_invalidate_ (false),
-  current_row_ (INT_MIN)
+  need_scroll_layout_ (false), block_invalidate_ (false)
 {}
 
 WidgetListImpl::~WidgetListImpl()
@@ -94,6 +112,13 @@ WidgetListImpl::~WidgetListImpl()
   row_map_.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
     cache_row (ri->second);
+  if (cached_focus_)
+    {
+      ListRow *lr = cached_focus_;
+      cached_focus_ = NULL;
+      lr->lrow->unset_focus();
+      cache_row (lr);
+    }
   // destroy row cache
   while (row_cache_.size())
     {
@@ -193,14 +218,14 @@ WidgetListImpl::model_updated (const UpdateRequest &urequest)
     case UPDATE_READ:
       break;
     case UPDATE_INSERTION:
-      nuke_range (urequest.rowspan.start, ~size_t (0));
+      cache_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
       break;
     case UPDATE_CHANGE:
-      nuke_range (urequest.rowspan.start, urequest.rowspan.start + urequest.rowspan.length);
+      cache_range (urequest.rowspan.start, urequest.rowspan.start + urequest.rowspan.length);
       break;
     case UPDATE_DELETION:
-      nuke_range (urequest.rowspan.start, ~size_t (0));
+      cache_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
       break;
     }
@@ -295,6 +320,14 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
     }
 }
 
+int
+WidgetListImpl::focus_row()
+{
+  WidgetImpl *fchild = get_focus_child();
+  WidgetListRowImpl *lrow = dynamic_cast<WidgetListRowImpl*> (fchild);
+  return lrow ? lrow->row_index() : -1;
+}
+
 bool
 WidgetListImpl::handle_event (const Event &event)
 {
@@ -303,7 +336,8 @@ WidgetListImpl::handle_event (const Event &event)
     return handled;
   const int64 mcount = model_->count();
   return_unless (mcount > 0, handled);
-  const int saved_current_row = current_row_;
+  int current_focus = focus_row();
+  const int saved_current_row = current_focus;
   switch (event.type)
     {
       const EventKey *kevent;
@@ -312,22 +346,22 @@ WidgetListImpl::handle_event (const Event &event)
       switch (kevent->key)
         {
         case KEY_Down:
-          if (current_row_ >= 0 && current_row_ < model_->count())
-            current_row_ = MIN (current_row_ + 1, model_->count() - 1);
+          if (current_focus >= 0 && current_focus < model_->count())
+            current_focus = MIN (current_focus + 1, model_->count() - 1);
           else
-            current_row_ = 0;
+            current_focus = 0;
           handled = true;
           break;
         case KEY_Up:
-          if (current_row_ >= 0 && current_row_ < model_->count())
-            current_row_ = MAX (current_row_, 1) - 1;
+          if (current_focus >= 0 && current_focus < model_->count())
+            current_focus = MAX (current_focus, 1) - 1;
           else if (model_->count())
-            current_row_ = model_->count() - 1;
+            current_focus = model_->count() - 1;
           handled = true;
           break;
         case KEY_space:
-          if (current_row_ >= 0 && current_row_ < model_->count())
-            toggle_selected (current_row_);
+          if (current_focus >= 0 && current_focus < model_->count())
+            toggle_selected (current_focus);
           handled = true;
           break;
         case KEY_Page_Up:
@@ -335,9 +369,9 @@ WidgetListImpl::handle_event (const Event &event)
             {
               // See KEY_Page_Down comment.
               const Allocation list_area = allocation();
-              const int delta = list_area.height; // - row_height (current_row_) - 1;
-              const int jumprow = vscroll_relative_row (current_row_, -MAX (0, delta)) + 1;
-              current_row_ = CLAMP (MIN (jumprow, current_row_ - 1), 0, model_->count() - 1);
+              const int delta = list_area.height; // - row_height (current_focus) - 1;
+              const int jumprow = vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
+              current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, model_->count() - 1);
             }
           break;
         case KEY_Page_Down:
@@ -349,9 +383,9 @@ WidgetListImpl::handle_event (const Event &event)
                * moving regardless of view height (which might be less than current_row height).
                */
               const Allocation list_area = allocation();
-              const int delta = list_area.height; //  - row_height (current_row_) - 1;
-              const int jumprow = vscroll_relative_row (current_row_, +MAX (0, delta)) - 1;
-              current_row_ = CLAMP (MAX (jumprow, current_row_ + 1), 0, model_->count() - 1);
+              const int delta = list_area.height; //  - row_height (current_focus) - 1;
+              const int jumprow = vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
+              current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, model_->count() - 1);
             }
           break;
         }
@@ -359,25 +393,28 @@ WidgetListImpl::handle_event (const Event &event)
     default:
       break;
     }
-  if (saved_current_row != current_row_)
+  if (saved_current_row != current_focus)
     {
-      ListRow *lr;
-      lr = lookup_row (saved_current_row);
+      ListRow *lr = lookup_row (current_focus);
       if (lr)
+        lr->lrow->grab_focus();                 // new focus row is onscreen
+      else
         {
-          Frame *frame = lr->lrow->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_NONE);
+          lr = fetch_row (current_focus);
+          if (lr)                               // new focus row is offscreen
+            {
+              lr->lrow->grab_focus();
+              cache_row (lr);
+            }
+          else                                  // no row gets focus
+            {
+              lr = lookup_row (saved_current_row);
+              if (lr)
+                lr->lrow->unset_focus();
+            }
         }
-      lr = lookup_row (current_row_);
-      if (lr)
-        {
-          Frame *frame = lr->lrow->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_FOCUS);
-        }
-      double vscrolllower = vscroll_row_position (current_row_, 1.0); // lower scrollpos for current at visible bottom
-      double vscrollupper = vscroll_row_position (current_row_, 0.0); // upper scrollpos for current at visible top
+      double vscrolllower = vscroll_row_position (current_focus, 1.0); // lower scrollpos for current at visible bottom
+      double vscrollupper = vscroll_row_position (current_focus, 0.0); // upper scrollpos for current at visible top
       // fixup possible approximation error in first/last pixel via edge attraction
       if (vscrollupper <= 1)                    // edge attraction at top
         vscrolllower = vscrollupper = 0;
@@ -389,7 +426,7 @@ WidgetListImpl::handle_event (const Event &event)
       if ((selection_mode() == SELECTION_SINGLE ||
            selection_mode() == SELECTION_BROWSE) &&
           selected (saved_current_row))
-        toggle_selected (current_row_);
+        toggle_selected (current_focus);
     }
   return handled;
 }
@@ -415,33 +452,6 @@ WidgetListImpl::row_height (int nth_row)
         cache_row (lr);
     }
   return row_heights_[nth_row];
-}
-
-void
-WidgetListImpl::cache_row (ListRow *lr)
-{
-  row_cache_.push_back (lr);
-  lr->lrow->row_index (-1); // visible=false
-  lr->allocated = 0;
-}
-
-void
-WidgetListImpl::nuke_range (size_t first, size_t bound)
-{
-  RowMap rmap;
-  for (auto it = row_map_.begin(); it != row_map_.end(); it++)
-    if (it->first < ssize_t (first) || it->first >= ssize_t (bound))
-      rmap[it->first] = it->second;                     // keep row
-    else
-      {
-        ListRow *lr = it->second;                       // retire
-        lr->lrow->row_index (-1); // visible=false
-        lr->allocated = 0;
-        row_cache_.push_back (lr);
-      }
-  for (size_t i = first; i < min (bound, row_heights_.size()); i++)
-    row_heights_[i] = -1;
-  row_map_.swap (rmap);
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
@@ -477,26 +487,14 @@ WidgetListImpl::fill_row (ListRow *lr, uint nthrow)
   Ambience *ambience = lr->lrow->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
-  Frame *frame = lr->lrow->interface<Frame*>();
-  if (frame)
-    frame->frame_type (nthrow == uint (current_row_) ? FRAME_FOCUS : FRAME_NONE);
   lr->lrow->selected (selected (nthrow));
 }
 
 ListRow*
-WidgetListImpl::lookup_row (uint64 row)
+WidgetListImpl::fetch_row (int row)
 {
-  RowMap::iterator ri = row_map_.find (row);
-  if (ri != row_map_.end())
-    return ri->second;
-  else
-    return NULL;
-}
-
-ListRow*
-WidgetListImpl::fetch_row (uint64 row)
-{
-  bool filled = false;
+  return_unless (row >= 0, NULL);
+  bool need_focus = false, filled = false;
   ListRow *lr;
   RowMap::iterator ri = row_map_.find (row);
   if (ri != row_map_.end())
@@ -504,6 +502,14 @@ WidgetListImpl::fetch_row (uint64 row)
       lr = ri->second;
       row_map_.erase (ri);
       filled = true;
+      IFDEBUG (dbg_cached++);
+    }
+  else if (cached_focus_ && cached_focus_->lrow->row_index() == row)
+    {
+      lr = cached_focus_;
+      cached_focus_ = NULL;
+      filled = true;
+      need_focus = true;
       IFDEBUG (dbg_cached++);
     }
   else if (row_cache_.size())
@@ -517,7 +523,56 @@ WidgetListImpl::fetch_row (uint64 row)
   if (!filled)
     fill_row (lr, row);
   lr->lrow->row_index (row); // visible=true
+  if (need_focus)
+    lr->lrow->grab_focus();
   return lr;
+}
+
+ListRow*
+WidgetListImpl::lookup_row (int row)
+{
+  return_unless (row >= 0, NULL);
+  RowMap::iterator ri = row_map_.find (row);
+  if (ri != row_map_.end())
+    return ri->second;
+  else if (cached_focus_ && cached_focus_->lrow->row_index() == row)
+    return cached_focus_;
+  else
+    return NULL;
+}
+
+void
+WidgetListImpl::cache_row (ListRow *lr)
+{
+  if (lr->lrow->has_focus())
+    {
+      assert_return (cached_focus_ == NULL);
+      cached_focus_ = lr;
+      lr->lrow->visible (false);
+    }
+  else
+    {
+      row_cache_.push_back (lr);
+      lr->lrow->row_index (-1); // visible=false
+      lr->allocated = 0;
+    }
+}
+
+void
+WidgetListImpl::cache_range (size_t first, size_t bound)
+{
+  RowMap rmap;
+  for (auto it = row_map_.begin(); it != row_map_.end(); it++)
+    if (it->first < ssize_t (first) || it->first >= ssize_t (bound))
+      rmap[it->first] = it->second;                     // keep row
+    else
+      {
+        ListRow *lr = it->second;                       // retire
+        cache_row (lr);
+      }
+  for (size_t i = first; i < min (bound, row_heights_.size()); i++)
+    row_heights_[i] = -1;
+  row_map_.swap (rmap);
 }
 
 void

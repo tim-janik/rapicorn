@@ -35,13 +35,14 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   vector<int>            row_heights_;
   mutable Adjustment    *hadjustment_, *vadjustment_;
   RowMap                 row_map_;
+  ListRow               *cached_focus_;
   vector<ListRow*>       row_cache_;
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
-  int                   first_row_, last_row_, current_row_;
+  int                   first_row_, last_row_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
@@ -69,16 +70,17 @@ public:
   virtual void          visual_update           ();
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
+  int                   focus_row               ();
   /* sizing and positioning */
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
-  void                  nuke_range              (size_t first, size_t bound);
+  void                  cache_range             (size_t first, size_t bound);
   void                  fill_row                (ListRow *lr, uint row);
   ListRow*              create_row              (uint64 row,
                                                  bool   with_size_groups = true);
-  ListRow*              lookup_row              (uint64 row);
-  ListRow*              fetch_row               (uint64 row);
+  ListRow*              lookup_row              (int    row);
+  ListRow*              fetch_row               (int    row);
   // == Scrolling Implementation ==
   void          scroll_layout           ()                              { return virtualized_pixel_scrolling_ ? vscroll_layout() : pscroll_layout(); }
   double        scroll_row_position     (const int r, const double a)   { return virtualized_pixel_scrolling_ ? vscroll_row_position (r, a) : pscroll_row_position (r, a); }
