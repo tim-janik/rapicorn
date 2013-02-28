@@ -463,6 +463,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
           lr = fetch_row (current_focus);
           if (lr)                               // new focus row was offscreen
             {
+              lr->lrow->visible (true);
               lr->lrow->grab_focus();
               cache_row (lr);
             }
@@ -559,6 +560,7 @@ WidgetListImpl::fill_row (ListRow *lr, int nthrow)
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
   lr->lrow->selected (selected (nthrow));
+  lr->allocated = 0;
 }
 
 ListRow*
@@ -635,12 +637,18 @@ WidgetListImpl::cache_row (ListRow *lr)
     destroy_row (lr);
   else
     {
-      const int big = 250000000;
-      Allocation nowhere = lr->lrow->allocation();
-      nowhere.x = nowhere.y = -5 * big;
-      nowhere.width = min (nowhere.width, big);
-      nowhere.height = min (nowhere.height, big);
-      lr->lrow->set_allocation (nowhere);
+      if (!lr->lrow->has_focus())       // properly hide invisible widgets
+        lr->lrow->visible (false);
+      else                              // stash focus widget but keep it visible to maintain focus
+        {
+          const int big = 250000000;
+          Allocation nowhere = lr->lrow->allocation();
+          nowhere.x = nowhere.y = -5 * big;
+          nowhere.width = min (nowhere.width, big);
+          nowhere.height = min (nowhere.height, big);
+          const Rect empty = Rect (0, 0, 0, 0);
+          lr->lrow->set_allocation (nowhere, &empty);
+        }
       row_cache_[row_index] = lr;
       lr->allocated = 0;
     }
