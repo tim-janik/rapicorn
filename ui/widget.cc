@@ -225,13 +225,13 @@ WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
-  if (!can_focus() || !sensitive() || !viewable())
+  if (!can_focus() || !sensitive() || !visible())
     return false;
-  /* unset old focus */
+  // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
     rwidget->set_focus (NULL);
-  /* set new focus */
+  // set new focus
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
     rwidget->set_focus (this);
