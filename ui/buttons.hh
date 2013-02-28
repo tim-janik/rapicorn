@@ -17,11 +17,11 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
   bool                  activate_button_command (int button);
   bool                  activate_command        ();
   void                  activate_click          (int button, EventType etype);
-  bool                  can_focus               () const;
-  bool                  register_focus_frame    (FocusFrame &frame);
-  void                  unregister_focus_frame  (FocusFrame &frame);
-  void                  reset                   (ResetMode mode = RESET_ALL);
-  bool                  handle_event            (const Event &event);
+  virtual bool          can_focus               () const;
+  virtual bool          register_focus_frame    (FocusFrame &frame);
+  virtual void          unregister_focus_frame  (FocusFrame &frame);
+  virtual void          reset                   (ResetMode mode = RESET_ALL);
+  virtual bool          handle_event            (const Event &event);
 public:
   explicit              ButtonAreaImpl  ();
   virtual bool          activate_widget   ();
