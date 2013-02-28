@@ -47,7 +47,9 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
 protected:
+  virtual bool          key_press_event         (const EventKey &event);
   virtual bool          handle_event            (const Event    &event);
+  virtual bool          row_event               (const Event    &event, WidgetListRowImpl *lrow, int index);
   virtual void          reset                   (ResetMode       mode);
   virtual bool          can_focus               () const { return true; }
   SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }

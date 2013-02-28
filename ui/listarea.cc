@@ -23,7 +23,9 @@ WidgetList::_property_list()
 }
 
 // == WidgetListRowImpl ==
-class WidgetListRowImpl : public virtual SingleContainerImpl, public virtual FocusFrame::Client {
+class WidgetListRowImpl : public virtual SingleContainerImpl,
+                          public virtual EventHandler,
+                          public virtual FocusFrame::Client {
   FocusFrame     *focus_frame_;
   int             index_;
   WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
@@ -36,6 +38,12 @@ protected:
     };
     static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
+  }
+  virtual bool
+  handle_event (const Event &event)
+  {
+    WidgetListImpl *list = widget_list();
+    return list && list->row_event (event, this, index_);
   }
   virtual bool
   can_focus () const
@@ -88,6 +96,9 @@ public:
         color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
       }
   }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {}
 };
 
 static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::Factory::WidgetListRow");
@@ -329,68 +340,58 @@ WidgetListImpl::focus_row()
 }
 
 bool
-WidgetListImpl::handle_event (const Event &event)
+WidgetListImpl::key_press_event (const EventKey &event)
 {
-  bool handled = false;
-  if (!model_)
-    return handled;
   const int64 mcount = model_->count();
-  return_unless (mcount > 0, handled);
+  bool handled = false;
   int current_focus = focus_row();
   const int saved_current_row = current_focus;
-  switch (event.type)
+  switch (event.key)
     {
-      const EventKey *kevent;
-    case KEY_PRESS:
-      kevent = dynamic_cast<const EventKey*> (&event);
-      switch (kevent->key)
+    case KEY_Down:
+      if (current_focus >= 0 && current_focus < model_->count())
+        current_focus = MIN (current_focus + 1, model_->count() - 1);
+      else
+        current_focus = 0;
+      handled = true;
+      break;
+    case KEY_Up:
+      if (current_focus >= 0 && current_focus < model_->count())
+        current_focus = MAX (current_focus, 1) - 1;
+      else if (model_->count())
+        current_focus = model_->count() - 1;
+      handled = true;
+      break;
+    case KEY_space:
+      if (current_focus >= 0 && current_focus < model_->count())
+        toggle_selected (current_focus);
+      handled = true;
+      break;
+    case KEY_Page_Up:
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
         {
-        case KEY_Down:
-          if (current_focus >= 0 && current_focus < model_->count())
-            current_focus = MIN (current_focus + 1, model_->count() - 1);
-          else
-            current_focus = 0;
-          handled = true;
-          break;
-        case KEY_Up:
-          if (current_focus >= 0 && current_focus < model_->count())
-            current_focus = MAX (current_focus, 1) - 1;
-          else if (model_->count())
-            current_focus = model_->count() - 1;
-          handled = true;
-          break;
-        case KEY_space:
-          if (current_focus >= 0 && current_focus < model_->count())
-            toggle_selected (current_focus);
-          handled = true;
-          break;
-        case KEY_Page_Up:
-          if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
-            {
-              // See KEY_Page_Down comment.
-              const Allocation list_area = allocation();
-              const int delta = list_area.height; // - row_height (current_focus) - 1;
-              const int jumprow = vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
-              current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, model_->count() - 1);
-            }
-          break;
-        case KEY_Page_Down:
-          if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
-            {
-              /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
-               * jumping more than a screenful of pixels, keep in mind that the view will be aligned
-               * to fit the target row fully. Also make sure to jump by at least single row so we keep
-               * moving regardless of view height (which might be less than current_row height).
-               */
-              const Allocation list_area = allocation();
-              const int delta = list_area.height; //  - row_height (current_focus) - 1;
-              const int jumprow = vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
-              current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, model_->count() - 1);
-            }
-          break;
+          // See KEY_Page_Down comment.
+          const Allocation list_area = allocation();
+          const int delta = list_area.height; // - row_height (current_focus) - 1;
+          const int jumprow = vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
+          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, model_->count() - 1);
         }
-    case KEY_RELEASE:
-    default:
+      handled = true;
+      break;
+    case KEY_Page_Down:
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
+        {
+          /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
+           * jumping more than a screenful of pixels, keep in mind that the view will be aligned
+           * to fit the target row fully. Also make sure to jump by at least single row so we keep
+           * moving regardless of view height (which might be less than current_row height).
+           */
+          const Allocation list_area = allocation();
+          const int delta = list_area.height; //  - row_height (current_focus) - 1;
+          const int jumprow = vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
+          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, model_->count() - 1);
+        }
+      handled = true;
       break;
     }
   if (saved_current_row != current_focus)
@@ -427,6 +428,41 @@ WidgetListImpl::handle_event (const Event &event)
            selection_mode() == SELECTION_BROWSE) &&
           selected (saved_current_row))
         toggle_selected (current_focus);
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::row_event (const Event &event, WidgetListRowImpl *lrow, int index)
+{
+  return_unless (model_ != NULL, false);
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0, false);
+  bool handled = false;
+  switch (event.type)
+    {
+    case KEY_PRESS:
+      handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
+      break;
+    default:
+      break;
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::handle_event (const Event &event)
+{
+  return_unless (model_ != NULL, false);
+  bool handled = false;
+  switch (event.type)
+    {
+    case KEY_PRESS:
+    case KEY_RELEASE:
+      handled = row_event (event, NULL, -1);
+      break;
+    default:
+      break;
     }
   return handled;
 }
