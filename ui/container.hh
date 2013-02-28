@@ -39,7 +39,7 @@ protected:
   static Allocation   layout_child      (WidgetImpl         &child,
                                          const Allocation &carea);
 public:
-  WidgetImpl*               get_focus_child   () const;
+  WidgetImpl*           get_focus_child () const;
   typedef Walker<WidgetImpl>  ChildWalker;
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
