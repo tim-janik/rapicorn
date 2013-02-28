@@ -34,9 +34,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   size_t                 conid_updated_;
   vector<int>            row_heights_;
   mutable Adjustment    *hadjustment_, *vadjustment_;
-  RowMap                 row_map_;
-  ListRow               *cached_focus_;
-  vector<ListRow*>       row_cache_;
+  RowMap                 row_map_, row_cache_;
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
   bool                   virtualized_pixel_scrolling_;
@@ -79,12 +77,14 @@ public:
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();
   void                  cache_row               (ListRow *lr);
-  void                  cache_range             (size_t first, size_t bound);
-  void                  fill_row                (ListRow *lr, uint row);
+  void                  destroy_row             (ListRow *lr);
+  void                  destroy_range           (size_t first, size_t bound);
+  void                  fill_row                (ListRow *lr, int row);
   ListRow*              create_row              (uint64 row,
                                                  bool   with_size_groups = true);
   ListRow*              lookup_row              (int    row);
   ListRow*              fetch_row               (int    row);
+  void                  update_row              (int    row);
   // == Scrolling Implementation ==
   void          scroll_layout           ()                              { return virtualized_pixel_scrolling_ ? vscroll_layout() : pscroll_layout(); }
   double        scroll_row_position     (const int r, const double a)   { return virtualized_pixel_scrolling_ ? vscroll_row_position (r, a) : pscroll_row_position (r, a); }

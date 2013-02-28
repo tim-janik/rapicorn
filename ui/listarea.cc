@@ -108,7 +108,7 @@ static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Facto
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
-  hadjustment_ (NULL), vadjustment_ (NULL), cached_focus_ (NULL),
+  hadjustment_ (NULL), vadjustment_ (NULL),
   virtualized_pixel_scrolling_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
@@ -120,27 +120,15 @@ WidgetListImpl::~WidgetListImpl()
   model ("");
   assert_return (model_ == NULL);
   // purge row map
-  RowMap rc; // empty
+  RowMap rc;
   row_map_.swap (rc);
-  for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
-    cache_row (ri->second);
-  if (cached_focus_)
-    {
-      ListRow *lr = cached_focus_;
-      cached_focus_ = NULL;
-      lr->lrow->unset_focus();
-      cache_row (lr);
-    }
-  // destroy row cache
-  while (row_cache_.size())
-    {
-      ListRow *lr = row_cache_.back();
-      row_cache_.pop_back();
-      for (uint i = 0; i < lr->cols.size(); i++)
-        unref (lr->cols[i]);
-      unref (lr->lrow);
-      delete lr;
-    }
+  for (auto ri : rc)
+    destroy_row (ri.second);
+  // purge row cache
+  rc.clear();
+  rc.swap (row_cache_);
+  for (auto ri : rc)
+    destroy_row (ri.second);
   // release size groups
   while (size_groups_.size())
     {
@@ -230,18 +218,20 @@ WidgetListImpl::model_updated (const UpdateRequest &urequest)
     case UPDATE_READ:
       break;
     case UPDATE_INSERTION:
-      cache_range (urequest.rowspan.start, ~size_t (0));
+      destroy_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
+      invalidate_model (true, true);
       break;
     case UPDATE_CHANGE:
-      cache_range (urequest.rowspan.start, urequest.rowspan.start + urequest.rowspan.length);
+      for (int64 i = urequest.rowspan.start; i < urequest.rowspan.start + urequest.rowspan.length; i++)
+        update_row (i);
       break;
     case UPDATE_DELETION:
-      cache_range (urequest.rowspan.start, ~size_t (0));
+      destroy_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
+      invalidate_model (true, true);
       break;
     }
-  invalidate_model (true, true);
 }
 
 void
@@ -464,11 +454,14 @@ WidgetListImpl::key_press_event (const EventKey &event)
     {
       ListRow *lr = lookup_row (current_focus);
       if (lr)
-        lr->lrow->grab_focus();                 // new focus row is onscreen
+        {
+          lr->lrow->visible (true);             // force new focus onscreen
+          lr->lrow->grab_focus();
+        }
       else
         {
           lr = fetch_row (current_focus);
-          if (lr)                               // new focus row is offscreen
+          if (lr)                               // new focus row was offscreen
             {
               lr->lrow->grab_focus();
               cache_row (lr);
@@ -553,7 +546,20 @@ WidgetListImpl::row_height (int nth_row)
   return row_heights_[nth_row];
 }
 
-static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
+static uint dbg_cached = 0, dbg_created = 0;
+
+void
+WidgetListImpl::fill_row (ListRow *lr, int nthrow)
+{
+  assert_return (lr->lrow->row_index() == nthrow);
+  Any row = model_->row (nthrow);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->set_property ("markup_text", row.as_string());
+  Ambience *ambience = lr->lrow->interface<Ambience*>();
+  if (ambience)
+    ambience->background (nthrow & 1 ? "background-odd" : "background-even");
+  lr->lrow->selected (selected (nthrow));
+}
 
 ListRow*
 WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
@@ -577,101 +583,105 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   return lr;
 }
 
-void
-WidgetListImpl::fill_row (ListRow *lr, uint nthrow)
-{
-  Any row = model_->row (nthrow);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", row.as_string());
-  Ambience *ambience = lr->lrow->interface<Ambience*>();
-  if (ambience)
-    ambience->background (nthrow & 1 ? "background-odd" : "background-even");
-  lr->lrow->selected (selected (nthrow));
-}
-
 ListRow*
 WidgetListImpl::fetch_row (int row)
 {
   return_unless (row >= 0, NULL);
-  bool need_focus = false, filled = false;
   ListRow *lr;
-  RowMap::iterator ri = row_map_.find (row);
-  if (ri != row_map_.end())
+  RowMap::iterator ri;
+  if (row_map_.end() != (ri = row_map_.find (row)))             // fetch visible row
     {
       lr = ri->second;
       row_map_.erase (ri);
-      filled = true;
       IFDEBUG (dbg_cached++);
     }
-  else if (cached_focus_ && cached_focus_->lrow->row_index() == row)
+  else if (row_cache_.end() != (ri = row_cache_.find (row)))    // fetch invisible row
     {
-      lr = cached_focus_;
-      cached_focus_ = NULL;
-      filled = true;
-      need_focus = true;
+      lr = ri->second;
+      row_cache_.erase (ri);
+      lr->lrow->visible (true);
       IFDEBUG (dbg_cached++);
     }
-  else if (row_cache_.size())
+  else                                                          // create row
     {
-      lr = row_cache_.back();
-      row_cache_.pop_back();
-      IFDEBUG (dbg_refilled++);
+      lr = create_row (row);
+      lr->lrow->row_index (row); // visible=true
+      fill_row (lr, row);
     }
-  else /* create row */
-    lr = create_row (row);
-  if (!filled)
-    fill_row (lr, row);
-  lr->lrow->row_index (row); // visible=true
-  if (need_focus)
-    lr->lrow->grab_focus();
   return lr;
+}
+
+void
+WidgetListImpl::destroy_row (ListRow *lr)
+{
+  assert_return (lr && lr->lrow);
+  ContainerImpl *parent = lr->lrow->parent();
+  if (parent)
+    parent->remove (lr->lrow);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    unref (lr->cols[i]);
+  unref (lr->lrow);
+  delete lr;
+}
+
+void
+WidgetListImpl::cache_row (ListRow *lr)
+{
+  const int64 mcount = model_ ? model_->count() : 0;
+  const int row_index = lr->lrow->row_index();
+  assert_return (row_index >= 0);
+  assert_return (row_cache_.find (row_index) == row_cache_.end());
+  if (row_index >= mcount)
+    destroy_row (lr);
+  else
+    {
+      const int big = 250000000;
+      Allocation nowhere = lr->lrow->allocation();
+      nowhere.x = nowhere.y = -5 * big;
+      nowhere.width = min (nowhere.width, big);
+      nowhere.height = min (nowhere.height, big);
+      lr->lrow->set_allocation (nowhere);
+      row_cache_[row_index] = lr;
+      lr->allocated = 0;
+    }
+}
+
+void
+WidgetListImpl::destroy_range (size_t first, size_t bound)
+{
+  for (auto rmap : { &row_map_, &row_cache_ })          // remove range from row_map_ *and* row_cache_
+    {
+      RowMap newmap;
+      for (auto ri : *rmap)
+        if (ri.first < ssize_t (first) || ri.first >= ssize_t (bound))
+          newmap[ri.first] = ri.second;                 // keep row
+        else                                            // or get rid of it
+          destroy_row (ri.second);
+      newmap.swap (*rmap);                              // assign updated row map
+    }
+  for (auto i = first; i < min (bound, row_heights_.size()); i++)
+    row_heights_[i] = -1;
 }
 
 ListRow*
 WidgetListImpl::lookup_row (int row)
 {
   return_unless (row >= 0, NULL);
-  RowMap::iterator ri = row_map_.find (row);
-  if (ri != row_map_.end())
+  RowMap::iterator ri;
+  if (row_map_.end()   != (ri = row_map_.find (row)) ||
+      row_cache_.end() != (ri = row_cache_.find (row)))
     return ri->second;
-  else if (cached_focus_ && cached_focus_->lrow->row_index() == row)
-    return cached_focus_;
   else
     return NULL;
 }
 
 void
-WidgetListImpl::cache_row (ListRow *lr)
+WidgetListImpl::update_row (int row)
 {
-  if (lr->lrow->has_focus())
-    {
-      assert_return (cached_focus_ == NULL);
-      cached_focus_ = lr;
-      lr->lrow->visible (false);
-    }
-  else
-    {
-      row_cache_.push_back (lr);
-      lr->lrow->row_index (-1); // visible=false
-      lr->allocated = 0;
-    }
-}
-
-void
-WidgetListImpl::cache_range (size_t first, size_t bound)
-{
-  RowMap rmap;
-  for (auto it = row_map_.begin(); it != row_map_.end(); it++)
-    if (it->first < ssize_t (first) || it->first >= ssize_t (bound))
-      rmap[it->first] = it->second;                     // keep row
-    else
-      {
-        ListRow *lr = it->second;                       // retire
-        cache_row (lr);
-      }
-  for (size_t i = first; i < min (bound, row_heights_.size()); i++)
-    row_heights_[i] = -1;
-  row_map_.swap (rmap);
+  return_unless (row >= 0);
+  ListRow *lr = lookup_row (row);
+  if (lr)
+    fill_row (lr, row);
 }
 
 void
@@ -711,8 +721,12 @@ WidgetListImpl::scroll_layout_preserving () // model_->count() >= 1
 void
 WidgetListImpl::vscroll_layout ()
 {
-  const int64 mcount = model_->count();
-  assert_return (mcount >= 1);
+  const int64 mcount = model_ ? model_->count() : 0;
+  if (mcount == 0)
+    {
+      destroy_range (0, ~size_t (0));
+      return;
+    }
   RowMap rmap;
   // deactivate size-groups to avoid excessive resizes upon row measuring
   for (uint i = 0; i < size_groups_.size(); i++)
