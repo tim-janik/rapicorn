@@ -6,9 +6,9 @@
   <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
   <tmpl:define id="RapicornWidgetListRow" inherit="Rapicorn::Factory::WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
-      <Frame hexpand="1" tight-focus="true" frame-type="none">
+      <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox id="ListRowCavity"/>
-      </Frame>
+      </FocusFrame>
     </Ambience>
   </tmpl:define>
 
