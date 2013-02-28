@@ -554,12 +554,12 @@ void
 ContainerImpl::expose_enclosure ()
 {
   /* expose without children */
-  Region region (allocation());
+  Region region (clipped_allocation());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     if (cw->drawable())
       {
         WidgetImpl &child = *cw;
-        Region cregion (child.allocation());
+        Region cregion (child.clipped_allocation());
         cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
       }
@@ -598,7 +598,7 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;
-      if (child.drawable() && rendering_region (rcontext).contains (child.allocation()) != Region::OUTSIDE)
+      if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
           if (child.test_flags (INVALID_REQUISITION))
             critical ("rendering widget with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);

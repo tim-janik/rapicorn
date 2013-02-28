@@ -844,7 +844,7 @@ WidgetImpl::screen_window_point (Point p) /* window coordinates relative */
 bool
 WidgetImpl::point (Point p) /* widget coordinates relative */
 {
-  Allocation a = allocation();
+  const Allocation a = clipped_allocation();
   return (drawable() &&
           p.x >= a.x && p.x < a.x + a.width &&
           p.y >= a.y && p.y < a.y + a.height);
@@ -1104,10 +1104,7 @@ WidgetImpl::expose (const Region &region) // widget relative
 {
   if (drawable() && !test_flags (INVALID_CONTENT))
     {
-      Region r (allocation());
-      const Rect *oc = clip_area();
-      if (oc)
-        r.intersect (*oc);
+      Region r (clipped_allocation());
       r.intersect (region);
       expose_internal (r);
     }
@@ -1437,6 +1434,16 @@ WidgetImpl::clip_area (const Allocation *clip)
     set_data (&clip_area_key, new Rect (*clip));
 }
 
+Allocation
+WidgetImpl::clipped_allocation () const
+{
+  Allocation area = allocation();
+  const Allocation *clip = clip_area();
+  if (clip)
+    area.intersect (*clip);
+  return area;
+}
+
 bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
@@ -1516,7 +1523,7 @@ void
 WidgetImpl::render_into (cairo_t *cr, const Region &region)
 {
   RenderContext rcontext;
-  rcontext.render_area = allocation();
+  rcontext.render_area = clipped_allocation();
   rcontext.render_area.intersect (region);
   if (!rcontext.render_area.empty())
     {
@@ -1541,7 +1548,7 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  Rect area = allocation();
+  Rect area = clipped_allocation();
   Rect *saved_hierarchical_clip = rcontext.hierarchical_clip;
   Rect newclip;
   const Rect *clip = clip_area();
@@ -1582,7 +1589,7 @@ WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
   Rect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
-    rect = allocation();
+    rect = clipped_allocation();
   if (rcontext.hierarchical_clip)
     rect.intersect (*rcontext.hierarchical_clip);
   const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels

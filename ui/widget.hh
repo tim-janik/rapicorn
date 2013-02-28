@@ -248,7 +248,8 @@ public:
   void                       set_allocation     (const Allocation &area,
                                                  const Allocation *clip = NULL); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } // current allocation
-  const Allocation*          clip_area          () const;
+  Allocation                 clipped_allocation () const;                        // clipped allocation
+  const Allocation*          clip_area          () const;                        // widget clipping
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return heritage_; }
