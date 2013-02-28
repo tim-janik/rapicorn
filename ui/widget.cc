@@ -209,6 +209,17 @@ WidgetImpl::can_focus () const
   return false;
 }
 
+void
+WidgetImpl::unset_focus ()
+{
+  if (test_flags (FOCUS_CHAIN))
+    {
+      WindowImpl *rwidget = get_window();
+      if (rwidget && rwidget->get_focus() == this)
+        rwidget->set_focus (NULL);
+    }
+}
+
 bool
 WidgetImpl::grab_focus ()
 {
