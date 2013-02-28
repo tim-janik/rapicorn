@@ -349,37 +349,37 @@ WidgetListImpl::key_press_event (const EventKey &event)
   switch (event.key)
     {
     case KEY_Down:
-      if (current_focus >= 0 && current_focus < model_->count())
-        current_focus = MIN (current_focus + 1, model_->count() - 1);
+      if (current_focus >= 0 && current_focus < mcount)
+        current_focus = CLAMP (current_focus + 1, 0, mcount - 1);
       else
         current_focus = 0;
       handled = true;
       break;
     case KEY_Up:
-      if (current_focus >= 0 && current_focus < model_->count())
-        current_focus = MAX (current_focus, 1) - 1;
-      else if (model_->count())
-        current_focus = model_->count() - 1;
+      if (current_focus >= 0 && current_focus < mcount)
+        current_focus = CLAMP (current_focus - 1, 0, mcount - 1);
+      else if (mcount)
+        current_focus = mcount - 1;
       handled = true;
       break;
     case KEY_space:
-      if (current_focus >= 0 && current_focus < model_->count())
+      if (current_focus >= 0 && current_focus < mcount)
         toggle_selected (current_focus);
       handled = true;
       break;
     case KEY_Page_Up:
-      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
         {
           // See KEY_Page_Down comment.
           const Allocation list_area = allocation();
           const int delta = list_area.height; // - row_height (current_focus) - 1;
           const int jumprow = vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
-          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, model_->count() - 1);
+          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, mcount - 1);
         }
       handled = true;
       break;
     case KEY_Page_Down:
-      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < model_->count())
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
         {
           /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
            * jumping more than a screenful of pixels, keep in mind that the view will be aligned
@@ -389,7 +389,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
           const Allocation list_area = allocation();
           const int delta = list_area.height; //  - row_height (current_focus) - 1;
           const int jumprow = vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
-          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, model_->count() - 1);
+          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, mcount - 1);
         }
       handled = true;
       break;
@@ -421,7 +421,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
         vscrolllower = vscrollupper = 0;
       else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
         vscrolllower = vscrollupper = mcount;
-      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / model_->count(), vscrollupper / model_->count());
+      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
       if ((selection_mode() == SELECTION_SINGLE ||
