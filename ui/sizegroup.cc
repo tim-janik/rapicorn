@@ -176,9 +176,9 @@ SizeGroup::invalidate_widget (WidgetImpl &widget)
 Requisition
 SizeGroup::widget_requisition (WidgetImpl &widget)
 {
-  /* size request all active groups */
+  // size request all active groups
   Requisition zreq; // 0,0
-  if (widget.allocatable())
+  if (widget.visible())
     {
       vector<SizeGroupImpl*> sgl = SizeGroupImpl::list_groups (widget);
       for (uint i = 0; i < sgl.size(); i++)
@@ -192,9 +192,9 @@ SizeGroup::widget_requisition (WidgetImpl &widget)
             zreq.height = MAX (zreq.height, gr.height);
         }
     }
-  /* size request ungrouped/unallocatable widgets */
+  // size request ungrouped/invisible widgets
   Requisition ireq = widget.inner_size_request();
-  /* determine final requisition */
+  // determine final requisition
   ireq.width = MAX (zreq.width, ireq.width);
   ireq.height = MAX (zreq.height, ireq.height);
   return ireq;

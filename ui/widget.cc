@@ -1050,7 +1050,7 @@ WidgetImpl::inner_size_request()
     {
       change_flags_silently (WidgetImpl::INVALID_REQUISITION, false); // skip notification
       Requisition inner; // 0,0
-      if (allocatable())
+      if (visible())
         {
           size_request (inner);
           inner.width = MAX (inner.width, 0);
@@ -1066,7 +1066,7 @@ WidgetImpl::inner_size_request()
         }
       requisition_ = inner;
     }
-  return allocatable() ? requisition_ : Requisition();
+  return visible() ? requisition_ : Requisition();
 }
 
 Requisition
@@ -1481,7 +1481,7 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   const Rect *oc = clip_area(), oc_copy = oc ? *oc : Rect();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
-  if (!allocatable())
+  if (!visible())
     sarea = Allocation (0, 0, 0, 0);
   const bool changed = allocation_ != sarea;
   allocation_ = sarea;

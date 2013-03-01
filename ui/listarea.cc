@@ -255,7 +255,7 @@ WidgetListImpl::size_request (Requisition &requisition)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       /* size request all children */
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       Requisition crq = cw->requisition();
       requisition.width = MAX (requisition.width, crq.width);

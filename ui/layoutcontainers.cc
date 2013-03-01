@@ -35,7 +35,7 @@ public:
     if (has_children())
       {
         WidgetImpl &child = get_child();
-        if (child.allocatable())
+        if (child.visible())
           {
             Requisition cr = child.requisition();
             requisition.width = left_padding() + cr.width + right_padding();
@@ -51,7 +51,7 @@ public:
   size_allocate (Allocation area, bool changed)
   {
     // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
-    if (!has_allocatable_child())
+    if (!has_visible_child())
       return;
     WidgetImpl &child = get_child();
     Requisition rq = child.requisition();

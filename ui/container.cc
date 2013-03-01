@@ -687,7 +687,7 @@ void
 SingleContainerImpl::size_request_child (Requisition &requisition, bool *hspread, bool *vspread)
 {
   bool chspread = false, cvspread = false;
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
       WidgetImpl &child = get_child();
       Requisition cr = child.requisition ();
@@ -744,7 +744,7 @@ ContainerImpl::layout_child (WidgetImpl         &child,
 void
 SingleContainerImpl::size_allocate (Allocation area, bool changed)
 {
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
       WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, area);

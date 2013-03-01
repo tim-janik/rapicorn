@@ -81,7 +81,6 @@ protected:
   virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
   bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
   bool                  has_drawable_child      () { return child_widget && child_widget->drawable(); }
-  bool                  has_allocatable_child   () { return child_widget && child_widget->allocatable(); }
   virtual void          add_child               (WidgetImpl   &widget);
   virtual void          remove_child            (WidgetImpl   &widget);
   explicit              SingleContainerImpl     ();

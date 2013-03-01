@@ -264,7 +264,7 @@ protected:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    if (has_allocatable_child())
+    if (has_visible_child())
       {
         Allocation carea = area;
         if (!overlap_child_)
