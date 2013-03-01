@@ -40,6 +40,28 @@ protected:
     static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
   }
+  virtual void
+  dump_private_data (TestStream &tstream)
+  {
+    WidgetListImpl *list = widget_list();
+    int kind = 0;
+    if (list && index_ >= 0)
+      {
+        ListRow *lr = list->row_map_[index_];
+        if (lr && lr->lrow == this)
+          kind = 1;
+        else
+          {
+            lr = list->row_cache_[index_];
+            if (lr && lr->lrow == this)
+              kind = 2;
+            else
+              kind = 3;
+          }
+      }
+    const char *knames[] = { "nil", "mapped", "cached", "dangling" };
+    tstream.dump ("row_kind", String (knames[kind]));
+  }
   virtual bool
   handle_event (const Event &event)
   {
