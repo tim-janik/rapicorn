@@ -751,9 +751,6 @@ WidgetListImpl::vscroll_layout ()
       return;
     }
   RowMap rmap;
-  // deactivate size-groups to avoid excessive resizes upon row measuring
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (false);
   // flag old rows
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     it->second->allocated = 0;
@@ -766,20 +763,28 @@ WidgetListImpl::vscroll_layout ()
   const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
   assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
   // allocate row at alignment point
-  ListRow *lr_sw = fetch_row (scroll_widget);
-  {
-    const Requisition lr_requisition = lr_sw->lrow->requisition();
-    const int64 rowheight = lr_requisition.height;
-    critical_unless (rowheight > 0);
-    const int64 row_apoint = rowheight * scroll_fraction;                       // row alignment point
-    lr_sw->area.y = list_apoint - row_apoint;
-    lr_sw->area.height = lr_requisition.height;
-    lr_sw->area.x = list_area.x;
-    lr_sw->area.width = list_area.width;
-    lr_sw->allocated = true; // FIXME: remove field?
-    rmap[scroll_widget] = lr_sw;
-    first_row_ = last_row_ = scroll_widget;
-  }
+  ListRow *lr_sw = NULL;
+  if (1)
+    {
+      ListRow *lr = fetch_row (scroll_widget);
+      const Requisition lr_requisition = lr->lrow->requisition();
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      const int64 rowheight = lr_requisition.height;
+      const int64 row_apoint = rowheight * scroll_fraction;                     // row alignment point
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      carea.y = list_apoint - row_apoint;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
+      rmap[scroll_widget] = lr;
+      first_row_ = last_row_ = scroll_widget;
+      lr_sw = lr;
+    }
   // allocate rows above scroll_widget
   int64 accu = lr_sw->area.y;                                                   // upper pixel bound
   int64 current = scroll_widget - 1;
@@ -787,13 +792,18 @@ WidgetListImpl::vscroll_layout ()
     {
       ListRow *lr = fetch_row (current);
       const Requisition lr_requisition = lr->lrow->requisition();
-      critical_unless (lr_requisition.height > 0);
-      lr->area.height = lr_requisition.height;
-      accu -= lr->area.height;
-      lr->area.y = accu;
-      lr->area.x = list_area.x;
-      lr->area.width = list_area.width;
-      lr->allocated = true;
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      accu -= carea.height;
+      carea.y = accu;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr_sw->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
       rmap[current] = lr;
       first_row_ = current--;
     }
@@ -804,13 +814,18 @@ WidgetListImpl::vscroll_layout ()
     {
       ListRow *lr = fetch_row (current);
       const Requisition lr_requisition = lr->lrow->requisition();
-      critical_unless (lr_requisition.height > 0);
-      lr->area.height = lr_requisition.height;
-      lr->area.y = accu;
-      accu += lr->area.height;
-      lr->area.x = list_area.x;
-      lr->area.width = list_area.width;
-      lr->allocated = true;
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      carea.y = accu;
+      accu += carea.height;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr_sw->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
       rmap[current] = lr;
       last_row_ = current++;
     }
@@ -818,9 +833,18 @@ WidgetListImpl::vscroll_layout ()
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     cache_row (it->second);
   row_map_.swap (rmap);
-  // reactivate size-groups for proper size allocation
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (true);
+  // ensure proper allocation for all rows
+  for (auto ri : row_map_)
+    {
+      ListRow *lr = ri.second;
+      if (lr->lrow->test_any_flag (INVALID_REQUISITION))
+        lr->lrow->requisition();                                // shouldn't happen, done above
+      assert (lr->lrow->test_any_flag (INVALID_REQUISITION) == 0 || this->test_any_flag (INVALID_REQUISITION));
+      if (lr->lrow->test_any_flag (INVALID_ALLOCATION))
+        lr->lrow->set_allocation (lr->area, &list_area);
+      assert (lr->lrow->test_any_flag (INVALID_ALLOCATION) == 0 || this->test_any_flag (INVALID_ALLOCATION));
+      assert (lr->lrow->test_any_flag (INVALID_REQUISITION) == 0 || this->test_any_flag (INVALID_REQUISITION));
+    }
   // reset state
   need_scroll_layout_ = 0;
 }
