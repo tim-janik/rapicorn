@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/serverapi.hh> // includes <ui/widget.hh> after WidgetIface declaration
+#include <ui/serverapi.hh>
+// serverapi.hh includes widget.hh after WidgetIface declaration
 
 #ifndef __RAPICORN_WIDGET_HH_
 #define __RAPICORN_WIDGET_HH_
