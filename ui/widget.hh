@@ -131,6 +131,8 @@ public:
   virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); }
   bool                        insensitive       () const { return !sensitive(); }
   void                        insensitive       (bool b) { sensitive (!b); }
+  bool                        key_sensitive     () const;
+  bool                        pointer_sensitive () const;
   bool                        prelight          () const { return test_any_flag (PRELIGHT); }
   virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); }
   bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().

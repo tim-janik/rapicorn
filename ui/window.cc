@@ -607,11 +607,11 @@ WindowImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
   dispatch_mouse_movement (event);
-  WidgetImpl *widget = get_focus();
-  if (widget && widget->process_screen_window_event (event))
+  WidgetImpl *focus_widget = get_focus();
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
-  if (kevent && kevent->type == KEY_PRESS)
+  if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
     {
       FocusDirType fdir = key_value_to_focus_dir (kevent->key);
       ActivateKeyType activate = key_value_to_activation (kevent->key);
@@ -623,8 +623,8 @@ WindowImpl::dispatch_key_event (const Event &event)
         }
       if (!handled && (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT))
         {
-          WidgetImpl *focus_widget = get_focus();
-          if (focus_widget && focus_widget->sensitive())
+          focus_widget = get_focus();
+          if (focus_widget && focus_widget->key_sensitive())
             {
               if (!focus_widget->activate())
                 notify_key_error();

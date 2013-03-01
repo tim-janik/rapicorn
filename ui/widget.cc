@@ -105,6 +105,20 @@ WidgetImpl::viewable() const
   return visible() && !test_any_flag (UNVIEWABLE | PARENT_UNVIEWABLE);
 }
 
+/// Return wether a widget can process key events.
+bool
+WidgetImpl::key_sensitive () const
+{
+  return sensitive() && ancestry_visible();
+}
+
+/// Return wether a widget can process pointer events.
+bool
+WidgetImpl::pointer_sensitive () const
+{
+  return sensitive() && drawable();
+}
+
 bool
 WidgetImpl::change_flags_silently (uint64 mask, bool on)
 {
