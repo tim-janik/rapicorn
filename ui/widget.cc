@@ -1584,10 +1584,7 @@ WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
   if (area == Allocation (-1, -1, 0, 0))
     rect = allocation();
   if (rcontext.hierarchical_clip)
-    {
-      const Rect s = rect;
-      rect.intersect (*rcontext.hierarchical_clip);
-    }
+    rect.intersect (*rcontext.hierarchical_clip);
   const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels
   if (empty_dummy)
     rect.width = rect.height = 1;
