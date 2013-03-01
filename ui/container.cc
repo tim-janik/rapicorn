@@ -630,6 +630,7 @@ ContainerImpl::debug_tree (String indent)
 void
 ContainerImpl::dump_test_data (TestStream &tstream)
 {
+  WidgetImpl::dump_test_data (tstream);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     cw->make_test_dump (tstream);
 }

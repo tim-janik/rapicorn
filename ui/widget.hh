@@ -142,6 +142,7 @@ public:
   virtual bool                can_focus         () const;
   bool                        has_focus         () const;
   bool                        grab_focus        ();
+  void                        unset_focus       ();
   bool                        activate          ();
   bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
@@ -181,9 +182,10 @@ public:
   virtual const CommandList&  list_commands     ();
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
+  ContainerImpl*              root              () const;
   bool                        has_ancestor      (const WidgetImpl &ancestor) const;
-  WidgetImpl*                   common_ancestor   (const WidgetImpl &other) const;
-  WidgetImpl*                   common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
+  WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
+  WidgetImpl*                 common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
   const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (ainfo_) ? ainfo_ : force_anchor_info(); }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
@@ -257,6 +259,7 @@ public:
   Color                 focus_color             () { return heritage()->focus_color (state()); }
   /* debugging/testing */
   virtual String        test_dump               ();
+  String                debug_dump              (const String &flags = String());
 protected:
   void                  make_test_dump          (TestStream   &tstream);
   virtual void          dump_test_data          (TestStream   &tstream);

@@ -56,7 +56,7 @@ data_list_container_example()
 REGISTER_TEST ("Examples/DataListContainer", data_list_container_example);
 
 class MyKey : public DataKey<int> {
-  void destroy (int i)
+  virtual void destroy (int i) override
   {
     TMSG ("%s: delete %d;\n", STRFUNC, i);
   }
@@ -67,7 +67,7 @@ class MyKey : public DataKey<int> {
 };
 
 class StringKey : public DataKey<String> {
-  void destroy (String s)
+  virtual void destroy (String s) override
   {
     TMSG ("%s: delete \"%s\";\n", STRFUNC, s.c_str());
   }

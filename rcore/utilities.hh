@@ -137,6 +137,9 @@ String      debug_confstring  (const String &option, const String &vdefault = ""
 bool        debug_confbool    (const String &option, bool vdefault = false);
 int64       debug_confnum     (const String &option, int64 vdefault = 0);
 String      debug_help        ();
+void        debug_backtrace_snapshot (size_t key);
+String      debug_backtrace_showshot (size_t key);
+
 const char* strerror    (void);         // simple wrapper for strerror (errno)
 const char* strerror    (int errnum);   // wrapper for ::strerror
 class DebugEntry {

@@ -12,6 +12,8 @@
   visible="1"
   sensitive="1"
   color_scheme="COLOR_INHERIT"
+  requisition="(20, 35)"
+  allocation="((0, 0), 20, 35)"
   >
     <Alignment
       left_padding="5"
@@ -30,6 +32,8 @@
       visible="1"
       sensitive="1"
       color_scheme="COLOR_INHERIT"
+      requisition="(20, 35)"
+      allocation="((0, 0), 20, 35)"
       >
         <VBox
           homogeneous="0"
@@ -46,6 +50,8 @@
           visible="1"
           sensitive="1"
           color_scheme="COLOR_INHERIT"
+          requisition="(10, 25)"
+          allocation="((5, 5), 10, 25)"
           >
             <TestWidget
               value="19"
@@ -73,6 +79,8 @@
               visible="1"
               sensitive="1"
               color_scheme="COLOR_INHERIT"
+              requisition="(10, 10)"
+              allocation="((5, 5), 10, 10)"
             >
             </TestWidget>
             <TestWidget
@@ -101,6 +109,8 @@
               visible="1"
               sensitive="1"
               color_scheme="COLOR_INHERIT"
+              requisition="(10, 10)"
+              allocation="((5, 20), 10, 10)"
             >
             </TestWidget>
         </VBox>

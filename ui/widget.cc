@@ -209,6 +209,17 @@ WidgetImpl::can_focus () const
   return false;
 }
 
+void
+WidgetImpl::unset_focus ()
+{
+  if (test_flags (FOCUS_CHAIN))
+    {
+      WindowImpl *rwidget = get_window();
+      if (rwidget && rwidget->get_focus() == this)
+        rwidget->set_focus (NULL);
+    }
+}
+
 bool
 WidgetImpl::grab_focus ()
 {
@@ -916,6 +927,16 @@ WidgetImpl::common_ancestor (const WidgetImpl &other) const
   return NULL;
 }
 
+ContainerImpl*
+WidgetImpl::root () const
+{
+  ContainerImpl *root = parent_;
+  if (root)
+    while (root->parent_)
+      root = root->parent_;
+  return root;
+}
+
 WindowImpl*
 WidgetImpl::get_window () const
 {
@@ -1105,6 +1126,18 @@ WidgetImpl::type_cast_error (const char *dest_type)
   fatal ("failed to dynamic_cast<%s> widget: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
+static WidgetImpl *global_debug_dump_marker = NULL;
+
+String
+WidgetImpl::debug_dump (const String &flags)
+{
+  WidgetImpl *saved_debug_dump_marker = global_debug_dump_marker;
+  global_debug_dump_marker = this;
+  String dump = root()->test_dump();
+  global_debug_dump_marker = saved_debug_dump_marker;
+  return dump;
+}
+
 String
 WidgetImpl::test_dump ()
 {
@@ -1119,6 +1152,8 @@ void
 WidgetImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
+  if (this == global_debug_dump_marker)
+    tstream.dump ("debug_dump", String ("1"));
   const PropertyList &plist = list_properties();
   size_t n_properties = 0;
   Aida::Property **properties = plist.list_properties (&n_properties);
@@ -1131,8 +1166,8 @@ WidgetImpl::make_test_dump (TestStream &tstream)
           tstream.dump (property->ident, value);
         }
     }
-  tstream.push_indent();
   dump_private_data (tstream);
+  tstream.push_indent();
   dump_test_data (tstream);
   tstream.pop_indent();
   tstream.pop_node ();
@@ -1144,7 +1179,10 @@ WidgetImpl::dump_test_data (TestStream &tstream)
 
 void
 WidgetImpl::dump_private_data (TestStream &tstream)
-{}
+{
+  tstream.dump ("requisition", string_printf ("(%.17g, %.17g)", requisition().width, requisition().height));
+  tstream.dump ("allocation", allocation().string());
+}
 
 void
 WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
