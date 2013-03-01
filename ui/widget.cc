@@ -853,6 +853,7 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
+/// Signal emitted when a widget ancestry is added to or removed from a Window
 void
 WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {

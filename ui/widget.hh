@@ -38,7 +38,8 @@ public:
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
 
-/* --- WidgetImpl --- */
+/// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
+/// More details about widgets are covered in @ref Widget.
 class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;

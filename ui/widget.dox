@@ -1,0 +1,13 @@
+/*! @page Widget	Widget System
+
+A <a href="http://en.wikipedia.org/wiki/GUI_widget">GUI Widget</a> is the main element that
+<a href="http://en.wikipedia.org/wiki/Graphical_user_interface">Graphical User Interfaces</a> (GUI)
+made with Rapicorn are composed of.
+
+@par Widget States
+- <b>ANCHORED</b><br/> The toplevel parent (root) of an anchored widget is a Rapicorn.Window. The Rapicorn.WidgetImpl.hierarchy_changed() method is called whenever the ANCHORED state of a widget changes.
+- <b>VISIBLE</b><br/> A widget is visible if its VISIBLE flag is set.<br/> Use: A widget must be visible to actively participate in size requisition and size allocation. In order to grab focus and process key events, the widget and all its parents must be visible, see Rapicorn.WidgetImpl.key_sensitive().
+- <b>VIEWABLE</b><br/> A widget is viewable if it's visible, its UNVIEWABLE flag is unset and its parent is viewable.<br/> Use: Children may be temporarily taken offscreen in which case they are flagged UNVIEWABLE. Examples are offscreen children of a list, inactive notebook pages or an inactive popup.
+- <b>DRAWABLE</b><br/> A widget is drawable if it's viewable and its clipped_allocation has non-zero size. A widget must be drawable to participate in pointer event handling and rendering, see Rapicorn.WidgetImpl.pointer_sensitive().
+
+*/
