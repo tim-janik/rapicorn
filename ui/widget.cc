@@ -1617,7 +1617,7 @@ WidgetImpl::RenderContext::~RenderContext()
 bool
 WidgetImpl::drawable () const
 {
-  if (visible() && allocation_.width > 0 && allocation_.height > 0)
+  if (viewable() && allocation_.width > 0 && allocation_.height > 0)
     {
       const Allocation *clip = clip_area();
       if (clip)
