@@ -626,7 +626,7 @@ WidgetListImpl::fetch_row (int row)
     {
       lr = ri->second;
       row_cache_.erase (ri);
-      lr->lrow->visible (true);
+      change_unviewable (*lr->lrow, false);
       IFDEBUG (dbg_cached++);
     }
   else                                                          // create row
@@ -662,13 +662,7 @@ WidgetListImpl::cache_row (ListRow *lr)
     destroy_row (lr);
   else
     {
-      if (!lr->lrow->has_focus())       // properly hide invisible widgets
-        lr->lrow->visible (false);
-      else                              // stash focus widget but keep it visible to maintain focus
-        {
-          lr->area = Rect (-250000000, -250000000, 0, 0);
-          lr->lrow->set_allocation (lr->area);
-        }
+      change_unviewable (*lr->lrow, true);      // take widget offscreen
       row_cache_[row_index] = lr;
       lr->allocated = 0;
     }
