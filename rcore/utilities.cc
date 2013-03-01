@@ -692,15 +692,13 @@ strerror (int errnum)
   return ::strerror (errnum);
 }
 
-std::vector<std::string>
-pretty_backtrace (uint level, size_t *parent_addr)
+#define BACKTRACE_DEPTH         1024
+
+static std::vector<std::string>
+pretty_backtrace_symbols (void **ptrbuffer, const int nptrs, const uint level)
 {
-  void *ptrbuffer[1024];
-  const int nptrs = backtrace (ptrbuffer, ARRAY_SIZE (ptrbuffer));
-  if (parent_addr)
-    *parent_addr = nptrs >= 1 + int (level) ? size_t (ptrbuffer[1 + level]) : 0;
-  char **btsymbols = backtrace_symbols (ptrbuffer, nptrs);
   std::vector<std::string> symbols;
+  char **btsymbols = backtrace_symbols (ptrbuffer, nptrs);
   if (btsymbols)
     {
       for (int i = 1 + level; i < nptrs; i++) // skip current function plus some
@@ -729,6 +727,57 @@ pretty_backtrace (uint level, size_t *parent_addr)
       free (btsymbols);
     }
   return symbols;
+}
+
+std::vector<std::string>
+pretty_backtrace (uint level, size_t *parent_addr)
+{
+  void *ptrbuffer[BACKTRACE_DEPTH];
+  const int nptrs = backtrace (ptrbuffer, ARRAY_SIZE (ptrbuffer));
+  if (parent_addr)
+    *parent_addr = nptrs >= 1 + int (level) ? size_t (ptrbuffer[1 + level]) : 0;
+  std::vector<std::string> symbols = pretty_backtrace_symbols (ptrbuffer, nptrs, level);
+  return symbols;
+}
+
+// == debug_backtrace_snapshot ==
+struct BacktraceBuffer {
+  void *ptrbuffer[BACKTRACE_DEPTH];
+  int nptrs;
+  BacktraceBuffer () :
+    nptrs (0)
+  {}
+};
+static Mutex                             backtrace_snapshot_mutex;
+static std::map<size_t,BacktraceBuffer> *backtrace_snapshot_map = NULL;
+
+void
+debug_backtrace_snapshot (size_t key)
+{
+  BacktraceBuffer bbuffer;
+  bbuffer.nptrs = backtrace (bbuffer.ptrbuffer, ARRAY_SIZE (bbuffer.ptrbuffer));
+  ScopedLock<Mutex> locker (backtrace_snapshot_mutex);
+  if (!backtrace_snapshot_map)
+    backtrace_snapshot_map = new std::map<size_t,BacktraceBuffer>();
+  (*backtrace_snapshot_map)[key] = bbuffer;
+}
+
+String
+debug_backtrace_showshot (size_t key)
+{
+  BacktraceBuffer bbuffer;
+  {
+    ScopedLock<Mutex> locker (backtrace_snapshot_mutex);
+    if (backtrace_snapshot_map)
+      bbuffer = (*backtrace_snapshot_map)[key];
+  }
+  const vector<String> syms = pretty_backtrace_symbols (bbuffer.ptrbuffer, bbuffer.nptrs, 0);
+  String btmsg;
+  size_t addr = bbuffer.nptrs >= 1 ? size_t (bbuffer.ptrbuffer[1]) : 0;
+  btmsg = string_printf ("Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", addr, size_t (__builtin_frame_address (0)));
+  for (size_t i = 0; i < syms.size(); i++)
+    btmsg += string_printf ("  %s\n", syms[i].c_str());
+  return btmsg;
 }
 
 // === User Messages ==
