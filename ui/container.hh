@@ -78,7 +78,7 @@ protected:
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
   virtual size_t        n_children              () { return child_widget ? 1 : 0; }
-  virtual WidgetImpl*     nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
   bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
   bool                  has_drawable_child      () { return child_widget && child_widget->drawable(); }
   bool                  has_allocatable_child   () { return child_widget && child_widget->allocatable(); }
