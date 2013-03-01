@@ -927,6 +927,16 @@ WidgetImpl::common_ancestor (const WidgetImpl &other) const
   return NULL;
 }
 
+ContainerImpl*
+WidgetImpl::root () const
+{
+  ContainerImpl *root = parent_;
+  if (root)
+    while (root->parent_)
+      root = root->parent_;
+  return root;
+}
+
 WindowImpl*
 WidgetImpl::get_window () const
 {

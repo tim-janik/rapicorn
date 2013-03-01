@@ -182,9 +182,10 @@ public:
   virtual const CommandList&  list_commands     ();
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
+  ContainerImpl*              root              () const;
   bool                        has_ancestor      (const WidgetImpl &ancestor) const;
-  WidgetImpl*                   common_ancestor   (const WidgetImpl &other) const;
-  WidgetImpl*                   common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
+  WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
+  WidgetImpl*                 common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
   const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (ainfo_) ? ainfo_ : force_anchor_info(); }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
