@@ -86,7 +86,6 @@ protected:
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
-  bool                        test_flags        (uint32 mask) const { return (flags_ & mask) != 0; }
   virtual bool                self_visible      () const;
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
@@ -121,9 +120,9 @@ protected:
 public:
   explicit                    WidgetImpl              ();
   bool                        test_all_flags    (uint32 mask) const { return (flags_ & mask) == mask; }
-  bool                        test_any_flag     (uint32 mask) const { return test_flags (mask); }
-  bool                        anchored          () const { return test_flags (ANCHORED); }
-  bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
+  bool                        test_any_flag     (uint32 mask) const { return (flags_ & mask) != 0; }
+  bool                        anchored          () const { return test_any_flag (ANCHORED); }
+  bool                        visible           () const { return test_any_flag (VISIBLE) && !test_any_flag (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
   bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
   bool                        drawable          () const; // visible() && allocation_.width && allocation_.height
@@ -132,31 +131,31 @@ public:
   virtual void                sensitive         (bool b);
   bool                        insensitive       () const { return !sensitive(); }
   void                        insensitive       (bool b) { sensitive (!b); }
-  bool                        prelight          () const { return test_flags (PRELIGHT); }
+  bool                        prelight          () const { return test_any_flag (PRELIGHT); }
   virtual void                prelight          (bool b);
   bool                        branch_prelight   () const;
-  bool                        impressed         () const { return test_flags (IMPRESSED); }
+  bool                        impressed         () const { return test_any_flag (IMPRESSED); }
   virtual void                impressed         (bool b);
   bool                        branch_impressed  () const;
-  bool                        has_default       () const { return test_flags (HAS_DEFAULT); }
+  bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const;
   bool                        has_focus         () const;
   bool                        grab_focus        ();
   void                        unset_focus       ();
   bool                        activate          ();
-  bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
-  void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
-  bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
-  void                        vexpand           (bool b) { set_flag (VEXPAND, b); }
-  bool                        hspread           () const { return test_flags (HSPREAD | HSPREAD_CONTAINER); }
-  void                        hspread           (bool b) { set_flag (HSPREAD, b); }
-  bool                        vspread           () const { return test_flags (VSPREAD | VSPREAD_CONTAINER); }
-  void                        vspread           (bool b) { set_flag (VSPREAD, b); }
-  bool                        hshrink           () const { return test_flags (HSHRINK); }
-  void                        hshrink           (bool b) { set_flag (HSHRINK, b); }
-  bool                        vshrink           () const { return test_flags (VSHRINK); }
-  void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
+  virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
+  virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); }
+  virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
+  virtual void                vexpand           (bool b) { set_flag (VEXPAND, b); }
+  virtual bool                hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); }
+  virtual void                hspread           (bool b) { set_flag (HSPREAD, b); }
+  virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); }
+  virtual void                vspread           (bool b) { set_flag (VSPREAD, b); }
+  virtual bool                hshrink           () const { return test_any_flag (HSHRINK); }
+  virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); }
+  virtual bool                vshrink           () const { return test_any_flag (VSHRINK); }
+  virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); }
   virtual String              name              () const;
   virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;

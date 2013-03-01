@@ -949,7 +949,7 @@ bool
 WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 {
   const bool can_resize = !pending_win_size_ && screen_window_;
-  const bool need_resize = can_resize && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return need_resize;
   else if (state.phase == state.DISPATCH)

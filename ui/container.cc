@@ -600,9 +600,9 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
       WidgetImpl &child = *cw;
       if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
-          if (child.test_flags (INVALID_REQUISITION))
+          if (child.test_any_flag (INVALID_REQUISITION))
             critical ("rendering widget with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
-          if (child.test_flags (INVALID_ALLOCATION))
+          if (child.test_any_flag (INVALID_ALLOCATION))
             critical ("rendering widget with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
           child.render_widget (rcontext);
         }
@@ -842,7 +842,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = debug_enabled() && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_debugging = debug_enabled() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (need_debugging)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
                   !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
@@ -856,7 +856,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
    * a simulated annealing process yielding the final layout.
    */
   tunable_requisition_counter_ = 3;
-  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  while (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Requisition creq = requisition(); // unsets INVALID_REQUISITION
       if (!have_allocation)

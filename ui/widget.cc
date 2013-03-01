@@ -194,7 +194,7 @@ WidgetImpl::state () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_flags (FOCUS_CHAIN))
+  if (test_any_flag (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -212,7 +212,7 @@ WidgetImpl::can_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_flags (FOCUS_CHAIN))
+  if (test_any_flag (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -1023,9 +1023,9 @@ WidgetImpl::invalidate (uint32 mask)
 {
   mask &= INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT;
   return_unless (mask != 0);
-  const bool had_invalid_requisition = test_flags (INVALID_REQUISITION);
-  const bool had_invalid_allocation = test_flags (INVALID_ALLOCATION);
-  const bool had_invalid_content = test_flags (INVALID_CONTENT);
+  const bool had_invalid_requisition = test_any_flag (INVALID_REQUISITION);
+  const bool had_invalid_allocation = test_any_flag (INVALID_ALLOCATION);
+  const bool had_invalid_content = test_any_flag (INVALID_CONTENT);
   if (!had_invalid_content && (mask & INVALID_CONTENT))
     expose();
   change_flags_silently (mask, true);
@@ -1046,7 +1046,7 @@ WidgetImpl::inner_size_request()
    * requisition invalidation during the size_request phase, widget implementations
    * have to ensure we're not looping endlessly
    */
-  while (test_flags (WidgetImpl::INVALID_REQUISITION))
+  while (test_any_flag (WidgetImpl::INVALID_REQUISITION))
     {
       change_flags_silently (WidgetImpl::INVALID_REQUISITION, false); // skip notification
       Requisition inner; // 0,0
@@ -1102,7 +1102,7 @@ WidgetImpl::expose_internal (const Region &region)
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
-  if (drawable() && !test_flags (INVALID_CONTENT))
+  if (drawable() && !test_any_flag (INVALID_CONTENT))
     {
       Region r (clipped_allocation());
       r.intersect (region);
@@ -1448,7 +1448,7 @@ bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
   WidgetImpl *p = parent();
-  if (p && !test_flags (INVALID_REQUISITION))
+  if (p && !test_any_flag (INVALID_REQUISITION))
     {
       ResizeContainerImpl *rc = p->get_resize_container();
       if (rc && rc->requisitions_tunable())
@@ -1488,7 +1488,7 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   clip_area (clip);     // invalidates *oc
   size_allocate (allocation_, changed);
   Allocation a = allocation();
-  const bool need_expose = oa != a || oc != clip || test_flags (INVALID_CONTENT);
+  const bool need_expose = oa != a || oc != clip || test_any_flag (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); // skip notification
   // expose old area
   if (need_expose)
