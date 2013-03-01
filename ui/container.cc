@@ -567,6 +567,12 @@ ContainerImpl::expose_enclosure ()
 }
 
 void
+ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
+{
+  child.set_flag (UNVIEWABLE, b);
+}
+
+void
 ContainerImpl::point_children (Point               p, /* window coordinates relative */
                                std::vector<WidgetImpl*> &stack)
 {

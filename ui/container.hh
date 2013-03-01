@@ -33,11 +33,11 @@ protected:
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
-  virtual void        set_focus_child   (WidgetImpl           *widget);
-  virtual void        scroll_to_child   (WidgetImpl           &widget);
-  virtual void        dump_test_data    (TestStream     &tstream);
-  static Allocation   layout_child      (WidgetImpl         &child,
-                                         const Allocation &carea);
+  void                change_unviewable (WidgetImpl &child, bool);
+  virtual void        set_focus_child   (WidgetImpl *widget);
+  virtual void        scroll_to_child   (WidgetImpl &widget);
+  virtual void        dump_test_data    (TestStream &tstream);
+  static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   virtual ContainerImpl* as_container_impl ()                           { return this; }
 public:
   WidgetImpl*           get_focus_child () const;
