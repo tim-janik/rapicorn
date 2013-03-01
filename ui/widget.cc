@@ -1126,6 +1126,18 @@ WidgetImpl::type_cast_error (const char *dest_type)
   fatal ("failed to dynamic_cast<%s> widget: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
+static WidgetImpl *global_debug_dump_marker = NULL;
+
+String
+WidgetImpl::debug_dump (const String &flags)
+{
+  WidgetImpl *saved_debug_dump_marker = global_debug_dump_marker;
+  global_debug_dump_marker = this;
+  String dump = root()->test_dump();
+  global_debug_dump_marker = saved_debug_dump_marker;
+  return dump;
+}
+
 String
 WidgetImpl::test_dump ()
 {
@@ -1140,6 +1152,8 @@ void
 WidgetImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
+  if (this == global_debug_dump_marker)
+    tstream.dump ("debug_dump", String ("1"));
   const PropertyList &plist = list_properties();
   size_t n_properties = 0;
   Aida::Property **properties = plist.list_properties (&n_properties);

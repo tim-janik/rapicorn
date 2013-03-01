@@ -259,6 +259,7 @@ public:
   Color                 focus_color             () { return heritage()->focus_color (state()); }
   /* debugging/testing */
   virtual String        test_dump               ();
+  String                debug_dump              (const String &flags = String());
 protected:
   void                  make_test_dump          (TestStream   &tstream);
   virtual void          dump_test_data          (TestStream   &tstream);
