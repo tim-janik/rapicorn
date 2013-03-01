@@ -688,15 +688,15 @@ WidgetListImpl::destroy_range (size_t first, size_t bound)
 }
 
 ListRow*
-WidgetListImpl::lookup_row (int row)
+WidgetListImpl::lookup_row (int row, bool maybe_cached)
 {
   return_unless (row >= 0, NULL);
   RowMap::iterator ri;
-  if (row_map_.end()   != (ri = row_map_.find (row)) ||
-      row_cache_.end() != (ri = row_cache_.find (row)))
+  if (row_map_.end()   != (ri = row_map_.find (row)))
     return ri->second;
-  else
-    return NULL;
+  if (maybe_cached && row_cache_.end() != (ri = row_cache_.find (row)))
+    return ri->second;
+  return NULL;
 }
 
 void

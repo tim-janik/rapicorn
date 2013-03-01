@@ -82,7 +82,7 @@ public:
   void                  fill_row                (ListRow *lr, int row);
   ListRow*              create_row              (uint64 row,
                                                  bool   with_size_groups = true);
-  ListRow*              lookup_row              (int    row);
+  ListRow*              lookup_row              (int    row, bool maybe_cached = true);
   ListRow*              fetch_row               (int    row);
   void                  update_row              (int    row);
   // == Scrolling Implementation ==
