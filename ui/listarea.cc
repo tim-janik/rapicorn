@@ -34,7 +34,8 @@ protected:
   _property_list ()
   {
     static Property *properties[] = {
-      MakeProperty (WidgetListRowImpl, selected, _("Selected"), _("Indicates wether this row is selected"), "rw"),
+      MakeProperty (WidgetListRowImpl, selected,  _("Selected"), _("Indicates wether this row is selected"), "rw"),
+      MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), "ro"),
     };
     static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
