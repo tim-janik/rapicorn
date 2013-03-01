@@ -560,7 +560,12 @@ WidgetListImpl::row_height (int nth_row)
           lr = fetch_row (nth_row);
           keep_uncached = false;
         }
+      const bool keep_invisible = !lr->lrow->visible();
+      if (keep_invisible)                                       // FIXME: resetting visible is very expensive
+        lr->lrow->visible (true); // proper requisition need visible row
       row_heights_[nth_row] = lr->lrow->requisition().height;
+      if (keep_invisible)
+        lr->lrow->visible (false); // restore state
       if (!keep_uncached)
         cache_row (lr);
     }
