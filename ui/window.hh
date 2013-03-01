@@ -63,14 +63,14 @@ public:
   virtual bool          synthesize_delete                       ();
   void                  draw_child                              (WidgetImpl &child);
 private:
+  virtual WindowImpl*   as_window_impl                          ()              { return this; }
   void                  notify_displayed                        (void);
-  virtual void          remove_grab_widget                        (WidgetImpl               &child);
+  virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
   virtual              ~WindowImpl                              ();
-  virtual void          dispose_widget                            (WidgetImpl               &widget);
-  virtual bool          self_visible                            () const;
+  virtual void          dispose_widget                          (WidgetImpl               &widget);
   /* misc */
-  vector<WidgetImpl*>     widget_difference                         (const vector<WidgetImpl*>    &clist, /* preserves order of clist */
+  vector<WidgetImpl*>   widget_difference                       (const vector<WidgetImpl*>    &clist, /* preserves order of clist */
                                                                  const vector<WidgetImpl*>    &cminus);
   /* sizing */
   void                  resize_window                           (const Allocation *new_area = NULL);

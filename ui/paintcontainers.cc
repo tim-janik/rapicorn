@@ -150,7 +150,7 @@ public:
   {
     IRect ia = allocation();
     const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    bool bimpressed = branch_impressed(), bprelight = branch_prelight();
+    bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
     /* render background */
     String background_color;
     if (bimpressed)
@@ -244,7 +244,7 @@ protected:
   virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed(); }
   virtual bool          tight_focus     () const        { return tight_focus_; }
   virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed(); }
-  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
+  virtual FrameType     current_frame   () const        { return ancestry_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
   {
@@ -411,7 +411,7 @@ protected:
     in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
     if (in_focus)
       return focus_frame();
-    return branch_impressed() ? impressed_frame() : normal_frame();
+    return ancestry_impressed() ? impressed_frame() : normal_frame();
   }
 public:
   explicit FocusFrameImpl() :

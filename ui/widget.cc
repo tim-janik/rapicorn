@@ -46,11 +46,8 @@ WidgetIface::impl () const
 }
 
 WidgetImpl::WidgetImpl () :
-  flags_ (VISIBLE | SENSITIVE | ALLOCATABLE),
-  parent_ (NULL),
-  heritage_ (NULL),
-  factory_context_ (NULL), // removing this breaks g++ pre-4.2.0 20060530
-  ainfo_ (NULL),
+  flags_ (VISIBLE | SENSITIVE),
+  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
   sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
@@ -61,57 +58,93 @@ WidgetImpl::constructed()
 {}
 
 bool
-WidgetImpl::viewable() const
+WidgetImpl::ancestry_visible () const
 {
-  return drawable() && (!parent_ || parent_->viewable());
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (!widget->visible())
+        return false;
+      widget = widget->parent_;
+    }
+  while (widget);
+  return true;
 }
 
 bool
-WidgetImpl::self_visible () const
+WidgetImpl::ancestry_prelight () const
 {
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (widget->prelight())
+        return true;
+      widget = widget->parent();
+    }
+  while (widget);
   return false;
 }
 
 bool
-WidgetImpl::change_flags_silently (uint32 mask,
-                                 bool   on)
+WidgetImpl::ancestry_impressed () const
 {
-  uint32 old_flags = flags_;
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (widget->impressed())
+        return true;
+      widget = widget->parent();
+    }
+  while (widget);
+  return false;
+}
+
+bool
+WidgetImpl::viewable() const
+{
+  return visible() && !test_any_flag (UNVIEWABLE | PARENT_UNVIEWABLE);
+}
+
+bool
+WidgetImpl::change_flags_silently (uint64 mask, bool on)
+{
+  const uint64 old_flags = flags_;
   if (on)
     flags_ |= mask;
   else
     flags_ &= ~mask;
-  /* omit change notification */
+  // silently: omit change notification
   return old_flags != flags_;
 }
 
 void
 WidgetImpl::propagate_state (bool notify_changed)
 {
-  change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
-  const bool wasallocatable = allocatable();
-  change_flags_silently (PARENT_VISIBLE, self_visible() ||
-                         (parent() && parent()->test_all_flags (VISIBLE | PARENT_VISIBLE)));
-  if (wasallocatable != allocatable())
-    invalidate();
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
+  ContainerImpl *container = as_container_impl();
+  const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
+  const bool was_viewable = viewable();
+  change_flags_silently (PARENT_SENSITIVE, self_is_window_impl || (parent() && parent()->sensitive()));
+  change_flags_silently (PARENT_UNVIEWABLE, !self_is_window_impl && (!parent() || !parent()->viewable()));
+  if (was_viewable != viewable())
+    invalidate();       // changing viewable forces invalidation, regardless of notify_changed
   if (container)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
-    sig_changed.emit(); /* notify changed() without invalidate() */
+    sig_changed.emit(); // changed() does not imply invalidate(), see above
 }
 
 void
-WidgetImpl::set_flag (uint32 flag, bool on)
+WidgetImpl::set_flag (uint64 flag, bool on)
 {
-  assert ((flag & (flag - 1)) == 0); /* single bit check */
-  const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
-                                    VISIBLE | PARENT_VISIBLE);
-  const uint repack_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD |
-                                HSPREAD_CONTAINER | VSPREAD_CONTAINER |
-                                HSHRINK | VSHRINK | VISIBLE;
-  bool fchanged = change_flags_silently (flag, on);
+  assert ((flag & (flag - 1)) == 0); // single bit check
+  const uint64 propagate_flag_mask = VISIBLE | SENSITIVE | UNVIEWABLE |
+                                     PARENT_SENSITIVE | PARENT_UNVIEWABLE |
+                                     PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint64 repack_flag_mask = HSHRINK | VSHRINK | HEXPAND | VEXPAND |
+                                  HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER |
+                                  VISIBLE | UNVIEWABLE | PARENT_UNVIEWABLE;
+  const bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
       if (flag & propagate_flag_mask)
@@ -132,50 +165,6 @@ WidgetImpl::set_flag (uint32 flag, bool on)
 bool
 WidgetImpl::grab_default () const
 {
-  return false;
-}
-
-void
-WidgetImpl::sensitive (bool b)
-{
-  set_flag (SENSITIVE, b);
-}
-
-void
-WidgetImpl::prelight (bool b)
-{
-  set_flag (PRELIGHT, b);
-}
-
-bool
-WidgetImpl::branch_prelight () const
-{
-  const WidgetImpl *widget = this;
-  while (widget)
-    {
-      if (widget->prelight())
-        return true;
-      widget = widget->parent();
-    }
-  return false;
-}
-
-void
-WidgetImpl::impressed (bool b)
-{
-  set_flag (IMPRESSED, b);
-}
-
-bool
-WidgetImpl::branch_impressed () const
-{
-  const WidgetImpl *widget = this;
-  while (widget)
-    {
-      if (widget->impressed())
-        return true;
-      widget = widget->parent();
-    }
   return false;
 }
 
@@ -225,7 +214,7 @@ WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
-  if (!can_focus() || !sensitive() || !visible())
+  if (!can_focus() || !sensitive() || !ancestry_visible())
     return false;
   // unset old focus
   WindowImpl *rwidget = get_window();
@@ -1019,13 +1008,13 @@ WidgetImpl::invalidate_parent ()
 }
 
 void
-WidgetImpl::invalidate (uint32 mask)
+WidgetImpl::invalidate (uint64 mask)
 {
   mask &= INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT;
   return_unless (mask != 0);
-  const bool had_invalid_requisition = test_any_flag (INVALID_REQUISITION);
-  const bool had_invalid_allocation = test_any_flag (INVALID_ALLOCATION);
   const bool had_invalid_content = test_any_flag (INVALID_CONTENT);
+  const bool had_invalid_allocation = test_any_flag (INVALID_ALLOCATION);
+  const bool had_invalid_requisition = test_any_flag (INVALID_REQUISITION);
   if (!had_invalid_content && (mask & INVALID_CONTENT))
     expose();
   change_flags_silently (mask, true);

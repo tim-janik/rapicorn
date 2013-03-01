@@ -232,7 +232,7 @@ WindowImpl::WindowImpl() :
   ClassDoctor::set_window_heritage (*this, hr);
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
-  set_flag (PARENT_VISIBLE, true);
+  set_flag (PARENT_UNVIEWABLE, false);
   /* create event loop (auto-starts) */
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
@@ -272,12 +272,6 @@ WindowImpl::~WindowImpl()
   /* this should be done last */
   unref (&loop_);
   const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
-}
-
-bool
-WindowImpl::self_visible () const
-{
-  return true;
 }
 
 void

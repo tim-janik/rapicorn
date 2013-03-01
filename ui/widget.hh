@@ -44,11 +44,11 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   friend                      class SizeGroup;
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
-  Heritage                   *heritage_;
-  Requisition                 requisition_;
-  Allocation                  allocation_;
-  FactoryContext             *factory_context_;
   const AnchorInfo           *ainfo_;
+  Heritage                   *heritage_;
+  FactoryContext             *factory_context_;
+  Allocation                  allocation_;
+  Requisition                 requisition_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
@@ -59,34 +59,34 @@ protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
   /* flag handling */
-  bool                        change_flags_silently (uint32 mask, bool on);
+  bool                        change_flags_silently (uint64 mask, bool on);
   enum {
     ANCHORED                  = 1 <<  0,
     VISIBLE                   = 1 <<  1,
-    PARENT_VISIBLE            = 1 <<  2,
-    HIDDEN_CHILD              = 1 <<  3,
-    SENSITIVE                 = 1 <<  4,
-    PARENT_SENSITIVE          = 1 <<  5,
+    SENSITIVE                 = 1 <<  2,
+    UNVIEWABLE                = 1 <<  3,
+    PARENT_SENSITIVE          = 1 <<  4,
+    PARENT_UNVIEWABLE         = 1 <<  5,
     PRELIGHT                  = 1 <<  6,
     IMPRESSED                 = 1 <<  7,
-    FOCUS_CHAIN               = 1 <<  8,
-    HAS_DEFAULT               = 1 <<  9,
-    INVALID_REQUISITION       = 1 << 11,
-    INVALID_ALLOCATION        = 1 << 12,
-    INVALID_CONTENT           = 1 << 13,
-    HSPREAD_CONTAINER         = 1 << 14,
-    VSPREAD_CONTAINER         = 1 << 15,
-    HSPREAD                   = 1 << 16,
-    VSPREAD                   = 1 << 17,
-    HEXPAND                   = 1 << 18,
-    VEXPAND                   = 1 << 19,
-    HSHRINK                   = 1 << 20,
-    VSHRINK                   = 1 << 21,
-    ALLOCATABLE               = 1 << 22,
+    HAS_DEFAULT               = 1 <<  8,
+    FOCUS_CHAIN               = 1 <<  9,
+    HSHRINK                   = 1 << 10,
+    VSHRINK                   = 1 << 11,
+    HEXPAND                   = 1 << 12,
+    VEXPAND                   = 1 << 13,
+    HSPREAD                   = 1 << 14,
+    VSPREAD                   = 1 << 15,
+    HSPREAD_CONTAINER         = 1 << 16,
+    VSPREAD_CONTAINER         = 1 << 17,
+    INVALID_REQUISITION       = 1 << 18,
+    INVALID_ALLOCATION        = 1 << 19,
+    INVALID_CONTENT           = 1 << 20,
   };
-  void                        set_flag          (uint32 flag, bool on = true);
-  void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
-  virtual bool                self_visible      () const;
+  void                        set_flag          (uint64 flag, bool on = true);
+  void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
+  virtual WindowImpl*         as_window_impl    ()              { return NULL; }
+  virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0;
@@ -107,36 +107,36 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~WidgetImpl         ();
+  virtual                     ~WidgetImpl       ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
-  virtual bool                activate_widget     ();
+  virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:
-  explicit                    WidgetImpl              ();
-  bool                        test_all_flags    (uint32 mask) const { return (flags_ & mask) == mask; }
-  bool                        test_any_flag     (uint32 mask) const { return (flags_ & mask) != 0; }
-  bool                        anchored          () const { return test_any_flag (ANCHORED); }
-  bool                        visible           () const { return test_any_flag (VISIBLE) && !test_any_flag (HIDDEN_CHILD); }
-  void                        visible           (bool b) { set_flag (VISIBLE, b); }
-  bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
-  bool                        drawable          () const; // visible() && allocation_.width && allocation_.height
-  virtual bool                viewable          () const; // drawable() && parent->viewable();
-  bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
-  virtual void                sensitive         (bool b);
+  explicit                    WidgetImpl        ();
+  bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
+  bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
+  bool                        anchored          () const { return test_all_flags (ANCHORED); }
+  virtual bool                visible           () const { return test_all_flags (VISIBLE); }
+  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }
+  bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
+  virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
+  bool                        drawable          () const; // viewable() && clipped_allocation > 0
+  virtual bool                sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
+  virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); }
   bool                        insensitive       () const { return !sensitive(); }
   void                        insensitive       (bool b) { sensitive (!b); }
   bool                        prelight          () const { return test_any_flag (PRELIGHT); }
-  virtual void                prelight          (bool b);
-  bool                        branch_prelight   () const;
+  virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); }
+  bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
   bool                        impressed         () const { return test_any_flag (IMPRESSED); }
-  virtual void                impressed         (bool b);
-  bool                        branch_impressed  () const;
+  virtual void                impressed         (bool b) { set_flag (IMPRESSED, b); }
+  bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const;
@@ -196,7 +196,7 @@ public:
   void                        cross_unlink      (WidgetImpl &link, size_t link_id);
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
-  void                        invalidate        (uint32 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        changed           ();
   void                        expose            ()                      { expose (allocation()); }

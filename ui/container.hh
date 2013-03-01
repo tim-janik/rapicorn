@@ -38,6 +38,7 @@ protected:
   virtual void        dump_test_data    (TestStream     &tstream);
   static Allocation   layout_child      (WidgetImpl         &child,
                                          const Allocation &carea);
+  virtual ContainerImpl* as_container_impl ()                           { return this; }
 public:
   WidgetImpl*           get_focus_child () const;
   typedef Walker<WidgetImpl>  ChildWalker;
@@ -45,8 +46,8 @@ public:
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual size_t        n_children      () = 0;
-  virtual WidgetImpl*     nth_child       (size_t nth) = 0;
-  bool                  has_children    ()                          { return 0 != n_children(); }
+  virtual WidgetImpl*   nth_child       (size_t nth) = 0;
+  bool                  has_children    ()                              { return 0 != n_children(); }
   void                  remove          (WidgetImpl           &widget);
   void                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL); remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
