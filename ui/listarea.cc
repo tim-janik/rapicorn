@@ -344,9 +344,9 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
   need_scroll_layout_ = need_scroll_layout_ || allocation() != area || changed;
   if (need_scroll_layout_)
     vscroll_layout();
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
+  for (auto ri : row_map_)
     {
-      ListRow *lr = it->second;
+      ListRow *lr = ri.second;
       lr->lrow->set_allocation (lr->area, &allocation());
     }
 }
