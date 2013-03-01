@@ -1166,8 +1166,8 @@ WidgetImpl::make_test_dump (TestStream &tstream)
           tstream.dump (property->ident, value);
         }
     }
-  tstream.push_indent();
   dump_private_data (tstream);
+  tstream.push_indent();
   dump_test_data (tstream);
   tstream.pop_indent();
   tstream.pop_node ();
@@ -1179,7 +1179,10 @@ WidgetImpl::dump_test_data (TestStream &tstream)
 
 void
 WidgetImpl::dump_private_data (TestStream &tstream)
-{}
+{
+  tstream.dump ("requisition", string_printf ("(%.17g, %.17g)", requisition().width, requisition().height));
+  tstream.dump ("allocation", allocation().string());
+}
 
 void
 WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
