@@ -27,6 +27,7 @@ ButtonAreaImpl::_property_list()
 void
 ButtonAreaImpl::dump_private_data (TestStream &tstream)
 {
+  SingleContainerImpl::dump_private_data (tstream);
   tstream.dump_intern ("button_", button_);
   tstream.dump_intern ("repeater_", repeater_);
 }
