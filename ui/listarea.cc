@@ -318,24 +318,22 @@ void
 WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  // FIXME: allow property to specify how many rows should be visible?
   requisition.width = 0;
   requisition.height = -1;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto ri : row_map_)
     {
-      /* size request all children */
-      if (!cw->visible())
-        continue;
-      Requisition crq = cw->requisition();
+      ListRow *lr = ri.second;
+      critical_unless (lr->lrow->visible());
+      const Requisition crq = lr->lrow->requisition();
       requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
   if (model_ && model_->count())
-    requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (model_->count() * vadjustment_->nvalue())); // FIXME
+    requisition.height = -1;  // FIXME: allow property to specify how many rows should be visible
   else
     requisition.height = -1;
   if (requisition.height < 0)
-    requisition.height = 12 * 5; // FIXME: request single row height
+    requisition.height = 12 * 5; // FIXME: request single label height
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
 }
