@@ -473,11 +473,10 @@ WidgetListImpl::key_press_event (const EventKey &event)
     }
   if (handled)
     {
-      ListRow *lr = lookup_row (current_focus);
+      ListRow *lr = lookup_row (current_focus, false);
       if (lr)
         {
-          lr->lrow->visible (true);             // force new focus onscreen
-          lr->lrow->grab_focus();
+          lr->lrow->grab_focus();               // focus onscreen row
         }
       else
         {
