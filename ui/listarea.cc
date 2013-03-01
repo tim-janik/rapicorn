@@ -642,13 +642,8 @@ WidgetListImpl::cache_row (ListRow *lr)
         lr->lrow->visible (false);
       else                              // stash focus widget but keep it visible to maintain focus
         {
-          const int big = 250000000;
-          Allocation nowhere = lr->lrow->allocation();
-          nowhere.x = nowhere.y = -5 * big;
-          nowhere.width = min (nowhere.width, big);
-          nowhere.height = min (nowhere.height, big);
-          const Rect empty = Rect (0, 0, 0, 0);
-          lr->lrow->set_allocation (nowhere, &empty);
+          lr->area = Rect (-250000000, -250000000, 0, 0);
+          lr->lrow->set_allocation (lr->area);
         }
       row_cache_[row_index] = lr;
       lr->allocated = 0;
