@@ -1019,32 +1019,22 @@ WidgetImpl::invalidate_parent ()
 }
 
 void
-WidgetImpl::invalidate()
+WidgetImpl::invalidate (uint32 mask)
 {
-  const bool widget_state_invalidation = !test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
-  if (widget_state_invalidation)
-    {
-      expose();
-      change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
-    }
+  mask &= INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT;
+  return_unless (mask != 0);
+  const bool had_invalid_requisition = test_flags (INVALID_REQUISITION);
+  const bool had_invalid_allocation = test_flags (INVALID_ALLOCATION);
+  const bool had_invalid_content = test_flags (INVALID_CONTENT);
+  if (!had_invalid_content && (mask & INVALID_CONTENT))
+    expose();
+  change_flags_silently (mask, true);
   if (!finalizing())
     sig_invalidate.emit();
-  if (widget_state_invalidation)
+  if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
+      (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
-      invalidate_parent(); /* need new size-request on parent */
-      SizeGroup::invalidate_widget (*this);
-    }
-}
-
-void
-WidgetImpl::invalidate_size()
-{
-  if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION, true); /* skip notification */
-      if (!finalizing())
-        sig_invalidate.emit();
-      invalidate_parent(); /* need new size-request on parent */
+      invalidate_parent(); // need new size-request from parent
       SizeGroup::invalidate_widget (*this);
     }
 }

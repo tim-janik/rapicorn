@@ -197,8 +197,8 @@ public:
   void                        cross_unlink      (WidgetImpl &link, size_t link_id);
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
-  void                        invalidate        ();
-  void                        invalidate_size   ();
+  void                        invalidate        (uint32 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        changed           ();
   void                        expose            ()                      { expose (allocation()); }
   void                        expose            (const Rect &rect)      { expose (Region (rect)); }
