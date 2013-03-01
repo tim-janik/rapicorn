@@ -30,7 +30,8 @@ protected:
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
-  virtual const PropertyList& _property_list   ();
+  virtual const PropertyList& _property_list    ();
+  virtual WindowImpl*   as_window_impl          ()              { return this; }
   virtual String        title                   () const;
   virtual void          title                   (const String &window_title);
   WidgetImpl*             get_focus               () const;
@@ -63,7 +64,6 @@ public:
   virtual bool          synthesize_delete                       ();
   void                  draw_child                              (WidgetImpl &child);
 private:
-  virtual WindowImpl*   as_window_impl                          ()              { return this; }
   void                  notify_displayed                        (void);
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();

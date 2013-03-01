@@ -157,7 +157,7 @@ ContainerImpl::uncross_descendant (WidgetImpl &descendant)
   WidgetImpl *widget = &descendant;
   ref (this);
   ref (widget);
-  ContainerImpl *cc = dynamic_cast<ContainerImpl*> (widget);
+  ContainerImpl *cc = widget->as_container_impl();
  restart_search:
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!cc || !cc->has_children()) /* suppress tree walks where possible */
@@ -584,7 +584,7 @@ ContainerImpl::point_children (Point               p, /* window coordinates rela
         {
           child.ref();
           stack.push_back (&child);
-          ContainerImpl *cc = dynamic_cast<ContainerImpl*> (&child);
+          ContainerImpl *cc = child.as_container_impl();
           if (cc)
             cc->point_children (cp, stack);
         }
@@ -623,7 +623,7 @@ ContainerImpl::debug_tree (String indent)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;
-      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&child);
+      ContainerImpl *c = child.as_container_impl();
       if (c)
         c->debug_tree (indent + "  ");
       else
@@ -806,7 +806,7 @@ ResizeContainerImpl::update_anchor_info ()
     last = widget, widget = last->parent();
   widget = last;
   // assign window iff one is found
-  anchor_info_.window = dynamic_cast<WindowImpl*> (widget);
+  anchor_info_.window = window_cast (widget);
 }
 
 static inline String

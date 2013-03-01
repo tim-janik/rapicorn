@@ -85,8 +85,6 @@ protected:
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
-  virtual WindowImpl*         as_window_impl    ()              { return NULL; }
-  virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0;
@@ -119,6 +117,8 @@ protected:
   void                        notify_key_error  ();
 public:
   explicit                    WidgetImpl        ();
+  virtual WindowImpl*         as_window_impl    ()              { return NULL; }
+  virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
   bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
   bool                        anchored          () const { return test_all_flags (ANCHORED); }
@@ -323,7 +323,6 @@ public:
   virtual WidgetIface* query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
   virtual WidgetIface* query_selector_unique (const String &selector);
-  inline ContainerImpl* as_container       (); // see container.hh
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
@@ -332,6 +331,8 @@ public:
                                               const std::nothrow_t &nt = dothrow) const;
 protected:
   virtual bool          do_event        (const Event &event);
+  static ContainerImpl* container_cast  (WidgetImpl *widget)    { return widget ? widget->as_container_impl() : NULL; }
+  static WindowImpl*    window_cast     (WidgetImpl *widget)    { return widget ? widget->as_window_impl() : NULL; }
 private:
   void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;

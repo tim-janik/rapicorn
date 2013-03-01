@@ -544,8 +544,8 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
 
 WidgetImpl*
 Builder::call_widget (const XmlNode *anode,
-                    const StringVector &call_names, const StringVector &call_values, // evaluated args
-                    const XmlNode *caller, const XmlNode *outmost_caller)
+                      const StringVector &call_names, const StringVector &call_values, // evaluated args
+                      const XmlNode *caller, const XmlNode *outmost_caller)
 {
   assert_return (dnode_ != NULL, NULL);
   String name;
@@ -574,7 +574,7 @@ Builder::call_widget (const XmlNode *anode,
     }
   // assign child container
   if (child_container_)
-    widget->as_container()->child_container (child_container_);
+    widget->as_container_impl()->child_container (child_container_);
   else if (!child_container_name_.empty())
     critical ("%s: failed to find child container: %s", node_location (dnode_).c_str(), child_container_name_.c_str());
   return widget;
@@ -603,7 +603,7 @@ Builder::call_child (const XmlNode *anode,
   // find child container
   if (!child_container_name_.empty() && child_container_name_ == widget->name())
     {
-      ContainerImpl *cc = widget->as_container();
+      ContainerImpl *cc = widget->as_container_impl();
       if (cc)
         {
           if (child_container_)
@@ -640,7 +640,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
         continue;
       if (!container)
         {
-          container = widget->as_container();
+          container = widget->as_container_impl();
           if (!container)
             critical ("%s: parent type is not a container: %s:%s", node_location (cnode).c_str(),
                       node_location (pnode).c_str(), pnode->name().c_str());

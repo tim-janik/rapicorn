@@ -38,7 +38,6 @@ protected:
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
-  virtual ContainerImpl* as_container_impl ()                           { return this; }
 public:
   WidgetImpl*           get_focus_child () const;
   typedef Walker<WidgetImpl>  ChildWalker;
@@ -59,6 +58,7 @@ public:
                                          std::vector<WidgetImpl*>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
                                          std::vector<WidgetImpl*>     &stack);
+  virtual ContainerImpl* as_container_impl ()                           { return this; }
   virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
@@ -130,13 +130,6 @@ protected:
   void                  remove_all_children     ();
   explicit              MultiContainerImpl      ();
 };
-
-// == misc impl bits ==
-ContainerImpl*
-WidgetImpl::as_container () // see widget.hh
-{
-  return dynamic_cast<ContainerImpl*> (this);
-}
 
 } // Rapicorn
 

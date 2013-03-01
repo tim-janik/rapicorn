@@ -407,7 +407,7 @@ protected:
     bool in_focus = has_focus();
     in_focus |= get_focus_child() != NULL;
     in_focus |= client_ && client_->has_focus();
-    ContainerImpl *cclient_ = dynamic_cast<ContainerImpl*> (client_);
+    ContainerImpl *cclient_ = container_cast (client_);
     in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
     if (in_focus)
       return focus_frame();

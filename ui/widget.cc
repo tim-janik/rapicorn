@@ -281,7 +281,7 @@ size_t
 WidgetImpl::cross_link (WidgetImpl &link, const WidgetSlot &uncross)
 {
   assert_return (this != &link, 0);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert_return (common_container != NULL, 0);
   return common_container->widget_cross_link (*this, link, uncross);
 }
@@ -290,7 +290,7 @@ void
 WidgetImpl::cross_unlink (WidgetImpl &link, size_t link_id)
 {
   assert_return (this != &link);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert_return (common_container != NULL);
   common_container->widget_cross_unlink (*this, link, link_id);
 }
@@ -299,7 +299,7 @@ void
 WidgetImpl::uncross_links (WidgetImpl &link)
 {
   assert (this != &link);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert (common_container != NULL);
   common_container->widget_uncross_links (*this, link);
 }
@@ -322,7 +322,7 @@ WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceM
     }
   if (children)
     {
-      ContainerImpl *container = dynamic_cast<ContainerImpl*> (self);
+      ContainerImpl *container = self->as_container_impl();
       if (container)
         for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
           if (cw->match_interface (1, 0, 1, imatcher))
@@ -642,7 +642,7 @@ WidgetImpl::height (double h)
 void
 WidgetImpl::propagate_heritage ()
 {
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
+  ContainerImpl *container = this->as_container_impl();
   if (container)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->heritage (heritage_);
@@ -883,9 +883,6 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
     }
   if (pcontainer)
     {
-      /* ensure parent widgets are always containers (see parent()) */
-      if (!dynamic_cast<ContainerImpl*> (pcontainer))
-        throw Exception ("not setting non-Container widget as parent: ", pcontainer->name());
       parent_ = pcontainer;
       ainfo_ = NULL;
       if (parent_->heritage())
@@ -949,7 +946,7 @@ WidgetImpl::get_window () const
   WidgetImpl *widget = const_cast<WidgetImpl*> (this);
   while (widget->parent_)
     widget = widget->parent_;
-  return dynamic_cast<WindowImpl*> (widget); // NULL iff this is not type WindowImpl*
+  return widget->as_window_impl(); // NULL iff this is not type WindowImpl*
 }
 
 ViewportImpl*
