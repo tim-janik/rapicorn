@@ -232,7 +232,7 @@ WindowImpl::WindowImpl() :
   ClassDoctor::set_window_heritage (*this, hr);
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
-  set_flag (PARENT_VISIBLE, true);
+  set_flag (PARENT_UNVIEWABLE, false);
   /* create event loop (auto-starts) */
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
@@ -272,12 +272,6 @@ WindowImpl::~WindowImpl()
   /* this should be done last */
   unref (&loop_);
   const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
-}
-
-bool
-WindowImpl::self_visible () const
-{
-  return true;
 }
 
 void
@@ -613,11 +607,11 @@ WindowImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
   dispatch_mouse_movement (event);
-  WidgetImpl *widget = get_focus();
-  if (widget && widget->process_screen_window_event (event))
+  WidgetImpl *focus_widget = get_focus();
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
-  if (kevent && kevent->type == KEY_PRESS)
+  if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
     {
       FocusDirType fdir = key_value_to_focus_dir (kevent->key);
       ActivateKeyType activate = key_value_to_activation (kevent->key);
@@ -629,8 +623,8 @@ WindowImpl::dispatch_key_event (const Event &event)
         }
       if (!handled && (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT))
         {
-          WidgetImpl *focus_widget = get_focus();
-          if (focus_widget && focus_widget->sensitive())
+          focus_widget = get_focus();
+          if (focus_widget && focus_widget->key_sensitive())
             {
               if (!focus_widget->activate())
                 notify_key_error();
@@ -949,7 +943,7 @@ bool
 WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 {
   const bool can_resize = !pending_win_size_ && screen_window_;
-  const bool need_resize = can_resize && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return need_resize;
   else if (state.phase == state.DISPATCH)

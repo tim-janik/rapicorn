@@ -46,11 +46,8 @@ WidgetIface::impl () const
 }
 
 WidgetImpl::WidgetImpl () :
-  flags_ (VISIBLE | SENSITIVE | ALLOCATABLE),
-  parent_ (NULL),
-  heritage_ (NULL),
-  factory_context_ (NULL), // removing this breaks g++ pre-4.2.0 20060530
-  ainfo_ (NULL),
+  flags_ (VISIBLE | SENSITIVE),
+  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
   sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
@@ -61,57 +58,107 @@ WidgetImpl::constructed()
 {}
 
 bool
-WidgetImpl::viewable() const
+WidgetImpl::ancestry_visible () const
 {
-  return drawable() && (!parent_ || parent_->viewable());
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (!widget->visible())
+        return false;
+      widget = widget->parent_;
+    }
+  while (widget);
+  return true;
 }
 
 bool
-WidgetImpl::self_visible () const
+WidgetImpl::ancestry_prelight () const
 {
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (widget->prelight())
+        return true;
+      widget = widget->parent();
+    }
+  while (widget);
   return false;
 }
 
 bool
-WidgetImpl::change_flags_silently (uint32 mask,
-                                 bool   on)
+WidgetImpl::ancestry_impressed () const
 {
-  uint32 old_flags = flags_;
+  const WidgetImpl *widget = this;
+  do
+    {
+      if (widget->impressed())
+        return true;
+      widget = widget->parent();
+    }
+  while (widget);
+  return false;
+}
+
+bool
+WidgetImpl::viewable() const
+{
+  return visible() && !test_any_flag (UNVIEWABLE | PARENT_UNVIEWABLE);
+}
+
+/// Return wether a widget can process key events.
+bool
+WidgetImpl::key_sensitive () const
+{
+  return sensitive() && ancestry_visible();
+}
+
+/// Return wether a widget can process pointer events.
+bool
+WidgetImpl::pointer_sensitive () const
+{
+  return sensitive() && drawable();
+}
+
+bool
+WidgetImpl::change_flags_silently (uint64 mask, bool on)
+{
+  const uint64 old_flags = flags_;
   if (on)
     flags_ |= mask;
   else
     flags_ &= ~mask;
-  /* omit change notification */
+  // silently: omit change notification
   return old_flags != flags_;
 }
 
 void
 WidgetImpl::propagate_state (bool notify_changed)
 {
-  change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
-  const bool wasallocatable = allocatable();
-  change_flags_silently (PARENT_VISIBLE, self_visible() ||
-                         (parent() && parent()->test_all_flags (VISIBLE | PARENT_VISIBLE)));
-  if (wasallocatable != allocatable())
-    invalidate();
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
+  ContainerImpl *container = as_container_impl();
+  const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
+  const bool was_viewable = viewable();
+  change_flags_silently (PARENT_SENSITIVE, self_is_window_impl || (parent() && parent()->sensitive()));
+  change_flags_silently (PARENT_UNVIEWABLE, !self_is_window_impl && (!parent() || !parent()->viewable()));
+  if (was_viewable != viewable())
+    invalidate();       // changing viewable forces invalidation, regardless of notify_changed
   if (container)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
-    sig_changed.emit(); /* notify changed() without invalidate() */
+    sig_changed.emit(); // changed() does not imply invalidate(), see above
 }
 
 void
-WidgetImpl::set_flag (uint32 flag, bool on)
+WidgetImpl::set_flag (uint64 flag, bool on)
 {
-  assert ((flag & (flag - 1)) == 0); /* single bit check */
-  const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
-                                    VISIBLE | PARENT_VISIBLE);
-  const uint repack_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD |
-                                HSPREAD_CONTAINER | VSPREAD_CONTAINER |
-                                HSHRINK | VSHRINK | VISIBLE;
-  bool fchanged = change_flags_silently (flag, on);
+  assert ((flag & (flag - 1)) == 0); // single bit check
+  const uint64 propagate_flag_mask = VISIBLE | SENSITIVE | UNVIEWABLE |
+                                     PARENT_SENSITIVE | PARENT_UNVIEWABLE |
+                                     PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint64 repack_flag_mask = HSHRINK | VSHRINK | HEXPAND | VEXPAND |
+                                  HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER |
+                                  VISIBLE | UNVIEWABLE | PARENT_UNVIEWABLE;
+  const bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
       if (flag & propagate_flag_mask)
@@ -135,50 +182,6 @@ WidgetImpl::grab_default () const
   return false;
 }
 
-void
-WidgetImpl::sensitive (bool b)
-{
-  set_flag (SENSITIVE, b);
-}
-
-void
-WidgetImpl::prelight (bool b)
-{
-  set_flag (PRELIGHT, b);
-}
-
-bool
-WidgetImpl::branch_prelight () const
-{
-  const WidgetImpl *widget = this;
-  while (widget)
-    {
-      if (widget->prelight())
-        return true;
-      widget = widget->parent();
-    }
-  return false;
-}
-
-void
-WidgetImpl::impressed (bool b)
-{
-  set_flag (IMPRESSED, b);
-}
-
-bool
-WidgetImpl::branch_impressed () const
-{
-  const WidgetImpl *widget = this;
-  while (widget)
-    {
-      if (widget->impressed())
-        return true;
-      widget = widget->parent();
-    }
-  return false;
-}
-
 StateType
 WidgetImpl::state () const
 {
@@ -194,7 +197,7 @@ WidgetImpl::state () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_flags (FOCUS_CHAIN))
+  if (test_any_flag (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -212,7 +215,7 @@ WidgetImpl::can_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_flags (FOCUS_CHAIN))
+  if (test_any_flag (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -225,13 +228,13 @@ WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
-  if (!can_focus() || !sensitive() || !viewable())
+  if (!can_focus() || !sensitive() || !ancestry_visible())
     return false;
-  /* unset old focus */
+  // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
     rwidget->set_focus (NULL);
-  /* set new focus */
+  // set new focus
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
     rwidget->set_focus (this);
@@ -278,7 +281,7 @@ size_t
 WidgetImpl::cross_link (WidgetImpl &link, const WidgetSlot &uncross)
 {
   assert_return (this != &link, 0);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert_return (common_container != NULL, 0);
   return common_container->widget_cross_link (*this, link, uncross);
 }
@@ -287,7 +290,7 @@ void
 WidgetImpl::cross_unlink (WidgetImpl &link, size_t link_id)
 {
   assert_return (this != &link);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert_return (common_container != NULL);
   common_container->widget_cross_unlink (*this, link, link_id);
 }
@@ -296,7 +299,7 @@ void
 WidgetImpl::uncross_links (WidgetImpl &link)
 {
   assert (this != &link);
-  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
+  ContainerImpl *common_container = container_cast (common_ancestor (link));
   assert (common_container != NULL);
   common_container->widget_uncross_links (*this, link);
 }
@@ -319,7 +322,7 @@ WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceM
     }
   if (children)
     {
-      ContainerImpl *container = dynamic_cast<ContainerImpl*> (self);
+      ContainerImpl *container = self->as_container_impl();
       if (container)
         for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
           if (cw->match_interface (1, 0, 1, imatcher))
@@ -639,7 +642,7 @@ WidgetImpl::height (double h)
 void
 WidgetImpl::propagate_heritage ()
 {
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
+  ContainerImpl *container = this->as_container_impl();
   if (container)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->heritage (heritage_);
@@ -844,12 +847,13 @@ WidgetImpl::screen_window_point (Point p) /* window coordinates relative */
 bool
 WidgetImpl::point (Point p) /* widget coordinates relative */
 {
-  Allocation a = allocation();
+  const Allocation a = clipped_allocation();
   return (drawable() &&
           p.x >= a.x && p.x < a.x + a.width &&
           p.y >= a.y && p.y < a.y + a.height);
 }
 
+/// Signal emitted when a widget ancestry is added to or removed from a Window
 void
 WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
@@ -880,9 +884,6 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
     }
   if (pcontainer)
     {
-      /* ensure parent widgets are always containers (see parent()) */
-      if (!dynamic_cast<ContainerImpl*> (pcontainer))
-        throw Exception ("not setting non-Container widget as parent: ", pcontainer->name());
       parent_ = pcontainer;
       ainfo_ = NULL;
       if (parent_->heritage())
@@ -946,7 +947,7 @@ WidgetImpl::get_window () const
   WidgetImpl *widget = const_cast<WidgetImpl*> (this);
   while (widget->parent_)
     widget = widget->parent_;
-  return dynamic_cast<WindowImpl*> (widget); // NULL iff this is not type WindowImpl*
+  return widget->as_window_impl(); // NULL iff this is not type WindowImpl*
 }
 
 ViewportImpl*
@@ -1019,32 +1020,22 @@ WidgetImpl::invalidate_parent ()
 }
 
 void
-WidgetImpl::invalidate()
+WidgetImpl::invalidate (uint64 mask)
 {
-  const bool widget_state_invalidation = !test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
-  if (widget_state_invalidation)
-    {
-      expose();
-      change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
-    }
+  mask &= INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT;
+  return_unless (mask != 0);
+  const bool had_invalid_content = test_any_flag (INVALID_CONTENT);
+  const bool had_invalid_allocation = test_any_flag (INVALID_ALLOCATION);
+  const bool had_invalid_requisition = test_any_flag (INVALID_REQUISITION);
+  if (!had_invalid_content && (mask & INVALID_CONTENT))
+    expose();
+  change_flags_silently (mask, true);
   if (!finalizing())
     sig_invalidate.emit();
-  if (widget_state_invalidation)
+  if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
+      (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
-      invalidate_parent(); /* need new size-request on parent */
-      SizeGroup::invalidate_widget (*this);
-    }
-}
-
-void
-WidgetImpl::invalidate_size()
-{
-  if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION, true); /* skip notification */
-      if (!finalizing())
-        sig_invalidate.emit();
-      invalidate_parent(); /* need new size-request on parent */
+      invalidate_parent(); // need new size-request from parent
       SizeGroup::invalidate_widget (*this);
     }
 }
@@ -1056,11 +1047,11 @@ WidgetImpl::inner_size_request()
    * requisition invalidation during the size_request phase, widget implementations
    * have to ensure we're not looping endlessly
    */
-  while (test_flags (WidgetImpl::INVALID_REQUISITION))
+  while (test_any_flag (WidgetImpl::INVALID_REQUISITION))
     {
       change_flags_silently (WidgetImpl::INVALID_REQUISITION, false); // skip notification
       Requisition inner; // 0,0
-      if (allocatable())
+      if (visible())
         {
           size_request (inner);
           inner.width = MAX (inner.width, 0);
@@ -1076,7 +1067,7 @@ WidgetImpl::inner_size_request()
         }
       requisition_ = inner;
     }
-  return allocatable() ? requisition_ : Requisition();
+  return visible() ? requisition_ : Requisition();
 }
 
 Requisition
@@ -1112,9 +1103,9 @@ WidgetImpl::expose_internal (const Region &region)
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
-  if (drawable() && !test_flags (INVALID_CONTENT))
+  if (drawable() && !test_any_flag (INVALID_CONTENT))
     {
-      Region r (allocation());
+      Region r (clipped_allocation());
       r.intersect (region);
       expose_internal (r);
     }
@@ -1421,11 +1412,44 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
     }
 }
 
+class ClipAreaDataKey : public DataKey<Allocation*> {
+  virtual void destroy (Allocation *clip) override
+  {
+    delete clip;
+  }
+};
+static ClipAreaDataKey clip_area_key;
+
+const Allocation*
+WidgetImpl::clip_area () const
+{
+  return get_data (&clip_area_key);
+}
+
+void
+WidgetImpl::clip_area (const Allocation *clip)
+{
+  if (!clip)
+    delete_data (&clip_area_key);
+  else
+    set_data (&clip_area_key, new Rect (*clip));
+}
+
+Allocation
+WidgetImpl::clipped_allocation () const
+{
+  Allocation area = allocation();
+  const Allocation *clip = clip_area();
+  if (clip)
+    area.intersect (*clip);
+  return area;
+}
+
 bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
   WidgetImpl *p = parent();
-  if (p && !test_flags (INVALID_REQUISITION))
+  if (p && !test_any_flag (INVALID_REQUISITION))
     {
       ResizeContainerImpl *rc = p->get_resize_container();
       if (rc && rc->requisitions_tunable())
@@ -1445,7 +1469,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
 }
 
 void
-WidgetImpl::set_allocation (const Allocation &area)
+WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
   Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
   const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
@@ -1455,22 +1479,25 @@ WidgetImpl::set_allocation (const Allocation &area)
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation oa = allocation();
+  const Rect *oc = clip_area(), oc_copy = oc ? *oc : Rect();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
-  if (!allocatable())
+  if (!visible())
     sarea = Allocation (0, 0, 0, 0);
   const bool changed = allocation_ != sarea;
   allocation_ = sarea;
+  clip_area (clip);     // invalidates *oc
   size_allocate (allocation_, changed);
   Allocation a = allocation();
-  bool need_expose = oa != a || test_flags (INVALID_CONTENT);
+  const bool need_expose = oa != a || oc != clip || test_any_flag (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); // skip notification
   // expose old area
   if (need_expose)
     {
-      // expose unclipped
       Region region (oa);
-      expose_internal (region);
+      if (oc)
+        region.intersect (oc_copy);
+      expose_internal (region); // don't intersect with new allocation
     }
   /* expose new area */
   if (need_expose)
@@ -1485,8 +1512,10 @@ class WidgetImpl::RenderContext {
   friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
+  Rect                    *hierarchical_clip;
   vector<cairo_t*>         cairos;
 public:
+  explicit      RenderContext() : hierarchical_clip (NULL) {}
   /*dtor*/     ~RenderContext();
   const Region& region() const { return render_area; }
 };
@@ -1495,7 +1524,7 @@ void
 WidgetImpl::render_into (cairo_t *cr, const Region &region)
 {
   RenderContext rcontext;
-  rcontext.render_area = allocation();
+  rcontext.render_area = clipped_allocation();
   rcontext.render_area.intersect (region);
   if (!rcontext.render_area.empty())
     {
@@ -1520,9 +1549,21 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  Rect area = allocation();
+  Rect area = clipped_allocation();
+  Rect *saved_hierarchical_clip = rcontext.hierarchical_clip;
+  Rect newclip;
+  const Rect *clip = clip_area();
+  if (clip)
+    {
+      newclip = *clip;
+      if (saved_hierarchical_clip)
+        newclip.intersect (*saved_hierarchical_clip);
+      rcontext.hierarchical_clip = &newclip;
+    }
   area.intersect (rendering_region (rcontext).extents());
   render (rcontext, area);
+  render_recursive (rcontext);
+  rcontext.hierarchical_clip = saved_hierarchical_clip;
   while (rcontext.cairos.size() > n_cairos)
     {
       cairo_destroy (rcontext.cairos.back());
@@ -1534,6 +1575,10 @@ void
 WidgetImpl::render (RenderContext &rcontext, const Rect &rect)
 {}
 
+void
+WidgetImpl::render_recursive (RenderContext &rcontext)
+{}
+
 const Region&
 WidgetImpl::rendering_region (RenderContext &rcontext) const
 {
@@ -1541,12 +1586,13 @@ WidgetImpl::rendering_region (RenderContext &rcontext) const
 }
 
 cairo_t*
-WidgetImpl::cairo_context (RenderContext  &rcontext,
-                         const Allocation &area)
+WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
   Rect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
-    rect = allocation();
+    rect = clipped_allocation();
+  if (rcontext.hierarchical_clip)
+    rect.intersect (*rcontext.hierarchical_clip);
   const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels
   if (empty_dummy)
     rect.width = rect.height = 1;
@@ -1578,6 +1624,24 @@ WidgetImpl::RenderContext::~RenderContext()
       cairo_surface_destroy (surfaces.back());
       surfaces.pop_back();
     }
+}
+
+bool
+WidgetImpl::drawable () const
+{
+  if (viewable() && allocation_.width > 0 && allocation_.height > 0)
+    {
+      const Allocation *clip = clip_area();
+      if (clip)
+        {
+          Allocation carea = allocation_;
+          carea.intersect (*clip);
+          if (carea.width <= 0 || carea.height <= 0)
+            return false;
+        }
+      return true;
+    }
+  return false;
 }
 
 // == WidgetIfaceVector ==

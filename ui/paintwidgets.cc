@@ -122,7 +122,7 @@ public:
   virtual FrameType impressed_dot () const              { return impressed_dot_; }
   virtual void      normal_dot    (FrameType ft)        { normal_dot_ = ft; expose(); }
   virtual FrameType normal_dot    () const              { return normal_dot_; }
-  FrameType         current_dot   () const              { return branch_impressed() ? impressed_dot() : normal_dot(); }
+  FrameType         current_dot   () const              { return ancestry_impressed() ? impressed_dot() : normal_dot(); }
   virtual void      n_hdots       (uint   num)          { n_hdots_ = num; expose(); }
   virtual uint      n_hdots       () const              { return n_hdots_; }
   virtual void      n_vdots       (uint   num)          { n_vdots_ = num; expose(); }

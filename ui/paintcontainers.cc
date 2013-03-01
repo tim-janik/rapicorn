@@ -150,7 +150,7 @@ public:
   {
     IRect ia = allocation();
     const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    bool bimpressed = branch_impressed(), bprelight = branch_prelight();
+    bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
     /* render background */
     String background_color;
     if (bimpressed)
@@ -244,7 +244,7 @@ protected:
   virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed(); }
   virtual bool          tight_focus     () const        { return tight_focus_; }
   virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed(); }
-  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
+  virtual FrameType     current_frame   () const        { return ancestry_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
   {
@@ -264,7 +264,7 @@ protected:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    if (has_allocatable_child())
+    if (has_visible_child())
       {
         Allocation carea = area;
         if (!overlap_child_)
@@ -407,11 +407,11 @@ protected:
     bool in_focus = has_focus();
     in_focus |= get_focus_child() != NULL;
     in_focus |= client_ && client_->has_focus();
-    ContainerImpl *cclient_ = dynamic_cast<ContainerImpl*> (client_);
+    ContainerImpl *cclient_ = container_cast (client_);
     in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
     if (in_focus)
       return focus_frame();
-    return branch_impressed() ? impressed_frame() : normal_frame();
+    return ancestry_impressed() ? impressed_frame() : normal_frame();
   }
 public:
   explicit FocusFrameImpl() :

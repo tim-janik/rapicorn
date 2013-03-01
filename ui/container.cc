@@ -157,7 +157,7 @@ ContainerImpl::uncross_descendant (WidgetImpl &descendant)
   WidgetImpl *widget = &descendant;
   ref (this);
   ref (widget);
-  ContainerImpl *cc = dynamic_cast<ContainerImpl*> (widget);
+  ContainerImpl *cc = widget->as_container_impl();
  restart_search:
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!cc || !cc->has_children()) /* suppress tree walks where possible */
@@ -554,16 +554,22 @@ void
 ContainerImpl::expose_enclosure ()
 {
   /* expose without children */
-  Region region (allocation());
+  Region region (clipped_allocation());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     if (cw->drawable())
       {
         WidgetImpl &child = *cw;
-        Region cregion (child.allocation());
+        Region cregion (child.clipped_allocation());
         cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
       }
   expose (region);
+}
+
+void
+ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
+{
+  child.set_flag (UNVIEWABLE, b);
 }
 
 void
@@ -578,7 +584,7 @@ ContainerImpl::point_children (Point               p, /* window coordinates rela
         {
           child.ref();
           stack.push_back (&child);
-          ContainerImpl *cc = dynamic_cast<ContainerImpl*> (&child);
+          ContainerImpl *cc = child.as_container_impl();
           if (cc)
             cc->point_children (cp, stack);
         }
@@ -593,17 +599,16 @@ ContainerImpl::screen_window_point_children (Point                   p, /* scree
 }
 
 void
-ContainerImpl::render_widget (RenderContext &rcontext)
+ContainerImpl::render_recursive (RenderContext &rcontext)
 {
-  WidgetImpl::render_widget (rcontext);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;
-      if (child.drawable() && rendering_region (rcontext).contains (child.allocation()) != Region::OUTSIDE)
+      if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
-          if (child.test_flags (INVALID_REQUISITION))
+          if (child.test_any_flag (INVALID_REQUISITION))
             critical ("rendering widget with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
-          if (child.test_flags (INVALID_ALLOCATION))
+          if (child.test_any_flag (INVALID_ALLOCATION))
             critical ("rendering widget with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
           child.render_widget (rcontext);
         }
@@ -618,7 +623,7 @@ ContainerImpl::debug_tree (String indent)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;
-      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&child);
+      ContainerImpl *c = child.as_container_impl();
       if (c)
         c->debug_tree (indent + "  ");
       else
@@ -688,7 +693,7 @@ void
 SingleContainerImpl::size_request_child (Requisition &requisition, bool *hspread, bool *vspread)
 {
   bool chspread = false, cvspread = false;
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
       WidgetImpl &child = get_child();
       Requisition cr = child.requisition ();
@@ -745,7 +750,7 @@ ContainerImpl::layout_child (WidgetImpl         &child,
 void
 SingleContainerImpl::size_allocate (Allocation area, bool changed)
 {
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
       WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, area);
@@ -801,7 +806,7 @@ ResizeContainerImpl::update_anchor_info ()
     last = widget, widget = last->parent();
   widget = last;
   // assign window iff one is found
-  anchor_info_.window = dynamic_cast<WindowImpl*> (widget);
+  anchor_info_.window = window_cast (widget);
 }
 
 static inline String
@@ -843,7 +848,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = debug_enabled() && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_debugging = debug_enabled() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (need_debugging)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
                   !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
@@ -857,7 +862,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
    * a simulated annealing process yielding the final layout.
    */
   tunable_requisition_counter_ = 3;
-  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  while (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Requisition creq = requisition(); // unsets INVALID_REQUISITION
       if (!have_allocation)

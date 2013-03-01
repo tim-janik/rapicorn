@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/serverapi.hh> // includes <ui/widget.hh> after WidgetIface declaration
+#include <ui/serverapi.hh>
+// serverapi.hh includes widget.hh after WidgetIface declaration
 
 #ifndef __RAPICORN_WIDGET_HH_
 #define __RAPICORN_WIDGET_HH_
@@ -37,18 +38,19 @@ public:
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
 
-/* --- WidgetImpl --- */
+/// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
+/// More details about widgets are covered in @ref Widget.
 class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
-  Heritage                   *heritage_;
-  Requisition                 requisition_;
-  Allocation                  allocation_;
-  FactoryContext             *factory_context_;
   const AnchorInfo           *ainfo_;
+  Heritage                   *heritage_;
+  FactoryContext             *factory_context_;
+  Allocation                  allocation_;
+  Requisition                 requisition_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
@@ -59,40 +61,38 @@ protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
   /* flag handling */
-  bool                        change_flags_silently (uint32 mask, bool on);
+  bool                        change_flags_silently (uint64 mask, bool on);
   enum {
     ANCHORED                  = 1 <<  0,
     VISIBLE                   = 1 <<  1,
-    PARENT_VISIBLE            = 1 <<  2,
-    HIDDEN_CHILD              = 1 <<  3,
-    SENSITIVE                 = 1 <<  4,
-    PARENT_SENSITIVE          = 1 <<  5,
+    SENSITIVE                 = 1 <<  2,
+    UNVIEWABLE                = 1 <<  3,
+    PARENT_SENSITIVE          = 1 <<  4,
+    PARENT_UNVIEWABLE         = 1 <<  5,
     PRELIGHT                  = 1 <<  6,
     IMPRESSED                 = 1 <<  7,
-    FOCUS_CHAIN               = 1 <<  8,
-    HAS_DEFAULT               = 1 <<  9,
-    INVALID_REQUISITION       = 1 << 11,
-    INVALID_ALLOCATION        = 1 << 12,
-    INVALID_CONTENT           = 1 << 13,
-    HSPREAD_CONTAINER         = 1 << 14,
-    VSPREAD_CONTAINER         = 1 << 15,
-    HSPREAD                   = 1 << 16,
-    VSPREAD                   = 1 << 17,
-    HEXPAND                   = 1 << 18,
-    VEXPAND                   = 1 << 19,
-    HSHRINK                   = 1 << 20,
-    VSHRINK                   = 1 << 21,
-    ALLOCATABLE               = 1 << 22,
+    HAS_DEFAULT               = 1 <<  8,
+    FOCUS_CHAIN               = 1 <<  9,
+    HSHRINK                   = 1 << 10,
+    VSHRINK                   = 1 << 11,
+    HEXPAND                   = 1 << 12,
+    VEXPAND                   = 1 << 13,
+    HSPREAD                   = 1 << 14,
+    VSPREAD                   = 1 << 15,
+    HSPREAD_CONTAINER         = 1 << 16,
+    VSPREAD_CONTAINER         = 1 << 17,
+    INVALID_REQUISITION       = 1 << 18,
+    INVALID_ALLOCATION        = 1 << 19,
+    INVALID_CONTENT           = 1 << 20,
   };
-  void                        set_flag          (uint32 flag, bool on = true);
-  void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
-  bool                        test_flags        (uint32 mask) const { return (flags_ & mask) != 0; }
-  virtual bool                self_visible      () const;
+  void                        set_flag          (uint64 flag, bool on = true);
+  void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
   virtual void                invalidate_parent ();
+  void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (double       new_width,
                                                  double       new_height);
@@ -107,55 +107,59 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~WidgetImpl         ();
+  virtual                     ~WidgetImpl       ();
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
-  virtual bool                activate_widget     ();
+  virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:
-  explicit                    WidgetImpl              ();
-  bool                        test_all_flags    (uint32 mask) const { return (flags_ & mask) == mask; }
-  bool                        test_any_flag     (uint32 mask) const { return test_flags (mask); }
-  bool                        anchored          () const { return test_flags (ANCHORED); }
-  bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
-  void                        visible           (bool b) { set_flag (VISIBLE, b); }
-  bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
-  bool                        drawable          () const { return visible() && allocation_.width > 0 && allocation_.height > 0; }
-  virtual bool                viewable          () const; // drawable() && parent->viewable();
-  bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
-  virtual void                sensitive         (bool b);
+  explicit                    WidgetImpl        ();
+  virtual WindowImpl*         as_window_impl    ()              { return NULL; }
+  virtual ContainerImpl*      as_container_impl ()              { return NULL; }
+  bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
+  bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
+  bool                        anchored          () const { return test_all_flags (ANCHORED); }
+  virtual bool                visible           () const { return test_all_flags (VISIBLE); }
+  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }
+  bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
+  virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
+  bool                        drawable          () const; // viewable() && clipped_allocation > 0
+  virtual bool                sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
+  virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); }
   bool                        insensitive       () const { return !sensitive(); }
   void                        insensitive       (bool b) { sensitive (!b); }
-  bool                        prelight          () const { return test_flags (PRELIGHT); }
-  virtual void                prelight          (bool b);
-  bool                        branch_prelight   () const;
-  bool                        impressed         () const { return test_flags (IMPRESSED); }
-  virtual void                impressed         (bool b);
-  bool                        branch_impressed  () const;
-  bool                        has_default       () const { return test_flags (HAS_DEFAULT); }
+  bool                        key_sensitive     () const;
+  bool                        pointer_sensitive () const;
+  bool                        prelight          () const { return test_any_flag (PRELIGHT); }
+  virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); }
+  bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
+  bool                        impressed         () const { return test_any_flag (IMPRESSED); }
+  virtual void                impressed         (bool b) { set_flag (IMPRESSED, b); }
+  bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
+  bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const;
   bool                        has_focus         () const;
   bool                        grab_focus        ();
   void                        unset_focus       ();
   bool                        activate          ();
-  bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
-  void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
-  bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
-  void                        vexpand           (bool b) { set_flag (VEXPAND, b); }
-  bool                        hspread           () const { return test_flags (HSPREAD | HSPREAD_CONTAINER); }
-  void                        hspread           (bool b) { set_flag (HSPREAD, b); }
-  bool                        vspread           () const { return test_flags (VSPREAD | VSPREAD_CONTAINER); }
-  void                        vspread           (bool b) { set_flag (VSPREAD, b); }
-  bool                        hshrink           () const { return test_flags (HSHRINK); }
-  void                        hshrink           (bool b) { set_flag (HSHRINK, b); }
-  bool                        vshrink           () const { return test_flags (VSHRINK); }
-  void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
+  virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
+  virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); }
+  virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
+  virtual void                vexpand           (bool b) { set_flag (VEXPAND, b); }
+  virtual bool                hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); }
+  virtual void                hspread           (bool b) { set_flag (HSPREAD, b); }
+  virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); }
+  virtual void                vspread           (bool b) { set_flag (VSPREAD, b); }
+  virtual bool                hshrink           () const { return test_any_flag (HSHRINK); }
+  virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); }
+  virtual bool                vshrink           () const { return test_any_flag (VSHRINK); }
+  virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); }
   virtual String              name              () const;
   virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;
@@ -196,8 +200,8 @@ public:
   void                        cross_unlink      (WidgetImpl &link, size_t link_id);
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
-  void                        invalidate        ();
-  void                        invalidate_size   ();
+  void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        changed           ();
   void                        expose            ()                      { expose (allocation()); }
   void                        expose            (const Rect &rect)      { expose (Region (rect)); }
@@ -218,7 +222,8 @@ protected:
   Affine                     affine_from_screen_window ();                    // screen_window => widget affine
   // rendering
   class RenderContext;
-  virtual void               render_widget               (RenderContext    &rcontext);
+  virtual void               render_widget             (RenderContext    &rcontext);
+  virtual void               render_recursive          (RenderContext    &rcontext);
   virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
@@ -243,8 +248,11 @@ public:
   bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
-  void                       set_allocation     (const Allocation &area);       // assign new allocation
+  void                       set_allocation     (const Allocation &area,
+                                                 const Allocation *clip = NULL); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } // current allocation
+  Allocation                 clipped_allocation () const;                        // clipped allocation
+  const Allocation*          clip_area          () const;                        // widget clipping
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return heritage_; }
@@ -317,7 +325,6 @@ public:
   virtual WidgetIface* query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
   virtual WidgetIface* query_selector_unique (const String &selector);
-  inline ContainerImpl* as_container       (); // see container.hh
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
@@ -326,6 +333,8 @@ public:
                                               const std::nothrow_t &nt = dothrow) const;
 protected:
   virtual bool          do_event        (const Event &event);
+  static ContainerImpl* container_cast  (WidgetImpl *widget)    { return widget ? widget->as_container_impl() : NULL; }
+  static WindowImpl*    window_cast     (WidgetImpl *widget)    { return widget ? widget->as_window_impl() : NULL; }
 private:
   void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;

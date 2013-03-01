@@ -101,7 +101,7 @@ SelobWidget::cache_n_children()
 {
   if (UNLIKELY (n_children_ < 0))
     {
-      ContainerImpl *container = dynamic_cast<ContainerImpl*> (&widget_);
+      ContainerImpl *container = widget_.as_container_impl();
       n_children_ = container ? container->n_children() : 0;
     }
 }
@@ -125,7 +125,7 @@ SelobWidget::get_child (int64 index)
 {
   if (n_children_ == 0)
     return NULL;
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&widget_);
+  ContainerImpl *container = widget_.as_container_impl();
   if (container)
     {
       WidgetImpl *child = container->nth_child (index);

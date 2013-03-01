@@ -53,10 +53,11 @@ ViewportImpl::child_affine (const WidgetImpl &widget)
 }
 
 void
-ViewportImpl::render_widget (RenderContext &rcontext)
+ViewportImpl::render_recursive (RenderContext &rcontext)
 {
-  // prevent recursive rendering of children
-  WidgetImpl::render_widget (rcontext);
+  // prevent recursive rendering of children by not calling ResizeContainerImpl::render_recursive
+  if (0)
+    ResizeContainerImpl::render_recursive (rcontext);
   // viewport children are rendered in render()
 }
 

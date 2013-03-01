@@ -223,20 +223,20 @@ TableImpl::size_request_init()
       cols[col].requisition = 0;
       cols[col].expand = false;
     }
-  
+
   bool chspread = false, cvspread = false;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      /* size request all children */
-      if (!cw->allocatable())
+      // size request all children
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       chspread |= cw->hspread();
       cvspread |= cw->vspread();
-      /* expand cols with single-column expand children */
+      // expand cols with single-column expand children
       if (left_attach (pi) + 1 == right_attach (pi) && cw->hexpand())
         cols[left_attach (pi)].expand = true;
-      /* expand rows with single-column expand children */
+      // expand rows with single-column expand children
       if (bottom_attach (pi) + 1 == top_attach (pi) && cw->vexpand())
         rows[bottom_attach (pi)].expand = true;
     }
@@ -249,7 +249,7 @@ TableImpl::size_request_pass1()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       Requisition crq = cw->requisition();
       const PackInfo &pi = cw->pack_info();
@@ -293,7 +293,7 @@ TableImpl::size_request_pass3()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       /* request remaining space for multi-column children */
@@ -406,7 +406,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of single row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       if (left_attach (pi) + 1 == right_attach (pi))
@@ -425,7 +425,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       if (left_attach (pi) + 1 != right_attach (pi))
@@ -750,7 +750,7 @@ TableImpl::size_allocate_pass2 ()
   Allocation area = allocation(), child_area;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       Requisition crq = cw->requisition();

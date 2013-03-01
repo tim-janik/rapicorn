@@ -60,6 +60,7 @@ rapicorn_private_files = $(strip 	\
 	serverapi.cc			\
 	pixmap.cc			\
 )
+EXTRA_DIST += widget.dox
 
 # === CPU flags ===
 CPU_FLAGS = $(or	\

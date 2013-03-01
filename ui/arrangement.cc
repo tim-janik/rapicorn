@@ -79,7 +79,7 @@ ArrangementImpl::size_request (Requisition &requisition)
       WidgetImpl &child = *cw;
       /* size request all children */
       // Requisition rq = child.requisition();
-      if (!child.allocatable())
+      if (!child.visible())
         continue;
       chspread |= child.hspread();
       cvspread |= child.vspread();
@@ -115,7 +115,7 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       WidgetImpl &child = *cw;
-      if (!child.allocatable())
+      if (!child.visible())
         continue;
       Allocation carea = local_child_allocation (child, area.width, area.height);
       carea.x += area.x;

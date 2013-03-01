@@ -33,11 +33,11 @@ protected:
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
-  virtual void        set_focus_child   (WidgetImpl           *widget);
-  virtual void        scroll_to_child   (WidgetImpl           &widget);
-  virtual void        dump_test_data    (TestStream     &tstream);
-  static Allocation   layout_child      (WidgetImpl         &child,
-                                         const Allocation &carea);
+  void                change_unviewable (WidgetImpl &child, bool);
+  virtual void        set_focus_child   (WidgetImpl *widget);
+  virtual void        scroll_to_child   (WidgetImpl &widget);
+  virtual void        dump_test_data    (TestStream &tstream);
+  static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
 public:
   WidgetImpl*           get_focus_child () const;
   typedef Walker<WidgetImpl>  ChildWalker;
@@ -45,8 +45,8 @@ public:
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual size_t        n_children      () = 0;
-  virtual WidgetImpl*     nth_child       (size_t nth) = 0;
-  bool                  has_children    ()                          { return 0 != n_children(); }
+  virtual WidgetImpl*   nth_child       (size_t nth) = 0;
+  bool                  has_children    ()                              { return 0 != n_children(); }
   void                  remove          (WidgetImpl           &widget);
   void                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL); remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
@@ -58,7 +58,8 @@ public:
                                          std::vector<WidgetImpl*>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
                                          std::vector<WidgetImpl*>     &stack);
-  virtual void          render_widget     (RenderContext          &rcontext);
+  virtual ContainerImpl* as_container_impl ()                           { return this; }
+  virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
   virtual WidgetIface*    create_child    (const std::string      &widget_identifier,
@@ -78,10 +79,9 @@ protected:
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
   virtual size_t        n_children              () { return child_widget ? 1 : 0; }
-  virtual WidgetImpl*     nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
   bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
   bool                  has_drawable_child      () { return child_widget && child_widget->drawable(); }
-  bool                  has_allocatable_child   () { return child_widget && child_widget->allocatable(); }
   virtual void          add_child               (WidgetImpl   &widget);
   virtual void          remove_child            (WidgetImpl   &widget);
   explicit              SingleContainerImpl     ();
@@ -130,13 +130,6 @@ protected:
   void                  remove_all_children     ();
   explicit              MultiContainerImpl      ();
 };
-
-// == misc impl bits ==
-ContainerImpl*
-WidgetImpl::as_container () // see widget.hh
-{
-  return dynamic_cast<ContainerImpl*> (this);
-}
 
 } // Rapicorn
 

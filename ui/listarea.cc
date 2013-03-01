@@ -255,7 +255,7 @@ WidgetListImpl::size_request (Requisition &requisition)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       /* size request all children */
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       Requisition crq = cw->requisition();
       requisition.width = MAX (requisition.width, crq.width);
@@ -597,7 +597,7 @@ void
 WidgetListImpl::resize_scroll_preserving () // model_->size() >= 1
 {
   if (!block_invalidate_ && drawable() &&
-      !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+      !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
     {
       block_invalidate_ = true;
       resize_scroll();

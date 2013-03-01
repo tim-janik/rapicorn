@@ -101,7 +101,7 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    if (!has_allocatable_child())
+    if (!has_visible_child())
       return;
     WidgetImpl &child = get_child();
     Requisition rq = child.requisition();

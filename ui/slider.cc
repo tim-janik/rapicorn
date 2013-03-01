@@ -192,7 +192,7 @@ protected:
   void
   size_request (Requisition &requisition)
   {
-    if (has_allocatable_child())
+    if (has_visible_child())
       {
         WidgetImpl &child = get_child();
         requisition = child.requisition();
@@ -208,7 +208,7 @@ protected:
   reallocate_child ()
   {
     Allocation area = allocation();
-    if (!has_allocatable_child())
+    if (!has_visible_child())
       return;
     WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
@@ -313,7 +313,7 @@ protected:
     if (has_children())
       {
         WidgetImpl &child = get_child();
-        if (child.allocatable())
+        if (child.visible())
           {
             requisition = child.requisition();
             chspread = child.hspread();
