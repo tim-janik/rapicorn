@@ -45,8 +45,9 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
 protected:
-  void                  change_selection        (int previous, int current, bool toggle, bool range, bool preserve);
+  void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   virtual bool          key_press_event         (const EventKey &event);
+  virtual bool          button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);
   virtual bool          handle_event            (const Event    &event);
   virtual bool          row_event               (const Event    &event, WidgetListRowImpl *lrow, int index);
   virtual void          reset                   (ResetMode       mode);
@@ -73,6 +74,7 @@ public:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   int                   focus_row               ();
+  void                  grab_row_focus          (int next_focus, int old_focus = -1);
   /* sizing and positioning */
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();

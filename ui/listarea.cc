@@ -360,7 +360,33 @@ WidgetListImpl::focus_row()
 }
 
 void
-WidgetListImpl::change_selection (const int previous, const int current, const bool toggle, const bool range, const bool preserve)
+WidgetListImpl::grab_row_focus (int next_focus, int old_focus)
+{
+  ListRow *lr = lookup_row (next_focus, false);
+  if (lr)
+    {
+      lr->lrow->grab_focus();               // focus onscreen row
+    }
+  else
+    {
+      lr = fetch_row (next_focus);
+      if (lr)                               // new focus row was offscreen
+        {
+          lr->lrow->visible (true);
+          lr->lrow->grab_focus();
+          cache_row (lr);
+        }
+      else                                  // no row gets focus
+        {
+          lr = lookup_row (old_focus);
+          if (lr)
+            lr->lrow->unset_focus();
+        }
+    }
+}
+
+void
+WidgetListImpl::change_selection (const int current, int previous, const bool toggle, const bool range, const bool preserve)
 {
   const int64 mcount = model_->count();
   return_unless (mcount > 0);
@@ -473,27 +499,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
     }
   if (handled)
     {
-      ListRow *lr = lookup_row (current_focus, false);
-      if (lr)
-        {
-          lr->lrow->grab_focus();               // focus onscreen row
-        }
-      else
-        {
-          lr = fetch_row (current_focus);
-          if (lr)                               // new focus row was offscreen
-            {
-              lr->lrow->visible (true);
-              lr->lrow->grab_focus();
-              cache_row (lr);
-            }
-          else                                  // no row gets focus
-            {
-              lr = lookup_row (saved_current_row);
-              if (lr)
-                lr->lrow->unset_focus();
-            }
-        }
+      grab_row_focus (current_focus, saved_current_row);
       double vscrolllower = vscroll_row_position (current_focus, 1.0); // lower scrollpos for current at visible bottom
       double vscrollupper = vscroll_row_position (current_focus, 0.0); // upper scrollpos for current at visible top
       // fixup possible approximation error in first/last pixel via edge attraction
@@ -504,7 +510,24 @@ WidgetListImpl::key_press_event (const EventKey &event)
       const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
       if (nvalue != vadjustment_->nvalue())
         vadjustment_->nvalue (nvalue);
-      change_selection (saved_current_row, current_focus, toggle_selection, range_selection, preserve_old_selection);
+      change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::button_event (const EventButton &event, WidgetListRowImpl *lrow, int index)
+{
+  bool handled = false;
+  bool preserve_old_selection = event.key_state & MOD_CONTROL;
+  bool toggle_selection = event.key_state & MOD_CONTROL, range_selection = event.key_state & MOD_SHIFT;
+  int current_focus = index;
+  const int saved_current_row = current_focus;
+  if (event.type == BUTTON_PRESS && event.button == 1 && lrow)
+    {
+      grab_row_focus (current_focus, saved_current_row);
+      change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
+      handled = true;
     }
   return handled;
 }
@@ -520,6 +543,9 @@ WidgetListImpl::row_event (const Event &event, WidgetListRowImpl *lrow, int inde
     {
     case KEY_PRESS:
       handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
+      break;
+    case BUTTON_PRESS:
+      handled = button_event (*dynamic_cast<const EventButton*> (&event), lrow, index);
       break;
     default:
       break;
