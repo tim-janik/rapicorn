@@ -336,7 +336,7 @@ WindowImpl::beep()
 
 vector<WidgetImpl*>
 WindowImpl::widget_difference (const vector<WidgetImpl*> &clist, /* preserves order of clist */
-                             const vector<WidgetImpl*> &cminus)
+                               const vector<WidgetImpl*> &cminus)
 {
   map<WidgetImpl*,bool> mminus;
   for (uint i = 0; i < cminus.size(); i++)
@@ -1012,6 +1012,9 @@ WindowImpl::idle_show()
 {
   if (screen_window_)
     {
+      // try to ensure initial focus
+      if (!get_focus())
+        move_focus (FOCUS_NEXT);
       // size request & show up
       screen_window_->show();
     }
