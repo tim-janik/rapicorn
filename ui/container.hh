@@ -34,6 +34,7 @@ protected:
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
   void                change_unviewable (WidgetImpl &child, bool);
+  virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);

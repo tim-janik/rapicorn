@@ -148,7 +148,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
           ClassDoctor::widget_unset_flag (*widget, FOCUS_CHAIN);
           ContainerImpl *fc = widget->parent();
           if (fc)
-            fc->set_focus_child (NULL);
+            fc->focus_lost();
           widget = fc;
         }
       cfocus = get_data (&focus_widget_key);
