@@ -10,4 +10,13 @@ made with Rapicorn are composed of.
 - <b>VIEWABLE</b><br/> A widget is viewable if it's visible, its UNVIEWABLE flag is unset and its parent is viewable.<br/> Use: Children may be temporarily taken offscreen in which case they are flagged UNVIEWABLE. Examples are offscreen children of a list, inactive notebook pages or an inactive popup.
 - <b>DRAWABLE</b><br/> A widget is drawable if it's viewable and its clipped_allocation has non-zero size. A widget must be drawable to participate in pointer event handling and rendering, see Rapicorn.WidgetImpl.pointer_sensitive().
 
+@par Focus Handling
+A Rapicorn.Window allows a specific widget to receive keyboard events at any given time, this is the "focus widget".
+Keyboard shortcuts like Tab, Shift-Tab, Up, Down, Left, Right (sometimes in combination with Control) allow moving the focus from one widget to another.
+-# The Rapicorn.WidgetImpl.move_focus() method generally implements movement of the current focus widget along the list of focusable widgets in a window.
+-# Rapicorn.Container generally keep track of the last child that had focus (the focus_child) or was part of the focus chain (an ancestor of the widget having focus).
+-# Onece focus moves on, the Container.focus_child is adjusted or unset. Some containers need to memorize the last focus child, the Container.focus_lost() method can be overridden for this purpose.
+-# The Window.auto_focus property controls whether a window contains an initially focused widget when it is shown.
+-# The FOCUS_CHAIN flag is used to keep track of the current focus widget and its ancestry.
+
 */
