@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "listareaimpl.hh"
+#include "listarea.hh"
 #include "sizegroup.hh"
 #include "paintcontainers.hh"
 #include "factory.hh"
@@ -9,18 +9,6 @@
 #define IFDEBUG(...)      __VA_ARGS__
 
 namespace Rapicorn {
-
-// == WidgetList ==
-const PropertyList&
-WidgetList::_property_list()
-{
-  static Property *properties[] = {
-    MakeProperty (WidgetList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
-    MakeProperty (WidgetList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
-  return property_list;
-}
 
 // == WidgetListRowImpl ==
 class WidgetListRowImpl : public virtual SingleContainerImpl,
@@ -128,6 +116,18 @@ static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn
 
 // == WidgetListImpl ==
 static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
+
+const PropertyList&
+WidgetListImpl::_property_list()
+{
+  static Property *properties[] = {};
+  static const PropertyList property_list (properties,
+                                           WidgetListIface::_property_list(),
+                                           MultiContainerImpl::_property_list(),
+                                           AdjustmentSource::_property_list(),
+                                           EventHandler::_property_list());
+  return property_list;
+}
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),

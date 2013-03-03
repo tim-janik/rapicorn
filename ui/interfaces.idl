@@ -323,6 +323,13 @@ interface Drawable : Widget {
 };
 
 /**
+ * List widget is a widget that displays a list of widgets generated according to a data source.
+ */
+interface WidgetList {
+  String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+};
+
+/**
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
