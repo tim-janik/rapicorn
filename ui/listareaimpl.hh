@@ -52,6 +52,8 @@ protected:
   virtual bool          row_event               (const Event    &event, WidgetListRowImpl *lrow, int index);
   virtual void          reset                   (ResetMode       mode);
   virtual bool          can_focus               () const { return true; }
+  virtual bool          move_focus              (FocusDirType    fdir);
+  virtual void          focus_lost              ();
   SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
@@ -74,7 +76,7 @@ public:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   int                   focus_row               ();
-  void                  grab_row_focus          (int next_focus, int old_focus = -1);
+  bool                  grab_row_focus          (int next_focus, int old_focus = -1);
   /* sizing and positioning */
   int                   row_height              (int            nth_row);
   void                  scroll_layout_preserving();

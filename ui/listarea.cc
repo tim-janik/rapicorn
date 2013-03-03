@@ -359,29 +359,65 @@ WidgetListImpl::focus_row()
   return lrow ? lrow->row_index() : -1;
 }
 
-void
+bool
 WidgetListImpl::grab_row_focus (int next_focus, int old_focus)
 {
+  const int64 mcount = model_ ? model_->count() : 0;
   ListRow *lr = lookup_row (next_focus, false);
+  bool success;
   if (lr)
     {
-      lr->lrow->grab_focus();               // focus onscreen row
+      success = lr->lrow->grab_focus();         // focus onscreen row
     }
   else
     {
       lr = fetch_row (next_focus);
-      if (lr)                               // new focus row was offscreen
+      if (lr)                                   // new focus row was offscreen
         {
           lr->lrow->visible (true);
-          lr->lrow->grab_focus();
+          success = lr->lrow->grab_focus();
           cache_row (lr);
         }
-      else                                  // no row gets focus
+      else                                      // no row gets focus
         {
           lr = lookup_row (old_focus);
           if (lr)
             lr->lrow->unset_focus();
+          success = false;
         }
+    }
+  const int current_focus = success ? focus_row () : -1;
+  if (success && current_focus >= 0)
+    {                                           // scroll to focus row
+      double vscrolllower = vscroll_row_position (current_focus, 1.0); // lower scrollpos for current at visible bottom
+      double vscrollupper = vscroll_row_position (current_focus, 0.0); // upper scrollpos for current at visible top
+      // fixup possible approximation error in first/last pixel via edge attraction
+      if (vscrollupper <= 1)                    // edge attraction at top
+        vscrolllower = vscrollupper = 0;
+      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
+        vscrolllower = vscrollupper = mcount;
+      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
+      if (nvalue != vadjustment_->nvalue())
+        vadjustment_->nvalue (nvalue);
+    }
+  return success && current_focus >= 0;
+}
+
+void
+WidgetListImpl::focus_lost ()
+{
+  // not resetting focus_child so we memorize focus child on next focus in
+}
+
+bool
+WidgetListImpl::move_focus (FocusDirType fdir)
+{
+  if (test_any_flag (FOCUS_CHAIN))
+    return false;                       // focus out
+  else
+    {
+      int last_focus = focus_row();     // focus in
+      return grab_row_focus (MAX (0, last_focus));
     }
 }
 
@@ -500,16 +536,6 @@ WidgetListImpl::key_press_event (const EventKey &event)
   if (handled)
     {
       grab_row_focus (current_focus, saved_current_row);
-      double vscrolllower = vscroll_row_position (current_focus, 1.0); // lower scrollpos for current at visible bottom
-      double vscrollupper = vscroll_row_position (current_focus, 0.0); // upper scrollpos for current at visible top
-      // fixup possible approximation error in first/last pixel via edge attraction
-      if (vscrollupper <= 1)                    // edge attraction at top
-        vscrolllower = vscrollupper = 0;
-      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
-        vscrolllower = vscrollupper = mcount;
-      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
-      if (nvalue != vadjustment_->nvalue())
-        vadjustment_->nvalue (nvalue);
       change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
     }
   return handled;
