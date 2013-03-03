@@ -92,7 +92,7 @@ test_cxx_server_gui ()
   window.impl().add (twidget);
   TOK();
   /* close window (and exit main loop) after first expose */
-  window.impl().enable_auto_close();
+  window.impl().sig_displayed() += [&window]() { window.close(); };
   TOK();
   /* verify and assert at least one TestWidget rendering */
   uint old_seen_test = TestContainer::seen_test_widgets();
@@ -134,7 +134,7 @@ test_test_widget ()
   TOK();
   run_main_loop_recursive (false);
   /* close window (and exit main loop) after first expose */
-  window.enable_auto_close();
+  window.impl().sig_displayed() += [&window]() { window.close(); };
   /* verify and assert at least one TestWidget rendering */
   uint old_seen_test = TestContainer::seen_test_widgets();
   window.show();

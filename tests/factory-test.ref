@@ -1,5 +1,6 @@
 <main-test
   title="RAPICORN:Rapidrun:main-test"
+  auto_focus="1"
   name="main-test"
   width="-1"
   height="-1"
