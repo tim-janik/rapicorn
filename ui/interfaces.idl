@@ -188,6 +188,9 @@ enum WindowType {
   WINDOW_TYPE_DND,              ///< Window for dragged during DND operations
 };
 
+/// A sequence of booleans.
+sequence BoolSeq { bool bools; };
+
 /// A sequence of strings (in C++ of std::string).
 sequence StringSeq { String strings; };
 
@@ -327,6 +330,10 @@ interface Drawable : Widget {
  */
 interface WidgetList {
   String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+  void          set_selection  (BoolSeq selection) = 0;
+  BoolSeq       get_selection  () = 0;
+  void          select_range   (int32 first, int32 length) = 0;
+  void          unselect_range (int32 first, int32 length) = 0;
 };
 
 /**

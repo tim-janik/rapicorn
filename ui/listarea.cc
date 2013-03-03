@@ -234,6 +234,121 @@ WidgetListImpl::model () const
 }
 
 void
+WidgetListImpl::set_selection (const BoolSeq &bseq)
+{
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (bseq.size(), selection_.size());
+  for (size_t i = 0; i < max_size; i++)
+    if (bseq[i] != selection_[i])
+      {
+        selection_[i] = bseq[i];
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
+    {
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
+    }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
+}
+
+BoolSeq
+WidgetListImpl::get_selection ()
+{
+  BoolSeq bseq;
+  bseq.resize (selection_.size());
+  std::copy (selection_.begin(), selection_.end(), bseq.begin());
+  return bseq;
+}
+
+void
+WidgetListImpl::select_range (int first, int length)
+{
+  return_unless (first >= 0 && length >= 0);
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (size_t (first + length), selection_.size());
+  for (size_t i = first; i < max_size; i++)
+    if (!selection_[i])
+      {
+        selection_[i] = true;
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
+    {
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
+    }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
+}
+
+void
+WidgetListImpl::unselect_range (int first, int length)
+{
+  return_unless (first >= 0 && length >= 0);
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (size_t (first + length), selection_.size());
+  for (size_t i = first; i < max_size; i++)
+    if (selection_[i])
+      {
+        selection_[i] = false;
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
+    {
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
+    }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
+}
+
+bool
+WidgetListImpl::validate_selection (int fallback)
+{
+  // ensure a valid selection
+  bool changed = false;
+  int first = -1;
+  switch (selection_mode())
+    {
+    case SELECTION_NONE:                // nothing to select ever
+      for (size_t i = 0; i < selection_.size(); i++)
+        if (selection_[i])
+          {
+            selection_[i] = false;
+            changed = true;
+          }
+      break;
+    case SELECTION_SINGLE:              // maintain a single selection at most
+    case SELECTION_BROWSE:              // always maintain a single selection
+      for (size_t i = 0; i < selection_.size(); i++)
+        if (selection_[i])
+          {
+            if (first < 0)
+              first = i;
+            else
+              {
+                selection_[i] = 0;
+                changed = true;
+              }
+          }
+      if (selection_mode() == SELECTION_BROWSE && first < 0 && selection_.size() > 0)
+        {
+          selection_[CLAMP (fallback, 0, ssize_t (selection_.size() - 1))] = true;
+          changed = true;
+        }
+      break;
+    case SELECTION_MULTIPLE:            // allow any combination of selected rows
+      break;
+    }
+  return changed == false;
+}
+
+void
 WidgetListImpl::model_updated (const UpdateRequest &urequest)
 {
   switch (urequest.kind)
@@ -263,7 +378,7 @@ WidgetListImpl::toggle_selected (int row)
   if (selection_.size() <= size_t (row))
     selection_.resize (row + 1);
   selection_[row] = !selection_[row];
-  selection_changed (row, row);
+  selection_changed (row, 1 + row);
 }
 
 void
@@ -271,14 +386,13 @@ WidgetListImpl::deselect_all ()
 {
   selection_.assign (selection_.size(), 0);
   if (selection_.size())
-    selection_changed (0, selection_.size() - 1);
+    selection_changed (0, selection_.size());
 }
 
 void
-WidgetListImpl::selection_changed (int first, int last)
+WidgetListImpl::selection_changed (int first, int length)
 {
-  // FIXME: intersect with visible rows?
-  for (int i = first; i <= last; i++)
+  for (int i = first; i < first + length; i++)
     {
       ListRow *lr = lookup_row (i);
       if (lr)
@@ -452,7 +566,7 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
             toggle_selected (sel);
         }
       break;
-    case SELECTION_SINGLE:
+    case SELECTION_SINGLE:              // maintain a single selection at most
       if (toggle)
         toggle_selected (current);
       else if (!preserve)
@@ -462,7 +576,7 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
             toggle_selected (current);
         }
       break;
-    case SELECTION_MULTIPLE:
+    case SELECTION_MULTIPLE:            // allow any combination of selected rows
       if (!preserve)
         deselect_all();
       if (current < 0)

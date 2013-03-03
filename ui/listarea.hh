@@ -39,7 +39,7 @@ class WidgetListImpl : public virtual WidgetListIface,
   bool                   block_invalidate_;
   int                   first_row_, last_row_, multi_sel_range_start_;
   void                  model_updated           (const UpdateRequest &ur);
-  void                  selection_changed       (int first, int last);
+  void                  selection_changed       (int first, int length);
   virtual void          invalidate_parent ();
 protected:
   virtual const PropertyList& _property_list    ();
@@ -57,10 +57,17 @@ protected:
   void                  toggle_selected         (int row);
   void                  deselect_all            ();
 public:
-  explicit              WidgetListImpl            ();
-  virtual              ~WidgetListImpl            ();
-  virtual void          model                   (const String &modelurl);
-  virtual String        model                   () const;
+  // == WidgetListIface ==
+  virtual std::string                   model           () const;
+  virtual void                          model           (const std::string &modelurl);
+  virtual void                          set_selection   (const BoolSeq &selection);
+  virtual BoolSeq                       get_selection   ();
+  virtual void                          select_range    (int first, int length);
+  virtual void                          unselect_range  (int first, int length);
+  // == WidgetListImpl ==
+  explicit              WidgetListImpl          ();
+  virtual              ~WidgetListImpl          ();
+  bool                  validate_selection      (int fallback = 0);
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
   Adjustment&           hadjustment             () const;
   Adjustment&           vadjustment             () const;
