@@ -599,6 +599,11 @@ WindowImpl::move_focus_dir (FocusDirType focus_dir)
     }
   if (old_focus)
     unref (old_focus);
+  if (old_focus && !get_focus() && (focus_dir == FOCUS_NEXT || focus_dir == FOCUS_PREV))
+    {
+      // wrap around once Tab focus leaves window
+      return move_focus (focus_dir);
+    }
   return true;
 }
 
