@@ -39,16 +39,6 @@ WindowIface::impl () const
   return *wimpl;
 }
 
-const PropertyList&
-WindowImpl::_property_list ()
-{
-  static Property *properties[] = {
-    MakeProperty (WindowImpl, title,   _("Title"),   _("User visible title to be displayed in the window title bar"), "rw"),
-  };
-  static const PropertyList property_list (properties, ViewportImpl::_property_list());
-  return property_list;
-}
-
 String
 WindowImpl::title () const
 {
@@ -64,6 +54,18 @@ WindowImpl::title (const String &window_title)
       if (screen_window_)
         screen_window_->configure (config_, false);
     }
+}
+
+bool
+WindowImpl::auto_focus () const
+{
+  return auto_focus_;
+}
+
+void
+WindowImpl::auto_focus (bool afocus)
+{
+  auto_focus_ = afocus;
 }
 
 void
@@ -222,8 +224,8 @@ WindowImpl::forcefully_close_all ()
 
 WindowImpl::WindowImpl() :
   loop_ (*ref_sink (uithread_main_loop()->new_slave())),
-  screen_window_ (NULL), commands_emission_ (NULL),
-  notify_displayed_id_ (0), entered_ (false), auto_close_ (false), pending_win_size_ (false), pending_expose_ (true)
+  screen_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
+  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
@@ -962,12 +964,6 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
   return false;
 }
 
-void
-WindowImpl::enable_auto_close ()
-{
-  auto_close_ = true;
-}
-
 bool
 WindowImpl::drawing_dispatcher (const EventLoop::State &state)
 {
@@ -977,18 +973,7 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
     {
       ref (this);
       if (exposes_pending())
-        {
-          draw_now();
-          if (auto_close_)
-            {
-              EventLoop *loop = get_loop();
-              if (loop)
-                {
-                  loop->exec_timer (0, Aida::slot (*this, &WindowImpl::destroy_screen_window), INT_MAX);
-                  auto_close_ = false;
-                }
-            }
-        }
+        draw_now();
       unref (this);
       return true;
     }
@@ -1013,7 +998,7 @@ WindowImpl::idle_show()
   if (screen_window_)
     {
       // try to ensure initial focus
-      if (!get_focus())
+      if (auto_focus_ && !get_focus())
         move_focus (FOCUS_NEXT);
       // size request & show up
       screen_window_->show();

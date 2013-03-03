@@ -18,8 +18,8 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   vector<WidgetImpl*>     last_entered_children_;
   ScreenWindow::Config  config_;
   uint                  notify_displayed_id_;
+  uint                  auto_focus_ : 1;
   uint                  entered_ : 1;
-  uint                  auto_close_ : 1;
   uint                  pending_win_size_ : 1;
   uint                  pending_expose_ : 1;
   void          uncross_focus           (WidgetImpl        &fwidget);
@@ -30,13 +30,15 @@ protected:
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
-  virtual const PropertyList& _property_list    ();
   virtual WindowImpl*   as_window_impl          ()              { return this; }
-  virtual String        title                   () const;
-  virtual void          title                   (const String &window_title);
   WidgetImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   static  void          forcefully_close_all    ();
+  // properties
+  virtual String        title                   () const;
+  virtual void          title                   (const String &window_title);
+  virtual bool          auto_focus              () const;
+  virtual void          auto_focus              (bool afocus);
   // grab handling
   virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
@@ -45,7 +47,6 @@ public:
   virtual WidgetImpl*     get_grab                                (bool                   *unconfined = NULL);
   // main loop
   virtual EventLoop*    get_loop                                ();
-  virtual void          enable_auto_close                       ();
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
