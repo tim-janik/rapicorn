@@ -412,13 +412,21 @@ WidgetListImpl::focus_lost ()
 bool
 WidgetListImpl::move_focus (FocusDirType fdir)
 {
-  if (test_any_flag (FOCUS_CHAIN))
-    return false;                       // focus out
-  else
+  // check focus ability
+  if (!visible() || !sensitive())
+    return false;
+  // allow last focus descendant to handle movement
+  WidgetImpl *last_child = get_focus_child();
+  if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
+    return true;
+  // pick row for initial focus
+  if (!test_any_flag (FOCUS_CHAIN))
     {
-      int last_focus = focus_row();     // focus in
-      return grab_row_focus (MAX (0, last_focus));
+      const int last_focus = focus_row();               // -1 initially
+      return grab_row_focus (MAX (0, last_focus));      // list focus in
     }
+  // focus out for FOCUS_PREV and FOCUS_NEXT, cursor focus is handled via events
+  return false;                                         // list focus out
 }
 
 void
