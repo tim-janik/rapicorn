@@ -474,22 +474,22 @@ rect_center (const Allocation &a)
 bool
 ContainerImpl::move_focus (FocusDirType fdir)
 {
-  /* check focus ability */
+  // check focus ability
   if (!visible() || !sensitive())
     return false;
-  /* focus self */
+  // focus self
   if (!has_focus() && can_focus())
     return grab_focus();
+  // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);
-  /* let last focus descendant handle movement */
   if (last_child && last_child->move_focus (fdir))
     return true;
-  /* copy children */
+  // copy children
   vector<WidgetImpl*> children;
   ChildWalker lw = local_children();
   while (lw.has_next())
     children.push_back (&*lw++);
-  /* sort children according to direction and current focus */
+  // sort children according to direction and current focus
   const Allocation &area = allocation();
   Point upper_left (area.x, area.y + area.height);
   Point lower_right (area.x + area.width, area.y);
@@ -508,7 +508,7 @@ ContainerImpl::move_focus (FocusDirType fdir)
     case FOCUS_LEFT:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
-      { /* filter widgets with negative distance (not ahead in focus direction) */
+      { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
@@ -522,7 +522,7 @@ ContainerImpl::move_focus (FocusDirType fdir)
     case FOCUS_DOWN:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
-      { /* filter widgets with negative distance (not ahead in focus direction) */
+      { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
@@ -533,13 +533,13 @@ ContainerImpl::move_focus (FocusDirType fdir)
       }
       break;
     }
-  /* skip children beyond last focus descendant */
+  // skip children beyond last focus descendant
   Walker<WidgetImpl*> cw = walker (children);
   if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
     while (cw.has_next())
       if (last_child == *cw++)
         break;
-  /* let remaining descendants handle movement */
+  // let remaining descendants handle movement
   while (cw.has_next())
     {
       WidgetImpl *child = *cw;
@@ -553,7 +553,7 @@ ContainerImpl::move_focus (FocusDirType fdir)
 void
 ContainerImpl::expose_enclosure ()
 {
-  /* expose without children */
+  // expose without children
   Region region (clipped_allocation());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     if (cw->drawable())

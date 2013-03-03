@@ -111,7 +111,6 @@ protected:
   virtual void                finalize          ();
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
-  virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
@@ -147,7 +146,8 @@ public:
   bool                        has_focus         () const;
   bool                        grab_focus        ();
   void                        unset_focus       ();
-  bool                        activate          ();
+  virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                activate          ();
   virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); }
   virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
