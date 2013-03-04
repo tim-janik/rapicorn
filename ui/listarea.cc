@@ -362,6 +362,16 @@ WidgetListImpl::validate_selection (int fallback)
   return changed == false;
 }
 
+bool
+WidgetListImpl::has_selection () const
+{
+  // OPTIMIZE: speed up by always caching first & last selected row
+  for (size_t i = 0; i < selection_.size(); i++)
+    if (selection_[i])
+      return true;
+  return false;
+}
+
 void
 WidgetListImpl::model_updated (const UpdateRequest &urequest)
 {
@@ -551,10 +561,10 @@ WidgetListImpl::move_focus (FocusDirType fdir)
   if (!test_any_flag (FOCUS_CHAIN))
     {
       const int last_focus = focus_row();               // -1 initially
-      return grab_row_focus (MAX (0, last_focus));      // list focus in
+      return grab_row_focus (MAX (0, last_focus));      // list focus-in
     }
   // focus out for FOCUS_PREV and FOCUS_NEXT, cursor focus is handled via events
-  return false;                                         // list focus out
+  return false;                                         // list focus-out
 }
 
 void
@@ -632,12 +642,16 @@ WidgetListImpl::key_press_event (const EventKey &event)
       handled = true;
       break;
     case KEY_Down:
-      if (current_focus + 1 < mcount)
+      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+        toggle_selection = true;        // treat like space
+      else if (current_focus + 1 < mcount)
         current_focus = MAX (current_focus + 1, 0);
       handled = true;
       break;
     case KEY_Up:
-      if (current_focus > 0)
+      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+        toggle_selection = true;        // treat like space
+      else if (current_focus > 0)
         current_focus = current_focus - 1;
       handled = true;
       break;

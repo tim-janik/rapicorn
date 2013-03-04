@@ -70,6 +70,7 @@ public:
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          ();
   bool                  validate_selection      (int fallback = 0);
+  bool                  has_selection           () const;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
   Adjustment&           hadjustment             () const;
   Adjustment&           vadjustment             () const;
