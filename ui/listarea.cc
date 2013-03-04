@@ -581,12 +581,11 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
         }
       break;
     case SELECTION_SINGLE:              // maintain a single selection at most
-      if (toggle)
-        toggle_selected (current);
-      else if (!preserve)
+      if (!preserve || toggle)
         {
+          sel = selected (current) ? current : -1;
           deselect_all();
-          if (current >= 0)
+          if (current > 0 && (!toggle || sel < 0))
             toggle_selected (current);
         }
       break;
