@@ -34,6 +34,7 @@ class WidgetListImpl : public virtual WidgetListIface,
   RowMap                 row_map_, row_cache_;
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
+  SelectionMode          selection_mode_;
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
   bool                   block_invalidate_;
@@ -52,7 +53,6 @@ protected:
   virtual bool          can_focus               () const { return true; }
   virtual bool          move_focus              (FocusDirType    fdir);
   virtual void          focus_lost              ();
-  SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
   void                  deselect_all            ();
@@ -60,6 +60,8 @@ public:
   // == WidgetListIface ==
   virtual std::string                   model           () const;
   virtual void                          model           (const std::string &modelurl);
+  virtual SelectionMode                 selection_mode  () const;
+  virtual void                          selection_mode  (SelectionMode smode);
   virtual void                          set_selection   (const BoolSeq &selection);
   virtual BoolSeq                       get_selection   ();
   virtual void                          select_range    (int first, int length);

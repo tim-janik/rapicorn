@@ -141,8 +141,8 @@ flags enum LightingType {
 ///< Enum type for list widget selection behaviour.
 enum SelectionMode {
   SELECTION_NONE = 0,   ///< No selection possible
-  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
   SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
+  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
   SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
 };
 
@@ -330,6 +330,11 @@ interface Drawable : Widget {
  */
 interface WidgetList {
   String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+  SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
+                                                               "Single - allow a single selected row<br/>"
+                                                               "Browse - always select a single row<br/>"
+                                                               "Multiple - allow any row selection combinations<br/>"),
+                                        "rw");
   void          set_selection  (BoolSeq selection) = 0;
   BoolSeq       get_selection  () = 0;
   void          select_range   (int32 first, int32 length) = 0;

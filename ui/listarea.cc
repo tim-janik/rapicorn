@@ -132,7 +132,7 @@ WidgetListImpl::_property_list()
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  virtualized_pixel_scrolling_ (true),
+  selection_mode_ (SELECTION_SINGLE), virtualized_pixel_scrolling_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
 {}
@@ -231,6 +231,20 @@ String
 WidgetListImpl::model () const
 {
   return ""; // FIME: use xurl_path (not model_->plor_name)
+}
+
+SelectionMode
+WidgetListImpl::selection_mode () const
+{
+  return selection_mode_;
+}
+
+void
+WidgetListImpl::selection_mode (SelectionMode smode)
+{
+  selection_mode_ = smode;
+  validate_selection (0);
+  selection_changed (0, selection_.size());
 }
 
 void
@@ -880,7 +894,7 @@ WidgetListImpl::lookup_row (int row, bool maybe_cached)
 {
   return_unless (row >= 0, NULL);
   RowMap::iterator ri;
-  if (row_map_.end()   != (ri = row_map_.find (row)))
+  if (row_map_.end() != (ri = row_map_.find (row)))
     return ri->second;
   if (maybe_cached && row_cache_.end() != (ri = row_cache_.find (row)))
     return ri->second;
