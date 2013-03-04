@@ -840,6 +840,22 @@ WidgetListImpl::cache_row (ListRow *lr)
       row_cache_[row_index] = lr;
       lr->allocated = 0;
     }
+  // prune if we have too many items
+  if (row_cache_.size() > MAX (20, 2 * row_map_.size()))
+    {
+      const int threshold = MAX (20, row_map_.size());
+      const int first = first_row_ - threshold / 2, last = last_row_ + threshold / 2;
+      RowMap newmap;
+      for (auto ri : row_cache_)
+        if ((ri.first < first || ri.first > last) && !ri.second->lrow->has_focus())
+          {
+            destroy_row (ri.second);
+            row_heights_[ri.first] = -1;
+          }
+        else
+          newmap[ri.first] = ri.second;
+      newmap.swap (row_cache_);
+    }
 }
 
 void
