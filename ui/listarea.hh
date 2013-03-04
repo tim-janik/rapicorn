@@ -31,7 +31,7 @@ class WidgetListImpl : public virtual WidgetListIface,
   size_t                 conid_updated_;
   vector<int>            row_heights_;
   mutable Adjustment    *hadjustment_, *vadjustment_;
-  RowMap                 row_map_, row_cache_;
+  RowMap                 row_map_, off_map_;
   vector<bool>           selection_;
   vector<SizeGroup*>     size_groups_;
   SelectionMode          selection_mode_;

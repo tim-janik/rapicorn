@@ -40,7 +40,7 @@ protected:
           kind = 1;
         else
           {
-            lr = list->row_cache_[index_];
+            lr = list->off_map_[index_];
             if (lr && lr->lrow == this)
               kind = 2;
             else
@@ -149,7 +149,7 @@ WidgetListImpl::~WidgetListImpl()
     destroy_row (ri.second);
   // purge row cache
   rc.clear();
-  rc.swap (row_cache_);
+  rc.swap (off_map_);
   for (auto ri : rc)
     destroy_row (ri.second);
   // release size groups
@@ -809,10 +809,10 @@ WidgetListImpl::fetch_row (int row)
       row_map_.erase (ri);
       IFDEBUG (dbg_cached++);
     }
-  else if (row_cache_.end() != (ri = row_cache_.find (row)))    // fetch invisible row
+  else if (off_map_.end() != (ri = off_map_.find (row)))    // fetch invisible row
     {
       lr = ri->second;
-      row_cache_.erase (ri);
+      off_map_.erase (ri);
       change_unviewable (*lr->lrow, false);
       IFDEBUG (dbg_cached++);
     }
@@ -844,22 +844,22 @@ WidgetListImpl::cache_row (ListRow *lr)
   const int64 mcount = model_ ? model_->count() : 0;
   const int row_index = lr->lrow->row_index();
   assert_return (row_index >= 0);
-  assert_return (row_cache_.find (row_index) == row_cache_.end());
+  assert_return (off_map_.find (row_index) == off_map_.end());
   if (row_index >= mcount)
     destroy_row (lr);
   else
     {
       change_unviewable (*lr->lrow, true);      // take widget offscreen
-      row_cache_[row_index] = lr;
+      off_map_[row_index] = lr;
       lr->allocated = 0;
     }
   // prune if we have too many items
-  if (row_cache_.size() > MAX (20, 2 * row_map_.size()))
+  if (off_map_.size() > MAX (20, 2 * row_map_.size()))
     {
       const int threshold = MAX (20, row_map_.size());
       const int first = first_row_ - threshold / 2, last = last_row_ + threshold / 2;
       RowMap newmap;
-      for (auto ri : row_cache_)
+      for (auto ri : off_map_)
         if ((ri.first < first || ri.first > last) && !ri.second->lrow->has_focus())
           {
             destroy_row (ri.second);
@@ -867,14 +867,14 @@ WidgetListImpl::cache_row (ListRow *lr)
           }
         else
           newmap[ri.first] = ri.second;
-      newmap.swap (row_cache_);
+      newmap.swap (off_map_);
     }
 }
 
 void
 WidgetListImpl::destroy_range (size_t first, size_t bound)
 {
-  for (auto rmap : { &row_map_, &row_cache_ })          // remove range from row_map_ *and* row_cache_
+  for (auto rmap : { &row_map_, &off_map_ })          // remove range from row_map_ *and* off_map_
     {
       RowMap newmap;
       for (auto ri : *rmap)
@@ -895,7 +895,7 @@ WidgetListImpl::lookup_row (int row, bool maybe_cached)
   RowMap::iterator ri;
   if (row_map_.end() != (ri = row_map_.find (row)))
     return ri->second;
-  if (maybe_cached && row_cache_.end() != (ri = row_cache_.find (row)))
+  if (maybe_cached && off_map_.end() != (ri = off_map_.find (row)))
     return ri->second;
   return NULL;
 }
