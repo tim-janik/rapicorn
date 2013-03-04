@@ -585,7 +585,7 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
         {
           sel = selected (current) ? current : -1;
           deselect_all();
-          if (current > 0 && (!toggle || sel < 0))
+          if (current >= 0 && (!toggle || sel < 0))
             toggle_selected (current);
         }
       break;
