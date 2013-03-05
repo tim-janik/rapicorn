@@ -261,6 +261,48 @@ test_spin_lock_simple (void)
 }
 REGISTER_TEST ("Threads/C++SpinLock", test_spin_lock_simple);
 
+// == Simple RWLock test ==
+static RWLock static_read_write_lock;
+static void
+test_rwlock_simple (void)
+{
+  RWLock &rwl = static_read_write_lock;
+  bool l;
+  // try_rdlock + try_wrlock
+  l = rwl.try_rdlock();
+  TASSERT (l == true);
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // rdlock + try_wrlock
+  rwl.rdlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // try_wrlock
+  l = rwl.try_wrlock();
+  TASSERT (l == true);
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // wrlock + try_wrlock
+  rwl.wrlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // rdlock + try_wrlock
+  rwl.rdlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // wrlock + try_rdlock
+  rwl.wrlock();
+  l = rwl.try_rdlock();
+  TASSERT (l == false);
+  rwl.unlock();
+}
+REGISTER_TEST ("Threads/C++RWLock", test_rwlock_simple);
+
 // == ScopedLock test ==
 template<class M> static bool
 lockable (M &mutex)
