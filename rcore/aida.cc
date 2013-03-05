@@ -879,6 +879,45 @@ public:
   {}
 };
 
+// == TypeNameDB ==
+class TypeNameDB {
+  RWLock                                mutex_;
+  std::vector<std::string>              vector_;
+  std::unordered_map<std::string, uint> map_;
+public:
+  uint
+  index (const std::string &type_name)
+  {
+    mutex_.rdlock();
+    auto it = map_.find (type_name);
+    uint result_type_index = it == map_.end() ? 0 : it->second;
+    mutex_.unlock();
+    if (result_type_index)
+      return result_type_index;
+    mutex_.wrlock();
+    vector_.push_back (type_name);
+    result_type_index = vector_.size();
+    map_[type_name] = result_type_index;
+    mutex_.unlock();
+    assert (result_type_index < 65536); // see IdentifierParts.orbid_type_index
+    return result_type_index;
+  }
+  std::string
+  type_name (const uint type_index)
+  {
+    std::string result;
+    if (type_index > 0)
+      {
+        mutex_.rdlock();
+        if (type_index <= vector_.size())
+          result = vector_[type_index - 1];
+        mutex_.unlock();
+      }
+    return result;
+  }
+};
+static TypeNameDB type_name_db;
+
 // == BaseConnection ==
 #define MAX_CONNECTIONS         8       ///< Arbitrary limit that can be extended if needed
 static Atomic<BaseConnection*>  global_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
@@ -993,6 +1032,7 @@ public:
   virtual void          dispatch          ();
   virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
+  virtual std::string   type_name_from_orbid (uint64_t orbid);
 };
 
 FieldBuffer*
@@ -1185,6 +1225,13 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
   return shandler;
 }
 
+std::string
+ClientConnectionImpl::type_name_from_orbid (uint64_t orbid)
+{
+  const uint type_index = IdentifierParts (orbid).orbid_type_index;
+  return type_name_db.type_name (type_index);
+}
+
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
@@ -1219,7 +1266,8 @@ ServerConnectionImpl::instance2orbid (ptrdiff_t addr)
   const auto it = addr_map.find (addr);
   if (AIDA_LIKELY (it != addr_map.end()))
     return (*it).second;
-  const uint64_t orbid = IdentifierParts (addr_vector.size(), connection_id()).vuint64; // see connection_id_from_orbid
+  // FIXME: use type_name_db
+  const uint64_t orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), addr_vector.size(), 0).vuint64; // see connection_id_from_orbid
   addr_vector.push_back (addr);
   addr_map[addr] = orbid;
   return orbid;
@@ -1228,7 +1276,7 @@ ServerConnectionImpl::instance2orbid (ptrdiff_t addr)
 ptrdiff_t
 ServerConnectionImpl::orbid2instance (uint64_t orbid)
 {
-  const uint32 index = orbid; // see connection_id_from_orbid
+  const uint32 index = IdentifierParts (orbid).orbid32; // see connection_id_from_orbid
   return AIDA_LIKELY (index < addr_vector.size()) ? addr_vector[index] : 0;
 }
 

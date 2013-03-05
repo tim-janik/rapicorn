@@ -250,13 +250,15 @@ union IdentifierParts {
   struct { // OrbID bits
     uint   orbid32 : 32;
     uint   orbid_connection : 16;
-    uint   orbid_unused : 16;
+    uint   orbid_type_index : 16;
   };
-  IdentifierParts (uint64_t vu64) : vuint64 (vu64) {}
-  IdentifierParts (uint orbid_v32, uint orbid_con) : orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_unused (0) {}
-  IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
+  constexpr IdentifierParts (uint64_t vu64) : vuint64 (vu64) {}
+  constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
     sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con), message_id (IdentifierParts (id).message_id)
   {}
+  struct ORBID {}; // constructor tag
+  constexpr IdentifierParts (const ORBID&, uint orbid_con, uint orbid_v32, uint type_index) :
+    orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_type_index (type_index) {}
 };
 constexpr uint64_t CONNECTION_MASK = 0x0000ffff;
 
@@ -504,6 +506,8 @@ public: /// @name API for remote calls.
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
+public: /// @name API for remote types.
+  virtual std::string   type_name_from_orbid (uint64_t orbid) = 0;
 };
 
 // == inline implementations ==
