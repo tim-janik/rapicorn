@@ -22,16 +22,17 @@ propcanonify (String s)
 
 // == PropertyHostInterface ==
 const PropertyList&
-PropertyHostInterface::_property_list ()
+ImplicitBase::_property_list ()
 {
   static const PropertyList empty_property_list;
   return empty_property_list;
+  // default implementation to allow explicit calls
 }
 
 static Mutex plist_map_mutex;
 
 Property*
-PropertyHostInterface::_property_lookup (const String &property_name)
+ImplicitBase::_property_lookup (const String &property_name)
 {
   // provide PropertyMaps globally
   typedef std::unordered_map<String, Property*> PropertyMap;
@@ -68,7 +69,7 @@ PropertyHostInterface::_property_lookup (const String &property_name)
 }
 
 bool
-PropertyHostInterface::_property_set (const String &property_name, const String &value)
+ImplicitBase::_property_set (const String &property_name, const String &value)
 {
   Property *prop = _property_lookup (property_name);
   if (!prop)
@@ -78,7 +79,7 @@ PropertyHostInterface::_property_set (const String &property_name, const String 
 }
 
 String
-PropertyHostInterface::_property_get (const String &property_name)
+ImplicitBase::_property_get (const String &property_name)
 {
   Property *prop = _property_lookup (property_name);
   if (!prop)

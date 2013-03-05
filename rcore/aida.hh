@@ -118,6 +118,28 @@ public:
   static TypeCode       notype       ();
 };
 
+// == Type Declarations ==
+class ObjectBroker;
+class ClientConnection;
+class ServerConnection;
+union FieldUnion;
+class FieldBuffer;
+class FieldReader;
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
+class PropertyList;
+class Property;
+
+// == ImplicitBase ==
+class ImplicitBase /// Abstract base interface that all IDL interfaces are implicitely derived from.
+{
+protected:
+  virtual                     ~ImplicitBase     () = 0; // abstract class
+  virtual const PropertyList& _property_list    () = 0; ///< Retrieve the list properties of an instance.
+  Property*                   _property_lookup  (const std::string &property_name);
+  bool                        _property_set     (const std::string &property_name, const std::string &value);
+  std::string                 _property_get     (const std::string &property_name);
+};
+
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
@@ -184,15 +206,6 @@ public:
   // <<= instance
   void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
 };
-
-// == Type Declarations ==
-class ObjectBroker;
-class ClientConnection;
-class ServerConnection;
-union FieldUnion;
-class FieldBuffer;
-class FieldReader;
-typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // == Type Hash ==
 struct TypeHash {

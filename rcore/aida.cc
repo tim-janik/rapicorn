@@ -145,6 +145,12 @@ warning_printf (const char *format, ...)
   fflush (stderr);
 }
 
+// == ImplicitBase ==
+ImplicitBase::~ImplicitBase()
+{
+  // this destructor implementation forces vtable emission
+}
+
 // == Any ==
 Any::Any() :
   type_code (TypeMap::notype())
