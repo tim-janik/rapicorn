@@ -30,9 +30,6 @@ rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 """
 
-servercc_testcode = r"""
-"""
-
 gencc_boilerplate = r"""
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
@@ -68,6 +65,8 @@ namespace __AIDA_Local__ {
 typedef ServerConnection::EmitResultHandler EmitResultHandler;
 typedef ServerConnection::MethodRegistry    MethodRegistry;
 typedef ServerConnection::MethodEntry       MethodEntry;
+static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>::value,
+               "IDL interface base '$AIDA_iface_base$' must derive 'Rapicorn::Aida::ImplicitBase'");
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
@@ -130,7 +129,7 @@ static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_r
 static bool          signal_disconnect (size_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
 static size_t        signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
                                        { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
-static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
+static inline uint64_t smh2id (const SmartHandle &sh) { return sh._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const uint64_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
@@ -167,7 +166,7 @@ class Generator:
     self.gen_inclusions = []
     self.skip_symbols = set()
     self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
-    self.iface_base = self.test_iface_base
+    self.iface_base = 'Rapicorn::Aida::ImplicitBase'
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
   def Iwrap (self, name):
@@ -1157,8 +1156,6 @@ class Generator:
       if self.iface_base == self.test_iface_base:
         s += serverhh_testcode
       s += rapicornsignal_boilerplate
-    if self.gen_servercc and self.iface_base == self.test_iface_base:
-      s += servercc_testcode + '\n'
     if self.gen_servercc:
       s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
     if self.gen_clientcc:

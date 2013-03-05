@@ -3,15 +3,6 @@
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
 
-namespace Rapicorn { namespace Aida {
-class TestServerBase : public virtual PropertyHostInterface {
-public:
-  explicit             TestServerBase ()            {}
-  virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
-};
-} } // Rapicorn::Aida
-
 #include <rapicorn-core.hh> // for rcore/signal.hh
 
 // --- Interfaces (class declarations) ---
@@ -21,7 +12,7 @@ namespace MandatoryNamespace {
 /** @interface FirstInterface
  * See also the corresponding C++ servant class I_FirstInterfaceIface. */
 /// See also the corresponding IDL class FirstInterface.
-class I_FirstInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_FirstInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_FirstInterfaceIface ();
@@ -74,7 +65,7 @@ namespace InterfaceTests {
 /** @interface UIWidgetArea
  * See also the corresponding C++ servant class I_UIWidgetAreaIface. */
 /// See also the corresponding IDL class UIWidgetArea.
-class I_UIWidgetAreaIface : public virtual Rapicorn::Aida::TestServerBase
+class I_UIWidgetAreaIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_UIWidgetAreaIface ();
@@ -118,7 +109,7 @@ UIWidgetAreaHandle operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_Handl
 /** @interface Parent
  * See also the corresponding C++ servant class I_ParentIface. */
 /// See also the corresponding IDL class Parent.
-class I_ParentIface : public virtual Rapicorn::Aida::TestServerBase
+class I_ParentIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_ParentIface ();
@@ -187,7 +178,7 @@ GrandChildHandle operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface QuickIface
  * See also the corresponding C++ servant class I_QuickIfaceIface. */
 /// See also the corresponding IDL class QuickIface.
-class I_QuickIfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_QuickIfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_QuickIfaceIface ();
@@ -206,7 +197,7 @@ QuickIfaceHandle operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface MethodTestInterface
  * See also the corresponding C++ servant class I_MethodTestInterfaceIface. */
 /// See also the corresponding IDL class MethodTestInterface.
-class I_MethodTestInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_MethodTestInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_MethodTestInterfaceIface ();
@@ -247,7 +238,7 @@ MethodTestInterfaceHandle operator->* (I_MethodTestInterfaceIface *obj, Rapicorn
 /** @interface SignalTestInterface
  * See also the corresponding C++ servant class I_SignalTestInterfaceIface. */
 /// See also the corresponding IDL class SignalTestInterface.
-class I_SignalTestInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_SignalTestInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_SignalTestInterfaceIface ();
@@ -349,7 +340,7 @@ AnotherChildHandle operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_Handl
 /** @interface PropertyTester
  * See also the corresponding C++ servant class I_PropertyTesterIface. */
 /// See also the corresponding IDL class PropertyTester.
-class I_PropertyTesterIface : public virtual Rapicorn::Aida::TestServerBase
+class I_PropertyTesterIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_PropertyTesterIface ();
@@ -392,7 +383,7 @@ namespace RapicornAidaTest {
 /** @interface ButtonArea
  * See also the corresponding C++ servant class I_ButtonAreaIface. */
 /// See also the corresponding IDL class ButtonArea.
-class I_ButtonAreaIface : public virtual Rapicorn::Aida::TestServerBase
+class I_ButtonAreaIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_ButtonAreaIface ();
@@ -424,7 +415,7 @@ class I_PureMethodsIface;
 /** @interface PureMethods
  * See also the corresponding C++ servant class I_PureMethodsIface. */
 /// See also the corresponding IDL class PureMethods.
-class I_PureMethodsIface : public virtual Rapicorn::Aida::TestServerBase
+class I_PureMethodsIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_PureMethodsIface ();
@@ -446,7 +437,7 @@ namespace Other {
 /** @interface NameTests
  * See also the corresponding C++ servant class I_NameTestsIface. */
 /// See also the corresponding IDL class NameTests.
-class I_NameTestsIface : public virtual Rapicorn::Aida::TestServerBase
+class I_NameTestsIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_NameTestsIface ();
@@ -470,7 +461,7 @@ namespace BseTest {
 /** @interface Compressor
  * See also the corresponding C++ servant class I_CompressorIface. */
 /// See also the corresponding IDL class Compressor.
-class I_CompressorIface : public virtual Rapicorn::Aida::TestServerBase
+class I_CompressorIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_CompressorIface ();
@@ -492,7 +483,7 @@ CompressorHandle operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface SoundModule
  * See also the corresponding C++ servant class I_SoundModuleIface. */
 /// See also the corresponding IDL class SoundModule.
-class I_SoundModuleIface : public virtual Rapicorn::Aida::TestServerBase
+class I_SoundModuleIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_SoundModuleIface ();
