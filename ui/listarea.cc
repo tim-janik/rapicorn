@@ -124,8 +124,7 @@ WidgetListImpl::_property_list()
   static const PropertyList property_list (properties,
                                            WidgetListIface::_property_list(),
                                            MultiContainerImpl::_property_list(),
-                                           AdjustmentSource::_property_list(),
-                                           EventHandler::_property_list());
+                                           AdjustmentSource::_property_list());
   return property_list;
 }
 
