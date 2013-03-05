@@ -204,8 +204,6 @@ struct TypeHash {
 typedef std::vector<TypeHash> TypeHashList;
 
 // == Utilities ==
-template<class V> inline
-bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 void    assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
 void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
 void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
