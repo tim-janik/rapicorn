@@ -554,11 +554,6 @@ class Generator:
       s += '#define AIDA_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
 
-def error (msg):
-  import sys
-  print >>sys.stderr, sys.argv[0] + ":", msg
-  sys.exit (127)
-
 def generate (namespace_list, **args):
   import sys, tempfile, os
   config = {}
