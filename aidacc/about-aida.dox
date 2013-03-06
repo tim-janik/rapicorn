@@ -3,7 +3,7 @@
 Aida is an architecture, centered around abstract interface definitions, used for programming of remote objects.
 The "aidacc" compiler is used to compile Aida IDL files into executable code.
 
-@par Motivating considerations for the creation of Aida.
+@section motivations Motivating considerations for the creation of Aida.
 
 -# <b>Expressive IDL</b> - The IDL syntax is designed to at least cover the use cases of aRts, Beast and Rapicorn:
   - The IDL supports primitive types: integer, double precision floating point, string and any.
@@ -49,12 +49,20 @@ The "aidacc" compiler is used to compile Aida IDL files into executable code.
 -# <b>Miscellaneous</b>
   - For Beast and Rapicorn, Aida is meant as a replacement for the chaotic growth of code generators, such as glib-mkenums.pl, bse/mkcproc.pl, function call marshallers, etc.
 
-@par Design Considerations
+@section design Design Considerations
 - 128bit Hash - In the IPC layer, all remote messages are identified via hashes, based on method signatures. The messages encode the message type, sending and receiving connections as the first 64bit quantity. This is usually followed by two 64bit quantities that encode a target method hash. Using a 128 bit hash keeps collision probabilities in the order of 10^-20 for up to 2^32 inputs (4 billion). The hash algorithm is based on SHA224 to ensure good distribution.
 - The client/server split in the generated APIs ensure a clear separation of object locations. Instances are always allocated and reside on the server, clients can only invoke methods remotely and cannot transfer or create instances locally.
 - The primitive types, sequences and records are always deep-copied by design and passed by value, so clients are operating on copies that are sent to or received from the server.
 - Methods are only supporting "in" arguments, all primitive types, sequences and records are passed by value.
 - Only the single return value of a two-way function is available to pass values "out" of a call.
 - Interfaces are passed by reference into method calls, but are constrained to remote instances.
+
+@section ImplicitBase ImplicitBase
+In the server side C++ implementations, all generated interfaces are (directly or indirectly) derived from Rapicorn::Aida::ImplicitBase.
+ImplicitBase provides means to introspect properties on an instance and to query the "final" type of an instance.
+
+@subsection aida_type_name Instance Type
+For dynamic language bindings such as Python, every accessible instance needs to have a "final" type that has been specified in an IDL file. This type is what is returned from the Rapicorn::Aida::ImplicitBase.__aida_type_name__() method that all instances implement.
+To ensure this property, implementation classes that implement multiple IDL interfaces should ultimately derive a single IDL interface which in turn derives (directly or indirectly) from all of the required IDL interfaces.
 
 */
