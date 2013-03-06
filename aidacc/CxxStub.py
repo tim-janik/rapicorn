@@ -15,17 +15,6 @@ serverhh_boilerplate = r"""
 #include <rapicorn-core.hh>
 """
 
-serverhh_testcode = r"""
-namespace Rapicorn { namespace Aida {
-class TestServerBase : public virtual PropertyHostInterface {
-public:
-  explicit             TestServerBase ()            {}
-  virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
-};
-} } // Rapicorn::Aida
-"""
-
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 """
@@ -165,7 +154,6 @@ class Generator:
     self.ns_aida = None
     self.gen_inclusions = []
     self.skip_symbols = set()
-    self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
     self.iface_base = 'Rapicorn::Aida::ImplicitBase'
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
@@ -1154,8 +1142,6 @@ class Generator:
       s += clienthh_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
-      if self.iface_base == self.test_iface_base:
-        s += serverhh_testcode
       s += rapicornsignal_boilerplate
     if self.gen_servercc:
       s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
