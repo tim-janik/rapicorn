@@ -6,8 +6,7 @@
 
 namespace Rapicorn {
 
-class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual ListModelIface,
-                           public virtual Aida::PropertyHostInterface {
+class ListModelRelayImpl : public virtual ListModelRelayIface, protected virtual ListModelIface {
   vector<Any>                   rows_;
   explicit                      ListModelRelayImpl ();
 protected:

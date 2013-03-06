@@ -97,7 +97,7 @@ ApplicationImpl::create_list_model_relay (const std::string &name)
 {
   struct Accessor : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
   ListModelRelayImpl &lmr = Accessor::create_list_model_relay();
-  if (ApplicationImpl::the().xurl_add (name, lmr))
+  if (ApplicationImpl::the().xurl_add (name, *lmr.model()))
     return &lmr;
   else
     {
