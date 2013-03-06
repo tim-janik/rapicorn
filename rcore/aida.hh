@@ -138,6 +138,7 @@ protected:
   Property*                   _property_lookup  (const std::string &property_name);
   bool                        _property_set     (const std::string &property_name, const std::string &value);
   std::string                 _property_get     (const std::string &property_name);
+  virtual std::string        __aida_type_name__ () = 0; ///< Retrieve the IDL type name of an instance.
 };
 
 // == Any Type ==

@@ -480,7 +480,7 @@ class Generator:
       cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_class (self, type_info):
-    s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
+    s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -503,7 +503,8 @@ class Generator:
     if ddc:
       s += c
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
+      s += '  virtual ' + self.F ('void') + ' _list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB

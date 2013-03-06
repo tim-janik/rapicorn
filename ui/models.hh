@@ -14,6 +14,8 @@ protected:
   static ListModelRelayImpl&    create_list_model_relay();
   void                          emit_updated    (UpdateKind kind, uint start, uint length);
 public:
+  // __aida_type_name__: hide the fact that we are *also* a ListModelIface, access to that aspect is provided via model()
+  virtual std::string           __aida_type_name__ () { return ListModelRelayIface::__aida_type_name__(); }
   // model API
   virtual int                   count           ()              { return rows_.size(); }
   virtual Any                   row             (int n);
