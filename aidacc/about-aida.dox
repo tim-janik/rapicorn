@@ -2,87 +2,59 @@
 
 Aida is an architecture, centered around abstract interface definitions, used for programming of remote objects.
 The "aidacc" compiler is used to compile Aida IDL files into executable code.
-What follows are some of the motivating considerations for the creation of Aida.
 
-@par Expressive IDL
-The IDL syntax is designed to at least cover the use cases of aRts, Beast and Rapicorn:
--# The IDL supports primitive types: integer, double precision floating point, string and any.
--# The IDL supports structured types: enums, records, sequences and interfaces.
--# Interfaces have support for methods, properties, signals and IO streams. @UNIMPLEMENTED{Streams are still TODO}
--# Auxiliary data is supported for enum values and properties. @UNIMPLEMENTED{Streams are still TODO}
--# Auxiliary data is specified in form of key=utf8value string pairs, so it can be used for arbitrary
-extensions like tooltips, float boundaries or icon references.
--# Two way calls from the client to the server are supported by blocking for arrival of the return value of a method.
--# One way calls from the client to the server are always carried out in non-blocking fashion.
--# For notification purposes, the server can emit signals, which are dispatched via callbacks on the client side.
+@par Motivating considerations for the creation of Aida.
 
-@par Extensible Code Generation
-The IDL parser is implemented in Python, as are the code generators.
-Code generators are loaded as external Python modules.
-Choosing Python has acceptable real-world performance and has shown to be very useful to prototype
-new IDL or code generator features.
--# Aidacc allows custom code generator implementations, implemented as external python scripts.
+-# <b>Expressive IDL</b> - The IDL syntax is designed to at least cover the use cases of aRts, Beast and Rapicorn:
+  - The IDL supports primitive types: integer, double precision floating point, string and any.
+  - The IDL supports structured types: enums, records, sequences and interfaces.
+  - Interfaces have support for methods, properties, signals and IO streams. @UNIMPLEMENTED{Streams are still TODO}
+  - Auxiliary data is supported for enum values and properties. @UNIMPLEMENTED{Streams are still TODO}
+  - Auxiliary data is specified in form of key=utf8value string pairs, so it can be used for arbitrary extensions like tooltips, float boundaries or icon references.
+  - Two way calls from the client to the server are supported by blocking for arrival of the return value of a method.
+  - One way calls from the client to the server are always carried out in non-blocking fashion.
+  - For notification purposes, the server can emit signals, which are dispatched via callbacks on the client side.
+-# <b>Extensible Code Generation</b>
+  - The IDL parser is implemented in Python, as are the code generators.
+  - Code generators are loaded as external Python modules.
+  - Choosing Python has acceptable real-world performance and has shown to be very useful to prototype new IDL or code generator features.
+  - Aidacc allows custom code generator implementations, implemented as external python scripts.
+-# <b>API & ABI Separation</b>
+  - The generated C++ code goes through some lengths to ensure best client side ABI flexibility.
+  - ABI flexibility is achieved by providing access to the various API bits through non-virtual methods, which can be freely added to and removed from C++ classes without affecting ABI compatibility of any other API parts.
+  - Methods can be added to interfaces without breaking ABI.
+  - Properties can be added to interfaces without breaking ABI.
+  - Signals can be added to interfaces without breaking ABI.
+  - IO Streams are planned to be implemented in an ABI preserving fashion as well.
+    @UNIMPLEMENTED{ABI-stable IO Stream implementations have yet to be researched.}
+  - This allows isolation of the client API of a library, which is subject to various ABI and source compatibility constraints.
+  - Full ABI compatibility is maintained on the client side, as long as API functionality is only added (classes, methods).
+  - For controlled deprecation and removal of features, ABI impact can be limited and controlled.
+-# <b>Standalone Executables</b>
+  - The generated C++ code for the client side as well as the server side is structured to be easily included into existing programs or libraries, without needing any additional administrative process (like a network object broker).
+  - The Aida IPC layer can be used within executables and libraries directly.
+-# <b>IPC Separation</b>
+  - The generated C++ code separates client and server functionality through an Aida::ClientConnection abstraction.
+  - This allows remote invocation of the server functions through the client API (currently across threads).
+  - Full developer control is provided on the server and client side about threading, remote connection use and main loop integration.
+-# <b>Reference Counting</b>
+  - Client side interface instances are always accessed through smart-pointers which automate reference counting.
+  - Remote instance lifetime is tracked through ref-counting per connections. @UNIMPLEMENTED{TODO: port Beast ref counting}
+  - All client side API uses are meant to be either automatically reference counted (C++) or garbage collected (Python). The corresponding logic is implemented in the respective code generators.
+-# <b>Performance</b> - The IDL and generated C++ code is designed, profiled and optimized as follows:
+  - Optimized IPC calls for low-latency dispatching require the Rapicorn::EventLoop implementation.
+  - Generate acceptable throughput in high-performance computing scenarios (pseudo realtime).
+    @UNIMPLEMENTED{The details of the Aida data port implementation still need to be finalized}
+  - Allow zero-copy high-bandwidth data throughput for images and audio. @UNIMPLEMENTED{Needs shared data ports}
+-# <b>Miscellaneous</b>
+  - For Beast and Rapicorn, Aida is meant as a replacement for the chaotic growth of code generators, such as glib-mkenums.pl, bse/mkcproc.pl, function call marshallers, etc.
 
-@par API & ABI Separation
-The generated C++ code goes through some lengths to ensure best client side ABI flexibility.
-This is achieved by providing access to the various API bits through non-virtual methods, which can
-be freely added to and removed from C++ classes without affecting ABI compatibility of any other
-API parts.
--# Methods can be added to interfaces without breaking ABI.
--# Properties can be added to interfaces without breaking ABI.
--# Signals can be added to interfaces without breaking ABI.
--# IO Streams are planned to be implemented in an ABI preserving fashion.
-@UNIMPLEMENTED{ABI-stable IO Stream implementations have yet to be researched.}
-
-In particular, this has the following benefits:
--# Allows isolation of the client API of a library, which is subject to various ABI and source compatibility constraints.
--# Full ABI compatibility is maintained on the client side, as long as API functionality is added (classes, methods).
--# For controlled deprecation and removal of features, ABI impact is limited and controlled.
-
-@par Standalone Executables
-The generated C++ code for the client side as well as the server side is structured to
-be easily included into existing programs or libraries, without needing any additional
-administrative process (like an object broker).
--# The Aida IPC layer can be used within executables and libraries directly.
--# No brokering architecture is required.
-
-@par IPC Separation
-The generated C++ code separates client and server functionality through an Aida::Connection abstraction.
--# This allows remote invocation of the server functions through the client API (currently across threads).
--# Full developer control is provided on the server and client side about threading and remote connection use.
-
-@par Reference Counting
--# Client side interface instances are always accessed through smart-pointers which automate reference counting.
--# Remote instance lifetime is tracked through ref-counting per connections. @UNIMPLEMENTED{TODO: port Beast ref counting}
--# All client side API uses are meant to be either automatically reference counted (C++) or garbage
-collected (Python). The corresponding logic is implemented in the respective code generators.
-
-@par Performance
-The IDL and generated C++ code is designed, profiled and optimized as follows.
--# Optimize IPC calls for low-latency dispatching, requires the Rapicorn/rcore/loop implementation.
--# Generate acceptable throughput in high-performance computing scenarios (pseudo realtime).
-@UNIMPLEMENTED{The details of the Aida data port implementation still need to be finalized}
--# Allow zero-copy high-bandwidth data throughput for images and audio. @UNIMPLEMENTED{Needs shared data ports}
-
-@par Miscellaneous
--# For Beast and Rapicorn, Aida is meant as a replacement for the chaotic growth of code generators,
-such as glib-mkenums.pl, bse/mkcproc.pl, and many others.
-
-@par Missing
--# In the IPC layer, all remote messages are identified via hashes, based on method signatures.
-The messages encode the target object ID and a 1 byte message ID as the first 64bit quantity.
-This is usually followed by two 64bit quantities that encode a target method hash.
-Using a 128 bit hash keeps collision probabilities in the order of 10^-20 for up to 2^32 inputs (4 billion).
-The hash algorithm is based on SHA224 to ensure good distribution.
--# @UNIMPLEMENTED{TODO: Port Beast IDL property groups to Aida}
--# The client/server split in the generated APIs ensure a clear separation of object locations.
-Instances are always allocated and reside on the server, clients can only invoke methods remotely
-and cannot transfer or create instances locally.
--# The primitive types, sequences and records are always deep-copied by design and passed by value,
-so clients are operating on copies that are sent to or received from the server.
--# Methods are only supporting "in" arguments, all primitive types, sequences and records are passed by value.
--# Only the single return value of a two-way function is available to pass values "out" of a call.
--# Interfaces are passed by reference into method calls, but are constrained to remote instances.
-
+@par Design Considerations
+- 128bit Hash - In the IPC layer, all remote messages are identified via hashes, based on method signatures. The messages encode the message type, sending and receiving connections as the first 64bit quantity. This is usually followed by two 64bit quantities that encode a target method hash. Using a 128 bit hash keeps collision probabilities in the order of 10^-20 for up to 2^32 inputs (4 billion). The hash algorithm is based on SHA224 to ensure good distribution.
+- The client/server split in the generated APIs ensure a clear separation of object locations. Instances are always allocated and reside on the server, clients can only invoke methods remotely and cannot transfer or create instances locally.
+- The primitive types, sequences and records are always deep-copied by design and passed by value, so clients are operating on copies that are sent to or received from the server.
+- Methods are only supporting "in" arguments, all primitive types, sequences and records are passed by value.
+- Only the single return value of a two-way function is available to pass values "out" of a call.
+- Interfaces are passed by reference into method calls, but are constrained to remote instances.
 
 */
