@@ -1252,8 +1252,8 @@ public:
   virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
   virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
   virtual void          dispatch   ();
-  virtual uint64_t      instance2orbid (ptrdiff_t);
-  virtual ptrdiff_t     orbid2instance (uint64_t);
+  virtual uint64_t      instance2orbid (ImplicitBase*);
+  virtual ImplicitBase* orbid2instance (uint64_t);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
@@ -1267,8 +1267,9 @@ ServerConnectionImpl::ServerConnectionImpl ()
 }
 
 uint64_t
-ServerConnectionImpl::instance2orbid (ptrdiff_t addr)
+ServerConnectionImpl::instance2orbid (ImplicitBase *instance)
 {
+  const ptrdiff_t addr = reinterpret_cast<ptrdiff_t> (instance);
   const auto it = addr_map.find (addr);
   if (AIDA_LIKELY (it != addr_map.end()))
     return (*it).second;
@@ -1279,11 +1280,12 @@ ServerConnectionImpl::instance2orbid (ptrdiff_t addr)
   return orbid;
 }
 
-ptrdiff_t
+ImplicitBase*
 ServerConnectionImpl::orbid2instance (uint64_t orbid)
 {
   const uint32 index = IdentifierParts (orbid).orbid32; // see connection_id_from_orbid
-  return AIDA_LIKELY (index < addr_vector.size()) ? addr_vector[index] : 0;
+  const ptrdiff_t addr = AIDA_LIKELY (index < addr_vector.size()) ? addr_vector[index] : 0;
+  return reinterpret_cast<ImplicitBase*> (addr);
 }
 
 void

@@ -493,8 +493,8 @@ protected:
   /*ctor*/           ServerConnection ();
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
-  virtual uint64_t   instance2orbid (ptrdiff_t) = 0;
-  virtual ptrdiff_t  orbid2instance (uint64_t) = 0;
+  virtual uint64_t      instance2orbid (ImplicitBase*) = 0;
+  virtual ImplicitBase* orbid2instance (uint64_t) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
 public:

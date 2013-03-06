@@ -65,14 +65,13 @@ static Rapicorn::Init init_server_connection ([]() {
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 { return server_connection->emit_result_handler_add (id, function); }
 // objects
-template<class Object> static inline Object* id2obj (uint64_t oid)
+template<class Target> static inline Target* id2obj (uint64_t oid)
 {
-  const ptrdiff_t addr = server_connection->orbid2instance (oid);
-  $AIDA_iface_base$ *instance = reinterpret_cast<$AIDA_iface_base$*> (addr);
-  return dynamic_cast<Object*> (instance);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
+  return dynamic_cast<Target*> (instance);
 }
-static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
-{ return server_connection->instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+static inline uint64_t obj2id  (Rapicorn::Aida::ImplicitBase *obj)
+{ return server_connection->instance2orbid (obj); }
 template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
 template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 {
