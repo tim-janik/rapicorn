@@ -1273,8 +1273,8 @@ ServerConnectionImpl::instance2orbid (ImplicitBase *instance)
   const auto it = addr_map.find (addr);
   if (AIDA_LIKELY (it != addr_map.end()))
     return (*it).second;
-  // FIXME: use type_name_db
-  const uint64_t orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), addr_vector.size(), 0).vuint64; // see connection_id_from_orbid
+  const uint64_t orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), // see connection_id_from_orbid
+                                          addr_vector.size(), type_name_db.index (instance->__aida_type_name__())).vuint64;
   addr_vector.push_back (addr);
   addr_map[addr] = orbid;
   return orbid;
