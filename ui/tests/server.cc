@@ -93,17 +93,17 @@ test_application_xurl()
 
   // removal checks
   lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == &lm1);
-  unref (ref_sink (lm1));
+  unref (ref_sink (lmr1));
   lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == NULL);
 
   lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == &lm2);
   success = app.xurl_sub (lm2);                                 TASSERT (success == true);
   success = app.xurl_sub (lm2);                                 TASSERT (success == false);
-  unref (ref_sink (lm2));
+  unref (ref_sink (lmr2));
   lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == NULL);
 
   lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == &lm3);
-  unref (ref_sink (lm3));
+  unref (ref_sink (lmr3));
   lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == NULL);
 }
 REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);

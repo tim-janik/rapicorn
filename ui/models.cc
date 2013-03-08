@@ -5,13 +5,18 @@
 namespace Rapicorn {
 
 ListModelRelayImpl::ListModelRelayImpl ()
-{}
+{
+  ref_sink (&model_); // ref-counting must be accurate even for embedded objects
+}
 
 ListModelRelayImpl::~ListModelRelayImpl ()
-{}
+{
+  unref (&model_); // model_.delete_this is a NOP
+  assert (model_.finalizing() == true); // ugly part, asks for ref_count==0
+}
 
 Any
-ListModelRelayImpl::row (int r)
+ListModelRelayImpl::RelayModel::row (int r)
 {
   const size_t row = r;
   return r >= 0 && row < rows_.size() ? rows_[row] : Any();
@@ -20,7 +25,7 @@ ListModelRelayImpl::row (int r)
 void
 ListModelRelayImpl::emit_updated (UpdateKind kind, uint start, uint length)
 {
-  sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length)));
+  model_.sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length)));
 }
 
 void
@@ -30,26 +35,26 @@ ListModelRelayImpl::update (const UpdateRequest &urequest)
     {
     case UPDATE_INSERTION:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= count());
+      assert_return (urequest.rowspan.start <= model_.count());
       assert_return (urequest.rowspan.length >= 0);
-      rows_.insert (rows_.begin() + urequest.rowspan.start, urequest.rowspan.length, Any());
-      sig_updated.emit (urequest);
+      model_.rows_.insert (model_.rows_.begin() + urequest.rowspan.start, urequest.rowspan.length, Any());
+      model_.sig_updated.emit (urequest);
       refill (urequest.rowspan.start, urequest.rowspan.length);
       break;
     case UPDATE_CHANGE:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= count());
+      assert_return (urequest.rowspan.start <= model_.count());
       assert_return (urequest.rowspan.length >= 0);
-      assert_return (urequest.rowspan.start + urequest.rowspan.length <= count());
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_.count());
       refill (urequest.rowspan.start, urequest.rowspan.length); // emits UPDATE_CHANGE later
       break;
     case UPDATE_DELETION:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= count());
+      assert_return (urequest.rowspan.start <= model_.count());
       assert_return (urequest.rowspan.length >= 0);
-      assert_return (urequest.rowspan.start + urequest.rowspan.length <= count());
-      rows_.erase (rows_.begin() + urequest.rowspan.start, rows_.begin() + urequest.rowspan.start + urequest.rowspan.length);
-      sig_updated.emit (urequest);
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_.count());
+      model_.rows_.erase (model_.rows_.begin() + urequest.rowspan.start, model_.rows_.begin() + urequest.rowspan.start + urequest.rowspan.length);
+      model_.sig_updated.emit (urequest);
       break;
     case UPDATE_READ: ;
     }
@@ -59,11 +64,11 @@ void
 ListModelRelayImpl::fill (int first, const AnySeq &anyseq)
 {
   assert_return (first >= 0);
-  if (first >= count())
+  if (first >= model_.count())
     return;
   size_t i;
-  for (i = 0; i < anyseq.size() && first + i < rows_.size(); i++)
-    rows_[first + i] = anyseq[i];
+  for (i = 0; i < anyseq.size() && first + i < model_.rows_.size(); i++)
+    model_.rows_[first + i] = anyseq[i];
   if (i)
     emit_updated (UPDATE_CHANGE, first, i);
 }
@@ -72,9 +77,9 @@ void
 ListModelRelayImpl::refill (int start, int length)
 {
   assert_return (start >= 0);
-  assert_return (start < count());
+  assert_return (start < model_.count());
   assert_return (length >= 0);
-  length = MIN (start + length, count()) - start;
+  length = MIN (start + length, model_.count()) - start;
   if (length)
     sig_refill.emit (UpdateRequest (UPDATE_READ, UpdateSpan (start, length)));
 }
@@ -84,12 +89,6 @@ ListModelRelayImpl::create_list_model_relay()
 {
   ListModelRelayImpl *relay = new ListModelRelayImpl ();
   return *relay;
-}
-
-const PropertyList&
-ListModelRelayImpl::_property_list ()
-{
-  return RAPICORN_AIDA_PROPERTY_CHAIN (ListModelRelayIface::_property_list(), ListModelIface::_property_list());
 }
 
 ListModelRelayIface*
