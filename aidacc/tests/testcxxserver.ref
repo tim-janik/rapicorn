@@ -3,18 +3,7 @@
 // --- ServerHH Boilerplate ---
 #include <rapicorn-core.hh>
 
-namespace Rapicorn { namespace Aida {
-class TestServerBase : public virtual PropertyHostInterface {
-public:
-  explicit             TestServerBase ()            {}
-  virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
-};
-} } // Rapicorn::Aida
-
 #include <rapicorn-core.hh> // for rcore/signal.hh
-
-
 
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
@@ -49,6 +38,8 @@ namespace __AIDA_Local__ {
 typedef ServerConnection::EmitResultHandler EmitResultHandler;
 typedef ServerConnection::MethodRegistry    MethodRegistry;
 typedef ServerConnection::MethodEntry       MethodEntry;
+static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::ImplicitBase>::value,
+               "IDL interface base 'Rapicorn::Aida::ImplicitBase' must derive 'Rapicorn::Aida::ImplicitBase'");
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
@@ -58,16 +49,15 @@ static Rapicorn::Init init_server_connection ([]() {
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 { return server_connection->emit_result_handler_add (id, function); }
 // objects
-template<class Object> static inline Object* id2obj (uint64_t oid)
+template<class Target> static inline Target* id2obj (uint64_t oid)
 {
-  const ptrdiff_t addr = server_connection->orbid2instance (oid);
-  Rapicorn::Aida::TestServerBase *instance = reinterpret_cast<Rapicorn::Aida::TestServerBase*> (addr);
-  return dynamic_cast<Object*> (instance);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
+  return dynamic_cast<Target*> (instance);
 }
-static inline uint64_t obj2id  (Rapicorn::Aida::TestServerBase *obj)
-{ return server_connection->instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+static inline uint64_t obj2id  (Rapicorn::Aida::ImplicitBase *obj)
+{ return server_connection->instance2orbid (obj); }
 template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
-template<class SMH> static inline SMH obj2smh (Rapicorn::Aida::TestServerBase *self)
+template<class SMH> static inline SMH obj2smh (Rapicorn::Aida::ImplicitBase *self)
 {
   const uint64_t orbid = obj2id (self);
   SMH target;
@@ -105,14 +95,15 @@ namespace MandatoryNamespace {
 /** @interface FirstInterface
  * See also the corresponding C++ servant class I_FirstInterfaceIface. */
 /// See also the corresponding IDL class FirstInterface.
-class I_FirstInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_FirstInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_FirstInterfaceIface ();
   virtual /*Des*/                       ~I_FirstInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "MandatoryNamespace::FirstInterface"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          void_func             ();
 };
@@ -158,14 +149,15 @@ namespace InterfaceTests {
 /** @interface UIWidgetArea
  * See also the corresponding C++ servant class I_UIWidgetAreaIface. */
 /// See also the corresponding IDL class UIWidgetArea.
-class I_UIWidgetAreaIface : public virtual Rapicorn::Aida::TestServerBase
+class I_UIWidgetAreaIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_UIWidgetAreaIface ();
   virtual /*Des*/                       ~I_UIWidgetAreaIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::UIWidgetArea"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          dummy    () const = 0;
   virtual void                          dummy    (bool) = 0;
@@ -202,14 +194,15 @@ UIWidgetAreaHandle operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_Handl
 /** @interface Parent
  * See also the corresponding C++ servant class I_ParentIface. */
 /// See also the corresponding IDL class Parent.
-class I_ParentIface : public virtual Rapicorn::Aida::TestServerBase
+class I_ParentIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_ParentIface ();
   virtual /*Des*/                       ~I_ParentIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Parent"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
@@ -226,7 +219,8 @@ protected:
   explicit                               I_ChildIface ();
   virtual /*Des*/                       ~I_ChildIface () = 0;
 public:
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Child"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
@@ -243,7 +237,8 @@ protected:
   explicit                               I_DescendantIface ();
   virtual /*Des*/                       ~I_DescendantIface () = 0;
 public:
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Descendant"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
@@ -260,7 +255,8 @@ protected:
   explicit                               I_GrandChildIface ();
   virtual /*Des*/                       ~I_GrandChildIface () = 0;
 public:
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::GrandChild"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
@@ -271,14 +267,15 @@ GrandChildHandle operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface QuickIface
  * See also the corresponding C++ servant class I_QuickIfaceIface. */
 /// See also the corresponding IDL class QuickIface.
-class I_QuickIfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_QuickIfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_QuickIfaceIface ();
   virtual /*Des*/                       ~I_QuickIfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::QuickIface"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          simple_function   (int i = 9);
 };
@@ -290,14 +287,15 @@ QuickIfaceHandle operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface MethodTestInterface
  * See also the corresponding C++ servant class I_MethodTestInterfaceIface. */
 /// See also the corresponding IDL class MethodTestInterface.
-class I_MethodTestInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_MethodTestInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_MethodTestInterfaceIface ();
   virtual /*Des*/                       ~I_MethodTestInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::MethodTestInterface"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          method_with_void           ();
   virtual bool                          method_with_bools          (bool input,
@@ -331,14 +329,15 @@ MethodTestInterfaceHandle operator->* (I_MethodTestInterfaceIface *obj, Rapicorn
 /** @interface SignalTestInterface
  * See also the corresponding C++ servant class I_SignalTestInterfaceIface. */
 /// See also the corresponding IDL class SignalTestInterface.
-class I_SignalTestInterfaceIface : public virtual Rapicorn::Aida::TestServerBase
+class I_SignalTestInterfaceIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_SignalTestInterfaceIface ();
   virtual /*Des*/                       ~I_SignalTestInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::SignalTestInterface"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
@@ -403,7 +402,8 @@ protected:
   explicit                               I_ChildInheritingSignalsIface ();
   virtual /*Des*/                       ~I_ChildInheritingSignalsIface () = 0;
 public:
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::ChildInheritingSignals"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
@@ -422,7 +422,8 @@ protected:
   explicit                               I_AnotherChildIface ();
   virtual /*Des*/                       ~I_AnotherChildIface () = 0;
 public:
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::AnotherChild"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
@@ -433,14 +434,15 @@ AnotherChildHandle operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_Handl
 /** @interface PropertyTester
  * See also the corresponding C++ servant class I_PropertyTesterIface. */
 /// See also the corresponding IDL class PropertyTester.
-class I_PropertyTesterIface : public virtual Rapicorn::Aida::TestServerBase
+class I_PropertyTesterIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_PropertyTesterIface ();
   virtual /*Des*/                       ~I_PropertyTesterIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::PropertyTester"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual bool                          bool_prop      () const = 0;
   virtual void                          bool_prop      (bool) = 0;
@@ -476,14 +478,15 @@ namespace RapicornAidaTest {
 /** @interface ButtonArea
  * See also the corresponding C++ servant class I_ButtonAreaIface. */
 /// See also the corresponding IDL class ButtonArea.
-class I_ButtonAreaIface : public virtual Rapicorn::Aida::TestServerBase
+class I_ButtonAreaIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_ButtonAreaIface ();
   virtual /*Des*/                       ~I_ButtonAreaIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::ButtonArea"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual std::string                   on_click   () const = 0;
   virtual void                          on_click   (const std::string&) = 0;
@@ -508,14 +511,15 @@ class I_PureMethodsIface;
 /** @interface PureMethods
  * See also the corresponding C++ servant class I_PureMethodsIface. */
 /// See also the corresponding IDL class PureMethods.
-class I_PureMethodsIface : public virtual Rapicorn::Aida::TestServerBase
+class I_PureMethodsIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_PureMethodsIface ();
   virtual /*Des*/                       ~I_PureMethodsIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::PureMethods"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual int                           pure_method        (double f) = 0;
 };
@@ -530,14 +534,15 @@ namespace Other {
 /** @interface NameTests
  * See also the corresponding C++ servant class I_NameTestsIface. */
 /// See also the corresponding IDL class NameTests.
-class I_NameTestsIface : public virtual Rapicorn::Aida::TestServerBase
+class I_NameTestsIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_NameTestsIface ();
   virtual /*Des*/                       ~I_NameTestsIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "Other::NameTests"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
@@ -554,14 +559,15 @@ namespace BseTest {
 /** @interface Compressor
  * See also the corresponding C++ servant class I_CompressorIface. */
 /// See also the corresponding IDL class Compressor.
-class I_CompressorIface : public virtual Rapicorn::Aida::TestServerBase
+class I_CompressorIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_CompressorIface ();
   virtual /*Des*/                       ~I_CompressorIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "BseTest::Compressor"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
   virtual double                        threshold () const = 0;
   virtual void                          threshold (double) = 0;
@@ -576,14 +582,15 @@ CompressorHandle operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleTyp
 /** @interface SoundModule
  * See also the corresponding C++ servant class I_SoundModuleIface. */
 /// See also the corresponding IDL class SoundModule.
-class I_SoundModuleIface : public virtual Rapicorn::Aida::TestServerBase
+class I_SoundModuleIface : public virtual Rapicorn::Aida::ImplicitBase
 {
 protected:
   explicit                               I_SoundModuleIface ();
   virtual /*Des*/                       ~I_SoundModuleIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual void                          _list_types (Rapicorn::Aida::TypeHashList&) const;
+  virtual std::string                    __aida_type_name__ ()	{ return "BseTest::SoundModule"; }
+  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& _property_list ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
@@ -635,7 +642,7 @@ I_FirstInterfaceIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 } // MandatoryNamespace
@@ -683,7 +690,7 @@ I_UIWidgetAreaIface::_property_list ()
     // RAPICORN_AIDA_PROPERTY (I_UIWidgetAreaIface, dummy, "dummy", "", ""),
     RAPICORN_AIDA_PROPERTY (I_UIWidgetAreaIface, on_click, _("On CLick"), _("Command on button1 click"), "rw"),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -726,7 +733,7 @@ I_ParentIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -889,7 +896,7 @@ I_QuickIfaceIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -932,7 +939,7 @@ I_MethodTestInterfaceIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -975,7 +982,7 @@ I_SignalTestInterfaceIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -1107,7 +1114,7 @@ I_PropertyTesterIface::_property_list ()
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, self_prop, "self_prop", "", ""),
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, any_prop, "any_prop", "", ""),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 } // InterfaceTests
@@ -1157,7 +1164,7 @@ I_ButtonAreaIface::_property_list ()
     // RAPICORN_AIDA_PROPERTY (I_ButtonAreaIface, on_click3, "on_click3", "", ""),
     // RAPICORN_AIDA_PROPERTY (I_ButtonAreaIface, click_type, "click_type", "", ""),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -1200,7 +1207,7 @@ I_PureMethodsIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 } // RapicornAidaTest
@@ -1246,7 +1253,7 @@ I_NameTestsIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 } // Other
@@ -1294,7 +1301,7 @@ I_CompressorIface::_property_list ()
     RAPICORN_AIDA_PROPERTY (I_CompressorIface, threshold, "", "", "w"),
     RAPICORN_AIDA_PROPERTY (I_CompressorIface, ratio, "", "", "w"),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 
@@ -1337,7 +1344,7 @@ I_SoundModuleIface::_property_list ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::TestServerBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
   return property_list;
 }
 

@@ -328,7 +328,7 @@ interface Drawable : Widget {
 /**
  * List widget is a widget that displays a list of widgets generated according to a data source.
  */
-interface WidgetList {
+interface WidgetList : Container {
   String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
   SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
                                                                "Single - allow a single selected row<br/>"

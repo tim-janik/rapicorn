@@ -4,7 +4,7 @@
 namespace {
 using namespace Rapicorn;
 
-class ListStore : public virtual BaseObject, public virtual DataListContainer {
+class ListStore : public virtual ReferenceCountable, public virtual DataListContainer {
   vector<Any> rows_;
 protected:
   typedef Aida::Signal<void (const UpdateRequest&)> UpdateSignal;

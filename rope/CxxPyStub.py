@@ -190,22 +190,33 @@ __AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
 }
 
 static inline PyObject*
-__AIDA_pyfactory__create_from_orbid (const char *type_name, uint64_t orbid)
+__AIDA_pyfactory__create_from_orbid (uint64_t orbid)
 {
+  PyObject *result = NULL, *pyid;
+  std::string type_name, fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
+  if (fqtn.find ("Rapicorn::") != 0)
+    goto unimplemented;
+  type_name = fqtn.substr (10);
+  if (type_name.find (':') != std::string::npos)
+    goto unimplemented;
   if (!__AIDA_pyfactory__global_callback)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
-  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (orbid);
-  if (pyid) {
-    PyObject *tuple = PyTuple_New (2);
-    if (tuple) {
-      PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name));
-      PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
-      result = PyObject_Call (__AIDA_pyfactory__global_callback, tuple, NULL);
-      Py_DECREF (tuple);
+  pyid = PyLong_FromUnsignedLongLong (orbid);
+  if (pyid)
+    {
+      PyObject *tuple = PyTuple_New (2);
+      if (tuple)
+        {
+          PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name.c_str()));
+          PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+          result = PyObject_Call (__AIDA_pyfactory__global_callback, tuple, NULL);
+          Py_DECREF (tuple);
+        }
+      Py_XDECREF (pyid);
     }
-    Py_XDECREF (pyid);
-  }
   return result;
+ unimplemented:
+  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", fqtn.c_str());
 }
 """
 
@@ -299,7 +310,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s = __AIDA_pyfactory__create_from_orbid ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
+      s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
     elif type.storage == Decls.ANY:
       s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
@@ -553,11 +564,6 @@ class Generator:
       aux = '{ "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" }'
       s += '#define AIDA_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
-
-def error (msg):
-  import sys
-  print >>sys.stderr, sys.argv[0] + ":", msg
-  sys.exit (127)
 
 def generate (namespace_list, **args):
   import sys, tempfile, os

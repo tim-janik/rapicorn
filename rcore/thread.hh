@@ -13,6 +13,7 @@ struct RECURSIVE_LOCK {} constexpr RECURSIVE_LOCK {}; ///< Flag for recursive Mu
 
 /**
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
+ * This class is a thin wrapper around pthread_mutex_lock() and related functions.
  * This class supports static construction.
  */
 class Mutex {
@@ -32,7 +33,7 @@ public:
 
 /**
  * The Spinlock uses low-latency busy spinning to acquire locks.
- * It is a thin wrapper around pthread_spin_lock().
+ * This class is a thin wrapper around pthread_spin_lock() and related functions.
  * This class supports static construction.
  */
 class Spinlock {
@@ -46,6 +47,30 @@ public:
   native_handle_type native_handle() { return &spinlock_; }
   /*ctor*/  Spinlock    (const Spinlock&) = delete;
   Mutex&    operator=   (const Spinlock&) = delete;
+};
+
+/**
+ * The RWLock allows multiple readers to simultaneously access a critical code section or one writer.
+ * This class is a thin wrapper around pthread_rwlock_rdlock() and related functions.
+ * This class supports static construction.
+ */
+class RWLock {
+  pthread_rwlock_t rwlock_;
+  char             initialized_;
+  void             real_init ();
+  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!Lib::atomic_load (&initialized_))) real_init(); }
+public:
+  constexpr RWLock      () : rwlock_ (), initialized_ (0) {}
+  void      rdlock      ()      { fixinit(); while (pthread_rwlock_rdlock (&rwlock_) == EAGAIN); }
+  void      wrlock      ()      { fixinit(); pthread_rwlock_wrlock (&rwlock_); }
+  void      unlock      ()      { fixinit(); pthread_rwlock_unlock (&rwlock_); }
+  bool      try_rdlock  ()      { fixinit(); return 0 == pthread_rwlock_tryrdlock (&rwlock_); }
+  bool      try_wrlock  ()      { fixinit(); return 0 == pthread_rwlock_trywrlock (&rwlock_); }
+  typedef pthread_rwlock_t* native_handle_type;
+  native_handle_type native_handle() { return &rwlock_; }
+  /*dtor*/ ~RWLock      ()      { fixinit(); pthread_rwlock_destroy (&rwlock_); }
+  /*ctor*/  RWLock      (const RWLock&) = delete;
+  Mutex&    operator=   (const RWLock&) = delete;
 };
 
 /// Class keeping information per Thread.

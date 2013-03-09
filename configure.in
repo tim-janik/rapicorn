@@ -220,7 +220,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     AC_SUBST(RAPICORN_OS_CHOICES)
     AC_DEFINE_UNQUOTED(RAPICORN_OS_$RAPICORN_OS, "1", [Win32 detection])
 
-    dnl # --- sizeof threading structs ---
+    dnl # == sizeof threading structs ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
     RAPICORN_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
     AC_SUBST(RAPICORN_SIZEOF_PTH_MUTEX_T)
@@ -228,7 +228,12 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     RAPICORN_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
     AC_SUBST(RAPICORN_SIZEOF_PTH_COND_T)
 
-    # --- sizeof pthread_spinlock_t ---
+    # == sizeof pthread_rwlock_t ==
+    GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
+    RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK) dnl # for rapicornconfig.h
+
+    # == sizeof pthread_spinlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
     RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
     AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK) dnl # for rapicornconfig.h

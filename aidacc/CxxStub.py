@@ -15,22 +15,8 @@ serverhh_boilerplate = r"""
 #include <rapicorn-core.hh>
 """
 
-serverhh_testcode = r"""
-namespace Rapicorn { namespace Aida {
-class TestServerBase : public virtual PropertyHostInterface {
-public:
-  explicit             TestServerBase ()            {}
-  virtual             ~TestServerBase ()            {}
-  virtual uint64_t     _orbid         () const      { return uint64_t (this); }
-};
-} } // Rapicorn::Aida
-"""
-
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
-"""
-
-servercc_testcode = r"""
 """
 
 gencc_boilerplate = r"""
@@ -68,6 +54,8 @@ namespace __AIDA_Local__ {
 typedef ServerConnection::EmitResultHandler EmitResultHandler;
 typedef ServerConnection::MethodRegistry    MethodRegistry;
 typedef ServerConnection::MethodEntry       MethodEntry;
+static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>::value,
+               "IDL interface base '$AIDA_iface_base$' must derive 'Rapicorn::Aida::ImplicitBase'");
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
@@ -77,14 +65,13 @@ static Rapicorn::Init init_server_connection ([]() {
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 { return server_connection->emit_result_handler_add (id, function); }
 // objects
-template<class Object> static inline Object* id2obj (uint64_t oid)
+template<class Target> static inline Target* id2obj (uint64_t oid)
 {
-  const ptrdiff_t addr = server_connection->orbid2instance (oid);
-  $AIDA_iface_base$ *instance = reinterpret_cast<$AIDA_iface_base$*> (addr);
-  return dynamic_cast<Object*> (instance);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
+  return dynamic_cast<Target*> (instance);
 }
-static inline uint64_t obj2id  ($AIDA_iface_base$ *obj)
-{ return server_connection->instance2orbid (reinterpret_cast<ptrdiff_t> (obj)); }
+static inline uint64_t obj2id  (Rapicorn::Aida::ImplicitBase *obj)
+{ return server_connection->instance2orbid (obj); }
 template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
 template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
 {
@@ -130,7 +117,7 @@ static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_r
 static bool          signal_disconnect (size_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
 static size_t        signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
                                        { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
-static inline uint64_t smh2id (const SmartHandle &h) { return h._orbid(); }
+static inline uint64_t smh2id (const SmartHandle &sh) { return sh._orbid(); }
 template<class SMH> SMH smh2cast (const SmartHandle &handle) {
   const uint64_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
@@ -166,8 +153,7 @@ class Generator:
     self.ns_aida = None
     self.gen_inclusions = []
     self.skip_symbols = set()
-    self.test_iface_base = 'Rapicorn::Aida::TestServerBase'
-    self.iface_base = self.test_iface_base
+    self.iface_base = 'Rapicorn::Aida::ImplicitBase'
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
   def Iwrap (self, name):
@@ -481,7 +467,7 @@ class Generator:
       cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_class (self, type_info):
-    s, classC, classH = '\n', self.C (type_info), self.C4client (type_info)
+    s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -504,7 +490,8 @@ class Generator:
     if ddc:
       s += c
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('void') + '_list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
+      s += '  virtual ' + self.F ('void') + ' _list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
     else: # G4STUB
@@ -1154,11 +1141,7 @@ class Generator:
       s += clienthh_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
-      if self.iface_base == self.test_iface_base:
-        s += serverhh_testcode
       s += rapicornsignal_boilerplate
-    if self.gen_servercc and self.iface_base == self.test_iface_base:
-      s += servercc_testcode + '\n'
     if self.gen_servercc:
       s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
     if self.gen_clientcc:

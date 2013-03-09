@@ -6,18 +6,8 @@
 
 namespace Rapicorn { namespace Aida {
 
-class Property;
-class PropertyList;
-
 // == PropertyHostInterface ==
-class PropertyHostInterface {
-protected:
-  virtual                    ~PropertyHostInterface () {}
-  virtual const PropertyList& _property_list        ();
-  Property*                   _property_lookup      (const String &property_name);
-  bool                        _property_set         (const String &property_name, const String &value);
-  String                      _property_get         (const String &property_name);
-};
+typedef ImplicitBase PropertyHostInterface;
 
 // == Property ==
 class Property {

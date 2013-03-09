@@ -15,6 +15,20 @@
 
 namespace Rapicorn {
 
+static Mutex global_rwlock_real_init_mutex;
+
+void
+RWLock::real_init ()
+{
+  global_rwlock_real_init_mutex.lock();
+  if (!initialized_)
+    {
+      pthread_rwlock_init (&rwlock_, NULL);
+      initialized_ = true;
+    }
+  global_rwlock_real_init_mutex.unlock();
+}
+
 /// Debugging hook, returns if the Mutex is currently locked, might not work with all threading implementations.
 bool
 Mutex::debug_locked()

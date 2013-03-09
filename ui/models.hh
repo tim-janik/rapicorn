@@ -6,24 +6,24 @@
 
 namespace Rapicorn {
 
-class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual ListModelIface,
-                           public virtual Aida::PropertyHostInterface {
-  vector<Any>                   rows_;
-  explicit                      ListModelRelayImpl ();
+class ListModelRelayImpl : public virtual ListModelRelayIface {
+  struct RelayModel : public virtual ListModelIface {
+    vector<Any>                 rows_;
+    virtual int                 count           ()              { return rows_.size(); }
+    virtual Any                 row             (int n);
+    virtual void                delete_this     ()              { /* do nothing for embedded object */ }
+  };
+  RelayModel                    model_;
+  void                          emit_updated            (UpdateKind kind, uint start, uint length);
+  explicit                      ListModelRelayImpl      ();
 protected:
-  virtual                      ~ListModelRelayImpl ();
-  static ListModelRelayImpl&    create_list_model_relay();
-  void                          emit_updated    (UpdateKind kind, uint start, uint length);
+  virtual                      ~ListModelRelayImpl      ();
+  static ListModelRelayImpl&    create_list_model_relay ();
 public:
-  // model API
-  virtual int                   count           ()              { return rows_.size(); }
-  virtual Any                   row             (int n);
-  // relay API
   virtual void                  update          (const UpdateRequest &urequest);
   virtual void                  fill            (int first, const AnySeq &aseq);
-  virtual ListModelIface*       model           ()              { return this; }
+  virtual ListModelIface*       model           ()              { return &model_; }
   void                          refill          (int start, int length);
-  virtual const PropertyList&   _property_list  ();
 };
 
 class MemoryListStore : public virtual ListModelIface {

@@ -118,6 +118,30 @@ public:
   static TypeCode       notype       ();
 };
 
+// == Type Declarations ==
+class ObjectBroker;
+class ClientConnection;
+class ServerConnection;
+union FieldUnion;
+class FieldBuffer;
+class FieldReader;
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
+class PropertyList;
+class Property;
+
+// == ImplicitBase ==
+class ImplicitBase /// Abstract base interface that all IDL interfaces are implicitely derived from.
+{
+protected:
+  virtual                     ~ImplicitBase     () = 0; // abstract class
+  virtual const PropertyList& _property_list    () = 0; ///< Retrieve the list properties of an instance.
+  Property*                   _property_lookup  (const std::string &property_name);
+  bool                        _property_set     (const std::string &property_name, const std::string &value);
+  std::string                 _property_get     (const std::string &property_name);
+public:
+  virtual std::string        __aida_type_name__ () = 0; ///< Retrieve the IDL type name of an instance.
+};
+
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
@@ -185,15 +209,6 @@ public:
   void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
 };
 
-// == Type Declarations ==
-class ObjectBroker;
-class ClientConnection;
-class ServerConnection;
-union FieldUnion;
-class FieldBuffer;
-class FieldReader;
-typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
-
 // == Type Hash ==
 struct TypeHash {
   uint64_t typehi, typelo;
@@ -204,8 +219,6 @@ struct TypeHash {
 typedef std::vector<TypeHash> TypeHashList;
 
 // == Utilities ==
-template<class V> inline
-bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 void    assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
 void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
 void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
@@ -252,13 +265,15 @@ union IdentifierParts {
   struct { // OrbID bits
     uint   orbid32 : 32;
     uint   orbid_connection : 16;
-    uint   orbid_unused : 16;
+    uint   orbid_type_index : 16;
   };
-  IdentifierParts (uint64_t vu64) : vuint64 (vu64) {}
-  IdentifierParts (uint orbid_v32, uint orbid_con) : orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_unused (0) {}
-  IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
+  constexpr IdentifierParts (uint64_t vu64) : vuint64 (vu64) {}
+  constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
     sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con), message_id (IdentifierParts (id).message_id)
   {}
+  struct ORBID {}; // constructor tag
+  constexpr IdentifierParts (const ORBID&, uint orbid_con, uint orbid_v32, uint type_index) :
+    orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_type_index (type_index) {}
 };
 constexpr uint64_t CONNECTION_MASK = 0x0000ffff;
 
@@ -479,8 +494,8 @@ protected:
   /*ctor*/           ServerConnection ();
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
-  virtual uint64_t   instance2orbid (ptrdiff_t) = 0;
-  virtual ptrdiff_t  orbid2instance (uint64_t) = 0;
+  virtual uint64_t      instance2orbid (ImplicitBase*) = 0;
+  virtual ImplicitBase* orbid2instance (uint64_t) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
 public:
@@ -506,6 +521,8 @@ public: /// @name API for remote calls.
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
+public: /// @name API for remote types.
+  virtual std::string   type_name_from_orbid (uint64_t orbid) = 0;
 };
 
 // == inline implementations ==
