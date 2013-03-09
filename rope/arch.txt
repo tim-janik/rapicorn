@@ -8,5 +8,3 @@ Python & Rapicorn:
 - cpy2rope.cc:	Generated cpy-trampoline -> rope RPC call glue
 - rope:		RPC call implementation, Rapicorn thread
 - cxx-client:	Generated C++ -> rope API
-- PyStub.py:	Aida module to generate py2cpy.py
-- CxxPyStub.py:	Aida module to generate cpy2rope
