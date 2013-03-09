@@ -7,6 +7,8 @@ INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS = $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
+PYMODULE    = $(RAPICORN_NAMESPACE_NAME)
+
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
@@ -35,8 +37,8 @@ python-call-info:
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
 	: # compile IDL definitions into cpy2rope.cc
-	${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o xgen-$(@F)
-	mv xgen-$(@F) $@
+	${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o $(PYMODULE)
+	mv $(PYMODULE).cc $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
@@ -62,6 +64,7 @@ check-local: check-localPyStub-gen check-localPyStub-syntax
 EXTRA_DIST += testcxxpystub.ref
 check-PyStub-gen: $(srcdir)/testcxxpystub.ref
 	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub.py $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) \
+        && mv $(TSTOUT).cc $(TSTOUT) \
 	&& echo "static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
