@@ -45,7 +45,6 @@ $(srcdir)/py-rope.cc: cpy2rope.cc
 # === TESTS ===
 # test PyStub files for testpass.idl
 EXTRA_DIST += testpystub.ref testcxxpystub.ref
-CLEANFILES += testpystub.pyc
 check-PyStub-testpass: $(srcdir)/testpystub.ref $(srcdir)/testcxxpystub.ref
 	@: # generate .cc and .py
 	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub.py $(srcdir)/../aidacc/tests/testpass.idl -o xgen-$@ \
@@ -65,7 +64,7 @@ check-PyStub-testpass: $(srcdir)/testpystub.ref $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
-CLEANFILES += testcxxpystub.cc testcxxpystub.o
+CLEANFILES += testcxxpystub.cc testcxxpystub.o testpystub.pyc
 check-local: check-PyStub-testpass
 # test PyStub files for Rapicorn interfaces
 check-rapicorn-idl:
@@ -73,4 +72,5 @@ check-rapicorn-idl:
 	$(Q) ${AIDACC} -x $(srcdir)/PyStub $(RAPICORNIDL) -o testmodule ; eval "$$TSTDIAGNOSE"
 	$(Q) $(PYTHON) testmodule.py ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testmodule.cc testmodule.py
+CLEANFILES += testmodule.cc testmodule.py
 check-local: check-rapicorn-idl
