@@ -36,9 +36,10 @@ python-call-info:
 
 # === cpy2rope.cc ===
 py2cpy.py cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
-	: # compile IDL definitions into cpy2rope.cc
-	${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o $(PYMODULE)
-	@mv $(PYMODULE).cc cpy2rope.cc && mv $(PYMODULE).py py2cpy.py
+	@: # compile IDL definitions into RapicornYYMM.{cc,py}
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o $(PYMODULE)
+	@: # fixup target file names
+	$(Q) mv $(PYMODULE).cc cpy2rope.cc && mv $(PYMODULE).py py2cpy.py
 CLEANFILES += py2cpy.py cpy2rope.cc
 $(srcdir)/py-rope.cc: cpy2rope.cc
 
