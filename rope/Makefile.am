@@ -7,8 +7,6 @@ INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS = $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
-PYMODULE    = $(RAPICORN_NAMESPACE_NAME)
-
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
@@ -18,30 +16,28 @@ noinst_PROGRAMS      = cxxrapicorn
 cxxrapicorn_SOURCES  = cxx-rope.cc
 cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 
-# === PyRapicorn ===
-pyrapicorn_cc_sources = py-rope.cc
+# === Cxxrapicorn ===
+cxxrapicorn_cc_sources = py-rope.cc
 EXTRA_DIST           += py-rope.hh
-pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON      = __init__.py py2cpy.py main.py
-pyrapicorn_LTLIBRARIES = pyRapicorn.la
-pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-pyRapicorn_la_LDFLAGS  = $(strip				\
-	-module -avoid-version -export-symbols-regex pyRapicorn	\
+cxxrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
+cxxrapicorn_PYTHON      = __init__.py pyrapicorn.py main.py
+cxxrapicorn_LTLIBRARIES = cxxrapicorn.la
+cxxrapicorn_la_SOURCES  = $(cxxrapicorn_cc_sources)
+cxxrapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+cxxrapicorn_la_LDFLAGS  = $(strip				\
+	-module -avoid-version -export-symbols-regex cxxrapicorn \
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 )
-$(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
+$(cxxrapicorn_LTLIBRARIES): $(cxxrapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
-# === cpy2rope.cc ===
-py2cpy.py cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
+# === pyrapicorn.cc ===
+pyrapicorn.py pyrapicorn.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
 	@: # compile IDL definitions into RapicornYYMM.{cc,py}
-	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o $(PYMODULE)
-	@: # fixup target file names
-	$(Q) mv $(PYMODULE).cc cpy2rope.cc && mv $(PYMODULE).py py2cpy.py
-CLEANFILES += py2cpy.py cpy2rope.cc
-$(srcdir)/py-rope.cc: cpy2rope.cc
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o pyrapicorn
+CLEANFILES += pyrapicorn.py pyrapicorn.cc
+$(srcdir)/py-rope.cc: pyrapicorn.cc
 
 # === TESTS ===
 # test PyStub files for testpass.idl

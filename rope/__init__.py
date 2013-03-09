@@ -73,16 +73,16 @@ class AidaObjectFactory:
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
-  import pyRapicorn     # generated __AIDA_... cpy methods
-  import py2cpy         # generated Python classes, Application, etc
-  py2cpy.__AIDA_pymodule__init_once (pyRapicorn)
-  pyRapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (py2cpy))
+  import cxxrapicorn    # generated __AIDA_... cpy methods
+  import pyrapicorn     # generated Python classes, Application, etc
+  pyrapicorn.__AIDA_pymodule__init_once (cxxrapicorn)
+  cxxrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
   del globals()['AidaObjectFactory']
-  app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
-  del globals()['pyRapicorn']
-  del globals()['py2cpy']
+  app_init._CPY, app_init._PY = (cxxrapicorn, pyrapicorn) # app_init() internals
+  del globals()['cxxrapicorn']
+  del globals()['pyrapicorn']
 _module_init_once_()
 
 # introduce module symbols
-from py2cpy import *
+from pyrapicorn import *
 import main

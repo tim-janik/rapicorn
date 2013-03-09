@@ -4,7 +4,5 @@
 Python & Rapicorn:
 - *.py:		Python user code imports Rapicorn (not included)
 - __init__.py:	Rapicorn module initialization & glue
-- py2cpy.py:	Generated Python API -> rope cpy-trampoline glue
-- cpy2rope.cc:	Generated cpy-trampoline -> rope RPC call glue
 - rope:		RPC call implementation, Rapicorn thread
 - cxx-client:	Generated C++ -> rope API
