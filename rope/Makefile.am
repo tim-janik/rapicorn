@@ -33,9 +33,9 @@ python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
 # === cpy2rope.cc ===
-cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
+cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
 	: # compile IDL definitions into cpy2rope.cc
-	${AIDACC} -x $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
+	${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
@@ -51,31 +51,31 @@ CLEANFILES += xgen-py2cpy.py py2cpy.py
 # test PyStub
 EXTRA_DIST += testpystub.ref PyStub.py
 CLEANFILES += testpystub.pyc
-check-PyStub-gen: $(srcdir)/testpystub.ref
+check-localPyStub-gen: $(srcdir)/testpystub.ref
 	$(Q) ${AIDACC} -x $(srcdir)/PyStub $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testpystub.ref'"
-check-PyStub-syntax: $(srcdir)/testpystub.ref
+check-localPyStub-syntax: $(srcdir)/testpystub.ref
 	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
-check-local: check-PyStub-gen check-PyStub-syntax
-# test CxxPyStub
-EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
-check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
-	$(Q) ${AIDACC} -x $(srcdir)/CxxPyStub $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) \
+check-local: check-localPyStub-gen check-localPyStub-syntax
+# test Cxx based PyStub
+EXTRA_DIST += testcxxpystub.ref
+check-PyStub-gen: $(srcdir)/testcxxpystub.ref
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub.py $(srcdir)/../aidacc/tests/testpass.idl -o $(TSTOUT) \
 	&& echo "static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
-check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
+check-PyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
 CLEANFILES += testcxxpystub.cc
-check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
+check-local: check-PyStub-gen check-PyStub-syntax
 # test interfaces.idl with Aida
 check-rapicorn-idl:
 	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
 check-local: check-rapicorn-idl
 # test PyStub with interfaces.idl
-check-PyStub-for-interfaces.idl:
+check-localPyStub-for-interfaces.idl:
 	$(Q) ${AIDACC} -x $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; eval "$$TSTDIAGNOSE"
-check-local: check-PyStub-for-interfaces.idl
+check-local: check-localPyStub-for-interfaces.idl
