@@ -1,94 +1,163 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "listareaimpl.hh"
+#include "listarea.hh"
 #include "sizegroup.hh"
 #include "paintcontainers.hh"
 #include "factory.hh"
+#include "application.hh"
 
 //#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
 
 namespace Rapicorn {
 
+// == WidgetListRowImpl ==
+class WidgetListRowImpl : public virtual SingleContainerImpl,
+                          public virtual EventHandler,
+                          public virtual FocusFrame::Client {
+  FocusFrame     *focus_frame_;
+  int             index_;
+  WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
+protected:
+  virtual const PropertyList&
+  _property_list ()
+  {
+    static Property *properties[] = {
+      MakeProperty (WidgetListRowImpl, selected,  _("Selected"), _("Indicates wether this row is selected"), "rw"),
+      MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), "ro"),
+    };
+    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
+    return property_list;
+  }
+  virtual void
+  dump_private_data (TestStream &tstream)
+  {
+    WidgetListImpl *list = widget_list();
+    int kind = 0;
+    if (list && index_ >= 0)
+      {
+        ListRow *lr = list->row_map_[index_];
+        if (lr && lr->lrow == this)
+          kind = 1;
+        else
+          {
+            lr = list->off_map_[index_];
+            if (lr && lr->lrow == this)
+              kind = 2;
+            else
+              kind = 3;
+          }
+      }
+    const char *knames[] = { "nil", "mapped", "cached", "dangling" };
+    tstream.dump ("row_kind", String (knames[kind]));
+  }
+  virtual bool
+  handle_event (const Event &event)
+  {
+    WidgetListImpl *list = widget_list();
+    return list && list->row_event (event, this, index_);
+  }
+  virtual bool
+  can_focus () const
+  {
+    return focus_frame_ != NULL;
+  }
+  virtual bool
+  register_focus_frame (FocusFrame &frame)
+  {
+    if (!focus_frame_)
+      focus_frame_ = &frame;
+    return focus_frame_ == &frame;
+  }
+  virtual void
+  unregister_focus_frame (FocusFrame &frame)
+  {
+    if (focus_frame_ == &frame)
+      focus_frame_ = NULL;
+  }
+public:
+  WidgetListRowImpl() :
+    focus_frame_ (NULL), index_ (INT_MIN)
+  {
+    color_scheme (COLOR_BASE);
+  }
+  int           row_index() const       { return index_; }
+  void
+  row_index (int i)
+  {
+    index_ = i >= 0 ? i : INT_MIN;
+    WidgetListImpl *list = widget_list();
+    if (list && index_ >= 0)
+      color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+    visible (index_ >= 0);
+  }
+  virtual bool
+  selected () const
+  {
+    WidgetListImpl *list = widget_list();
+    return list && index_ >= 0 ? list->selected (index_) : false;
+  }
+  virtual void
+  selected (bool s)
+  {
+    WidgetListImpl *list = widget_list();
+    if (list && index_ >= 0)
+      {
+        if (list->selected (index_) != s)
+          list->toggle_selected (index_);
+        color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+      }
+  }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {}
+};
+
+static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::Factory::WidgetListRow");
+
+// == WidgetListImpl ==
+static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
+
 const PropertyList&
-WidgetList::_property_list()
+WidgetListImpl::_property_list()
 {
-  static Property *properties[] = {
-    MakeProperty (WidgetList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
-    MakeProperty (WidgetList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static Property *properties[] = {};
+  static const PropertyList property_list (properties,
+                                           WidgetListIface::_property_list(),
+                                           MultiContainerImpl::_property_list(),
+                                           AdjustmentSource::_property_list(),
+                                           EventHandler::_property_list());
   return property_list;
 }
 
 WidgetListImpl::WidgetListImpl() :
-  model_ (NULL),
+  model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  browse_ (true), n_cols_ (0),
-  need_resize_scroll_ (false), block_invalidate_ (false),
-  current_row_ (18446744073709551615ULL)
+  selection_mode_ (SELECTION_SINGLE), virtualized_pixel_scrolling_ (true),
+  need_scroll_layout_ (false), block_invalidate_ (false),
+  first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
 {}
 
 WidgetListImpl::~WidgetListImpl()
 {
-  /* remove model */
-  ListModelIface *oldmodel = model_;
-  model_ = NULL;
-  if (oldmodel)
-    unref (oldmodel);
-  /* purge row map */
-  RowMap rc; // empty
+  // remove model
+  model ("");
+  assert_return (model_ == NULL);
+  // purge row map
+  RowMap rc;
   row_map_.swap (rc);
-  for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
-    cache_row (ri->second);
-  /* destroy row cache */
-  while (row_cache_.size())
-    {
-      ListRow *lr = row_cache_.back();
-      row_cache_.pop_back();
-      for (uint i = 0; i < lr->cols.size(); i++)
-        unref (lr->cols[i]);
-      unref (lr->rowbox);
-      delete lr;
-    }
-  /* release size groups */
+  for (auto ri : rc)
+    destroy_row (ri.second);
+  // purge row cache
+  rc.clear();
+  rc.swap (off_map_);
+  for (auto ri : rc)
+    destroy_row (ri.second);
+  // release size groups
   while (size_groups_.size())
     {
       SizeGroup *sg = size_groups_.back();
       size_groups_.pop_back();
       unref (sg);
-    }
-}
-
-void
-WidgetListImpl::constructed ()
-{
-  if (!model_)
-    {
-      MemoryListStore *store = new MemoryListStore (5);
-      for (uint i = 0; i < 20; i++)
-        {
-          AnySeq row;
-          row.resize (5);
-          String s;
-          if (i && (i % 10) == 0)
-            s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
-          else
-            s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row[0] <<= s;
-          for (uint j = 1; j < 4; j++)
-            row[j] <<= string_printf ("%u-%u", i + 1, j + 1);
-          store->insert (-1, row);
-        }
-      {
-        model_ = store;
-        ref_sink (model_);
-        // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
-        // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
-        // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
-        n_cols_ = model_->columns();
-      }
-      unref (ref_sink (store));
-      invalidate_model (true, true);
     }
 }
 
@@ -121,8 +190,7 @@ WidgetListImpl::vadjustment () const
 }
 
 Adjustment*
-WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source,
-                              const String        &name)
+WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &name)
 {
   switch (adj_source)
     {
@@ -138,57 +206,194 @@ WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source,
 void
 WidgetListImpl::model (const String &modelurl)
 {
-  BaseObject *obj = NULL; // FIXME: plor_get (modelurl);
-  ListModelIface *model = dynamic_cast<ListModelIface*> (obj);
+  ListModelIface *lmi = ApplicationImpl::the().xurl_find (modelurl);
   ListModelIface *oldmodel = model_;
-  model_ = model;
+  model_ = lmi;
+  row_heights_.clear();
+  if (oldmodel)
+    {
+      oldmodel->sig_updated() -= conid_updated_;
+      conid_updated_ = 0;
+      row_heights_.clear();
+    }
   if (model_)
     {
       ref_sink (model_);
-      // model_->sig_inserted() += Aida::slot (*this, &WidgetListImpl::model_inserted);
-      // model_->sig_changed() += Aida::slot (*this, &WidgetListImpl::model_changed);
-      // model_->sig_removed() += Aida::slot (*this, &WidgetListImpl::model_removed);
-      // #warning FIXME: missing: model_->sig_selection_changed() += slot (*this, &WidgetListImpl::selection_changed);
+      row_heights_.resize (model_->count(), -1);
+      conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
     }
   if (oldmodel)
-    {
-      unref (oldmodel);
-    }
-  if (!model_)
-    n_cols_ = 0;
-  else
-    n_cols_ = model_->columns();
+    unref (oldmodel);
   invalidate_model (true, true);
 }
 
 String
 WidgetListImpl::model () const
 {
-  return ""; // FIME: model_ ? model_->plor_name() : "";
+  return ""; // FIME: use xurl_path (not model_->plor_name)
+}
+
+SelectionMode
+WidgetListImpl::selection_mode () const
+{
+  return selection_mode_;
 }
 
 void
-WidgetListImpl::model_changed (int first, int last)
+WidgetListImpl::selection_mode (SelectionMode smode)
 {
-#warning FIXME: intersect changed rows with visible rows
-  for (uint64 i = first; i <= uint64 (last); i++)
+  selection_mode_ = smode;
+  validate_selection (0);
+  selection_changed (0, selection_.size());
+}
+
+void
+WidgetListImpl::set_selection (const BoolSeq &bseq)
+{
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (bseq.size(), selection_.size());
+  for (size_t i = 0; i < max_size; i++)
+    if (bseq[i] != selection_[i])
+      {
+        selection_[i] = bseq[i];
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
     {
-      ListRow *lr = lookup_row (i);
-      if (lr)
-        lr->rowbox->invalidate();
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
     }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
+}
+
+BoolSeq
+WidgetListImpl::get_selection ()
+{
+  BoolSeq bseq;
+  bseq.resize (selection_.size());
+  std::copy (selection_.begin(), selection_.end(), bseq.begin());
+  return bseq;
 }
 
 void
-WidgetListImpl::model_inserted (int first, int last)
+WidgetListImpl::select_range (int first, int length)
 {
-  invalidate_model (true, true);
+  return_unless (first >= 0 && length >= 0);
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (size_t (first + length), selection_.size());
+  for (size_t i = first; i < max_size; i++)
+    if (!selection_[i])
+      {
+        selection_[i] = true;
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
+    {
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
+    }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
 }
 
 void
-WidgetListImpl::model_removed (int first, int last)
+WidgetListImpl::unselect_range (int first, int length)
 {
-  invalidate_model (true, true);
+  return_unless (first >= 0 && length >= 0);
+  size_t lastrow = 0, firstrow = ~size_t (0);
+  const size_t max_size = min (size_t (first + length), selection_.size());
+  for (size_t i = first; i < max_size; i++)
+    if (selection_[i])
+      {
+        selection_[i] = false;
+        firstrow = min (firstrow, i);
+        lastrow = max (lastrow, i);
+      }
+  if (!validate_selection (firstrow))
+    {
+      firstrow = 0;
+      lastrow = selection_.size() - 1;
+    }
+  if (firstrow <= lastrow)
+    selection_changed (firstrow, 1 + lastrow - firstrow);
+}
+
+bool
+WidgetListImpl::validate_selection (int fallback)
+{
+  // ensure a valid selection
+  bool changed = false;
+  int first = -1;
+  switch (selection_mode())
+    {
+    case SELECTION_NONE:                // nothing to select ever
+      for (size_t i = 0; i < selection_.size(); i++)
+        if (selection_[i])
+          {
+            selection_[i] = false;
+            changed = true;
+          }
+      break;
+    case SELECTION_SINGLE:              // maintain a single selection at most
+    case SELECTION_BROWSE:              // always maintain a single selection
+      for (size_t i = 0; i < selection_.size(); i++)
+        if (selection_[i])
+          {
+            if (first < 0)
+              first = i;
+            else
+              {
+                selection_[i] = 0;
+                changed = true;
+              }
+          }
+      if (selection_mode() == SELECTION_BROWSE && first < 0 && selection_.size() > 0)
+        {
+          selection_[CLAMP (fallback, 0, ssize_t (selection_.size() - 1))] = true;
+          changed = true;
+        }
+      break;
+    case SELECTION_MULTIPLE:            // allow any combination of selected rows
+      break;
+    }
+  return changed == false;
+}
+
+bool
+WidgetListImpl::has_selection () const
+{
+  // OPTIMIZE: speed up by always caching first & last selected row
+  for (size_t i = 0; i < selection_.size(); i++)
+    if (selection_[i])
+      return true;
+  return false;
+}
+
+void
+WidgetListImpl::model_updated (const UpdateRequest &urequest)
+{
+  switch (urequest.kind)
+    {
+    case UPDATE_READ:
+      break;
+    case UPDATE_INSERTION:
+      destroy_range (urequest.rowspan.start, ~size_t (0));
+      row_heights_.resize (model_->count(), -1);
+      invalidate_model (true, true);
+      break;
+    case UPDATE_CHANGE:
+      for (int64 i = urequest.rowspan.start; i < urequest.rowspan.start + urequest.rowspan.length; i++)
+        update_row (i);
+      break;
+    case UPDATE_DELETION:
+      destroy_range (urequest.rowspan.start, ~size_t (0));
+      row_heights_.resize (model_->count(), -1);
+      invalidate_model (true, true);
+      break;
+    }
 }
 
 void
@@ -197,43 +402,46 @@ WidgetListImpl::toggle_selected (int row)
   if (selection_.size() <= size_t (row))
     selection_.resize (row + 1);
   selection_[row] = !selection_[row];
-  selection_changed (row, row);
+  selection_changed (row, 1 + row);
 }
 
 void
-WidgetListImpl::selection_changed (int first, int last)
+WidgetListImpl::deselect_all ()
 {
-  // FIXME: intersect with visible rows
-  for (int i = first; i <= last; i++)
+  selection_.assign (selection_.size(), 0);
+  if (selection_.size())
+    selection_changed (0, selection_.size());
+}
+
+void
+WidgetListImpl::selection_changed (int first, int length)
+{
+  for (int i = first; i < first + length; i++)
     {
       ListRow *lr = lookup_row (i);
       if (lr)
-        lr->rowbox->color_scheme (selected (i) ? COLOR_SELECTED : COLOR_NORMAL);
+        lr->lrow->selected (selected (i));
     }
 }
 
 void
-WidgetListImpl::invalidate_model (bool invalidate_heights,
-                                bool invalidate_widgets)
+WidgetListImpl::invalidate_model (bool invalidate_heights, bool invalidate_widgets)
 {
-  need_resize_scroll_ = true;
-  model_sizes_.clear();
+  need_scroll_layout_ = true;
+  // FIXME: reset all cached row_heights_ here?
   invalidate();
 }
 
 void
 WidgetListImpl::visual_update ()
 {
-  need_resize_scroll_ = true; // FIXME
-  if (need_resize_scroll_)
-    {
-      measure_rows (allocation().height);
-      resize_scroll_preserving();
-    }
+  need_scroll_layout_ = true; // FIXME
+  if (need_scroll_layout_)
+    scroll_layout_preserving();
   for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
     {
       ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area);
+      lr->lrow->set_allocation (lr->area, &allocation());
     }
 }
 
@@ -248,25 +456,22 @@ void
 WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  measure_rows (4096); // FIXME: use monitor size
-  // FIXME: this should only measure current row
   requisition.width = 0;
   requisition.height = -1;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto ri : row_map_)
     {
-      /* size request all children */
-      if (!cw->visible())
-        continue;
-      Requisition crq = cw->requisition();
+      ListRow *lr = ri.second;
+      critical_unless (lr->lrow->visible());
+      const Requisition crq = lr->lrow->requisition();
       requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
-  if (model_ && model_->size())
-    requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (model_->count() * vadjustment_->nvalue())); // FIXME
+  if (model_ && model_->count())
+    requisition.height = -1;  // FIXME: allow property to specify how many rows should be visible
   else
     requisition.height = -1;
   if (requisition.height < 0)
-    requisition.height = 12 * 5; // FIXME: request single row height
+    requisition.height = 12 * 5; // FIXME: request single label height
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
 }
@@ -274,108 +479,699 @@ WidgetListImpl::size_request (Requisition &requisition)
 void
 WidgetListImpl::size_allocate (Allocation area, bool changed)
 {
-  need_resize_scroll_ = need_resize_scroll_ || allocation() != area || changed;
-  if (need_resize_scroll_)
+  need_scroll_layout_ = need_scroll_layout_ || allocation() != area || changed;
+  if (need_scroll_layout_)
+    vscroll_layout();
+  for (auto ri : row_map_)
     {
-      measure_rows (area.height);
-      resize_scroll();
-    }
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
-    {
-      ListRow *lr = it->second;
-      lr->rowbox->set_allocation (lr->area);
-    }
-}
-
-bool
-WidgetListImpl::pixel_positioning (const int64       mcount,
-                                 const ModelSizes &ms) const
-{
-  return 0;
-  return mcount == int64 (ms.row_sizes.size());
-}
-
-void
-WidgetListImpl::measure_rows (int64 maxpixels)
-{
-  ModelSizes &ms = model_sizes_;
-  /* create measuring context */
-  if (!ms.measurement_row)
-    {
-      ms.measurement_row = create_row (0, false);
-      Allocation area;
-      area.x = area.y = -1;
-      area.width = area.height = 0;
-      ms.measurement_row->rowbox->set_allocation (area);
-    }
-  /* catch cases where measuring is useless */
-  if (!model_ || model_->size() > maxpixels)
-    {
-      ms.clear();
-      return;
-    }
-  /* check if measuring is needed */
-  const int64 mcount = model_->size();
-  if (ms.total_height > 0 && mcount == int64 (ms.row_sizes.size()))
-    return;
-
-  return; // FIXME
-
-  /* measure all rows */
-  ms.clear();
-  ms.row_sizes.resize (mcount);
-  ListRow *lr = ms.measurement_row;
-  for (int64 row = 0; row < mcount; row++)
-    {
-      printerr ("measure: %llu\n", row);
-      fill_row (lr, row);
-      int rowheight = measure_row (lr);
-      ms.row_sizes[row] = rowheight;
-      ms.total_height += rowheight;
+      ListRow *lr = ri.second;
+      lr->lrow->set_allocation (lr->area, &allocation());
     }
 }
 
 int
-WidgetListImpl::row_height (ModelSizes &ms,
-                          int64       list_row)
+WidgetListImpl::focus_row()
 {
-  map<int64,int>::iterator it = ms.size_cache.find (list_row);
-  if (it != ms.size_cache.end())
-    return it->second;
-  fill_row (ms.measurement_row, list_row);
-  Requisition requisition = ms.measurement_row->rowbox->requisition();
-  ms.size_cache[list_row] = requisition.height;
-  // printerr ("CACHE: last=%lld size=%d\n", list_row, ms.size_cache.size());
-  return requisition.height;
+  WidgetImpl *fchild = get_focus_child();
+  WidgetListRowImpl *lrow = dynamic_cast<WidgetListRowImpl*> (fchild);
+  return lrow ? lrow->row_index() : -1;
 }
 
-int64 /* list bottom relative y for list_row */
-WidgetListImpl::row_layout (double      vscrollpos,
-                          int64       mcount,
-                          ModelSizes &ms,
-                          int64       list_row)
+bool
+WidgetListImpl::grab_row_focus (int next_focus, int old_focus)
 {
-  /* allocate scroll position row (list bottom relative) */
-  const double list_alignment = vscrollpos / mcount;
-  const int listpos = allocation().height * (1.0 - list_alignment);
-  const int64 scrollrow = ifloor (vscrollpos);
-  const double scrollrow_alignment = vscrollpos - scrollrow;
-  const int scrollrow_lower = row_height (ms, scrollrow) * (1.0 - scrollrow_alignment);
-  const int scrollrow_y = listpos - scrollrow_lower;
-  int64 y = scrollrow_y;
-  if (scrollrow > list_row)
-    for (int64 row = list_row + 1; row <= scrollrow; row++)
-      y += row_height (ms, row);
-  else if (scrollrow < list_row)
-    for (int64 row = scrollrow + 1; row <= list_row; row++)
-      y -= row_height (ms, row);
-  return y;
+  const int64 mcount = model_ ? model_->count() : 0;
+  ListRow *lr = lookup_row (next_focus, false);
+  bool success;
+  if (lr)
+    {
+      success = lr->lrow->grab_focus();         // focus onscreen row
+    }
+  else
+    {
+      lr = fetch_row (next_focus);
+      if (lr)                                   // new focus row was offscreen
+        {
+          lr->lrow->visible (true);
+          success = lr->lrow->grab_focus();
+          cache_row (lr);
+        }
+      else                                      // no row gets focus
+        {
+          lr = lookup_row (old_focus);
+          if (lr)
+            lr->lrow->unset_focus();
+          success = false;
+        }
+    }
+  const int current_focus = success ? focus_row () : -1;
+  if (success && current_focus >= 0)
+    {                                           // scroll to focus row
+      double vscrolllower = vscroll_row_position (current_focus, 1.0); // lower scrollpos for current at visible bottom
+      double vscrollupper = vscroll_row_position (current_focus, 0.0); // upper scrollpos for current at visible top
+      // fixup possible approximation error in first/last pixel via edge attraction
+      if (vscrollupper <= 1)                    // edge attraction at top
+        vscrolllower = vscrollupper = 0;
+      else if (vscrolllower >= mcount - 1)      // edge attraction at bottom
+        vscrolllower = vscrollupper = mcount;
+      const double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower / mcount, vscrollupper / mcount);
+      if (nvalue != vadjustment_->nvalue())
+        vadjustment_->nvalue (nvalue);
+    }
+  return success && current_focus >= 0;
 }
 
-int64
-WidgetListImpl::position2row (double   list_fraction,
-                            double  *row_fraction)
+void
+WidgetListImpl::focus_lost ()
 {
+  // not resetting focus_child so we memorize focus child on next focus in
+}
+
+bool
+WidgetListImpl::move_focus (FocusDirType fdir)
+{
+  // check focus ability
+  if (!visible() || !sensitive())
+    return false;
+  // allow last focus descendant to handle movement
+  WidgetImpl *last_child = get_focus_child();
+  if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
+    return true;
+  // pick row for initial focus
+  if (!test_any_flag (FOCUS_CHAIN))
+    {
+      const int last_focus = focus_row();               // -1 initially
+      return grab_row_focus (MAX (0, last_focus));      // list focus-in
+    }
+  // focus out for FOCUS_PREV and FOCUS_NEXT, cursor focus is handled via events
+  return false;                                         // list focus-out
+}
+
+void
+WidgetListImpl::change_selection (const int current, int previous, const bool toggle, const bool range, const bool preserve)
+{
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0);
+  return_unless (previous < mcount);
+  return_unless (current < mcount);
+  switch (selection_mode())
+    {
+      int sel, old;
+    case SELECTION_NONE:                // nothing to select ever
+      break;
+    case SELECTION_BROWSE:              // always maintain a single selection
+      sel = MAX (0, current >= 0 ? current : previous);
+      old = focus_row();
+      if (sel != old)
+        {
+          if (old >= 0 && selected (old))
+            toggle_selected (old);
+          if (!selected (sel))
+            toggle_selected (sel);
+        }
+      break;
+    case SELECTION_SINGLE:              // maintain a single selection at most
+      if (!preserve || toggle)
+        {
+          sel = selected (current) ? current : -1;
+          deselect_all();
+          if (current >= 0 && (!toggle || sel < 0))
+            toggle_selected (current);
+        }
+      break;
+    case SELECTION_MULTIPLE:            // allow any combination of selected rows
+      if (!preserve)
+        deselect_all();
+      if (current < 0)
+        ;               // nothing to select
+      else if (toggle)
+        toggle_selected (current);
+      else if (range)
+        {
+          if (multi_sel_range_start_ < 0)
+            multi_sel_range_start_ = previous >= 0 ? previous : current;
+          for (int i = MAX (0, MIN (multi_sel_range_start_, current)); i <= MAX (multi_sel_range_start_, current); i++)
+            if (!selected (i))
+              toggle_selected (i);
+        }
+      else if (!preserve)
+        toggle_selected (current);
+      if (!range)
+        multi_sel_range_start_ = -1;
+      break;
+    }
+}
+
+bool
+WidgetListImpl::key_press_event (const EventKey &event)
+{
+  const int64 mcount = model_->count();
+  bool handled = false;
+  bool preserve_old_selection = event.key_state & MOD_CONTROL;
+  bool toggle_selection = false, range_selection = event.key_state & MOD_SHIFT;
+  int current_focus = focus_row();
+  const int saved_current_row = current_focus;
+  switch (event.key)
+    {
+    case KEY_space:
+      if (current_focus >= 0 && current_focus < mcount)
+        {
+          toggle_selection = true;
+          range_selection = false;
+        }
+      handled = true;
+      break;
+    case KEY_Down:
+      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+        toggle_selection = true;        // treat like space
+      else if (current_focus + 1 < mcount)
+        current_focus = MAX (current_focus + 1, 0);
+      handled = true;
+      break;
+    case KEY_Up:
+      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+        toggle_selection = true;        // treat like space
+      else if (current_focus > 0)
+        current_focus = current_focus - 1;
+      handled = true;
+      break;
+    case KEY_Page_Up:
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
+        {
+          // See KEY_Page_Down comment.
+          const Allocation list_area = allocation();
+          const int delta = list_area.height; // - row_height (current_focus) - 1;
+          const int jumprow = vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
+          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, mcount - 1);
+        }
+      handled = true;
+      break;
+    case KEY_Page_Down:
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
+        {
+          /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
+           * jumping more than a screenful of pixels, keep in mind that the view will be aligned
+           * to fit the target row fully. Also make sure to jump by at least single row so we keep
+           * moving regardless of view height (which might be less than current_row height).
+           */
+          const Allocation list_area = allocation();
+          const int delta = list_area.height; //  - row_height (current_focus) - 1;
+          const int jumprow = vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
+          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, mcount - 1);
+        }
+      handled = true;
+      break;
+    }
+  if (handled)
+    {
+      grab_row_focus (current_focus, saved_current_row);
+      change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::button_event (const EventButton &event, WidgetListRowImpl *lrow, int index)
+{
+  bool handled = false;
+  bool preserve_old_selection = event.key_state & MOD_CONTROL;
+  bool toggle_selection = event.key_state & MOD_CONTROL, range_selection = event.key_state & MOD_SHIFT;
+  int current_focus = index;
+  const int saved_current_row = current_focus;
+  if (event.type == BUTTON_PRESS && event.button == 1 && lrow)
+    {
+      grab_row_focus (current_focus, saved_current_row);
+      change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
+      handled = true;
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::row_event (const Event &event, WidgetListRowImpl *lrow, int index)
+{
+  return_unless (model_ != NULL, false);
+  const int64 mcount = model_->count();
+  return_unless (mcount > 0, false);
+  bool handled = false;
+  switch (event.type)
+    {
+    case KEY_PRESS:
+      handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
+      break;
+    case BUTTON_PRESS:
+      handled = button_event (*dynamic_cast<const EventButton*> (&event), lrow, index);
+      break;
+    default:
+      break;
+    }
+  return handled;
+}
+
+bool
+WidgetListImpl::handle_event (const Event &event)
+{
+  return_unless (model_ != NULL, false);
+  bool handled = false;
+  switch (event.type)
+    {
+    case KEY_PRESS:
+    case KEY_RELEASE:
+      handled = row_event (event, NULL, -1);
+      break;
+    default:
+      break;
+    }
+  return handled;
+}
+
+int
+WidgetListImpl::row_height (int nth_row)
+{
+  const int64 mcount = model_->count();
+  assert_return (nth_row < mcount, -1);
+  if (row_heights_.size() != (size_t) mcount)    // FIXME: hack around missing updates
+    row_heights_.resize (model_->count(), -1);
+  if (row_heights_[nth_row] < 0)
+    {
+      ListRow *lr = lookup_row (nth_row);
+      bool keep_uncached = true;
+      if (!lr)
+        {
+          lr = fetch_row (nth_row);
+          keep_uncached = false;
+        }
+      const bool keep_invisible = !lr->lrow->visible();
+      if (keep_invisible)                                       // FIXME: resetting visible is very expensive
+        lr->lrow->visible (true); // proper requisition need visible row
+      row_heights_[nth_row] = lr->lrow->requisition().height;
+      if (keep_invisible)
+        lr->lrow->visible (false); // restore state
+      if (!keep_uncached)
+        cache_row (lr);
+    }
+  return row_heights_[nth_row];
+}
+
+static uint dbg_cached = 0, dbg_created = 0;
+
+void
+WidgetListImpl::fill_row (ListRow *lr, int nthrow)
+{
+  assert_return (lr->lrow->row_index() == nthrow);
+  Any row = model_->row (nthrow);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->set_property ("markup_text", row.as_string());
+  Ambience *ambience = lr->lrow->interface<Ambience*>();
+  if (ambience)
+    ambience->background (nthrow & 1 ? "background-odd" : "background-even");
+  lr->lrow->selected (selected (nthrow));
+  lr->allocated = 0;
+}
+
+ListRow*
+WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
+{
+  Any row = model_->row (nthrow);
+  ListRow *lr = new ListRow();
+  IFDEBUG (dbg_created++);
+  WidgetImpl *widget = &Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
+  lr->lrow = ref_sink (widget)->interface<WidgetListRowImpl*>();
+  lr->lrow->interface<HBox>().spacing (5); // FIXME
+  widget = ref_sink (&Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList()));
+  lr->cols.push_back (widget);
+
+  while (size_groups_.size() < lr->cols.size())
+    size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
+  if (with_size_groups)
+    for (uint i = 0; i < lr->cols.size(); i++)
+      size_groups_[i]->add_widget (*lr->cols[i]);
+
+  add (lr->lrow);
+  return lr;
+}
+
+ListRow*
+WidgetListImpl::fetch_row (int row)
+{
+  return_unless (row >= 0, NULL);
+  ListRow *lr;
+  RowMap::iterator ri;
+  if (row_map_.end() != (ri = row_map_.find (row)))             // fetch visible row
+    {
+      lr = ri->second;
+      row_map_.erase (ri);
+      IFDEBUG (dbg_cached++);
+    }
+  else if (off_map_.end() != (ri = off_map_.find (row)))    // fetch invisible row
+    {
+      lr = ri->second;
+      off_map_.erase (ri);
+      change_unviewable (*lr->lrow, false);
+      IFDEBUG (dbg_cached++);
+    }
+  else                                                          // create row
+    {
+      lr = create_row (row);
+      lr->lrow->row_index (row); // visible=true
+      fill_row (lr, row);
+    }
+  return lr;
+}
+
+void
+WidgetListImpl::destroy_row (ListRow *lr)
+{
+  assert_return (lr && lr->lrow);
+  ContainerImpl *parent = lr->lrow->parent();
+  if (parent)
+    parent->remove (lr->lrow);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    unref (lr->cols[i]);
+  unref (lr->lrow);
+  delete lr;
+}
+
+void
+WidgetListImpl::cache_row (ListRow *lr)
+{
+  const int64 mcount = model_ ? model_->count() : 0;
+  const int row_index = lr->lrow->row_index();
+  assert_return (row_index >= 0);
+  assert_return (off_map_.find (row_index) == off_map_.end());
+  if (row_index >= mcount)
+    destroy_row (lr);
+  else
+    {
+      change_unviewable (*lr->lrow, true);      // take widget offscreen
+      off_map_[row_index] = lr;
+      lr->allocated = 0;
+    }
+  // prune if we have too many items
+  if (off_map_.size() > MAX (20, 2 * row_map_.size()))
+    {
+      const int threshold = MAX (20, row_map_.size());
+      const int first = first_row_ - threshold / 2, last = last_row_ + threshold / 2;
+      RowMap newmap;
+      for (auto ri : off_map_)
+        if ((ri.first < first || ri.first > last) && !ri.second->lrow->has_focus())
+          {
+            destroy_row (ri.second);
+            row_heights_[ri.first] = -1;
+          }
+        else
+          newmap[ri.first] = ri.second;
+      newmap.swap (off_map_);
+    }
+}
+
+void
+WidgetListImpl::destroy_range (size_t first, size_t bound)
+{
+  for (auto rmap : { &row_map_, &off_map_ })          // remove range from row_map_ *and* off_map_
+    {
+      RowMap newmap;
+      for (auto ri : *rmap)
+        if (ri.first < ssize_t (first) || ri.first >= ssize_t (bound))
+          newmap[ri.first] = ri.second;                 // keep row
+        else                                            // or get rid of it
+          destroy_row (ri.second);
+      newmap.swap (*rmap);                              // assign updated row map
+    }
+  for (auto i = first; i < min (bound, row_heights_.size()); i++)
+    row_heights_[i] = -1;
+}
+
+ListRow*
+WidgetListImpl::lookup_row (int row, bool maybe_cached)
+{
+  return_unless (row >= 0, NULL);
+  RowMap::iterator ri;
+  if (row_map_.end() != (ri = row_map_.find (row)))
+    return ri->second;
+  if (maybe_cached && off_map_.end() != (ri = off_map_.find (row)))
+    return ri->second;
+  return NULL;
+}
+
+void
+WidgetListImpl::update_row (int row)
+{
+  return_unless (row >= 0);
+  ListRow *lr = lookup_row (row);
+  if (lr)
+    fill_row (lr, row);
+}
+
+void
+WidgetListImpl::reset (ResetMode mode)
+{
+  // first_row_ = last_row_ = current_row_ = MIN_INT;
+}
+
+void
+WidgetListImpl::scroll_layout_preserving () // model_->count() >= 1
+{
+  if (!block_invalidate_ && drawable() && !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+    {
+      block_invalidate_ = true;
+      scroll_layout();
+      requisition();
+      set_allocation (allocation());
+      block_invalidate_ = false;
+    }
+  else
+    scroll_layout();
+}
+
+// == Virtual Position Scrolling ==
+/* Scroll position interpretation:
+ * The current slider position is interpreted as a fractional pointer into the
+ * interval [0,count[. The resulting integer part of the scroll position will always
+ * point at one particular row (<= count) and the fractional part is interpreted as a
+ * vertical offset into this particular row.
+ * From this, a scroll position is interpolated so that the top of the first row and
+ * the bottom of the last row are aligned with top and bottom of the list view
+ * respectively. This is achieved by using the vertical row offset as one alignment
+ * point within the row (the row alignment point), and using the current slider position
+ * via proportional indexing into the list view height as second (list) alignment point.
+ * Note that list rows increase downwards and pixel coordinates increase downwards.
+ */
+void
+WidgetListImpl::vscroll_layout ()
+{
+  const int64 mcount = model_ ? model_->count() : 0;
+  if (mcount == 0)
+    {
+      destroy_range (0, ~size_t (0));
+      return;
+    }
+  RowMap rmap;
+  // flag old rows
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
+    it->second->allocated = 0;
+  // calculate alignment point for vertical scroll layout
+  const Allocation list_area = allocation();
+  const double scroll_norm_value = vadjustment_->nvalue();                      // 0..1 scroll position
+  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
+  const int64 scroll_widget = min (mcount - 1, ifloor (scroll_value));          // index into mcount at scroll_norm_value
+  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
+  const int64 list_apoint = list_area.y + list_area.height * scroll_norm_value; // list alignment coordinate
+  assert_return (scroll_widget >= 0 && scroll_widget < mcount);         // FIXME: properly catch scroll_widget > mcount
+  // allocate row at alignment point
+  ListRow *lr_sw = NULL;
+  if (1)
+    {
+      ListRow *lr = fetch_row (scroll_widget);
+      const Requisition lr_requisition = lr->lrow->requisition();
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      const int64 rowheight = lr_requisition.height;
+      const int64 row_apoint = rowheight * scroll_fraction;                     // row alignment point
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      carea.y = list_apoint - row_apoint;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
+      rmap[scroll_widget] = lr;
+      first_row_ = last_row_ = scroll_widget;
+      lr_sw = lr;
+    }
+  // allocate rows above scroll_widget
+  int64 accu = lr_sw->area.y;                                                   // upper pixel bound
+  int64 current = scroll_widget - 1;
+  while (current >= 0 && accu >= list_area.y)
+    {
+      ListRow *lr = fetch_row (current);
+      const Requisition lr_requisition = lr->lrow->requisition();
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      accu -= carea.height;
+      carea.y = accu;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr_sw->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
+      rmap[current] = lr;
+      first_row_ = current--;
+    }
+  // allocate rows below scroll_widget
+  accu = lr_sw->area.y + lr_sw->area.height;                                    // lower pixel bound
+  current = scroll_widget + 1;
+  while (current < mcount && accu < list_area.y + list_area.height)
+    {
+      ListRow *lr = fetch_row (current);
+      const Requisition lr_requisition = lr->lrow->requisition();
+      critical_unless (lr_requisition.height > 0);                              // or do max(1) ?
+      Allocation carea;
+      carea.height = lr_requisition.height;
+      carea.y = accu;
+      accu += carea.height;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      if (carea != lr_sw->area)
+        {
+          lr->area = carea;
+          lr->lrow->invalidate (INVALID_ALLOCATION);
+        }
+      rmap[current] = lr;
+      last_row_ = current++;
+    }
+  // clean up remaining old rows and put new row map into place
+  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
+    cache_row (it->second);
+  row_map_.swap (rmap);
+  // ensure proper allocation for all rows
+  for (auto ri : row_map_)
+    {
+      ListRow *lr = ri.second;
+      if (lr->lrow->test_any_flag (INVALID_REQUISITION))
+        lr->lrow->requisition();                                // shouldn't happen, done above
+      assert (lr->lrow->test_any_flag (INVALID_REQUISITION) == 0 || this->test_any_flag (INVALID_REQUISITION));
+      if (lr->lrow->test_any_flag (INVALID_ALLOCATION))
+        lr->lrow->set_allocation (lr->area, &list_area);
+      assert (lr->lrow->test_any_flag (INVALID_ALLOCATION) == 0 || this->test_any_flag (INVALID_ALLOCATION));
+      assert (lr->lrow->test_any_flag (INVALID_REQUISITION) == 0 || this->test_any_flag (INVALID_REQUISITION));
+    }
+  // reset state
+  need_scroll_layout_ = 0;
+}
+
+// determine y position for target_row, at vertical scroll position @a value
+int
+WidgetListImpl::vscroll_row_yoffset (const double value, const int target_row)
+{
+  const int mcount = model_->count();
+  assert_return (target_row >= 0 && target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  const double scroll_norm_value = value / mcount;                              // 0..1 scroll position
+  const double scroll_value = scroll_norm_value * mcount;                       // fraction into count()
+  const int scroll_widget = min (mcount - 1, ifloor (scroll_value));            // index into mcount at scroll_norm_value
+  const double scroll_fraction = min (1.0, scroll_value - scroll_widget);       // fraction into scroll_widget row
+  const int list_apoint = list_area.y + list_area.height * scroll_norm_value;   // list alignment point
+  const int scroll_apoint_height = row_height (scroll_widget) * scroll_fraction; // inner row alignment point
+  int current = scroll_widget;
+  int current_y = list_apoint - scroll_apoint_height;
+  // adjust for target_row > current
+  while (target_row > current)
+    {
+      current_y += row_height (current);
+      current++;
+    }
+  // adjust for target_row < current
+  while (target_row < current)
+    {
+      current--;
+      current_y -= row_height (current);
+    }
+  return current_y;
+}
+
+// determine target row when moving away from src_row by @a pixel_delta in either direction
+int
+WidgetListImpl::vscroll_relative_row (const int src_row, int pixel_delta)
+{
+  const int mcount = model_->count();
+  int current = src_row;
+  if (pixel_delta < 0)
+    while (pixel_delta < 0 && current > 0)
+      {
+        current--;
+        pixel_delta += row_height (current);
+      }
+  else // pixel_delta >= 0
+    while (pixel_delta > 0 && current + 1 < mcount)
+      {
+        current++;
+        pixel_delta -= row_height (current);
+      }
+  return current;
+}
+
+// find vertical value that aligns target_row most closely within the visible list area.
+double
+WidgetListImpl::vscroll_row_position (const int target_row, const double list_alignment)
+{
+  const int64 mcount = model_->count();
+  assert_return (target_row < mcount, 0);
+  const Allocation list_area = allocation();
+  // determine scroll position bounds around target position
+  double lower = vscroll_relative_row (target_row, -list_area.height);
+  double upper = vscroll_relative_row (target_row, +list_area.height + row_height (target_row)) + 1.0;
+  // calculate alignment points for vertical scroll layout
+  const int list_apoint = list_area.y + list_area.height * list_alignment;      // list alignment point
+  const int scroll_apoint_height = row_height (target_row) * list_alignment;    // inner target row alignment point
+  // approximation start value, picked so it positions target_row in the visible list area
+  double delta, value = target_row + 0.5;                                       // initial approximation
+  // refine approximation via bisection
+  do
+    {
+      const int target_y = vscroll_row_yoffset (value, target_row);
+      const int target_apoint = target_y + scroll_apoint_height;                // target row alignment point
+      if (target_apoint < list_apoint)
+        upper = value;                          // scroll value must shrink so target_apoint grows
+      else if (target_apoint > list_apoint)
+        lower = value;                          // scroll value must grow so target_apoint shrinks
+      else
+        break;
+      const double new_value = (lower + upper) / 2.0;
+      delta = value - new_value;
+      value = new_value;
+    }
+  while (fabs (delta) > 1 / (2.0 * row_height (min (mcount - 1, ifloor (value)))));
+  return value;                                 // aproximation for positioning target_row alignment point at list_alignment
+}
+
+// == Pixel Accurate Scrolling ==
+void
+WidgetListImpl::pscroll_layout ()
+{
+  fatal ("UNIMPLEMENTED");
+}
+
+double
+WidgetListImpl::pscroll_row_position (const int target_row, const double list_alignment)
+{
+  fatal ("UNIMPLEMENTED");
+#if 0
+  /* pixel positioning */
+  int64 row, accu = 0;
+  for (row = 0; row < list_row; row++)
+    accu += ms.row_sizes[row];
+  /* here: accu == real_scroll_position for list_alignment == 0 */
+  accu += ms.row_sizes[row] * list_alignment;       // fractional row to align
+  accu -= listheight * list_alignment;              // fractional list to align
+  accu = max (0, accu);                             // clamp row0 to list start
+  return accu;
+
   /* scroll position interpretation depends on the available vertical scroll
    * position resolution, which is derived from the number of pixels that
    * are (possibly) vertically allocated for the list view:
@@ -383,17 +1179,9 @@ WidgetListImpl::position2row (double   list_fraction,
    *    All list rows are measured to determine their height. The fractional
    *    scroll position is then interpreted as a pointer into the total pixel
    *    height of the list.
-   * 2) Positional interpretation (applicable for large models).
-   *    The scroll position is interpreted as a fractional pointer into the
-   *    interval [0,rowcount[. So the integer part of the scroll position will
-   *    always point at one particular row and the fractional part is
-   *    interpreted as an offset into the widget's row, as [row_index.row_fraction].
-   *    From this, the actual scroll position is interpolated so that the top
-   *    of the first row and the bottom of the last row are aligned with top and
-   *    bottom of the list view respectively.
-   * Note that list rows increase downwards, pixel coordinates increase upwards.
+   * Note that list rows increase downwards and pixel coordinates increase downwards.
    */
-  const int64 mcount = model_->size();
+  const int64 mcount = model_->count();
   const ModelSizes &ms = model_sizes_;
   if (pixel_positioning (mcount, ms))
     {
@@ -423,377 +1211,7 @@ WidgetListImpl::position2row (double   list_fraction,
         *row_fraction = min (1.0, scroll_value - row);
       return row;
     }
+#endif
 }
-
-double
-WidgetListImpl::row2position (const int64  list_row,
-                            const double list_alignment)
-{
-  const int64 mcount = model_->size();
-  if (list_row < 0 || list_row >= mcount)
-    return -1; // invalid row
-  ModelSizes &ms = model_sizes_;
-  const int listheight = allocation().height;
-  /* see position2row() for fractional positioning vs. pixel positioning */
-  if (pixel_positioning (mcount, ms))
-    {
-      /* pixel positioning */
-      int64 row, accu = 0;
-      for (row = 0; row < list_row; row++)
-        accu += ms.row_sizes[row];
-      /* here: accu == real_scroll_position for list_alignment == 0 */
-      accu += ms.row_sizes[row] * list_alignment;       // fractional row to align
-      accu -= listheight * list_alignment;              // fractional list to align
-      accu = max (0, accu);                             // clamp row0 to list start
-      return accu;
-    }
-  else
-    {
-      /* fractional positioning */
-      const int listpos = listheight * (1.0 - list_alignment);
-      const int rowheight = row_height (ms, list_row);
-      const int maxstep = 16;                           // upper bound on O(row_layout())
-      int64 last_rowpos = listpos;
-      double lower = 0, upper = mcount;
-      double value = list_row + 0.5;
-      for (int i = 0; i <= max (56, listheight); i++)   // maximum usually unreached
-        {
-          int64 rowy = row_layout (value, mcount, ms, list_row); // rowy measure from list bottom
-          int64 rowpos = rowy + rowheight * (1.0 - list_alignment);
-          if (rowpos < listpos)
-            lower = value;      /* value must grow */
-          else if (rowpos > listpos)
-            upper = value;      /* value must shrink */
-          else
-            break;              /* value is ideal */
-          if (rowpos == last_rowpos)
-            break;              /* value cannot be refined */
-          last_rowpos = rowpos;
-          value = CLAMP (0.5 * (lower + upper), value - maxstep, value + maxstep);
-        }
-      return value;
-    }
-}
-
-int64
-WidgetListImpl::scroll_row_layout (ListRow *lr_current,
-                                 int64 *scrollrowy,
-                                 int64 *scrollrowupper,
-                                 int64 *scrollrowlower,
-                                 int64 *listupperp,
-                                 int64 *listheightp)
-{
-  /* scroll position interpretation:
-   * the current slider position is interpreted as a fractional pointer into the
-   * interval [0,count[. so the integer part of the scroll position will always
-   * point at one particular widget and the fractional part is interpreted as an
-   * offset into the widget's row.
-   * Scrolling for large models works by interpreting the scroll adjustment
-   * values as [row_index.row_fraction]. From this, a scroll position is
-   * interpolated so that the top of the first row and the bottom of the last
-   * row are aligned with top and bottom of the list view respectively.
-   * Note that list rows increase downwards, pixel coordinates increase upwards.
-   */
-  const double norm_value = vadjustment_->nvalue();            // 0..1 scroll position
-  const double scroll_value = norm_value * model_->size();    // fraction into count()
-  const int64 scroll_widget = MIN (model_->size() - 1, ifloor (scroll_value));
-  const double scroll_fraction = MIN (1.0, scroll_value - scroll_widget); // fraction into scroll_widget row
-
-  int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_widget);
-  {
-    Requisition requisition = lr_current->rowbox->requisition();
-    rowheight = requisition.height;
-  }
-
-  assert_return (rowheight > 0, scroll_widget);
-  const int64 rowlower = rowheight * (1 - scroll_fraction);       // fractional lower row pixels
-  const int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
-  *scrollrowy = listlower - rowlower;
-  *scrollrowupper = rowheight - rowlower;
-  *scrollrowlower = rowlower;
-  *listupperp = allocation().height - listlower;
-  *listheightp = allocation().height;
-  return scroll_widget;
-}
-
-void
-WidgetListImpl::resize_scroll () // model_->size() >= 1
-{
-  const int64 mcount = model_->size();
-
-  /* flag old rows */
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
-    it->second->allocated = 0; // FIXME
-
-  int64 current = min (mcount - 1, ifloor (vadjustment_->nvalue() * mcount)); // FIXME
-  ListRow *lr_current = fetch_row (current);
-
-  int64 current_y, currentupper, currentlower, listupper, listheight;
-  int64 current_FIXME = scroll_row_layout (lr_current, &current_y, &currentupper, &currentlower, &listupper, &listheight);
-  (void) current_FIXME;
-  RowMap rmap;
-
-  cache_row (lr_current); // FIXME
-
-  /* deactivate size-groups to avoid excessive resizes upon measure_row() */
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (false);
-
-  /* allocate current row */
-  int64 accu = 0;
-  {
-    ListRow *lr = fetch_row (current);
-    lr->rowbox->requisition(); accu = currentupper; // FIXME
-    rmap[current] = lr;
-    lr->allocated = true; // FIXME: remove field
-  }
-  int64 firstrow = current;
-  /* allocate rows above current */
-  for (int64 i = current - 1; i >= 0 && accu < listupper; i--)
-    {
-      ListRow *lr = fetch_row (i);
-      int64 rowheight = measure_row (lr);
-      firstrow = i;
-      rmap[firstrow] = lr;
-      lr->allocated = true;
-      accu += rowheight;
-    }
-  int64 firstrowoffset = MIN (0, listupper - accu);
-  /* allocate rows below current */
-  int64 lastrow = current;
-  accu += firstrowoffset + currentlower;
-  for (int64 i = current + 1; i < mcount && accu < listheight; i++)
-    {
-      ListRow *lr = fetch_row (i);
-      int64 rowheight = measure_row (lr);
-      lastrow = i;
-      rmap[lastrow] = lr;
-      lr->allocated = true;
-      accu += rowheight;
-    }
-  /* clean up remaining old rows */
-  for (RowMap::iterator it = row_map_.begin(); it != row_map_.end(); it++)
-    cache_row (it->second);
-  row_map_.swap (rmap);
-  /* layout new rows */
-  accu = firstrowoffset;
-  for (int64 ix = firstrow; ix <= lastrow; ix++)
-    {
-      ListRow *lr = row_map_[ix];
-      Allocation area = allocation();
-      area.height = measure_row (lr);
-      area.y = allocation().y + allocation().height - area.height - accu;
-      lr->area = area;
-      accu += area.height;
-    }
-  /* reactivate size-groups for proper size allocation */
-  for (uint i = 0; i < size_groups_.size(); i++)
-    size_groups_[i]->active (true);
-  /* remember state */
-  need_resize_scroll_ = 0;
-}
-
-void
-WidgetListImpl::resize_scroll_preserving () // model_->size() >= 1
-{
-  if (!block_invalidate_ && drawable() &&
-      !test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
-    {
-      block_invalidate_ = true;
-      resize_scroll();
-      requisition();
-      set_allocation (allocation());
-      block_invalidate_ = false;
-    }
-  else
-    resize_scroll();
-}
-
-void
-WidgetListImpl::cache_row (ListRow *lr)
-{
-  row_cache_.push_back (lr);
-  lr->rowbox->visible (false);
-  lr->allocated = 0;
-}
-
-static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
-
-ListRow*
-WidgetListImpl::create_row (uint64 nthrow,
-                          bool   with_size_groups)
-{
-  AnySeq row = model_->row (nthrow);
-  ListRow *lr = new ListRow();
-  for (uint i = 0; i < row.size(); i++)
-    {
-      WidgetImpl *widget = ref_sink (&Factory::create_ui_widget ("Label"));
-      lr->cols.push_back (widget);
-    }
-  IFDEBUG (dbg_created++);
-  lr->rowbox = &ref_sink (&Factory::create_ui_widget ("ListRow"))->interface<ContainerImpl>();
-  lr->rowbox->interface<HBox>().spacing (5); // FIXME
-
-  while (size_groups_.size() < lr->cols.size())
-    size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
-  if (with_size_groups)
-    for (uint i = 0; i < lr->cols.size(); i++)
-      size_groups_[i]->add_widget (*lr->cols[i]);
-
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->rowbox->add (lr->cols[i]);
-  add (lr->rowbox);
-  return lr;
-}
-
-void
-WidgetListImpl::fill_row (ListRow *lr,
-                        uint64   nthrow)
-{
-  AnySeq row = model_->row (nthrow);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", i < row.size() ? row[i].as_string() : "");
-  Ambience *ambience = lr->rowbox->interface<Ambience*>();
-  if (ambience)
-    ambience->background (nthrow & 1 ? "background-odd" : "background-even");
-  Frame *frame = lr->rowbox->interface<Frame*>();
-  if (frame)
-    frame->frame_type (nthrow == current_row_ ? FRAME_FOCUS : FRAME_NONE);
-  lr->rowbox->color_scheme (selected (nthrow) ? COLOR_SELECTED : COLOR_NORMAL);
-}
-
-ListRow*
-WidgetListImpl::lookup_row (uint64 row)
-{
-  RowMap::iterator ri = row_map_.find (row);
-  if (ri != row_map_.end())
-    return ri->second;
-  else
-    return NULL;
-}
-
-ListRow*
-WidgetListImpl::fetch_row (uint64 row)
-{
-  bool filled = false;
-  ListRow *lr;
-  RowMap::iterator ri = row_map_.find (row);
-  if (ri != row_map_.end())
-    {
-      lr = ri->second;
-      row_map_.erase (ri);
-      filled = true;
-      IFDEBUG (dbg_cached++);
-    }
-  else if (row_cache_.size())
-    {
-      lr = row_cache_.back();
-      row_cache_.pop_back();
-      IFDEBUG (dbg_refilled++);
-    }
-  else /* create row */
-    lr = create_row (row);
-  if (!filled)
-    fill_row (lr, row);
-  lr->rowbox->visible (true);
-  return lr;
-}
-
-uint64 // FIXME: signed
-WidgetListImpl::measure_row (ListRow *lr,
-                           uint64  *allocation_offset)
-{
-  if (allocation_offset)
-    {
-      Allocation carea = lr->rowbox->allocation();
-      *allocation_offset = carea.y;
-      if (carea.height < 0)
-        assert_unreached(); // FIXME
-      return carea.height;
-    }
-  else
-    {
-      Requisition requisition = lr->rowbox->requisition();
-      if (requisition.height < 0)
-        assert_unreached(); // FIXME
-      return requisition.height;
-    }
-}
-
-void
-WidgetListImpl::reset (ResetMode mode)
-{
-  // current_row_ = 18446744073709551615ULL;
-}
-
-bool
-WidgetListImpl::handle_event (const Event &event)
-{
-  bool handled = false;
-  if (!model_)
-    return handled;
-  uint64 saved_current_row = current_row_;
-  switch (event.type)
-    {
-      const EventKey *kevent;
-    case KEY_PRESS:
-      kevent = dynamic_cast<const EventKey*> (&event);
-      switch (kevent->key)
-        {
-        case KEY_Down:
-          if (current_row_ < uint64 (model_->size()))
-            current_row_ = MIN (int64 (current_row_) + 1, model_->size() - 1);
-          else
-            current_row_ = 0;
-          handled = true;
-          break;
-        case KEY_Up:
-          if (current_row_ < uint64 (model_->size()))
-            current_row_ = MAX (current_row_, 1) - 1;
-          else if (model_->size())
-            current_row_ = model_->size() - 1;
-          handled = true;
-          break;
-        case KEY_space:
-          if (current_row_ >= 0 && current_row_ < uint64 (model_->size()))
-            toggle_selected (current_row_);
-          handled = true;
-          break;
-        }
-    case KEY_RELEASE:
-    default:
-      break;
-    }
-  if (saved_current_row != current_row_)
-    {
-      ListRow *lr;
-      lr = lookup_row (saved_current_row);
-      if (lr)
-        {
-          Frame *frame = lr->rowbox->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_NONE);
-        }
-      lr = lookup_row (current_row_);
-      if (lr)
-        {
-          Frame *frame = lr->rowbox->interface<Frame*>();
-          if (frame)
-            frame->frame_type (FRAME_FOCUS);
-        }
-      double vscrollupper = row2position (current_row_, 0.0) / model_->size();
-      double vscrolllower = row2position (current_row_, 1.0) / model_->size();
-      double nvalue = CLAMP (vadjustment_->nvalue(), vscrolllower, vscrollupper);
-      if (nvalue != vadjustment_->nvalue())
-        vadjustment_->nvalue (nvalue);
-      if ((selection_mode() == SELECTION_SINGLE ||
-           selection_mode() == SELECTION_BROWSE) &&
-          selected (saved_current_row))
-        toggle_selected (current_row_);
-    }
-  return handled;
-}
-
-static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
 
 } // Rapicorn

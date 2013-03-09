@@ -41,9 +41,9 @@ test_application_xurl()
   bool success;
 
   struct Dummy : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
-  ListModelRelayImpl &lmr1 = Dummy::create_list_model_relay (1);
-  ListModelRelayImpl &lmr2 = Dummy::create_list_model_relay (2);
-  ListModelRelayImpl &lmr3 = Dummy::create_list_model_relay (3);
+  ListModelRelayImpl &lmr1 = Dummy::create_list_model_relay ();
+  ListModelRelayImpl &lmr2 = Dummy::create_list_model_relay ();
+  ListModelRelayImpl &lmr3 = Dummy::create_list_model_relay ();
   ListModelIface *lmi;
   String path;
 

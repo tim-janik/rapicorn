@@ -99,6 +99,7 @@ WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
 
 typedef map<String, const XmlNode*> GadgetDefinitionMap;
 static GadgetDefinitionMap gadget_definition_map;
+static vector<String>      local_namespace_list;
 static vector<String>      gadget_namespace_list;
 
 static const XmlNode*
@@ -115,6 +116,12 @@ gadget_definition_lookup (const String &widget_identifier, const XmlNode *contex
       if (it != gadget_definition_map.end())
         return it->second; // lookup in context namespace succeeded
     }
+  for (ssize_t i = local_namespace_list.size() - 1; i >= 0; i--)
+    {
+      it = gadget_definition_map.find (local_namespace_list[i] + ":" + widget_identifier);
+      if (it != gadget_definition_map.end())
+        return it->second; // namespace searchpath lookup succeeded
+    }
   for (ssize_t i = gadget_namespace_list.size() - 1; i >= 0; i--)
     {
       it = gadget_definition_map.find (gadget_namespace_list[i] + ":" + widget_identifier);
@@ -128,6 +135,8 @@ gadget_definition_lookup (const String &widget_identifier, const XmlNode *contex
       String context_domain = context_node->get_data (&xml_node_domain_key);
       printerr (" %s", context_domain.c_str());
     }
+  for (size_t i = 0; i < local_namespace_list.size(); i++)
+    printerr (" %s", local_namespace_list[i].c_str());
   for (size_t i = 0; i < gadget_namespace_list.size(); i++)
     printerr (" %s", gadget_namespace_list[i].c_str());
   printerr ("\n");
@@ -726,13 +735,39 @@ create_ui_widget (const String       &widget_identifier,
   return *widget;
 }
 
+WidgetImpl&
+create_ui_child (ContainerImpl &container, const String &widget_identifier, const ArgumentList &arguments, bool autoadd)
+{
+  // figure XML context
+  FactoryContext *fc = container.factory_context();
+  assert_return (fc != NULL, *(WidgetImpl*) NULL);
+  const XmlNode *xnode = fc->xnode;
+  const NodeData &ndata = NodeData::from_xml_node (const_cast<XmlNode&> (*xnode));
+  // create child within parent namespace
+  local_namespace_list.push_back (ndata.domain);
+  WidgetImpl &widget = create_ui_widget (widget_identifier, arguments);
+  local_namespace_list.pop_back();
+  // add to parent
+  if (autoadd)
+    container.add (widget);
+  return widget;
+}
+
 void
 create_ui_children (ContainerImpl     &container,
                     vector<WidgetImpl*> *children,
                     const String      &presuppose,
                     int64              max_children)
 {
-  return Builder::build_children (container, children, presuppose, max_children);
+  // figure XML context
+  FactoryContext *fc = container.factory_context();
+  assert_return (fc != NULL);
+  const XmlNode *xnode = fc->xnode;
+  const NodeData &ndata = NodeData::from_xml_node (const_cast<XmlNode&> (*xnode));
+  // create children within parent namespace
+  local_namespace_list.push_back (ndata.domain);
+  Builder::build_children (container, children, presuppose, max_children);
+  local_namespace_list.pop_back();
 }
 
 static void

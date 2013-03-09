@@ -4,12 +4,12 @@
 
   <!-- list construction -->
   <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
-  <tmpl:define id="ListAreaTable" inherit="Table" />
-  <tmpl:define id="ListRow" inherit="Ambience" child-container="ListRowCavity" hexpand="1"
-	       normal-background="background" lighting="none" shade="none">
-    <Frame hexpand="1" frame-type="none" tight-focus="true">
-      <HBox id="ListRowCavity"/>
-    </Frame>
+  <tmpl:define id="RapicornWidgetListRow" inherit="Rapicorn::Factory::WidgetListRow" child-container="ListRowCavity" hexpand="1">
+    <Ambience normal-background="background" lighting="none" shade="none">
+      <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
+	<HBox id="ListRowCavity"/>
+      </FocusFrame>
+    </Ambience>
   </tmpl:define>
 
   <!-- list area -->
@@ -29,6 +29,7 @@
 
   <!-- main dialog -->
   <tmpl:define id="main-dialog" inherit="Window">
+    <tmpl:argument id="list_model" default=""/>
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" >
@@ -39,7 +40,7 @@
 	  </HBox>
 
 	  <VBox spacing="5" homogeneous="0" >
-	    <widget-list hspread="1" vspread="1" model="`ListModel`"/>
+	    <widget-list hspread="1" vspread="1" model="`list_model`"/>
 	    <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	  </VBox>
 

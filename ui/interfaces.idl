@@ -141,9 +141,8 @@ flags enum LightingType {
 ///< Enum type for list widget selection behaviour.
 enum SelectionMode {
   SELECTION_NONE = 0,   ///< No selection possible
-  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
   SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
-  SELECTION_INTERVAL,   ///< Allow selection of multiple consecutive widgets
+  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
   SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
 };
 
@@ -189,6 +188,9 @@ enum WindowType {
   WINDOW_TYPE_DND,              ///< Window for dragged during DND operations
 };
 
+/// A sequence of booleans.
+sequence BoolSeq { bool bools; };
+
 /// A sequence of strings (in C++ of std::string).
 sequence StringSeq { String strings; };
 
@@ -227,20 +229,18 @@ record UpdateRequest {
   UpdateKind kind;              ///< Classifies the update request type.
   UpdateSpan rowspan;           ///< List of rows affected.
   UpdateSpan colspan;           ///< List of columns affected.
-  UpdateSpan lvlspan;           ///< List of levels affected.
   StringSeq  variables;         ///< Optional "key=UTF-8 string" pairs to provide auxillary information.
+  Any        value;             ///< Row or cell value newly inserted, possibly sequences thereof.
 };
 
 /**
  * The ListModel interface serves as a row-oriented data provider for list views.
- * For most model implementations, in-order read outs should be of complexity O(1),
+ * For many model implementations, in-order read outs should be of complexity O(1),
  * while random order read outs may be of O(log n) or even O(n).
  */
 interface ListModel {
-  int32       size    () = 0;		        ///< Obtain the number of rows provided by this model.
-  int32       columns () = 0;		        ///< Obtain the number of columns provided by this model.
-  AnySeq      row     (int32 n) = 0;            ///< Read-out row @a n. In-order read outs are generally fastest.
-  Any         cell    (int32 r, int32 c) = 0;   ///< Read-out the cell at row @a r and column @a c.
+  int32       count   () = 0;		        ///< Obtain the number of rows provided by this model.
+  Any         row     (int32 index) = 0;        ///< Read-out row at @a index. In-order read outs are generally fastest.
   signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
 };
 
@@ -251,7 +251,7 @@ interface ListModel {
  */
 interface ListModelRelay {
   ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
-  void        fill   (int32 first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
+  void        fill   (int32 first, AnySeq asq) = 0;   ///< Provide row data as requested by refill().
   signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
   void        update (UpdateRequest urequest) = 0;    ///< Issue model notification for row change, insertion and deletion.
 };
@@ -326,6 +326,22 @@ interface Drawable : Widget {
 };
 
 /**
+ * List widget is a widget that displays a list of widgets generated according to a data source.
+ */
+interface WidgetList {
+  String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+  SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
+                                                               "Single - allow a single selected row<br/>"
+                                                               "Browse - always select a single row<br/>"
+                                                               "Multiple - allow any row selection combinations<br/>"),
+                                        "rw");
+  void          set_selection  (BoolSeq selection) = 0;
+  BoolSeq       get_selection  () = 0;
+  void          select_range   (int32 first, int32 length) = 0;
+  void          unselect_range (int32 first, int32 length) = 0;
+};
+
+/**
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
@@ -382,7 +398,7 @@ interface Application {
   WindowList    list_windows    () = 0;
   /// @name Application Registries
   ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
-  ListModelRelay create_list_model_relay (int32 n_columns, String name = "") = 0;
+  ListModelRelay create_list_model_relay (String name = "") = 0;
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
   void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.

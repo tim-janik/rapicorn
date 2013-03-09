@@ -1173,17 +1173,19 @@ WidgetImpl::dump_private_data (TestStream &tstream)
 {
   tstream.dump ("requisition", string_printf ("(%.17g, %.17g)", requisition().width, requisition().height));
   tstream.dump ("allocation", allocation().string());
+  const Allocation *carea = clip_area();
+  tstream.dump ("clip_area", carea ? carea->string() : "");
 }
 
 void
 WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
-                        Adjustment         **adj1,
-                        AdjustmentSourceType adjsrc2,
-                        Adjustment         **adj2,
-                        AdjustmentSourceType adjsrc3,
-                        Adjustment         **adj3,
-                        AdjustmentSourceType adjsrc4,
-                        Adjustment         **adj4)
+                              Adjustment         **adj1,
+                              AdjustmentSourceType adjsrc2,
+                              Adjustment         **adj2,
+                              AdjustmentSourceType adjsrc3,
+                              Adjustment         **adj3,
+                              AdjustmentSourceType adjsrc4,
+                              Adjustment         **adj4)
 {
   for (WidgetImpl *pwidget = this->parent(); pwidget; pwidget = pwidget->parent())
     {

@@ -42,7 +42,6 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
-	listareaimpl.hh			\
 	scrollwidgetsimpl.hh		\
 	sinfeximpl.hh			\
 	tableimpl.hh			\
