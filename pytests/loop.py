@@ -7,25 +7,25 @@ PyRapicorn Loop Test
 
 import sys
 import Rapicorn1208 as Rapicorn  # Rapicorn modules are versioned
-import Rapicorn1208.main as Main # FIXME: provide by default?
+import Rapicorn1208.loop as Loop # FIXME: provide by default?
 
 # initialize application
 app = Rapicorn.app_init ("PyRapicorn-Loop-Test")  # unique application name
 
 def loop_tests():
   def testfunc(): pass
-  loop = Main.Loop()
-  ts = Main.TimeoutSource (testfunc, 0, 0.25)
-  assert ts.state != Main.DESTROYED
+  loop = Loop.Loop()
+  ts = Loop.TimeoutSource (testfunc, 0, 0.25)
+  assert ts.state != Loop.DESTROYED
   loop += ts
-  assert ts.state != Main.DESTROYED
+  assert ts.state != Loop.DESTROYED
   loop -= ts
-  assert ts.state == Main.DESTROYED
-  src = Main.IdleSource (testfunc)
+  assert ts.state == Loop.DESTROYED
+  src = Loop.IdleSource (testfunc)
   loop += src
-  assert src.state != Main.DESTROYED
+  assert src.state != Loop.DESTROYED
   loop -= testfunc
-  assert src.state == Main.DESTROYED
+  assert src.state == Loop.DESTROYED
 
 testname = "  Loop-Test:"
 print testname,

@@ -75,5 +75,5 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   # object references (from python) are not yet implemented
   print " " * max (0, 75 - len (testname)), "OK"
 
-# main loop to process window events (exits when all windows are gone)
+# event loop to process window events (exits when all windows are gone)
 app.loop()
