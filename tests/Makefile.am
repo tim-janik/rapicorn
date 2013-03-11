@@ -5,7 +5,7 @@ INCLUDES   += -I$(top_srcdir)
 DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 
-noinst_PROGRAMS  = $(EXAMPLES)
+noinst_PROGRAMS  = benchaida $(EXAMPLES)
 noinst_DATA      =
 XML_FILES        =
 EXAMPLES         =
@@ -15,6 +15,10 @@ LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LI
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11TEST_SERVER) && rrun() { $(RAPIDRUN) --fatal-warnings "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+
+# == benchaida ==
+benchaida_SOURCES  = benchaida.cc
+benchaida_LDADD    = $(LDADDS)
 
 # === programs ===
 EXAMPLES        += fileview

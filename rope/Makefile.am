@@ -11,11 +11,6 @@ AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
-# === CxxRapicorn ===
-noinst_PROGRAMS      = cxxrapicorn
-cxxrapicorn_SOURCES  = cxx-rope.cc
-cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-
 # === Cxxrapicorn ===
 cxxrapicorn_cc_sources = py-rope.cc
 EXTRA_DIST           += py-rope.hh
