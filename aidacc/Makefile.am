@@ -72,14 +72,14 @@ backendfiles    = PrettyDump.py TypeMap.py CxxStub.py TmplFiles.py PyStub.py
 noinst_SCRIPTS += $(backendfiles)
 
 # == Templates & Copy-Paste Files ==
-template_files = PyStub-glue.py
+template_files = PyStub-glue.py PyStub-glue.cc
 EXTRA_DIST += $(template_files)
-TmplFiles.py: Makefile.am
+TmplFiles.py: Makefile.am $(template_files)
 	$(AM_V_GEN)
 	$(Q) (cd $(srcdir) && echo "### == $@ - Generated File == ###" \
 	&& for file in $(template_files) ; \
 	    do echo -n "$$file" | sed 's/[^a-zA-Z0-9_]/_/g' && echo ' = """' \
-	    && sed 's/"""/\"""/g' $$file && echo '"""' || exit $? ; done ) > xgen-$@
+	    && sed 's/\\/\\\\/g; s/"""/\\"""/g' $$file && echo '"""' || exit $? ; done ) > xgen-$@
 	$(Q) mv xgen-$@ $@
 CLEANFILES += TmplFiles.py
 
