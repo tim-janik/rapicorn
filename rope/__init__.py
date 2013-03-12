@@ -39,8 +39,8 @@ def app_init (application_name = None):
   # setup global Application
   app = Application (_PY._BaseClass_._AidaID_ (aida_id))
   def iterate (self, may_block, may_dispatch):
-    if hasattr (self, "event_loop"):
-      loop = self.event_loop
+    if hasattr (self, "__aida_event_loop__"):
+      loop = self.__aida_event_loop__
       dloop = None
     else:
       dloop = Loop.Loop()
@@ -52,10 +52,11 @@ def app_init (application_name = None):
     return needs_dispatch
   app.__class__.iterate = iterate # extend for event loop integration
   def loop (self):
-    self.event_loop = Loop.Loop()
-    self.event_loop += Loop.RapicornSource()
-    exit_status = self.event_loop.loop()
-    del self.event_loop
+    event_loop = Loop.Loop()
+    event_loop += Loop.RapicornSource()
+    self.__dict__['__aida_event_loop__'] = event_loop
+    exit_status = self.__aida_event_loop__.loop()
+    del self.__dict__['__aida_event_loop__']
     return exit_status
   app.__class__.loop = loop # extend for event loop integration
   Loop.app = app # integrate event loop with app

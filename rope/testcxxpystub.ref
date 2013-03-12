@@ -340,11 +340,11 @@ aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
   item = PyDict_GetItemString (dictR, "enum_field"); ERRORif (!item);
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface1"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface2"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface3"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyDict_GetItemString (dictR, "any1"); ERRORif (!item);
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
@@ -671,7 +671,7 @@ aida_pyInterfaceSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuff
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
-    fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+    fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   }
   success = true;
  error:
@@ -1113,7 +1113,7 @@ __AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void (PyObject *pys
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
   fb.add_object (object_orbid);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1132,7 +1132,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__simple_method_float64 (PyObject *py
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
   fb.add_object (object_orbid);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1159,7 +1159,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject 
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1188,7 +1188,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1217,7 +1217,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyO
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1248,7 +1248,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (Py
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
@@ -1279,7 +1279,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 6), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 6) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // b
@@ -1318,13 +1318,13 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests_
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // ba1
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // ba2
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1349,7 +1349,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__void_method_void (PyObject *pyself,
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
   fb.add_object (object_orbid);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1368,7 +1368,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2out_String (PyObject *pyse
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
   fb.add_object (object_orbid);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1395,7 +1395,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String (PyObject *
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // command
@@ -1429,7 +1429,7 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyse
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -1481,7 +1481,7 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceT
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -1504,7 +1504,7 @@ __AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32 (PyObject 
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // i
@@ -1525,7 +1525,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void (PyObj
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
   fb.add_object (object_orbid);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1544,7 +1544,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1575,7 +1575,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints32_int32_int
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1606,7 +1606,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints64_int64_int
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1637,7 +1637,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_floats_float64_f
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1668,7 +1668,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_string_String_St
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1699,7 +1699,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTe
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1730,7 +1730,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_record_Interface
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1761,7 +1761,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_sequence_Interfa
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1792,13 +1792,13 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_interface_Interf
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1823,7 +1823,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
@@ -1858,13 +1858,13 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_Inter
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // iface0
-  fb.add_object (PyAttr_As_uint64 (item, "__AIDA_pyobject__")); ERRORifpy();
+  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1902,7 +1902,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void (PyObjec
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -1950,7 +1950,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObjec
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -1998,7 +1998,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32 (PyObj
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2046,7 +2046,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_result_int64 (PyObj
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2094,7 +2094,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_result_float64 (P
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2142,7 +2142,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_result_String (PyO
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2190,7 +2190,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTest
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2238,7 +2238,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTe
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2286,7 +2286,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_result_Interface
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2321,7 +2321,7 @@ __AIDA_pyemit2__SignalTestInterface__interface_result (const Rapicorn::Aida::Fie
     (*rb).add_object (NULL);
     goto error;
   } else {
-    (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
+    (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);
   }
  error:
   Py_XDECREF (result);
@@ -2334,7 +2334,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_result_Interfac
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2384,7 +2384,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_result_Any (PyObject 
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2419,7 +2419,7 @@ __AIDA_pyemit2__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuf
     (*rb).add_object (NULL);
     goto error;
   } else {
-    (*rb).add_object (PyAttr_As_uint64 (result, "__AIDA_pyobject__")); ERROR_callable_ifpy (callable);
+    (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);
   }
  error:
   Py_XDECREF (result);
@@ -2432,7 +2432,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTest
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2468,7 +2468,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2509,7 +2509,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObj
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2550,7 +2550,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_arg_void_int32 (PyO
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2591,7 +2591,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int64_arg_void_int64 (PyO
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2632,7 +2632,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__float64_arg_void_float64 
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2673,7 +2673,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__string_arg_void_String (P
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2714,7 +2714,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTe
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2755,7 +2755,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__record_arg_void_Interface
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2796,7 +2796,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__sequence_arg_void_Interfa
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2837,7 +2837,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interf
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2878,7 +2878,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any (PyObjec
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2919,7 +2919,7 @@ __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceT
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -2970,7 +2970,7 @@ __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Inte
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -3018,7 +3018,7 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool (PyObject *p
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -3054,7 +3054,7 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself,
   while (0) { error: return NULL; }
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64_t result = 0;
   if (callable == Py_None) {
@@ -3077,7 +3077,7 @@ __AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObjec
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // f
@@ -3106,7 +3106,7 @@ __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 3), &fb = *fm, *fr = NULL;
   if (PyTuple_Size (pyargs) != 1 + 3) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__AIDA_pyobject__"); ERRORifpy();
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
   fb.add_object (object_orbid);
   item = PyTuple_GET_ITEM (pyargs, 1); // qr
