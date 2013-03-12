@@ -9,9 +9,6 @@ class _BaseClass_ (object):
   def __init__ (self, _aida_id):
     assert isinstance (_aida_id, _BaseClass_._AidaID_)
     self.__AIDA_pyobject__ = _aida_id.id
-class __Signal__:
-  def __init__ (self, signame):
-    self.name = signame
 
 def __AIDA_pymodule__init_once (cpy_module):
   del globals()['__AIDA_pymodule__init_once'] # run once only

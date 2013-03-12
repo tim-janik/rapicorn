@@ -99,7 +99,6 @@ class Generator:
     return s
   def generate_signal_pyimpl (self, ftype, ctype):
     s = ''
-    s += 'def __sig_%s__ (self): pass # default handler\n' % ftype.name
     s += 'def sig_%s_connect (self, func):\n' % ftype.name
     s += '  return _CPY._AIDA_pymarshal__%s (self, func, 0)\n' % ftype.ident_digest()
     s += 'def sig_%s_disconnect (self, connection_id):\n' % ftype.name
@@ -177,8 +176,6 @@ class Generator:
     s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
     s += '  def __init__ (self, _aida_id):\n'
     s += '    super (%s, self).__init__ (_aida_id)\n' % type_info.name
-    for sg in type_info.signals:
-      s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
     for m in type_info.methods:
       s += reindent ('  ', self.generate_method_caller_pyimpl (m)) + '\n'
     for sg in type_info.signals:
