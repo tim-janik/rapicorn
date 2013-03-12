@@ -51,34 +51,7 @@ class Generator:
     s = ''
     s += type.name + ' ' + ident
     return s
-  def generate_prop (self, fident, ftype):
-    v = 'virtual '
-    # getter
-    s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
-    # setter
-    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
-    return s
-  def generate_proplist (self, ctype):
-    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
-  def generate_field (self, fident, ftype):
-    return '  ' + self.format_to_tab (ftype.name) + fident + ';\n'
-  def generate_signal_name (self, ftype, ctype):
-    return 'Signal_%s' % ftype.name
-  def generate_sigdef (self, ftype, ctype):
-    signame = self.generate_signal_name (ftype, ctype)
-    s = ''
-    s += '  typedef Signal<%s, %s (' % (ctype.name, ftype.rtype.name)
-    l = []
-    for a in ftype.args:
-      l += [ self.format_arg (*a) ]
-    s += ', '.join (l)
-    s += ')'
-    if ftype.rtype.collector != 'void':
-      s += ', Collector' + ftype.rtype.collector.capitalize()
-      s += '<' + ftype.rtype.name + '> '
-    s += '> ' + signame + ';\n'
-    return s
-  def zero_value (self, type):
+  def zero_value_pyimpl (self, type):
     return { Decls.BOOL      : '0',
              Decls.INT32     : '0',
              Decls.INT64     : '0',
@@ -90,17 +63,17 @@ class Generator:
              Decls.INTERFACE : "None",
              Decls.ANY       : '()',
            }[type.storage]
-  def default_value (self, type, vdefault):
+  def default_value_pyimpl (self, type, vdefault):
     if type.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
       return vdefault # number litrals or string
-    return self.zero_value (type) # zero is the only default for these types
+    return self.zero_value_pyimpl (type) # zero is the only default for these types
   def generate_record_pyimpl (self, type_info):
     s = ''
     s += 'class %s (_BaseRecord_):\n' % type_info.name
     s += '  def __init__ (self, **entries):\n'
     s += '    defaults = {'
     for fl in type_info.fields:
-      s += " '%s' : %s, " % (fl[0], self.zero_value (fl[1]))
+      s += " '%s' : %s, " % (fl[0], self.zero_value_pyimpl (fl[1]))
     s += '}\n'
     s += '    self.__dict__.update (defaults)\n'
     s += '    _BaseRecord_.__init__ (self, **entries)\n'
@@ -160,7 +133,7 @@ class Generator:
     vals = [ 'self' ]
     for a in m.args:
       if a[2] != None:
-        args += [ '%s = %s' % (a[0], self.default_value (a[1], a[2])) ]
+        args += [ '%s = %s' % (a[0], self.default_value_pyimpl (a[1], a[2])) ]
       else:
         args += [ a[0] ]
       vals += [ a[0] ]
