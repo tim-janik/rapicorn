@@ -1,224 +1,40 @@
-#!/usr/bin/env python
-# Rapicorn-CxxPyStub                                           -*-mode:python-*-
-# Copyright (C) 2009-2010 Tim Janik
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Rapicorn-CxxPyStub - C++-Python glue generator
+# Licensed GNU GPLv3 or later: http://www.gnu.org/licenses/gpl.html
+"""AidaPyStub - Aida Python Code Generator
 
-More details at http://www.rapicorn.org
+More details at http://www.rapicorn.org/
 """
-import Decls, GenUtils, re
+import Decls, GenUtils, TmplFiles, re
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
+def strcquote (string):
+  result = ''
+  for c in string:
+    oc = ord (c)
+    ec = { 92 : r'\\',
+            7 : r'\a',
+            8 : r'\b',
+            9 : r'\t',
+           10 : r'\n',
+           11 : r'\v',
+           12 : r'\f',
+           13 : r'\r',
+           12 : r'\f'
+         }.get (oc, '')
+    if ec:
+      result += ec
+      continue
+    if oc <= 31 or oc >= 127:
+      result += '\\' + oct (oc)[-3:]
+    elif c == '"':
+      result += r'\"'
+    else:
+      result += c
+  return '"' + result + '"'
 
 # exception class:
 # const char *exclass = PyExceptionClass_Check (t) ? PyExceptionClass_Name (t) : "<unknown>";
 # exclass = strrchr (exclass, '.') ? strrchr (exclass, '.') + 1 : exclass;
-
-base_code = r"""
-#include <Python.h> // must be included first to configure std headers
-#include <string>
-
-#include <rapicorn.hh>
-
-#define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
-#define GOTO_ERROR()    goto error
-#define ERRORif(cond)   if (cond) goto error
-#define ERRORifpy()     if (PyErr_Occurred()) goto error
-#define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
-#define ERRORifnotret(fr) do { if (AIDA_UNLIKELY (!fr) || \
-                                   AIDA_UNLIKELY (!Rapicorn::Aida::msgid_is_result (Rapicorn::Aida::MessageId (fr->first_id())))) { \
-                                 PyErr_Format_from_AIDA_error (fr); \
-                                 goto error; } } while (0)
-#define ERROR_callable_ifpy(callable) do { if (PyErr_Occurred()) { \
-  PyObject *t, *v, *tb; \
-  PyErr_Fetch (&t, &v, &tb); \
-  PyObject *sc = PyObject_Repr (callable), *sv = PyObject_Str (v); \
-  PyErr_Format (PyExceptionClass_Check (t) ? t : PyExc_RuntimeError, \
-                "in return from %s: %s", PyString_AsString (sc), PyString_AsString (sv)); \
-  Py_XDECREF (sc); Py_XDECREF (sv); Py_XDECREF (t); Py_XDECREF (v); Py_XDECREF (tb); \
-  goto error; \
-} } while (0)
-
-#ifndef __AIDA_PYMODULE__OBJECT
-#define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
-#endif
-
-// using Rapicorn::Aida::uint64_t;
-using ::uint64_t;
-using Rapicorn::Aida::FieldBuffer;
-using Rapicorn::Aida::FieldReader;
-
-static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
-static Rapicorn::Init __AIDA_init__client_connection ([]() {
-  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection();
-});
-
-static PyObject*
-PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
-{
-  if (!fr)
-    return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
-  FieldReader frr (*fr);
-  const uint64_t msgid AIDA_UNUSED = frr.pop_int64();
-  frr.skip(); frr.skip(); // hashhigh hashlow
-#if 0
-  if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
-    {
-      std::string msg = frr.pop_string(), domain = frr.pop_string();
-      if (domain.size()) domain += ": ";
-      msg = domain + msg;
-      return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
-    }
-#endif
-  return PyErr_Format (PyExc_RuntimeError, "Aida: garbage return: 0x%s", fr->first_id_str().c_str());
-}
-
-static inline PY_LONG_LONG
-PyIntLong_AsLongLong (PyObject *intlong)
-{
-  if (PyInt_Check (intlong))
-    return PyInt_AS_LONG (intlong);
-  else
-    return PyLong_AsLongLong (intlong);
-}
-
-static inline std::string
-PyString_As_std_string (PyObject *pystr)
-{
-  char *s = NULL;
-  Py_ssize_t len = 0;
-  PyString_AsStringAndSize (pystr, &s, &len);
-  return std::string (s, len);
-}
-
-static inline Rapicorn::Aida::uint64_t
-PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
-{
-  PyObject *pyo = PyObject_GetAttrString (pyobj, attr_name);
-  Rapicorn::Aida::uint64_t uval = pyo ? PyLong_AsUnsignedLongLong (pyo) : 0;
-  Py_XDECREF (pyo);
-  return uval;
-}
-
-static inline PyObject*
-PyString_From_std_string (const std::string &s)
-{
-  return PyString_FromStringAndSize (s.data(), s.size());
-}
-
-static inline int
-PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
-{
-  int r = PyDict_SetItemString (pydict, key, *pyitemp);
-  if (r >= 0)
-    {
-      Py_DECREF (*pyitemp);
-      *pyitemp = NULL;
-    }
-  return r;
-}
-
-static void
-__AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
-{
-  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
-  else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
-  else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
-  else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
-  else if (PyLong_Check (pyvalue))      any <<= PyLong_AsLongLong (pyvalue);
-  else if (PyFloat_Check (pyvalue))     any <<= PyFloat_AsDouble (pyvalue);
-  else {
-    std::string msg =
-      Rapicorn::string_printf ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
-    PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
-  }
-}
-
-static PyObject*
-__AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
-{
-  using namespace Rapicorn::Aida;
-  switch (any.kind())
-    {
-    case UNTYPED:                               return None_INCREF();
-    case BOOL:          { bool b; any >>= b;    return PyBool_FromLong (b); }
-    case ENUM:  // chain
-    case INT32: // chain
-    case INT64:                                 return PyLong_FromLongLong (any.as_int());
-    case FLOAT64:                               return PyFloat_FromDouble (any.as_float());
-    case STRING:                                return PyString_From_std_string (any.as_string());
-    case SEQUENCE:      break;
-    case RECORD:        break;
-    case INSTANCE:      break;
-    case ANY:           break;
-    default:            break;
-    }
-  std::string msg =
-    Rapicorn::string_printf ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
-  PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
-  return NULL;
-}
-
-static PyObject *__AIDA_pyfactory__global_callback = NULL;
-
-static PyObject*
-__AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
-{
-  if (__AIDA_pyfactory__global_callback)
-    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
-  if (PyTuple_Size (pyargs) != 1)
-    return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
-  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);
-  if (!PyCallable_Check (item))
-    return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
-  Py_INCREF (item);
-  __AIDA_pyfactory__global_callback = item;
-  return None_INCREF();
-}
-
-static inline PyObject*
-__AIDA_pyfactory__create_from_orbid (uint64_t orbid)
-{
-  PyObject *result = NULL, *pyid;
-  std::string type_name, fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
-  if (fqtn.find ("Rapicorn::") != 0)
-    goto unimplemented;
-  type_name = fqtn.substr (10);
-  if (type_name.find (':') != std::string::npos)
-    goto unimplemented;
-  if (!__AIDA_pyfactory__global_callback)
-    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
-  pyid = PyLong_FromUnsignedLongLong (orbid);
-  if (pyid)
-    {
-      PyObject *tuple = PyTuple_New (2);
-      if (tuple)
-        {
-          PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name.c_str()));
-          PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
-          result = PyObject_Call (__AIDA_pyfactory__global_callback, tuple, NULL);
-          Py_DECREF (tuple);
-        }
-      Py_XDECREF (pyid);
-    }
-  return result;
- unimplemented:
-  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", fqtn.c_str());
-}
-"""
 
 class Generator:
   def __init__ (self):
@@ -231,7 +47,162 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def generate_enum_impl (self, type_info):
+  def format_arg (self, ident, type):
+    s = ''
+    s += type.name + ' ' + ident
+    return s
+  def zero_value_pyimpl (self, type):
+    return { Decls.BOOL      : '0',
+             Decls.INT32     : '0',
+             Decls.INT64     : '0',
+             Decls.FLOAT64   : '0',
+             Decls.ENUM      : '0',
+             Decls.RECORD    : 'None',
+             Decls.SEQUENCE  : '()',
+             Decls.STRING    : "''",
+             Decls.INTERFACE : "None",
+             Decls.ANY       : '()',
+           }[type.storage]
+  def default_value_pyimpl (self, type, vdefault):
+    if type.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
+      return vdefault # number litrals or string
+    return self.zero_value_pyimpl (type) # zero is the only default for these types
+  def generate_record_pyimpl (self, type_info):
+    s = ''
+    s += 'class %s (_BaseRecord_):\n' % type_info.name
+    s += '  def __init__ (self, **entries):\n'
+    s += '    defaults = {'
+    for fl in type_info.fields:
+      s += " '%s' : %s, " % (fl[0], self.zero_value_pyimpl (fl[1]))
+    s += '}\n'
+    s += '    self.__dict__.update (defaults)\n'
+    s += '    _BaseRecord_.__init__ (self, **entries)\n'
+    s += '  @staticmethod\n'
+    s += '  def create (args):\n'
+    s += '    self = %s()\n' % type_info.name
+    s += '    if hasattr (args, "__iter__") and len (args) == %d:\n' % len (type_info.fields)
+    n = 0
+    for fl in type_info.fields:
+      s += '      self.%s = args[%d]\n' % (fl[0], n)
+      s += reindent ('      #', self.generate_to_proto_pyimpl ('self.' + fl[0], fl[1], 'args[%d]' % n)) + '\n'
+      n += 1
+    s += '    elif isinstance (args, dict):\n'
+    for fl in type_info.fields:
+      s += '      self.%s = args["%s"]\n' % (fl[0], fl[0])
+    s += '    else: raise RuntimeError ("invalid or missing record initializers")\n'
+    s += '    return self\n'
+    s += '  @staticmethod\n'
+    s += '  def to_proto (self, _aida_rec):\n' # FIXME: broken, staticmethod with self?
+    for a in type_info.fields:
+      s += '    _aida_field = _aida_rp.fields.add()\n'
+      s += reindent ('  ', self.generate_to_proto_pyimpl ('_aida_field', a[1], 'self.' + a[0])) + '\n'
+    return s
+  def generate_signal_pyimpl (self, ftype, ctype):
+    s = ''
+    s += 'def __sig_%s__ (self): pass # default handler\n' % ftype.name
+    s += 'def sig_%s_connect (self, func):\n' % ftype.name
+    s += '  return _CPY._AIDA_pymarshal__%s (self, func, 0)\n' % ftype.ident_digest()
+    s += 'def sig_%s_disconnect (self, connection_id):\n' % ftype.name
+    s += '  return _CPY._AIDA_pymarshal__%s (self, None, connection_id)\n' % ftype.ident_digest()
+    return s
+  def generate_to_proto_pyimpl (self, argname, type_info, valname, onerror = 'return false'):
+    s = ''
+    if type_info.storage == Decls.VOID:
+      pass
+    elif type_info.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.ENUM):
+      s += '  %s.vint64 = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.FLOAT64:
+      s += '  %s.vdouble = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.STRING:
+      s += '  %s.vstring = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.INTERFACE:
+      s += '  %s.vstring (Instance2StringCast (%s))\n' % (argname, valname)
+    elif type_info.storage == Decls.RECORD:
+      s += '  %s.to_proto (%s.vrec, %s)\n' % (type_info.name, argname, valname)
+    elif type_info.storage == Decls.SEQUENCE:
+      s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
+    elif type_info.storage == Decls.ANY:
+      s += '  # FIXME: support Aida::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
+    else: # FUNC
+      raise RuntimeError ("Unexpected storage type: " + type_info.storage)
+    return s
+  def generate_method_caller_pyimpl (self, m):
+    s = ''
+    s += 'def %s (' % m.name
+    args = [ 'self' ]
+    vals = [ 'self' ]
+    for a in m.args:
+      if a[2] != None:
+        args += [ '%s = %s' % (a[0], self.default_value_pyimpl (a[1], a[2])) ]
+      else:
+        args += [ a[0] ]
+      vals += [ a[0] ]
+    s += ', '.join (args)
+    if m.rtype.name == 'void':
+      s += '): # one way\n'
+    else:
+      s += '): # %s\n' % m.rtype.name
+    s += '  ___ret = _CPY._AIDA_pycall__%s (' % m.ident_digest()
+    s += ', '.join (vals)
+    s += ')\n'
+    s += '  return ___ret'
+    return s
+  def inherit_reduce (self, type_list):
+    def hasancestor (child, parent):
+      if child == parent:
+        return True
+      for childpre in child.prerequisites:
+        if hasancestor (childpre, parent):
+          return True
+    reduced = []
+    while type_list:
+      p = type_list.pop()
+      skip = 0
+      for c in type_list + reduced:
+        if hasancestor (c, p):
+          skip = 1
+          break
+      if not skip:
+        reduced = [ p ] + reduced
+    return reduced
+  def generate_class_pyimpl (self, type_info):
+    s = ''
+    l = []
+    for pr in type_info.prerequisites:
+      l += [ pr ]
+    l = self.inherit_reduce (l)
+    l = [pr.name for pr in l] # types -> names
+    if not l:
+      l = [ '_BaseClass_' ]
+    s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
+    s += '  def __init__ (self, _aida_id):\n'
+    s += '    super (%s, self).__init__ (_aida_id)\n' % type_info.name
+    for sg in type_info.signals:
+      s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
+    for m in type_info.methods:
+      s += reindent ('  ', self.generate_method_caller_pyimpl (m)) + '\n'
+    for sg in type_info.signals:
+      s += reindent ('  ', self.generate_signal_pyimpl (sg, type_info)) + '\n'
+    return s
+  def generate_pyimpl_types (self, implementation_types):
+    s = '### --- Generated by Rapicorn-PyStub --- ###\n'
+    s += TmplFiles.PyStub_glue_py + '\n'
+    self.tabwidth (16)
+    # collect impl types
+    types = []
+    for tp in implementation_types:
+      if tp.isimpl:
+        types += [ tp ]
+    # generate types
+    for tp in types:
+      if tp.is_forward: # or tp.typedef_origin
+        pass
+      elif tp.storage == Decls.RECORD:
+        s += self.generate_record_pyimpl (tp) + '\n'
+      elif tp.storage == Decls.INTERFACE:
+        s += self.generate_class_pyimpl (tp) + '\n'
+    return s
+  def generate_enum_cxximpl (self, type_info):
     s = ''
     l = []
     s += 'enum %s {\n' % type_info.name
@@ -243,7 +214,7 @@ class Generator:
       s += '\n'
     s += '};'
     return s
-  def generate_proto_add_0 (self, fb, type):
+  def generate_add_0_cxximpl (self, fb, type):
     s = ''
     if type.storage == Decls.BOOL:
       s += '  %s.add_bool (0);\n' % fb
@@ -268,7 +239,7 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
-  def generate_proto_add_py (self, fb, type, var, excheck = "ERRORifpy()"):
+  def generate_add_field_cxximpl (self, fb, type, var, excheck = "ERRORifpy()"):
     s = ''
     if type.storage == Decls.BOOL:
       s += '  %s.add_bool (PyIntLong_AsLongLong (%s)); %s;\n' % (fb, var, excheck)
@@ -293,7 +264,7 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
-  def generate_proto_pop_py (self, fbr, type, var):
+  def generate_pop_field_cxximpl (self, fbr, type, var):
     s = ''
     if type.storage == Decls.BOOL:
       s += '  %s = PyLong_FromLongLong (%s.pop_bool()); ERRORifpy ();\n' % (var, fbr)
@@ -316,7 +287,7 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
-  def generate_record_impl (self, type_info):
+  def generate_record_cxximpl (self, type_info):
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
@@ -328,7 +299,7 @@ class Generator:
     s += '  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);\n'
     for fl in type_info.fields:
       s += '  item = PyDict_GetItemString (dictR, "%s"); ERRORif (!item);\n' % (fl[0])
-      s += self.generate_proto_add_py ('fb', fl[1], 'item')
+      s += self.generate_add_field_cxximpl ('fb', fl[1], 'item')
     s += '  success = true;\n'
     s += ' error:\n'
     s += '  Py_XDECREF (dictR);\n'
@@ -345,7 +316,7 @@ class Generator:
     s += '  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
     for fl in type_info.fields:
-      s += self.generate_proto_pop_py ('fbr', fl[1], 'pyfoR')
+      s += self.generate_pop_field_cxximpl ('fbr', fl[1], 'pyfoR')
       s += '  if (PyDict_Take_Item (dictR, "%s", &pyfoR) < 0) goto error;\n' % fl[0]
     s += '  pyret = pyinstR;\n'
     s += ' error:\n'
@@ -357,7 +328,7 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_sequence_impl (self, type_info):
+  def generate_sequence_cxximpl (self, type_info):
     s = ''
     el = type_info.elements
     # sequence proto add
@@ -370,7 +341,7 @@ class Generator:
     s += '  bool success = false;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);\n'
-    s += reindent ('  ', self.generate_proto_add_py ('fb', el[1], 'item')) + '\n'
+    s += reindent ('  ', self.generate_add_field_cxximpl ('fb', el[1], 'item')) + '\n'
     s += '  }\n'
     s += '  success = true;\n'
     s += ' error:\n'
@@ -386,7 +357,7 @@ class Generator:
     s += '  const size_t len = fbr.remaining();\n'
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_proto_pop_py ('fbr', el[1], 'pyfoR')) + '\n'
+    s += reindent ('  ', self.generate_pop_field_cxximpl ('fbr', el[1], 'pyfoR')) + '\n'
     s += '    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;\n'
     s += '  }\n'
     s += '  pyret = listR;\n'
@@ -397,7 +368,7 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_client_signal_def (self, class_info, stype, mdefs):
+  def generate_pyemit_cxximpl (self, class_info, stype, mdefs):
     digest, async = self.method_digest (stype), stype.rtype.storage != Decls.VOID
     mdefs += [ '{ "_AIDA_pymarshal__%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (stype.ident_digest(), stype.ident_digest()) ]
@@ -419,7 +390,7 @@ class Generator:
         s += '  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();\n'
       arg_counter = 0
       for a in stype.args:
-        s += self.generate_proto_pop_py ('fbr', a[1], 'item')
+        s += self.generate_pop_field_cxximpl ('fbr', a[1], 'item')
         s += '  PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
         arg_counter += 1
     s += '  if (PyErr_Occurred()) goto error;\n'
@@ -429,10 +400,10 @@ class Generator:
       s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digest
       s += '  *rb <<= emit_result_id;\n'
       s += '  if (PyErr_Occurred()) {\n'
-      s += '  ' + self.generate_proto_add_0 ('(*rb)', stype.rtype)
+      s += '  ' + self.generate_add_0_cxximpl ('(*rb)', stype.rtype)
       s += '    goto error;\n'
       s += '  } else {\n'
-      s += '  ' + self.generate_proto_add_py ('(*rb)', stype.rtype, 'result', "ERROR_callable_ifpy (callable)")
+      s += '  ' + self.generate_add_field_cxximpl ('(*rb)', stype.rtype, 'result', "ERROR_callable_ifpy (callable)")
       s += '  }\n'
     s += ' error:\n'
     s += '  Py_XDECREF (result);\n'
@@ -464,7 +435,7 @@ class Generator:
   def method_digest (self, mtype):
     digest = mtype.type_hash()
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
-  def generate_pycall_wrapper (self, class_info, mtype, mdefs):
+  def generate_pycall_cxximpl (self, class_info, mtype, mdefs):
     s = ''
     mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
@@ -489,7 +460,7 @@ class Generator:
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
-      s += self.generate_proto_add_py ('fb', ma[1], 'item')
+      s += self.generate_add_field_cxximpl ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
     s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb\n'
@@ -502,7 +473,7 @@ class Generator:
       s += '    Rapicorn::Aida::FieldReader frr (*fr);\n'
       s += '    frr.skip_header();\n'
       s += '    if (frr.remaining() == 1) {\n'
-      s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
+      s += reindent ('      ', self.generate_pop_field_cxximpl ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'
       s += '    delete fr; fr = NULL;\n'
       s += '  }\n'
@@ -513,13 +484,13 @@ class Generator:
     s += '  return NULL;\n'
     s += '}\n'
     return s
-  def type2cpp (self, typename):
+  def type2cxx (self, typename):
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
     return typename
-  def generate_impl_types (self, implementation_types):
+  def generate_cxximpl_types (self, implementation_types):
     s = '/* --- Generated by Rapicorn-CxxPyStub --- */\n'
-    s += base_code + '\n'
+    s += TmplFiles.PyStub_glue_cc + '\n'
     self.tabwidth (16)
     # collect impl types
     types = []
@@ -529,19 +500,19 @@ class Generator:
     # generate prototypes
     for tp in types:
       if tp.typedef_origin or tp.is_forward:
-        pass # s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin.name), tp.name)
+        pass # s += 'typedef %s %s;\n' % (self.type2cxx (tp.typedef_origin.name), tp.name)
       elif tp.storage == Decls.RECORD:
         s += 'struct %s;\n' % tp.name
       elif tp.storage == Decls.ENUM:
-        s += self.generate_enum_impl (tp) + '\n'
+        s += self.generate_enum_cxximpl (tp) + '\n'
     # generate types
     for tp in types:
       if tp.typedef_origin or tp.is_forward:
         pass
       elif tp.storage == Decls.RECORD:
-        s += self.generate_record_impl (tp) + '\n'
+        s += self.generate_record_cxximpl (tp) + '\n'
       elif tp.storage == Decls.SEQUENCE:
-        s += self.generate_sequence_impl (tp) + '\n'
+        s += self.generate_sequence_cxximpl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += ''
     # generate accessors
@@ -556,9 +527,9 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         pass
         for m in tp.methods:
-          s += self.generate_pycall_wrapper (tp, m, mdefs)
+          s += self.generate_pycall_cxximpl (tp, m, mdefs)
         for sg in tp.signals:
-          s += self.generate_client_signal_def (tp, sg, mdefs)
+          s += self.generate_pyemit_cxximpl (tp, sg, mdefs)
     # method def array
     if mdefs:
       aux = '{ "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" }'
@@ -569,15 +540,25 @@ def generate (namespace_list, **args):
   import sys, tempfile, os
   config = {}
   config.update (args)
+  outname = config.get ('output', 'testmodule')
+  if outname == '-':
+    raise RuntimeError ("-: stdout is not support for generation of multiple files")
   gg = Generator()
-  textstring = gg.generate_impl_types (config['implementation_types'])
-  outname = config.get ('output', '-')
-  if outname != '-':
-    fout = open (outname, 'w')
+  if 1:
+    fname = outname + '.cc'
+    print "  GEN   ", fname
+    fout = open (fname, 'w')
+    textstring = gg.generate_cxximpl_types (config['implementation_types'])
     fout.write (textstring)
     fout.close()
-  else:
-    print textstring,
+  if 1:
+    fname = outname + '.py'
+    print "  GEN   ", fname
+    fout = open (fname, 'w')
+    gg = Generator()
+    textstring = gg.generate_pyimpl_types (config['implementation_types'])
+    fout.write (textstring)
+    fout.close()
 
 # register extension hooks
 __Aida__.add_backend (__file__, generate, __doc__)

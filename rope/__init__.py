@@ -20,8 +20,8 @@ def app_init (application_name = None):
   if cmdline_args == None:
     cmdline_args = sys.argv
   aida_id = _CPY._init_dispatcher (application_name, cmdline_args)
-  # integrate Rapicorn dispatching with main loop
-  class RapicornSource (main.Source):
+  # integrate Rapicorn dispatching with event loop
+  class RapicornSource (Loop.Source):
     def __init__ (self):
       super (RapicornSource, self).__init__ (_CPY._event_dispatch)
       import select
@@ -35,30 +35,30 @@ def app_init (application_name = None):
     def dispatch (self, fdevents):
       self.callable() # _event_dispatch
       return True
-  main.RapicornSource = RapicornSource
+  Loop.RapicornSource = RapicornSource
   # setup global Application
   app = Application (_PY._BaseClass_._AidaID_ (aida_id))
   def iterate (self, may_block, may_dispatch):
-    if hasattr (self, "main_loop"):
-      loop = self.main_loop
+    if hasattr (self, "event_loop"):
+      loop = self.event_loop
       dloop = None
     else:
-      dloop = main.Loop()
+      dloop = Loop.Loop()
       loop = dloop
-      loop += main.RapicornSource()
+      loop += Loop.RapicornSource()
     needs_dispatch = loop.iterate (may_block, may_dispatch)
     loop = None
     del dloop
     return needs_dispatch
-  app.__class__.iterate = iterate # extend for main loop integration
+  app.__class__.iterate = iterate # extend for event loop integration
   def loop (self):
-    self.main_loop = main.Loop()
-    self.main_loop += main.RapicornSource()
-    exit_status = self.main_loop.loop()
-    del self.main_loop
+    self.event_loop = Loop.Loop()
+    self.event_loop += Loop.RapicornSource()
+    exit_status = self.event_loop.loop()
+    del self.event_loop
     return exit_status
-  app.__class__.loop = loop # extend for main loop integration
-  main.app = app # integrate main loop with app
+  app.__class__.loop = loop # extend for event loop integration
+  Loop.app = app # integrate event loop with app
   return app
 
 class AidaObjectFactory:
@@ -73,16 +73,16 @@ class AidaObjectFactory:
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
-  import pyRapicorn     # generated __AIDA_... cpy methods
-  import py2cpy         # generated Python classes, Application, etc
-  py2cpy.__AIDA_pymodule__init_once (pyRapicorn)
-  pyRapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (py2cpy))
+  import cxxrapicorn    # generated __AIDA_... cpy methods
+  import pyrapicorn     # generated Python classes, Application, etc
+  pyrapicorn.__AIDA_pymodule__init_once (cxxrapicorn)
+  cxxrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
   del globals()['AidaObjectFactory']
-  app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
-  del globals()['pyRapicorn']
-  del globals()['py2cpy']
+  app_init._CPY, app_init._PY = (cxxrapicorn, pyrapicorn) # app_init() internals
+  del globals()['cxxrapicorn']
+  del globals()['pyrapicorn']
 _module_init_once_()
 
 # introduce module symbols
-from py2cpy import *
-import main
+from pyrapicorn import *
+import loop as Loop

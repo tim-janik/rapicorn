@@ -3,17 +3,17 @@
 #include <deque>
 
 // --- conventional Python module initializers ---
-#define MODULE_NAME             pyRapicorn
+#define MODULE_NAME             cxxrapicorn
 #define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
 #define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 
 // --- Anonymous namespacing
 namespace {
 
-// --- cpy2rope stubs (generated) ---
+// == Generated C++ Stubs ==
 static PyObject *global_rapicorn_module = NULL;
 #define __AIDA_PYMODULE__OBJECT global_rapicorn_module
-#include "cpy2rope.cc"
+#include "pyrapicorn.cc"
 
 // --- PyC functions ---
 static PyObject*

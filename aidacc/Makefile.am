@@ -66,9 +66,22 @@ EXTRA_DIST += builtins.idl
 check-local: check-builtins
 
 # == Aida Dependencies ==
-pyutilsdir     = $(libdir)/$(strip ${AIDACCV})/pyutils
-aidaccbackends = PrettyDump.py TypeMap.py CxxStub.py
-pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${aidaccbackends}
+pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
+pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
+backendfiles    = PrettyDump.py TypeMap.py CxxStub.py TmplFiles.py PyStub.py
+noinst_SCRIPTS += $(backendfiles)
+
+# == Templates & Copy-Paste Files ==
+template_files = PyStub-glue.py PyStub-glue.cc
+EXTRA_DIST += $(template_files)
+TmplFiles.py: Makefile.am $(template_files)
+	$(AM_V_GEN)
+	$(Q) (cd $(srcdir) && echo "### == $@ - Generated File == ###" \
+	&& for file in $(template_files) ; \
+	    do echo -n "$$file" | sed 's/[^a-zA-Z0-9_]/_/g' && echo ' = """' \
+	    && sed 's/\\/\\\\/g; s/"""/\\"""/g' $$file && echo '"""' || exit $? ; done ) > xgen-$@
+	$(Q) mv xgen-$@ $@
+CLEANFILES += TmplFiles.py
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
