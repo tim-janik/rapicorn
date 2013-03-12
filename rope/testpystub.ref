@@ -25,6 +25,10 @@ class FirstInterface (_BaseClass_):
   def void_func (self): # one way
     ___ret = _CPY._AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void (self)
     return ___ret
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class XFooRecord (_BaseRecord_):
   def __init__ (self, **entries):
@@ -422,22 +426,46 @@ class UIWidgetArea (_BaseClass_):
     return _CPY._AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (self, func, 0)
   def sig_sample_signal_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (self, None, connection_id)
+  def __getattr__ (self, name):
+    # dummy
+    # on_click
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    # dummy
+    # on_click
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class Parent (_BaseClass_):
   def __init__ (self, _aida_id):
     super (Parent, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class Child (Parent):
   def __init__ (self, _aida_id):
     super (Child, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class Descendant (Child):
   def __init__ (self, _aida_id):
     super (Descendant, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class GrandChild (Descendant):
   def __init__ (self, _aida_id):
     super (GrandChild, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class QuickRecord (_BaseRecord_):
   def __init__ (self, **entries):
@@ -470,6 +498,10 @@ class QuickIface (_BaseClass_):
   def simple_function (self, i = 9): # one way
     ___ret = _CPY._AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32 (self, i)
     return ___ret
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class MethodTestInterface (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -510,6 +542,10 @@ class MethodTestInterface (_BaseClass_):
   def method_with_quickiface (self, input, iface0 = None): # QuickIface
     ___ret = _CPY._AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (self, input, iface0)
     return ___ret
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class SignalTestInterface (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -610,6 +646,10 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (self, func, 0)
   def sig_self_args_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (self, None, connection_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class ChildInheritingSignals (SignalTestInterface):
   def __init__ (self, _aida_id):
@@ -618,14 +658,48 @@ class ChildInheritingSignals (SignalTestInterface):
     return _CPY._AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, func, 0)
   def sig_child_signal_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, None, connection_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class AnotherChild (SignalTestInterface):
   def __init__ (self, _aida_id):
     super (AnotherChild, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class PropertyTester (_BaseClass_):
   def __init__ (self, _aida_id):
     super (PropertyTester, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    # bool_prop
+    # int32_prop
+    # int64_prop
+    # float64_prop
+    # string_prop
+    # enum_prop
+    # record_prop
+    # sequence_prop
+    # interface_prop
+    # self_prop
+    # any_prop
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    # bool_prop
+    # int32_prop
+    # int64_prop
+    # float64_prop
+    # string_prop
+    # enum_prop
+    # record_prop
+    # sequence_prop
+    # interface_prop
+    # self_prop
+    # any_prop
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class ButtonArea (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -638,6 +712,18 @@ class ButtonArea (_BaseClass_):
     return _CPY._AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (self, func, 0)
   def sig_activate_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (self, None, connection_id)
+  def __getattr__ (self, name):
+    # on_click
+    # on_click2
+    # on_click3
+    # click_type
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    # on_click
+    # on_click2
+    # on_click3
+    # click_type
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class PureMethods (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -645,6 +731,10 @@ class PureMethods (_BaseClass_):
   def pure_method (self, f): # int32
     ___ret = _CPY._AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64 (self, f)
     return ___ret
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class NameTests (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -652,10 +742,22 @@ class NameTests (_BaseClass_):
   def args_from_other_namespace (self, qr, qe, sr): # one way
     ___ret = _CPY._AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (self, qr, qe, sr)
     return ___ret
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class Compressor (_BaseClass_):
   def __init__ (self, _aida_id):
     super (Compressor, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    # threshold
+    # ratio
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    # threshold
+    # ratio
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class RecordForGroups (_BaseRecord_):
   def __init__ (self, **entries):
@@ -700,4 +802,8 @@ class RecordForGroups (_BaseRecord_):
 class SoundModule (_BaseClass_):
   def __init__ (self, _aida_id):
     super (SoundModule, self).__init__ (_aida_id)
+  def __getattr__ (self, name):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+  def __setattr__ (self, name, value):
+    raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
