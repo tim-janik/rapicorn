@@ -427,8 +427,10 @@ class UIWidgetArea (_BaseClass_):
   def sig_sample_signal_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32 (self, None, connection_id)
   def __getattr__ (self, name):
-    # dummy
-    # on_click
+    if name == "dummy":
+      return _CPY._AIDA_pygetter__f67db704b9d460d6d4950feab697e61e (self) # UIWidgetArea.dummy
+    if name == "on_click":
+      return _CPY._AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a (self) # UIWidgetArea.on_click
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
     # dummy
@@ -675,17 +677,28 @@ class PropertyTester (_BaseClass_):
   def __init__ (self, _aida_id):
     super (PropertyTester, self).__init__ (_aida_id)
   def __getattr__ (self, name):
-    # bool_prop
-    # int32_prop
-    # int64_prop
-    # float64_prop
-    # string_prop
-    # enum_prop
-    # record_prop
-    # sequence_prop
-    # interface_prop
-    # self_prop
-    # any_prop
+    if name == "bool_prop":
+      return _CPY._AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788 (self) # PropertyTester.bool_prop
+    if name == "int32_prop":
+      return _CPY._AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0 (self) # PropertyTester.int32_prop
+    if name == "int64_prop":
+      return _CPY._AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63 (self) # PropertyTester.int64_prop
+    if name == "float64_prop":
+      return _CPY._AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab (self) # PropertyTester.float64_prop
+    if name == "string_prop":
+      return _CPY._AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558 (self) # PropertyTester.string_prop
+    if name == "enum_prop":
+      return _CPY._AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81 (self) # PropertyTester.enum_prop
+    if name == "record_prop":
+      return _CPY._AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8 (self) # PropertyTester.record_prop
+    if name == "sequence_prop":
+      return _CPY._AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b (self) # PropertyTester.sequence_prop
+    if name == "interface_prop":
+      return _CPY._AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a (self) # PropertyTester.interface_prop
+    if name == "self_prop":
+      return _CPY._AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f (self) # PropertyTester.self_prop
+    if name == "any_prop":
+      return _CPY._AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e (self) # PropertyTester.any_prop
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
     # bool_prop
@@ -713,10 +726,14 @@ class ButtonArea (_BaseClass_):
   def sig_activate_disconnect (self, connection_id):
     return _CPY._AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (self, None, connection_id)
   def __getattr__ (self, name):
-    # on_click
-    # on_click2
-    # on_click3
-    # click_type
+    if name == "on_click":
+      return _CPY._AIDA_pygetter__199859aecc756e97a744332174ed27f4 (self) # ButtonArea.on_click
+    if name == "on_click2":
+      return _CPY._AIDA_pygetter__1b448d91990181da9751c08ae956c729 (self) # ButtonArea.on_click2
+    if name == "on_click3":
+      return _CPY._AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5 (self) # ButtonArea.on_click3
+    if name == "click_type":
+      return _CPY._AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a (self) # ButtonArea.click_type
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
     # on_click
@@ -751,8 +768,10 @@ class Compressor (_BaseClass_):
   def __init__ (self, _aida_id):
     super (Compressor, self).__init__ (_aida_id)
   def __getattr__ (self, name):
-    # threshold
-    # ratio
+    if name == "threshold":
+      return _CPY._AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20 (self) # Compressor.threshold
+    if name == "ratio":
+      return _CPY._AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e (self) # Compressor.ratio
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
     # threshold

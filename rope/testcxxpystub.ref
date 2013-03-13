@@ -1497,6 +1497,60 @@ __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceT
   return pyres;
 }
 static PyObject*
+_AIDA_pygetter__f67db704b9d460d6d4950feab697e61e (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.dummy
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_bool()); ERRORifpy ();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.on_click
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
 __AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32 (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
@@ -2985,6 +3039,303 @@ __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Inte
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
 }
+static PyObject*
+_AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788 (PyObject *pyself, PyObject *pyargs) // PropertyTester.bool_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_bool()); ERRORifpy ();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0 (PyObject *pyself, PyObject *pyargs) // PropertyTester.int32_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63 (PyObject *pyself, PyObject *pyargs) // PropertyTester.int64_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab (PyObject *pyself, PyObject *pyargs) // PropertyTester.float64_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558 (PyObject *pyself, PyObject *pyargs) // PropertyTester.string_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81 (PyObject *pyself, PyObject *pyargs) // PropertyTester.enum_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8 (PyObject *pyself, PyObject *pyargs) // PropertyTester.record_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = aida_pyQuickRecord_proto_pop (frr); ERRORif (!pyfoR);
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b (PyObject *pyself, PyObject *pyargs) // PropertyTester.sequence_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = aida_pyQuickSequence_proto_pop (frr); ERRORif (!pyfoR);
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a (PyObject *pyself, PyObject *pyargs) // PropertyTester.interface_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f (PyObject *pyself, PyObject *pyargs) // PropertyTester.self_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e (PyObject *pyself, PyObject *pyargs) // PropertyTester.any_prop
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = __AIDA_pyconvert__pyany_from_any (frr.pop_any()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
 static Rapicorn::Aida::FieldBuffer*
 __AIDA_pyemit2__ButtonArea__check_activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
@@ -3070,6 +3421,114 @@ __AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void (PyObject *pyself,
   return pyres;
 }
 static PyObject*
+_AIDA_pygetter__199859aecc756e97a744332174ed27f4 (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__1b448d91990181da9751c08ae956c729 (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click2
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5 (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click3
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a (PyObject *pyself, PyObject *pyargs) // ButtonArea.click_type
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
 __AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
@@ -3123,6 +3582,60 @@ __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__
   if (fm) delete fm;
   return NULL;
 }
+static PyObject*
+_AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20 (PyObject *pyself, PyObject *pyargs) // Compressor.threshold
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
+_AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e (PyObject *pyself, PyObject *pyargs) // Compressor.ratio
+{
+  uint64_t object_orbid;
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);
+  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
+  fb.add_object (object_orbid);
+  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
+  ERRORifnotret (fr);
+  if (fr) {
+    Rapicorn::Aida::FieldReader frr (*fr);
+    frr.skip_header();
+    if (frr.remaining() == 1) {
+        pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
 #define AIDA_PYSTUB_METHOD_DEFS() \
   { "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" },\
   { "_AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void", __AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void, METH_VARARGS, "pyRapicorn call" },\
@@ -3138,6 +3651,8 @@ __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__
   { "_AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String", __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void", __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32", __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_AIDA_pygetter__f67db704b9d460d6d4950feab697e61e", _AIDA_pygetter__f67db704b9d460d6d4950feab697e61e, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a", _AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32", __AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool, METH_VARARGS, "pyRapicorn call" },\
@@ -3176,8 +3691,25 @@ __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__
   { "_AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any", __AIDA_pymarshal__InterfaceTests__SignalTestInterface__any_arg_void_Any, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface", __AIDA_pymarshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence", __AIDA_pymarshal__InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_Any_int32_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788", _AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0", _AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63", _AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab", _AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558", _AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81", _AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8", _AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b", _AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a", _AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f", _AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e", _AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool", __AIDA_pymarshal__RapicornAidaTest__ButtonArea__check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void", __AIDA_pymarshal__RapicornAidaTest__ButtonArea__activate_void, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_AIDA_pygetter__199859aecc756e97a744332174ed27f4", _AIDA_pygetter__199859aecc756e97a744332174ed27f4, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__1b448d91990181da9751c08ae956c729", _AIDA_pygetter__1b448d91990181da9751c08ae956c729, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5", _AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a", _AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64", __AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord", __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord, METH_VARARGS, "pyRapicorn call" }
+  { "_AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord", __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20", _AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20, METH_VARARGS, "pyRapicorn call" },\
+  { "_AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e", _AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e, METH_VARARGS, "pyRapicorn call" }
 static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };

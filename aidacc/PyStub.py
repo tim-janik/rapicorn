@@ -182,7 +182,9 @@ class Generator:
       s += reindent ('  ', self.generate_signal_pyimpl (sg, type_info)) + '\n'
     s += '  def __getattr__ (self, name):\n'
     for fl in type_info.fields:
-      s += '    # ' + fl[0] + '\n'
+      (digeststring, digestnums) = self.getter_digests (type_info, fl[0], fl[1])
+      s += '    if name == ' + strcquote (fl[0]) + ':\n'
+      s += '      return _CPY._AIDA_pygetter__%s (self) # %s.%s\n' % (digeststring, type_info.name, fl[0])
     s += '    raise AttributeError ("class %s has no attribute \'%s\'" % (self.__class__.__name__, name))\n'
     s += '  def __setattr__ (self, name, value):\n'
     for fl in type_info.fields:
@@ -437,9 +439,16 @@ class Generator:
     s += '  return pyres;\n'
     s += '}\n'
     return s
-  def method_digest (self, mtype):
-    digest = mtype.type_hash()
+  def hash2digestbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
+  def hash2digestident (self, digest):
+    return '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' % digest
+  def method_digest (self, mtype):
+    method_hash = mtype.type_hash()
+    return self.hash2digestbytes (method_hash)
+  def getter_digests (self, class_info, fident, ftype):
+    getter_hash = class_info.property_hash ((fident, ftype), False)
+    return (self.hash2digestident (getter_hash), self.hash2digestbytes (getter_hash))
   def generate_pycall_cxximpl (self, class_info, mtype, mdefs):
     s = ''
     mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
@@ -483,6 +492,39 @@ class Generator:
       s += '    delete fr; fr = NULL;\n'
       s += '  }\n'
       s += '  return pyfoR;\n'
+    s += ' error:\n'
+    s += '  if (fr) delete fr;\n'
+    s += '  if (fm) delete fm;\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    return s
+  def generate_pygetter_cxximpl (self, class_info, fident, ftype, mdefs):
+    s, (digeststring, digestnums) = '', self.getter_digests (class_info, fident, ftype)
+    mdefs += [ '{ "_AIDA_pygetter__%s", _AIDA_pygetter__%s, METH_VARARGS, "pyRapicorn call" }' % (digeststring, digeststring) ]
+    s += 'static PyObject*\n'
+    s += '_AIDA_pygetter__%s (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
+    s += '{\n'
+    s += '  uint64_t object_orbid;\n'
+    s += '  PyObject *item, *pyfoR = NULL;\n'
+    s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;\n' # header + self
+    s += '  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
+    s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
+    s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
+    s += '__AIDA_local__client_connection->connection_id(), %s);\n' % digestnums
+    s += '  fb.add_object (object_orbid);\n'
+    # call out
+    s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);\n' # deletes fb
+    s += '  ERRORifnotret (fr);\n'
+    s += '  if (fr) {\n'
+    s += '    Rapicorn::Aida::FieldReader frr (*fr);\n'
+    s += '    frr.skip_header();\n'
+    s += '    if (frr.remaining() == 1) {\n'
+    s += reindent ('      ', self.generate_pop_field_cxximpl ('frr', ftype, 'pyfoR')) + '\n'
+    s += '    }\n'
+    s += '    delete fr; fr = NULL;\n'
+    s += '  }\n'
+    s += '  return pyfoR;\n'
     s += ' error:\n'
     s += '  if (fr) delete fr;\n'
     s += '  if (fm) delete fm;\n'
@@ -535,6 +577,8 @@ class Generator:
           s += self.generate_pycall_cxximpl (tp, m, mdefs)
         for sg in tp.signals:
           s += self.generate_pyemit_cxximpl (tp, sg, mdefs)
+        for fl in tp.fields:
+          s += self.generate_pygetter_cxximpl (tp, fl[0], fl[1], mdefs)
     # method def array
     if mdefs:
       aux = '{ "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" }'
