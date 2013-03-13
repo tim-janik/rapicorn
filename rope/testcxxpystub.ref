@@ -1106,7 +1106,7 @@ aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
 }
 
 static PyObject*
-__AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -1125,7 +1125,7 @@ __AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void (PyObject *pys
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__simple_method_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1152,7 +1152,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__simple_method_float64 (PyObject *py
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1181,7 +1181,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg_float64_int32 (PyObject 
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1210,7 +1210,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg2_float64_int32 (PyObject
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1241,7 +1241,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args_float64_int32_float64 (PyO
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1272,7 +1272,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64 (Py
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_int32_String_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1311,7 +1311,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1342,7 +1342,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests_
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__void_method_void (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -1361,7 +1361,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__void_method_void (PyObject *pyself,
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2out_String (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1388,7 +1388,7 @@ __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2out_String (PyObject *pyse
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -1593,7 +1593,7 @@ _AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb (PyObject *pyself, PyObject *py
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__76ac7a704663d24623abac49621c6802__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -1614,7 +1614,7 @@ __AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32 (PyObject 
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -1633,7 +1633,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void (PyObj
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__55291a7348d1424232dac90dde65a764__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1664,7 +1664,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_int32 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1695,7 +1695,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints32_int32_int
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_int64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__678de8636167b6a1b27d37ca066b5335__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1726,7 +1726,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints64_int64_int
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1757,7 +1757,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_floats_float64_f
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_string_String_String_String (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__646f80849d732dc572fd1ede45b153e3__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1788,7 +1788,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_string_String_St
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1819,7 +1819,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTe
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1850,7 +1850,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_record_Interface
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1881,7 +1881,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_sequence_Interfa
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1912,7 +1912,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_interface_Interf
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__807e5dacf307a2772b65069e50e63c80__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -1947,7 +1947,7 @@ __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -3888,7 +3888,7 @@ _AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8 (PyObject *pyself, PyObject *py
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item, *pyfoR = NULL;
@@ -3917,7 +3917,7 @@ __AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64 (PyObjec
   return NULL;
 }
 static PyObject*
-__AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord (PyObject *pyself, PyObject *pyargs)
+__AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (PyObject *pyself, PyObject *pyargs)
 {
   uint64_t object_orbid;
   PyObject *item;
@@ -4039,36 +4039,36 @@ _AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315 (PyObject *pyself, PyObject *py
 }
 #define AIDA_PYSTUB_METHOD_DEFS() \
   { "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" },\
-  { "_AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void", __AIDA_pycall__MandatoryNamespace__FirstInterface__void_func_void, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__simple_method_float64", __AIDA_pycall__InterfaceTests__UIWidgetArea__simple_method_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg_float64_int32", __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg_float64_int32, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg2_float64_int32", __AIDA_pycall__InterfaceTests__UIWidgetArea__single_arg2_float64_int32, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__two_args_float64_int32_float64", __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args_float64_int32_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64", __AIDA_pycall__InterfaceTests__UIWidgetArea__two_args2_float64_int32_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_int32_String_float64", __AIDA_pycall__InterfaceTests__UIWidgetArea__multi_args_float64_bool_int64_float64_int32_String_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea", __AIDA_pycall__InterfaceTests__UIWidgetArea__self_method_float64_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__void_method_void", __AIDA_pycall__InterfaceTests__UIWidgetArea__void_method_void, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2out_String", __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2out_String, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String", __AIDA_pycall__InterfaceTests__UIWidgetArea__on_click2in_void_String, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__", __AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__", __AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__", __AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__", __AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__", __AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__", __AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__", __AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__", __AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__", __AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__", __AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__", __AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void", __AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32", __AIDA_pymarshal__InterfaceTests__UIWidgetArea__sample_signal_float64_InterfaceTests__UIWidgetArea_int32, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pygetter__f67db704b9d460d6d4950feab697e61e", _AIDA_pygetter__f67db704b9d460d6d4950feab697e61e, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5", _AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a", _AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb", _AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32", __AIDA_pycall__InterfaceTests__QuickIface__simple_function_void_int32, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_void_void, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_bools_bool_bool_bool, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_int32", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints32_int32_int32_int32, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_int64", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_ints64_int64_int64_int64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_floats_float64_float64_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_string_String_String_String", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_string_String_String_String, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_anys_Any_Any_Any, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface", __AIDA_pycall__InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__76ac7a704663d24623abac49621c6802__", __AIDA_pycall__76ac7a704663d24623abac49621c6802__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__", __AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__55291a7348d1424232dac90dde65a764__", __AIDA_pycall__55291a7348d1424232dac90dde65a764__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__", __AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__678de8636167b6a1b27d37ca066b5335__", __AIDA_pycall__678de8636167b6a1b27d37ca066b5335__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__", __AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__646f80849d732dc572fd1ede45b153e3__", __AIDA_pycall__646f80849d732dc572fd1ede45b153e3__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__", __AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__", __AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__", __AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__", __AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__807e5dacf307a2772b65069e50e63c80__", __AIDA_pycall__807e5dacf307a2772b65069e50e63c80__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__", __AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void", __AIDA_pymarshal__InterfaceTests__SignalTestInterface__void_result_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool", __AIDA_pymarshal__InterfaceTests__SignalTestInterface__bool_result_bool, METH_VARARGS, "pyRapicorn signal call" },\
   { "_AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32", __AIDA_pymarshal__InterfaceTests__SignalTestInterface__int32_result_int32, METH_VARARGS, "pyRapicorn signal call" },\
@@ -4126,8 +4126,8 @@ _AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315 (PyObject *pyself, PyObject *py
   { "_AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8", _AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a", _AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8", _AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64", __AIDA_pycall__RapicornAidaTest__PureMethods__pure_method_int32_float64, METH_VARARGS, "pyRapicorn call" },\
-  { "_AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord", __AIDA_pycall__Other__NameTests__args_from_other_namespace_void_InterfaceTests__QuickRecord_RapicornAidaTest__ClickType_OtherNamespace__SomeRecord, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__", __AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__, METH_VARARGS, "pyRapicorn call" },\
+  { "__AIDA_pycall__d471f88e8c15081c963d2094339d0220__", __AIDA_pycall__d471f88e8c15081c963d2094339d0220__, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20", _AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b", _AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b, METH_VARARGS, "pyRapicorn call" },\
   { "_AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e", _AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e, METH_VARARGS, "pyRapicorn call" },\

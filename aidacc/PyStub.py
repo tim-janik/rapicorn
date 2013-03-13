@@ -45,9 +45,9 @@ class Generator:
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def hash2digestident (self, digest):
     return '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' % digest
-  def method_digest (self, mtype):
+  def method_digests (self, mtype):
     method_hash = mtype.type_hash()
-    return self.hash2digestbytes (method_hash)
+    return (self.hash2digestident (method_hash), self.hash2digestbytes (method_hash))
   def getter_digests (self, class_info, fident, ftype):
     getter_hash = class_info.property_hash ((fident, ftype), False)
     return (self.hash2digestident (getter_hash), self.hash2digestbytes (getter_hash))
@@ -140,23 +140,23 @@ class Generator:
     else: # FUNC
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s
-  def generate_method_caller_pyimpl (self, m):
-    s = ''
-    s += 'def %s (' % m.name
+  def generate_method_caller_pyimpl (self, mtype):
+    s, (digeststring, digestnums) = '', self.method_digests (mtype)
+    s += 'def %s (' % mtype.name
     args = [ 'self' ]
     vals = [ 'self' ]
-    for a in m.args:
+    for a in mtype.args:
       if a[2] != None:
         args += [ '%s = %s' % (a[0], self.default_value_pyimpl (a[1], a[2])) ]
       else:
         args += [ a[0] ]
       vals += [ a[0] ]
     s += ', '.join (args)
-    if m.rtype.name == 'void':
+    if mtype.rtype.name == 'void':
       s += '): # one way\n'
     else:
-      s += '): # %s\n' % m.rtype.name
-    s += '  ___ret = _CPY._AIDA_pycall__%s (' % m.ident_digest()
+      s += '): # %s\n' % mtype.rtype.name
+    s += '  ___ret = _CPY.__AIDA_pycall__%s__ (' % digeststring
     s += ', '.join (vals)
     s += ')\n'
     s += '  return ___ret'
@@ -389,10 +389,11 @@ class Generator:
     s += '}\n'
     return s
   def generate_pyemit_cxximpl (self, class_info, stype, mdefs):
-    digest, async = self.method_digest (stype), stype.rtype.storage != Decls.VOID
+    s, (digeststring, digestnums) = '', self.method_digests (stype)
     mdefs += [ '{ "_AIDA_pymarshal__%s", __AIDA_pymarshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (stype.ident_digest(), stype.ident_digest()) ]
-    s, cbtname, classN = '', 'Callback' + '_' + stype.name, class_info.name
+    cbtname, classN = 'Callback' + '_' + stype.name, class_info.name
+    async = stype.rtype.storage != Decls.VOID
     u64 = 'Rapicorn::Aida::uint64_t'
     emitfunc = '__AIDA_pyemit%d__%s__%s' % (2 if async else 1, classN, stype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
@@ -417,7 +418,7 @@ class Generator:
     s += '  result = PyObject_Call (callable, tuple, NULL);\n' # we MUST return EMIT_RESULT to be PyException safe
     if async:
       s += '  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
-      s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digest
+      s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digestnums
       s += '  *rb <<= emit_result_id;\n'
       s += '  if (PyErr_Occurred()) {\n'
       s += '  ' + self.generate_add_0_cxximpl ('(*rb)', stype.rtype)
@@ -446,19 +447,18 @@ class Generator:
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (digest, emitfunc)
+    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (digestnums, emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
     s += '}\n'
     return s
   def generate_pycall_cxximpl (self, class_info, mtype, mdefs):
-    s = ''
-    mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
-               (mtype.ident_digest(), mtype.ident_digest()) ]
+    s, (digeststring, digestnums) = '', self.method_digests (mtype)
+    mdefs += [ '{ "__AIDA_pycall__%s__", __AIDA_pycall__%s__, METH_VARARGS, "pyRapicorn call" }' % (digeststring, digeststring) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
-    s += '__AIDA_pycall__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '__AIDA_pycall__%s__ (PyObject *pyself, PyObject *pyargs)\n' % digeststring
     s += '{\n'
     s += '  uint64_t object_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
@@ -469,10 +469,10 @@ class Generator:
     s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
     if hasret:
       s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid),'
-      s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % self.method_digest (mtype)
+      s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % digestnums
     else:
       s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL,'
-      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), %s);\n' % self.method_digest (mtype)
+      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), %s);\n' % digestnums
     s += '  fb.add_object (object_orbid);\n'
     arg_counter += 1
     for ma in mtype.args:
