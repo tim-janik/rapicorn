@@ -41,6 +41,19 @@ class Generator:
     assert isinstance (module_name, str)
     self.ntab = 26
     self.module_name = module_name
+  def hash2digestbytes (self, digest):
+    return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
+  def hash2digestident (self, digest):
+    return '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' % digest
+  def method_digest (self, mtype):
+    method_hash = mtype.type_hash()
+    return self.hash2digestbytes (method_hash)
+  def getter_digests (self, class_info, fident, ftype):
+    getter_hash = class_info.property_hash ((fident, ftype), False)
+    return (self.hash2digestident (getter_hash), self.hash2digestbytes (getter_hash))
+  def setter_digests (self, class_info, fident, ftype):
+    setter_hash = class_info.property_hash ((fident, ftype), True)
+    return (self.hash2digestident (setter_hash), self.hash2digestbytes (setter_hash))
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -439,19 +452,6 @@ class Generator:
     s += '  return pyres;\n'
     s += '}\n'
     return s
-  def hash2digestbytes (self, digest):
-    return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
-  def hash2digestident (self, digest):
-    return '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' % digest
-  def method_digest (self, mtype):
-    method_hash = mtype.type_hash()
-    return self.hash2digestbytes (method_hash)
-  def getter_digests (self, class_info, fident, ftype):
-    getter_hash = class_info.property_hash ((fident, ftype), False)
-    return (self.hash2digestident (getter_hash), self.hash2digestbytes (getter_hash))
-  def setter_digests (self, class_info, fident, ftype):
-    setter_hash = class_info.property_hash ((fident, ftype), True)
-    return (self.hash2digestident (setter_hash), self.hash2digestbytes (setter_hash))
   def generate_pycall_cxximpl (self, class_info, mtype, mdefs):
     s = ''
     mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
