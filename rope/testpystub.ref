@@ -417,10 +417,10 @@ class UIWidgetArea (_BaseClass_):
     return _CPY.__AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (self, func, 0)
   def sig_sample_signal_disconnect (self, connection_id):
     return _CPY.__AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (self, None, connection_id)
-  __pygetter__dummy__             = _CPY._AIDA_pygetter__f67db704b9d460d6d4950feab697e61e # UIWidgetArea.dummy
-  __pygetter__on_click__          = _CPY._AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a # UIWidgetArea.on_click
-  __pysetter__dummy__             = _CPY._AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5 # UIWidgetArea.dummy
-  __pysetter__on_click__          = _CPY._AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb # UIWidgetArea.on_click
+  __pygetter__dummy__             = _CPY.__AIDA_pygetter__f67db704b9d460d6d4950feab697e61e__ # UIWidgetArea.dummy
+  __pygetter__on_click__          = _CPY.__AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a__ # UIWidgetArea.on_click
+  __pysetter__dummy__             = _CPY.__AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5__ # UIWidgetArea.dummy
+  __pysetter__on_click__          = _CPY.__AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb__ # UIWidgetArea.on_click
 
 class Parent (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -612,28 +612,28 @@ class AnotherChild (SignalTestInterface):
 class PropertyTester (_BaseClass_):
   def __init__ (self, _aida_id):
     super (PropertyTester, self).__init__ (_aida_id)
-  __pygetter__bool_prop__         = _CPY._AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788 # PropertyTester.bool_prop
-  __pygetter__int32_prop__        = _CPY._AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0 # PropertyTester.int32_prop
-  __pygetter__int64_prop__        = _CPY._AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63 # PropertyTester.int64_prop
-  __pygetter__float64_prop__      = _CPY._AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab # PropertyTester.float64_prop
-  __pygetter__string_prop__       = _CPY._AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558 # PropertyTester.string_prop
-  __pygetter__enum_prop__         = _CPY._AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81 # PropertyTester.enum_prop
-  __pygetter__record_prop__       = _CPY._AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8 # PropertyTester.record_prop
-  __pygetter__sequence_prop__     = _CPY._AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b # PropertyTester.sequence_prop
-  __pygetter__interface_prop__    = _CPY._AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a # PropertyTester.interface_prop
-  __pygetter__self_prop__         = _CPY._AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f # PropertyTester.self_prop
-  __pygetter__any_prop__          = _CPY._AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e # PropertyTester.any_prop
-  __pysetter__bool_prop__         = _CPY._AIDA_pysetter__a88d7a16adc7ad4333e7a32598f08880 # PropertyTester.bool_prop
-  __pysetter__int32_prop__        = _CPY._AIDA_pysetter__7b7b3182160469e4bd3c44c3a57484eb # PropertyTester.int32_prop
-  __pysetter__int64_prop__        = _CPY._AIDA_pysetter__b33bf89d2259a1db0154420aebe9a16c # PropertyTester.int64_prop
-  __pysetter__float64_prop__      = _CPY._AIDA_pysetter__f1df5bd296ac78e2bb263cff89927093 # PropertyTester.float64_prop
-  __pysetter__string_prop__       = _CPY._AIDA_pysetter__fadb1eed1d8d358a17cd2ca684080698 # PropertyTester.string_prop
-  __pysetter__enum_prop__         = _CPY._AIDA_pysetter__99206fff699c82d61dcbc77498569411 # PropertyTester.enum_prop
-  __pysetter__record_prop__       = _CPY._AIDA_pysetter__55aaf8cee9dd7a4683d8416416740bf0 # PropertyTester.record_prop
-  __pysetter__sequence_prop__     = _CPY._AIDA_pysetter__f86952a034b8bc843be169a3f0a9a07d # PropertyTester.sequence_prop
-  __pysetter__interface_prop__    = _CPY._AIDA_pysetter__bf62779e2a11aebb95547f4e29ca3814 # PropertyTester.interface_prop
-  __pysetter__self_prop__         = _CPY._AIDA_pysetter__1a1ee3ab20ab3c2feeaf17826dba2891 # PropertyTester.self_prop
-  __pysetter__any_prop__          = _CPY._AIDA_pysetter__e0c7d397e652f3f7bbdf7826e88f4f42 # PropertyTester.any_prop
+  __pygetter__bool_prop__         = _CPY.__AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788__ # PropertyTester.bool_prop
+  __pygetter__int32_prop__        = _CPY.__AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0__ # PropertyTester.int32_prop
+  __pygetter__int64_prop__        = _CPY.__AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63__ # PropertyTester.int64_prop
+  __pygetter__float64_prop__      = _CPY.__AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab__ # PropertyTester.float64_prop
+  __pygetter__string_prop__       = _CPY.__AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558__ # PropertyTester.string_prop
+  __pygetter__enum_prop__         = _CPY.__AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81__ # PropertyTester.enum_prop
+  __pygetter__record_prop__       = _CPY.__AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8__ # PropertyTester.record_prop
+  __pygetter__sequence_prop__     = _CPY.__AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b__ # PropertyTester.sequence_prop
+  __pygetter__interface_prop__    = _CPY.__AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a__ # PropertyTester.interface_prop
+  __pygetter__self_prop__         = _CPY.__AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f__ # PropertyTester.self_prop
+  __pygetter__any_prop__          = _CPY.__AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e__ # PropertyTester.any_prop
+  __pysetter__bool_prop__         = _CPY.__AIDA_pysetter__a88d7a16adc7ad4333e7a32598f08880__ # PropertyTester.bool_prop
+  __pysetter__int32_prop__        = _CPY.__AIDA_pysetter__7b7b3182160469e4bd3c44c3a57484eb__ # PropertyTester.int32_prop
+  __pysetter__int64_prop__        = _CPY.__AIDA_pysetter__b33bf89d2259a1db0154420aebe9a16c__ # PropertyTester.int64_prop
+  __pysetter__float64_prop__      = _CPY.__AIDA_pysetter__f1df5bd296ac78e2bb263cff89927093__ # PropertyTester.float64_prop
+  __pysetter__string_prop__       = _CPY.__AIDA_pysetter__fadb1eed1d8d358a17cd2ca684080698__ # PropertyTester.string_prop
+  __pysetter__enum_prop__         = _CPY.__AIDA_pysetter__99206fff699c82d61dcbc77498569411__ # PropertyTester.enum_prop
+  __pysetter__record_prop__       = _CPY.__AIDA_pysetter__55aaf8cee9dd7a4683d8416416740bf0__ # PropertyTester.record_prop
+  __pysetter__sequence_prop__     = _CPY.__AIDA_pysetter__f86952a034b8bc843be169a3f0a9a07d__ # PropertyTester.sequence_prop
+  __pysetter__interface_prop__    = _CPY.__AIDA_pysetter__bf62779e2a11aebb95547f4e29ca3814__ # PropertyTester.interface_prop
+  __pysetter__self_prop__         = _CPY.__AIDA_pysetter__1a1ee3ab20ab3c2feeaf17826dba2891__ # PropertyTester.self_prop
+  __pysetter__any_prop__          = _CPY.__AIDA_pysetter__e0c7d397e652f3f7bbdf7826e88f4f42__ # PropertyTester.any_prop
 
 class ButtonArea (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -646,14 +646,14 @@ class ButtonArea (_BaseClass_):
     return _CPY.__AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (self, func, 0)
   def sig_activate_disconnect (self, connection_id):
     return _CPY.__AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (self, None, connection_id)
-  __pygetter__on_click__          = _CPY._AIDA_pygetter__199859aecc756e97a744332174ed27f4 # ButtonArea.on_click
-  __pygetter__on_click2__         = _CPY._AIDA_pygetter__1b448d91990181da9751c08ae956c729 # ButtonArea.on_click2
-  __pygetter__on_click3__         = _CPY._AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5 # ButtonArea.on_click3
-  __pygetter__click_type__        = _CPY._AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a # ButtonArea.click_type
-  __pysetter__on_click__          = _CPY._AIDA_pysetter__db3a24116c6539852a0576faff45b4b2 # ButtonArea.on_click
-  __pysetter__on_click2__         = _CPY._AIDA_pysetter__fc93898ba4104662c918694fe5c2bfef # ButtonArea.on_click2
-  __pysetter__on_click3__         = _CPY._AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8 # ButtonArea.on_click3
-  __pysetter__click_type__        = _CPY._AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8 # ButtonArea.click_type
+  __pygetter__on_click__          = _CPY.__AIDA_pygetter__199859aecc756e97a744332174ed27f4__ # ButtonArea.on_click
+  __pygetter__on_click2__         = _CPY.__AIDA_pygetter__1b448d91990181da9751c08ae956c729__ # ButtonArea.on_click2
+  __pygetter__on_click3__         = _CPY.__AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5__ # ButtonArea.on_click3
+  __pygetter__click_type__        = _CPY.__AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a__ # ButtonArea.click_type
+  __pysetter__on_click__          = _CPY.__AIDA_pysetter__db3a24116c6539852a0576faff45b4b2__ # ButtonArea.on_click
+  __pysetter__on_click2__         = _CPY.__AIDA_pysetter__fc93898ba4104662c918694fe5c2bfef__ # ButtonArea.on_click2
+  __pysetter__on_click3__         = _CPY.__AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8__ # ButtonArea.on_click3
+  __pysetter__click_type__        = _CPY.__AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8__ # ButtonArea.click_type
 
 class PureMethods (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -670,10 +670,10 @@ class NameTests (_BaseClass_):
 class Compressor (_BaseClass_):
   def __init__ (self, _aida_id):
     super (Compressor, self).__init__ (_aida_id)
-  __pygetter__threshold__         = _CPY._AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20 # Compressor.threshold
-  __pygetter__ratio__             = _CPY._AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e # Compressor.ratio
-  __pysetter__threshold__         = _CPY._AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b # Compressor.threshold
-  __pysetter__ratio__             = _CPY._AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315 # Compressor.ratio
+  __pygetter__threshold__         = _CPY.__AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20__ # Compressor.threshold
+  __pygetter__ratio__             = _CPY.__AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e__ # Compressor.ratio
+  __pysetter__threshold__         = _CPY.__AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b__ # Compressor.threshold
+  __pysetter__ratio__             = _CPY.__AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315__ # Compressor.ratio
 
 class RecordForGroups (_BaseRecord_):
   def __init__ (self, **entries):
