@@ -188,7 +188,9 @@ class Generator:
     s += '    raise AttributeError ("class %s has no attribute \'%s\'" % (self.__class__.__name__, name))\n'
     s += '  def __setattr__ (self, name, value):\n'
     for fl in type_info.fields:
-      s += '    # ' + fl[0] + '\n'
+      (digeststring, digestnums) = self.setter_digests (type_info, fl[0], fl[1])
+      s += '    if name == ' + strcquote (fl[0]) + ':\n'
+      s += '      return _CPY._AIDA_pysetter__%s (self, value) # %s.%s\n' % (digeststring, type_info.name, fl[0])
     s += '    raise AttributeError ("class %s has no attribute \'%s\'" % (self.__class__.__name__, name))\n'
     return s
   def generate_pyimpl_types (self, implementation_types):
@@ -449,6 +451,9 @@ class Generator:
   def getter_digests (self, class_info, fident, ftype):
     getter_hash = class_info.property_hash ((fident, ftype), False)
     return (self.hash2digestident (getter_hash), self.hash2digestbytes (getter_hash))
+  def setter_digests (self, class_info, fident, ftype):
+    setter_hash = class_info.property_hash ((fident, ftype), True)
+    return (self.hash2digestident (setter_hash), self.hash2digestbytes (setter_hash))
   def generate_pycall_cxximpl (self, class_info, mtype, mdefs):
     s = ''
     mdefs += [ '{ "_AIDA_pycall__%s", __AIDA_pycall__%s, METH_VARARGS, "pyRapicorn call" }' %
@@ -460,7 +465,7 @@ class Generator:
     s += '  uint64_t object_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
-    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self args
+    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self + args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
@@ -531,6 +536,33 @@ class Generator:
     s += '  return NULL;\n'
     s += '}\n'
     return s
+  def generate_pysetter_cxximpl (self, class_info, fident, ftype, mdefs):
+    s, (digeststring, digestnums) = '', self.setter_digests (class_info, fident, ftype)
+    mdefs += [ '{ "_AIDA_pysetter__%s", _AIDA_pysetter__%s, METH_VARARGS, "pyRapicorn call" }' % (digeststring, digeststring) ]
+    s += 'static PyObject*\n'
+    s += '_AIDA_pysetter__%s (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
+    s += '{\n'
+    s += '  uint64_t object_orbid;\n'
+    s += '  PyObject *item;\n'
+    s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;\n' # header + self + arg
+    s += '  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");\n' # self + arg
+    s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
+    s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
+    s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
+    s += '%s);\n' % digestnums
+    s += '  fb.add_object (object_orbid);\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 1);\n' # arg
+    s += self.generate_add_field_cxximpl ('fb', ftype, 'item')
+    # call out
+    s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);\n' # deletes fb
+    s += '  if (fr) { delete fr; fr = NULL; }\n'
+    s += '  return None_INCREF();\n'
+    s += ' error:\n'
+    s += '  if (fr) delete fr;\n'
+    s += '  if (fm) delete fm;\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    return s
   def type2cxx (self, typename):
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
@@ -579,6 +611,7 @@ class Generator:
           s += self.generate_pyemit_cxximpl (tp, sg, mdefs)
         for fl in tp.fields:
           s += self.generate_pygetter_cxximpl (tp, fl[0], fl[1], mdefs)
+          s += self.generate_pysetter_cxximpl (tp, fl[0], fl[1], mdefs)
     # method def array
     if mdefs:
       aux = '{ "__AIDA_pyfactory__register_callback", __AIDA_pyfactory__register_callback, METH_VARARGS, "Register Python object factory callable" }'

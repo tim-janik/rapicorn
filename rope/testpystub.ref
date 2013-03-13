@@ -433,8 +433,10 @@ class UIWidgetArea (_BaseClass_):
       return _CPY._AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a (self) # UIWidgetArea.on_click
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
-    # dummy
-    # on_click
+    if name == "dummy":
+      return _CPY._AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5 (self, value) # UIWidgetArea.dummy
+    if name == "on_click":
+      return _CPY._AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb (self, value) # UIWidgetArea.on_click
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class Parent (_BaseClass_):
@@ -701,17 +703,28 @@ class PropertyTester (_BaseClass_):
       return _CPY._AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e (self) # PropertyTester.any_prop
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
-    # bool_prop
-    # int32_prop
-    # int64_prop
-    # float64_prop
-    # string_prop
-    # enum_prop
-    # record_prop
-    # sequence_prop
-    # interface_prop
-    # self_prop
-    # any_prop
+    if name == "bool_prop":
+      return _CPY._AIDA_pysetter__a88d7a16adc7ad4333e7a32598f08880 (self, value) # PropertyTester.bool_prop
+    if name == "int32_prop":
+      return _CPY._AIDA_pysetter__7b7b3182160469e4bd3c44c3a57484eb (self, value) # PropertyTester.int32_prop
+    if name == "int64_prop":
+      return _CPY._AIDA_pysetter__b33bf89d2259a1db0154420aebe9a16c (self, value) # PropertyTester.int64_prop
+    if name == "float64_prop":
+      return _CPY._AIDA_pysetter__f1df5bd296ac78e2bb263cff89927093 (self, value) # PropertyTester.float64_prop
+    if name == "string_prop":
+      return _CPY._AIDA_pysetter__fadb1eed1d8d358a17cd2ca684080698 (self, value) # PropertyTester.string_prop
+    if name == "enum_prop":
+      return _CPY._AIDA_pysetter__99206fff699c82d61dcbc77498569411 (self, value) # PropertyTester.enum_prop
+    if name == "record_prop":
+      return _CPY._AIDA_pysetter__55aaf8cee9dd7a4683d8416416740bf0 (self, value) # PropertyTester.record_prop
+    if name == "sequence_prop":
+      return _CPY._AIDA_pysetter__f86952a034b8bc843be169a3f0a9a07d (self, value) # PropertyTester.sequence_prop
+    if name == "interface_prop":
+      return _CPY._AIDA_pysetter__bf62779e2a11aebb95547f4e29ca3814 (self, value) # PropertyTester.interface_prop
+    if name == "self_prop":
+      return _CPY._AIDA_pysetter__1a1ee3ab20ab3c2feeaf17826dba2891 (self, value) # PropertyTester.self_prop
+    if name == "any_prop":
+      return _CPY._AIDA_pysetter__e0c7d397e652f3f7bbdf7826e88f4f42 (self, value) # PropertyTester.any_prop
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class ButtonArea (_BaseClass_):
@@ -736,10 +749,14 @@ class ButtonArea (_BaseClass_):
       return _CPY._AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a (self) # ButtonArea.click_type
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
-    # on_click
-    # on_click2
-    # on_click3
-    # click_type
+    if name == "on_click":
+      return _CPY._AIDA_pysetter__db3a24116c6539852a0576faff45b4b2 (self, value) # ButtonArea.on_click
+    if name == "on_click2":
+      return _CPY._AIDA_pysetter__fc93898ba4104662c918694fe5c2bfef (self, value) # ButtonArea.on_click2
+    if name == "on_click3":
+      return _CPY._AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8 (self, value) # ButtonArea.on_click3
+    if name == "click_type":
+      return _CPY._AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8 (self, value) # ButtonArea.click_type
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class PureMethods (_BaseClass_):
@@ -774,8 +791,10 @@ class Compressor (_BaseClass_):
       return _CPY._AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e (self) # Compressor.ratio
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
   def __setattr__ (self, name, value):
-    # threshold
-    # ratio
+    if name == "threshold":
+      return _CPY._AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b (self, value) # Compressor.threshold
+    if name == "ratio":
+      return _CPY._AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315 (self, value) # Compressor.ratio
     raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
 
 class RecordForGroups (_BaseRecord_):
