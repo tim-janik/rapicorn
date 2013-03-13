@@ -3,7 +3,7 @@
 #include <deque>
 
 // --- conventional Python module initializers ---
-#define MODULE_NAME             cxxrapicorn
+#define MODULE_NAME             __pyrapicorn
 #define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
 #define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 

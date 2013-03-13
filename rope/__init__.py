@@ -39,8 +39,8 @@ def app_init (application_name = None):
   # setup global Application
   app = Application (_PY._BaseClass_._AidaID_ (aida_id))
   def iterate (self, may_block, may_dispatch):
-    if hasattr (self, "event_loop"):
-      loop = self.event_loop
+    if hasattr (self, "__aida_event_loop__"):
+      loop = self.__aida_event_loop__
       dloop = None
     else:
       dloop = Loop.Loop()
@@ -52,10 +52,11 @@ def app_init (application_name = None):
     return needs_dispatch
   app.__class__.iterate = iterate # extend for event loop integration
   def loop (self):
-    self.event_loop = Loop.Loop()
-    self.event_loop += Loop.RapicornSource()
-    exit_status = self.event_loop.loop()
-    del self.event_loop
+    event_loop = Loop.Loop()
+    event_loop += Loop.RapicornSource()
+    self.__dict__['__aida_event_loop__'] = event_loop
+    exit_status = self.__aida_event_loop__.loop()
+    del self.__dict__['__aida_event_loop__']
     return exit_status
   app.__class__.loop = loop # extend for event loop integration
   Loop.app = app # integrate event loop with app
@@ -73,13 +74,14 @@ class AidaObjectFactory:
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
-  import cxxrapicorn    # generated __AIDA_... cpy methods
-  import pyrapicorn     # generated Python classes, Application, etc
-  pyrapicorn.__AIDA_pymodule__init_once (cxxrapicorn)
-  cxxrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
+  import __pyrapicorn   # generated C++ methods
+  import pyrapicorn     # generated Python classes
+  __pyrapicorn.__AIDA_BaseRecord__ = pyrapicorn._BaseRecord_ # FIXME
+  __pyrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
+  pyrapicorn._CPY = __pyrapicorn # FIXME
   del globals()['AidaObjectFactory']
-  app_init._CPY, app_init._PY = (cxxrapicorn, pyrapicorn) # app_init() internals
-  del globals()['cxxrapicorn']
+  app_init._CPY, app_init._PY = (__pyrapicorn, pyrapicorn) # app_init() internals
+  del globals()['__pyrapicorn']
   del globals()['pyrapicorn']
 _module_init_once_()
 
