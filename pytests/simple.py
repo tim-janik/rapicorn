@@ -22,6 +22,22 @@ app = Rapicorn.app_init ("Simple-Python-Test")  # unique application name
 app.load_string ("SimplePy", simple_window_widgets)     # loads widget tree
 window = app.create_window ("SimplePy:simple-window")  # creates main window
 
+# signal connection testing
+def assert_unreachable (*args):
+  assert "code unreachable" == True
+cid1 = window.sig_commands.connect (assert_unreachable)
+cid2 = window.sig_commands.connect (assert_unreachable)
+assert cid1 != 0
+assert cid2 != 0
+assert cid1 != cid2
+disconnected = window.sig_commands.disconnect (cid2)
+assert disconnected == True
+disconnected = window.sig_commands.disconnect (cid2)
+assert disconnected == False
+window.sig_commands -= cid1
+disconnected = window.sig_commands.disconnect (cid1)
+assert disconnected == False
+
 # window command handling
 seen_click_command = False
 def command_handler (cmdname, args):
@@ -29,17 +45,8 @@ def command_handler (cmdname, args):
   seen_click_command |= cmdname == "CLICK"
   ## print "in signal handler, args:", cmdname, args
   return True # handled
-cid = window.sig_commands_connect (command_handler)
-
-# signal connection testing
-cid2 = window.sig_commands_connect (command_handler)
-assert cid != 0
-assert cid2 != 0
-assert cid != cid2
-disconnected = window.sig_commands_disconnect (cid2)
-assert disconnected == True
-disconnected = window.sig_commands_disconnect (cid2)
-assert disconnected == False
+# need one signal connection to test for click
+window.sig_commands += command_handler
 
 # show window on screen
 window.show()

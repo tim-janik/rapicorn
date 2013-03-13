@@ -4,11 +4,24 @@ import __testpass as _CPY
 class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
+
 class _BaseClass_ (object):
   class _AidaID_:
     def __init__ (self, _aidaid):
       assert isinstance (_aidaid, (int, long))
       self.id = _aidaid
+  class __Signal__:
+    def __init__ (self, object, pyconnect):
+      self.__object = object
+      self.__pyconnect = pyconnect
+    def connect (self, _callable):
+      return self.__pyconnect (self.__object, _callable, 0)
+    def disconnect (self, connection_id):
+      return self.__pyconnect (self.__object, None, connection_id)
+    def __iadd__ (self, _callable):
+      return self.connect (_callable)
+    def __isub__ (self, connection_id):
+      return self.disconnect (connection_id)
   def __init__ (self, _aida_id):
     assert isinstance (_aida_id, _BaseClass_._AidaID_)
     self.__dict__['__aida_pyobject__'] = _aida_id.id
@@ -16,13 +29,20 @@ class _BaseClass_ (object):
     try:
       getter = getattr (self.__class__, '__pygetter__%s__' % name)
     except AttributeError:
-      raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+      try:
+        getter = getattr (self.__class__, '__pysignal__%s__' % name)
+      except AttributeError:
+        raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
     return getter (self)
   def __setattr__ (self, name, value):
     try:
       setter = getattr (self.__class__, '__pysetter__%s__' % name)
     except AttributeError:
-      raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
+      try:
+        getattr (self.__class__, '__pysignal__%s__' % name)
+        return None # ignore setting of signals to allow __iadd__ and __isub__
+      except AttributeError:
+        raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
     return setter (self, value)
 
 class FirstInterface (_BaseClass_):
@@ -409,14 +429,10 @@ class UIWidgetArea (_BaseClass_):
     return _CPY.__AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (self)
   def on_click2in (self, command): # one way
     return _CPY.__AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__ (self, command)
-  def sig_void_signal_connect (self, func):
-    return _CPY.__AIDA_pyconnect__0774aa0ffbdf5f023f1b5247dca90c86__ (self, func, 0)
-  def sig_void_signal_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__0774aa0ffbdf5f023f1b5247dca90c86__ (self, None, connection_id)
-  def sig_sample_signal_connect (self, func):
-    return _CPY.__AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (self, func, 0)
-  def sig_sample_signal_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (self, None, connection_id)
+  def __pysignal__sig_void_signal__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__0774aa0ffbdf5f023f1b5247dca90c86__)
+  def __pysignal__sig_sample_signal__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__)
   __pygetter__dummy__             = _CPY.__AIDA_pygetter__f67db704b9d460d6d4950feab697e61e__ # UIWidgetArea.dummy
   __pygetter__on_click__          = _CPY.__AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a__ # UIWidgetArea.on_click
   __pysetter__dummy__             = _CPY.__AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5__ # UIWidgetArea.dummy
@@ -500,110 +516,60 @@ class MethodTestInterface (_BaseClass_):
 class SignalTestInterface (_BaseClass_):
   def __init__ (self, _aida_id):
     super (SignalTestInterface, self).__init__ (_aida_id)
-  def sig_void_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__ (self, func, 0)
-  def sig_void_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__ (self, None, connection_id)
-  def sig_bool_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__31529d809bd68e6ba11d55517d4325ae__ (self, func, 0)
-  def sig_bool_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__31529d809bd68e6ba11d55517d4325ae__ (self, None, connection_id)
-  def sig_int32_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__ac712d196d3466f3eb06bf4f2b2a414c__ (self, func, 0)
-  def sig_int32_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__ac712d196d3466f3eb06bf4f2b2a414c__ (self, None, connection_id)
-  def sig_int64_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__1439d37d87e2668b57ded621e6b0cde6__ (self, func, 0)
-  def sig_int64_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__1439d37d87e2668b57ded621e6b0cde6__ (self, None, connection_id)
-  def sig_float64_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__4c5a782eaa76edb0b66fbaa524004fd9__ (self, func, 0)
-  def sig_float64_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__4c5a782eaa76edb0b66fbaa524004fd9__ (self, None, connection_id)
-  def sig_string_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__bc5c00f41d7c710d368d920fb6c136e6__ (self, func, 0)
-  def sig_string_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__bc5c00f41d7c710d368d920fb6c136e6__ (self, None, connection_id)
-  def sig_enum_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__60702e53aca1b772eac0d39852c951fb__ (self, func, 0)
-  def sig_enum_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__60702e53aca1b772eac0d39852c951fb__ (self, None, connection_id)
-  def sig_record_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__755d247d6abfde87093ff68bbb0f5257__ (self, func, 0)
-  def sig_record_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__755d247d6abfde87093ff68bbb0f5257__ (self, None, connection_id)
-  def sig_sequence_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__b5c453295aa722077c0fa1c12417b139__ (self, func, 0)
-  def sig_sequence_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__b5c453295aa722077c0fa1c12417b139__ (self, None, connection_id)
-  def sig_interface_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__e8ef1fe5de31f95bc0e4bcc410120585__ (self, func, 0)
-  def sig_interface_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__e8ef1fe5de31f95bc0e4bcc410120585__ (self, None, connection_id)
-  def sig_any_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__296163d4220985ce40daacab4a841093__ (self, func, 0)
-  def sig_any_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__296163d4220985ce40daacab4a841093__ (self, None, connection_id)
-  def sig_self_result_connect (self, func):
-    return _CPY.__AIDA_pyconnect__35828273200534f772873f1374d6093b__ (self, func, 0)
-  def sig_self_result_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__35828273200534f772873f1374d6093b__ (self, None, connection_id)
-  def sig_void_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__e79b3592345942f66818e92df5df5bef__ (self, func, 0)
-  def sig_void_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__e79b3592345942f66818e92df5df5bef__ (self, None, connection_id)
-  def sig_bool_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__495e3d2d698caad7f16b2f75ddaf3220__ (self, func, 0)
-  def sig_bool_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__495e3d2d698caad7f16b2f75ddaf3220__ (self, None, connection_id)
-  def sig_int32_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__1d335377194859d1fa00c7fb47bc82e4__ (self, func, 0)
-  def sig_int32_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__1d335377194859d1fa00c7fb47bc82e4__ (self, None, connection_id)
-  def sig_int64_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__52b8b36ec08458caeecdb452f6b51528__ (self, func, 0)
-  def sig_int64_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__52b8b36ec08458caeecdb452f6b51528__ (self, None, connection_id)
-  def sig_float64_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__dcacb20b2d942f30242d314085f3e44a__ (self, func, 0)
-  def sig_float64_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__dcacb20b2d942f30242d314085f3e44a__ (self, None, connection_id)
-  def sig_string_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__9bb22c59672e3921981c8364b2197db9__ (self, func, 0)
-  def sig_string_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__9bb22c59672e3921981c8364b2197db9__ (self, None, connection_id)
-  def sig_enum_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__62459d25ac74ebedd598edad744f61b7__ (self, func, 0)
-  def sig_enum_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__62459d25ac74ebedd598edad744f61b7__ (self, None, connection_id)
-  def sig_record_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__e4c732769519ca6a8cf6e34972e875aa__ (self, func, 0)
-  def sig_record_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__e4c732769519ca6a8cf6e34972e875aa__ (self, None, connection_id)
-  def sig_sequence_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__eca8cf0dd80dee4a1bb3845a0704c774__ (self, func, 0)
-  def sig_sequence_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__eca8cf0dd80dee4a1bb3845a0704c774__ (self, None, connection_id)
-  def sig_interface_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__c2562bdab457affd189f1ba486f30579__ (self, func, 0)
-  def sig_interface_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__c2562bdab457affd189f1ba486f30579__ (self, None, connection_id)
-  def sig_any_arg_connect (self, func):
-    return _CPY.__AIDA_pyconnect__445abac8fb3999b7422ee36946f0b021__ (self, func, 0)
-  def sig_any_arg_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__445abac8fb3999b7422ee36946f0b021__ (self, None, connection_id)
-  def sig_self_args_connect (self, func):
-    return _CPY.__AIDA_pyconnect__f62d65c3c8ab76a77f95ce585cfc2b0c__ (self, func, 0)
-  def sig_self_args_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__f62d65c3c8ab76a77f95ce585cfc2b0c__ (self, None, connection_id)
+  def __pysignal__sig_void_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__)
+  def __pysignal__sig_bool_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__31529d809bd68e6ba11d55517d4325ae__)
+  def __pysignal__sig_int32_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__ac712d196d3466f3eb06bf4f2b2a414c__)
+  def __pysignal__sig_int64_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__1439d37d87e2668b57ded621e6b0cde6__)
+  def __pysignal__sig_float64_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__4c5a782eaa76edb0b66fbaa524004fd9__)
+  def __pysignal__sig_string_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__bc5c00f41d7c710d368d920fb6c136e6__)
+  def __pysignal__sig_enum_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__60702e53aca1b772eac0d39852c951fb__)
+  def __pysignal__sig_record_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__755d247d6abfde87093ff68bbb0f5257__)
+  def __pysignal__sig_sequence_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__b5c453295aa722077c0fa1c12417b139__)
+  def __pysignal__sig_interface_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__e8ef1fe5de31f95bc0e4bcc410120585__)
+  def __pysignal__sig_any_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__296163d4220985ce40daacab4a841093__)
+  def __pysignal__sig_self_result__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__35828273200534f772873f1374d6093b__)
+  def __pysignal__sig_void_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__e79b3592345942f66818e92df5df5bef__)
+  def __pysignal__sig_bool_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__495e3d2d698caad7f16b2f75ddaf3220__)
+  def __pysignal__sig_int32_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__1d335377194859d1fa00c7fb47bc82e4__)
+  def __pysignal__sig_int64_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__52b8b36ec08458caeecdb452f6b51528__)
+  def __pysignal__sig_float64_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__dcacb20b2d942f30242d314085f3e44a__)
+  def __pysignal__sig_string_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__9bb22c59672e3921981c8364b2197db9__)
+  def __pysignal__sig_enum_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__62459d25ac74ebedd598edad744f61b7__)
+  def __pysignal__sig_record_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__e4c732769519ca6a8cf6e34972e875aa__)
+  def __pysignal__sig_sequence_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__eca8cf0dd80dee4a1bb3845a0704c774__)
+  def __pysignal__sig_interface_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__c2562bdab457affd189f1ba486f30579__)
+  def __pysignal__sig_any_arg__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__445abac8fb3999b7422ee36946f0b021__)
+  def __pysignal__sig_self_args__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__f62d65c3c8ab76a77f95ce585cfc2b0c__)
 
 class ChildInheritingSignals (SignalTestInterface):
   def __init__ (self, _aida_id):
     super (ChildInheritingSignals, self).__init__ (_aida_id)
-  def sig_child_signal_connect (self, func):
-    return _CPY.__AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__ (self, func, 0)
-  def sig_child_signal_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__ (self, None, connection_id)
+  def __pysignal__sig_child_signal__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__)
 
 class AnotherChild (SignalTestInterface):
   def __init__ (self, _aida_id):
@@ -638,14 +604,10 @@ class PropertyTester (_BaseClass_):
 class ButtonArea (_BaseClass_):
   def __init__ (self, _aida_id):
     super (ButtonArea, self).__init__ (_aida_id)
-  def sig_check_activate_connect (self, func):
-    return _CPY.__AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__ (self, func, 0)
-  def sig_check_activate_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__ (self, None, connection_id)
-  def sig_activate_connect (self, func):
-    return _CPY.__AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (self, func, 0)
-  def sig_activate_disconnect (self, connection_id):
-    return _CPY.__AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (self, None, connection_id)
+  def __pysignal__sig_check_activate__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__)
+  def __pysignal__sig_activate__ (self):
+    return self.__Signal__ (self, _CPY.__AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__)
   __pygetter__on_click__          = _CPY.__AIDA_pygetter__199859aecc756e97a744332174ed27f4__ # ButtonArea.on_click
   __pygetter__on_click2__         = _CPY.__AIDA_pygetter__1b448d91990181da9751c08ae956c729__ # ButtonArea.on_click2
   __pygetter__on_click3__         = _CPY.__AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5__ # ButtonArea.on_click3

@@ -114,10 +114,8 @@ class Generator:
     return s
   def generate_signal_pyimpl (self, signal_type):
     s, (digeststring, digestnums) = '', self.method_digests (signal_type)
-    s += 'def sig_%s_connect (self, func):\n' % signal_type.name
-    s += '  return _CPY.__AIDA_pyconnect__%s__ (self, func, 0)\n' % digeststring
-    s += 'def sig_%s_disconnect (self, connection_id):\n' % signal_type.name
-    s += '  return _CPY.__AIDA_pyconnect__%s__ (self, None, connection_id)\n' % digeststring
+    s += 'def __pysignal__sig_%s__ (self):\n' % signal_type.name
+    s += '  return self.__Signal__ (self, _CPY.__AIDA_pyconnect__%s__)\n' % digeststring
     return s
   def generate_to_proto_pyimpl (self, argname, type_info, valname, onerror = 'return false'):
     s = ''
@@ -219,7 +217,7 @@ class Generator:
         s += self.generate_record_pyimpl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += self.generate_class_pyimpl (tp) + '\n'
-    s += 'del _CPY'
+    s += 'del _CPY\n'
     return s
   def generate_enum_cxximpl (self, type_info):
     s = ''

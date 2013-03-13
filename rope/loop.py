@@ -99,7 +99,7 @@ class Loop:
     self.cached_primary = False
   def loop (self):
     if not self.primary_sig:
-      self.primary_sig = app.sig_missing_primary_connect (self.lost_primary)
+      self.primary_sig = app.sig_missing_primary.connect (self.lost_primary)
     while self.iterate (False, True):
       pass # handle all pending events
     self.cached_primary = not app.finishable()
