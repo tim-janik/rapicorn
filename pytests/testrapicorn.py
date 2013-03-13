@@ -23,8 +23,10 @@ app.load_string ("MyTest", my_window_xml)       # load widget tree
 window = app.create_window ("MyTest:my-window") # create main window
 
 # property testing
-# FIXME: assert window.name == "my-window"
-window.title = "foo"    ; assert window.title == "foo"
+assert window.name == "my-window"
+window.name = "frob17"  ; assert window.name == "frob17"        # testing derived property
+window.name = "window1" ; assert window.name == "window1"
+window.title = "foo"    ; assert window.title == "foo"          # testing narrowed property
 window.title = "bar"    ; assert window.title == "bar"
 
 
