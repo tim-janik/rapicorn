@@ -14,9 +14,7 @@ X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREX
 
 
 # === tests ===
-TEST_PYPROGS =
-TEST_PYPROGS     += simple.py
-TEST_PYPROGS     += loop.py
+TEST_PYPROGS = simple.py loop.py testrapicorn.py
 
 # === python-call-info ===
 python-call-info:
