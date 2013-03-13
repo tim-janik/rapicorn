@@ -637,7 +637,6 @@ def generate (namespace_list, **args):
     fname = outname + '.py'
     print "  GEN   ", fname
     fout = open (fname, 'w')
-    gg = Generator()
     textstring = gg.generate_pyimpl_types (config['implementation_types'])
     fout.write (textstring)
     fout.close()
