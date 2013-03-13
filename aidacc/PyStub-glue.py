@@ -9,10 +9,3 @@ class _BaseClass_ (object):
   def __init__ (self, _aida_id):
     assert isinstance (_aida_id, _BaseClass_._AidaID_)
     self.__dict__['__aida_pyobject__'] = _aida_id.id
-
-def __AIDA_pymodule__init_once (cpy_module):
-  del globals()['__AIDA_pymodule__init_once'] # run once only
-  global _CPY
-  _CPY = cpy_module
-  _CPY.__AIDA_BaseRecord__ = _BaseRecord_
-

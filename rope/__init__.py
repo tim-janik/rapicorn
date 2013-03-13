@@ -74,13 +74,14 @@ class AidaObjectFactory:
 
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
-  import cxxrapicorn    # generated __AIDA_... cpy methods
-  import pyrapicorn     # generated Python classes, Application, etc
-  pyrapicorn.__AIDA_pymodule__init_once (cxxrapicorn)
-  cxxrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
+  import __pyrapicorn   # generated C++ methods
+  import pyrapicorn     # generated Python classes
+  __pyrapicorn.__AIDA_BaseRecord__ = pyrapicorn._BaseRecord_ # FIXME
+  __pyrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
+  pyrapicorn._CPY = __pyrapicorn # FIXME
   del globals()['AidaObjectFactory']
-  app_init._CPY, app_init._PY = (cxxrapicorn, pyrapicorn) # app_init() internals
-  del globals()['cxxrapicorn']
+  app_init._CPY, app_init._PY = (__pyrapicorn, pyrapicorn) # app_init() internals
+  del globals()['__pyrapicorn']
   del globals()['pyrapicorn']
 _module_init_once_()
 
