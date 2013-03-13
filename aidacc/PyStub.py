@@ -155,11 +155,10 @@ class Generator:
     if mtype.rtype.name == 'void':
       s += '): # one way\n'
     else:
-      s += '): # %s\n' % mtype.rtype.name
-    s += '  ___ret = _CPY.__AIDA_pycall__%s__ (' % digeststring
+      s += '): # returns %s\n' % mtype.rtype.name
+    s += '  return _CPY.__AIDA_pycall__%s__ (' % digeststring
     s += ', '.join (vals)
     s += ')\n'
-    s += '  return ___ret'
     return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):

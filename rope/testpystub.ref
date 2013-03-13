@@ -29,8 +29,7 @@ class FirstInterface (_BaseClass_):
   def __init__ (self, _aida_id):
     super (FirstInterface, self).__init__ (_aida_id)
   def void_func (self): # one way
-    ___ret = _CPY.__AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (self)
-    return ___ret
+    return _CPY.__AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (self)
 
 class XFooRecord (_BaseRecord_):
   def __init__ (self, **entries):
@@ -390,36 +389,26 @@ class SomeRecord (_BaseRecord_):
 class UIWidgetArea (_BaseClass_):
   def __init__ (self, _aida_id):
     super (UIWidgetArea, self).__init__ (_aida_id)
-  def simple_method (self): # float64
-    ___ret = _CPY.__AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (self)
-    return ___ret
-  def single_arg (self, n): # float64
-    ___ret = _CPY.__AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__ (self, n)
-    return ___ret
-  def single_arg2 (self, n = 5): # float64
-    ___ret = _CPY.__AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__ (self, n)
-    return ___ret
-  def two_args (self, n, r): # float64
-    ___ret = _CPY.__AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__ (self, n, r)
-    return ___ret
-  def two_args2 (self, n = 6, r = 7.7): # float64
-    ___ret = _CPY.__AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__ (self, n, r)
-    return ___ret
-  def multi_args (self, b, n, r, i, s = "String ding", y = 5): # float64
-    ___ret = _CPY.__AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__ (self, b, n, r, i, s, y)
-    return ___ret
-  def self_method (self, ba1, ba2): # float64
-    ___ret = _CPY.__AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__ (self, ba1, ba2)
-    return ___ret
+  def simple_method (self): # returns float64
+    return _CPY.__AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (self)
+  def single_arg (self, n): # returns float64
+    return _CPY.__AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__ (self, n)
+  def single_arg2 (self, n = 5): # returns float64
+    return _CPY.__AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__ (self, n)
+  def two_args (self, n, r): # returns float64
+    return _CPY.__AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__ (self, n, r)
+  def two_args2 (self, n = 6, r = 7.7): # returns float64
+    return _CPY.__AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__ (self, n, r)
+  def multi_args (self, b, n, r, i, s = "String ding", y = 5): # returns float64
+    return _CPY.__AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__ (self, b, n, r, i, s, y)
+  def self_method (self, ba1, ba2): # returns float64
+    return _CPY.__AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__ (self, ba1, ba2)
   def void_method (self): # one way
-    ___ret = _CPY.__AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__ (self)
-    return ___ret
-  def on_click2out (self): # String
-    ___ret = _CPY.__AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (self)
-    return ___ret
+    return _CPY.__AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__ (self)
+  def on_click2out (self): # returns String
+    return _CPY.__AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (self)
   def on_click2in (self, command): # one way
-    ___ret = _CPY.__AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__ (self, command)
-    return ___ret
+    return _CPY.__AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__ (self, command)
   def sig_void_signal_connect (self, func):
     return _CPY._AIDA_pymarshal__InterfaceTests__UIWidgetArea__void_signal_void (self, func, 0)
   def sig_void_signal_disconnect (self, connection_id):
@@ -478,48 +467,35 @@ class QuickIface (_BaseClass_):
   def __init__ (self, _aida_id):
     super (QuickIface, self).__init__ (_aida_id)
   def simple_function (self, i = 9): # one way
-    ___ret = _CPY.__AIDA_pycall__76ac7a704663d24623abac49621c6802__ (self, i)
-    return ___ret
+    return _CPY.__AIDA_pycall__76ac7a704663d24623abac49621c6802__ (self, i)
 
 class MethodTestInterface (_BaseClass_):
   def __init__ (self, _aida_id):
     super (MethodTestInterface, self).__init__ (_aida_id)
   def method_with_void (self): # one way
-    ___ret = _CPY.__AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (self)
-    return ___ret
-  def method_with_bools (self, input, optval = 0): # bool
-    ___ret = _CPY.__AIDA_pycall__55291a7348d1424232dac90dde65a764__ (self, input, optval)
-    return ___ret
-  def method_with_ints32 (self, input, optval = -2): # int32
-    ___ret = _CPY.__AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__ (self, input, optval)
-    return ___ret
-  def method_with_ints64 (self, input, optval = 576460752303423488): # int64
-    ___ret = _CPY.__AIDA_pycall__678de8636167b6a1b27d37ca066b5335__ (self, input, optval)
-    return ___ret
-  def method_with_floats (self, input, optval = 309.9): # float64
-    ___ret = _CPY.__AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__ (self, input, optval)
-    return ___ret
-  def method_with_string (self, input, optval = "default"): # String
-    ___ret = _CPY.__AIDA_pycall__646f80849d732dc572fd1ede45b153e3__ (self, input, optval)
-    return ___ret
-  def method_with_enum (self, input, optval = 0): # QuickEnum
-    ___ret = _CPY.__AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (self, input, optval)
-    return ___ret
-  def method_with_record (self, input, optval = None): # QuickRecord
-    ___ret = _CPY.__AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__ (self, input, optval)
-    return ___ret
-  def method_with_sequence (self, input, optval = ()): # QuickSequence
-    ___ret = _CPY.__AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__ (self, input, optval)
-    return ___ret
-  def method_with_interface (self, input, optval = None): # GrandChild
-    ___ret = _CPY.__AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (self, input, optval)
-    return ___ret
-  def method_with_anys (self, input, optval): # Any
-    ___ret = _CPY.__AIDA_pycall__807e5dacf307a2772b65069e50e63c80__ (self, input, optval)
-    return ___ret
-  def method_with_quickiface (self, input, iface0 = None): # QuickIface
-    ___ret = _CPY.__AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__ (self, input, iface0)
-    return ___ret
+    return _CPY.__AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (self)
+  def method_with_bools (self, input, optval = 0): # returns bool
+    return _CPY.__AIDA_pycall__55291a7348d1424232dac90dde65a764__ (self, input, optval)
+  def method_with_ints32 (self, input, optval = -2): # returns int32
+    return _CPY.__AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__ (self, input, optval)
+  def method_with_ints64 (self, input, optval = 576460752303423488): # returns int64
+    return _CPY.__AIDA_pycall__678de8636167b6a1b27d37ca066b5335__ (self, input, optval)
+  def method_with_floats (self, input, optval = 309.9): # returns float64
+    return _CPY.__AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__ (self, input, optval)
+  def method_with_string (self, input, optval = "default"): # returns String
+    return _CPY.__AIDA_pycall__646f80849d732dc572fd1ede45b153e3__ (self, input, optval)
+  def method_with_enum (self, input, optval = 0): # returns QuickEnum
+    return _CPY.__AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (self, input, optval)
+  def method_with_record (self, input, optval = None): # returns QuickRecord
+    return _CPY.__AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__ (self, input, optval)
+  def method_with_sequence (self, input, optval = ()): # returns QuickSequence
+    return _CPY.__AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__ (self, input, optval)
+  def method_with_interface (self, input, optval = None): # returns GrandChild
+    return _CPY.__AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (self, input, optval)
+  def method_with_anys (self, input, optval): # returns Any
+    return _CPY.__AIDA_pycall__807e5dacf307a2772b65069e50e63c80__ (self, input, optval)
+  def method_with_quickiface (self, input, iface0 = None): # returns QuickIface
+    return _CPY.__AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__ (self, input, iface0)
 
 class SignalTestInterface (_BaseClass_):
   def __init__ (self, _aida_id):
@@ -682,16 +658,14 @@ class ButtonArea (_BaseClass_):
 class PureMethods (_BaseClass_):
   def __init__ (self, _aida_id):
     super (PureMethods, self).__init__ (_aida_id)
-  def pure_method (self, f): # int32
-    ___ret = _CPY.__AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (self, f)
-    return ___ret
+  def pure_method (self, f): # returns int32
+    return _CPY.__AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (self, f)
 
 class NameTests (_BaseClass_):
   def __init__ (self, _aida_id):
     super (NameTests, self).__init__ (_aida_id)
   def args_from_other_namespace (self, qr, qe, sr): # one way
-    ___ret = _CPY.__AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (self, qr, qe, sr)
-    return ___ret
+    return _CPY.__AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (self, qr, qe, sr)
 
 class Compressor (_BaseClass_):
   def __init__ (self, _aida_id):
