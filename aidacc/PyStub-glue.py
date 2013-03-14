@@ -1,3 +1,28 @@
+class __Enum__ (long):
+  def __new__ (_class, value, ident, doc = None):
+    if _class.enum_values.has_key (ident):
+      raise KeyError (ident)
+    instance = long.__new__ (_class, value)
+    instance.__name__ = ident
+    if doc:
+      instance.__doc__ = doc
+    _class.enum_values[ident] = instance
+    vlist = _class._valuedict.get (value, [])
+    if not vlist:
+      _class._valuedict[value] = vlist
+    vlist += [ instance ]
+    return instance
+  def __repr__ (self):
+    return '<enum %s.%s value %s>' % (self.__class__.__name__, self.__name__, repr (long (self)))
+  def __str__ (self):
+    return self.__name__
+  @classmethod
+  def index (_class, value):
+    return _class._valuedict[value][0]
+  @classmethod
+  def get (_class, key, default = None):
+    return _class.enum_values.get (key, default)
+
 class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)

@@ -82,6 +82,19 @@ class Generator:
     if type.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
       return vdefault # number litrals or string
     return self.zero_value_pyimpl (type) # zero is the only default for these types
+  def generate_enum_pyimpl (self, type_info):
+    s = ''
+    s += 'class %s (__Enum__):\n' % type_info.name
+    s += '  enum_values = {}\n'
+    s += '  _valuedict = {}\n'
+    for opt in type_info.options:
+      (ident, label, blurb, number) = opt
+      if blurb:
+        blurb = strcquote (re.sub ('\n', ' ', blurb))
+      else:
+        blurb = 'None'
+      s += '%s = %s (%s, %s)\n' % (ident, type_info.name, number, strcquote (ident))
+    return s
   def generate_record_pyimpl (self, type_info):
     s = ''
     s += 'class %s (_BaseRecord_):\n' % type_info.name
@@ -213,23 +226,13 @@ class Generator:
     for tp in types:
       if tp.is_forward: # or tp.typedef_origin
         pass
+      elif tp.storage == Decls.ENUM:
+        s += self.generate_enum_pyimpl (tp) + '\n'
       elif tp.storage == Decls.RECORD:
         s += self.generate_record_pyimpl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += self.generate_class_pyimpl (tp) + '\n'
     s += 'del _CPY\n'
-    return s
-  def generate_enum_cxximpl (self, type_info):
-    s = ''
-    l = []
-    s += 'enum %s {\n' % type_info.name
-    for opt in type_info.options:
-      (ident, label, blurb, number) = opt
-      s += '  %s = %s,' % (ident, number)
-      if blurb:
-        s += ' // %s' % re.sub ('\n', ' ', blurb)
-      s += '\n'
-    s += '};'
     return s
   def generate_add_0_cxximpl (self, fb, type):
     s = ''
@@ -576,8 +579,6 @@ class Generator:
         pass # s += 'typedef %s %s;\n' % (self.type2cxx (tp.typedef_origin.name), tp.name)
       elif tp.storage == Decls.RECORD:
         s += 'struct %s;\n' % tp.name
-      elif tp.storage == Decls.ENUM:
-        s += self.generate_enum_cxximpl (tp) + '\n'
     # generate types
     for tp in types:
       if tp.typedef_origin or tp.is_forward:
