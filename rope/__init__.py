@@ -62,24 +62,12 @@ def app_init (application_name = None):
   Loop.app = app # integrate event loop with app
   return app
 
-class AidaObjectFactory:
-  def __init__ (self, _PY):
-    self._PY = _PY
-    self.AidaID = _PY._BaseClass_._AidaID_
-  def __call__ (self, type_name, orbid):
-    klass = getattr (self._PY, type_name)
-    if not klass or not orbid:
-      return None
-    return klass (self.AidaID (orbid))
-
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
   import __pyrapicorn   # generated C++ methods
   import pyrapicorn     # generated Python classes
   __pyrapicorn.__AIDA_BaseRecord__ = pyrapicorn._BaseRecord_ # FIXME
-  __pyrapicorn.__AIDA_pyfactory__register_callback (AidaObjectFactory (pyrapicorn))
   pyrapicorn._CPY = __pyrapicorn # FIXME
-  del globals()['AidaObjectFactory']
   app_init._CPY, app_init._PY = (__pyrapicorn, pyrapicorn) # app_init() internals
   del globals()['__pyrapicorn']
   del globals()['pyrapicorn']

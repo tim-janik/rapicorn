@@ -66,3 +66,10 @@ class _BaseClass_ (object):
       except AttributeError:
         raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
     return setter (self, value)
+
+def __AIDA_pyfactory__create_pyobject__ (type_name, orbid):
+    klass = globals().get (type_name, None)
+    if not klass or not orbid:
+      return None
+    return klass (_BaseClass_._AidaID_ (orbid))
+_CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
