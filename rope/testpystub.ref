@@ -7,7 +7,7 @@ class __AIDA_Enum__ (long):
       raise KeyError (ident)
     instance = long.__new__ (_class, value)
     if ident: # track named enums (non-anonymous)
-      instance.__name__ = ident
+      instance.name = ident
       _class.enum_values[ident] = instance
       vlist = _class._valuedict.get (value, [])
       if not vlist:
@@ -17,12 +17,12 @@ class __AIDA_Enum__ (long):
       instance.__doc__ = doc
     return instance
   def __repr__ (self):
-    if hasattr (self, '__name__'):
-      return '<enum %s.%s value %s>' % (self.__class__.__name__, self.__name__, repr (long (self)))
+    if hasattr (self, 'name'):
+      return '<enum %s.%s value %s>' % (self.__class__.__name__, self.name, repr (long (self)))
     else:
       return '<enum %s.%u>' % (self.__class__.__name__, self)
   def __str__ (self):
-    return self.__name__ if hasattr (self, '__name__') else str (long (self))
+    return self.name if hasattr (self, 'name') else str (long (self))
   @classmethod
   def _enum_lookup (_class, value):
     try:
