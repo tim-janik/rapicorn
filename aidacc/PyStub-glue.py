@@ -85,3 +85,4 @@ def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
       return None
     return klass (_BaseClass_._AidaID_ (longid))
 _CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
+_CPY.__AIDA_BaseRecord__ = _BaseRecord_
