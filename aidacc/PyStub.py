@@ -284,28 +284,28 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
-  def generate_pop_field_cxximpl (self, fbr, type, var):
+  def generate_pop_field_cxximpl (self, fbr, type_info, var):
     s = ''
-    if type.storage == Decls.BOOL:
+    if type_info.storage == Decls.BOOL:
       s += '  %s = PyLong_FromLongLong (%s.pop_bool()); ERRORifpy ();\n' % (var, fbr)
-    elif type.storage == Decls.INT32:
+    elif type_info.storage == Decls.INT32:
       s += '  %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % (var, fbr)
-    elif type.storage == Decls.INT64:
+    elif type_info.storage == Decls.INT64:
       s += '  %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % (var, fbr)
-    elif type.storage == Decls.FLOAT64:
+    elif type_info.storage == Decls.FLOAT64:
       s += '  %s = PyFloat_FromDouble (%s.pop_double()); ERRORifpy();\n' % (var, fbr)
-    elif type.storage == Decls.ENUM:
-      s += '  %s = PyLong_FromLongLong (%s.pop_evalue()); ERRORifpy();\n' % (var, fbr)
-    elif type.storage == Decls.STRING:
+    elif type_info.storage == Decls.ENUM:
+      s += '  %s = __AIDA_pyfactory__create_enum (%s, %s.pop_evalue()); ERRORifpy();\n' % (var, strcquote (type_info.name), fbr)
+    elif type_info.storage == Decls.STRING:
       s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)
-    elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
-    elif type.storage == Decls.INTERFACE:
+    elif type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
+      s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type_info.name, fbr, var)
+    elif type_info.storage == Decls.INTERFACE:
       s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
-    elif type.storage == Decls.ANY:
+    elif type_info.storage == Decls.ANY:
       s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
-      raise RuntimeError ("marshalling not implemented: " + type.storage)
+      raise RuntimeError ("marshalling not implemented: " + type_info.storage)
     return s
   def generate_record_cxximpl (self, type_info):
     s = ''

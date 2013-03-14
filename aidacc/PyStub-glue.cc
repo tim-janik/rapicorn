@@ -142,12 +142,12 @@ __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
   return NULL;
 }
 
-static PyObject *__AIDA_pyfactory__global_callback = NULL;
+static PyObject *__AIDA_pyfactory__create_pyobject__ = NULL;
 
 static PyObject*
 __AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
 {
-  if (__AIDA_pyfactory__global_callback)
+  if (__AIDA_pyfactory__create_pyobject__)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
   if (PyTuple_Size (pyargs) != 1)
     return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
@@ -155,8 +155,34 @@ __AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
   if (!PyCallable_Check (item))
     return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
   Py_INCREF (item);
-  __AIDA_pyfactory__global_callback = item;
+  __AIDA_pyfactory__create_pyobject__ = item;
   return None_INCREF();
+}
+
+static inline PyObject*
+__AIDA_pyfactory__create_enum (const char *enum_name, uint64_t enum_value)
+{
+  PyObject *result = NULL, *pyid;
+  if (strchr (enum_name, ':'))
+    goto unimplemented;
+  if (!__AIDA_pyfactory__create_pyobject__)
+    return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
+  pyid = PyLong_FromUnsignedLongLong (enum_value);
+  if (pyid)
+    {
+      PyObject *tuple = PyTuple_New (2);
+      if (tuple)
+        {
+          PyTuple_SET_ITEM (tuple, 0, PyString_FromString (enum_name));
+          PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+          result = PyObject_Call (__AIDA_pyfactory__create_pyobject__, tuple, NULL);
+          Py_DECREF (tuple);
+        }
+      Py_XDECREF (pyid);
+    }
+  return result;
+ unimplemented:
+  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", enum_name);
 }
 
 static inline PyObject*
@@ -169,8 +195,8 @@ __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
   type_name = fqtn.substr (10);
   if (type_name.find (':') != std::string::npos)
     goto unimplemented;
-  if (!__AIDA_pyfactory__global_callback)
-    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
+  if (!__AIDA_pyfactory__create_pyobject__)
+    return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
   pyid = PyLong_FromUnsignedLongLong (orbid);
   if (pyid)
     {
@@ -179,7 +205,7 @@ __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
         {
           PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name.c_str()));
           PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
-          result = PyObject_Call (__AIDA_pyfactory__global_callback, tuple, NULL);
+          result = PyObject_Call (__AIDA_pyfactory__create_pyobject__, tuple, NULL);
           Py_DECREF (tuple);
         }
       Py_XDECREF (pyid);

@@ -3,22 +3,32 @@
 import __testpass as _CPY
 class __Enum__ (long):
   def __new__ (_class, value, ident, doc = None):
-    if _class.enum_values.has_key (ident):
+    if ident and _class.enum_values.has_key (ident):
       raise KeyError (ident)
     instance = long.__new__ (_class, value)
-    instance.__name__ = ident
+    if ident: # track named enums (non-anonymous)
+      instance.__name__ = ident
+      _class.enum_values[ident] = instance
+      vlist = _class._valuedict.get (value, [])
+      if not vlist:
+        _class._valuedict[value] = vlist
+      vlist += [ instance ]
     if doc:
       instance.__doc__ = doc
-    _class.enum_values[ident] = instance
-    vlist = _class._valuedict.get (value, [])
-    if not vlist:
-      _class._valuedict[value] = vlist
-    vlist += [ instance ]
     return instance
   def __repr__ (self):
-    return '<enum %s.%s value %s>' % (self.__class__.__name__, self.__name__, repr (long (self)))
+    if hasattr (self, '__name__'):
+      return '<enum %s.%s value %s>' % (self.__class__.__name__, self.__name__, repr (long (self)))
+    else:
+      return '<enum %s.%u>' % (self.__class__.__name__, self)
   def __str__ (self):
-    return self.__name__
+    return self.__name__ if hasattr (self, '__name__') else str (long (self))
+  @classmethod
+  def __lookup__ (_class, value):
+    try:
+      return _class.index (value)
+    except:
+      return _class (value, None) # anonymous enum
   @classmethod
   def index (_class, value):
     return _class._valuedict[value][0]
@@ -70,11 +80,13 @@ class _BaseClass_ (object):
         raise AttributeError ("class %s has no attribute '%s'" % (self.__class__.__name__, name))
     return setter (self, value)
 
-def __AIDA_pyfactory__create_pyobject__ (type_name, orbid):
+def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
     klass = globals().get (type_name, None)
-    if not klass or not orbid:
+    if klass and __Enum__ in klass.__mro__:
+      return klass.__lookup__ (longid)
+    if not klass or not longid:
       return None
-    return klass (_BaseClass_._AidaID_ (orbid))
+    return klass (_BaseClass_._AidaID_ (longid))
 _CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
 
 class Enum1 (__Enum__):
