@@ -1,4 +1,4 @@
-class __Enum__ (long):
+class __AIDA_Enum__ (long):
   def __new__ (_class, value, ident, doc = None):
     if ident and _class.enum_values.has_key (ident):
       raise KeyError (ident)
@@ -21,7 +21,7 @@ class __Enum__ (long):
   def __str__ (self):
     return self.__name__ if hasattr (self, '__name__') else str (long (self))
   @classmethod
-  def __lookup__ (_class, value):
+  def _enum_lookup (_class, value):
     try:
       return _class.index (value)
     except:
@@ -79,8 +79,8 @@ class _BaseClass_ (object):
 
 def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
     klass = globals().get (type_name, None)
-    if klass and __Enum__ in klass.__mro__:
-      return klass.__lookup__ (longid)
+    if hasattr (klass, '_enum_lookup'):
+      return klass._enum_lookup (longid)
     if not klass or not longid:
       return None
     return klass (_BaseClass_._AidaID_ (longid))

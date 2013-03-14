@@ -84,7 +84,7 @@ class Generator:
     return self.zero_value_pyimpl (type) # zero is the only default for these types
   def generate_enum_pyimpl (self, type_info):
     s = ''
-    s += 'class %s (__Enum__):\n' % type_info.name
+    s += 'class %s (__AIDA_Enum__):\n' % type_info.name
     s += '  enum_values = {}\n'
     s += '  _valuedict = {}\n'
     for opt in type_info.options:
