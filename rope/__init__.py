@@ -5,6 +5,8 @@
 More details at http://www.rapicorn.org/.
 """
 
+from Aida1208 import loop as _loop
+
 app = None
 def app_init (application_name = None):
   global app
@@ -21,7 +23,7 @@ def app_init (application_name = None):
     cmdline_args = sys.argv
   aida_id = _CPY._init_dispatcher (application_name, cmdline_args)
   # integrate Rapicorn dispatching with event loop
-  class RapicornSource (Loop.Source):
+  class RapicornSource (_loop.Source):
     def __init__ (self):
       super (RapicornSource, self).__init__ (_CPY._event_dispatch)
       import select
@@ -35,31 +37,41 @@ def app_init (application_name = None):
     def dispatch (self, fdevents):
       self.callable() # _event_dispatch
       return True
-  Loop.RapicornSource = RapicornSource
+  _loop.RapicornSource = RapicornSource
   # setup global Application
   app = Application (_PY._BaseClass_._AidaID_ (aida_id))
+  app.__dict__['cached_primary'] = True
+  app.__dict__['primary_sig'] = 0
   def iterate (self, may_block, may_dispatch):
     if hasattr (self, "__aida_event_loop__"):
       loop = self.__aida_event_loop__
       dloop = None
     else:
-      dloop = Loop.Loop()
+      dloop = _loop.Loop()
       loop = dloop
-      loop += Loop.RapicornSource()
+      loop += _loop.RapicornSource()
     needs_dispatch = loop.iterate (may_block, may_dispatch)
     loop = None
     del dloop
     return needs_dispatch
   app.__class__.iterate = iterate # extend for event loop integration
   def loop (self):
-    event_loop = Loop.Loop()
-    event_loop += Loop.RapicornSource()
+    event_loop = _loop.Loop()
+    event_loop += _loop.RapicornSource()
+    if not self.__dict__['primary_sig']:
+      self.__dict__['primary_sig'] = app.sig_missing_primary.connect (lambda: setattr (app.__dict__, 'cached_primary', 0))
     self.__dict__['__aida_event_loop__'] = event_loop
-    exit_status = self.__aida_event_loop__.loop()
+    while event_loop.quit_status == None:
+      if not event_loop.iterate (False, True):  # handle queued events
+        break
+    self.__dict__['cached_primary'] = not app.finishable()  # run while not exitable
+    while self.__dict__['cached_primary'] and event_loop.quit_status == None:
+      self.iterate (True, True)
     del self.__dict__['__aida_event_loop__']
+    exit_status = event_loop.quit_status
     return exit_status
   app.__class__.loop = loop # extend for event loop integration
-  Loop.app = app # integrate event loop with app
+  _loop.app = app # integrate event loop with app
   return app
 
 def _module_init_once_():
@@ -75,4 +87,3 @@ _module_init_once_()
 
 # introduce module symbols
 from pyrapicorn import *
-import loop as Loop

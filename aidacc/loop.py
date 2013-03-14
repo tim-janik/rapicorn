@@ -1,14 +1,11 @@
-# Rapicorn                              -*- Mode: python; -*-
-# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-"""Rapicorn - experimental UI toolkit
-Main.py - Main event loop implementation.
-More details at http://www.rapicorn.org/.
+# Licensed GNU GPLv3 or later: http://www.gnu.org/licenses/gpl.html
+"""Aida.loop - Aida Event Loop
+
+More details at http://www.rapicorn.org/
 """
 import time, select
 
 NEEDS_DISPATCH, PREPARED, UNCHECKED, DESTROYED = 'NpuD'
-
-app = None      # set from __init__.py
 
 class Source (object):
   def __init__ (self, callable, loop = None):
@@ -82,8 +79,6 @@ class Loop:
     self.poll = select.poll()
     self.pollfds = {}
     self.fddict = {}
-    self.cached_primary = True
-    self.primary_sig = 0
   def update_poll (self, src):
     fd = self.pollfds.get (src, -1)
     if fd >= 0:
@@ -95,17 +90,8 @@ class Loop:
     assert isinstance (status, int)
     if self.quit_status == None:
       self.quit_status = status
-  def lost_primary (self):
-    self.cached_primary = False
   def loop (self):
-    if not self.primary_sig:
-      self.primary_sig = app.sig_missing_primary.connect (self.lost_primary)
-    while self.iterate (False, True):
-      pass # handle all pending events
-    self.cached_primary = not app.finishable()
-    if not self.cached_primary:
-      return self.quit_status
-    while self.cached_primary and self.quit_status == None:
+    while self.quit_status == None:
       self.iterate (True, True)
     return self.quit_status
   def __iadd__ (self, source):

@@ -65,7 +65,7 @@ check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
 EXTRA_DIST += builtins.idl
 check-local: check-builtins
 
-# == Aida Dependencies ==
+# == Install aidacc Helper Modules ==
 pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
 pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
 backendfiles    = PrettyDump.py TypeMap.py CxxStub.py TmplFiles.py PyStub.py
@@ -82,6 +82,10 @@ TmplFiles.py: Makefile.am $(template_files)
 	    && sed 's/\\/\\\\/g; s/"""/\\"""/g' $$file && echo '"""' || exit $? ; done ) > xgen-$@
 	$(Q) mv xgen-$@ $@
 CLEANFILES += TmplFiles.py
+
+# == Install Aida Library Modules ==
+PyAidadir	= ${pythondir}/Aida$(strip @RAPICORN_RELEASE@)
+PyAida_PYTHON	= __init__.py loop.py
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
