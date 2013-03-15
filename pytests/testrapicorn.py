@@ -2,7 +2,7 @@
 """
 Rapicorn test program for Python
 """
-import Rapicorn1208 as Rapicorn # Rapicorn modules are versioned
+from Rapicorn1208 import Rapicorn # Rapicorn modules are versioned
 import sys
 
 # issue test message

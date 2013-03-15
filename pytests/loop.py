@@ -6,7 +6,7 @@ PyRapicorn Loop Test
 """
 
 import sys
-import Rapicorn1208 as Rapicorn  # Rapicorn modules are versioned
+from Rapicorn1208 import Rapicorn # Rapicorn modules are versioned
 import Rapicorn1208.loop as Loop # FIXME: provide by default?
 
 # initialize application

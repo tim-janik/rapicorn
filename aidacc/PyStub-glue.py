@@ -1,3 +1,13 @@
+def __AIDA__open_namespace__ (name, _file):
+  import sys, imp
+  if sys.modules.has_key (name):
+    return sys.modules[name]
+  m = imp.new_module (name)
+  m.__file__ = _file
+  m.__doc__ = "AIDA IDL module %s (%s)" % (name, _file)
+  sys.modules[m.__name__] = m
+  return m
+
 class __AIDA_Enum__ (long):
   def __new__ (_class, value, ident, doc = None):
     if ident and _class.enum_values.has_key (ident):
@@ -78,11 +88,26 @@ class _BaseClass_ (object):
     return setter (self, value)
 
 def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
-    klass = globals().get (type_name, None)
-    if hasattr (klass, '_enum_lookup'):
-      return klass._enum_lookup (longid)
-    if not klass or not longid:
-      return None
-    return klass (_BaseClass_._AidaID_ (longid))
+  def resolve (obj, path):
+    parts = path.split ('.')
+    parts.reverse()
+    if parts:
+      element = parts.pop()
+      obj = obj[element]                # obj is a dict initially
+    while parts:
+      element = parts.pop()
+      obj = getattr (obj, element)      # nested obj are module/object instances
+    return obj
+  try:
+    klass = resolve (globals(), type_name)
+  except:
+    raise NameError ("undefined identifier '%s'" % type_name)
+  if hasattr (klass, '_enum_lookup'):
+    return klass._enum_lookup (longid)
+  if not longid:
+    return None
+  if not klass:
+    raise NameError ("undefined identifier '%s'" % type_name)
+  return klass (_BaseClass_._AidaID_ (longid))
 _CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
 _CPY.__AIDA_BaseRecord__ = _BaseRecord_

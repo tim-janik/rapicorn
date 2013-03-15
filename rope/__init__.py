@@ -10,10 +10,12 @@ from Aida1208 import loop as _Aida_loop
 # Load generated C++ API
 import __pyrapicorn as _cxxrapicorn
 
-# Load generated Python API, hook up with C++ API
-import pyrapicorn as _pyrapicorn
-_pyrapicorn._CPY = _cxxrapicorn
+# Load generated Python API
+import pyrapicorn
 from pyrapicorn import *        # incorporate namespace
+
+# Hook up Python API with C++ API
+pyrapicorn._CPY = _cxxrapicorn
 
 # Integrate Rapicorn dispatching with event loop
 class _RapicornSource (_Aida_loop.Source):
@@ -32,11 +34,11 @@ class _RapicornSource (_Aida_loop.Source):
     return True
 
 # Main event loop intergration for Rapicorn.Application
-class MainApplication (Application):
+class MainApplication (Rapicorn.Application):
   def __init__ (self, _aida_id):
     super (MainApplication, self).__init__ (_aida_id)
     self.__dict__['__cached_exitable'] = False
-    self.sig_missing_primary += lambda: app.__dict__.__setitem__ ('__cached_exitable', True)
+    self.sig_missing_primary += lambda: Rapicorn.app.__dict__.__setitem__ ('__cached_exitable', True)
   def iterate (self, may_block, may_dispatch):
     delete_loop = None
     try:
@@ -59,7 +61,7 @@ class MainApplication (Application):
     while event_loop.quit_status == None:
       if not event_loop.iterate (False, True):                  # complete events already queued
         break
-    self.__dict__['__cached_exitable'] = app.finishable()       # run while not exitable
+    self.__dict__['__cached_exitable'] = Rapicorn.app.finishable() # run while not exitable
     while event_loop.quit_status == None and not self.__dict__['__cached_exitable']:
       self.iterate (True, True)                                 # also processes signals
     del self.__dict__['__event_loop']                           # inloop == False
@@ -67,11 +69,10 @@ class MainApplication (Application):
     return exit_status
 
 # Application Initialization
-app = None
+Rapicorn.app = None
 def app_init (application_name = None):
-  del globals()['app_init'] # run once only
-  global app
-  assert app == None
+  from pyrapicorn import Rapicorn
+  assert Rapicorn.app == None
   # initialize dispatching Rapicorn thread
   import sys
   if application_name == None:
@@ -79,5 +80,7 @@ def app_init (application_name = None):
     application_name = os.path.abspath (sys.argv[0] or '-')
   orbid = _cxxrapicorn._init_dispatcher (application_name, sys.argv)
   # setup global Application
-  app = MainApplication (_pyrapicorn._BaseClass_._AidaID_ (orbid))
-  return app
+  Rapicorn.app = MainApplication (pyrapicorn._BaseClass_._AidaID_ (orbid))
+  return Rapicorn.app
+Rapicorn.app_init = app_init
+del app_init
