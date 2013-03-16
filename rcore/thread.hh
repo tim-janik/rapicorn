@@ -293,7 +293,16 @@ public:
 
 // == AsyncRingBuffer ==
 /**
- * This is a thread-safe lock-free ring buffer of fixed size which returns 0 from read() until data is provided through write().
+ * This is a thread-safe lock-free ring buffer of fixed size.
+ * This ring buffer is a single-producer, single-consumer ring buffer that uses atomic
+ * non-blocking operations to synchronize between reader and writer. Calls to read()
+ * will return 0 until data is provided through write(). Only a single single reader
+ * and a single writer must access the ring buffer at any time.
+ * The amount of writable elements is limited by the maximum size of the ring buffer,
+ * as specified during construction. If the elements to be written exceed the available
+ * space, partial writes are possible, depending on how write() was called.
+ * Reading happens analogously, partial reads occur if the number of readable elements
+ * passed into read() exceed the available number of elements in the ring buffer.
  */
 template<typename T>
 class AsyncRingBuffer {
@@ -302,12 +311,12 @@ class AsyncRingBuffer {
   T            *buffer_;
   RAPICORN_CLASS_NON_COPYABLE (AsyncRingBuffer);
 public:
-  explicit      AsyncRingBuffer (uint buffer_size);
-  /*dtor*/     ~AsyncRingBuffer ();
-  uint          n_readable      () const;
-  uint          n_writable      () const;
-  uint          write           (uint length, const T *data, bool partial = true);
-  uint          read            (uint length, T *data, bool partial = true);
+  explicit      AsyncRingBuffer (uint buffer_size);     ///< Construct ring buffer with the maximum available buffer size.
+  /*dtor*/     ~AsyncRingBuffer ();                     ///< Deletes all resources, no asynchronous access must occour at this point.
+  uint          n_readable      () const;               ///< Number elements that can currently be read from ring buffer.
+  uint          n_writable      () const;               ///< Number of elements that can currently be written to ring buffer.
+  uint          read            (uint length, T *data, bool partial = true);       ///< Read (possibly partial) data from ring buffer.
+  uint          write           (uint length, const T *data, bool partial = true); ///< Write (possibly partial) data to ring buffer.
 };
 
 // == Implementation Bits ==
