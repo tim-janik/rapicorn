@@ -312,8 +312,8 @@ cpu_info_string (const CPUInfo &cpu_info)
 }
 
 // == TaskStatus ==
-TaskStatus::TaskStatus (int tid) :
-  task_id (tid), state (UNKNOWN), processor (-1), priority (0),
+TaskStatus::TaskStatus (int pid, int tid) :
+  process_id (pid), task_id (tid >= 0 ? tid : pid), state (UNKNOWN), processor (-1), priority (0),
   utime (0), stime (0), cutime (0), cstime (0),
   ac_stamp (0), ac_utime (0), ac_stime (0), ac_cutime (0), ac_cstime (0)
 {}
@@ -339,7 +339,7 @@ update_task_status (TaskStatus &self)
   unsigned long wchan = 0, nswap = 0, cnswap = 0, rt_priority = 0, policy = 0;
   unsigned long long starttime = 0;
   char state = 0, command[8192 + 1] = { 0 };
-  String filename = string_printf ("/proc/%u/task/%u/stat", self.task_id, self.task_id); // FIXME: find PID for TID
+  String filename = string_printf ("/proc/%u/task/%u/stat", self.process_id, self.task_id);
   FILE *file = fopen (filename.c_str(), "r");
   if (!file)
     return false;
@@ -408,8 +408,8 @@ String
 TaskStatus::string ()
 {
   return
-    string_printf ("task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
-                   task_id, state, processor, priority, (utime + stime) * 0.0001,
+    string_printf ("pid=%d task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
+                   process_id, task_id, state, processor, priority, (utime + stime) * 0.0001,
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
 

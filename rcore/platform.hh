@@ -25,7 +25,9 @@ String  cpu_info_string	(const CPUInfo &cpu_info);
 /// Acquire information about a task (process or thread) at runtime.
 struct TaskStatus {
   enum State { UNKNOWN = '?', RUNNING = 'R', SLEEPING = 'S', DISKWAIT = 'D', STOPPED = 'T', PAGING = 'W', ZOMBIE = 'Z', DEBUG = 'X', };
-  const int     task_id;        ///< Process ID or thread ID.
+  int           process_id;     ///< Process ID.
+  int           task_id;        ///< Process ID or thread ID.
+  String        name;           ///< Thread name (set by user).
   State         state;          ///< Thread state.
   int           processor;      ///< Rrunning processor number.
   int           priority;       ///< Priority or nice value.
@@ -35,9 +37,9 @@ struct TaskStatus {
   uint64        cstime;         ///< System time of dead children.
   uint64        ac_stamp;       ///< Accounting stamp.
   uint64        ac_utime, ac_stime, ac_cutime, ac_cstime;
-  explicit      TaskStatus (int tid);
-  bool          update     ();
-  String        string     ();
+  explicit      TaskStatus (int pid, int tid = -1); ///< Construct from process ID and optionally thread ID.
+  bool          update     ();  ///< Update status information, might return false if called too frequently.
+  String        string     ();  ///< Retrieve string representation of the status information.
 };
 
 } // Rapicorn

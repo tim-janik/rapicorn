@@ -724,7 +724,7 @@ main (int   argc,
         result = ts.string();
       else
         result = "no stats";
-      printout ("TaskStatus(%s): %s\n", argv[2], result.c_str());
+      printout ("TaskStatus: %s\n", result.c_str());
       return 0;
     }
 
