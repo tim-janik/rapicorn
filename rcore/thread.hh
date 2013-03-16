@@ -291,7 +291,116 @@ public:
   void  notifier (const std::function<void()> &notifier);
 };
 
+// == AsyncRingBuffer ==
+/**
+ * This is a thread-safe lock-free ring buffer of fixed size which returns 0 from read() until data is provided through write().
+ */
+template<typename T>
+class AsyncRingBuffer {
+  const uint    size_;
+  Atomic<uint>  wmark_, rmark_;
+  T            *buffer_;
+  RAPICORN_CLASS_NON_COPYABLE (AsyncRingBuffer);
+public:
+  explicit      AsyncRingBuffer (uint buffer_size);
+  /*dtor*/     ~AsyncRingBuffer ();
+  uint          n_readable      () const;
+  uint          n_writable      () const;
+  uint          write           (uint length, const T *data, bool partial = true);
+  uint          read            (uint length, T *data, bool partial = true);
+};
+
 // == Implementation Bits ==
+template<typename T>
+AsyncRingBuffer<T>::AsyncRingBuffer (uint buffer_size) :
+  size_ (buffer_size + 1), wmark_ (0), rmark_ (0), buffer_ (new T[size_])
+{}
+
+template<typename T>
+AsyncRingBuffer<T>::~AsyncRingBuffer()
+{
+  T *old = buffer_;
+  buffer_ = NULL;
+  rmark_ = 0;
+  wmark_ = 0;
+  delete[] old;
+  *const_cast<uint*> (&size_) = 0;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::n_writable() const
+{
+  const uint rm = rmark_.load();
+  const uint wm = wmark_.load();
+  const uint space = (size_ - 1 + rm - wm) % size_;
+  return space;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
+{
+  const uint orig_length = length;
+  const uint rm = rmark_.load();
+  uint wm = wmark_.load();
+  uint space = (size_ - 1 + rm - wm) % size_;
+  if (!partial && length > space)
+    return 0;
+  while (length)
+    {
+      if (rm <= wm)
+        space = size_ - wm + (rm == 0 ? -1 : 0);
+      else
+        space = rm - wm -1;
+      if (!space)
+        break;
+      space = MIN (space, length);
+      std::copy (data, &data[space], &buffer_[wm]);
+      wm = (wm + space) % size_;
+      data += space;
+      length -= space;
+    }
+  RAPICORN_SFENCE; // wmb ensures buffer_ writes are made visible before the wmark_ update
+  wmark_.store (wm);
+  return orig_length - length;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::n_readable() const
+{
+  const uint wm = wmark_.load();
+  const uint rm = rmark_.load();
+  const uint space = (size_ + wm - rm) % size_;
+  return space;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
+{
+  const uint orig_length = length;
+  RAPICORN_LFENCE; // rmb ensures buffer_ contents are seen before wmark_ updates
+  const uint wm = wmark_.load();
+  uint rm = rmark_.load();
+  uint space = (size_ + wm - rm) % size_;
+  if (!partial && length > space)
+    return 0;
+  while (length)
+    {
+      if (wm < rm)
+        space = size_ - rm;
+      else
+        space = wm - rm;
+      if (!space)
+        break;
+      space = MIN (space, length);
+      std::copy (&buffer_[rm], &buffer_[rm + space], data);
+      rm = (rm + space) % size_;
+      data += space;
+      length -= space;
+    }
+  rmark_.store (rm);
+  return orig_length - length;
+}
+
 template<class Value> void
 AsyncBlockingQueue<Value>::push (const Value &v)
 {
