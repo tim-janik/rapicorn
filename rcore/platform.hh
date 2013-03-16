@@ -6,6 +6,7 @@
 
 namespace Rapicorn {
 
+/// Acquire information about the runtime architecture and CPU type.
 struct CPUInfo {
   // architecture name
   const char *machine;
@@ -20,6 +21,24 @@ struct CPUInfo {
 
 CPUInfo cpu_info	(void);
 String  cpu_info_string	(const CPUInfo &cpu_info);
+
+/// Acquire information about a task (process or thread) at runtime.
+struct TaskStatus {
+  enum State { UNKNOWN = '?', RUNNING = 'R', SLEEPING = 'S', DISKWAIT = 'D', STOPPED = 'T', PAGING = 'W', ZOMBIE = 'Z', DEBUG = 'X', };
+  const int     task_id;        ///< Process ID or thread ID.
+  State         state;          ///< Thread state.
+  int           processor;      ///< Rrunning processor number.
+  int           priority;       ///< Priority or nice value.
+  uint64        utime;          ///< Userspace time.
+  uint64        stime;          ///< System time.
+  uint64        cutime;         ///< Userspace time of dead children.
+  uint64        cstime;         ///< System time of dead children.
+  uint64        ac_stamp;       ///< Accounting stamp.
+  uint64        ac_utime, ac_stime, ac_cutime, ac_cstime;
+  explicit      TaskStatus (int tid);
+  bool          update     ();
+  String        string     ();
+};
 
 } // Rapicorn
 
