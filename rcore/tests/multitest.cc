@@ -712,6 +712,21 @@ main (int   argc,
       printout ("%s", process_handle().c_str());
       return 0;
     }
+  if (argc >= 3 && String ("--task-status") == argv[1])
+    {
+      init_core (app_ident, &argc, argv);
+      TaskStatus ts = TaskStatus (string_to_int (argv[2]));
+      String result;
+      bool valid = ts.update();
+      sleep (1);
+      valid &= ts.update();
+      if (valid)
+        result = ts.string();
+      else
+        result = "no stats";
+      printout ("TaskStatus: %s\n", result.c_str());
+      return 0;
+    }
 
   init_core_test (app_ident, &argc, argv);
 
