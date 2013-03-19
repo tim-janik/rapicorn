@@ -189,12 +189,14 @@ static inline PyObject*
 __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
 {
   PyObject *result = NULL, *pyid;
-  std::string type_name, fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
-  if (fqtn.find ("Rapicorn::") != 0)
-    goto unimplemented;
-  type_name = fqtn.substr (10);
-  if (type_name.find (':') != std::string::npos)
-    goto unimplemented;
+  const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
+  std::string type_name = fqtn;
+  size_t p = type_name.find ("::");
+  while (p != std::string::npos)
+    {
+      type_name.replace (p, 2, ".");            // Foo::Bar::baz -> Foo.Bar.baz
+      p = type_name.find ("::", p + 1);
+    }
   if (!__AIDA_pyfactory__create_pyobject__)
     return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
   pyid = PyLong_FromUnsignedLongLong (orbid);
@@ -211,6 +213,4 @@ __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
       Py_XDECREF (pyid);
     }
   return result;
- unimplemented:
-  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", fqtn.c_str());
 }

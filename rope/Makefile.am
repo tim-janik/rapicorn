@@ -13,7 +13,7 @@ HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === Cxxrapicorn ===
 PyRapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-PyRapicorn_PYTHON      = __init__.py pyrapicorn.py loop.py
+PyRapicorn_PYTHON      = __init__.py pyrapicorn.py
 PyRapicorn_LTLIBRARIES = __pyrapicorn.la
 $(PyRapicorn_LTLIBRARIES): $(PyRapicorn_PYTHON) # force python source creation
 python-call-info:

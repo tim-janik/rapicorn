@@ -191,12 +191,14 @@ static inline PyObject*
 __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
 {
   PyObject *result = NULL, *pyid;
-  std::string type_name, fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
-  if (fqtn.find ("Rapicorn::") != 0)
-    goto unimplemented;
-  type_name = fqtn.substr (10);
-  if (type_name.find (':') != std::string::npos)
-    goto unimplemented;
+  const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
+  std::string type_name = fqtn;
+  size_t p = type_name.find ("::");
+  while (p != std::string::npos)
+    {
+      type_name.replace (p, 2, ".");            // Foo::Bar::baz -> Foo.Bar.baz
+      p = type_name.find ("::", p + 1);
+    }
   if (!__AIDA_pyfactory__create_pyobject__)
     return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
   pyid = PyLong_FromUnsignedLongLong (orbid);
@@ -213,8 +215,6 @@ __AIDA_pyfactory__create_from_orbid (uint64_t orbid)
       Py_XDECREF (pyid);
     }
   return result;
- unimplemented:
-  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", fqtn.c_str());
 }
 
 struct XFooRecord;
@@ -310,7 +310,7 @@ aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "multi3", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "multi4", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_enum ("ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_enum ("MandatoryNamespace.ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
   pyfoR = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
@@ -498,7 +498,7 @@ aida_pyExtensiveEnumSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = __AIDA_pyfactory__create_enum ("ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
+    pyfoR = __AIDA_pyfactory__create_enum ("MandatoryNamespace.ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -756,7 +756,7 @@ aida_pyNewRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   if (PyDict_Take_Item (dictR, "i", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_enum ("Enum1", fbr.pop_evalue()); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_enum ("MandatoryNamespace.Enum1", fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum1", &pyfoR) < 0) goto error;
   pyfoR = aida_pyXFooSequence_proto_pop (fbr); ERRORif (!pyfoR);
   if (PyDict_Take_Item (dictR, "xfs", &pyfoR) < 0) goto error;
@@ -1725,7 +1725,7 @@ __AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (PyObject *pyself, PyObject *p
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_enum ("QuickEnum", frr.pop_evalue()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_enum ("InterfaceTests.QuickEnum", frr.pop_evalue()); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -2712,7 +2712,7 @@ __AIDA_pyemit1__SignalTestInterface__enum_arg (const Rapicorn::Aida::FieldBuffer
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_enum ("QuickEnum", fbr.pop_evalue()); ERRORifpy();
+  item = __AIDA_pyfactory__create_enum ("InterfaceTests.QuickEnum", fbr.pop_evalue()); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -3255,7 +3255,7 @@ __AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81__ (PyObject *pyself, PyObject 
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_enum ("QuickEnum", frr.pop_evalue()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_enum ("InterfaceTests.QuickEnum", frr.pop_evalue()); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -3773,7 +3773,7 @@ __AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a__ (PyObject *pyself, PyObject 
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_enum ("ClickType", frr.pop_evalue()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_enum ("RapicornAidaTest.ClickType", frr.pop_evalue()); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
