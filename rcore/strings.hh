@@ -23,11 +23,8 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #endif // RAPICORN_CONVENIENCE
 
 // == String ==
-String                          string_multiply          (const String &s,
-                                                          uint64       count);
-String                          string_canonify          (const String &s,
-                                                          const String &valid_chars,
-                                                          const String &substitute);
+String                          string_multiply          (const String &s, uint64 count);
+String                          string_canonify          (const String &s, const String &valid_chars, const String &substitute);
 String                          string_set_a2z           ();
 String                          string_set_A2Z           ();
 String                          string_set_ascii_alnum   ();
@@ -36,12 +33,10 @@ String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
 String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
 String  			string_vprintf           (const char *format, va_list vargs);
-String  			string_cprintf           (const char *format, ...) RAPICORN_PRINTF (1, 2);
-String  			string_vcprintf          (const char *format, va_list vargs);
-StringVector 			string_split             (const String       &string,
-                                                          const String       &splitter = "");
-String  			string_join              (const String       &junctor,
-                                                          const StringVector &strvec);
+String  			string_locale_printf     (const char *format, ...) RAPICORN_PRINTF (1, 2);
+String  			string_locale_vprintf    (const char *format, va_list vargs);
+StringVector 			string_split             (const String &string, const String &splitter = "");
+String  			string_join              (const String &junctor, const StringVector &strvec);
 bool    			string_to_bool           (const String &string, bool fallback = false);
 String  			string_from_bool         (bool value);
 uint64  			string_to_uint           (const String &string, uint base = 10);
@@ -51,8 +46,7 @@ int64   			string_to_int            (const String &string, uint base = 10);
 String  			string_from_int          (int64 value);
 String  			string_from_float        (float value);
 double  			string_to_double         (const String &string);
-double  			string_to_double         (const char  *dblstring,
-                                                          const char **endptr);
+double  			string_to_double         (const char *dblstring, const char **endptr);
 String                          string_from_double       (double value);
 inline String                   string_from_float        (double value)         { return string_from_double (value); }
 inline double                   string_to_float          (const String &string) { return string_to_double (string); }
@@ -98,6 +92,8 @@ String  string_substitute_char                           (const String &input, c
 String  string_vector_find (const StringVector &svector, const String &key, const String &fallback);
 StringVector cstrings_to_vector (const char*, ...) RAPICORN_SENTINEL;
 void         memset4		(uint32 *mem, uint32 filler, uint length);
+long double posix_locale_strtold   (const char *nptr, char **endptr);
+long double current_locale_strtold (const char *nptr, char **endptr);
 
 // == String Options ==
 bool    string_option_check     (const String   &option_string,
