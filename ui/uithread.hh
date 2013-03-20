@@ -6,7 +6,6 @@
 #include <ui/application.hh>
 #include <ui/arrangement.hh>
 #include <ui/buttons.hh>
-#include <ui/coffer.hh>
 #include <ui/container.hh>
 #include <ui/cmdlib.hh>
 #include <ui/evaluator.hh>

@@ -141,32 +141,17 @@ AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
     fi
 ])
 
-dnl # RAPICORN_RSVG_REQUIREMENTS() - checks everything needed for embedding librsvg
-AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
-[
-    AC_CHECK_FUNCS(strtok_r)
-    PKG_CHECK_MODULES(LIBXML,		[ libxml-2.0		>= 2.4.7  ])
-    PKG_CHECK_MODULES(CAIRO,		[ cairo			>= 1.2.4  ])
-    PKG_CHECK_MODULES(GDKPIXBUF,	[ gdk-pixbuf-2.0	>= 2.22.0 ])
-    PKG_CHECK_MODULES(PANGO,		[ pango			>= 1.14.8 ])
-    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.10.0 ])
-    RAPICORN_RSVG_CFLAGS="$PANGO_CFLAGS $GDKPIXBUF_CFLAGS $LIBXML_CFLAGS $CAIRO_CFLAGS"
-    RAPICORN_RSVG_LIBS="$PANGO_LIBS $GDKPIXBUF_LIBS $LIBXML_LIBS $CAIRO_LIBS -lm"
-    AC_SUBST(RAPICORN_RSVG_CFLAGS)
-    AC_SUBST(RAPICORN_RSVG_LIBS)
-
-])
-
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
+    LIBXML_LIBS=
+    AC_SUBST(LIBXML_LIBS)
+
     # --- Rapicorn paths ---
     docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
     rapicorndatadir='${datadir}/rapicorn'"$RAPICORN_RELEASE"	# datadir = ${datarootdir}
-    rapicornsvgdir='${rapicorndatadir}/svg'
     AC_SUBST(docdir)
     AC_SUBST(rapicorndatadir)
-    AC_SUBST(rapicornsvgdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -512,7 +497,6 @@ RAPICORN_GCC_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_ROPE_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
-RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
@@ -532,7 +516,6 @@ po-helper.sh
 po/Makefile.in
 data/Makefile
 rcore/Makefile
-rcore/rsvg/Makefile
 rcore/tests/Makefile
 res/Makefile
 aidacc/Makefile
@@ -579,7 +562,6 @@ Autoconfiguration complete.
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
 	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
-	SVG-Library:			`printexpandvar ${rapicornsvgdir}`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
 	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`

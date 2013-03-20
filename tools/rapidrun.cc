@@ -1,6 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rapicorn.hh>
-#include "../rcore/rsvg/svg.hh"       // FIXME
 
 #include <string.h>
 #include <stdlib.h>

@@ -3,34 +3,3 @@
 ### ** +  testrcore2  + ** ###
 ### ** +--------------+ ** ###
 
-# Test:  SVG/svg2png ...
-  ARGB:94x78:58d08c470ac62b89
-  -----------------------------------------------
- |                                               |
- |                                               |
- |                                               |
- |      ```````````````````````````````````      |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |     _ddddddddddddddddddddddddddddddddddd_     |
- |      ```````````````````````````````````      |
- |                                               |
- |                                               |
- |                                               |
-  -----------------------------------------------
-  TEST   SVG/svg2png:                                                    OK
