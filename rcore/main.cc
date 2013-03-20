@@ -275,6 +275,61 @@ program_cwd ()
   return program_cwd0;
 }
 
+ScopedLocale::ScopedLocale (locale_t scope_locale) :
+  locale_ (NULL)
+{
+  if (!scope_locale)
+    locale_ = uselocale (LC_GLOBAL_LOCALE);     // use process locale
+  else
+    locale_ = uselocale (scope_locale);         // use custom locale
+  assert (locale_ != NULL);
+}
+
+ScopedLocale::~ScopedLocale ()
+{
+  uselocale (locale_);                          // restore locale
+}
+
+#if 0
+ScopedLocale::ScopedLocale (const String &locale_name = "")
+{
+  /* this constructor should:
+   * - uselocale (LC_GLOBAL_LOCALE) if locale_name == "",
+   * - create newlocale from locale_name, use it and later delete it, but:
+   * - freelocale(newlocale()) seems buggy on glibc-2.7 (crashes)
+   */
+}
+#endif
+
+ScopedPosixLocale::ScopedPosixLocale () :
+  ScopedLocale (posix_locale())
+{}
+
+locale_t
+ScopedPosixLocale::posix_locale ()
+{
+  static locale_t volatile posix_locale_ = NULL;
+  if (!posix_locale_)
+    {
+      locale_t posix_locale = NULL;
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "POSIX.UTF-8", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "C.UTF-8", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "POSIX", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "C", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, NULL, NULL);
+      assert (posix_locale != NULL);
+      if (!__sync_bool_compare_and_swap (&posix_locale_, NULL, posix_locale))
+        freelocale (posix_locale_);
+    }
+  return posix_locale_;
+}
+
+
 static struct __StaticCTorTest {
   int v;
   __StaticCTorTest() : v (0x12affe16)

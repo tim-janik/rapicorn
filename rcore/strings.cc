@@ -132,25 +132,13 @@ string_totitle (const String &str)
   return s;
 }
 
-static locale_t
-c_locale()
-{
-  static locale_t volatile clocale = NULL;
-  if (!clocale)
-    {
-      locale_t tmploc = newlocale (LC_ALL_MASK, "C", NULL);
-      if (!__sync_bool_compare_and_swap (&clocale, NULL, tmploc))
-        freelocale (tmploc);
-    }
-  return clocale;
-}
-
 #define STACK_BUFFER_SIZE       3072
 
-/// Formatted printing ala printf() into a String.
+/// Formatted printing ala printf() into a String, using the POSIX/C locale.
 String
 string_printf (const char *format, ...)
 {
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
   va_list args;
   int l;
   {
@@ -172,18 +160,16 @@ string_printf (const char *format, ...)
   return string;
 }
 
-/// Formatted printing like string_printf using the "C" locale.
+/// Formatted printing like string_printf using the current locale.
 String
-string_cprintf (const char *format, ...)
+string_locale_printf (const char *format, ...)
 {
   va_list args;
   int l;
   {
     char buffer[STACK_BUFFER_SIZE];
     va_start (args, format);
-    locale_t olocale = uselocale (c_locale());
     l = vsnprintf (buffer, sizeof (buffer), format, args);
-    uselocale (olocale);
     va_end (args);
     if (l < 0)
       return format; // error?
@@ -193,20 +179,15 @@ string_cprintf (const char *format, ...)
   String string;
   string.resize (l + 1);
   va_start (args, format);
-  locale_t olocale = uselocale (c_locale());
   const int j = vsnprintf (&string[0], string.size(), format, args);
-  uselocale (olocale);
   va_end (args);
   string.resize (std::min (l, std::max (j, 0)));
   return string;
 }
 
-template<bool CLOCALE> static inline String
-local_vprintf (const char *format, va_list vargs)
+static inline String
+current_locale_vprintf (const char *format, va_list vargs)
 {
-  locale_t olocale;
-  if (CLOCALE)
-    olocale = uselocale (c_locale());
   va_list pargs;
   char buffer[STACK_BUFFER_SIZE];
   buffer[0] = 0;
@@ -226,23 +207,28 @@ local_vprintf (const char *format, va_list vargs)
       va_end (pargs);
       string.resize (std::min (l, std::max (j, 0)));
     }
-  if (CLOCALE)
-    uselocale (olocale);
   return string;
 }
 
-/// Formatted printing ala vprintf() into a String.
+static inline String
+posix_locale_vprintf (const char *format, va_list vargs)
+{
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
+  return current_locale_vprintf (format, vargs);
+}
+
+/// Formatted printing ala vprintf() into a String, using the POSIX/C locale.
 String
 string_vprintf (const char *format, va_list vargs)
 {
-  return local_vprintf<false> (format, vargs);
+  return posix_locale_vprintf (format, vargs);
 }
 
-/// Formatted printing like string_vprintf using the "C" locale.
+/// Formatted printing like string_vprintf using the current locale.
 String
-string_vcprintf (const char *format, va_list vargs)
+string_locale_vprintf (const char *format, va_list vargs)
 {
-  return local_vprintf<true> (format, vargs);
+  return current_locale_vprintf (format, vargs);
 }
 
 static StringVector
@@ -341,8 +327,7 @@ string_from_bool (bool value)
 
 /// Parse a string into a 64bit unsigned integer, optionally specifying the expected number base.
 uint64
-string_to_uint (const String &string,
-                uint          base)
+string_to_uint (const String &string, uint base)
 {
   const char *p = string.c_str();
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
@@ -355,7 +340,7 @@ string_to_uint (const String &string,
 String
 string_from_uint (uint64 value)
 {
-  return string_cprintf ("%llu", value);
+  return string_printf ("%llu", value);
 }
 
 /// Checks if a string contains a digit, optionally preceeded by whitespaces.
@@ -383,20 +368,31 @@ string_to_int (const String &string, uint base)
 String
 string_from_int (int64 value)
 {
-  return string_cprintf ("%lld", value);
+  return string_printf ("%lld", value);
 }
 
-static long double // try strtold in current and C locale
-locale_strtold (const char *nptr, char **endptr)
+/// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
+long double
+posix_locale_strtold (const char *nptr, char **endptr)
+{
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
+  char *fail_pos = NULL;
+  const long double val = strtold (nptr, &fail_pos);
+  if (endptr)
+    *endptr = fail_pos;
+  return val;
+}
+
+/// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
+long double
+current_locale_strtold (const char *nptr, char **endptr)
 {
   char *fail_pos_1 = NULL;
-  const long double val_1 = strtold (nptr, &fail_pos_1);
+  const long double val_1 = posix_locale_strtold (nptr, &fail_pos_1);
   if (fail_pos_1 && fail_pos_1[0] != 0)
     {
       char *fail_pos_2 = NULL;
-      locale_t olocale = uselocale (c_locale());
       const long double val_2 = strtold (nptr, &fail_pos_2);
-      uselocale (olocale);
       if (fail_pos_2 > fail_pos_1)
         {
           if (endptr)
@@ -409,32 +405,32 @@ locale_strtold (const char *nptr, char **endptr)
   return val_1;
 }
 
-/// Parse a double from a string without using locale specific characters, i.e. according to the "C" locale.
+/// Parse a double from a string, trying locale specific characters and POSIX/C formatting.
 double
 string_to_double (const String &string)
 {
-  return locale_strtold (string.c_str(), NULL);
+  return current_locale_strtold (string.c_str(), NULL);
 }
 
 /// Similar to string_to_double(const String&), but returns the first failing character position in @a endptr.
 double
 string_to_double (const char *dblstring, const char **endptr)
 {
-  return locale_strtold (dblstring, (char**) endptr);
+  return current_locale_strtold (dblstring, (char**) endptr);
 }
 
-/// Convert a float into a string without using locale specific characters, i.e. according to the "C" locale.
+/// Convert a float into a string, using the POSIX/C locale.
 String
 string_from_float (float value)
 {
-  return string_cprintf ("%.7g", value);
+  return string_printf ("%.7g", value);
 }
 
-/// Convert a double into a string without using locale specific characters, i.e. according to the "C" locale.
+/// Convert a double into a string, using the POSIX/C locale.
 String
 string_from_double (double value)
 {
-  return string_cprintf ("%.17g", value);
+  return string_printf ("%.17g", value);
 }
 
 /// Parse a string into a list of doubles, expects ';' as delimiter.

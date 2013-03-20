@@ -81,11 +81,11 @@ public:
     accu += "DONE";
 
     const char *expected =
-      "float: 0,30\n"
+      "float: 0.30\n"
       "int: 4\n"
       "string: huhu\n"
-      "Foo: 3,50\n"
-      "Foo: 3,50\n"
+      "Foo: 3.50\n"
+      "Foo: 3.50\n"
       "msg: in sig2 *17*\n"
       "DONE";
     TCMP (accu, ==, expected);
