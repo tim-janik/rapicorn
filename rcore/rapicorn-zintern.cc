@@ -25,7 +25,7 @@ zintern_error  (const char     *format,
   va_start (args, format);
   buffer = g_strdup_vprintf (format, args);
   va_end (args);
-  g_printerr ("\nERROR: %s", buffer);
+  g_printerr ("\nERROR: %s\n", buffer);
   _exit (1);
   g_free (buffer);
 }
