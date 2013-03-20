@@ -159,7 +159,7 @@ string_printf (const char *format, ...)
   return string;
 }
 
-/// Formatted printing like string_printf using the "C" locale.
+/// Formatted printing like string_printf using the POSIX/C locale.
 String
 string_cprintf (const char *format, ...)
 {
@@ -213,12 +213,8 @@ current_locale_vprintf (const char *format, va_list vargs)
 static inline String
 posix_locale_vprintf (const char *format, va_list vargs)
 {
-  String result;
-  {
-    ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
-    result = current_locale_vprintf (format, vargs);
-  }
-  return result;
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
+  return current_locale_vprintf (format, vargs);
 }
 
 /// Formatted printing ala vprintf() into a String.
@@ -228,7 +224,7 @@ string_vprintf (const char *format, va_list vargs)
   return current_locale_vprintf (format, vargs);
 }
 
-/// Formatted printing like string_vprintf using the "C" locale.
+/// Formatted printing like string_vprintf using the POSIX/C locale.
 String
 string_vcprintf (const char *format, va_list vargs)
 {
@@ -376,7 +372,7 @@ string_from_int (int64 value)
   return string_cprintf ("%lld", value);
 }
 
-static long double // try strtold in current and C locale
+static long double // try strtold in current and POSIX/C locale
 locale_strtold (const char *nptr, char **endptr)
 {
   char *fail_pos_1 = NULL;
@@ -384,7 +380,7 @@ locale_strtold (const char *nptr, char **endptr)
   if (fail_pos_1 && fail_pos_1[0] != 0)
     {
       char *fail_pos_2 = NULL;
-      ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
+      ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
       const long double val_2 = strtold (nptr, &fail_pos_2);
       if (fail_pos_2 > fail_pos_1)
         {
@@ -398,7 +394,7 @@ locale_strtold (const char *nptr, char **endptr)
   return val_1;
 }
 
-/// Parse a double from a string without using locale specific characters, i.e. according to the "C" locale.
+/// Parse a double from a string, trying locale specific characters and POSIX/C formatting.
 double
 string_to_double (const String &string)
 {
