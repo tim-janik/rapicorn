@@ -132,19 +132,6 @@ string_totitle (const String &str)
   return s;
 }
 
-static locale_t
-c_locale()
-{
-  static locale_t volatile clocale = NULL;
-  if (!clocale)
-    {
-      locale_t tmploc = newlocale (LC_ALL_MASK, "C", NULL);
-      if (!__sync_bool_compare_and_swap (&clocale, NULL, tmploc))
-        freelocale (tmploc);
-    }
-  return clocale;
-}
-
 #define STACK_BUFFER_SIZE       3072
 
 /// Formatted printing ala printf() into a String.
@@ -176,14 +163,13 @@ string_printf (const char *format, ...)
 String
 string_cprintf (const char *format, ...)
 {
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
   va_list args;
   int l;
   {
     char buffer[STACK_BUFFER_SIZE];
     va_start (args, format);
-    locale_t olocale = uselocale (c_locale());
     l = vsnprintf (buffer, sizeof (buffer), format, args);
-    uselocale (olocale);
     va_end (args);
     if (l < 0)
       return format; // error?
@@ -193,20 +179,15 @@ string_cprintf (const char *format, ...)
   String string;
   string.resize (l + 1);
   va_start (args, format);
-  locale_t olocale = uselocale (c_locale());
   const int j = vsnprintf (&string[0], string.size(), format, args);
-  uselocale (olocale);
   va_end (args);
   string.resize (std::min (l, std::max (j, 0)));
   return string;
 }
 
-template<bool CLOCALE> static inline String
-local_vprintf (const char *format, va_list vargs)
+static inline String
+current_locale_vprintf (const char *format, va_list vargs)
 {
-  locale_t olocale;
-  if (CLOCALE)
-    olocale = uselocale (c_locale());
   va_list pargs;
   char buffer[STACK_BUFFER_SIZE];
   buffer[0] = 0;
@@ -226,23 +207,32 @@ local_vprintf (const char *format, va_list vargs)
       va_end (pargs);
       string.resize (std::min (l, std::max (j, 0)));
     }
-  if (CLOCALE)
-    uselocale (olocale);
   return string;
+}
+
+static inline String
+posix_locale_vprintf (const char *format, va_list vargs)
+{
+  String result;
+  {
+    ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
+    result = current_locale_vprintf (format, vargs);
+  }
+  return result;
 }
 
 /// Formatted printing ala vprintf() into a String.
 String
 string_vprintf (const char *format, va_list vargs)
 {
-  return local_vprintf<false> (format, vargs);
+  return current_locale_vprintf (format, vargs);
 }
 
 /// Formatted printing like string_vprintf using the "C" locale.
 String
 string_vcprintf (const char *format, va_list vargs)
 {
-  return local_vprintf<true> (format, vargs);
+  return posix_locale_vprintf (format, vargs);
 }
 
 static StringVector
@@ -394,9 +384,8 @@ locale_strtold (const char *nptr, char **endptr)
   if (fail_pos_1 && fail_pos_1[0] != 0)
     {
       char *fail_pos_2 = NULL;
-      locale_t olocale = uselocale (c_locale());
+      ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
       const long double val_2 = strtold (nptr, &fail_pos_2);
-      uselocale (olocale);
       if (fail_pos_2 > fail_pos_1)
         {
           if (endptr)

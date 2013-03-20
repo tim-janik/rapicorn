@@ -10,7 +10,7 @@
 
 namespace Rapicorn {
 
-// === initialization ===
+// == initialization ==
 void    init_core               (const String       &app_ident,
                                  int                *argcp,
                                  char              **argv,
@@ -38,14 +38,34 @@ int     arg_parse_collapse      (int         *argcp,
 String  rapicorn_version        ();
 String  rapicorn_buildid        ();
 
+// == locale ==
 
-// === process info ===
+/// Class to push a specific locale_t for the scope of its lifetime.
+class ScopedLocale {
+  locale_t      locale_;
+  /*copy*/      ScopedLocale (const ScopedLocale&) = delete;
+  ScopedLocale& operator=    (const ScopedLocale&) = delete;
+protected:
+  explicit      ScopedLocale (locale_t scope_locale);
+public:
+  // explicit   ScopedLocale (const String &locale_name = ""); // not supported
+  /*dtor*/     ~ScopedLocale ();
+};
+
+/// Class to push the POSIX/C locale_t (UTF-8) for the scope of its lifetime.
+class ScopedPosixLocale : public ScopedLocale {
+public:
+  explicit        ScopedPosixLocale ();
+  static locale_t posix_locale      (); ///< Retrieve the (UTF-8) POSIX/C locale_t.
+};
+
+// == process info ==
 String       program_file       ();
 String       program_alias      ();
 String       program_ident      ();
 String       program_cwd        ();
 
-// === initialization hooks ===
+// == initialization hooks ==
 class InitHook {
   typedef void (*InitHookFunc) (const StringVector &args);
   InitHook    *next;
