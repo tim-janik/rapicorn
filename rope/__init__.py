@@ -5,7 +5,7 @@ More details at http://www.rapicorn.org/.
 """
 
 # Import Aida helper module
-from Aida1208 import loop as _Aida_loop
+from Aida1303 import loop as _Aida_loop
 
 # Load generated C++ API
 import __pyrapicorn as _cxxrapicorn
