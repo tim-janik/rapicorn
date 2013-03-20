@@ -23,6 +23,7 @@ benchaida_LDADD    = $(LDADDS)
 # === programs ===
 EXAMPLES        += fileview
 fileview_SOURCES = fileview.cc
+EXTRA_DIST	+= liststore.cc
 fileview_LDADD   = $(LDADDS)
 XML_FILES       += fileview.xml
 
