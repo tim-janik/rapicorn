@@ -116,7 +116,7 @@ ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
 noinst_DATA += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
-	@$(srcdir)/mkrelease.sh news
+	@$(srcdir)/mkrelease.sh news --first-parent
 release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
