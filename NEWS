@@ -1,4 +1,4 @@
-Rapicorn 13.03.0:	(2013-  -  )
+Rapicorn 13.03.0:	(2013-03-24)
 
 * Added proper UTF-8 locale initialization and POSIX locale support.
 * Extended mmap() support to full builtin resource loading subsystem.
