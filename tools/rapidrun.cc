@@ -1,6 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rapicorn.hh>
-#include "../rcore/rsvg/svg.hh"       // FIXME
 
 #include <string.h>
 #include <stdlib.h>
@@ -189,7 +188,7 @@ main (int   argc,
 
   // create window, hook up post-display handler
   WindowH window = app.create_window (dialog);
-  window.sig_displayed() += window_displayed;
+  window.sig_displayed() += [&window]() { window_displayed (window); };
 
   /* show window and process events */
   window.show();

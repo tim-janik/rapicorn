@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <string.h>
+#include <unistd.h>
 #include <algorithm>
 #include <sys/syscall.h>        // SYS_gettid
 #include <list>
@@ -14,14 +15,28 @@
 
 namespace Rapicorn {
 
+static Mutex global_rwlock_real_init_mutex;
+
+void
+RWLock::real_init ()
+{
+  global_rwlock_real_init_mutex.lock();
+  if (!initialized_)
+    {
+      pthread_rwlock_init (&rwlock_, NULL);
+      initialized_ = true;
+    }
+  global_rwlock_real_init_mutex.unlock();
+}
+
 /// Debugging hook, returns if the Mutex is currently locked, might not work with all threading implementations.
 bool
 Mutex::debug_locked()
 {
   const pthread_mutex_t unlocked_mutex1 = PTHREAD_MUTEX_INITIALIZER;
   const pthread_mutex_t unlocked_mutex2 = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-  return !(memcmp (&m_mutex, &unlocked_mutex1, sizeof (m_mutex)) == 0 ||
-           memcmp (&m_mutex, &unlocked_mutex2, sizeof (m_mutex)) == 0);
+  return !(memcmp (&mutex_, &unlocked_mutex1, sizeof (mutex_)) == 0 ||
+           memcmp (&mutex_, &unlocked_mutex2, sizeof (mutex_)) == 0);
 }
 
 static ThreadInfo *volatile     list_head = NULL;
@@ -35,7 +50,7 @@ ThreadInfo::~ThreadInfo ()
 }
 
 ThreadInfo::ThreadInfo () :
-  hp ({ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }),
+  hp { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
   next (NULL), pth_thread_id (pthread_self())
 {}
 
@@ -116,7 +131,7 @@ ThreadInfo::create ()
 void
 ThreadInfo::reset_specific ()
 {
-  m_data_list.clear_like_destructor();
+  data_list_.clear_like_destructor();
   for (size_t i = 0; i < ARRAY_SIZE (hp); i++)
     hp[i] = NULL;
   self_cached = NULL;
@@ -124,7 +139,7 @@ ThreadInfo::reset_specific ()
   do
     assert (pttid == pth_thread_id);
   while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
-  m_data_list.clear_like_destructor(); // should be empty
+  data_list_.clear_like_destructor(); // should be empty
   // TESTED: printout ("resetted: %zx (%p)\n", pttid, this);
 }
 
@@ -169,14 +184,14 @@ String
 ThreadInfo::name ()
 {
   ScopedLock<Mutex> locker (thread_info_mutex);
-  return m_name.size() ? m_name : ident();
+  return name_.size() ? name_ : ident();
 }
 
 void
 ThreadInfo::name (const String &newname)
 {
   ScopedLock<Mutex> locker (thread_info_mutex);
-  m_name = newname;
+  name_ = newname;
 }
 
 struct timespec

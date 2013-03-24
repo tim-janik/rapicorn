@@ -2,12 +2,11 @@
 #include "utilities.hh"
 #include "main.hh"
 #include "strings.hh"
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include "thread.hh"
-#include "rapicornmsg.hh"
-#include "rapicorncpu.hh"
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <fcntl.h>
@@ -151,8 +150,8 @@ timestamp_format (uint64 stamp)
 // == KeyConfig ==
 struct KeyConfig {
   typedef std::map<String, String> StringMap;
-  Mutex         m_mutex;
-  StringMap     m_map;
+  Mutex         mutex_;
+  StringMap     map_;
 public:
   void          assign    (const String &key, const String &val);
   String        slookup   (const String &key, const String &dfl = "");
@@ -161,22 +160,22 @@ public:
 void
 KeyConfig::assign (const String &key, const String &val)
 {
-  ScopedLock<Mutex> locker (m_mutex);
-  m_map[key] = val;
+  ScopedLock<Mutex> locker (mutex_);
+  map_[key] = val;
 }
 String
 KeyConfig::slookup (const String &ckey, const String &dfl)
 {
   // alias: "verbose" -> "debug"
   String key = ckey == "verbose" ? "debug" : ckey;
-  ScopedLock<Mutex> locker (m_mutex);
-  StringMap::iterator it = m_map.find (key);
-  return it == m_map.end() ? dfl : it->second;
+  ScopedLock<Mutex> locker (mutex_);
+  StringMap::iterator it = map_.find (key);
+  return it == map_.end() ? dfl : it->second;
 }
 void
 KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   vector<String> onames, ovalues;
   string_options_split (colon_options, onames, ovalues, "1");
   for (size_t i = 0; i < onames.size(); i++)
@@ -193,7 +192,7 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
       // alias: "verbose" -> "debug", "V=1" -> "debug", "V=0" -> "no-debug"
       if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
         key = "debug";
-      m_map[key] = val;
+      map_[key] = val;
     }
 }
 
@@ -203,7 +202,7 @@ bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup defa
 static Atomic<char>         conftest_general_debugging = false;
 static Atomic<char>         conftest_key_debugging = false;
 static Atomic<KeyConfig*>   conftest_map = NULL;
-static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
+static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
 
 static inline KeyConfig&
 conftest_procure ()
@@ -271,6 +270,7 @@ debug_help ()
   s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
   s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
   s += "  :devel:           Enable development version behavior.\n";
+  s += "  :color:           Colorize error messages, can be 'never', 'always', 'auto'.\n";
   s += "  :verbose:         Enable general information and diagnostic messages.\n";
   s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
   s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
@@ -370,6 +370,96 @@ dbg_prefix (const String &fileline)
 // export debug_handler() symbol for debugging stacktraces and gdb
 extern void debug_handler (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
 
+// check for colorization only once
+static inline bool
+colorize_stderr()
+{
+  Atomic<char> conftest_colorize = -1; // initially unknown
+  char vbool = conftest_colorize.load();
+  if (UNLIKELY (vbool == -1))
+    {
+      String value = debug_confstring ("color");
+      if (value == "always")
+        vbool = true;
+      else if (value == "never")
+        vbool = false;
+      else if (value == "auto")
+        {
+          vbool = false;
+          if (isatty (1) && isatty (2))
+            {
+              char *term = getenv ("TERM");
+              if (term && strcmp (term, "dumb") != 0)
+                vbool = true;
+            }
+        }
+      else
+        vbool = string_to_bool (value, 0);
+      conftest_colorize.cas (-1, vbool); // prevent overiding of existing values
+      vbool = conftest_colorize.load();
+    }
+  return vbool;
+}
+
+enum AnsiColors {
+  ANSI_NONE,
+  ANSI_RESET,
+  ANSI_BOLD, ANSI_BOLD_OFF,
+  ANSI_ITALICS, ANSI_ITALICS_OFF,
+  ANSI_UNDERLINE, ANSI_UNDERLINE_OFF,
+  ANSI_INVERSE, ANSI_INVERSE_OFF,
+  ANSI_STRIKETHROUGH, ANSI_STRIKETHROUGH_OFF,
+  ANSI_FG_BLACK, ANSI_FG_RED, ANSI_FG_GREEN, ANSI_FG_YELLOW, ANSI_FG_BLUE, ANSI_FG_MAGENTA, ANSI_FG_CYAN, ANSI_FG_WHITE,
+  ANSI_FG_DEFAULT,
+  ANSI_BG_BLACK, ANSI_BG_RED, ANSI_BG_GREEN, ANSI_BG_YELLOW, ANSI_BG_BLUE, ANSI_BG_MAGENTA, ANSI_BG_CYAN, ANSI_BG_WHITE,
+  ANSI_BG_DEFAULT,
+};
+
+static const char*
+ansi_color (AnsiColors acolor)
+{
+  switch (acolor)
+    {
+    default: ;
+    case ANSI_NONE:             return "";
+    case ANSI_RESET:            return "\033[0m";
+    case ANSI_BOLD:             return "\033[1m";
+    case ANSI_BOLD_OFF:         return "\033[22m";
+    case ANSI_ITALICS:          return "\033[3m";
+    case ANSI_ITALICS_OFF:      return "\033[23m";
+    case ANSI_UNDERLINE:        return "\033[4m";
+    case ANSI_UNDERLINE_OFF:    return "\033[24m";
+    case ANSI_INVERSE:          return "\033[7m";
+    case ANSI_INVERSE_OFF:      return "\033[27m";
+    case ANSI_STRIKETHROUGH:    return "\033[9m";
+    case ANSI_STRIKETHROUGH_OFF:return "\033[29m";
+    case ANSI_FG_BLACK:         return "\033[30m";
+    case ANSI_FG_RED:           return "\033[31m";
+    case ANSI_FG_GREEN:         return "\033[32m";
+    case ANSI_FG_YELLOW:        return "\033[33m";
+    case ANSI_FG_BLUE:          return "\033[34m";
+    case ANSI_FG_MAGENTA:       return "\033[35m";
+    case ANSI_FG_CYAN:          return "\033[36m";
+    case ANSI_FG_WHITE:         return "\033[37m";
+    case ANSI_FG_DEFAULT:       return "\033[39m";
+    case ANSI_BG_BLACK:         return "\033[40m";
+    case ANSI_BG_RED:           return "\033[41m";
+    case ANSI_BG_GREEN:         return "\033[42m";
+    case ANSI_BG_YELLOW:        return "\033[43m";
+    case ANSI_BG_BLUE:          return "\033[44m";
+    case ANSI_BG_MAGENTA:       return "\033[45m";
+    case ANSI_BG_CYAN:          return "\033[46m";
+    case ANSI_BG_WHITE:         return "\033[47m";
+    case ANSI_BG_DEFAULT:       return "\033[49m";
+    }
+}
+
+static const char*
+color (AnsiColors acolor)
+{
+  return colorize_stderr() ? ansi_color (acolor) : "";
+}
+
 void // internal function, this + caller are skipped in backtraces
 debug_handler (const char dkind, const String &file_line, const String &message, const char *key)
 {
@@ -429,7 +519,25 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     }
   if (f & DO_STDERR)
     {
-      printerr ("%s[%u]:%s%s%s", program_alias().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), emsg.c_str());
+      const char *cy1 = color (ANSI_FG_CYAN), *cy0 = color (ANSI_FG_DEFAULT);
+      const char *bo1 = color (ANSI_BOLD), *bo0 = color (ANSI_BOLD_OFF);
+      const char *fgw = color (ANSI_FG_WHITE), *fgc1 = fgw, *fgc0 = color (ANSI_FG_DEFAULT), *fbo1 = "", *fbo0 = "";
+      switch (kind)
+        {
+        case 'F':
+          fgc1 = color (ANSI_FG_RED);
+          fbo1 = bo1;                           fbo0 = bo0;
+          break;
+        case 'C':
+          fgc1 = color (ANSI_FG_YELLOW);
+          break;
+        }
+      printerr ("%s%s%s%s%s%s%s%s[%u] %s%s%s:%s%s %s%s",
+                cy1, where.c_str(), cy0,
+                bo1, fgw, program_alias().c_str(), fgc0, bo0, thread_pid(),
+                fbo1, fgc1, what,
+                fgc0, fbo0,
+                msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         printerr ("Aborting...\n");
     }
@@ -495,51 +603,51 @@ debug_handler (const char dkind, const String &file_line, const String &message,
 }
 
 void
-debug_assert (const char *file, const int line, const char *message)
+debug_assert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('C', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
 }
 
 void
-debug_fassert (const char *file, const int line, const char *message)
+debug_fassert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('F', string_printf ("%s:%d", file, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
   ::abort();
 }
 
 void
-debug_fatal (const char *file, const int line, const char *format, ...)
+debug_fatal (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
   ::abort();
 }
 
 void
-debug_critical (const char *file, const int line, const char *format, ...)
+debug_critical (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_fixit (const char *file, const int line, const char *format, ...)
+debug_fixit (const char *file_path, const int line, const char *format, ...)
 {
   va_list vargs;
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_general (const char *file, const int line, const char *format, ...)
+debug_general (const char *file_path, const int line, const char *format, ...)
 {
   if (!conftest_general_debugging)
     return;
@@ -547,11 +655,11 @@ debug_general (const char *file, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('D', string_printf ("%s:%d", file, line), msg);
+  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg);
 }
 
 void
-debug_keymsg (const char *file, const int line, const char *key, const char *format, ...)
+debug_keymsg (const char *file_path, const int line, const char *key, const char *format, ...)
 {
   if (!debug_enabled (key))
     return;
@@ -559,7 +667,17 @@ debug_keymsg (const char *file, const int line, const char *key, const char *for
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('K', string_printf ("%s:%d", file, line), msg, key);
+  debug_handler ('K', string_printf ("%s:%d", file_path, line), msg, key);
+}
+
+String
+pretty_file (const char *file_dir, const char *file)
+{
+  if (!file)
+    return "<" + String ("???") + ">";     // cannot use macros here
+  if (RAPICORN_IS_ABSPATH (file) || !file_dir || !file_dir[0])
+    return file;
+  return String (file_dir) + "/" + file;
 }
 
 const char*
@@ -574,15 +692,13 @@ strerror (int errnum)
   return ::strerror (errnum);
 }
 
-std::vector<std::string>
-pretty_backtrace (uint level, size_t *parent_addr)
+#define BACKTRACE_DEPTH         1024
+
+static std::vector<std::string>
+pretty_backtrace_symbols (void **ptrbuffer, const int nptrs, const uint level)
 {
-  void *ptrbuffer[1024];
-  const int nptrs = backtrace (ptrbuffer, ARRAY_SIZE (ptrbuffer));
-  if (parent_addr)
-    *parent_addr = nptrs >= 1 + int (level) ? size_t (ptrbuffer[1 + level]) : 0;
-  char **btsymbols = backtrace_symbols (ptrbuffer, nptrs);
   std::vector<std::string> symbols;
+  char **btsymbols = backtrace_symbols (ptrbuffer, nptrs);
   if (btsymbols)
     {
       for (int i = 1 + level; i < nptrs; i++) // skip current function plus some
@@ -611,6 +727,57 @@ pretty_backtrace (uint level, size_t *parent_addr)
       free (btsymbols);
     }
   return symbols;
+}
+
+std::vector<std::string>
+pretty_backtrace (uint level, size_t *parent_addr)
+{
+  void *ptrbuffer[BACKTRACE_DEPTH];
+  const int nptrs = backtrace (ptrbuffer, ARRAY_SIZE (ptrbuffer));
+  if (parent_addr)
+    *parent_addr = nptrs >= 1 + int (level) ? size_t (ptrbuffer[1 + level]) : 0;
+  std::vector<std::string> symbols = pretty_backtrace_symbols (ptrbuffer, nptrs, level);
+  return symbols;
+}
+
+// == debug_backtrace_snapshot ==
+struct BacktraceBuffer {
+  void *ptrbuffer[BACKTRACE_DEPTH];
+  int nptrs;
+  BacktraceBuffer () :
+    nptrs (0)
+  {}
+};
+static Mutex                             backtrace_snapshot_mutex;
+static std::map<size_t,BacktraceBuffer> *backtrace_snapshot_map = NULL;
+
+void
+debug_backtrace_snapshot (size_t key)
+{
+  BacktraceBuffer bbuffer;
+  bbuffer.nptrs = backtrace (bbuffer.ptrbuffer, ARRAY_SIZE (bbuffer.ptrbuffer));
+  ScopedLock<Mutex> locker (backtrace_snapshot_mutex);
+  if (!backtrace_snapshot_map)
+    backtrace_snapshot_map = new std::map<size_t,BacktraceBuffer>();
+  (*backtrace_snapshot_map)[key] = bbuffer;
+}
+
+String
+debug_backtrace_showshot (size_t key)
+{
+  BacktraceBuffer bbuffer;
+  {
+    ScopedLock<Mutex> locker (backtrace_snapshot_mutex);
+    if (backtrace_snapshot_map)
+      bbuffer = (*backtrace_snapshot_map)[key];
+  }
+  const vector<String> syms = pretty_backtrace_symbols (bbuffer.ptrbuffer, bbuffer.nptrs, 0);
+  String btmsg;
+  size_t addr = bbuffer.nptrs >= 1 ? size_t (bbuffer.ptrbuffer[1]) : 0;
+  btmsg = string_printf ("Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", addr, size_t (__builtin_frame_address (0)));
+  for (size_t i = 0; i < syms.size(); i++)
+    btmsg += string_printf ("  %s\n", syms[i].c_str());
+  return btmsg;
 }
 
 // === User Messages ==
@@ -679,7 +846,7 @@ construct_error_msg (const String &file, size_t line, const char *error, const S
 }
 
 AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
-  m_msg (construct_error_msg (file, line, "assertion failed", expr))
+  msg_ (construct_error_msg (file, line, "assertion failed", expr))
 {}
 
 AssertionError::~AssertionError () throw()
@@ -688,7 +855,7 @@ AssertionError::~AssertionError () throw()
 const char*
 AssertionError::what () const throw()
 {
-  return m_msg.c_str();
+  return msg_.c_str();
 }
 
 // == Development Helpers ==
@@ -888,7 +1055,6 @@ seed_buffer (vector<uint8> &randbuf)
 }
 
 static uint32 process_hash = 0;
-static uint64 locatable_process_hash64 = 0;
 
 static void
 process_handle_and_seed_init (const StringVector &args)
@@ -912,7 +1078,6 @@ process_handle_and_seed_init (const StringVector &args)
   for (uint i = 0; i < randbuf.size(); i++)
     phash64 = (phash64 << 5) - phash64 + randbuf[i];
   process_hash = phash64 % 4294967291U;
-  locatable_process_hash64 = (uint64 (process_hash) << 32) + 0xa0000000;
 
   /* gather random seed entropy, this should include the entropy
    * from process_hash, but not be predictable from it.
@@ -940,34 +1105,7 @@ process_handle ()
   return string_printf ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
-/* --- VirtualTypeid --- */
-VirtualTypeid::~VirtualTypeid ()
-{ /* virtual destructor ensures vtable */ }
-
-String
-VirtualTypeid::typeid_name ()
-{
-  return typeid (*this).name();
-}
-
-String
-VirtualTypeid::typeid_pretty_name ()
-{
-  return cxx_demangle (typeid (*this).name());
-}
-
-String
-VirtualTypeid::cxx_demangle (const char *mangled_identifier)
-{
-  int status = 0;
-  char *malloced_result = abi::__cxa_demangle (mangled_identifier, NULL, NULL, &status);
-  String result = malloced_result && !status ? malloced_result : mangled_identifier;
-  if (malloced_result)
-    free (malloced_result);
-  return result;
-}
-
-/// @namespace Rapicorn::Path The Rapicorn::Path namespace provides functions for file path manipulation and testing.
+/// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 
 /**
@@ -1342,282 +1480,6 @@ memfree (char *memread_mem)
 
 } // Path
 
-/**
- * @class ResourceBlob
- * A ResourceBlob provides access to binary data (BLOB = Binary Large OBject) which may be
- * preassembled and compiled into a program or located in a resource path directory.
- * Locators for resources should generally adhere to the form: @code
- *      res: [relative_path/] resource_name
- * @endcode
- * See also: RAPICORN_STATIC_RESOURCE_DATA(), RAPICORN_STATIC_RESOURCE_ENTRY().
- * Example: @SNIPPET{rcore/tests/multitest.cc, ResourceBlob-EXAMPLE}
- */
-ResourceBlob::ResourceBlob (const String &name, size_t dsize, std::shared_ptr<const uint8> shdata) :
-  m_name (name), m_size (dsize), m_data (shdata)
-{}
-
-static ResourceBlob::Entry *res_head = NULL;
-static Mutex                res_mutex;
-
-void
-ResourceBlob::Entry::reg_add (ResourceBlob::Entry *entry)
-{
-  assert_return (entry && !entry->next);
-  ScopedLock<Mutex> sl (res_mutex);
-  entry->next = res_head;
-  res_head = entry;
-}
-
-ResourceBlob::Entry::~Entry()
-{
-  ScopedLock<Mutex> sl (res_mutex);
-  Entry **ptr = &res_head;
-  while (*ptr != this)
-    ptr = &(*ptr)->next;
-  *ptr = next;
-}
-
-const ResourceBlob::Entry*
-ResourceBlob::Entry::find_entry (const String &res_name)
-{
-  ScopedLock<Mutex> sl (res_mutex);
-  for (const Entry *e = res_head; e; e = e->next)
-    if (res_name == e->name)
-      return e;
-  return NULL;
-}
-
-ResourceBlob
-ResourceBlob::load (const String &path)
-{
-  struct BBlob : ResourceBlob {
-    BBlob (const String &name, size_t dsize, std::shared_ptr<const uint8> ddata) :
-      ResourceBlob (name, dsize, ddata)
-    {}
-  };
-  const Entry *entry = Entry::find_entry (path);
-  struct NopDeleter { void operator() (const uint8*) {} }; // prevent delete on const data
-  if (entry && (entry->dsize == entry->psize || entry->dsize + 1 == entry->psize))
-    {
-      if (entry->dsize + 1 == entry->psize)
-        assert (entry->pdata[entry->dsize] == 0);       // 0-terminated char array
-      else
-        assert (entry->dsize == entry->psize);
-      const uint8 *data = reinterpret_cast<const uint8*> (entry->pdata);
-      return BBlob (path, entry->dsize, std::shared_ptr<const uint8> (data, NopDeleter()));
-    }
-  else if (entry && entry->psize && entry->dsize == 0)  // variable length array
-    {
-      const uint8 *data = reinterpret_cast<const uint8*> (entry->pdata);
-      return BBlob (path, entry->psize, std::shared_ptr<const uint8> (data, NopDeleter()));
-    }
-  else if (entry && entry->psize < entry->dsize)        // compressed
-    {
-      const uint8 *data = zintern_decompress (entry->dsize, reinterpret_cast<const uint8*> (entry->pdata), entry->psize);
-      struct ZinternDeleter { void operator() (const uint8 *d) { zintern_free (const_cast<uint8*> (d)); } };
-      return BBlob (path, entry->dsize, std::shared_ptr<const uint8> (data, ZinternDeleter()));
-    }
-  // FIXME: handle file system lookups for ResourceBlob
-  return BBlob (path, 0, std::shared_ptr<const uint8> (nullptr));
-}
-
-String
-ResourceBlob::string () const
-{
-  size_t l = size();
-  if (l && data()[l - 1] == 0)
-    l--; // std::string automatically 0-terminates its contents.
-  return std::string ((char*) data(), l);
-}
-
-/**
- * @class Deletable
- * Classes derived from @a Deletable need to have a virtual destructor.
- * Handlers can be registered with class instances that are called during
- * instance deletion. This is most useful for automated memory keeping of
- * custom resources attached to the lifetime of a particular instance.
- */
-Deletable::~Deletable ()
-{
-  invoke_deletion_hooks();
-}
-
-/**
- * @param deletable     possible Deletable* handle
- * @return              TRUE if the hook was added
- *
- * Adds the deletion hook to @a deletable if it is non NULL.
- * The deletion hook is asserted to be so far uninstalled.
- * This function is MT-safe and may be called from any thread.
- */
-bool
-Deletable::DeletionHook::deletable_add_hook (Deletable *deletable)
-{
-  if (deletable)
-    {
-      deletable->add_deletion_hook (this);
-      return true;
-    }
-  return false;
-}
-
-/**
- * @param deletable     possible Deletable* handle
- * @return              TRUE if the hook was removed
- *
- * Removes the deletion hook from @a deletable if it is non NULL.
- * The deletion hook is asserted to be installed on @a deletable.
- * This function is MT-safe and may be called from any thread.
- */
-bool
-Deletable::DeletionHook::deletable_remove_hook (Deletable *deletable)
-{
-  if (deletable)
-    {
-      deletable->remove_deletion_hook (this);
-      return true;
-    }
-  return false;
-}
-
-Deletable::DeletionHook::~DeletionHook ()
-{
-  if (this->next || this->prev)
-    fatal ("hook is being destroyed but not unlinked: %p", this);
-}
-
-#define DELETABLE_MAP_HASH (19) /* use prime size for hashing, sums up to roughly 1k (use 83 for 4k) */
-struct DeletableAuxData {
-  Deletable::DeletionHook* hooks;
-  DeletableAuxData() : hooks (NULL) {}
-  ~DeletableAuxData() { assert (hooks == NULL); }
-};
-struct DeletableMap {
-  Mutex                                 mutex;
-  std::map<Deletable*,DeletableAuxData> dmap;
-};
-typedef std::map<Deletable*,DeletableAuxData>::iterator DMapIterator;
-static Atomic<DeletableMap*> deletable_maps = NULL;
-
-static inline void
-auto_init_deletable_maps (void)
-{
-  if (UNLIKELY (deletable_maps.load() == NULL))
-    {
-      DeletableMap *dmaps = new DeletableMap[DELETABLE_MAP_HASH];
-      if (!deletable_maps.cas (NULL, dmaps))
-        delete dmaps;
-      // ensure threading works
-      deletable_maps[0].mutex.lock();
-      deletable_maps[0].mutex.unlock();
-    }
-}
-
-/**
- * @param hook  valid deletion hook
- *
- * Add an uninstalled deletion hook to the deletable.
- * This function is MT-safe and may be called from any thread.
- */
-void
-Deletable::add_deletion_hook (DeletionHook *hook)
-{
-  auto_init_deletable_maps();
-  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
-  deletable_maps[hashv].mutex.lock();
-  RAPICORN_ASSERT (hook);
-  RAPICORN_ASSERT (!hook->next);
-  RAPICORN_ASSERT (!hook->prev);
-  DeletableAuxData &ad = deletable_maps[hashv].dmap[this];
-  if (!ad.hooks)
-    ad.hooks = hook->prev = hook->next = hook;
-  else
-    {
-      hook->prev = ad.hooks->prev;
-      hook->next = ad.hooks;
-      hook->prev->next = hook;
-      hook->next->prev = hook;
-      ad.hooks = hook;
-    }
-  deletable_maps[hashv].mutex.unlock();
-  hook->monitoring_deletable (*this);
-  //g_printerr ("DELETABLE-ADD(%p,%p)\n", this, hook);
-}
-
-/**
- * @param hook  valid deletion hook
- *
- * Remove a previously added deletion hook.
- * This function is MT-safe and may be called from any thread.
- */
-void
-Deletable::remove_deletion_hook (DeletionHook *hook)
-{
-  auto_init_deletable_maps();
-  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
-  deletable_maps[hashv].mutex.lock();
-  RAPICORN_ASSERT (hook);
-  RAPICORN_ASSERT (hook->next && hook->prev);
-  hook->next->prev = hook->prev;
-  hook->prev->next = hook->next;
-  DMapIterator it = deletable_maps[hashv].dmap.find (this);
-  RAPICORN_ASSERT (it != deletable_maps[hashv].dmap.end());
-  DeletableAuxData &ad = it->second;
-  if (ad.hooks == hook)
-    ad.hooks = hook->next != hook ? hook->next : NULL;
-  hook->prev = NULL;
-  hook->next = NULL;
-  deletable_maps[hashv].mutex.unlock();
-  //g_printerr ("DELETABLE-REM(%p,%p)\n", this, hook);
-}
-
-/**
- * Invoke all deletion hooks installed on this deletable.
- */
-void
-Deletable::invoke_deletion_hooks()
-{
-  /* upon program exit, we may get here without deletable maps or even
-   * threading being initialized. to avoid calling into a NULL threading
-   * table, we'll detect the case and return
-   */
-  if (NULL == deletable_maps.load())
-    return;
-  auto_init_deletable_maps();
-  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
-  while (TRUE)
-    {
-      /* lookup hook list */
-      deletable_maps[hashv].mutex.lock();
-      DeletionHook *hooks;
-      DMapIterator it = deletable_maps[hashv].dmap.find (this);
-      if (it != deletable_maps[hashv].dmap.end())
-        {
-          DeletableAuxData &ad = it->second;
-          hooks = ad.hooks;
-          ad.hooks = NULL;
-          deletable_maps[hashv].dmap.erase (it);
-        }
-      else
-        hooks = NULL;
-      deletable_maps[hashv].mutex.unlock();
-      /* we're done if all hooks have been procesed */
-      if (!hooks)
-        break;
-      /* process hooks */
-      while (hooks)
-        {
-          DeletionHook *hook = hooks;
-          hook->next->prev = hook->prev;
-          hook->prev->next = hook->next;
-          hooks = hook->next != hook ? hook->next : NULL;
-          hook->prev = hook->next = NULL;
-          //g_printerr ("DELETABLE-DISMISS(%p,%p)\n", this, hook);
-          hook->dismiss_deletable();
-        }
-    }
-}
-
 /* --- Id Allocator --- */
 IdAllocator::IdAllocator ()
 {}
@@ -1697,111 +1559,6 @@ IdAllocatorImpl::seen_id (uint unique_id)
   bool inrange = unique_id >= counterstart && unique_id < counter;
   mutex.unlock();
   return inrange;
-}
-
-
-/* --- Locatable --- */
-#define LOCATOR_ID_OFFSET 0xa0000000
-static Spinlock           locatable_mutex;
-static vector<Locatable*> locatable_objs;
-static IdAllocatorImpl    locator_ids (1, 227); // has own mutex
-
-Locatable::Locatable () :
-  m_locatable_index (0)
-{}
-
-Locatable::~Locatable ()
-{
-  if (UNLIKELY (m_locatable_index))
-    {
-      ScopedLock<Spinlock> locker (locatable_mutex);
-      assert_return (m_locatable_index <= locatable_objs.size());
-      const uint index = m_locatable_index - 1;
-      locatable_objs[index] = NULL;
-      locator_ids.release_id (m_locatable_index);
-      m_locatable_index = 0;
-    }
-}
-
-uint64
-Locatable::locatable_id () const
-{
-  if (UNLIKELY (m_locatable_index == 0))
-    {
-      m_locatable_index = locator_ids.alloc_id();
-      const uint index = m_locatable_index - 1;
-      ScopedLock<Spinlock> locker (locatable_mutex);
-      if (index >= locatable_objs.size())
-        locatable_objs.resize (index + 1);
-      locatable_objs[index] = const_cast<Locatable*> (this);
-    }
-  return locatable_process_hash64 + m_locatable_index;
-}
-
-Locatable*
-Locatable::from_locatable_id (uint64 locatable_id)
-{
-  if (UNLIKELY (locatable_id == 0))
-    return NULL;
-  if (locatable_id >> 32 != locatable_process_hash64 >> 32)
-    return NULL; // id from wrong process
-  const uint index = locatable_id - locatable_process_hash64  - 1;
-  ScopedLock<Spinlock> locker (locatable_mutex);
-  assert_return (index < locatable_objs.size(), NULL);
-  Locatable *_this = locatable_objs[index];
-  return _this;
-}
-
-/* --- ReferenceCountable --- */
-static const size_t stack_proximity_threshold = 4096; // <= page_size on most systems
-
-static __attribute__ ((noinline))
-size_t
-stack_ptrdiff (const void *stackvariable,
-               const void *data)
-{
-  size_t d = size_t (data);
-  size_t s = size_t (stackvariable);
-  return MAX (d, s) - MIN (d, s);
-}
-
-void
-ReferenceCountable::stackcheck (const void *data)
-{
-  int stackvariable = 0;
-  /* this check for ReferenceCountable instance allocations on the stack isn't
-   * perfect, but should catch the most common cases for growing and shrinking stacks
-   */
-  if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
-    fatal ("ReferenceCountable object allocated on stack instead of heap: %zu > %zu (%p - %p)",
-           stack_proximity_threshold,
-           stack_ptrdiff (&stackvariable, data),
-           data, &stackvariable);
-}
-
-void
-ReferenceCountable::ref_diag (const char *msg) const
-{
-  fprintf (stderr, "%s: this=%p ref_count=%d floating=%d", msg ? msg : "ReferenceCountable", this, ref_count(), floating());
-}
-
-void
-ReferenceCountable::pre_finalize ()
-{}
-
-void
-ReferenceCountable::finalize ()
-{}
-
-void
-ReferenceCountable::delete_this ()
-{
-  delete this;
-}
-
-ReferenceCountable::~ReferenceCountable ()
-{
-  RAPICORN_ASSERT (ref_count() == 0);
 }
 
 /* --- DataList --- */
@@ -1956,11 +1713,8 @@ url_test_show (const char *url)
 static void
 browser_launch_warning (const char *url)
 {
-  Msg::display (Msg::WARNING,
-                Msg::Title (_("Launch Web Browser")),
-                Msg::Text1 (_("Failed to launch a web browser executable")),
-                Msg::Text2 (_("No suitable web browser executable could be found to be executed and to display the URL: %s"), url),
-                Msg::Check (_("Show messages about web browser launch problems")));
+  // FIXME: turn browser_launch_warning into a dialog
+  user_warning (UserSource (__FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
 }
 
 void
@@ -2124,81 +1878,6 @@ cleanup_add (guint          timeout_ms,
   cleanup_mutex.unlock();
   return cleanup->id;
 }
-
-/* --- BaseObject --- */
-static Mutex                        plor_mutex;
-static std::map<String,BaseObject*> plor_map; // Process Local Object Repository
-
-static bool
-plor_remove (const String &plor_name)
-{
-  ScopedLock<Mutex> locker (plor_mutex);
-  std::map<String,BaseObject*>::iterator mit = plor_map.find (plor_name);
-  if (mit != plor_map.end())
-    {
-      plor_map.erase (mit);
-      return true;
-    }
-  return false;
-}
-
-static const char *plor_subs[] = { // FIXME: need registry
-  "models",
-  NULL,
-};
-
-static bool
-plor_add (BaseObject   &object,
-          const String &name)
-{
-  ScopedLock<Mutex> locker (plor_mutex);
-  size_t p = name.find ('/');
-  if (p != name.npos && p < name.size())
-    {
-      String s = name.substr (0, p);
-      for (uint i = 0; plor_subs[i]; i++)
-        if (s == plor_subs[i])
-          {
-            plor_map[name] = &object;
-            return true;
-          }
-    }
-  return false;
-}
-
-BaseObject*
-BaseObject::plor_get (const String &plor_url)
-{
-  ScopedLock<Mutex> locker (plor_mutex);
-  std::map<String,BaseObject*>::iterator mit = plor_map.find (plor_url);
-  if (mit != plor_map.end())
-    return mit->second;
-  return NULL;
-}
-
-static class PlorDataKey : public DataKey<String> {
-  virtual void destroy (String data) { plor_remove (data); }
-} plor_name_key;
-
-String
-BaseObject::plor_name () const
-{
-  return get_data (&plor_name_key);
-}
-
-void
-BaseObject::plor_name (const String &_plor_name)
-{
-  assert_return (plor_name() == "");
-  if (plor_add (*this, _plor_name))
-    set_data (&plor_name_key, _plor_name);
-  else
-    critical ("invalid plor name for object (%p): %s", this, _plor_name.c_str());
-}
-
-void
-BaseObject::dispose ()
-{}
 
 /* --- memory utils --- */
 void*

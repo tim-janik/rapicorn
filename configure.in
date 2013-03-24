@@ -8,15 +8,15 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 
 # initialize autoconf for Rapicorn
 AC_INIT
-AC_CONFIG_SRCDIR([ui/item.hh])
+AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_PREREQ(2.57)
 
 # Rapicorn version numbers
 AC_DIVERT_BEFORE_HELP([
-RAPICORN_RELEASE_YEAR=12     	# increment on ABI/API change
-RAPICORN_RELEASE_MONTH=08    	# increment on ABI/API change
-RAPICORN_REVISION_VERSION=1 	# ABI compatible increments, devel versions are odd
+RAPICORN_RELEASE_YEAR=13     	# increment on ABI/API change
+RAPICORN_RELEASE_MONTH=03    	# increment on ABI/API change
+RAPICORN_REVISION_VERSION=0 	# ABI compatible increments, devel versions are odd
 RAPICORN_RELEASE_CANDIDATE=	#rc1
 ])				# RAPICORN_RELEASE_CANDIDATE may contain rc[0-9]+ or nothing
 
@@ -38,6 +38,12 @@ LT_AGE=$RAPICORN_REVISION_VERSION
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
+if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
+  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
+else
+  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
+fi
+AC_SUBST(DEFINE__FILE_DIR__)
 
 # Rapicorn namespace
 AC_MSG_CHECKING([for Rapicorn namespace])
@@ -73,8 +79,13 @@ MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgcon
 
 # check for base package requirements early on
 PKG_CHECK_MODULES(BASE_DEPENDENCIES,[
-	glib-2.0 >= 2.12.4
-	gtk+-2.0 >= 2.8.20
+	cairo		>= 1.10.0
+	glib-2.0	>= 2.30.0
+	gio-2.0		>= 2.30.0
+	gthread-2.0	>= 2.30.0
+	pango		>= 1.29.0
+	pangoft2	>= 1.29.0
+	pangocairo	>= 1.29.0
 ])
 
 # setup DEBUG defaults
@@ -99,9 +110,14 @@ if ${CC} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\)' && \
   LDFLAGS="$LDFLAGS -Wl,--hash-style=both -Wl,--as-needed -Wl,-O1"
 fi
 
+# == Compiler Flags ==
+MC_EVAR_ADD(CFLAGS, -Werror=format-security, -Werror=format-security)
+MC_EVAR_ADD(CXXFLAGS, -Werror=format-security, -Werror=format-security)
+MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread)
+
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
-    [_AC_COMPUTE_INT([$1], [RAPICORN_SYSVAL_$1], [$2],
+    [AC_COMPUTE_INT([RAPICORN_SYSVAL_$1], [$1], [$2],
 	    [AC_MSG_ERROR("failed to detect [$1]")])
     AC_SUBST([RAPICORN_SYSVAL_$1])])
 
@@ -125,27 +141,17 @@ AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
     fi
 ])
 
-dnl # RAPICORN_RSVG_REQUIREMENTS() - checks everything needed for embedding librsvg
-AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
-[
-    AC_CHECK_FUNCS(strtok_r)
-    PKG_CHECK_MODULES(LIBXML,		[ libxml-2.0		>= 2.4.7  ])
-    PKG_CHECK_MODULES(CAIRO,		[ cairo			>= 1.2.4  ])
-    PKG_CHECK_MODULES(GDKPIXBUF,	[ gdk-pixbuf-2.0	>= 2.22.0 ])
-    PKG_CHECK_MODULES(PANGO,		[ pango			>= 1.14.8 ])
-    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.10.0 ])
-])
-
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
+    LIBXML_LIBS=
+    AC_SUBST(LIBXML_LIBS)
+
     # --- Rapicorn paths ---
     docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
     rapicorndatadir='${datadir}/rapicorn'"$RAPICORN_RELEASE"	# datadir = ${datarootdir}
-    rapicornsvgdir='${rapicorndatadir}/svg'
     AC_SUBST(docdir)
     AC_SUBST(rapicorndatadir)
-    AC_SUBST(rapicornsvgdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -199,7 +205,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     AC_SUBST(RAPICORN_OS_CHOICES)
     AC_DEFINE_UNQUOTED(RAPICORN_OS_$RAPICORN_OS, "1", [Win32 detection])
 
-    dnl # --- sizeof threading structs ---
+    dnl # == sizeof threading structs ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
     RAPICORN_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
     AC_SUBST(RAPICORN_SIZEOF_PTH_MUTEX_T)
@@ -207,7 +213,12 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     RAPICORN_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
     AC_SUBST(RAPICORN_SIZEOF_PTH_COND_T)
 
-    # --- sizeof pthread_spinlock_t ---
+    # == sizeof pthread_rwlock_t ==
+    GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
+    RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK) dnl # for rapicornconfig.h
+
+    # == sizeof pthread_spinlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
     RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
     AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK) dnl # for rapicornconfig.h
@@ -262,7 +273,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     fi
 
     dnl # --- check for GLib (version checked above) ---
-    PKG_CHECK_MODULES(RAPICORN_CORE, glib-2.0 gthread-2.0)
+    PKG_CHECK_MODULES(RAPICORN_CORE, glib-2.0 gio-2.0 gthread-2.0)
     # libtool doesn't automatically figure that -pthread implies -lpthread
     RAPICORN_CORE_LIBS=`echo " $RAPICORN_CORE_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
     RAPICORN_CORE_LIBS="$RAPICORN_CORE_LIBS $LIBPNG $LIBZ"
@@ -308,21 +319,29 @@ dnl # RAPICORN_REQUIREMENTS() - checks everything needed by ui/
 AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
     dnl # --- check for Rapicorn GUI dependencies ---
-    PKG_CHECK_MODULES(RAPICORN_GUI, cairo glib-2.0 gthread-2.0 pangoft2 gtk+-2.0)
+    PKG_CHECK_MODULES(RAPICORN_GUI, cairo pangoft2 pangocairo)
+    dnl # == X11 System ==
+    AC_CHECK_LIB(X11, XOpenDisplay,
+      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lX11" ],
+      [ AC_MSG_ERROR([missing X11 library]) ])
+    dnl # == X11 Extensions ==
+    AC_CHECK_LIB(Xext, XShmAttach,
+      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lXext" ],
+      [ AC_MSG_ERROR([missing X11 shared memory extension]) ])
+    RAPICORN_GUI_CFLAGS="$RAPICORN_GUI_CFLAGS $RAPICORN_CORE_CFLAGS"
     # libtool doesn't automatically figure that -pthread implies -lpthread
     RAPICORN_GUI_LIBS=`echo " $RAPICORN_GUI_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $LIBZ"
+    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $RAPICORN_CORE_LIBS $RAPICORN_RSVG_LIBS $LIBZ"
     AC_SUBST(RAPICORN_GUI_CFLAGS)
     AC_SUBST(RAPICORN_GUI_LIBS)
     AM_CONDITIONAL(WITH_PANGO, true)
-    AM_CONDITIONAL(WITH_GTK, true)
     # --- Rapicorn build tools ---
     MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
     MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 ])
 
-dnl # PYROPE_REQUIREMENTS() - rapicorn python binding checks
-AC_DEFUN([PYROPE_REQUIREMENTS],
+dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
+AC_DEFUN([RAPICORN_ROPE_REQUIREMENTS],
 [
     # Find Python execution and development environment
     saved_CPPFLAGS="$CPPFLAGS"
@@ -360,8 +379,8 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
-# PLIC requirements
-AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
+# Aida requirements
+AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 [
     # Check for working $PYTHON and pythondir
     dnl #ALREADYDONE# AM_PATH_PYTHON(2.4)
@@ -373,8 +392,6 @@ AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
       AC_MSG_RESULT(fail)
       AC_MSG_ERROR([failed to check \$PYTHON and \$pythondir])
     fi
-    PLIC_VERSION="$RAPICORN_RELEASE"
-    AC_SUBST(PLIC_VERSION)
 
     # XML linting check
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
@@ -383,15 +400,8 @@ AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
 dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
 AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
 [
-    # need doxer to generate documentation
-    DOXERDEP='#'
-    AC_CHECK_PROGS(DOXER, doxer)
-    if test -n "$DOXER" ; then
-	doxer_version=`$DOXER --version`
-	MC_CHECK_VERSION($doxer_version, 0.6, [DOXERDEP=''])
-    fi
-    AC_SUBST(DOXER)
-    AC_SUBST(DOXERDEP)
+  # need doxygen to generate documentation
+  AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 ])
 
 dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
@@ -418,8 +428,6 @@ AC_DEFUN([RAPICORN_CPU_FLAGS],
     # --- SSE3 flags ---
     MC_PROG_CC_SPECIAL_FLAGS(SSE3_FLAGS, -msse3 -ftree-vectorize)
     AC_SUBST(SSE3_FLAGS)
-    # -- C++11 --
-    MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread)
 ])
 
 # check for development build rules (autogen.sh based builds)
@@ -487,11 +495,10 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_GCC_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
-RAPICORN_RSVG_REQUIREMENTS
+RAPICORN_ROPE_REQUIREMENTS
+RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_REQUIREMENTS
-PYROPE_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
-RAPICORN_PLIC_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
@@ -506,16 +513,16 @@ AC_SUBST(LDFLAGS)
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
-data/Makefile
 po/Makefile.in
-plic/Makefile
-plic/tests/Makefile
-rope/Makefile
+data/Makefile
 rcore/Makefile
-rcore/rsvg/Makefile
 rcore/tests/Makefile
+res/Makefile
+aidacc/Makefile
+aidacc/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
+rope/Makefile
 tools/Makefile
 tests/Makefile
 pytests/Makefile
@@ -546,7 +553,7 @@ Autoconfiguration complete.
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
 	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
-	Documentation tool:		${DOXER:-none}
+	Documentation tool:		${DOXYGEN:-none}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS
@@ -555,7 +562,6 @@ Autoconfiguration complete.
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
 	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
-	SVG-Library:			`printexpandvar ${rapicornsvgdir}`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
 	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`

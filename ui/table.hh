@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_TABLE_HH__
 #define __RAPICORN_TABLE_HH__
 
@@ -23,13 +8,13 @@ namespace Rapicorn {
 
 class Table : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   list_properties ();
+  virtual const PropertyList&   _property_list ();
 public:
   virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_items) = 0;
-  virtual uint  col_spacing     () = 0;
+  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
+  virtual uint  col_spacing     () const = 0;
   virtual void  col_spacing     (uint cspacing) = 0;
-  virtual uint  row_spacing     () = 0;
+  virtual uint  row_spacing     () const = 0;
   virtual void  row_spacing     (uint rspacing) = 0;
   virtual void  resize          (uint n_cols, uint n_rows) = 0;
   virtual uint  get_n_rows      () = 0;

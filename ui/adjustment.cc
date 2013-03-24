@@ -1,27 +1,12 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "adjustment.hh"
 #include "factory.hh"
 
 namespace Rapicorn {
 
 Adjustment::Adjustment() :
-  sig_value_changed (*this, &Adjustment::value_changed),
-  sig_range_changed (*this, &Adjustment::range_changed)
+  sig_value_changed (Aida::slot (*this, &Adjustment::value_changed)),
+  sig_range_changed (Aida::slot (*this, &Adjustment::range_changed))
 {}
 
 Adjustment::~Adjustment()
@@ -92,6 +77,42 @@ Adjustment::abs_length ()
   return ar > 0 ? p / ar : 0.0;
 }
 
+bool
+Adjustment::move_flipped (MoveType movet)
+{
+  switch (movet)
+    {
+    case MOVE_PAGE_FORWARD:     return move (MOVE_PAGE_BACKWARD);
+    case MOVE_STEP_FORWARD:     return move (MOVE_STEP_BACKWARD);
+    case MOVE_STEP_BACKWARD:    return move (MOVE_STEP_FORWARD);
+    case MOVE_PAGE_BACKWARD:    return move (MOVE_PAGE_FORWARD);
+    case MOVE_NONE:             ;
+    }
+  return false;
+}
+
+bool
+Adjustment::move (MoveType move)
+{
+  switch (move)
+    {
+    case MOVE_PAGE_FORWARD:
+      value (value() + page_increment());
+      return true;
+    case MOVE_STEP_FORWARD:
+      value (value() + step_increment());
+      return true;
+    case MOVE_STEP_BACKWARD:
+      value (value() - step_increment());
+      return true;
+    case MOVE_PAGE_BACKWARD:
+      value (value() - page_increment());
+      return true;
+    case MOVE_NONE: ;
+    }
+  return false;
+}
+
 String
 Adjustment::string ()
 {
@@ -108,88 +129,88 @@ struct AdjustmentMemorizedState {
 static DataKey<AdjustmentMemorizedState> memorized_state_key;
 
 class AdjustmentSimpleImpl : public virtual Adjustment, public virtual DataListContainer {
-  double m_value, m_lower, m_upper, m_step_increment, m_page_increment, m_page;
-  uint   m_freeze_count;
+  double value_, lower_, upper_, step_increment_, page_increment_, page_;
+  uint   freeze_count_;
 public:
   AdjustmentSimpleImpl() :
-    m_value (0), m_lower (0), m_upper (100),
-    m_step_increment (1), m_page_increment (10), m_page (0),
-    m_freeze_count (0)
+    value_ (0), lower_ (0), upper_ (100),
+    step_increment_ (1), page_increment_ (10), page_ (0),
+    freeze_count_ (0)
   {}
   /* value */
-  virtual double        value	        ()                      { return m_value; }
+  virtual double        value	        ()                      { return value_; }
   virtual void
   value (double newval)
   {
-    double old_value = m_value;
+    double old_value = value_;
     if (isnan (newval))
       {
         critical ("Adjustment::value(): invalid value: %g", newval);
         newval = 0;
       }
-    m_value = CLAMP (newval, m_lower, m_upper - m_page);
-    if (old_value != m_value && !m_freeze_count)
+    value_ = CLAMP (newval, lower_, upper_ - page_);
+    if (old_value != value_ && !freeze_count_)
       sig_value_changed.emit ();
   }
   /* range */
-  virtual bool                  frozen          () const                { return m_freeze_count > 0; }
-  virtual double                lower	        () const                { return m_lower; }
-  virtual void                  lower           (double newval)         { assert_return (m_freeze_count); m_lower = newval; }
-  virtual double                upper	        () const                { return m_upper; }
-  virtual void		        upper	        (double newval)         { assert_return (m_freeze_count); m_upper = newval; }
-  virtual double	        step_increment	() const                { return m_step_increment; }
-  virtual void		        step_increment	(double newval)         { assert_return (m_freeze_count); m_step_increment = newval; }
-  virtual double	        page_increment	() const                { return m_page_increment; }
-  virtual void		        page_increment	(double newval)         { assert_return (m_freeze_count); m_page_increment = newval; }
-  virtual double	        page	        () const                { return m_page; }
-  virtual void		        page	        (double newval)         { assert_return (m_freeze_count); m_page = newval; }
+  virtual bool                  frozen          () const                { return freeze_count_ > 0; }
+  virtual double                lower	        () const                { return lower_; }
+  virtual void                  lower           (double newval)         { assert_return (freeze_count_); lower_ = newval; }
+  virtual double                upper	        () const                { return upper_; }
+  virtual void		        upper	        (double newval)         { assert_return (freeze_count_); upper_ = newval; }
+  virtual double	        step_increment	() const                { return step_increment_; }
+  virtual void		        step_increment	(double newval)         { assert_return (freeze_count_); step_increment_ = newval; }
+  virtual double	        page_increment	() const                { return page_increment_; }
+  virtual void		        page_increment	(double newval)         { assert_return (freeze_count_); page_increment_ = newval; }
+  virtual double	        page	        () const                { return page_; }
+  virtual void		        page	        (double newval)         { assert_return (freeze_count_); page_ = newval; }
   virtual void
   freeze ()
   {
-    if (!m_freeze_count)
+    if (!freeze_count_)
       {
         AdjustmentMemorizedState m;
-        m.value = m_value;
-        m.lower = m_lower;
-        m.upper = m_upper;
-        m.step_increment = m_step_increment;
-        m.page_increment = m_page_increment;
-        m.page = m_page;
+        m.value = value_;
+        m.lower = lower_;
+        m.upper = upper_;
+        m.step_increment = step_increment_;
+        m.page_increment = page_increment_;
+        m.page = page_;
         set_data (&memorized_state_key, m);
       }
-    m_freeze_count++;
+    freeze_count_++;
   }
   virtual void
   constrain ()
   {
-    assert_return (m_freeze_count);
-    if (m_lower > m_upper)
-      m_lower = m_upper = (m_lower + m_upper) / 2;
-    m_page = CLAMP (m_page, 0, m_upper - m_lower);
-    m_page_increment = MAX (m_page_increment, 0);
-    if (m_page > 0)
-      m_page_increment = MIN (m_page_increment, m_page);
-    m_step_increment = MAX (0, m_step_increment);
-    if (m_page_increment > 0)
-      m_step_increment = MIN (m_step_increment, m_page_increment);
-    else if (m_page > 0)
-      m_step_increment = MIN (m_step_increment, m_page);
-    m_value = CLAMP (m_value, m_lower, m_upper - m_page);
+    assert_return (freeze_count_);
+    if (lower_ > upper_)
+      lower_ = upper_ = (lower_ + upper_) / 2;
+    page_ = CLAMP (page_, 0, upper_ - lower_);
+    page_increment_ = MAX (page_increment_, 0);
+    if (page_ > 0)
+      page_increment_ = MIN (page_increment_, page_);
+    step_increment_ = MAX (0, step_increment_);
+    if (page_increment_ > 0)
+      step_increment_ = MIN (step_increment_, page_increment_);
+    else if (page_ > 0)
+      step_increment_ = MIN (step_increment_, page_);
+    value_ = CLAMP (value_, lower_, upper_ - page_);
   }
   virtual void
   thaw ()
   {
-    assert_return (m_freeze_count);
-    if (m_freeze_count == 1)
+    assert_return (freeze_count_);
+    if (freeze_count_ == 1)
       constrain();
-    m_freeze_count--;
-    if (!m_freeze_count)
+    freeze_count_--;
+    if (!freeze_count_)
       {
         AdjustmentMemorizedState m = swap_data (&memorized_state_key);
-        if (m.lower != m_lower || m.upper != m_upper || m.page != m_page ||
-            m.step_increment != m_step_increment || m.page_increment != m_page_increment)
+        if (m.lower != lower_ || m.upper != upper_ || m.page != page_ ||
+            m.step_increment != step_increment_ || m.page_increment != page_increment_)
           sig_range_changed.emit();
-        if (m.value != m_value)
+        if (m.value != value_)
           sig_value_changed.emit ();
       }
   }

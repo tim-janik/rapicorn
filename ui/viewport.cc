@@ -7,21 +7,24 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl () :
-  m_xoffset (0), m_yoffset (0),
-  sig_scrolled (*this, &ViewportImpl::do_scrolled)
-{}
+  xoffset_ (0), yoffset_ (0),
+  sig_scrolled (Aida::slot (*this, &ViewportImpl::do_scrolled))
+{
+  const_cast<AnchorInfo*> (force_anchor_info())->viewport = this;
+}
 
 ViewportImpl::~ViewportImpl ()
-{}
-
+{
+  const_cast<AnchorInfo*> (force_anchor_info())->viewport = NULL;
+}
 
 void
 ViewportImpl::scroll_offsets (int deltax, int deltay)
 {
-  if (deltax != m_xoffset || deltay != m_yoffset)
+  if (deltax != xoffset_ || deltay != yoffset_)
     {
-      m_xoffset = deltax;
-      m_yoffset = deltay;
+      xoffset_ = deltax;
+      yoffset_ = deltay;
       // FIXME: need to issue 0-distance move here
       sig_scrolled.emit();
     }
@@ -42,7 +45,7 @@ ViewportImpl::child_viewport ()
 }
 
 Affine
-ViewportImpl::child_affine (const ItemImpl &item)
+ViewportImpl::child_affine (const WidgetImpl &widget)
 {
   const Allocation &area = allocation();
   const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
@@ -50,10 +53,11 @@ ViewportImpl::child_affine (const ItemImpl &item)
 }
 
 void
-ViewportImpl::render_item (RenderContext &rcontext)
+ViewportImpl::render_recursive (RenderContext &rcontext)
 {
-  // prevent recursive rendering of children
-  ItemImpl::render_item (rcontext);
+  // prevent recursive rendering of children by not calling ResizeContainerImpl::render_recursive
+  if (0)
+    ResizeContainerImpl::render_recursive (rcontext);
   // viewport children are rendered in render()
 }
 
@@ -63,8 +67,8 @@ ViewportImpl::render (RenderContext &rcontext, const Rect &rect)
   if (!has_drawable_child())
     return;
   const Allocation &area = allocation();
-  ItemImpl &child = get_child();
-  const int xoffset = m_xoffset, yoffset = m_yoffset;
+  WidgetImpl &child = get_child();
+  const int xoffset = xoffset_, yoffset = yoffset_;
   // constrain rendering within allocation
   Region what = rect;
   // constrain to child allocation (child is allocated relative to Viewport origin)
@@ -79,7 +83,7 @@ ViewportImpl::render (RenderContext &rcontext, const Rect &rect)
   // render child stack
   if (!what.empty())
     {
-      m_expose_region.subtract (what);
+      expose_region_.subtract (what);
       cairo_t *cr = cairo_context (rcontext, rarea);
       cairo_translate (cr, area.x - xoffset, area.y - yoffset);
       child.render_into (cr, what);
@@ -91,14 +95,14 @@ ViewportImpl::expose_child_region (const Region &region)
 {
   if (!region.empty())
     {
-      m_expose_region.add (region);
+      expose_region_.add (region);
       collapse_expose_region();
       if (parent())
         {
           const Allocation &area = allocation();
           // propagate exposes, to make child rendering changes visible at toplevel
           Region vpregion = region;
-          vpregion.translate (area.x - m_xoffset, area.y - m_yoffset); // translate to viewport coords
+          vpregion.translate (area.x - xoffset_, area.y - yoffset_); // translate to viewport coords
           expose (vpregion);
         }
     }
@@ -108,7 +112,7 @@ void
 ViewportImpl::collapse_expose_region ()
 {
   // check for excess expose fragment scenarios
-  uint n_erects = m_expose_region.count_rects();
+  uint n_erects = expose_region_.count_rects();
   /* considering O(n^2) collision computation complexity, but also focus frame
    * exposures which easily consist of 4+ fragments, a hundred rectangles turn
    * out to be an emperically suitable threshold.
@@ -121,8 +125,8 @@ ViewportImpl::collapse_expose_region ()
        * as a workaround, we simply force everything into a single expose
        * rectangle which is good enough to avoid worst case explosion.
        */
-      m_expose_region.add (m_expose_region.extents());
-      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, m_expose_region.count_rects());
+      expose_region_.add (expose_region_.extents());
+      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, expose_region_.count_rects());
     }
 }
 

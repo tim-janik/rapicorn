@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "layoutcontainers.hh"
 #include "tableimpl.hh"
 #include "factory.hh"
@@ -21,7 +6,7 @@
 namespace Rapicorn {
 
 const PropertyList&
-Alignment::list_properties()
+Alignment::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Alignment, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
@@ -30,17 +15,17 @@ Alignment::list_properties()
     MakeProperty (Alignment, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, padding,        _("Padding"),        _("Amount of padding to add at the child's sides"), 0, 65535, 3, "w"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
-  uint16 m_left_padding, m_right_padding;
-  uint16 m_bottom_padding, m_top_padding;
+  uint16 left_padding_, right_padding_;
+  uint16 bottom_padding_, top_padding_;
 public:
   AlignmentImpl() :
-    m_left_padding (0), m_right_padding (0),
-    m_bottom_padding (0), m_top_padding (0)
+    left_padding_ (0), right_padding_ (0),
+    bottom_padding_ (0), top_padding_ (0)
   {}
   virtual void
   size_request (Requisition &requisition)
@@ -49,8 +34,8 @@ public:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        ItemImpl &child = get_child();
-        if (child.allocatable())
+        WidgetImpl &child = get_child();
+        if (child.visible())
           {
             Requisition cr = child.requisition();
             requisition.width = left_padding() + cr.width + right_padding();
@@ -66,9 +51,9 @@ public:
   size_allocate (Allocation area, bool changed)
   {
     // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
-    if (!has_allocatable_child())
+    if (!has_visible_child())
       return;
-    ItemImpl &child = get_child();
+    WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
     /* pad allocation */
     area.x += left_padding();
@@ -90,52 +75,52 @@ public:
       }
     child.set_allocation (area);
   }
-  virtual uint  left_padding   () const  { return m_left_padding; }
-  virtual void  left_padding   (uint c)  { m_left_padding = c; invalidate(); }
-  virtual uint  right_padding  () const  { return m_right_padding; }
-  virtual void  right_padding  (uint c)  { m_right_padding = c; invalidate(); }
-  virtual uint  bottom_padding () const  { return m_bottom_padding; }
-  virtual void  bottom_padding (uint c)  { m_bottom_padding = c; invalidate(); }
-  virtual uint  top_padding    () const  { return m_top_padding; }
-  virtual void  top_padding    (uint c)  { m_top_padding = c; invalidate(); }
+  virtual uint  left_padding   () const  { return left_padding_; }
+  virtual void  left_padding   (uint c)  { left_padding_ = c; invalidate(); }
+  virtual uint  right_padding  () const  { return right_padding_; }
+  virtual void  right_padding  (uint c)  { right_padding_ = c; invalidate(); }
+  virtual uint  bottom_padding () const  { return bottom_padding_; }
+  virtual void  bottom_padding (uint c)  { bottom_padding_ = c; invalidate(); }
+  virtual uint  top_padding    () const  { return top_padding_; }
+  virtual void  top_padding    (uint c)  { top_padding_ = c; invalidate(); }
   virtual uint  padding        () const  { assert_unreached(); return 0; }
   virtual void  padding        (uint c)
   {
-    m_left_padding = m_right_padding = m_bottom_padding = m_top_padding = c;
+    left_padding_ = right_padding_ = bottom_padding_ = top_padding_ = c;
     invalidate();
   }
 };
-static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
+static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 
 const PropertyList&
-HBox::list_properties()
+HBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (HBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (HBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class HBoxImpl : public virtual TableImpl, public virtual HBox {
-  virtual const PropertyList& list_properties() { return HBox::list_properties(); }
+  virtual const PropertyList& _property_list() { return HBox::_property_list(); }
   virtual void
-  add_child (ItemImpl &item)
+  add_child (WidgetImpl &widget)
   {
     uint col = get_n_cols();
     while (col > 0 && !is_col_used (col - 1))
       col--;
     if (is_col_used (col))
       insert_cols (col, 1);     // should never be triggered
-    item.hposition (col);
-    item.hspan (1);
-    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
+    widget.hposition (col);
+    widget.hspan (1);
+    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
-  virtual uint  spacing  ()                                     { return col_spacing(); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
+  virtual uint  spacing  () const                               { return col_spacing(); }
   virtual void  spacing  (uint cspacing)                        { col_spacing (cspacing); }
 public:
   explicit
@@ -144,38 +129,38 @@ public:
   ~HBoxImpl()
   {}
 };
-static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
+static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
 
 const PropertyList&
-VBox::list_properties()
+VBox::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (VBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (VBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class VBoxImpl : public virtual TableImpl, public virtual VBox {
   /* pack properties */
-  virtual const PropertyList& list_properties() { return VBox::list_properties(); }
+  virtual const PropertyList& _property_list() { return VBox::_property_list(); }
   virtual void
-  add_child (ItemImpl &item)
+  add_child (WidgetImpl &widget)
   {
     uint row = get_n_rows();
     while (row > 0 && !is_row_used (row - 1))
       row--;
     if (is_row_used (row))
       insert_rows (row, 1);     // should never be triggered
-    item.vposition (row);
-    item.vspan (1);
-    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
+    widget.vposition (row);
+    widget.vspan (1);
+    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
-  virtual uint  spacing  ()                                     { return row_spacing(); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
+  virtual uint  spacing  () const                               { return row_spacing(); }
   virtual void  spacing  (uint cspacing)                        { row_spacing (cspacing); }
 public:
   explicit
@@ -184,6 +169,6 @@ public:
   ~VBoxImpl()
   {}
 };
-static const ItemFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
+static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
 
 } // Rapicorn

@@ -1,27 +1,22 @@
-/* Rapicorn region handling
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_REGION_IMPL_H__
 #define __RAPICORN_REGION_IMPL_H__
 
-#include <rcore/rapicorncdefs.h>
+#include <rcore/rapicornconfig.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 RAPICORN_EXTERN_C_BEGIN();
 
+#if     __GNUC__ >= 4
+#define RAPICORN_PRINTF(format_idx, arg_idx)    __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
+#else
+#define RAPICORN_PRINTF(format_idx, arg_idx)
+#endif
+
 /* --- types & macros --- */
+typedef signed long long int llint64_t;
+typedef char llint64_size_assertion_t[-!(sizeof (llint64_t) == 8)];
 typedef enum {
   RAPICORN_REGION_OUTSIDE = 0,
   RAPICORN_REGION_INSIDE  = 1,
@@ -29,10 +24,10 @@ typedef enum {
 } RapicornRegionCType;
 typedef struct _RapicornRegion    RapicornRegion;
 typedef struct {
-  RapicornInt64 x1, y1, x2, y2;
+  llint64_t x1, y1, x2, y2;
 } RapicornRegionBox;
 typedef struct {
-  RapicornInt64 x, y;
+  llint64_t x, y;
 } RapicornRegionPoint;
 
 /* --- functions --- */

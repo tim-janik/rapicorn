@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_TESTUTILS_HH__
 #define __RAPICORN_TESTUTILS_HH__
 
@@ -32,13 +17,14 @@
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
 #define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
-#define TASSERT_AT(F,L,cond)    do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (F, L, #cond); } while (0)
+#define TASSERT_AT(L,cond)      do { if (RAPICORN_LIKELY (cond)) break; \
+                                     Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, L, #cond); } while (0)
 #define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
-    Rapicorn::debug_fatal (__FILE__, __LINE__, "error: %s", __s.c_str()); } while (0)
+    Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, "error: %s", __s.c_str()); } while (0)
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
   String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
   String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
-  Rapicorn::debug_fatal (__FILE__, __LINE__,                            \
+  Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__,                \
                          "assertion failed: %s %s %s: %s %s %s",        \
                          sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
   } while (0)
@@ -54,10 +40,10 @@ namespace Test {
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
  */
 class Timer {
-  const double   m_deadline;
-  vector<double> m_samples;
-  double         m_test_duration;
-  int64          m_n_runs;
+  const double   deadline_;
+  vector<double> samples_;
+  double         test_duration_;
+  int64          n_runs_;
   int64          loops_needed () const;
   void           reset        ();
   void           submit       (double elapsed, int64 repetitions);
@@ -66,8 +52,8 @@ public:
   /// Create a Timer() instance, specifying an optional upper bound for test durations.
   explicit       Timer        (double deadline_in_secs = 0);
   virtual       ~Timer        ();
-  int64          n_runs       () const { return m_n_runs; }             ///< Number of benchmark runs executed
-  double         test_elapsed () const { return m_test_duration; }      ///< Seconds spent in benchmark()
+  int64          n_runs       () const { return n_runs_; }             ///< Number of benchmark runs executed
+  double         test_elapsed () const { return test_duration_; }      ///< Seconds spent in benchmark()
   double         min_elapsed  () const;         ///< Minimum time benchmarked for a @a callee() call.
   double         max_elapsed  () const;         ///< Maximum time benchmarked for a @a callee() call.
   template<typename Callee>

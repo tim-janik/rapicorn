@@ -14,7 +14,9 @@
 #include <stdio.h>
 
 /* --- compat stuff --- */
-typedef RapicornInt64             Xint64;
+typedef llint64_t               Xint64;
+#define FALSE                   false
+#define TRUE                    true
 #define INLINE                  inline
 #define _X_EXPORT               static
 #define Bool                    bool

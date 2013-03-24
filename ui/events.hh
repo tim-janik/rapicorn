@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_EVENT_HH__
 #define __RAPICORN_EVENT_HH__
 
@@ -40,13 +25,22 @@ enum ModifierState {
 };
 
 enum KeyValue {
-#include <ui/keycodes.hh>
+#include <ui/keysymbols.hh>
 };
-unichar      key_value_to_unichar     (uint32 keysym);
-bool         key_value_is_modifier    (uint32 keysym);
-bool         key_value_is_accelerator (uint32 keysym);
-FocusDirType key_value_to_focus_dir   (uint32 keysym);
-bool         key_value_is_focus_dir   (uint32 keysym);
+
+enum ActivateKeyType {
+  ACTIVATE_NONE = 0,
+  ACTIVATE_FOCUS,
+  ACTIVATE_DEFAULT
+};
+
+unichar         key_value_to_unichar      (uint32 keysym);
+bool            key_value_is_modifier     (uint32 keysym);
+bool            key_value_is_accelerator  (uint32 keysym);
+FocusDirType    key_value_to_focus_dir    (uint32 keysym);
+bool            key_value_is_focus_dir    (uint32 keysym);
+ActivateKeyType key_value_to_activation   (uint32 keysym);
+bool            key_value_is_cancellation (uint32 keysym);
 
 typedef enum {
   EVENT_NONE,
@@ -71,14 +65,15 @@ typedef enum {
   SCROLL_RIGHT,       /* button7 */
   CANCEL_EVENTS,
   WIN_SIZE,
-  WIN_DRAW,
   WIN_DELETE,
+  WIN_DESTROY,
   EVENT_LAST
 } EventType;
 const char* string_from_event_type (EventType etype);
 
 struct EventContext;
-class Event : public Deletable, protected NonCopyable {
+class Event : public Deletable {
+  RAPICORN_CLASS_NON_COPYABLE (Event);
 protected:
   explicit        Event (EventType, const EventContext&);
 public:
@@ -112,22 +107,14 @@ public:
 };
 struct EventWinSize : public Event {
 protected:
-  explicit        EventWinSize (EventType, const EventContext&, uint, double, double);
+  explicit        EventWinSize (EventType, const EventContext&, double, double, bool);
 public:
   virtual        ~EventWinSize();
-  uint            draw_stamp;
   double          width, height;
-};
-struct EventWinDraw : public Event {
-protected:
-  explicit          EventWinDraw (EventType, const EventContext&, uint, const std::vector<Rect> &);
-public:
-  virtual          ~EventWinDraw();
-  uint              draw_stamp;
-  Rect              bbox; /* bounding box */
-  std::vector<Rect> rectangles;
+  bool            intermediate;
 };
 typedef Event EventWinDelete;
+typedef Event EventWinDestroy;
 struct EventContext {
   uint32        time;
   bool          synthesized;
@@ -155,13 +142,11 @@ EventKey*       create_event_key          (EventType           type,
                                            uint32              key,
                                            const char         *name);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
-                                           uint                draw_stamp,
                                            double              width,
-                                           double              height);
-EventWinDraw*   create_event_win_draw     (const EventContext &econtext,
-                                           uint                draw_stamp,
-                                           const std::vector<Rect> &rects);
+                                           double              height,
+                                           bool                intermediate);
 EventWinDelete* create_event_win_delete   (const EventContext &econtext);
+EventWinDestroy* create_event_win_destroy (const EventContext &econtext);
 
 } // Rapicorn
 

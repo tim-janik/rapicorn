@@ -8,42 +8,47 @@
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
-                   public virtual ScreenWindow::EventReceiver {
-  friend class  ItemImpl;
-  EventLoop            &m_loop;
-  Mutex                 m_async_mutex;
-  std::list<Event*>     m_async_event_queue;
-  ScreenWindow         *m_screen_window;
-  uint                  m_entered : 1;
-  uint                  m_auto_close : 1;
-  uint                  m_pending_win_size : 1;
-  EventContext          m_last_event_context;
-  vector<ItemImpl*>     m_last_entered_children;
-  ScreenWindow::Config  m_config;
-  uint                  m_notify_displayed_id;
-  void          uncross_focus           (ItemImpl        &fitem);
+class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
+  friend class  WidgetImpl;
+  EventLoop            &loop_;
+  ScreenWindow*         screen_window_;
+  EventContext          last_event_context_;
+  Signal_commands::Emission *commands_emission_;
+  String                     last_command_;
+  vector<WidgetImpl*>     last_entered_children_;
+  ScreenWindow::Config  config_;
+  uint                  notify_displayed_id_;
+  uint                  auto_focus_ : 1;
+  uint                  entered_ : 1;
+  uint                  pending_win_size_ : 1;
+  uint                  pending_expose_ : 1;
+  void          uncross_focus           (WidgetImpl        &fwidget);
 protected:
-  void          set_focus               (ItemImpl         *item);
+  void          set_focus               (WidgetImpl         *widget);
   virtual void  set_parent              (ContainerImpl    *parent);
   virtual void  dispose                 ();
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
-  ItemImpl*             get_focus               () const;
+  virtual WindowImpl*   as_window_impl          ()              { return this; }
+  WidgetImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
+  static  void          forcefully_close_all    ();
+  // properties
+  virtual String        title                   () const;
+  virtual void          title                   (const String &window_title);
+  virtual bool          auto_focus              () const;
+  virtual void          auto_focus              (bool afocus);
   // grab handling
-  virtual void          add_grab                                (ItemImpl &child, bool unconfined = false);
-  void                  add_grab                                (ItemImpl *child, bool unconfined = false);
-  virtual void          remove_grab                             (ItemImpl &child);
-  void                  remove_grab                             (ItemImpl *child);
-  virtual ItemImpl*     get_grab                                (bool                   *unconfined = NULL);
+  virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
+  void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
+  virtual void          remove_grab                             (WidgetImpl &child);
+  void                  remove_grab                             (WidgetImpl *child);
+  virtual WidgetImpl*     get_grab                                (bool                   *unconfined = NULL);
   // main loop
   virtual EventLoop*    get_loop                                ();
-  virtual void          enable_auto_close                       ();
   // signals
-  typedef Signal<WindowImpl, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
-  typedef Signal<WindowImpl, void ()> NotifySignal;
+  typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
   virtual bool          viewable                                ();
   virtual void          show                                    ();
@@ -53,27 +58,26 @@ public:
   virtual bool          synthesize_enter                        (double xalign = 0.5,
                                                                  double yalign = 0.5);
   virtual bool          synthesize_leave                        ();
-  virtual bool          synthesize_click                        (ItemIface &item,
+  virtual bool          synthesize_click                        (WidgetIface &widget,
                                                                  int        button,
                                                                  double     xalign = 0.5,
                                                                  double     yalign = 0.5);
   virtual bool          synthesize_delete                       ();
+  void                  draw_child                              (WidgetImpl &child);
 private:
   void                  notify_displayed                        (void);
-  virtual void          remove_grab_item                        (ItemImpl               &child);
+  virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
-  /*Des*/               ~WindowImpl                             ();
-  virtual void          dispose_item                            (ItemImpl               &item);
-  virtual bool          self_visible                            () const;
+  virtual              ~WindowImpl                              ();
+  virtual void          dispose_widget                          (WidgetImpl               &widget);
   /* misc */
-  vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
-                                                                 const vector<ItemImpl*>    &cminus);
+  vector<WidgetImpl*>   widget_difference                       (const vector<WidgetImpl*>    &clist, /* preserves order of clist */
+                                                                 const vector<WidgetImpl*>    &cminus);
   /* sizing */
-  void                  resize_screen_window                    ();
+  void                  resize_window                           (const Allocation *new_area = NULL);
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  void                  expose_now                              ();
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
   /* screen_window ops */
@@ -85,16 +89,12 @@ private:
   virtual bool          event_dispatcher                        (const EventLoop::State &state);
   virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
   virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
-  virtual bool          prepare                                 (const EventLoop::State &state,
-                                                                 int64                  *timeout_usecs_p);
-  virtual bool          check                                   (const EventLoop::State &state);
-  virtual bool          dispatch                                (const EventLoop::State &state);
+  virtual bool          command_dispatcher                      (const EventLoop::State &state);
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringSeq    &command_args);
   /* event handling */
-  virtual void          enqueue_async                           (Event                  *event);
-  virtual void          cancel_item_events                      (ItemImpl               *item);
-  void                  cancel_item_events                      (ItemImpl &item) { cancel_item_events (&item); }
+  virtual void          cancel_widget_events                      (WidgetImpl               *widget);
+  void                  cancel_widget_events                      (WidgetImpl &widget) { cancel_widget_events (&widget); }
   bool                  dispatch_mouse_movement                 (const Event            &event);
   bool                  dispatch_event_to_pierced_or_grab       (const Event            &event);
   bool                  dispatch_button_press                   (const EventButton      &bevent);
@@ -109,31 +109,31 @@ private:
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
-  bool                  dispatch_win_draw_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
+  bool                  dispatch_win_destroy                    ();
   virtual bool          dispatch_event                          (const Event            &event);
-  bool                  has_pending_win_size                    ();
+  bool                  has_queued_win_size                     ();
   /* --- GrabEntry --- */
   struct GrabEntry {
-    ItemImpl *item;
+    WidgetImpl *widget;
     bool  unconfined;
-    explicit            GrabEntry (ItemImpl *i, bool uc) : item (i), unconfined (uc) {}
+    explicit            GrabEntry (WidgetImpl *i, bool uc) : widget (i), unconfined (uc) {}
   };
-  vector<GrabEntry>     m_grab_stack;
+  vector<GrabEntry>     grab_stack_;
   /* --- ButtonState --- */
   struct ButtonState {
-    ItemImpl           *item;
+    WidgetImpl           *widget;
     uint                button;
-    explicit            ButtonState     (ItemImpl *i, uint b) : item (i), button (b) {}
-    explicit            ButtonState     () : item (NULL), button (0) {}
+    explicit            ButtonState     (WidgetImpl *i, uint b) : widget (i), button (b) {}
+    explicit            ButtonState     () : widget (NULL), button (0) {}
     bool                operator< (const ButtonState &bs2) const
     {
       const ButtonState &bs1 = *this;
-      return bs1.item < bs2.item || (bs1.item == bs2.item &&
+      return bs1.widget < bs2.widget || (bs1.widget == bs2.widget &&
                                      bs1.button < bs2.button);
     }
   };
-  map<ButtonState,uint> m_button_state_map;
+  map<ButtonState,uint> button_state_map_;
 };
 
 } // Rapicorn

@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "image.hh"
 #include "painter.hh"
 #include "factory.hh"
@@ -22,13 +7,13 @@
 namespace Rapicorn {
 
 const PropertyList&
-Image::list_properties()
+Image::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "w"),
     MakeProperty (Image, stock_pixmap, _("Stock Image"), _("Load an image from stock, providing a stock name."), "w"),
   };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
+  static const PropertyList property_list (properties, WidgetImpl::_property_list());
   return property_list;
 }
 
@@ -49,15 +34,15 @@ cairo_surface_from_pixmap (Pixmap pixmap)
   return isurface;
 }
 
-class ImageImpl : public virtual ItemImpl, public virtual Image {
-  Pixmap           m_pixmap;
+class ImageImpl : public virtual WidgetImpl, public virtual Image {
+  Pixmap           pixmap_;
 public:
   explicit ImageImpl()
   {}
   void
   reset ()
   {
-    m_pixmap = Pixmap();
+    pixmap_ = Pixmap();
     invalidate();
   }
   ~ImageImpl()
@@ -66,12 +51,12 @@ public:
   pixbuf (const Pixbuf &pixbuf)
   {
     reset();
-    m_pixmap = pixbuf;
+    pixmap_ = pixbuf;
   }
   virtual Pixbuf
   pixbuf()
   {
-    return m_pixmap;
+    return pixmap_;
   }
   virtual void
   stock_pixmap (const String &stock_name)
@@ -111,8 +96,8 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width += m_pixmap.width();
-    requisition.height += m_pixmap.height();
+    requisition.width += pixmap_.width();
+    requisition.height += pixmap_.height();
   }
   virtual void
   size_allocate (Allocation area, bool changed)
@@ -129,15 +114,15 @@ protected:
     const bool grow = true;
     PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
     const Allocation &area = allocation();
-    if (area.width < 1 || area.height < 1 || m_pixmap.width() < 1 || m_pixmap.height() < 1)
+    if (area.width < 1 || area.height < 1 || pixmap_.width() < 1 || pixmap_.height() < 1)
       return view;
-    view.xscale = m_pixmap.width() / area.width;
-    view.yscale = m_pixmap.height() / area.height;
+    view.xscale = pixmap_.width() / area.width;
+    view.yscale = pixmap_.height() / area.height;
     view.scale = max (view.xscale, view.yscale);
     if (!grow)
       view.scale = max (view.scale, 1.0);
-    view.pwidth = m_pixmap.width() / view.scale + 0.5;
-    view.pheight = m_pixmap.height() / view.scale + 0.5;
+    view.pwidth = pixmap_.width() / view.scale + 0.5;
+    view.pheight = pixmap_.height() / view.scale + 0.5;
     const PackInfo &pi = pack_info();
     view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
     view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
@@ -147,7 +132,7 @@ public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (m_pixmap.width() > 0 && m_pixmap.height() > 0)
+    if (pixmap_.width() > 0 && pixmap_.height() > 0)
       {
         const Allocation &area = allocation();
         PixView view = adjust_view();
@@ -155,7 +140,7 @@ public:
         Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
         erect.intersect (rect);
         cairo_t *cr = cairo_context (rcontext, erect);
-        cairo_surface_t *isurface = cairo_surface_from_pixmap (m_pixmap);
+        cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
         cairo_matrix_init_identity (&matrix);
@@ -169,7 +154,7 @@ public:
       }
   }
 };
-static const ItemFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
+static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
 
 static const uint8*
 get_broken16_pixdata (void)

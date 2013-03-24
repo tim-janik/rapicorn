@@ -2,127 +2,135 @@
 #ifndef __RAPICORN_CONTAINER_HH__
 #define __RAPICORN_CONTAINER_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
+class ResizeContainerImpl;
+
 // == Container ==
-struct ContainerImpl : public virtual ItemImpl, public virtual ContainerIface {
-  friend              class ItemImpl;
+struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface {
+  friend              class WidgetImpl;
   friend              class WindowImpl;
-  void                uncross_descendant(ItemImpl          &descendant);
-  void                item_cross_link   (ItemImpl           &owner,
-                                         ItemImpl           &link,
-                                         const ItemSlot &uncross);
-  void                item_cross_unlink (ItemImpl           &owner,
-                                         ItemImpl           &link,
-                                         const ItemSlot &uncross);
-  void                item_uncross_links(ItemImpl           &owner,
-                                         ItemImpl           &link);
+  void                uncross_descendant(WidgetImpl          &descendant);
+  size_t              widget_cross_link   (WidgetImpl           &owner,
+                                         WidgetImpl           &link,
+                                         const WidgetSlot &uncross);
+  void                widget_cross_unlink (WidgetImpl           &owner,
+                                         WidgetImpl           &link,
+                                         size_t              link_id);
+  void                widget_uncross_links(WidgetImpl           &owner,
+                                         WidgetImpl           &link);
 protected:
   virtual            ~ContainerImpl     ();
-  virtual void        add_child         (ItemImpl           &item) = 0;
-  virtual void        repack_child      (ItemImpl           &item,
+  virtual void        add_child         (WidgetImpl           &widget) = 0;
+  virtual void        repack_child      (WidgetImpl           &widget,
                                          const PackInfo &orig,
                                          const PackInfo &pnew);
-  virtual void        remove_child      (ItemImpl           &item) = 0;
-  virtual void        unparent_child    (ItemImpl           &item);
-  virtual void        dispose_item      (ItemImpl           &item);
-  virtual void        hierarchy_changed (ItemImpl           *old_toplevel);
+  virtual void        remove_child      (WidgetImpl           &widget) = 0;
+  virtual void        unparent_child    (WidgetImpl           &widget);
+  virtual void        dispose_widget      (WidgetImpl           &widget);
+  virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
-  virtual void        set_focus_child   (ItemImpl           *item);
-  virtual void        dump_test_data    (TestStream     &tstream);
-  static Allocation   layout_child      (ItemImpl         &child,
-                                         const Allocation &carea);
+  void                change_unviewable (WidgetImpl &child, bool);
+  virtual void        focus_lost        ()                              { set_focus_child (NULL); }
+  virtual void        set_focus_child   (WidgetImpl *widget);
+  virtual void        scroll_to_child   (WidgetImpl &widget);
+  virtual void        dump_test_data    (TestStream &tstream);
+  static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
 public:
-  ItemImpl*               get_focus_child   () const;
-  typedef Walker<ItemImpl>  ChildWalker;
+  WidgetImpl*           get_focus_child () const;
+  typedef Walker<WidgetImpl>  ChildWalker;
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual size_t        n_children      () = 0;
-  virtual ItemImpl*     nth_child       (size_t nth) = 0;
-  bool                  has_children    ()                          { return 0 != n_children(); }
-  void                  remove          (ItemImpl           &item);
-  void                  remove          (ItemImpl           *item)  { assert_return (item != NULL); remove (*item); }
-  void                  add             (ItemImpl                   &item);
-  void                  add             (ItemImpl                   *item);
-  virtual Affine        child_affine    (const ItemImpl             &item); /* container => item affine */
+  virtual WidgetImpl*   nth_child       (size_t nth) = 0;
+  bool                  has_children    ()                              { return 0 != n_children(); }
+  void                  remove          (WidgetImpl           &widget);
+  void                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL); remove (*widget); }
+  void                  add             (WidgetImpl                   &widget);
+  void                  add             (WidgetImpl                   *widget);
+  virtual Affine        child_affine    (const WidgetImpl             &widget); /* container => widget affine */
   virtual
-  const PropertyList&   list_properties (); /* essentially chaining to ItemImpl:: */
-  const CommandList&    list_commands   (); /* essentially chaining to ItemImpl:: */
-  virtual void          point_children  (Point                   p, /* item coordinates relative */
-                                         std::vector<ItemImpl*>     &stack);
+  const CommandList&    list_commands   (); /* essentially chaining to WidgetImpl:: */
+  virtual void          point_children  (Point                   p, /* widget coordinates relative */
+                                         std::vector<WidgetImpl*>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
-                                         std::vector<ItemImpl*>     &stack);
-  virtual void          render_item     (RenderContext          &rcontext);
+                                         std::vector<WidgetImpl*>     &stack);
+  virtual ContainerImpl* as_container_impl ()                           { return this; }
+  virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
-  virtual ItemIface*    create_child    (const std::string      &item_identifier,
-                                         const StringSeqImpl    &args);
+  virtual WidgetIface*    create_child    (const std::string      &widget_identifier,
+                                         const StringSeq    &args);
 };
 
 // == Single Child Container ==
 class SingleContainerImpl : public virtual ContainerImpl {
-  ItemImpl             *child_item;
+  WidgetImpl             *child_widget;
 protected:
   void                  size_request_child      (Requisition &requisition, bool *hspread, bool *vspread);
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}
-  ItemImpl&             get_child               () { critical_unless (child_item != NULL); return *child_item; }
+  WidgetImpl&             get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
-  virtual size_t        n_children              () { return child_item ? 1 : 0; }
-  virtual ItemImpl*     nth_child               (size_t nth) { return nth == 0 ? child_item : NULL; }
-  bool                  has_visible_child       () { return child_item && child_item->visible(); }
-  bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
-  bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
-  virtual void          add_child               (ItemImpl   &item);
-  virtual void          remove_child            (ItemImpl   &item);
+  virtual size_t        n_children              () { return child_widget ? 1 : 0; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
+  bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
+  bool                  has_drawable_child      () { return child_widget && child_widget->drawable(); }
+  virtual void          add_child               (WidgetImpl   &widget);
+  virtual void          remove_child            (WidgetImpl   &widget);
   explicit              SingleContainerImpl     ();
+};
+
+// == AnchorInfo ==
+struct AnchorInfo {
+  ResizeContainerImpl *resize_container;
+  ViewportImpl        *viewport;
+  WindowImpl          *window;
+  constexpr AnchorInfo() : resize_container (NULL), viewport (NULL), window (NULL) {}
 };
 
 // == Resize Container ==
 class ResizeContainerImpl : public virtual SingleContainerImpl {
-  uint                  m_tunable_requisition_counter;
-  uint                  m_resizer;
+  uint                  tunable_requisition_counter_;
+  uint                  resizer_;
+  AnchorInfo            anchor_info_;
   void                  idle_sizing             ();
+  void                  update_anchor_info      ();
 protected:
   virtual void          invalidate_parent       ();
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();
 public:
-  bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
+  bool                  requisitions_tunable    () const { return tunable_requisition_counter_ > 0; }
+  AnchorInfo*           container_anchor_info   () { return &anchor_info_; }
 };
 
 // == Multi Child Container ==
 class MultiContainerImpl : public virtual ContainerImpl {
-  std::vector<ItemImpl*>    items;
+  std::vector<WidgetImpl*>    widgets;
 protected:
   virtual void          pre_finalize            ();
   virtual              ~MultiContainerImpl      ();
   virtual void          render                  (RenderContext&, const Rect&) {}
-  virtual ChildWalker   local_children          () const { return value_walker (items); }
-  virtual size_t        n_children              () { return items.size(); }
-  virtual ItemImpl*     nth_child               (size_t nth) { return nth < items.size() ? items[nth] : NULL; }
-  virtual void          add_child               (ItemImpl   &item);
-  virtual void          remove_child            (ItemImpl   &item);
-  void                  raise_child             (ItemImpl   &item);
-  void                  lower_child             (ItemImpl   &item);
+  virtual ChildWalker   local_children          () const { return value_walker (widgets); }
+  virtual size_t        n_children              () { return widgets.size(); }
+  virtual WidgetImpl*     nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
+  virtual void          add_child               (WidgetImpl   &widget);
+  virtual void          remove_child            (WidgetImpl   &widget);
+  void                  raise_child             (WidgetImpl   &widget);
+  void                  lower_child             (WidgetImpl   &widget);
   void                  remove_all_children     ();
   explicit              MultiContainerImpl      ();
 };
-
-// == misc impl bits ==
-ContainerImpl*
-ItemImpl::as_container () // see item.hh
-{
-  return dynamic_cast<ContainerImpl*> (this);
-}
 
 } // Rapicorn
 

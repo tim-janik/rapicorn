@@ -13,39 +13,64 @@ struct RECURSIVE_LOCK {} constexpr RECURSIVE_LOCK {}; ///< Flag for recursive Mu
 
 /**
  * The Mutex synchronization primitive is a thin wrapper around std::mutex.
+ * This class is a thin wrapper around pthread_mutex_lock() and related functions.
  * This class supports static construction.
  */
 class Mutex {
-  pthread_mutex_t m_mutex;
+  pthread_mutex_t mutex_;
 public:
-  constexpr Mutex       () : m_mutex (PTHREAD_MUTEX_INITIALIZER) {}
-  constexpr Mutex       (struct RECURSIVE_LOCK) : m_mutex (PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) {}
-  void      lock        ()      { pthread_mutex_lock (&m_mutex); }
-  void      unlock      ()      { pthread_mutex_unlock (&m_mutex); }
-  bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&m_mutex); }
+  constexpr Mutex       () : mutex_ (PTHREAD_MUTEX_INITIALIZER) {}
+  constexpr Mutex       (struct RECURSIVE_LOCK) : mutex_ (PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) {}
+  void      lock        ()      { pthread_mutex_lock (&mutex_); }
+  void      unlock      ()      { pthread_mutex_unlock (&mutex_); }
+  bool      try_lock    ()      { return 0 == pthread_mutex_trylock (&mutex_); }
   bool      debug_locked();
   typedef pthread_mutex_t* native_handle_type;
-  native_handle_type native_handle() { return &m_mutex; }
+  native_handle_type native_handle() { return &mutex_; }
   /*ctor*/  Mutex       (const Mutex&) = delete;
   Mutex&    operator=   (const Mutex&) = delete;
 };
 
 /**
  * The Spinlock uses low-latency busy spinning to acquire locks.
- * It is a thin wrapper around pthread_spin_lock().
+ * This class is a thin wrapper around pthread_spin_lock() and related functions.
  * This class supports static construction.
  */
 class Spinlock {
-  pthread_spinlock_t m_spinlock;
+  pthread_spinlock_t spinlock_;
 public:
-  constexpr Spinlock    () : m_spinlock (RAPICORN_SPINLOCK_INITIALIZER) {}
-  void      lock        ()      { pthread_spin_lock (&m_spinlock); }
-  void      unlock      ()      { pthread_spin_unlock (&m_spinlock); }
-  bool      try_lock    ()      { return 0 == pthread_spin_trylock (&m_spinlock); }
+  constexpr Spinlock    () : spinlock_ RAPICORN_SPINLOCK_INITIALIZER {}
+  void      lock        ()      { pthread_spin_lock (&spinlock_); }
+  void      unlock      ()      { pthread_spin_unlock (&spinlock_); }
+  bool      try_lock    ()      { return 0 == pthread_spin_trylock (&spinlock_); }
   typedef pthread_spinlock_t* native_handle_type;
-  native_handle_type native_handle() { return &m_spinlock; }
+  native_handle_type native_handle() { return &spinlock_; }
   /*ctor*/  Spinlock    (const Spinlock&) = delete;
   Mutex&    operator=   (const Spinlock&) = delete;
+};
+
+/**
+ * The RWLock allows multiple readers to simultaneously access a critical code section or one writer.
+ * This class is a thin wrapper around pthread_rwlock_rdlock() and related functions.
+ * This class supports static construction.
+ */
+class RWLock {
+  pthread_rwlock_t rwlock_;
+  char             initialized_;
+  void             real_init ();
+  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!Lib::atomic_load (&initialized_))) real_init(); }
+public:
+  constexpr RWLock      () : rwlock_ (), initialized_ (0) {}
+  void      rdlock      ()      { fixinit(); while (pthread_rwlock_rdlock (&rwlock_) == EAGAIN); }
+  void      wrlock      ()      { fixinit(); pthread_rwlock_wrlock (&rwlock_); }
+  void      unlock      ()      { fixinit(); pthread_rwlock_unlock (&rwlock_); }
+  bool      try_rdlock  ()      { fixinit(); return 0 == pthread_rwlock_tryrdlock (&rwlock_); }
+  bool      try_wrlock  ()      { fixinit(); return 0 == pthread_rwlock_trywrlock (&rwlock_); }
+  typedef pthread_rwlock_t* native_handle_type;
+  native_handle_type native_handle() { return &rwlock_; }
+  /*dtor*/ ~RWLock      ()      { fixinit(); pthread_rwlock_destroy (&rwlock_); }
+  /*ctor*/  RWLock      (const RWLock&) = delete;
+  Mutex&    operator=   (const RWLock&) = delete;
 };
 
 /// Class keeping information per Thread.
@@ -63,18 +88,18 @@ struct ThreadInfo {
   /** @name Accessing custom data members
    * For further details, see DataListContainer.
    */
-  template<typename T> inline T    get_data    (DataKey<T> *key)         { tdl(); T d = m_data_list.get (key); tdu(); return d; }
-  template<typename T> inline void set_data    (DataKey<T> *key, T data) { tdl(); m_data_list.set (key, data); tdu(); }
-  template<typename T> inline void delete_data (DataKey<T> *key)         { tdl(); m_data_list.del (key); tdu(); }
-  template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = m_data_list.swap (key); tdu(); return d; }
-  template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = m_data_list.swap (key, data); tdu(); return d; }
+  template<typename T> inline T    get_data    (DataKey<T> *key)         { tdl(); T d = data_list_.get (key); tdu(); return d; }
+  template<typename T> inline void set_data    (DataKey<T> *key, T data) { tdl(); data_list_.set (key, data); tdu(); }
+  template<typename T> inline void delete_data (DataKey<T> *key)         { tdl(); data_list_.del (key); tdu(); }
+  template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = data_list_.swap (key); tdu(); return d; }
+  template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = data_list_.swap (key, data); tdu(); return d; }
 private:
   ThreadInfo        *volatile next;
   pthread_t                   pth_thread_id;
   char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
-  String                      m_name;
-  Mutex                       m_data_mutex;
-  DataList                    m_data_list;
+  String                      name_;
+  Mutex                       data_mutex_;
+  DataList                    data_list_;
   static ThreadInfo __thread *self_cached;
   /*ctor*/              ThreadInfo      ();
   /*ctor*/              ThreadInfo      (const ThreadInfo&) = delete;
@@ -84,8 +109,8 @@ private:
   void                  reset_specific  ();
   void                  setup_specific  ();
   static ThreadInfo*    create          ();
-  void                  tdl             () { m_data_mutex.lock(); }
-  void                  tdu             () { m_data_mutex.unlock(); }
+  void                  tdl             () { data_mutex_.lock(); }
+  void                  tdu             () { data_mutex_.unlock(); }
 };
 
 struct AUTOMATIC_LOCK {} constexpr AUTOMATIC_LOCK {}; ///< Flag for automatic locking of a ScopedLock<Mutex>.
@@ -105,15 +130,16 @@ struct BALANCED_LOCK  {} constexpr BALANCED_LOCK  {}; ///< Flag for balancing un
  * So this mode can be used to manage ownership for an already locked mutex.
  */
 template<class MUTEX>
-class ScopedLock : protected NonCopyable {
-  MUTEX         &m_mutex;
-  volatile int   m_count;
+class ScopedLock {
+  MUTEX         &mutex_;
+  volatile int   count_;
+  RAPICORN_CLASS_NON_COPYABLE (ScopedLock);
 public:
-  inline     ~ScopedLock () { while (m_count < 0) lock(); while (m_count > 0) unlock(); }
-  inline void lock       () { m_mutex.lock(); m_count++; }
-  inline void unlock     () { m_count--; m_mutex.unlock(); }
-  inline      ScopedLock (MUTEX &mutex, struct AUTOMATIC_LOCK = AUTOMATIC_LOCK) : m_mutex (mutex), m_count (0) { lock(); }
-  inline      ScopedLock (MUTEX &mutex, struct BALANCED_LOCK) : m_mutex (mutex), m_count (0) {}
+  inline     ~ScopedLock () { while (count_ < 0) lock(); while (count_ > 0) unlock(); }
+  inline void lock       () { mutex_.lock(); count_++; }
+  inline void unlock     () { count_--; mutex_.unlock(); }
+  inline      ScopedLock (MUTEX &mutex, struct AUTOMATIC_LOCK = AUTOMATIC_LOCK) : mutex_ (mutex), count_ (0) { lock(); }
+  inline      ScopedLock (MUTEX &mutex, struct BALANCED_LOCK) : mutex_ (mutex), count_ (0) {}
 };
 
 /**
@@ -121,23 +147,23 @@ public:
  * This class supports static construction.
  */
 class Cond {
-  pthread_cond_t m_cond;
+  pthread_cond_t cond_;
   static struct timespec abstime (int64);
   /*ctor*/      Cond        (const Cond&) = delete;
   Cond&         operator=   (const Cond&) = delete;
 public:
-  constexpr     Cond        () : m_cond (PTHREAD_COND_INITIALIZER) {}
-  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&m_cond); }
-  void          signal      ()  { pthread_cond_signal (&m_cond); }
-  void          broadcast   ()  { pthread_cond_broadcast (&m_cond); }
-  void          wait        (Mutex &m)  { pthread_cond_wait (&m_cond, m.native_handle()); }
+  constexpr     Cond        () : cond_ (PTHREAD_COND_INITIALIZER) {}
+  /*dtor*/     ~Cond        ()  { pthread_cond_destroy (&cond_); }
+  void          signal      ()  { pthread_cond_signal (&cond_); }
+  void          broadcast   ()  { pthread_cond_broadcast (&cond_); }
+  void          wait        (Mutex &m)  { pthread_cond_wait (&cond_, m.native_handle()); }
   void          wait_timed  (Mutex &m, int64 max_usecs)
-  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&m_cond, m.native_handle(), &abs); }
+  { struct timespec abs = abstime (max_usecs); pthread_cond_timedwait (&cond_, m.native_handle(), &abs); }
   typedef pthread_cond_t* native_handle_type;
-  native_handle_type native_handle() { return &m_cond; }
+  native_handle_type native_handle() { return &cond_; }
 };
 
-/// @namespace Rapicorn::ThisThread The Rapicorn::ThisThread namespace provides functions for the current thread of execution.
+/// The ThisThread namespace provides functions for the current thread of execution.
 namespace ThisThread {
 
 String  name            ();             ///< Get thread name.
@@ -147,7 +173,7 @@ void    affinity        (int cpu);      ///< Set the current CPU affinity.
 int     thread_pid      ();             ///< Get the current threads's thread ID (TID). For further details, see gettid().
 int     process_pid     ();             ///< Get the process ID (PID). For further details, see getpid().
 
-#ifdef  DOXYGEN // parts reused from std::this_thread
+#ifdef  RAPICORN_DOXYGEN // parts reused from std::this_thread
 /// Relinquish the processor to allow execution of other threads. For further details, see std::this_thread::yield().
 void                                       yield       ();
 /// Returns the pthread_t id for the current thread. For further details, see std::this_thread::get_id().
@@ -156,16 +182,16 @@ std::thread::id                            get_id      ();
 template<class Rep, class Period>     void sleep_for   (std::chrono::duration<Rep,Period> sleep_duration);
 /// Sleep until @a sleep_time has been reached. For further details, see std::this_thread::sleep_until().
 template<class Clock, class Duration> void sleep_until (const std::chrono::time_point<Clock,Duration> &sleep_time);
-#else // !DOXYGEN
+#else // !RAPICORN_DOXYGEN
 using namespace std::this_thread;
-#endif // !DOXYGEN
+#endif // !RAPICORN_DOXYGEN
 
 } // ThisThread
 
 #ifdef RAPICORN_CONVENIENCE
 
 /** The @e do_once statement preceeds code blocks to ensure that a critical section is executed atomically and at most once.
- *  Example: @SNIPPET{rcore/tests/threads.cc, do_once-EXAMPLE}
+ *  Example: @snippet rcore/tests/threads.cc do_once-EXAMPLE
  */
 #define do_once                         RAPICORN_DO_ONCE
 
@@ -177,43 +203,43 @@ template<typename T> class Atomic;
 
 /// Atomic char type.
 template<> struct Atomic<char> : Lib::Atomic<char> {
-  Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
+  constexpr Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
   using Lib::Atomic<char>::operator=;
 };
 
 /// Atomic int8 type.
 template<> struct Atomic<int8> : Lib::Atomic<int8> {
-  Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
+  constexpr Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
   using Lib::Atomic<int8>::operator=;
 };
 
 /// Atomic uint8 type.
 template<> struct Atomic<uint8> : Lib::Atomic<uint8> {
-  Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
+  constexpr Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
   using Lib::Atomic<uint8>::operator=;
 };
 
 /// Atomic int32 type.
 template<> struct Atomic<int32> : Lib::Atomic<int32> {
-  Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
+  constexpr Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
   using Lib::Atomic<int32>::operator=;
 };
 
 /// Atomic uint32 type.
 template<> struct Atomic<uint32> : Lib::Atomic<uint32> {
-  Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
+  constexpr Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
   using Lib::Atomic<uint32>::operator=;
 };
 
 /// Atomic int64 type.
 template<> struct Atomic<int64> : Lib::Atomic<int64> {
-  Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
+  constexpr Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
   using Lib::Atomic<int64>::operator=;
 };
 
 /// Atomic uint64 type.
 template<> struct Atomic<uint64> : Lib::Atomic<uint64> {
-  Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
+  constexpr Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
   using Lib::Atomic<uint64>::operator=;
 };
 
@@ -238,45 +264,233 @@ public:
  */
 template<class Value>
 class AsyncBlockingQueue {
-  Mutex            m_mutex;
-  Cond             m_cond;
-  std::list<Value> m_list;
+  Mutex            mutex_;
+  Cond             cond_;
+  std::list<Value> list_;
 public:
-  void  push (const Value &v);
-  Value pop  ();
-  void  swap (std::list<Value> &list);
+  void  push    (const Value &v);
+  Value pop     ();
+  bool  pending ();
+  void  swap    (std::list<Value> &list);
+};
+
+// == AsyncNotifyingQueue ==
+/**
+ * This is a thread-safe asyncronous queue which returns 0 from pop() until data is provided through push().
+ */
+template<class Value>
+class AsyncNotifyingQueue {
+  Mutex                 mutex_;
+  std::function<void()> notifier_;
+  std::list<Value>      list_;
+public:
+  void  push     (const Value &v);
+  Value pop      (Value fallback = 0);
+  bool  pending  ();
+  void  swap     (std::list<Value> &list);
+  void  notifier (const std::function<void()> &notifier);
+};
+
+// == AsyncRingBuffer ==
+/**
+ * This is a thread-safe lock-free ring buffer of fixed size.
+ * This ring buffer is a single-producer, single-consumer ring buffer that uses atomic
+ * non-blocking operations to synchronize between reader and writer. Calls to read()
+ * will return 0 until data is provided through write(). Only a single single reader
+ * and a single writer must access the ring buffer at any time.
+ * The amount of writable elements is limited by the maximum size of the ring buffer,
+ * as specified during construction. If the elements to be written exceed the available
+ * space, partial writes are possible, depending on how write() was called.
+ * Reading happens analogously, partial reads occur if the number of readable elements
+ * passed into read() exceed the available number of elements in the ring buffer.
+ */
+template<typename T>
+class AsyncRingBuffer {
+  const uint    size_;
+  Atomic<uint>  wmark_, rmark_;
+  T            *buffer_;
+  RAPICORN_CLASS_NON_COPYABLE (AsyncRingBuffer);
+public:
+  explicit      AsyncRingBuffer (uint buffer_size);     ///< Construct ring buffer with the maximum available buffer size.
+  /*dtor*/     ~AsyncRingBuffer ();                     ///< Deletes all resources, no asynchronous access must occour at this point.
+  uint          n_readable      () const;               ///< Number elements that can currently be read from ring buffer.
+  uint          n_writable      () const;               ///< Number of elements that can currently be written to ring buffer.
+  uint          read            (uint length, T *data, bool partial = true);       ///< Read (possibly partial) data from ring buffer.
+  uint          write           (uint length, const T *data, bool partial = true); ///< Write (possibly partial) data to ring buffer.
 };
 
 // == Implementation Bits ==
+template<typename T>
+AsyncRingBuffer<T>::AsyncRingBuffer (uint buffer_size) :
+  size_ (buffer_size + 1), wmark_ (0), rmark_ (0), buffer_ (new T[size_])
+{}
+
+template<typename T>
+AsyncRingBuffer<T>::~AsyncRingBuffer()
+{
+  T *old = buffer_;
+  buffer_ = NULL;
+  rmark_ = 0;
+  wmark_ = 0;
+  delete[] old;
+  *const_cast<uint*> (&size_) = 0;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::n_writable() const
+{
+  const uint rm = rmark_.load();
+  const uint wm = wmark_.load();
+  const uint space = (size_ - 1 + rm - wm) % size_;
+  return space;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
+{
+  const uint orig_length = length;
+  const uint rm = rmark_.load();
+  uint wm = wmark_.load();
+  uint space = (size_ - 1 + rm - wm) % size_;
+  if (!partial && length > space)
+    return 0;
+  while (length)
+    {
+      if (rm <= wm)
+        space = size_ - wm + (rm == 0 ? -1 : 0);
+      else
+        space = rm - wm -1;
+      if (!space)
+        break;
+      space = MIN (space, length);
+      std::copy (data, &data[space], &buffer_[wm]);
+      wm = (wm + space) % size_;
+      data += space;
+      length -= space;
+    }
+  RAPICORN_SFENCE; // wmb ensures buffer_ writes are made visible before the wmark_ update
+  wmark_.store (wm);
+  return orig_length - length;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::n_readable() const
+{
+  const uint wm = wmark_.load();
+  const uint rm = rmark_.load();
+  const uint space = (size_ + wm - rm) % size_;
+  return space;
+}
+
+template<typename T> uint
+AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
+{
+  const uint orig_length = length;
+  RAPICORN_LFENCE; // rmb ensures buffer_ contents are seen before wmark_ updates
+  const uint wm = wmark_.load();
+  uint rm = rmark_.load();
+  uint space = (size_ + wm - rm) % size_;
+  if (!partial && length > space)
+    return 0;
+  while (length)
+    {
+      if (wm < rm)
+        space = size_ - rm;
+      else
+        space = wm - rm;
+      if (!space)
+        break;
+      space = MIN (space, length);
+      std::copy (&buffer_[rm], &buffer_[rm + space], data);
+      rm = (rm + space) % size_;
+      data += space;
+      length -= space;
+    }
+  rmark_.store (rm);
+  return orig_length - length;
+}
+
 template<class Value> void
 AsyncBlockingQueue<Value>::push (const Value &v)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.push_back (v);
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.push_back (v);
   if (RAPICORN_UNLIKELY (notify))
-    m_cond.broadcast();
+    cond_.broadcast();
 }
 
 template<class Value> Value
 AsyncBlockingQueue<Value>::pop ()
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  while (m_list.empty())
-    m_cond.wait (m_mutex);
-  Value v = m_list.front();
-  m_list.pop_front();
+  ScopedLock<Mutex> sl (mutex_);
+  while (list_.empty())
+    cond_.wait (mutex_);
+  Value v = list_.front();
+  list_.pop_front();
   return v;
+}
+
+template<class Value> bool
+AsyncBlockingQueue<Value>::pending()
+{
+  ScopedLock<Mutex> sl (mutex_);
+  return !list_.empty();
 }
 
 template<class Value> void
 AsyncBlockingQueue<Value>::swap (std::list<Value> &list)
 {
-  ScopedLock<Mutex> sl (m_mutex);
-  const bool notify = m_list.empty();
-  m_list.swap (list);
-  if (notify && !m_list.empty())
-    m_cond.broadcast();
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.swap (list);
+  if (notify && !list_.empty())
+    cond_.broadcast();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::push (const Value &v)
+{
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.push_back (v);
+  if (RAPICORN_UNLIKELY (notify) && notifier_)
+    notifier_();
+}
+
+template<class Value> Value
+AsyncNotifyingQueue<Value>::pop (Value fallback)
+{
+  ScopedLock<Mutex> sl (mutex_);
+  if (RAPICORN_UNLIKELY (list_.empty()))
+    return fallback;
+  Value v = list_.front();
+  list_.pop_front();
+  return v;
+}
+
+template<class Value> bool
+AsyncNotifyingQueue<Value>::pending()
+{
+  ScopedLock<Mutex> sl (mutex_);
+  return !list_.empty();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::swap (std::list<Value> &list)
+{
+  ScopedLock<Mutex> sl (mutex_);
+  const bool notify = list_.empty();
+  list_.swap (list);
+  if (notify && !list_.empty() && notifier_)
+    notifier_();
+}
+
+template<class Value> void
+AsyncNotifyingQueue<Value>::notifier (const std::function<void()> &notifier)
+{
+  ScopedLock<Mutex> sl (mutex_);
+  notifier_ = notifier;
 }
 
 inline ThreadInfo&

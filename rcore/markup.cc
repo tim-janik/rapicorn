@@ -1,23 +1,7 @@
-/* RapicornMarkup - simple XML parser
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- *
- * based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "markup.hh"
-#include "rapicornutf8.hh"
+// This file is based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
+#include "unicode.hh"
 #include "strings.hh"
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,7 +98,7 @@ struct MarkupParser::Context {
 };
 
 MarkupParser::MarkupParser (const String &input_name) :
-  context (NULL), m_input_name (input_name), m_recap_depth (0), m_recap_outer (true)
+  context (NULL), input_name_ (input_name), recap_depth_ (0), recap_outer_ (true)
 {
   context = new MarkupParserContext;
   
@@ -196,7 +180,7 @@ is_name_start_char (const char  *p)
       (!IS_COMMON_NAME_END_CHAR (*p) &&
        (*p == '_' || 
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
@@ -213,7 +197,7 @@ is_name_char (const char  *p)
 	*p == '-' ||
 	*p == '_' ||
 	*p == ':' ||
-	Unichar::isalpha (utf8_to_unichar (p)))))
+	Unicode::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
@@ -994,7 +978,7 @@ MarkupParser::parse (const char          *text,
             assert (!context->tag_stack.empty());
             error.line_number = context->line_number - context->line_number_after_newline;;
             error.char_number = context->char_number;
-            if (m_recap_depth)
+            if (recap_depth_)
               recap_end_element (context->tag_stack.top(), error);
             else
               context->parser->end_element (context->tag_stack.top(), error);
@@ -1148,7 +1132,7 @@ MarkupParser::parse (const char          *text,
                   /* Call user callback for element start */
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  if (m_recap_depth)
+                  if (recap_depth_)
                     recap_start_element (current_element (context), context->attr_names, context->attr_values, error);
                   else
                     context->parser->start_element (current_element (context), context->attr_names, context->attr_values, error);
@@ -1279,7 +1263,7 @@ MarkupParser::parse (const char          *text,
                 {
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  if (m_recap_depth)
+                  if (recap_depth_)
                     recap_text (unescaped, error);
                   else
                     context->parser->text (unescaped, error);
@@ -1381,7 +1365,7 @@ MarkupParser::parse (const char          *text,
 		  /* call the end_element callback */
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  if (m_recap_depth)
+                  if (recap_depth_)
                     recap_end_element (close_name, error);
                   else
                     context->parser->end_element (close_name, error);
@@ -1439,7 +1423,7 @@ MarkupParser::parse (const char          *text,
               
               error.line_number = context->line_number - context->line_number_after_newline;
               error.char_number = context->char_number;
-              if (m_recap_depth)
+              if (recap_depth_)
                 recap_pass_through (context->partial_chunk, error);
               else
                 context->parser->pass_through (context->partial_chunk, error);
@@ -1592,7 +1576,7 @@ MarkupParser::get_element()
 String
 MarkupParser::input_name ()
 {
-  return m_input_name;
+  return input_name_;
 }
 
 void
@@ -1607,7 +1591,7 @@ MarkupParser::get_position (int            *line_number,
   if (char_number)
     *char_number = context->char_number;
   if (input_name_p)
-    *input_name_p = m_input_name.c_str();
+    *input_name_p = input_name_.c_str();
 }
 
 void
@@ -1619,18 +1603,18 @@ MarkupParser::recap_element (const String   &element_name,
 {
   if (error.set())
     return;
-  assert (m_recap_depth == 0);
-  m_recap = "";
-  m_recap_outer = include_outer;
+  assert (recap_depth_ == 0);
+  recap_ = "";
+  recap_outer_ = include_outer;
   recap_start_element (element_name, attribute_names, attribute_values, error);
-  if (!m_recap_outer)
-    m_recap = "";
+  if (!recap_outer_)
+    recap_ = "";
 }
 
 const String&
 MarkupParser::recap_string () const
 {
-  return m_recap;
+  return recap_;
 }
 
 void
@@ -2002,7 +1986,7 @@ MarkupParser::recap_start_element (const String   &element_name,
                                    ConstStrings   &attribute_values,
                                    Error          &error)
 {
-  m_recap_depth++;
+  recap_depth_++;
   String appendix;
   appendix += "<" + element_name;
   for (uint i = 0; i < attribute_names.size(); i++)
@@ -2017,23 +2001,23 @@ MarkupParser::recap_start_element (const String   &element_name,
       appendix += qvalue + "'";
     }
   appendix += ">";
-  m_recap += appendix; // takes potentially long
+  recap_ += appendix; // takes potentially long
 }
 
 void
 MarkupParser::recap_end_element (const String   &element_name,
                                  Error          &error)
 {
-  m_recap_depth--;
-  if (m_recap_depth || m_recap_outer)
+  recap_depth_--;
+  if (recap_depth_ || recap_outer_)
     {
       String appendix ("</" + element_name + ">");
-      m_recap += appendix; // takes potentially long
+      recap_ += appendix; // takes potentially long
     }
-  if (!m_recap_depth)
+  if (!recap_depth_)
     {
       end_element (element_name, error);
-      m_recap.clear(); // potentially large savings
+      recap_.clear(); // potentially large savings
     }
 }
 
@@ -2041,7 +2025,7 @@ void
 MarkupParser::recap_text (const String   &text,
                           Error          &error)
 {
-  m_recap += escape_text (text);
+  recap_ += escape_text (text);
 }
 
 void

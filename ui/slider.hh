@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_SLIDER_HH__
 #define __RAPICORN_SLIDER_HH__
 
@@ -23,15 +8,15 @@
 namespace Rapicorn {
 
 class SliderArea : public virtual ContainerImpl {
-  bool                  move              (int);
+  bool                  move              (MoveType);
 protected:
-  virtual const CommandList&    list_commands   ();
-  virtual const PropertyList&   list_properties ();
+  virtual const CommandList&    list_commands  ();
+  virtual const PropertyList&   _property_list ();
   explicit              SliderArea        ();
   virtual void          control           (const String   &command_name,
                                            const String   &arg) = 0;
   virtual void          slider_changed    ();
-  typedef Signal<SliderArea, void ()>     SignalSliderChanged;
+  typedef Aida::Signal<void ()> SignalSliderChanged;
 public:
   virtual bool          flipped           () const = 0;
   virtual void          flipped           (bool flip) = 0;

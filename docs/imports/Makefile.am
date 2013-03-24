@@ -13,7 +13,6 @@ TMPDIR=tmphtml
 import-docs:
 	mkdir -p $(TMPDIR)
 	rm -rf $(TMPDIR)/*
-	$(DOXERDEP)  cd $(TMPDIR) && doxer.py copy-css
 	cd $(TMPDIR) && $(WGET_MIRROR) $(CHROME_CONF) 'http://testbit.eu/book/Rapicorn-Tutorial'
 	mv $(TMPDIR)/*.html $(TMPDIR)/*.css .
 	rm -rf $(TMPDIR)/

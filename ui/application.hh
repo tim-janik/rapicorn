@@ -7,8 +7,8 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<WindowIface*> m_windows;
-  int                  m_tc;
+  vector<WindowIface*> windows_;
+  int                  tc_;
 public:
   explicit            ApplicationImpl        ();
   virtual String      auto_path              (const String  &file_name,
@@ -29,12 +29,12 @@ public:
   virtual WindowIface*query_window           (const String &selector);
   virtual WindowList  query_windows          (const String &selector);
   virtual WindowList  list_windows           ();
-  virtual ListModelRelayIface* create_list_model_relay (int                n_columns,
-                                                        const std::string &name = "");
+  virtual ListModelRelayIface* create_list_model_relay (const std::string &name = "");
   virtual void        test_counter_set       (int val);
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();
   virtual int         test_counter_inc_fetch ();
+  virtual int64       test_hook              ();
   void                lost_primaries         ();
   static ApplicationImpl& the                ();
 };

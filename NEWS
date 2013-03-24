@@ -1,3 +1,35 @@
+Rapicorn 13.03.0:	(2013-03-24)
+
+* Added proper UTF-8 locale initialization and POSIX locale support.
+* Extended mmap() support to full builtin resource loading subsystem.
+* AIDA: The IDL compiler and infrastructure got renamed to AIDA.
+* AIDA: Added support for IDL properties in C++ & Python.
+* AIDA: Added support for IDL namespaces in Python.
+* AIDA: Added rudimentary support for Any type in Python.
+* AIDA: Support fully down_casted type returns in Python.
+* AIDA: Added enum support to generated Python code.
+* AIDA: Adapted IDL fundamental types to other projects.
+* AIDA: Added sfidl features, include paths, enum expressions, streams, etc.
+* AIDA: Enable self-contained modules via ORB message routing.
+* AIDA: Merged client and server code for all non-interface types.
+* Lists: Fixes and new support for clicks, key presses and seleciton modes.
+* Added generic scroll event support to scroll ports.
+* Added support for widget actiavetion via Space and Return.
+* Added INI file support.
+* Replaced signal system by more efficient C++11 signal system.
+* Added asynchronous signals, which allow main loop driven signal emissions.
+* Moved Rapicorn to using its own full fledged X11 backend.
+* Many, many code cleanups and parallel build fixes.
+* Added support for g++-4.7 and newer SSE CPU types.
+* Added support for pseudo objects on widget selectors.
+* Ported code base to C++11.
+* Provide C++11 based threading system, including a lock-free ring buffer.
+* Much improved support for debugging, error and warning messages.
+* Lots of performance, memory use and layout improvements.
+* Many bugs, locale and message fixes.
+* Many documentation updates.
+
+
 Rapicorn 12.08.0:	(2012-08-08)
 
 * Started publicizing widget interfaces in IDL.

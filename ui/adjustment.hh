@@ -1,29 +1,22 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_ADJUSTMENT_HH__
 #define __RAPICORN_ADJUSTMENT_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
-class Adjustment : public virtual BaseObject {
-  typedef Signal<Adjustment, void ()>	SignalValueChanged;
-  typedef Signal<Adjustment, void ()>	SignalRangeChanged;
+enum MoveType {
+  MOVE_NONE,
+  MOVE_STEP_FORWARD,
+  MOVE_STEP_BACKWARD,
+  MOVE_PAGE_FORWARD,
+  MOVE_PAGE_BACKWARD,
+};
+
+class Adjustment : public virtual ReferenceCountable {
+  typedef Aida::Signal<void ()> SignalValueChanged;
+  typedef Aida::Signal<void ()> SignalRangeChanged;
 protected:
   explicit              Adjustment      ();
   virtual               ~Adjustment     ();
@@ -59,6 +52,8 @@ public:
   SignalRangeChanged	sig_range_changed;
   double                abs_range       ();
   double                abs_length      ();
+  bool                  move            (MoveType move);
+  bool                  move_flipped    (MoveType move);
   String                string          ();
   /* factory */
   static Adjustment*    create          (double  value = 0,

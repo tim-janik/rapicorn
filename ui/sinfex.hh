@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_SINFEX_HH__
 #define __RAPICORN_SINFEX_HH__
 
@@ -21,9 +6,10 @@
 
 namespace Rapicorn {
 
-class Sinfex : public virtual ReferenceCountable, protected NonCopyable {
+class Sinfex : public virtual ReferenceCountable {
+  RAPICORN_CLASS_NON_COPYABLE (Sinfex);
 protected:
-  uint          *m_start;
+  uint          *start_;
   explicit       Sinfex ();
   virtual       ~Sinfex ();
 public:
@@ -39,18 +25,18 @@ public:
   virtual Value  eval     (Scope &scope) = 0;
   /* Sinfex::Value implementation */
   class Value {
-    String   m_string;
-    double   m_real;
-    bool     m_strflag;
+    String   string_;
+    double   real_;
+    bool     strflag_;
     String   real2string () const;
     double   string2real () const;
   public:
-    bool     isreal      () const { return !m_strflag; }
-    bool     isstring    () const { return m_strflag; }
-    double   real        () const { return !m_strflag ? m_real : string2real(); }
-    String   string      () const { return m_strflag ? m_string : real2string(); }
-    bool     asbool      () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
-    explicit Value       (double        d) : m_real (d), m_strflag (0) {}
+    bool     isreal      () const { return !strflag_; }
+    bool     isstring    () const { return strflag_; }
+    double   real        () const { return !strflag_ ? real_ : string2real(); }
+    String   string      () const { return strflag_ ? string_ : real2string(); }
+    bool     asbool      () const { return (!strflag_ && real_) || (strflag_ && string_ != ""); }
+    explicit Value       (double        d) : real_ (d), strflag_ (0) {}
     explicit Value       (const String &s);
   };
 };

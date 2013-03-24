@@ -5,12 +5,12 @@
 #include "screenwindow.hh"
 #include "image.hh"
 #include "uithread.hh"
+#include "internal.hh"
+#include "selob.hh"
 #include <algorithm>
 #include <stdlib.h>
 
 namespace Rapicorn {
-
-ApplicationIface::ApplicationMutex ApplicationIface::mutex;
 
 bool
 ApplicationIface::factory_window (const std::string &factory_definition)
@@ -18,95 +18,153 @@ ApplicationIface::factory_window (const std::string &factory_definition)
   return Factory::check_ui_window (factory_definition);
 }
 
-typedef std::map<String,BaseObject*> StringObjectMap;
-static Mutex           xurl_mutex;
-static StringObjectMap xurl_map;
+struct XurlNode : public Deletable::DeletionHook {
+  String       xurl;
+  Deletable   *object;
+  bool         needs_remove;
+  explicit     XurlNode (const String &_xu, Deletable *_ob);
+  virtual void monitoring_deletable (Deletable &deletable) {}
+  virtual void dismiss_deletable ();
+  virtual     ~XurlNode();
+};
 
-static bool
-xurl_map_add (BaseObject   &object,
-              const String &key)
+class XurlMap {
+  typedef std::map<String,XurlNode*>           StringMap;
+  typedef std::map<const Deletable*,XurlNode*> ObjectMap;
+  StringMap     smap_;
+  ObjectMap     omap_;
+  XurlNode*     lookup_node (const String *xurl, const Deletable *object);
+public:
+  Deletable*    lookup (const String &xurl)     { XurlNode *xnode = lookup_node (&xurl, NULL); return xnode ? xnode->object : NULL; }
+  String        lookup (const Deletable *obj)   { XurlNode *xnode = lookup_node (NULL, obj);   return xnode ? xnode->xurl : ""; }
+  bool          add    (String xurl, Deletable *obj);
+  bool          remove (String xurl);
+  bool          remove (Deletable *obj);
+};
+
+bool
+XurlMap::add (String xurl, Deletable *obj)
 {
-  ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  if (it != xurl_map.end())
+  XurlNode *xnode = lookup_node (&xurl, obj);
+  if (xnode)
     return false;
-  xurl_map[key] = &object;
+  xnode = new XurlNode (xurl, obj);
+  smap_[xnode->xurl] = xnode;
+  omap_[xnode->object] = xnode;
   return true;
 }
 
-static bool
-xurl_map_sub (const String &key)
+bool
+XurlMap::remove (String xurl)
 {
-  ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  if (it != xurl_map.end())
+  auto sit = smap_.find (xurl);
+  if (sit == smap_.end())
+    return false;
+  XurlNode *xnode = sit->second;
+  auto oit = omap_.find (xnode->object);
+  assert (oit != omap_.end());
+  smap_.erase (sit);
+  omap_.erase (oit);
+  delete xnode;
+  return true;
+}
+
+bool
+XurlMap::remove (Deletable *obj)
+{
+  auto oit = omap_.find (obj);
+  if (oit == omap_.end())
+    return false;
+  XurlNode *xnode = oit->second;
+  auto sit = smap_.find (xnode->xurl);
+  assert (sit != smap_.end());
+  smap_.erase (sit);
+  omap_.erase (oit);
+  delete xnode;
+  return true;
+}
+
+XurlNode*
+XurlMap::lookup_node (const String *xurl, const Deletable *object)
+{
+  if (xurl)
     {
-      xurl_map.erase (it);
-      return true;
+      auto it = smap_.find (*xurl);
+      if (it != smap_.end())
+        return it->second;
     }
-  return false;
+  if (object)
+    {
+      auto it = omap_.find (object);
+      if (it != omap_.end())
+        return it->second;
+    }
+  return NULL;
 }
 
-static BaseObject*
-xurl_map_get (const String &key)
+static Mutex   xurl_mutex;
+static XurlMap xurl_map;
+
+XurlNode::XurlNode (const String &_xu, Deletable *_ob) :
+  xurl (_xu), object (_ob), needs_remove (0)
+{
+  deletable_add_hook (object);
+  needs_remove = true;
+}
+
+void
+XurlNode::dismiss_deletable ()
 {
   ScopedLock<Mutex> locker (xurl_mutex);
-  StringObjectMap::iterator it = xurl_map.find (key);
-  return it != xurl_map.end() ? it->second : NULL;
+  needs_remove = false;
+  // printerr ("DISMISS: deletable=%p hook=%p\n", object, this);
+  const bool deleted = xurl_map.remove (object);
+  // here, this is deleted
+  assert (deleted == true);
+  // this is leaked if deleted==false
 }
 
-static class XurlDataKey : public DataKey<String> {
-  virtual void destroy (String data) { xurl_map_sub (data); }
-} xurl_name_key;
+XurlNode::~XurlNode()
+{
+  if (needs_remove)
+    deletable_remove_hook (object);
+}
 
 bool
 ApplicationIface::xurl_add (const String &model_path, ListModelIface &model)
 {
-  assert_return (model_path.find ("//local/data/") == 0, false); // FIXME
+  assert_return (model_path.find ("//local/data/") == 0, false); // FIXME: should be auto-added?
   if (model_path.find ("//local/data/") != 0)
     return false;
-  const String xurl_name = model.get_data (&xurl_name_key);
-  if (!xurl_name.empty())
-    return false; // model already in map
-  if (!xurl_map_add (model, model_path))
-    return false; // model_path already in map
-  model.set_data (&xurl_name_key, model_path);
-  return true;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.add (model_path, &model);
 }
 
 bool
 ApplicationIface::xurl_sub (ListModelIface &model)
 {
-  const String xurl_name = model.get_data (&xurl_name_key);
-  if (!xurl_name.empty())
-    {
-      BaseObject *bo = xurl_map_get (xurl_name);
-      assert_return (bo == &model, false);
-      model.delete_data (&xurl_name_key);       // calls xurl_map_sub
-      bo = xurl_map_get (xurl_name);
-      assert_return (bo == NULL, false);
-      return true;
-    }
-  else
-    return false;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.remove (&model);
 }
 
 ListModelIface*
 ApplicationIface::xurl_find (const String &model_path)
 {
-  BaseObject *bo = model_path.empty() ? NULL : xurl_map_get (model_path);
-  return dynamic_cast<ListModelIface*> (bo);
+  ScopedLock<Mutex> locker (xurl_mutex);
+  Deletable *deletable = xurl_map.lookup (model_path);
+  locker.unlock();
+  return dynamic_cast<ListModelIface*> (deletable);
 }
 
 String
 ApplicationIface::xurl_path (const ListModelIface &model)
 {
-  const String xurl_name = model.get_data (&xurl_name_key);
-  return xurl_name;
+  ScopedLock<Mutex> locker (xurl_mutex);
+  return xurl_map.lookup (&model);
 }
 
 ApplicationImpl::ApplicationImpl() :
-  m_tc (0)
+  tc_ (0)
 {}
 
 static ApplicationImpl *the_app = NULL;
@@ -131,13 +189,13 @@ WindowIface*
 ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringSeq      &arguments)
 {
-  ItemImpl &item = Factory::create_ui_item (window_identifier, arguments);
-  WindowIface *window = dynamic_cast<WindowIface*> (&item);
+  WidgetImpl &widget = Factory::create_ui_widget (window_identifier, arguments);
+  WindowIface *window = dynamic_cast<WindowIface*> (&widget);
   if (!window)
     {
-      ref_sink (item);
-      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), item.typeid_pretty_name().c_str());
-      unref (item);
+      ref_sink (widget);
+      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), widget.typeid_name().c_str());
+      unref (widget);
     }
   return window;
 }
@@ -147,7 +205,6 @@ ApplicationImpl::auto_path (const String  &file_name,
                             const String  &binary_path,
                             bool           search_vpath)
 {
-  assert (rapicorn_thread_entered());
   /* test absolute file_name */
   if (Path::isabs (file_name))
     return file_name;
@@ -216,11 +273,11 @@ ApplicationIface::finishable ()
 void
 ApplicationImpl::close_all ()
 {
-  vector<WindowIface*> candidates = m_windows;
+  vector<WindowIface*> candidates = windows_;
   for (auto wip : candidates)
     {
-      auto alive = find (m_windows.begin(), m_windows.end(), wip);
-      if (alive != m_windows.end())
+      auto alive = find (windows_.begin(), windows_.end(), wip);
+      if (alive != windows_.end())
         wip->close();
     }
   // FIXME: use WindowImpl::close_all
@@ -229,33 +286,35 @@ ApplicationImpl::close_all ()
 WindowIface*
 ApplicationImpl::query_window (const String &selector)
 {
-  vector<ItemImpl*> input;
-  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+  Selector::SelobAllocator sallocator;
+  vector<Selector::Selob*> input;
+  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
-      if (item)
-        input.push_back (item);
+      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      if (widget)
+        input.push_back (sallocator.widget_selob (*widget));
     }
-  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   if (result.size() == 1) // unique
-    return dynamic_cast<WindowIface*> (result[0]);
+    return dynamic_cast<WindowIface*> (sallocator.selob_widget (*result[0]));
   return NULL;
 }
 
 WindowList
 ApplicationImpl::query_windows (const String &selector)
 {
-  vector<ItemImpl*> input;
-  for (vector<WindowIface*>::const_iterator it = m_windows.begin(); it != m_windows.end(); it++)
+  Selector::SelobAllocator sallocator;
+  vector<Selector::Selob*> input;
+  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      ItemImpl *item = dynamic_cast<ItemImpl*> (*it);
-      if (item)
-        input.push_back (item);
+      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      if (widget)
+        input.push_back (sallocator.widget_selob (*widget));
     }
-  vector<ItemImpl*> result = Selector::Matcher::match_selector (selector, input.begin(), input.end());
+  vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   WindowList wlist;
-  for (vector<ItemImpl*>::const_iterator it = result.begin(); it != result.end(); it++)
-    wlist.push_back (dynamic_cast<WindowIface*> (*it));
+  for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
+    wlist.push_back (dynamic_cast<WindowIface*> (sallocator.selob_widget (**it))->*Aida::_handle);
   return wlist;
 }
 
@@ -263,8 +322,11 @@ WindowList
 ApplicationImpl::list_windows ()
 {
   WindowList wl;
-  for (uint i = 0; i < m_windows.size(); i++)
-    wl.push_back (m_windows[i]);
+  for (uint i = 0; i < windows_.size(); i++)
+    {
+      WindowHandle wh = windows_[i]->*Aida::_handle;
+      wl.push_back (wh);
+    }
   return wl;
 }
 
@@ -272,7 +334,7 @@ void
 ApplicationImpl::add_window (WindowIface &window)
 {
   ref_sink (window);
-  m_windows.push_back (&window);
+  windows_.push_back (&window);
 }
 
 void
@@ -284,10 +346,10 @@ ApplicationImpl::lost_primaries()
 bool
 ApplicationImpl::remove_window (WindowIface &window)
 {
-  vector<WindowIface*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
-  if (it == m_windows.end())
+  vector<WindowIface*>::iterator it = std::find (windows_.begin(), windows_.end(), &window);
+  if (it == windows_.end())
     return false;
-  m_windows.erase (it);
+  windows_.erase (it);
   unref (window);
   return true;
 }
@@ -295,25 +357,31 @@ ApplicationImpl::remove_window (WindowIface &window)
 void
 ApplicationImpl::test_counter_set (int val)
 {
-  m_tc = val;
+  tc_ = val;
 }
 
 void
 ApplicationImpl::test_counter_add (int val)
 {
-  m_tc += val;
+  tc_ += val;
 }
 
 int
 ApplicationImpl::test_counter_get ()
 {
-  return m_tc;
+  return tc_;
 }
 
 int
 ApplicationImpl::test_counter_inc_fetch ()
 {
-  return ++m_tc;
+  return ++tc_;
+}
+
+int64
+ApplicationImpl::test_hook ()
+{
+  return server_app_test_hook();
 }
 
 } // Rapicorn

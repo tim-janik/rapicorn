@@ -1,23 +1,6 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- *
- * - This file is derived from GtkTable code which is
- *   Copyright (C) 1996-2002 by the GTK+ project.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "tableimpl.hh"
+// This file is derived from GtkTable code, Copyright (C) 1996-2002 by the GTK+ project.
 #include "factory.hh"
 
 #include <algorithm>
@@ -25,13 +8,13 @@
 namespace Rapicorn {
 
 static uint
-left_attach (const ItemImpl::PackInfo &pi)
+left_attach (const WidgetImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.hposition));
 }
 
 static uint
-right_attach (const ItemImpl::PackInfo &pi)
+right_attach (const WidgetImpl::PackInfo &pi)
 {
   double r = pi.hposition + pi.hspan;
   double l = left_attach (pi);
@@ -39,13 +22,13 @@ right_attach (const ItemImpl::PackInfo &pi)
 }
 
 static uint
-bottom_attach (const ItemImpl::PackInfo &pi)
+bottom_attach (const WidgetImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.vposition));
 }
 
 static uint
-top_attach (const ItemImpl::PackInfo &pi)
+top_attach (const WidgetImpl::PackInfo &pi)
 {
   double t = pi.vposition + pi.vspan;
   double b = bottom_attach (pi);
@@ -55,7 +38,7 @@ top_attach (const ItemImpl::PackInfo &pi)
 TableImpl::TableImpl() :
   default_row_spacing (0),
   default_col_spacing (0),
-  homogeneous_items (false)
+  homogeneous_widgets (false)
 {
   resize_table (1, 1);
 }
@@ -178,14 +161,14 @@ TableImpl::~TableImpl()
 {}
 
 void
-TableImpl::repack_child (ItemImpl       &item,
+TableImpl::repack_child (WidgetImpl       &widget,
                          const PackInfo &orig,
                          const PackInfo &pnew)
 {
   uint n_cols = right_attach (pnew), n_rows = top_attach (pnew);
   if (n_cols > cols.size() || n_rows > rows.size())
     resize_table (n_cols, n_rows);
-  MultiContainerImpl::repack_child (item, orig, pnew);
+  MultiContainerImpl::repack_child (widget, orig, pnew);
 }
 
 void
@@ -216,14 +199,14 @@ TableImpl::size_allocate (Allocation area, bool changed)
 }
 
 const PropertyList&
-Table::list_properties()
+Table::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Table, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (Table, col_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
     MakeProperty (Table, row_spacing, _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
@@ -240,20 +223,20 @@ TableImpl::size_request_init()
       cols[col].requisition = 0;
       cols[col].expand = false;
     }
-  
+
   bool chspread = false, cvspread = false;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      /* size request all children */
-      if (!cw->allocatable())
+      // size request all children
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       chspread |= cw->hspread();
       cvspread |= cw->vspread();
-      /* expand cols with single-column expand children */
+      // expand cols with single-column expand children
       if (left_attach (pi) + 1 == right_attach (pi) && cw->hexpand())
         cols[left_attach (pi)].expand = true;
-      /* expand rows with single-column expand children */
+      // expand rows with single-column expand children
       if (bottom_attach (pi) + 1 == top_attach (pi) && cw->vexpand())
         rows[bottom_attach (pi)].expand = true;
     }
@@ -266,7 +249,7 @@ TableImpl::size_request_pass1()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       Requisition crq = cw->requisition();
       const PackInfo &pi = cw->pack_info();
@@ -310,7 +293,7 @@ TableImpl::size_request_pass3()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       /* request remaining space for multi-column children */
@@ -423,7 +406,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of single row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       if (left_attach (pi) + 1 == right_attach (pi))
@@ -442,7 +425,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       if (left_attach (pi) + 1 != right_attach (pi))
@@ -767,7 +750,7 @@ TableImpl::size_allocate_pass2 ()
   Allocation area = allocation(), child_area;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->allocatable())
+      if (!cw->visible())
         continue;
       const PackInfo &pi = cw->pack_info();
       Requisition crq = cw->requisition();
@@ -827,6 +810,6 @@ TableImpl::size_allocate_pass2 ()
     }
 }
 
-static const ItemFactory<TableImpl> table_factory ("Rapicorn::Factory::Table");
+static const WidgetFactory<TableImpl> table_factory ("Rapicorn::Factory::Table");
 
 } // Rapicorn

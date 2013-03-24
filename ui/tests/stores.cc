@@ -13,7 +13,7 @@ test_any_seq ()
   aseq.append_back() <<= "second";      assert (aseq.size() == 2);
   aseq.resize (5);                      assert (aseq.size() == 5);
   aseq[2] <<= 7;                        assert (aseq[2].as_int() == 7);  assert (aseq[2].as_string() == "7");
-  aseq[3] <<= 17.5;                     assert (aseq[3].as_int() == 17); assert (aseq[3].as_string() == "17.5");
+  aseq[3] <<= 17.5;                     TCMP (aseq[3].as_int(), ==, 17); TCMP (aseq[3].as_string(), ==, "17.5");
   aseq[4] <<= "fifth";                  assert (aseq[4].as_string() == "fifth");
   aseq.append_back() <<= Any();         assert (aseq.size() == 6);
   assert (aseq[1].as_string() == "second");
@@ -78,16 +78,20 @@ test_any_seq_seq ()
 REGISTER_UITHREAD_TEST ("Stores/AnySeqSeq Chess", test_any_seq_seq);
 
 static uint store_inserted_counter = 0;
-static void
-store_inserted (int first, int last)
-{
-  store_inserted_counter++;
-}
 static uint store_changed_counter = 0;
 static void
-store_changed (int first, int last)
+store_updated (const UpdateRequest &urequest)
 {
-  store_changed_counter++;
+  switch (urequest.kind)
+    {
+    case UPDATE_INSERTION:
+      store_inserted_counter++;
+      break;
+    case UPDATE_CHANGE:
+      store_changed_counter++;
+      break;
+    default: ;
+    }
 }
 
 static void
@@ -98,28 +102,27 @@ test_basic_memory_store ()
   // check model/store identity (for memory stores)
   ListModelIface &m1 = *store;
   assert (&m1 == store);
-  store->sig_inserted += slot (store_inserted);
-  store->sig_changed += slot (store_changed);
+  store->sig_updated() += store_updated;
   // basic store assertions
-  assert (store->size() == 0);
+  assert (store->count() == 0);
   // insert first row
-  AnySeq row;
-  row.append_back() <<= "first";
+  Any row;
+  row <<= "first";
   uint last_counter = store_inserted_counter;
   store->insert (0, row);
   assert (store_inserted_counter > last_counter);
-  assert (store->size() == 1);
-  assert (store->row (0)[0].as_string() == "first");
+  assert (store->count() == 1);
+  assert (store->row (0).as_string() == "first");
   last_counter = store_changed_counter;
-  row[0] <<= "foohoo";
-  store->update (0, row);
+  row <<= "foohoo";
+  store->update_row (0, row);
   assert (store_changed_counter > last_counter);
-  assert (store->row (0)[0].as_string() == "foohoo");
+  assert (store->row (0).as_string() == "foohoo");
   last_counter = store_inserted_counter;
-  row[0] <<= 2;
+  row <<= 2;
   store->insert (1, row);
   assert (store_inserted_counter > last_counter);
-  assert (store->row (1)[0].as_int() == 2);
+  assert (store->row (1).as_int() == 2);
   unref (store);
 }
 REGISTER_UITHREAD_TEST ("Stores/Basic memory store", test_basic_memory_store);
@@ -128,12 +131,12 @@ static String
 stringify_model (ListModelIface &model)
 {
   String s = "[\n";
-  for (int i = 0; i < model.size(); i++)
+  for (int i = 0; i < model.count(); i++)
     {
-      AnySeq row = model.row (i);
+      Any row = model.row (i);
       s += "  (";
-      for (uint j = 0; j < row.size(); j++)
-        s += string_printf ("%s%s", j ? "," : "", row[j].as_string().c_str());
+      for (uint j = 0; j < 1; j++) // FIXME: support sequences in Any
+        s += string_printf ("%s%s", j ? "," : "", row.as_string().c_str());
       s += "),\n";
     }
   s += "]";
@@ -147,42 +150,39 @@ test_store_modifications ()
   ref_sink (store);
   for (uint i = 0; i < 4; i++)
     {
-      AnySeq row;
-      for (uint j = 0; j < 4; j++)
-        row.append_back() <<= string_printf ("%02x", 16 * (i + 1) + j + 1);
+      Any row;
+      for (uint j = 0; j < 1; j++) // FIXME: "j < 4" - support sequences in Any
+        row <<= string_printf ("%02x", 16 * (i + 1) + j + 1);
       store.insert (-1, row);
     }
-  AnySeq row;
-  row.resize (4);
+  Any row;
   // store modifications
-  row[0] <<= "Newly_appended_last_row";
+  row <<= "Newly_appended_last_row";
   store.insert (-1, row);
-  row[0] <<= "Newly_prepended_first_row";
+  row <<= "Newly_prepended_first_row";
   store.insert (0, row);
 
   row = store.row (1);
-  row[3] <<= "Extra_text_added_to_row_1";
-  store.update (1, row);
+  row <<= "Extra_text_added_to_row_1";
+  store.update_row (1, row);
 
-  store.remove (2);
-  row.clear();
-  row.resize (4);
-  row[0] <<= "Replacement_for_removed_row_2";
+  store.remove (2, 1);
+  row <<= "Replacement_for_removed_row_2";
   store.insert (2, row);
 
   // test verification
   String e = "[\n"
-             "  (Newly_prepended_first_row,,,),\n"
-             "  (11,12,13,Extra_text_added_to_row_1),\n"
-             "  (Replacement_for_removed_row_2,,,),\n"
-             "  (31,32,33,34),\n"
-             "  (41,42,43,44),\n"
-             "  (Newly_appended_last_row,,,),\n"
+             "  (Newly_prepended_first_row),\n"
+             "  (Extra_text_added_to_row_1),\n"
+             "  (Replacement_for_removed_row_2),\n" // FIXME: (11,12,13,Extra_text_added_to_row_1)
+             "  (31),\n" // FIXME: (31,32,33,34)
+             "  (41),\n" // FIXME: (41,42,43,44)
+             "  (Newly_appended_last_row),\n"
              "]";
   String s = stringify_model (store);
   if (Test::verbose())
     printout ("%s: model:\n%s\n", __func__, s.c_str());
-  assert (e == s);
+  TCMP (e, ==, s);
   // cleanup
   unref (store);
 }

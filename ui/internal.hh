@@ -10,10 +10,10 @@
 
 namespace Rapicorn {
 
-ClientConnection        uithread_connection     (void); // Implemented in uithread.cc
-void                    uithread_shutdown       (void); // Implemented in uithread.cc
-void                    uithread_serverglue     (ServerConnection); // Implemented in serverglue.cc
-
+ApplicationH            uithread_bootup         (int *argcp, char **argv, const StringVector &args);
+void                    uithread_shutdown       (); // Implemented in uithread.cc
+int64                   client_app_test_hook    ();
+int64                   server_app_test_hook    ();
 
 } // Rapicorn
 

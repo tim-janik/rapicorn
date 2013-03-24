@@ -2,9 +2,8 @@
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/objects.hh>
 #include <rcore/thread.hh>
-#include <rcore/rapicornsignal.hh>
 
 
 namespace Rapicorn {
@@ -48,7 +47,7 @@ public:
 
 // === EventLoop ===
 class MainLoop;
-class EventLoop : public virtual BaseObject /// Loop object, polling for events and executing callbacks in accordance.
+class EventLoop : public virtual ReferenceCountable /// Loop object, polling for events and executing callbacks in accordance.
 {
   class TimedSource;
   class PollFDSource;
@@ -61,13 +60,13 @@ public:
   class State;
 protected:
   typedef std::vector<Source*>    SourceList;
-  MainLoop     &m_main_loop;
-  SourceList    m_sources;
-  int64         m_dispatch_priority;
-  QuickSourceArray &m_poll_sources;
+  MainLoop     &main_loop_;
+  SourceList    sources_;
+  int64         dispatch_priority_;
+  QuickSourceArray &poll_sources_;
   uint64        pollmem1[3];
   Source*       pollmem2[7];
-  bool          m_primary;
+  bool          primary_;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
   Source*       find_first_L     ();
@@ -80,14 +79,16 @@ protected:
   bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
   bool          check_sources_Lm    (State&, const QuickPfdArray&);
   Source*       dispatch_source_Lm  (State&);
-  typedef Signals::Slot1<void,PollFD&>      VPfdSlot;
-  typedef Signals::Slot1<bool,PollFD&>      BPfdSlot;
-  typedef Signals::Slot1<bool,const State&> DispatcherSlot;
 public:
+  typedef std::function<void (void)>         VoidSlot;
+  typedef std::function<bool (void)>         BoolSlot;
+  typedef std::function<void (PollFD&)>      VPfdSlot;
+  typedef std::function<bool (PollFD&)>      BPfdSlot;
+  typedef std::function<bool (const State&)> DispatcherSlot;
   static const int PRIORITY_NOW        = -1073741824;   ///< Most important, used for immediate async execution (MAXINT/2)
   static const int PRIORITY_HIGH       = -100 - 10;     ///< Very important, used for e.g. io handlers (G*HIGH)
   static const int PRIORITY_NEXT       = -100 - 5;      ///< Still very important, used for need-to-be-async operations (G*HIGH)
-  static const int PRIORITY_NOTIFY     =    0 - 1;      ///< Important, delivers async signals (G*DEFAULT)
+  static const int PRIORITY_NOTIFY     =    0 - 1;      ///< Important, delivers async callbacks (G*DEFAULT)
   static const int PRIORITY_NORMAL     =    0;          ///< Normal importantance, interfaces to all layers (G*DEFAULT)
   static const int PRIORITY_UPDATE     = +100 + 5;      ///< Mildly important, used for GUI updates or user information (G*HIGH_IDLE)
   static const int PRIORITY_IDLE       = +200;          ///< Mildly important, used for GUI updates or user information (G*DEFAULT_IDLE)
@@ -101,36 +102,30 @@ public:
   void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
-  uint exec_now        (const VoidSlot &sl);    ///< Execute a callback with priority "now" (highest).
-  uint exec_now        (const BoolSlot &sl);    ///< Executes callback as exec_now(), returning true repeats callback.
-  uint exec_next       (const VoidSlot &sl);    ///< Execute a callback with priority "next" (very important).
-  uint exec_next       (const BoolSlot &sl);    ///< Executes callback as exec_next(), returning true repeats callback.
-  uint exec_notify     (const VoidSlot &sl);    ///< Execute a callback with priority "notify" (important, for async signals).
-  uint exec_notify     (const BoolSlot &sl);    ///< Executes callback as exec_notify(), returning true repeats callback.
-  uint exec_normal     (const VoidSlot &sl);    ///< Execute a callback with normal priority (round-robin for all events and requests).
-  uint exec_normal     (const BoolSlot &sl);    ///< Executes callback as exec_normal(), returning true repeats callback.
-  uint exec_update     (const VoidSlot &sl);    ///< Execute a callback with priority "update" (important idle).
-  uint exec_update     (const BoolSlot &sl);    ///< Executes callback as exec_update(), returning true repeats callback.
-  uint exec_background (const VoidSlot &sl);    ///< Execute a callback with background priority (when idle).
-  uint exec_background (const BoolSlot &sl);    ///< Executes callback as exec_background(), returning true repeats callback.
-  uint exec_dispatcher (const DispatcherSlot &sl,
-                        int    priority = PRIORITY_NORMAL); ///< Execute a single dispatcher callback for prepare, check, dispatch.
-  uint exec_timer      (uint            timeout_ms,
-                        const VoidSlot &sl,
-                        int             priority = PRIORITY_NORMAL); ///< Execute a callback after a specified timeout.
-  uint exec_timer      (uint            initial_timeout_ms,
-                        uint            repeat_timeout_ms,
-                        const BoolSlot &sl,
-                        int             priority = PRIORITY_NORMAL); ///< Add exec_timer() callback, returning true repeats callback.
-  uint exec_io_handler (const VPfdSlot &sl,
-                        int             fd,
-                        const String   &mode,
-                        int             priority = PRIORITY_NORMAL); ///< Execute a callback after polling for mode on fd.
-  uint exec_io_handler (const BPfdSlot &sl,
-                        int             fd,
-                        const String   &mode,
-                        int             priority = PRIORITY_NORMAL); ///< Add exec_io_handler() callback, returning true repeats callback.
-  MainLoop* main_loop  () const { return &m_main_loop; }             ///< Get the main loop for this loop.
+  template<class BoolVoidFunctor>
+  uint exec_now        (BoolVoidFunctor &&bvf); ///< Execute a callback as primary source with priority "now" (highest), returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_next       (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "next" (very important), returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_notify     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "notify" (important, for async callbacks), returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_normal     (BoolVoidFunctor &&bvf); ///< Execute a callback with normal priority (round-robin for all events and requests), returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with background priority (when idle), returning true repeats callback.
+  MainLoop* main_loop  () const { return &main_loop_; }        ///< Get the main loop for this loop.
+  /// Execute a single dispatcher callback for prepare, check, dispatch.
+  uint exec_dispatcher (const DispatcherSlot &sl, int priority = PRIORITY_NORMAL);
+  /// Execute a callback after a specified timeout, returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_timer      (uint timeout_ms, BoolVoidFunctor &&bvf, int priority = PRIORITY_NORMAL);
+  /// Execute a callback after a specified timeout with adjustable initial timeout, returning true repeats callback.
+  template<class BoolVoidFunctor>
+  uint exec_timer      (uint initial_timeout_ms, uint repeat_timeout_ms, BoolVoidFunctor &&bvf, int priority = PRIORITY_NORMAL);
+  /// Execute a callback after polling for mode on fd, returning true repeats callback.
+  template<class BoolVoidPollFunctor>
+  uint exec_io_handler (BoolVoidPollFunctor &&bvf, int fd, const String &mode, int priority = PRIORITY_NORMAL);
 };
 
 // === MainLoop ===
@@ -138,12 +133,12 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
 {
   friend                class EventLoop;
   friend                class SlaveLoop;
-  Mutex                 m_mutex;
-  vector<EventLoop*>    m_loops;
-  EventFd               m_eventfd;
-  uint                  m_rr_index;
-  bool                  m_running;
-  int                   m_quit_code;
+  Mutex                 mutex_;
+  vector<EventLoop*>    loops_;
+  EventFd               eventfd_;
+  uint                  rr_index_;
+  bool                  running_;
+  int                   quit_code_;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
@@ -161,12 +156,12 @@ public:
   void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
   EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
-  inline Mutex&     mutex    () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
+  inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
   ///@cond
   void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:
-  struct LookHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
-  LookHooks m_lock_hooks; bool m_lock_hooks_locked;
+  struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
+  LockHooks lock_hooks_; bool lock_hooks_locked_;
   ///@endcond
 };
 
@@ -180,25 +175,26 @@ struct EventLoop::State {
 };
 
 // === EventLoop::Source ===
-class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyable /// EventLoop source for callback execution.
+class EventLoop::Source : public virtual ReferenceCountable /// EventLoop source for callback execution.
 {
   friend        class EventLoop;
+  RAPICORN_CLASS_NON_COPYABLE (Source);
 protected:
-  EventLoop   *m_loop;
+  EventLoop   *loop_;
   struct {
     PollFD    *pfd;
     uint       idx;
-  }           *m_pfds;
-  uint         m_id;
-  int          m_priority;
-  uint16       m_loop_state;
-  uint         m_may_recurse : 1;
-  uint         m_dispatching : 1;
-  uint         m_was_dispatching : 1;
-  uint         m_primary : 1;
+  }           *pfds_;
+  uint         id_;
+  int          priority_;
+  uint16       loop_state_;
+  uint         may_recurse_ : 1;
+  uint         dispatching_ : 1;
+  uint         was_dispatching_ : 1;
+  uint         primary_ : 1;
   uint         n_pfds      ();
   explicit     Source      ();
-  uint         source_id   () { return m_loop ? m_id : 0; }
+  uint         source_id   () { return loop_ ? id_ : 0; }
 public:
   virtual     ~Source      ();
   virtual bool prepare     (const State &state,
@@ -214,13 +210,13 @@ public:
   void         add_poll    (PollFD * const pfd);            ///< Add a PollFD descriptors for poll(2) and check().
   void         remove_poll (PollFD * const pfd);            ///< Remove a previously added PollFD.
   void         loop_remove ();                              ///< Remove this source from its event loop if any.
-  MainLoop*    main_loop   () const { return m_loop ? m_loop->main_loop() : NULL; } ///< Get the main loop for this source.
+  MainLoop*    main_loop   () const { return loop_ ? loop_->main_loop() : NULL; } ///< Get the main loop for this source.
 };
 
 // === EventLoop::DispatcherSource ===
 class EventLoop::DispatcherSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
 {
-  Signals::Trampoline1<bool,const State&> *m_trampoline;
+  DispatcherSlot slot_;
 protected:
   virtual     ~DispatcherSource ();
   virtual bool prepare          (const State &state, int64 *timeout_usecs_p);
@@ -228,19 +224,19 @@ protected:
   virtual bool dispatch         (const State &state);
   virtual void destroy          ();
 public:
-  explicit     DispatcherSource (Signals::Trampoline1<bool,const State&> &tr);
+  explicit     DispatcherSource (const DispatcherSlot &slot);
 };
 
 // === EventLoop::TimedSource ===
 class EventLoop::TimedSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
 {
-  uint64     m_expiration_usecs;
-  uint       m_interval_msecs;
-  bool       m_first_interval;
-  const bool m_oneshot;
+  uint64     expiration_usecs_;
+  uint       interval_msecs_;
+  bool       first_interval_;
+  const bool oneshot_;
   union {
-    Signals::Trampoline0<bool> *m_btrampoline;
-    Signals::Trampoline0<void> *m_vtrampoline;
+    BoolSlot bool_slot_;
+    VoidSlot void_slot_;
   };
 protected:
   virtual     ~TimedSource  ();
@@ -249,12 +245,8 @@ protected:
   virtual bool check        (const State &state);
   virtual bool dispatch     (const State &state);
 public:
-  explicit     TimedSource (Signals::Trampoline0<bool> &bt,
-                            uint initial_interval_msecs = 0,
-                            uint repeat_interval_msecs = 0);
-  explicit     TimedSource (Signals::Trampoline0<void> &vt,
-                            uint initial_interval_msecs = 0,
-                            uint repeat_interval_msecs = 0);
+  explicit     TimedSource (const BoolSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0);
+  explicit     TimedSource (const VoidSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0);
 };
 
 // === EventLoop::PollFDSource ===
@@ -268,137 +260,100 @@ protected:
   virtual bool  check           (const State &state);
   virtual bool  dispatch        (const State &state);
   virtual void  destroy         ();
-  PollFD        m_pfd;
-  uint          m_ignore_errors : 1;    // 'E'
-  uint          m_ignore_hangup : 1;    // 'H'
-  uint          m_never_close : 1;      // 'C'
+  PollFD        pfd_;
+  uint          ignore_errors_ : 1;    // 'E'
+  uint          ignore_hangup_ : 1;    // 'H'
+  uint          never_close_ : 1;      // 'C'
 private:
-  const uint    m_oneshot : 1;
+  const uint    oneshot_ : 1;
   union {
-    Signals::Trampoline1<bool,PollFD&> *m_btrampoline;
-    Signals::Trampoline1<void,PollFD&> *m_vtrampoline;
+    BPfdSlot bool_poll_slot_;
+    VPfdSlot void_poll_slot_;
   };
 public:
-  explicit      PollFDSource    (Signals::Trampoline1<bool,PollFD&> &bt,
-                                 int                                 fd,
-                                 const String                       &mode);
-  explicit      PollFDSource    (Signals::Trampoline1<void,PollFD&> &vt,
-                                 int                                 fd,
-                                 const String                       &mode);
+  explicit      PollFDSource    (const BPfdSlot &slot, int fd, const String &mode);
+  explicit      PollFDSource    (const VPfdSlot &slot, int fd, const String &mode);
 };
 
 // === EventLoop methods ===
-inline uint
-EventLoop::exec_now (const VoidSlot &sl)
+template<class BoolVoidFunctor> uint
+EventLoop::exec_now (BoolVoidFunctor &&bvf)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  TimedSource *tsource = new TimedSource (slot);
+  tsource->primary (true);
+  return add (tsource, PRIORITY_NOW);
+}
+
+template<class BoolVoidFunctor> uint
+EventLoop::exec_next (BoolVoidFunctor &&bvf)
+{
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot), PRIORITY_NEXT);
+}
+
+template<class BoolVoidFunctor> uint
+EventLoop::exec_notify (BoolVoidFunctor &&bvf)
+{
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot), PRIORITY_NOTIFY);
+}
+
+template<class BoolVoidFunctor> uint
+EventLoop::exec_normal (BoolVoidFunctor &&bvf)
+{
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot), PRIORITY_NORMAL);
+}
+
+template<class BoolVoidFunctor> uint
+EventLoop::exec_update (BoolVoidFunctor &&bvf)
+{
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot), PRIORITY_UPDATE);
+}
+
+template<class BoolVoidFunctor> uint
+EventLoop::exec_background (BoolVoidFunctor &&bvf)
+{
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot), PRIORITY_BACKGROUND);
 }
 
 inline uint
-EventLoop::exec_now (const BoolSlot &sl)
+EventLoop::exec_dispatcher (const DispatcherSlot &slot, int priority)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
+  return add (new DispatcherSource (slot), priority);
 }
 
-inline uint
-EventLoop::exec_next (const VoidSlot &sl)
+template<class BoolVoidFunctor> uint
+EventLoop::exec_timer (uint timeout_ms, BoolVoidFunctor &&bvf, int priority)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot, timeout_ms, timeout_ms), priority);
 }
 
-inline uint
-EventLoop::exec_next (const BoolSlot &sl)
+template<class BoolVoidFunctor> uint
+EventLoop::exec_timer (uint initial_timeout_ms, uint repeat_timeout_ms, BoolVoidFunctor &&bvf, int priority)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
+  typedef decltype (bvf()) ReturnType;
+  std::function<ReturnType()> slot (bvf);
+  return add (new TimedSource (slot, initial_timeout_ms, repeat_timeout_ms), priority);
 }
 
-inline uint
-EventLoop::exec_notify (const VoidSlot &sl)
+template<class BoolVoidPollFunctor> uint
+EventLoop::exec_io_handler (BoolVoidPollFunctor &&bvf, int fd, const String &mode, int priority)
 {
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
-}
-
-inline uint
-EventLoop::exec_notify (const BoolSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
-}
-
-inline uint
-EventLoop::exec_normal (const VoidSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
-}
-
-inline uint
-EventLoop::exec_normal (const BoolSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
-}
-
-inline uint
-EventLoop::exec_update (const VoidSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
-}
-
-inline uint
-EventLoop::exec_update (const BoolSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
-}
-
-inline uint
-EventLoop::exec_background (const VoidSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
-}
-
-inline uint
-EventLoop::exec_background (const BoolSlot &sl)
-{
-  return add (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
-}
-
-inline uint
-EventLoop::exec_dispatcher (const DispatcherSlot &sl, int priority)
-{
-  return add (new DispatcherSource (*sl.get_trampoline()), priority);
-}
-
-inline uint
-EventLoop::exec_timer (uint            timeout_ms,
-                       const VoidSlot &sl,
-                       int             priority)
-{
-  return add (new TimedSource (*sl.get_trampoline(), timeout_ms, timeout_ms), priority);
-}
-
-inline uint
-EventLoop::exec_timer (uint            initial_timeout_ms,
-                       uint            repeat_timeout_ms,
-                       const BoolSlot &sl,
-                       int             priority)
-{
-  return add (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), priority);
-}
-
-inline uint
-EventLoop::exec_io_handler (const VPfdSlot &sl,
-                            int             fd,
-                            const String   &mode,
-                            int             priority)
-{
-  return add (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
-}
-
-inline uint
-EventLoop::exec_io_handler (const BPfdSlot &sl,
-                            int             fd,
-                            const String   &mode,
-                            int             priority)
-{
-  return add (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
+  typedef decltype (bvf (*(PollFD*) 0)) ReturnType;
+  std::function<ReturnType (PollFD&)> slot (bvf);
+  return add (new PollFDSource (slot, fd, mode), priority);
 }
 
 } // Rapicorn

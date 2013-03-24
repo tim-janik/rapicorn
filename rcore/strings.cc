@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "strings.hh"
-#include "rapicornutf8.hh"
+#include "unicode.hh"
 #include "main.hh"
 
 #include <cstring>
@@ -34,6 +34,7 @@ init_gettext (const StringVector &args)
 static InitHook _init_gettext ("core/10 Init i18n Translation Domain", init_gettext);
 
 // === String ===
+/// Reproduce a string @a s for @a count times.
 String
 string_multiply (const String &s,
                  uint64        count)
@@ -56,18 +57,21 @@ string_multiply (const String &s,
     return "";
 }
 
+/** Enforce a canonical charset for a string.
+ * Convert all chars in @a string that are not listed as @a valid_chars with @a substitute.
+ */
 String
-string_canonify (const String &s, const String &valid_chars, const String &substitute)
+string_canonify (const String &string, const String &valid_chars, const String &substitute)
 {
-  const size_t l = s.size();
-  const char *valids = valid_chars.c_str(), *p = s.c_str();
+  const size_t l = string.size();
+  const char *valids = valid_chars.c_str(), *p = string.c_str();
   size_t i;
   for (i = 0; i < l; i++)
     if (!strchr (valids, p[i]))
       goto rewrite_string;
-  return s; // only ref increment
+  return string; // only ref increment
  rewrite_string:
-  String d = s.substr (0, i);
+  String d = string.substr (0, i);
   d += substitute;
   for (++i; i < l; i++)
     if (strchr (valids, p[i]))
@@ -77,76 +81,154 @@ string_canonify (const String &s, const String &valid_chars, const String &subst
   return d;
 }
 
+/// Returns a string containing all of a-z.
 String
 string_set_a2z ()
 {
   return "abcdefghijklmnopqrstuvwxyz";
 }
 
+/// Returns a string containing all of A-Z.
 String
 string_set_A2Z ()
 {
   return "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 }
 
+/// Returns a string containing all of 0-9, A-Z and a-z.
 String
 string_set_ascii_alnum ()
 {
   return "0123456789" + string_set_A2Z() + string_set_a2z();
 }
 
+/// Convert all string characters into Unicode lower case characters.
 String
 string_tolower (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::tolower (s[i]);
+    s[i] = Unicode::tolower (s[i]);
   return s;
 }
 
+/// Convert all string characters into Unicode upper case characters.
 String
 string_toupper (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::toupper (s[i]);
+    s[i] = Unicode::toupper (s[i]);
   return s;
 }
 
+/// Convert all string characters into Unicode title characters.
 String
 string_totitle (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    s[i] = Unichar::totitle (s[i]);
+    s[i] = Unicode::totitle (s[i]);
   return s;
 }
 
+#define STACK_BUFFER_SIZE       3072
+
+/// Formatted printing ala printf() into a String, using the POSIX/C locale.
 String
-string_printf (const char *format,
-               ...)
+string_printf (const char *format, ...)
 {
-  String str;
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
   va_list args;
+  int l;
+  {
+    char buffer[STACK_BUFFER_SIZE];
+    va_start (args, format);
+    l = vsnprintf (buffer, sizeof (buffer), format, args);
+    va_end (args);
+    if (l < 0)
+      return format; // error?
+    if (size_t (l) < sizeof (buffer))
+      return String (buffer, l);
+  }
+  String string;
+  string.resize (l + 1);
   va_start (args, format);
-  str = string_vprintf (format, args);
+  const int j = vsnprintf (&string[0], string.size(), format, args);
   va_end (args);
-  return str;
+  string.resize (std::min (l, std::max (j, 0)));
+  return string;
 }
 
+/// Formatted printing like string_printf using the current locale.
 String
-string_vprintf (const char *format,
-                va_list     vargs)
+string_locale_printf (const char *format, ...)
 {
-  char *str = NULL;
-  if (vasprintf (&str, format, vargs) >= 0 && str)
-    {
-      String s = str;
-      free (str);
-      return s;
-    }
+  va_list args;
+  int l;
+  {
+    char buffer[STACK_BUFFER_SIZE];
+    va_start (args, format);
+    l = vsnprintf (buffer, sizeof (buffer), format, args);
+    va_end (args);
+    if (l < 0)
+      return format; // error?
+    if (size_t (l) < sizeof (buffer))
+      return String (buffer, l);
+  }
+  String string;
+  string.resize (l + 1);
+  va_start (args, format);
+  const int j = vsnprintf (&string[0], string.size(), format, args);
+  va_end (args);
+  string.resize (std::min (l, std::max (j, 0)));
+  return string;
+}
+
+static inline String
+current_locale_vprintf (const char *format, va_list vargs)
+{
+  va_list pargs;
+  char buffer[STACK_BUFFER_SIZE];
+  buffer[0] = 0;
+  va_copy (pargs, vargs);
+  const int l = vsnprintf (buffer, sizeof (buffer), format, pargs);
+  va_end (pargs);
+  std::string string;
+  if (l < 0)
+    string = format; // error?
+  else if (size_t (l) < sizeof (buffer))
+    string = String (buffer, l);
   else
-    return format;
+    {
+      string.resize (l + 1);
+      va_copy (pargs, vargs);
+      const int j = vsnprintf (&string[0], string.size(), format, pargs);
+      va_end (pargs);
+      string.resize (std::min (l, std::max (j, 0)));
+    }
+  return string;
+}
+
+static inline String
+posix_locale_vprintf (const char *format, va_list vargs)
+{
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
+  return current_locale_vprintf (format, vargs);
+}
+
+/// Formatted printing ala vprintf() into a String, using the POSIX/C locale.
+String
+string_vprintf (const char *format, va_list vargs)
+{
+  return posix_locale_vprintf (format, vargs);
+}
+
+/// Formatted printing like string_vprintf using the current locale.
+String
+string_locale_vprintf (const char *format, va_list vargs)
+{
+  return current_locale_vprintf (format, vargs);
 }
 
 static StringVector
@@ -167,9 +249,10 @@ string_whitesplit (const String &string)
   return sv;
 }
 
+/// Split a string, using @a splitter as delimiter.
+/// Passing "" as @a splitter will split the string at whitespace positions.
 StringVector
-string_split (const String       &string,
-              const String       &splitter)
+string_split (const String &string, const String &splitter)
 {
   if (splitter == "")
     return string_whitesplit (string);
@@ -187,9 +270,11 @@ string_split (const String       &string,
   return sv;
 }
 
+/** Join a number of strings.
+ * Join a string vector into a single string, using @a junctor inbetween each pair of strings.
+ */
 String
-string_join (const String       &junctor,
-             const StringVector &strvec)
+string_join (const String &junctor, const StringVector &strvec)
 {
   String s;
   if (strvec.size())
@@ -199,21 +284,12 @@ string_join (const String       &junctor,
   return s;
 }
 
+/** Interpret a string as boolean value.
+ * Interpret the string as number, "ON"/"OFF" or distinguish "false"/"true" or "yes"/"no" by starting letter.
+ * For empty strings, @a fallback is returned.
+ */
 bool
-string_to_bool1 (const String &string)
-{
-  const char *p = string.c_str();
-  while (*p && isspace (*p))
-    p++;
-  if (!*p)
-    return true;        // option was present, but empty
-
-  return string.empty() ? true : string_to_bool (string);
-}
-
-bool
-string_to_bool (const String &string,
-                bool          empty_default)
+string_to_bool (const String &string, bool fallback)
 {
   const char *p = string.c_str();
   // skip spaces
@@ -237,20 +313,21 @@ string_to_bool (const String &string,
     return 0;
   // empty string
   if (!p[0])
-    return empty_default;
+    return fallback;
   // anything else needs to resemble "yes" or "true"
   return strchr ("YyTt", p[0]);
 }
 
+/// Convert a boolean value into a string.
 String
 string_from_bool (bool value)
 {
   return String (value ? "1" : "0");
 }
 
+/// Parse a string into a 64bit unsigned integer, optionally specifying the expected number base.
 uint64
-string_to_uint (const String &string,
-                uint          base)
+string_to_uint (const String &string, uint base)
 {
   const char *p = string.c_str();
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
@@ -259,12 +336,14 @@ string_to_uint (const String &string,
   return strtoull (hex ? p + 2 : p, NULL, hex ? 16 : base);
 }
 
+/// Convert a 64bit unsigned integer into a string.
 String
 string_from_uint (uint64 value)
 {
   return string_printf ("%llu", value);
 }
 
+/// Checks if a string contains a digit, optionally preceeded by whitespaces.
 bool
 string_has_int (const String &string)
 {
@@ -274,9 +353,9 @@ string_has_int (const String &string)
   return p[0] >= '0' && p[0] <= '9';
 }
 
+/// Parse a string into a 64bit integer, optionally specifying the expected number base.
 int64
-string_to_int (const String &string,
-               uint          base)
+string_to_int (const String &string, uint base)
 {
   const char *p = string.c_str();
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
@@ -285,41 +364,76 @@ string_to_int (const String &string,
   return strtoll (hex ? p + 2 : p, NULL, hex ? 16 : base);
 }
 
+/// Convert a 64bit signed integer into a string.
 String
 string_from_int (int64 value)
 {
   return string_printf ("%lld", value);
 }
 
+/// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
+long double
+posix_locale_strtold (const char *nptr, char **endptr)
+{
+  ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
+  char *fail_pos = NULL;
+  const long double val = strtold (nptr, &fail_pos);
+  if (endptr)
+    *endptr = fail_pos;
+  return val;
+}
+
+/// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
+long double
+current_locale_strtold (const char *nptr, char **endptr)
+{
+  char *fail_pos_1 = NULL;
+  const long double val_1 = posix_locale_strtold (nptr, &fail_pos_1);
+  if (fail_pos_1 && fail_pos_1[0] != 0)
+    {
+      char *fail_pos_2 = NULL;
+      const long double val_2 = strtold (nptr, &fail_pos_2);
+      if (fail_pos_2 > fail_pos_1)
+        {
+          if (endptr)
+            *endptr = fail_pos_2;
+          return val_2;
+        }
+    }
+  if (endptr)
+    *endptr = fail_pos_1;
+  return val_1;
+}
+
+/// Parse a double from a string, trying locale specific characters and POSIX/C formatting.
 double
 string_to_double (const String &string)
 {
-  return g_ascii_strtod (string.c_str(), NULL);
+  return current_locale_strtold (string.c_str(), NULL);
 }
 
+/// Similar to string_to_double(const String&), but returns the first failing character position in @a endptr.
 double
-string_to_double (const char  *dblstring,
-                  const char **endptr)
+string_to_double (const char *dblstring, const char **endptr)
 {
-  return g_ascii_strtod (dblstring, (char**) endptr);
+  return current_locale_strtold (dblstring, (char**) endptr);
 }
 
+/// Convert a float into a string, using the POSIX/C locale.
 String
 string_from_float (float value)
 {
-  char numbuf[G_ASCII_DTOSTR_BUF_SIZE + 1] = { 0, };
-  g_ascii_formatd (numbuf, G_ASCII_DTOSTR_BUF_SIZE, "%.7g", value);
-  return String (numbuf);
+  return string_printf ("%.7g", value);
 }
 
+/// Convert a double into a string, using the POSIX/C locale.
 String
 string_from_double (double value)
 {
-  char numbuf[G_ASCII_DTOSTR_BUF_SIZE + 1] = { 0, };
-  g_ascii_formatd (numbuf, G_ASCII_DTOSTR_BUF_SIZE, "%.17g", value);
-  return String (numbuf);
+  return string_printf ("%.17g", value);
 }
 
+/// Parse a string into a list of doubles, expects ';' as delimiter.
 vector<double>
 string_to_double_vector (const String &string)
 {
@@ -357,9 +471,9 @@ string_to_double_vector (const String &string)
   return dvec;
 }
 
+/// Construct a string out of all double values passed in @a dvec, separated by @a delim.
 String
-string_from_double_vector (const vector<double> &dvec,
-                           const String         &delim)
+string_from_double_vector (const vector<double> &dvec, const String &delim)
 {
   String s;
   for (uint i = 0; i < dvec.size(); i++)
@@ -371,6 +485,7 @@ string_from_double_vector (const vector<double> &dvec,
   return s;
 }
 
+/// Returns a String describing the passed in errno value, similar to strerror().
 String
 string_from_errno (int errno_val)
 {
@@ -385,6 +500,7 @@ string_from_errno (int errno_val)
   return buffer;
 }
 
+/// Returns whether @a uuid_string contains a properly formatted UUID string.
 bool
 string_is_uuid (const String &uuid_string) /* check uuid formatting */
 {
@@ -408,13 +524,29 @@ string_is_uuid (const String &uuid_string) /* check uuid formatting */
   return true;
 }
 
+/// Returns whether @a uuid_string1 compares smaller (-1), equal (0) or greater (+1) to @a uuid_string2.
 int
-string_cmp_uuid (const String &uuid_string1,
-                 const String &uuid_string2) /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
+string_cmp_uuid (const String &uuid_string1, const String &uuid_string2)
 {
   return strcasecmp (uuid_string1.c_str(), uuid_string2.c_str()); /* good enough for numeric equality and defines stable order */
 }
 
+/// Returns whether @a string starts with @a fragment.
+bool
+string_startswith (const String &string, const String &fragment)
+{
+  return fragment.size() <= string.size() && 0 == string.compare (0, fragment.size(), fragment);
+}
+
+/// Returns whether @a string ends with @a fragment.
+bool
+string_endswith (const String &string, const String &fragment)
+{
+  return fragment.size() <= string.size() && 0 == string.compare (string.size() - fragment.size(), fragment.size(), fragment);
+}
+
+/// Extract the full function name from __PRETTY_FUNCTION__.
+/// See also RAPICORN_SIMPLE_FUNCTION.
 String
 string_from_pretty_function_name (const char *gnuc_pretty_function)
 {
@@ -440,31 +572,40 @@ string_from_pretty_function_name (const char *gnuc_pretty_function)
   return result;
 }
 
+/// Escape text like a C string.
+/// Returns a string that escapes all characters with a backslash '\\' that need escaping in C language string syntax.
 String
 string_to_cescape (const String &str)
 {
   String buffer;
   for (String::const_iterator it = str.begin(); it != str.end(); it++)
     {
-      uint8 d = *it;
-      if (d < 32 || d > 126 || d == '?')
+      const uint8 d = *it;
+      if      (d == '\a')       buffer +=  "\\a";
+      else if (d == '\b')       buffer +=  "\\b";
+      else if (d == '\t')       buffer +=  "\\t";
+      else if (d == '\n')       buffer +=  "\\n";
+      else if (d == '\v')       buffer +=  "\\v";
+      else if (d == '\f')       buffer +=  "\\f";
+      else if (d == '\r')       buffer +=  "\\r";
+      else if (d == '"')        buffer += "\\\"";
+      else if (d == '\\')       buffer += "\\\\";
+      else if (d < 32 || d > 126)
         buffer += string_printf ("\\%03o", d);
-      else if (d == '\\')
-        buffer += "\\\\";
-      else if (d == '"')
-        buffer += "\\\"";
       else
         buffer += d;
     }
   return buffer;
 }
 
+/// Returns a string as C string including double quotes.
 String
 string_to_cquote (const String &str)
 {
   return String() + "\"" + string_to_cescape (str) + "\"";
 }
 
+/// Parse a possibly quoted C string into regular string.
 String
 string_from_cquote (const String &input)
 {
@@ -494,6 +635,7 @@ string_from_cquote (const String &input)
                     out += char (oc);
                     i--;
                     break;
+                  case 'a':     out += '\a';            break;
                   case 'n':     out += '\n';            break;
                   case 'r':     out += '\r';            break;
                   case 't':     out += '\t';            break;
@@ -526,6 +668,7 @@ string_from_cquote (const String &input)
 
 static const char *whitespaces = " \t\v\f\n\r";
 
+/// Strip whitespaces from the left of a string.
 String
 string_lstrip (const String &input)
 {
@@ -535,6 +678,7 @@ string_lstrip (const String &input)
   return i ? input.substr (i) : input;
 }
 
+/// Strip whitespaces from the right of a string.
 String
 string_rstrip (const String &input)
 {
@@ -544,6 +688,7 @@ string_rstrip (const String &input)
   return i < input.size() ? input.substr (0, i) : input;
 }
 
+/// Strip whitespaces from the left and right of a string.
 String
 string_strip (const String &input)
 {
@@ -561,10 +706,9 @@ string_strip (const String &input)
     return input.substr (a, b - a);
 }
 
+/// Replace all occouranes of @a match in @a input with @a subst.
 String
-string_substitute_char (const String &input,
-                        const char    match,
-                        const char    subst)
+string_substitute_char (const String &input, const char match, const char subst)
 {
   String output = input;
   if (match != subst)
@@ -574,10 +718,9 @@ string_substitute_char (const String &input,
   return output;
 }
 
+/// Fill a memory area with a 32-bit quantitiy.
 void
-memset4 (guint32        *mem,
-         guint32         filler,
-         guint           length)
+memset4 (uint32 *mem, uint32 filler, uint length)
 {
   RAPICORN_STATIC_ASSERT (sizeof (*mem) == 4);
   RAPICORN_STATIC_ASSERT (sizeof (filler) == 4);
@@ -591,9 +734,7 @@ memset4 (guint32        *mem,
  * @returns @a fallback if no match was found.
  */
 String
-string_vector_find (const StringVector &svector,
-                    const String       &key,
-                    const String       &fallback)
+string_vector_find (const StringVector &svector, const String &key, const String &fallback)
 {
   for (size_t i = svector.size(); i > 0; i--)
     {
@@ -604,6 +745,7 @@ string_vector_find (const StringVector &svector,
   return fallback;
 }
 
+/// Construct a StringVector from a NULL terminated list of string arguments.
 StringVector
 cstrings_to_vector (const char *s, ...)
 {
@@ -674,6 +816,7 @@ string_options_split_filtered (const String   &option_string,
     }
 }
 
+/// Split an option list string into name/value pairs.
 void
 string_options_split (const String   &option_string,
                       vector<String> &option_names,
@@ -692,6 +835,7 @@ string_option_find_value (const String &option_string,
   return option_values.empty() ? "0" : option_values[option_values.size() - 1];
 }
 
+/// Retrieve the option value from an options list separated by ':' or ';'.
 String
 string_option_get (const String   &option_string,
                    const String   &option)
@@ -699,6 +843,7 @@ string_option_get (const String   &option_string,
   return string_option_find_value (option_string, option);
 }
 
+/// Check if an option is set/unset in an options list string.
 bool
 string_option_check (const String   &option_string,
                      const String   &option)
@@ -857,6 +1002,11 @@ aliased_iconv_open (const String &tocode,
   return icNONE; /* encoding not found */
 }
 
+/** Convert a string from one encoding to another.
+ * Convert @a input_string from encoding @a from_charset to @a to_charset, returning @a output_string.
+ * Interpret unknown characters according to @a fallback_charset. Use @a output_mark in place of unconvertible characters.
+ * Returns whether the conversion was successful.
+ */
 bool
 text_convert (const String &to_charset,
               String       &output_string,

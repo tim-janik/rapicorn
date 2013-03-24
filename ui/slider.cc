@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "slider.hh"
 #include "tableimpl.hh"
 #include "painter.hh"
@@ -23,7 +8,7 @@
 namespace Rapicorn {
 
 SliderArea::SliderArea() :
-  sig_slider_changed (*this, &SliderArea::slider_changed)
+  sig_slider_changed (Aida::slot (*this, &SliderArea::slider_changed))
 {}
 
 void
@@ -31,96 +16,78 @@ SliderArea::slider_changed()
 {}
 
 bool
-SliderArea::move (int distance)
+SliderArea::move (MoveType movement)
 {
   Adjustment *adj = adjustment();
-  double pi = adj->page_increment();
-  double si = adj->step_increment();
-  if (flipped())
-    {
-      pi = -pi;
-      si = -si;
-    }
-  switch (adj ? distance : 0)
-    {
-    case +2:
-      adj->value (adj->value() + pi);
-      return true;
-    case +1:
-      adj->value (adj->value() + si);
-      return true;
-    case -1:
-      adj->value (adj->value() - si);
-      return true;
-    case -2:
-      adj->value (adj->value() - pi);
-      return true;
-    default:
-      return false;
-    }
+  return flipped() ? adj->move_flipped (movement) : adj->move (movement);
 }
 
 const CommandList&
 SliderArea::list_commands ()
 {
   static Command *commands[] = {
-    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, +1),
-    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, -1),
-    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, +2),
-    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, -2),
+    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
+    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
+    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),
+    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, MOVE_PAGE_BACKWARD),
   };
   static const CommandList command_list (commands, ContainerImpl::list_commands());
   return command_list;
 }
 
 const PropertyList&
-SliderArea::list_properties()
+SliderArea::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
     MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
-  Adjustment          *m_adjustment;
-  AdjustmentSourceType m_adjustment_source;
-  bool                 m_flip;
+  Adjustment          *adjustment_;
+  size_t               avc_id_, arc_id_;
+  AdjustmentSourceType adjustment_source_;
+  bool                 flip_;
   void
   unset_adjustment()
   {
-    m_adjustment->sig_value_changed -= slot (sig_slider_changed);
-    m_adjustment->sig_range_changed -= slot (sig_slider_changed);
-    m_adjustment->unref();
-    m_adjustment = NULL;
+    if (avc_id_)
+      adjustment_->sig_value_changed() -= avc_id_;
+    avc_id_ = 0;
+    if (arc_id_)
+      adjustment_->sig_range_changed() -= arc_id_;
+    arc_id_ = 0;
+    adjustment_->unref();
+    adjustment_ = NULL;
   }
-  virtual const PropertyList& list_properties() { return SliderArea::list_properties(); }
+  virtual const PropertyList& _property_list() { return SliderArea::_property_list(); }
 protected:
   virtual AdjustmentSourceType
   adjustment_source () const
   {
-    return m_adjustment_source;
+    return adjustment_source_;
   }
   virtual void
   adjustment_source (AdjustmentSourceType adj_source)
   {
-    m_adjustment_source = adj_source;
+    adjustment_source_ = adj_source;
   }
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
     this->TableImpl::hierarchy_changed (old_toplevel);
-    if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_NONE)
+    if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
       {
         Adjustment *adj = NULL;
-        find_adjustments (m_adjustment_source, &adj);
+        find_adjustments (adjustment_source_, &adj);
         if (!adj)
           {
-            EnumTypeAdjustmentSourceType ast;
+            Aida::EnumInfo ast = Aida::enum_info<AdjustmentSourceType>();
             throw Exception ("SliderArea failed to get Adjustment (",
-                             ast.string (m_adjustment_source),
+                             ast.string (adjustment_source_),
                              ") from ancestors: ", name());
           }
         adjustment (*adj);
@@ -129,14 +96,14 @@ protected:
   virtual bool
   flipped () const
   {
-    return m_flip;
+    return flip_;
   }
   virtual void
   flipped (bool flip)
   {
-    if (m_flip != flip)
+    if (flip_ != flip)
       {
-        m_flip = flip;
+        flip_ = flip;
         changed();
       }
   }
@@ -146,9 +113,9 @@ protected:
   }
 public:
   SliderAreaImpl() :
-    m_adjustment (NULL),
-    m_adjustment_source (ADJUSTMENT_SOURCE_NONE),
-    m_flip (false)
+    adjustment_ (NULL), avc_id_ (0), arc_id_ (0),
+    adjustment_source_ (ADJUSTMENT_SOURCE_NONE),
+    flip_ (false)
   {
     Adjustment *adj = Adjustment::create();
     adjustment (*adj);
@@ -158,17 +125,17 @@ public:
   adjustment (Adjustment &adjustment)
   {
     adjustment.ref();
-    if (m_adjustment)
+    if (adjustment_)
       unset_adjustment();
-    m_adjustment = &adjustment;
-    m_adjustment->sig_value_changed += slot (sig_slider_changed);
-    m_adjustment->sig_range_changed += slot (sig_slider_changed);
+    adjustment_ = &adjustment;
+    avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
+    arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
     changed();
   }
   virtual Adjustment*
   adjustment () const
   {
-    return m_adjustment;
+    return adjustment_;
   }
   virtual void
   control (const String &command_name,
@@ -176,55 +143,58 @@ public:
   {
   }
 };
-static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
+static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
 
 class SliderSkidImpl;
 
 class SliderTroughImpl : public virtual SingleContainerImpl, public virtual EventHandler {
+  SliderArea *slider_area_;
+  size_t conid_slider_changed_;
   bool
   flipped()
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    return slider_area ? slider_area->flipped() : false;
+    return slider_area_ ? slider_area_->flipped() : false;
   }
 public:
-  SliderTroughImpl()
+  SliderTroughImpl() :
+    slider_area_ (NULL), conid_slider_changed_ (0)
   {}
   ~SliderTroughImpl()
   {}
 protected:
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    if (slider_area)
-      slider_area->sig_slider_changed -= slot (*this, &SliderTroughImpl::reallocate_child);
+    if (slider_area_ && conid_slider_changed_)
+      slider_area_->sig_slider_changed() -= conid_slider_changed_;
+    conid_slider_changed_ = 0;
+    slider_area_ = NULL;
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        if (!slider_area)
-          throw Exception ("SliderTrough without SliderArea ancestor: ", name());
-        slider_area->sig_slider_changed += slot (*this, &SliderTroughImpl::reallocate_child);
+        slider_area_ = parent_interface<SliderArea*>();
+        conid_slider_changed_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
       }
   }
   Adjustment*
   adjustment () const
   {
-    SliderArea *slider_area = parent_interface<SliderArea*>();
-    return slider_area ? slider_area->adjustment() : NULL;
+    return slider_area_ ? slider_area_->adjustment() : NULL;
   }
   double
   nvalue()
   {
+    if (!slider_area_)
+      return 0;
     Adjustment &adj = *adjustment();
     return flipped() ? adj.flipped_nvalue() : adj.nvalue();
   }
   void
   size_request (Requisition &requisition)
   {
-    if (has_allocatable_child())
+    if (has_visible_child())
       {
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         requisition = child.requisition();
         /* we confine spreading to within the trough, so don't propagate hspread/vspread here */
       }
@@ -238,17 +208,17 @@ protected:
   reallocate_child ()
   {
     Allocation area = allocation();
-    if (!has_allocatable_child())
+    if (!has_visible_child())
       return;
-    ItemImpl &child = get_child();
+    WidgetImpl &child = get_child();
     Requisition rq = child.requisition();
     /* expand/scale child */
     if (area.width > rq.width && !child.hspread())
       {
         if (child.hexpand())
           {
-            Adjustment &adj = *adjustment();
-            double cwidth = round (adj.abs_length() * area.width);
+            Adjustment *adj = adjustment();
+            double cwidth = adj ? round (adj->abs_length() * area.width) : 0;
             rq.width = MAX (cwidth, rq.width);
           }
         area.x += round (nvalue() * (area.width - rq.width));
@@ -258,8 +228,8 @@ protected:
       {
         if (child.vexpand())
           {
-            Adjustment &adj = *adjustment();
-            double cheight = round (adj.abs_length() * area.height);
+            Adjustment *adj = adjustment();
+            double cheight = adj ? round (adj->abs_length() * area.height) : 0;
             rq.height = MAX (cheight, rq.height);
           }
         area.y += round (nvalue() * (area.height - rq.height));
@@ -301,12 +271,12 @@ protected:
     return handled;
   }
 };
-static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
+static const WidgetFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
 
 class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventHandler {
-  uint        m_button;
-  double      m_coffset;
-  bool        m_vertical_skid;
+  uint        button_;
+  double      coffset_;
+  bool        vertical_skid_;
   bool
   flipped()
   {
@@ -316,22 +286,22 @@ class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventH
   bool
   vertical_skid () const
   {
-    return m_vertical_skid;
+    return vertical_skid_;
   }
   void
   vertical_skid (bool vs)
   {
-    if (m_vertical_skid != vs)
+    if (vertical_skid_ != vs)
       {
-        m_vertical_skid = vs;
+        vertical_skid_ = vs;
         changed();
       }
   }
 public:
   SliderSkidImpl() :
-    m_button (0),
-    m_coffset (0),
-    m_vertical_skid (false)
+    button_ (0),
+    coffset_ (0),
+    vertical_skid_ (false)
   {}
   ~SliderSkidImpl()
   {}
@@ -342,8 +312,8 @@ protected:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        ItemImpl &child = get_child();
-        if (child.allocatable())
+        WidgetImpl &child = get_child();
+        if (child.visible())
           {
             requisition = child.requisition();
             chspread = child.hspread();
@@ -365,8 +335,8 @@ protected:
   virtual void
   reset (ResetMode mode = RESET_ALL)
   {
-    m_button = 0;
-    m_coffset = 0;
+    button_ = 0;
+    coffset_ = 0;
   }
   virtual bool
   handle_event (const Event &event)
@@ -387,22 +357,22 @@ protected:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
-        if (!m_button and (bevent->button == 1 or bevent->button == 2))
+        if (!button_ and (bevent->button == 1 or bevent->button == 2))
           {
-            m_button = bevent->button;
+            button_ = bevent->button;
             get_window()->add_grab (this, true);
             handled = true;
-            m_coffset = 0;
+            coffset_ = 0;
             double ep = vertical_skid() ? event.y : event.x;
             double cp = vertical_skid() ? ep - allocation().y : ep - allocation().x;
             double clength = vertical_skid() ? allocation().height : allocation().width;
             if (cp >= 0 && cp < clength)
-              m_coffset = cp / clength;
+              coffset_ = cp / clength;
             else
               {
-                m_coffset = 0.5;
+                coffset_ = 0.5;
                 // confine offset to not slip the skid off trough boundaries
-                cp = ep - clength * m_coffset;
+                cp = ep - clength * coffset_;
                 const Allocation &ta = trough.allocation();
                 double start_slip = (vertical_skid() ? ta.y : ta.x) - cp;
                 double tlength = vertical_skid() ? ta.y + ta.height : ta.x + ta.width;
@@ -411,12 +381,12 @@ protected:
                 cp += MAX (0, start_slip);
                 cp -= MAX (0, end_slip);
                 // recalculate offset
-                m_coffset = (ep - cp) / clength;
+                coffset_ = (ep - cp) / clength;
               }
           }
         break;
       case MOUSE_MOVE:
-        if (m_button)
+        if (button_)
           {
             double ep = vertical_skid() ? event.y : event.x;
             const Allocation &ta = trough.allocation();
@@ -425,7 +395,7 @@ protected:
             double tlength = vertical_skid() ? ta.height : ta.width;
             double clength = vertical_skid() ? allocation().height : allocation().width;
             tlength -= clength;
-            pos -= m_coffset * clength;
+            pos -= coffset_ * clength;
             if (tlength > 0)
               pos /= tlength;
             pos = CLAMP (pos, 0, 1);
@@ -441,11 +411,11 @@ protected:
         proper_release = true;
       case BUTTON_CANCELED:
         bevent = dynamic_cast<const EventButton*> (&event);
-        if (m_button == bevent->button)
+        if (button_ == bevent->button)
           {
             get_window()->remove_grab (this);
-            m_button = 0;
-            m_coffset = 0;
+            button_ = 0;
+            coffset_ = 0;
             handled = true;
           }
         (void) proper_release; // silence compiler
@@ -456,15 +426,15 @@ protected:
   }
 private:
   virtual const PropertyList&
-  list_properties() // escape check-list_properties ';'
+  _property_list() // escape check-_property_list ';'
   {
     static Property *properties[] = {
       MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw"),
     };
-    static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
+    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
     return property_list;
   }
 };
-static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
+static const WidgetFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
 
 } // Rapicorn

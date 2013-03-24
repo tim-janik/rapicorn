@@ -5,9 +5,6 @@
 
 namespace Rapicorn {
 
-uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-static void       clientglue_setup      (Plic::ClientConnection connection);
-
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
 
@@ -29,7 +26,7 @@ init_app (const String       &app_ident,
           char              **argv,
           const StringVector &args)
 {
-  assert_return (ApplicationH::the()._is_null() == true, app_cached);
+  assert_return (ApplicationH::the() == NULL, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
@@ -39,15 +36,10 @@ init_app (const String       &app_ident,
   else if (app_ident != program_ident())
     fatal ("librapicornui: application identifier changed during ui initialization");
   // boot up UI thread
-  uint64 appid = uithread_bootup (argcp, argv, args);
-  assert (appid != 0);
-  // initialize clientglue bits
-  clientglue_setup (uithread_connection());
-  // construct smart handle
-  Plic::FieldBuffer8 fb (1);
-  fb.add_object (appid);
-  Plic::FieldReader fbr (fb);
-  fbr >>= app_cached;
+  ApplicationH app = uithread_bootup (argcp, argv, args);
+  assert (app != NULL);
+  // assign global smart handle
+  app_cached = app;
   return app_cached;
 }
 
@@ -71,33 +63,33 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Plic::ClientConnection m_connection;
-  PollFD            m_pfd;
-  bool              last_seen_primary, need_check_primary;
+  Rapicorn::Aida::BaseConnection &connection_;
+  PollFD pfd_;
+  bool   last_seen_primary, need_check_primary;
   void
   check_primaries()
   {
     // seen_primary is merely a hint, need to check local and remote states
     if (ApplicationH::the().finishable() &&  // remote
-        main_loop()->finishable() && m_loop)            // local
+        main_loop()->finishable() && loop_)            // local
       main_loop()->quit();
   }
 public:
-  AppSource (Plic::ClientConnection connection) :
-    m_connection (connection), last_seen_primary (false), need_check_primary (false)
+  AppSource (Rapicorn::Aida::BaseConnection &connection) :
+    connection_ (connection), last_seen_primary (false), need_check_primary (false)
   {
-    m_pfd.fd = m_connection.notify_fd();
-    m_pfd.events = PollFD::IN;
-    m_pfd.revents = 0;
-    add_poll (&m_pfd);
+    pfd_.fd = connection_.notify_fd();
+    pfd_.events = PollFD::IN;
+    pfd_.revents = 0;
+    add_poll (&pfd_);
     primary (false);
-    ApplicationH::the().sig_missing_primary() += slot (*this, &AppSource::queue_check_primaries);
+    ApplicationH::the().sig_missing_primary() += [this]() { queue_check_primaries(); };
   }
   virtual bool
   prepare (const EventLoop::State &state,
            int64                  *timeout_usecs_p)
   {
-    return need_check_primary || m_connection.pending();
+    return need_check_primary || connection_.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -105,12 +97,12 @@ public:
     if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
-    return need_check_primary || m_connection.pending();
+    return need_check_primary || connection_.pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    m_connection.dispatch();
+    connection_.dispatch();
     if (need_check_primary)
       {
         need_check_primary = false;
@@ -121,73 +113,25 @@ public:
   void
   queue_check_primaries()
   {
-    if (m_loop)
-      m_loop->exec_background (slot (*this, &AppSource::check_primaries));
+    if (loop_)
+      loop_->exec_background (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 
 } // Rapicorn
 
-// === clientapi.cc helpers ===
-namespace { // Anon
-static Plic::ClientConnection _clientglue_connection;
-class ConnectionContext {
-  // this should one day be linked with the server side connection and implement Plic::ClientConnection itself
-  typedef std::map <Plic::uint64_t, Plic::NonCopyable*> ContextMap;
-  ContextMap context_map;
-public:
-  Plic::NonCopyable*
-  find_context (Plic::uint64_t ipcid)
-  {
-    ContextMap::iterator it = context_map.find (ipcid);
-    return LIKELY (it != context_map.end()) ? it->second : NULL;
-  }
-  void
-  add_context (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
-  {
-    context_map[ipcid] = ctx;
-  }
-};
-static __thread ConnectionContext *ccontext = NULL;
-static inline void
-connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
-{
-  if (!ccontext)
-    ccontext = new ConnectionContext();
-  ccontext->add_context (ipcid, ctx);
-}
-template<class Context> static inline Context*
-connection_id2context (Plic::uint64_t ipcid)
-{
-  Plic::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
-  if (UNLIKELY (!ctx))
-    ctx = new Context (ipcid);
-  return static_cast<Context*> (ctx);
-}
-static inline Plic::uint64_t
-connection_handle2id (const Plic::SmartHandle &h)
-{
-  return h._rpc_id();
-}
-
-#define PLIC_CONNECTION()       (_clientglue_connection)
-} // Anon
+// compile client-side API
 #include "clientapi.cc"
+
+// compile client-side Pixmap<PixbufStruct> template
+#include "pixmap.cc"
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {
-
-ClientConnection
-ApplicationH::ipc_connection()
-{
-  return PLIC_CONNECTION();
-}
-
 MainLoop*
 ApplicationH::main_loop()
 {
-  assert_return (the()._is_null() == false, NULL);
-  assert_return (_clientglue_connection.is_null() == false, NULL);
+  assert_return (the() != NULL, NULL);
   static MainLoop *app_loop = NULL;
   static EventLoop *slave = NULL;
   static AppSource *source = NULL;
@@ -197,7 +141,7 @@ ApplicationH::main_loop()
       ref_sink (mloop);
       slave = mloop->new_slave();
       ref_sink (slave);
-      source = new AppSource (_clientglue_connection);
+      source = new AppSource (*ApplicationHandle::__aida_connection__());
       ref_sink (source);
       slave->add (source);
       source->queue_check_primaries();
@@ -218,13 +162,6 @@ init_test_app (const String       &app_ident,
 {
   init_core_test (app_ident, argcp, argv, args);
   return init_app (app_ident, argcp, argv, args);
-}
-
-static void
-clientglue_setup (Plic::ClientConnection connection)
-{
-  assert_return (_clientglue_connection.is_null() == true);
-  _clientglue_connection = connection;
 }
 
 /**
@@ -272,6 +209,13 @@ void
 ApplicationH::shutdown()
 {
   uithread_shutdown();
+}
+
+// internal function for tests
+int64
+client_app_test_hook ()
+{
+  return ApplicationH::the().test_hook();
 }
 
 } // Rapicorn

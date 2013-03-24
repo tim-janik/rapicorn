@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_TABLE_IMPL_HH__
 #define __RAPICORN_TABLE_IMPL_HH__
 
@@ -40,7 +25,7 @@ class TableImpl : public virtual MultiContainerImpl, public virtual Table {
   vector<RowCol>        rows, cols;
   uint16                default_row_spacing;
   uint16                default_col_spacing;
-  uint                  homogeneous_items : 1;
+  uint                  homogeneous_widgets : 1;
   void                  size_request_init       ();
   void                  size_request_pass1      ();
   void                  size_request_pass2      ();
@@ -53,7 +38,7 @@ protected:
   virtual               ~TableImpl      ();
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
-  virtual void          repack_child    (ItemImpl       &item,
+  virtual void          repack_child    (WidgetImpl       &widget,
                                          const PackInfo &orig,
                                          const PackInfo &pnew);
 public:
@@ -65,11 +50,11 @@ public:
   virtual bool          is_col_used     (uint col);
   virtual void          insert_rows     (uint first_row, uint n_rows);
   virtual void          insert_cols     (uint first_col, uint n_cols);
-  virtual bool          homogeneous     () const                        { return homogeneous_items; }
-  virtual void          homogeneous     (bool chomogeneous_items)       { homogeneous_items = chomogeneous_items; invalidate(); }
-  virtual uint          col_spacing     ()                              { return default_col_spacing; }
+  virtual bool          homogeneous     () const                        { return homogeneous_widgets; }
+  virtual void          homogeneous     (bool chomogeneous_widgets)       { homogeneous_widgets = chomogeneous_widgets; invalidate(); }
+  virtual uint          col_spacing     () const                        { return default_col_spacing; }
   virtual void          col_spacing     (uint cspacing);
-  virtual uint          row_spacing     ()                              { return default_row_spacing; }
+  virtual uint          row_spacing     () const                        { return default_row_spacing; }
   virtual void          row_spacing     (uint rspacing);
 };
 

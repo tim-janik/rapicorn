@@ -8,149 +8,57 @@
 #include <deque>
 #include <set>
 
-namespace { // Anon
-static void wrap_test_runner  (void);
-} // Anon
-
 namespace Rapicorn {
 
-class Channel { // Channel for cross-thread FieldBuffer IO
-  pthread_spinlock_t        msg_spinlock;
-  std::vector<FieldBuffer*> msg_vector;
-  std::vector<FieldBuffer*> msg_queue;
-  size_t                    msg_index, msg_last_size;
-  virtual void  data_notify () = 0;
-  virtual void  data_wait   () = 0;
-  virtual void  flush_waits () = 0;
-public:
-  FieldBuffer*
-  fetch_msg (const int blockpop)
-  {
-    do
-      {
-        // fetch new messages
-        if (msg_index >= msg_queue.size())      // no buffered messages left
-          {
-            if (msg_index)
-              msg_queue.resize (0);             // get rid of stale pointers
-            msg_index = 0;
-            flush_waits();
-            pthread_spin_lock (&msg_spinlock);
-            msg_vector.swap (msg_queue);        // actual cross-thread fetching
-            pthread_spin_unlock (&msg_spinlock);
-          }
-        // hand out message
-        if (msg_index < msg_queue.size())       // have buffered messages
-          {
-            const size_t index = msg_index;
-            if (blockpop > 0) // advance
-              msg_index++;
-            return msg_queue[index];
-          }
-        // no messages available
-        if (blockpop < 0)
-          data_wait();
-      }
-    while (blockpop < 0);
-    return NULL;
-  }
-  Channel () :
-    msg_index (0), msg_last_size (0)
-  {
-    pthread_spin_init (&msg_spinlock, 0 /* pshared */);
-  }
-  ~Channel ()
-  {
-    pthread_spin_destroy (&msg_spinlock);
-  }
-  void
-  push_msg (FieldBuffer *fb) // takes fb ownership
-  {
-    pthread_spin_lock (&msg_spinlock);
-    msg_vector.push_back (fb);
-    msg_last_size = msg_vector.size();
-    pthread_spin_unlock (&msg_spinlock);
-    data_notify();
-  }
-  bool          has_msg          () { return fetch_msg (0) != NULL; }
-  FieldBuffer*  pop_msg          () { wait_msg(); return fetch_msg (1); } // passes fbmsg ownership
-  void          wait_msg         () { while (!fetch_msg (-1)); }
-  FieldBuffer*  pop_msg_ndelay   () { return fetch_msg (1); } // passes fbmsg ownership
-};
-
-class ChannelS : public Channel { // Channel with semaphore for syncronization
-  sem_t         msg_sem;
-  virtual void  data_notify ()  { sem_post (&msg_sem); }
-  virtual void  data_wait   ()  { sem_wait (&msg_sem); }
-  virtual void  flush_waits ()  { /*sem_trywait (&msg_sem);*/ }
-public:
-  explicit      ChannelS    ()  { sem_init (&msg_sem, 0 /* unshared */, 0 /* init */); }
-  /*dtor*/     ~ChannelS    ()  { sem_destroy (&msg_sem); }
-};
-
-class ChannelE : public Channel, public EventFd { // Channel with EventFd for syncronization
-  virtual void  data_notify ()  { wakeup(); }
-  virtual void  data_wait   ()  { pollin(); }
-  virtual void  flush_waits ()  { flush(); }
-public:
-  ChannelE ()
-  {
-    if (open() < 0)
-      fatal ("failed to open pipe for thread communication: %s", strerror());
-  }
-};
-
 class ServerConnectionSource : public virtual EventLoop::Source {
-  const char            *WHERE;
-  ServerConnection       m_connection;
-  PollFD                 pollfd;
-  bool                   last_seen_primary, need_check_primary;
+  static Aida::BaseConnection *connection_;
+  const char             *WHERE;
+  PollFD                  pollfd_;
+  bool                    last_seen_primary_, need_check_primary_;
 public:
-  ServerConnectionSource (EventLoop        &loop,
-                          ServerConnection  scon) :
+  ServerConnectionSource (EventLoop &loop) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
-    m_connection (scon), last_seen_primary (false), need_check_primary (false)
+    last_seen_primary_ (false), need_check_primary_ (false)
   {
+    assert (connection_ == NULL); // essentially allows only singletons
+    connection_ = ApplicationIface::__aida_connection__();
+    assert (connection_ != NULL); // essentially allows only singletons
     primary (false);
     loop.add (this, EventLoop::PRIORITY_NORMAL);
-    pollfd.fd = m_connection.notify_fd();
-    pollfd.events = PollFD::IN;
-    pollfd.revents = 0;
-    add_poll (&pollfd);
-  }
-  void
-  wakeup () // allow external wakeups
-  {
-    // evil kludge, we're assuming ServerConnection.notify_fd() is an eventfd
-    eventfd_write (pollfd.fd, 1);
+    pollfd_.fd = connection_->notify_fd();
+    pollfd_.events = PollFD::IN;
+    pollfd_.revents = 0;
+    add_poll (&pollfd_);
   }
 private:
   ~ServerConnectionSource ()
   {
-    remove_poll (&pollfd);
+    remove_poll (&pollfd_);
     loop_remove();
   }
   virtual bool
   prepare (const EventLoop::State &state, int64*)
   {
-    return need_check_primary || m_connection.pending();
+    if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
+      need_check_primary_ = true;
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   check (const EventLoop::State &state)
   {
-    if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
-      need_check_primary = true;
-    last_seen_primary = state.seen_primary;
-    return need_check_primary || m_connection.pending();
+    if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
+      need_check_primary_ = true;
+    last_seen_primary_ = state.seen_primary;
+    return need_check_primary_ || connection_->pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    m_connection.dispatch();
-    if (need_check_primary)
+    connection_->dispatch();
+    if (need_check_primary_)
       {
-        need_check_primary = false;
-        m_loop->exec_background (check_primaries);
+        need_check_primary_ = false;
+        loop_->exec_background (check_primaries);
       }
     return true;
   }
@@ -158,79 +66,78 @@ private:
   check_primaries()
   {
     // seen_primary is merely a hint, this handler checks the real loop state
-    if (uithread_main_loop()->finishable())
+    const bool uithread_finishable = uithread_main_loop()->finishable();
+    if (uithread_finishable)
       ApplicationImpl::the().lost_primaries();
   }
 };
 
+Aida::BaseConnection *ServerConnectionSource::connection_ = NULL;
+
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Plic::ServerConnection server_connection;
-  Mutex mutex; Cond cond; uint64 app_id;
+  Mutex mutex; Cond cond; ApplicationH app;
 };
 
+static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
+
 class UIThread {
-  std::thread           m_thread;
-  pthread_mutex_t       m_thread_mutex;
-  volatile bool         m_running;
-  Plic::ServerConnection m_server_connection;
-  Initializer      *m_idata;
-  MainLoop         &m_main_loop; // FIXME: non-NULL only while running
+  std::thread             thread_;
+  pthread_mutex_t         thread_mutex_;
+  volatile bool           running_;
+  Initializer            *idata_;
+  MainLoop               &main_loop_; // FIXME: non-NULL only while running
 public:
-  ClientConnection      m_client_connection;
   UIThread (Initializer *idata) :
-    m_thread_mutex (PTHREAD_MUTEX_INITIALIZER), m_running (0), m_idata (idata),
-    m_main_loop (*ref_sink (MainLoop::_new()))
+    thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
+    main_loop_ (*ref_sink (MainLoop::_new()))
   {
-    m_main_loop.set_lock_hooks (rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave);
-    m_server_connection = ServerConnection::create_threaded();
-    m_client_connection = ClientConnection (m_server_connection);
+    // main_loop_.set_lock_hooks (...);
   }
-  bool  running() const { return m_running; }
+  bool  running() const { return running_; }
   void
   start()
   {
-    pthread_mutex_lock (&m_thread_mutex);
-    if (m_thread.get_id() == std::thread::id())
+    pthread_mutex_lock (&thread_mutex_);
+    if (thread_.get_id() == std::thread::id())
       {
-        assert (m_running == false);
-        m_thread = std::thread (std::ref (*this));
+        assert (running_ == false);
+        thread_ = std::thread (std::ref (*this));
       }
-    pthread_mutex_unlock (&m_thread_mutex);
+    pthread_mutex_unlock (&thread_mutex_);
   }
   void
   join()
   {
-    pthread_mutex_lock (&m_thread_mutex);
-    if (m_thread.joinable())
-      m_thread.join();
-    pthread_mutex_unlock (&m_thread_mutex);
-    assert (m_running == false);
+    pthread_mutex_lock (&thread_mutex_);
+    if (thread_.joinable())
+      thread_.join();
+    pthread_mutex_unlock (&thread_mutex_);
+    assert (running_ == false);
   }
   void
   queue_stop()
   {
-    pthread_mutex_lock (&m_thread_mutex);
-    if (&m_main_loop)
-      m_main_loop.quit();
-    pthread_mutex_unlock (&m_thread_mutex);
+    pthread_mutex_lock (&thread_mutex_);
+    if (&main_loop_)
+      main_loop_.quit();
+    pthread_mutex_unlock (&thread_mutex_);
   }
-  MainLoop*         main_loop()   { return &m_main_loop; }
+  MainLoop*         main_loop()   { return &main_loop_; }
 private:
   ~UIThread ()
   {
     fatal ("UIThread singleton in dtor");
+    // FIXME: leaking ServerConnectionSource ref count...
   }
   void
   initialize ()
   {
-    assert_return (m_idata != NULL);
-    // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
-    assert (rapicorn_thread_entered() == true);
+    assert_return (idata_ != NULL);
     // idata_core() already called
-    ThisThread::affinity (string_to_int (string_vector_find (*m_idata->args, "cpu-affinity=", "-1")));
+    ThisThread::affinity (string_to_int (string_vector_find (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (m_main_loop, m_server_connection));
+    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_));
     (void) server_source;
     // initialize sub systems
     struct InitHookCaller : public InitHook {
@@ -238,50 +145,49 @@ private:
       { invoke_hooks (kind, argcp, argv, args); }
     };
     // UI library core parts
-    InitHookCaller::invoke ("ui-core/", m_idata->argcp, m_idata->argv, *m_idata->args);
+    InitHookCaller::invoke ("ui-core/", idata_->argcp, idata_->argv, *idata_->args);
     // Application Singleton
-    InitHookCaller::invoke ("ui-thread/", m_idata->argcp, m_idata->argv, *m_idata->args);
+    InitHookCaller::invoke ("ui-thread/", idata_->argcp, idata_->argv, *idata_->args);
     assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
-    InitHookCaller::invoke ("ui-app/", m_idata->argcp, m_idata->argv, *m_idata->args);
-    // initialize uithread connection handling
-    uithread_serverglue (m_server_connection);
+    InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // Complete initialization by signalling caller
-    m_idata->mutex.lock();
-    m_idata->app_id = connection_object2id (ApplicationImpl::the());
-    m_idata->cond.signal();
-    m_idata->mutex.unlock();
-    m_idata = NULL;
+    idata_->mutex.lock();
+    idata_->app = &ApplicationImpl::the()->*Aida::_handle;
+    idata_->cond.signal();
+    idata_->mutex.unlock();
+    idata_ = NULL;
   }
 public:
   void
   operator() ()
   {
+    assert (uithread_threadinfo == NULL);
+    uithread_threadinfo = &ThreadInfo::self();
     ThreadInfo::self().name ("RapicornUIThread");
-    const bool running_twice = __sync_fetch_and_add (&m_running, +1);
+    const bool running_twice = __sync_fetch_and_add (&running_, +1);
     assert (running_twice == false);
 
-    rapicorn_thread_enter();
     initialize();
-    assert_return (m_idata == NULL);
-    m_main_loop.run();
-    m_main_loop.kill_loops();
-    rapicorn_thread_leave();
+    assert_return (idata_ == NULL);
+    main_loop_.run();
+    WindowImpl::forcefully_close_all();
+    ScreenDriver::forcefully_close_all();
+    while (!main_loop_.finishable())
+      if (!main_loop_.iterate (false))
+        break;  // handle primary idle handlers like exec_now
+    main_loop_.kill_loops();
 
-    assert (m_running == true);
-    const bool stopped_twice = !__sync_fetch_and_sub (&m_running, +1);
+    assert (running_ == true);
+    const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);
     assert (stopped_twice == false);
 
-    assert (m_running == false);
+    assert (running_ == false);
+    assert (uithread_threadinfo == &ThreadInfo::self());
+    uithread_threadinfo = NULL;
   }
 };
 static UIThread *the_uithread = NULL;
-
-ClientConnection
-uithread_connection (void) // prototype in ui/internal.hh
-{
-  return the_uithread && the_uithread->running() ? the_uithread->m_client_connection : ClientConnection();
-}
 
 MainLoop*
 uithread_main_loop ()
@@ -289,10 +195,15 @@ uithread_main_loop ()
   return the_uithread ? the_uithread->main_loop() : NULL;
 }
 
+bool
+uithread_is_current ()
+{
+  return uithread_threadinfo == &ThreadInfo::self();
+}
+
 void
 uithread_shutdown (void)
 {
-  rapicorn_gtk_threads_shutdown();
   if (the_uithread && the_uithread->running())
     {
       the_uithread->queue_stop(); // stops ui thread main loop
@@ -318,36 +229,36 @@ uithread_uncancelled_atexit()
     }
 }
 
-uint64
-uithread_bootup (int *argcp, char **argv, const StringVector &args)
+static void wrap_test_runner (void);
+
+ApplicationH
+uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
 {
-  assert_return (the_uithread == NULL, 0);
+  assert_return (the_uithread == NULL, ApplicationH());
   // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
   // setup client/server connection pair
   Initializer idata;
   // initialize and create UIThread
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args;
   // start and syncronize with thread
   idata.mutex.lock();
   the_uithread = new UIThread (&idata);
   the_uithread->start();
-  while (idata.app_id == 0)
+  while (idata.app == NULL)
     idata.cond.wait (idata.mutex);
-  uint64 app_id = idata.app_id;
   idata.mutex.unlock();
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  return app_id;
+  return idata.app;
 }
 
 } // Rapicorn
 
 #include <rcore/testutils.hh>
 
-namespace { // Anon
-using namespace Rapicorn;
+namespace Rapicorn {
 
 // === UI-Thread Syscalls ===
 struct Callable {
@@ -357,10 +268,19 @@ struct Callable {
 static std::deque<Callable*> syscall_queue;
 static Mutex                 syscall_mutex;
 
-static Plic::FieldBuffer*
-ui_thread_syscall_twoway (Plic::FieldReader &fbr)
+static int64
+ui_thread_syscall (Callable *callable)
 {
-  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  syscall_mutex.lock();
+  syscall_queue.push_back (callable);
+  syscall_mutex.unlock();
+  const int64 result = client_app_test_hook();
+  return result;
+}
+
+int64
+server_app_test_hook()
+{
   int64 result = -1;
   syscall_mutex.lock();
   while (syscall_queue.size())
@@ -373,31 +293,6 @@ ui_thread_syscall_twoway (Plic::FieldReader &fbr)
       syscall_mutex.lock();
     }
   syscall_mutex.unlock();
-  rb.add_int64 (result);
-  return &rb;
-}
-
-static const ServerConnection::MethodEntry ui_thread_call_entries[] = {
-  { Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
-};
-static ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
-
-static int64
-ui_thread_syscall (Callable *callable)
-{
-  Plic::FieldBuffer *fb = Plic::FieldBuffer::_new (2);
-  fb->add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
-  syscall_mutex.lock();
-  syscall_queue.push_back (callable);
-  syscall_mutex.unlock();
-  FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  const Plic::MessageId msgid = Plic::MessageId (frr.pop_int64());
-  frr.skip(); // FIXME: check full msgid
-  int64 result = 0;
-  if (Plic::msgid_is_result (msgid))
-    result = frr.pop_int64();
-  delete fr;
   return result;
 }
 
@@ -415,16 +310,14 @@ wrap_test_runner (void)
   Test::RegisterTest::test_set_trigger (uithread_test_trigger);
 }
 
-} // Anon
-
 // === UI-Thread Test Trigger ===
-namespace Rapicorn {
 class SyscallTestTrigger : public Callable {
   void (*test_func) (void);
 public:
   SyscallTestTrigger (void (*tfunc) (void)) : test_func (tfunc) {}
   int64 operator()  ()                      { test_func(); return 0; }
 };
+
 void
 uithread_test_trigger (void (*test_func) ())
 {
@@ -435,4 +328,5 @@ uithread_test_trigger (void (*test_func) ())
   // ensure ui-thread shutdown
   uithread_shutdown();
 }
+
 } // Rapicorn

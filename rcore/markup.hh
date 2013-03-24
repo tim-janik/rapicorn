@@ -1,19 +1,4 @@
-/* RapicornMarkup - simple XML parser
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_MARKUP_HH__
 #define __RAPICORN_MARKUP_HH__
 
@@ -88,10 +73,10 @@ protected:
   const String&         recap_string    () const;
 private:
   Context *context;
-  String   m_input_name;
-  String   m_recap;
-  uint     m_recap_depth;
-  bool     m_recap_outer;
+  String   input_name_;
+  String   recap_;
+  uint     recap_depth_;
+  bool     recap_outer_;
   void     recap_start_element   (const String   &element_name,
                                   ConstStrings   &attribute_names,
                                   ConstStrings   &attribute_values,

@@ -3,77 +3,77 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . # tests
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
-	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
-DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
-PLICINT   = $(top_builddir)/plic/plic-intern
+INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS = $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
+
+AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
-# === CxxRapicorn ===
-noinst_PROGRAMS      = cxxrapicorn
-cxxrapicorn_SOURCES  = cxx-rope.cc
-cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-
-# === PyRapicorn ===
-pyrapicorn_cc_sources = py-rope.cc
-EXTRA_DIST           += py-rope.hh
-pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON      = __init__.py py2cpy.py main.py
-pyrapicorn_LTLIBRARIES = pyRapicorn.la
-pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-pyRapicorn_la_LDFLAGS  = $(strip				\
-	-module -avoid-version -export-symbols-regex pyRapicorn	\
-	-no-undefined $(SYMBOLIC_LDFLAGS)			\
-)
-$(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
+# === Cxxrapicorn ===
+PyRapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
+PyRapicorn_PYTHON      = __init__.py pyrapicorn.py
+PyRapicorn_LTLIBRARIES = __pyrapicorn.la
+$(PyRapicorn_LTLIBRARIES): $(PyRapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
-# === cpy2rope.cc ===
-cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
-	: # compile IDL definitions into cpy2rope.cc
-	${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
-	mv xgen-$(@F) $@
-$(srcdir)/py-rope.cc: cpy2rope.cc
-CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
+# == pyrapicorn.py & pyrapicorn.cc ==
+pyrapicorn.py pyrapicorn.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
+	@: # compile IDL definitions into RapicornYYMM.{cc,py}
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o pyrapicorn
+CLEANFILES += pyrapicorn.py pyrapicorn.cc
+$(srcdir)/py-rope.cc: pyrapicorn.cc
 
-# === py2cpy.py ===
-py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
-	${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../rcore/basics.idl $(RAPICORNIDL) -o xgen-$(@F)
-	mv xgen-$(@F) $@
-	rm -f xgen-$(@F)
-CLEANFILES += xgen-py2cpy.py py2cpy.py
+# == __pyrapicorn from pyrapicorn.cc ==
+__pyrapicorn_la_SOURCES	= py-rope.cc # includes pyrapicorn.cc
+__pyrapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+__pyrapicorn_la_LDFLAGS  	= -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS)
+EXTRA_DIST             += py-rope.hh
 
 # === TESTS ===
-# test PyStub
-EXTRA_DIST += testpystub.ref PyStub.py
-CLEANFILES += testpystub.pyc
-check-PyStub-gen: $(srcdir)/testpystub.ref
-	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+# test PyStub file generation for testpass.idl
+EXTRA_DIST += testpystub.ref testcxxpystub.ref
+check-PyStub-testpass-generation: $(srcdir)/testpystub.ref $(srcdir)/testcxxpystub.ref
+	@: # generate .cc and .py
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub.py $(srcdir)/../aidacc/tests/testpass.idl -o testpass \
+	; eval "$$TSTDIAGNOSE_LOGTEST"
+	@: # check .py generation
+	$(Q) mv testpass.py $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testpystub.ref'"
-check-PyStub-syntax: $(srcdir)/testpystub.ref
-	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
-	  $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
-check-local: check-PyStub-gen check-PyStub-syntax
-# test CxxPyStub
-EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
-check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) \
-	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
+	@: # check .cc generation
+	$(Q) mv testpass.cc $(TSTOUT) \
+	&& echo "static AIDA_UNUSED PyMethodDef dummy[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
-check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
-	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
-	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
-check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
-# test interfaces.idl with PLIC
-check-rapicorn-idl:
-	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
+check-local: check-PyStub-testpass-generation
+#testcxxpystub.ref testpystub.ref: check-PyStub-testpass-generation # force-check-update dependency
+# test PyStub file syntax
+noinst_LTLIBRARIES    = __testpass.la
+__testpass_la_SOURCES = testpystub.cc	# forces C++ syntax check
+__testpass_la_LIBADD  = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+__testpass_la_LDFLAGS = -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS) -rpath /nowhere # -rpath forces .so
+testpystub.cc: testcxxpystub.ref
+	$(Q) cp $(srcdir)/testcxxpystub.ref xgen-$@
+	$(Q) echo "static PyMethodDef __testpass_methods__[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >> xgen-$@
+	$(Q) echo 'PyMODINIT_FUNC init__testpass (void) { Py_InitModule ("__testpass", __testpass_methods__); }' >> xgen-$@
+	$(Q) mv xgen-$@ $@
+check-PyStub-testpass-module: __testpass.la
+	@: # check .cc syntax: already done by building __testpass.so
+	@: # check .py syntax
+	$(Q) cp .libs/__testpass.so .
+	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" \
+	&& $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
+	@: # cleanups
+	$(Q) rm -f testpystub.cc __testpass.so
+CLEANFILES += testpystub.cc __testpass.so testpystub.pyc
+check-local: check-PyStub-testpass-module
+# test PyStub files for Rapicorn interfaces
+check-rapicorn-idl: __pyrapicorn.la pyrapicorn.py
+	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) cp .libs/__pyrapicorn.so .
+	$(Q) $(PYTHON) pyrapicorn.py ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f __pyrapicorn.so
+CLEANFILES += __pyrapicorn.so
 check-local: check-rapicorn-idl
-# test PyStub with interfaces.idl
-check-PyStub-for-interfaces.idl:
-	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; eval "$$TSTDIAGNOSE"
-check-local: check-PyStub-for-interfaces.idl

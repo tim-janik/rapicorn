@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "paintcontainers.hh"
 #include "container.hh"
 #include "painter.hh"
@@ -49,7 +34,7 @@ Ambience::shade (LightingType sh)
 }
 
 const PropertyList&
-Ambience::list_properties()
+Ambience::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
@@ -68,55 +53,55 @@ Ambience::list_properties()
     MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "wo"),
     MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "wo"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class AmbienceImpl : public virtual SingleContainerImpl, public virtual Ambience {
-  String m_insensitive_background, m_prelight_background, m_impressed_background, m_normal_background;
-  LightingType m_insensitive_lighting, m_prelight_lighting, m_impressed_lighting, m_normal_lighting;
-  LightingType m_insensitive_shade, m_prelight_shade, m_impressed_shade, m_normal_shade;
+  String insensitive_background_, prelight_background_, impressed_background_, normal_background_;
+  LightingType insensitive_lighting_, prelight_lighting_, impressed_lighting_, normal_lighting_;
+  LightingType insensitive_shade_, prelight_shade_, impressed_shade_, normal_shade_;
 public:
   explicit AmbienceImpl() :
-    m_insensitive_background ("none"),
-    m_prelight_background ("none"),
-    m_impressed_background ("none"),
-    m_normal_background ("none"),
-    m_insensitive_lighting (LIGHTING_CENTER),
-    m_prelight_lighting (LIGHTING_UPPER_LEFT),
-    m_impressed_lighting (LIGHTING_LOWER_RIGHT),
-    m_normal_lighting (LIGHTING_UPPER_LEFT),
-    m_insensitive_shade (LIGHTING_CENTER),
-    m_prelight_shade (LIGHTING_UPPER_LEFT),
-    m_impressed_shade (LIGHTING_LOWER_RIGHT),
-    m_normal_shade (LIGHTING_UPPER_LEFT)
+    insensitive_background_ ("none"),
+    prelight_background_ ("none"),
+    impressed_background_ ("none"),
+    normal_background_ ("none"),
+    insensitive_lighting_ (LIGHTING_CENTER),
+    prelight_lighting_ (LIGHTING_UPPER_LEFT),
+    impressed_lighting_ (LIGHTING_LOWER_RIGHT),
+    normal_lighting_ (LIGHTING_UPPER_LEFT),
+    insensitive_shade_ (LIGHTING_CENTER),
+    prelight_shade_ (LIGHTING_UPPER_LEFT),
+    impressed_shade_ (LIGHTING_LOWER_RIGHT),
+    normal_shade_ (LIGHTING_UPPER_LEFT)
   {}
   ~AmbienceImpl()
   {}
-  virtual void          insensitive_background  (const String &color) { m_insensitive_background = color; expose(); }
-  virtual String        insensitive_background  () const              { return m_insensitive_background; }
-  virtual void          prelight_background     (const String &color) { m_prelight_background = color; expose(); }
-  virtual String        prelight_background     () const              { return m_prelight_background; }
-  virtual void          impressed_background    (const String &color) { m_impressed_background = color; expose(); }
-  virtual String        impressed_background    () const              { return m_impressed_background; }
-  virtual void          normal_background       (const String &color) { m_normal_background = color; expose(); }
-  virtual String        normal_background       () const              { return m_normal_background; }
-  virtual void          insensitive_lighting    (LightingType sh)     { m_insensitive_lighting = sh; expose(); }
-  virtual LightingType  insensitive_lighting    () const              { return m_insensitive_lighting; }
-  virtual void          prelight_lighting       (LightingType sh)     { m_prelight_lighting = sh; expose(); }
-  virtual LightingType  prelight_lighting       () const              { return m_prelight_lighting; }
-  virtual void          impressed_lighting      (LightingType sh)     { m_impressed_lighting = sh; expose(); }
-  virtual LightingType  impressed_lighting      () const              { return m_impressed_lighting; }
-  virtual void          normal_lighting         (LightingType sh)     { m_normal_lighting = sh; expose(); }
-  virtual LightingType  normal_lighting         () const              { return m_normal_lighting; }
-  virtual void          insensitive_shade       (LightingType sh)     { m_insensitive_shade = sh; expose(); }
-  virtual LightingType  insensitive_shade       () const              { return m_insensitive_shade; }
-  virtual void          prelight_shade          (LightingType sh)     { m_prelight_shade = sh; expose(); }
-  virtual LightingType  prelight_shade          () const              { return m_prelight_shade; }
-  virtual void          impressed_shade         (LightingType sh)     { m_impressed_shade = sh; expose(); }
-  virtual LightingType  impressed_shade         () const              { return m_impressed_shade; }
-  virtual void          normal_shade            (LightingType sh)     { m_normal_shade = sh; expose(); }
-  virtual LightingType  normal_shade            () const              { return m_normal_shade; }
+  virtual void          insensitive_background  (const String &color) { insensitive_background_ = color; expose(); }
+  virtual String        insensitive_background  () const              { return insensitive_background_; }
+  virtual void          prelight_background     (const String &color) { prelight_background_ = color; expose(); }
+  virtual String        prelight_background     () const              { return prelight_background_; }
+  virtual void          impressed_background    (const String &color) { impressed_background_ = color; expose(); }
+  virtual String        impressed_background    () const              { return impressed_background_; }
+  virtual void          normal_background       (const String &color) { normal_background_ = color; expose(); }
+  virtual String        normal_background       () const              { return normal_background_; }
+  virtual void          insensitive_lighting    (LightingType sh)     { insensitive_lighting_ = sh; expose(); }
+  virtual LightingType  insensitive_lighting    () const              { return insensitive_lighting_; }
+  virtual void          prelight_lighting       (LightingType sh)     { prelight_lighting_ = sh; expose(); }
+  virtual LightingType  prelight_lighting       () const              { return prelight_lighting_; }
+  virtual void          impressed_lighting      (LightingType sh)     { impressed_lighting_ = sh; expose(); }
+  virtual LightingType  impressed_lighting      () const              { return impressed_lighting_; }
+  virtual void          normal_lighting         (LightingType sh)     { normal_lighting_ = sh; expose(); }
+  virtual LightingType  normal_lighting         () const              { return normal_lighting_; }
+  virtual void          insensitive_shade       (LightingType sh)     { insensitive_shade_ = sh; expose(); }
+  virtual LightingType  insensitive_shade       () const              { return insensitive_shade_; }
+  virtual void          prelight_shade          (LightingType sh)     { prelight_shade_ = sh; expose(); }
+  virtual LightingType  prelight_shade          () const              { return prelight_shade_; }
+  virtual void          impressed_shade         (LightingType sh)     { impressed_shade_ = sh; expose(); }
+  virtual LightingType  impressed_shade         () const              { return impressed_shade_; }
+  virtual void          normal_shade            (LightingType sh)     { normal_shade_ = sh; expose(); }
+  virtual LightingType  normal_shade            () const              { return normal_shade_; }
 private:
   void
   render_shade (cairo_t      *cairo,
@@ -165,7 +150,7 @@ public:
   {
     IRect ia = allocation();
     const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    bool bimpressed = branch_impressed(), bprelight = branch_prelight();
+    bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
     /* render background */
     String background_color;
     if (bimpressed)
@@ -201,7 +186,7 @@ public:
       render_shade (cr, x, y, width, height, normal_shade());
   }
 };
-static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
+static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
 void
 Frame::frame_type (FrameType ft)
@@ -211,7 +196,7 @@ Frame::frame_type (FrameType ft)
 }
 
 const PropertyList&
-Frame::list_properties()
+Frame::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
@@ -220,24 +205,24 @@ Frame::list_properties()
     MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "rw"),
     MakeProperty (Frame, tight_focus,     _("Tight Focus"),    _("Prevent extra padding around focus frames"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual Frame {
-  FrameType m_normal_frame, m_impressed_frame;
-  bool      m_overlap_child, m_tight_focus;
+  FrameType normal_frame_, impressed_frame_;
+  bool      overlap_child_, tight_focus_;
   bool
   is_tight_focus()
   {
-    return m_tight_focus && ((m_normal_frame == FRAME_FOCUS || m_normal_frame == FRAME_NONE) &&
-                             (m_impressed_frame == FRAME_FOCUS || m_impressed_frame == FRAME_NONE));
+    return tight_focus_ && ((normal_frame_ == FRAME_FOCUS || normal_frame_ == FRAME_NONE) &&
+                             (impressed_frame_ == FRAME_FOCUS || impressed_frame_ == FRAME_NONE));
   }
 public:
   explicit FrameImpl() :
-    m_normal_frame (FRAME_ETCHED_IN),
-    m_impressed_frame (FRAME_ETCHED_IN),
-    m_overlap_child (false), m_tight_focus (false)
+    normal_frame_ (FRAME_ETCHED_IN),
+    impressed_frame_ (FRAME_ETCHED_IN),
+    overlap_child_ (false), tight_focus_ (false)
   {}
   ~FrameImpl()
   {}
@@ -251,21 +236,21 @@ protected:
     else
       expose_enclosure();
   }
-  virtual void          normal_frame    (FrameType ft)  { m_normal_frame = ft; changed(); }
-  virtual FrameType     normal_frame    () const        { return m_normal_frame; }
-  virtual void          impressed_frame (FrameType ft)  { m_impressed_frame = ft; changed(); }
-  virtual FrameType     impressed_frame () const        { return m_impressed_frame; }
-  virtual bool          overlap_child   () const        { return m_overlap_child; }
-  virtual void          overlap_child   (bool ovc)      { m_overlap_child = ovc; invalidate(); changed(); }
-  virtual bool          tight_focus     () const        { return m_tight_focus; }
-  virtual void          tight_focus     (bool tf)       { m_tight_focus = tf; invalidate(); changed(); }
-  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
+  virtual void          normal_frame    (FrameType ft)  { normal_frame_ = ft; changed(); }
+  virtual FrameType     normal_frame    () const        { return normal_frame_; }
+  virtual void          impressed_frame (FrameType ft)  { impressed_frame_ = ft; changed(); }
+  virtual FrameType     impressed_frame () const        { return impressed_frame_; }
+  virtual bool          overlap_child   () const        { return overlap_child_; }
+  virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed(); }
+  virtual bool          tight_focus     () const        { return tight_focus_; }
+  virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed(); }
+  virtual FrameType     current_frame   () const        { return ancestry_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
   {
     SingleContainerImpl::size_request (requisition);
     int thickness = is_tight_focus() ? 1 : 2;
-    if (m_overlap_child)
+    if (overlap_child_)
       {
         requisition.width = MAX (requisition.width, 2 * thickness);
         requisition.height = MAX (requisition.height, 2 * thickness);
@@ -279,10 +264,10 @@ protected:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    if (has_allocatable_child())
+    if (has_visible_child())
       {
         Allocation carea = area;
-        if (!m_overlap_child)
+        if (!overlap_child_)
           {
             int thickness = is_tight_focus() ? 1 : 2;
             carea.x += thickness;
@@ -290,7 +275,7 @@ protected:
             carea.width -= 2 * thickness;
             carea.height -= 2 * thickness;
           }
-        ItemImpl &child = get_child();
+        WidgetImpl &child = get_child();
         Allocation child_area = layout_child (child, carea);
         child.set_allocation (child_area);
       }
@@ -363,25 +348,26 @@ public:
       }
   }
 };
-static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
+static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 
 const PropertyList&
-FocusFrame::list_properties()
+FocusFrame::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
   };
-  static const PropertyList property_list (properties, Frame::list_properties());
+  static const PropertyList property_list (properties, Frame::_property_list());
   return property_list;
 }
 
 class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
-  FrameType m_focus_frame;
-  Client   *m_client;
+  FrameType focus_frame_;
+  Client   *client_;
+  size_t    conid_client_;
   virtual void
-  set_focus_child (ItemImpl *item)
+  set_focus_child (WidgetImpl *widget)
   {
-    FrameImpl::set_focus_child (item);
+    FrameImpl::set_focus_child (widget);
     expose_enclosure();
   }
   void
@@ -393,45 +379,46 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
       expose_enclosure();
   }
   virtual void
-  hierarchy_changed (ItemImpl *old_toplevel)
+  hierarchy_changed (WidgetImpl *old_toplevel)
   {
-    if (m_client)
+    if (client_)
       {
-        m_client->sig_changed -= slot (*this, &FocusFrameImpl::client_changed);
-        m_client->unregister_focus_frame (*this);
+        client_->sig_changed() -= conid_client_;
+        conid_client_ = 0;
+        client_->unregister_focus_frame (*this);
       }
-    m_client = NULL;
+    client_ = NULL;
     this->FrameImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
         Client *client = parent_interface<Client*>();
         if (client && client->register_focus_frame (*this))
-          m_client = client;
-        if (m_client)
-          m_client->sig_changed += slot (*this, &FocusFrameImpl::client_changed);
+          client_ = client;
+        if (client_)
+          conid_client_ = client_->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
       }
   }
 protected:
-  virtual void          focus_frame     (FrameType ft)  { m_focus_frame = ft; changed(); }
-  virtual FrameType     focus_frame     () const        { return m_focus_frame; }
+  virtual void          focus_frame     (FrameType ft)  { focus_frame_ = ft; changed(); }
+  virtual FrameType     focus_frame     () const        { return focus_frame_; }
   virtual FrameType
   current_frame () const
   {
     bool in_focus = has_focus();
     in_focus |= get_focus_child() != NULL;
-    in_focus |= m_client && m_client->has_focus();
-    ContainerImpl *m_cclient = dynamic_cast<ContainerImpl*> (m_client);
-    in_focus |= m_cclient && m_cclient->get_focus_child() != NULL;
+    in_focus |= client_ && client_->has_focus();
+    ContainerImpl *cclient_ = container_cast (client_);
+    in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
     if (in_focus)
       return focus_frame();
-    return branch_impressed() ? impressed_frame() : normal_frame();
+    return ancestry_impressed() ? impressed_frame() : normal_frame();
   }
 public:
   explicit FocusFrameImpl() :
-    m_focus_frame (FRAME_FOCUS),
-    m_client (NULL)
+    focus_frame_ (FRAME_FOCUS),
+    client_ (NULL), conid_client_ (0)
   {}
 };
-static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
+static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
 
 } // Rapicorn

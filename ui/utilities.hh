@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_UTILITIES_HH__
 #define __RAPICORN_UTILITIES_HH__
 
@@ -26,19 +11,13 @@
 
 /* --- internally used macros --- */
 #ifdef __RAPICORN_BUILD__
-/* convenience macros */
-#define MakeProperty                    RAPICORN_MakeProperty
+// convenience macros
+#define MakeProperty                    RAPICORN_AIDA_PROPERTY
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 #endif
 
 namespace Rapicorn {
-
-/* --- init stuff --- */
-void          rapicorn_thread_enter     ();
-bool          rapicorn_thread_try_enter ();
-bool          rapicorn_thread_entered   ();
-void          rapicorn_thread_leave     ();
 
 /* --- standard utlities --- */
 //template<typename T> inline const T& min   (const T &a, const T &b) { return ::std::min<T> (a, b); }
@@ -49,12 +28,6 @@ inline double min     (double a, int64  b) { return min<double> (a, b); }
 inline double min     (int64  a, double b) { return min<double> (a, b); }
 inline double max     (double a, int64  b) { return max<double> (a, b); }
 inline double max     (int64  a, double b) { return max<double> (a, b); }
-
-// === IDL Helpers === // FIXME: remove
-template<class O>
-O*      connection_id2object (uint64 oid) { return dynamic_cast<O*> (reinterpret_cast<BaseObject*> (oid)); }
-inline uint64  connection_object2id (const BaseObject *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline uint64  connection_object2id (const BaseObject &obj) { return connection_object2id (&obj); }
 
 /* --- exceptions --- */
 struct Exception : std::exception {
@@ -318,6 +291,7 @@ template<typename Value> class Walker {
     virtual AdapterBase* clone   () const = 0;
     virtual void*        element () const = 0;
     virtual bool         equals  (const AdapterBase &eb) const = 0;
+    virtual             ~AdapterBase () {}
   };
   AdapterBase *adapter;
 public:
@@ -327,10 +301,10 @@ public:
     explicit Adapter (const Iterator &cbegin, const Iterator &cend) :
       ibegin (cbegin), iend (cend)
     {}
-    virtual bool         done    ()              { return ibegin == iend; }
-    virtual void         inc     ()              { ibegin.operator++(); }
-    virtual AdapterBase* clone   () const        { return new Adapter (ibegin, iend); }
-    virtual void*        element () const        { return (void*) ibegin.operator->(); }
+    virtual bool         done    ()             { return ibegin == iend; }
+    virtual void         inc     ()             { ibegin.operator++(); }
+    virtual AdapterBase* clone   () const       { return new Adapter (ibegin, iend); }
+    virtual void*        element () const       { return (void*) ibegin.operator->(); }
     virtual bool         equals  (const AdapterBase &eb) const
     {
       const Adapter *we = dynamic_cast<const Adapter*> (&eb);

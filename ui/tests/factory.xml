@@ -21,14 +21,14 @@
  !-->
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
-  <!-- Multi-Level TestItem creation -->
-  <tmpl:define id="TestItemL0" inherit="TestItem" accu="L0"/>
-  <tmpl:define id="TestItemL1" inherit="TestItemL0" accu="L1"/>
-  <tmpl:define id="TestItemL2" inherit="TestItemL1" accu="L2"/>
+  <!-- Multi-Level TestWidget creation -->
+  <tmpl:define id="TestWidgetL0" inherit="TestWidget" accu="L0"/>
+  <tmpl:define id="TestWidgetL1" inherit="TestWidgetL0" accu="L1"/>
+  <tmpl:define id="TestWidgetL2" inherit="TestWidgetL1" accu="L2"/>
 
   <!-- main window -->
-  <tmpl:define id="test-TestItemL2" inherit="Window">
-    <TestItemL2 accu="Instance"/>
+  <tmpl:define id="test-TestWidgetL2" inherit="Window">
+    <TestWidgetL2 accu="Instance"/>
   </tmpl:define>
 
 </rapicorn-definitions>

@@ -1,43 +1,44 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS	     = . rsvg tests
+SUBDIRS	     = . tests
 
-INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
-DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
-	       -D__RAPICORN_BUILD__
+INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-        rapicorncpu.hh	rapicorndebugtools.hh				utilities.hh  \
-        rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
-        rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
-        pixmap.hh	regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
+	aida.hh		blobres.hh	inifile.hh	\
+        platform.hh	debugtools.hh					utilities.hh  \
+					math.hh				unicode.hh   \
+	objects.hh	aidaenums.hh	aidaprops.hh	\
+        xmlnode.hh	markup.hh					testutils.hh \
+			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
 	thread.hh	\
 	$(rapicorn_impl_headers) \
-	rapicorncdefs.h	rcore.hh \
+	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
-rapicorn_cc_sources = $(sort	serverglue.cc   clientglue.cc	\
-        rapicorncpu.cc  rapicorndebugtools.cc				utilities.cc  \
-        rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
-        rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
+rapicorn_cc_sources = $(sort	\
+	aida.cc		blobres.cc	inifile.cc	\
+        platform.cc	debugtools.cc					utilities.cc  \
+					math.cc				unicode.cc   \
+	objects.cc	aidaenums.cc	aidaprops.cc	\
+        xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
 	thread.cc	\
-        plicwrapper.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
+	aidacxx.hh			\
 	threadlib.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        rapicornsignalvariants.hh	\
+	aidavariants.hh			\
 	rapicornconfig.h		\
-	clientapi.hh			\
 )
 rapicorn_private_files = $(strip	\
-        rapicornsignalslot.hh		\
-        rapicornsignaltemplate.hh	\
-	mksignals.sh			\
-	pixmap.cc			\
+	aidabuiltins.cc			\
+	aidamap.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
@@ -45,7 +46,7 @@ rapicorn_generated_files = $(strip    	\
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === CPU flags ===
-AM_CXXFLAGS = @FPU_FLAGS@
+AM_CXXFLAGS += @FPU_FLAGS@
 
 # === libraries ===
 # librapicorn-core
@@ -85,25 +86,6 @@ noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
-# === enum introspection ===
-$(srcdir)/enumdefs.cc: gen-enums.cc
-gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
-	cd . \
-	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
-	  --fprod "\n/* --- $< --- */\n#include\t\"$<\"" \
-	  --vhead "/* @EnumName@\n */\n" \
-	  --vhead "static const @Type@Type<@EnumName@>::Value @EnumName@_value_array[] = {" \
-	  --vprod "  { @VALUENAME@, \"@VALUENAME@\", sizeof (\"@VALUENAME@\") - 1 }," \
-	  --vtail "};\n" \
-	  --vtail "template<> const uint @Type@Type<@EnumName@>::n_values = sizeof (@EnumName@_value_array) / sizeof (@EnumName@_value_array[0]);\n" \
-	  --vtail "template<> const @Type@Type@EnumName@::Value *const @Type@Type@EnumName@::values = @EnumName@_value_array;\n" \
-	  --vtail "template<> const char *@Type@Type@EnumName@::ename = \"@EnumName@\";" \
-	    <(sed 's,//[/!].*,,' $<) ) > xgen-enu \
-	&& cp xgen-enu $@ \
-	&& rm -f xgen-enu
-CLEANFILES += xgen-enu gen-enums.cc
-
-
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
 	git log -n1 --pretty=format:Git-%h --abbrev=11 ; \
@@ -123,34 +105,6 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
 .PHONY: PHONY_REBUILDS
-
-# === Rapicorn Basics IDL ===
-PLICINT     = $(top_builddir)/plic/plic-intern
-CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
-EXTRA_DIST += basics.idl serverinsert.hh
-# build serverapi.{hh|cc} and clientapi.{hh|cc} from basics.idl
-$(rapicorn_cc_sources): serverapi.hh clientapi.hh
-serverapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/serverinsert.hh
-	${PLICINT} -G CxxStub -g serverhh -g shortalias -g cppguard=__RAPICORN_RCORE_SERVERAPI_HH_ \
-	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-serverglue.cc: serverapi.cc
-serverapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl serverapi.hh
-	${PLICINT} -G CxxStub -g servercc --inclusions '"serverapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += serverapi.cc serverapi.hh
-EXTRA_DIST += clientinsert.hh
-clientapi.hh: $(CXXSTUB_PY) $(srcdir)/basics.idl $(srcdir)/clientinsert.hh
-	${PLICINT} -G CxxStub -g clienthh -g shortalias -g cppguard=__RAPICORN_RCORE_CLIENTAPI_HH_ \
-	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/basics.idl -o xgen-$(@F)
-	mv xgen-$(@F) $@
-clientglue.cc: clientapi.cc
-clientapi.cc: $(CXXSTUB_PY) $(srcdir)/basics.idl clientapi.hh
-	${PLICINT} -G CxxStub -g clientcc --inclusions '"clientapi.hh"' $(srcdir)/basics.idl -o - >> xgen-$(@F)
-	sed '/#include <plic\/cxxstubaux.hh>/s,^,// ,' -i xgen-$(@F)
-	mv xgen-$(@F) $@
-CLEANFILES += clientapi.cc clientapi.hh
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
@@ -199,12 +153,10 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
-	&& echo	'#define RAPICORN_SVGDIR		"${rapicornsvgdir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DATADIR       	"${rapicorndatadir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \
@@ -238,14 +190,13 @@ CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
-# === rapicornsignalvariants.hh ===
-$(srcdir)/*.cc: rapicornsignalvariants.hh
-rapicornsignalvariants.hh: $(srcdir)/rapicornsignalslot.hh $(srcdir)/rapicornsignaltemplate.hh $(srcdir)/mksignals.sh
-	cd . \
-	&& echo "/* Signal Variants -- Generated from: $(^F) */"	>xgen-sigs \
-	&& echo 						       >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignalslot.hh     17 >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignaltemplate.hh 16 >>xgen-sigs \
-	&& cp xgen-sigs $@ \
-	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs rapicornsignalvariants.hh xgen-signals.sed
+# === aidavariants.hh ===
+$(srcdir)/*.cc: aidavariants.hh
+aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
+	$(Q) cd . \
+	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
+	&& echo '# 1 "$(abs_srcdir)/aidaproto.hh"'		>>xtmp-$(@F) \
+	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
+	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
+CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
+EXTRA_DIST += aidaproto.hh xmanifold.py

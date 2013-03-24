@@ -11,24 +11,19 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_parent (ItemImpl &item, ContainerImpl *parent) { item.set_parent (parent); }
+  static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
 };
 
 /* --- CrossLinks --- */
-struct CrossLink : protected NonCopyable {
-  ItemImpl                             *owner, *link;
-  Signals::Trampoline1<void,ItemImpl&> *uncross;
-  CrossLink                            *next;
-  explicit      CrossLink (ItemImpl                         *o,
-                           ItemImpl                         *l,
-                           Signals::Trampoline1<void,ItemImpl&> &it) :
+struct CrossLink {
+  WidgetImpl           *owner, *link;
+  WidgetImpl::WidgetSlot  uncross;
+  CrossLink          *next;
+  CrossLink (WidgetImpl *o, WidgetImpl *l, const WidgetImpl::WidgetSlot &slot) :
     owner (o), link (l),
-    uncross (ref_sink (&it)), next (NULL)
+    uncross (slot), next (NULL)
   {}
-  /*Des*/       ~CrossLink()
-  {
-    unref (uncross);
-  }
+  RAPICORN_CLASS_NON_COPYABLE (CrossLink);
 };
 struct CrossLinks {
   ContainerImpl *container;
@@ -48,42 +43,39 @@ struct CrossLinksKey : public DataKey<CrossLinks*> {
 };
 static CrossLinksKey cross_links_key;
 
-struct UncrossNode : protected NonCopyable {
-  UncrossNode *next;
-  ContainerImpl   *mutable_container;
-  CrossLink   *clink;
-  explicit      UncrossNode (ContainerImpl *xcontainer,
-                             CrossLink *xclink) :
+struct UncrossNode {
+  UncrossNode   *next;
+  ContainerImpl *mutable_container;
+  CrossLink     *clink;
+  UncrossNode (ContainerImpl *xcontainer, CrossLink *xclink) :
     next (NULL), mutable_container (xcontainer), clink (xclink)
   {}
+  RAPICORN_CLASS_NON_COPYABLE (UncrossNode);
 };
 static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;
 
-void
-ContainerImpl::item_cross_link (ItemImpl       &owner,
-                                ItemImpl       &link,
-                                const ItemSlot &uncross)
+size_t
+ContainerImpl::widget_cross_link (WidgetImpl &owner, WidgetImpl &link, const WidgetSlot &uncross)
 {
   assert (&owner != &link);
   assert (owner.common_ancestor (link) == this); // could be disabled for performance
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!clinks)
     {
-      clinks =  new CrossLinks();
+      clinks = new CrossLinks();
       clinks->container = this;
       clinks->links = NULL;
       set_data (&cross_links_key, clinks);
     }
-  CrossLink *clink = new CrossLink (&owner, &link, *uncross.get_trampoline());
+  CrossLink *clink = new CrossLink (&owner, &link, uncross);
   clink->next = clinks->links;
   clinks->links = clink;
+  return size_t (clink);
 }
 
 void
-ContainerImpl::item_cross_unlink (ItemImpl       &owner,
-                                  ItemImpl       &link,
-                                  const ItemSlot &uncross)
+ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t link_id)
 {
   bool found_one = false;
   ref (this);
@@ -94,10 +86,8 @@ ContainerImpl::item_cross_unlink (ItemImpl       &owner,
    */
   uncross_callback_stack_mutex.lock();
   for (UncrossNode *unode = uncross_callback_stack; unode; unode = unode->next)
-    if (unode->mutable_container == this &&
-        unode->clink->owner == &owner &&
-        unode->clink->link == &link &&
-        *unode->clink->uncross == *uncross.get_trampoline())
+    if (unode->mutable_container == this && link_id == size_t (unode->clink) &&
+        unode->clink->owner == &owner && unode->clink->link == &link)
       {
         unode->mutable_container = NULL; /* prevent more cross_unlink() calls */
         found_one = true;
@@ -108,9 +98,7 @@ ContainerImpl::item_cross_unlink (ItemImpl       &owner,
     {
       CrossLinks *clinks = get_data (&cross_links_key);
       for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
-        if (clink->owner == &owner &&
-            clink->link == &link &&
-            *clink->uncross == *uncross.get_trampoline())
+        if (link_id == size_t (clink) && clink->owner == &owner && clink->link == &link)
           {
             container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links, false);
             found_one = true;
@@ -125,8 +113,8 @@ ContainerImpl::item_cross_unlink (ItemImpl       &owner,
 }
 
 void
-ContainerImpl::item_uncross_links (ItemImpl &owner,
-                                   ItemImpl &link)
+ContainerImpl::widget_uncross_links (WidgetImpl &owner,
+                                   WidgetImpl &link)
 {
   ref (this);
   ref (owner);
@@ -147,54 +135,54 @@ ContainerImpl::item_uncross_links (ItemImpl &owner,
 }
 
 static inline bool
-item_has_ancestor (const ItemImpl *item,
-                   const ItemImpl *ancestor)
+widget_has_ancestor (const WidgetImpl *widget,
+                   const WidgetImpl *ancestor)
 {
-  /* this duplicates item->has_ancestor() to optimize speed and
-   * to cover the case where item == ancestor.
+  /* this duplicates widget->has_ancestor() to optimize speed and
+   * to cover the case where widget == ancestor.
    */
   do
-    if (item == ancestor)
+    if (widget == ancestor)
       return true;
     else
-      item = item->parent();
-  while (item);
+      widget = widget->parent();
+  while (widget);
   return false;
 }
 
 void
-ContainerImpl::uncross_descendant (ItemImpl &descendant)
+ContainerImpl::uncross_descendant (WidgetImpl &descendant)
 {
   assert (descendant.has_ancestor (*this)); // could be disabled for performance
-  ItemImpl *item = &descendant;
+  WidgetImpl *widget = &descendant;
   ref (this);
-  ref (item);
-  ContainerImpl *cc = dynamic_cast<ContainerImpl*> (item);
+  ref (widget);
+  ContainerImpl *cc = widget->as_container_impl();
  restart_search:
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!cc || !cc->has_children()) /* suppress tree walks where possible */
     for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
       {
-        if (clink->owner == item || clink->link == item)
+        if (clink->owner == widget || clink->link == widget)
           {
             container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
             goto restart_search;
           }
       }
-  else /* need to check whether item is ancestor of any of our cross-link items */
+  else /* need to check whether widget is ancestor of any of our cross-link widgets */
     {
-      /* we do some minor hackery here, for optimization purposes. since item
+      /* we do some minor hackery here, for optimization purposes. since widget
        * is a descendant of this container, we don't need to walk ->owner's or
        * ->link's ancestor lists any further than up to reaching this container.
-       * to suppress extra checks in item_has_ancestor() in this regard, we
+       * to suppress extra checks in widget_has_ancestor() in this regard, we
        * simply set parent() to NULL temporarily and with that cause
-       * item_has_ancestor() to return earlier.
+       * widget_has_ancestor() to return earlier.
        */
       ContainerImpl *saved_parent = *_parent_loc();
       *_parent_loc() = NULL;
       for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
-        if (item_has_ancestor (clink->owner, item) ||
-            item_has_ancestor (clink->link, item))
+        if (widget_has_ancestor (clink->owner, widget) ||
+            widget_has_ancestor (clink->link, widget))
           {
             *_parent_loc() = saved_parent;
             container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
@@ -202,7 +190,7 @@ ContainerImpl::uncross_descendant (ItemImpl &descendant)
           }
       *_parent_loc() = saved_parent;
     }
-  unref (item);
+  unref (widget);
   unref (this);
 }
 
@@ -224,7 +212,7 @@ container_uncross_link_R (ContainerImpl *container,
       uncross_callback_stack = &unode;
       uncross_callback_stack_mutex.unlock();
       /* exec callback, note that this may recurse */
-      (*clink->uncross) (*clink->link);
+      clink->uncross (*clink->link);
       /* unrecord execution */
       uncross_callback_stack_mutex.lock();
       UncrossNode *walk, *last = NULL;
@@ -248,21 +236,12 @@ container_uncross_link_R (ContainerImpl *container,
 ContainerImpl::~ContainerImpl ()
 {}
 
-const PropertyList&
-ContainerImpl::list_properties()
-{
-  static Property *properties[] = {
-  };
-  static const PropertyList property_list (properties, ItemImpl::list_properties());
-  return property_list;
-}
-
 const CommandList&
 ContainerImpl::list_commands()
 {
   static Command *commands[] = {
   };
-  static const CommandList command_list (commands, ItemImpl::list_commands());
+  static const CommandList command_list (commands, WidgetImpl::list_commands());
   return command_list;
 }
 
@@ -286,105 +265,105 @@ ContainerImpl::child_container ()
 }
 
 void
-ContainerImpl::add (ItemImpl &item)
+ContainerImpl::add (WidgetImpl &widget)
 {
-  if (item.parent())
-    throw Exception ("not adding item with parent: ", item.name());
+  if (widget.parent())
+    throw Exception ("not adding widget with parent: ", widget.name());
   ContainerImpl &container = child_container();
   if (this != &container)
     {
-      container.add (item);
+      container.add (widget);
       return;
     }
-  item.ref();
+  widget.ref();
   try {
-    container.add_child (item);
-    const PackInfo &pa = item.pack_info();
+    container.add_child (widget);
+    const PackInfo &pa = widget.pack_info();
     PackInfo po = pa;
     po.hspan = po.vspan = 0; // indicate initial repack_child()
-    container.repack_child (item, po, pa);
+    container.repack_child (widget, po, pa);
   } catch (...) {
-    item.unref();
+    widget.unref();
     throw;
   }
-  /* can invalidate etc. the fully setup item now */
-  item.invalidate();
+  /* can invalidate etc. the fully setup widget now */
+  widget.invalidate();
   invalidate();
-  item.unref();
+  widget.unref();
 }
 
 void
-ContainerImpl::add (ItemImpl *item)
+ContainerImpl::add (WidgetImpl *widget)
 {
-  if (!item)
+  if (!widget)
     throw NullPointer();
-  add (*item);
+  add (*widget);
 }
 
 void
-ContainerImpl::remove (ItemImpl &item)
+ContainerImpl::remove (WidgetImpl &widget)
 {
-  ContainerImpl *container = item.parent();
+  ContainerImpl *container = widget.parent();
   if (!container)
     throw NullPointer();
-  item.ref();
-  if (item.visible())
+  widget.ref();
+  if (widget.visible())
     {
-      item.invalidate();
+      widget.invalidate();
       invalidate();
     }
   ContainerImpl *dcontainer = container;
   while (dcontainer)
     {
-      dcontainer->dispose_item (item);
+      dcontainer->dispose_widget (widget);
       dcontainer = dcontainer->parent();
     }
-  container->remove_child (item);
-  item.invalidate();
-  item.unref();
+  container->remove_child (widget);
+  widget.invalidate();
+  widget.unref();
 }
 
 Affine
-ContainerImpl::child_affine (const ItemImpl &item)
+ContainerImpl::child_affine (const WidgetImpl &widget)
 {
   return Affine(); // Identity
 }
 
 void
-ContainerImpl::hierarchy_changed (ItemImpl *old_toplevel)
+ContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  ItemImpl::hierarchy_changed (old_toplevel);
+  WidgetImpl::hierarchy_changed (old_toplevel);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     cw->sig_hierarchy_changed.emit (old_toplevel);
 }
 
 void
-ContainerImpl::dispose_item (ItemImpl &item)
+ContainerImpl::dispose_widget (WidgetImpl &widget)
 {
-  if (&item == get_data (&child_container_key))
+  if (&widget == get_data (&child_container_key))
     child_container (NULL);
 }
 
 void
-ContainerImpl::repack_child (ItemImpl       &item,
+ContainerImpl::repack_child (WidgetImpl       &widget,
                              const PackInfo &orig,
                              const PackInfo &pnew)
 {
-  item.invalidate_parent();
+  widget.invalidate_parent();
 }
 
-static DataKey<ItemImpl*> focus_child_key;
+static DataKey<WidgetImpl*> focus_child_key;
 
 void
-ContainerImpl::unparent_child (ItemImpl &item)
+ContainerImpl::unparent_child (WidgetImpl &widget)
 {
   ref (this);
-  if (&item == get_data (&focus_child_key))
+  if (&widget == get_data (&focus_child_key))
     delete_data (&focus_child_key);
   ContainerImpl *ancestor = this;
   do
     {
-      ancestor->uncross_descendant (item);
+      ancestor->uncross_descendant (widget);
       ancestor = ancestor->parent();
     }
   while (ancestor);
@@ -392,36 +371,40 @@ ContainerImpl::unparent_child (ItemImpl &item)
 }
 
 void
-ContainerImpl::set_focus_child (ItemImpl *item)
+ContainerImpl::set_focus_child (WidgetImpl *widget)
 {
-  if (!item)
+  if (!widget)
     delete_data (&focus_child_key);
   else
     {
-      assert (item->parent() == this);
-      set_data (&focus_child_key, item);
+      assert (widget->parent() == this);
+      set_data (&focus_child_key, widget);
     }
 }
 
-ItemImpl*
+void
+ContainerImpl::scroll_to_child (WidgetImpl &widget)
+{}
+
+WidgetImpl*
 ContainerImpl::get_focus_child () const
 {
   return get_data (&focus_child_key);
 }
 
-struct LesserItemByHBand {
+struct LesserWidgetByHBand {
   bool
-  operator() (ItemImpl *const &i1,
-              ItemImpl *const &i2) const
+  operator() (WidgetImpl *const &i1,
+              WidgetImpl *const &i2) const
   {
     const Allocation &a1 = i1->allocation();
     const Allocation &a2 = i2->allocation();
-    // sort items by horizontal bands first
+    // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
     if (a1.y >= a2.y + a2.height)
       return false;
-    // sort vertically overlapping items by horizontal position
+    // sort vertically overlapping widgets by horizontal position
     if (a1.x != a2.x)
       return a1.x < a2.x;
     // resort to center
@@ -434,10 +417,10 @@ struct LesserItemByHBand {
   }
 };
 
-struct LesserItemByDirection {
+struct LesserWidgetByDirection {
   FocusDirType dir;
   Point        anchor;
-  LesserItemByDirection (FocusDirType d,
+  LesserWidgetByDirection (FocusDirType d,
                          const Point &p) :
     dir (d), anchor (p)
   {}
@@ -459,15 +442,15 @@ struct LesserItemByDirection {
       }
   }
   bool
-  operator() (ItemImpl *const &i1,
-              ItemImpl *const &i2) const
+  operator() (WidgetImpl *const &i1,
+              WidgetImpl *const &i2) const
   {
-    // calculate item distances along dir, dist >= 0 lies ahead
+    // calculate widget distances along dir, dist >= 0 lies ahead
     const Allocation &a1 = i1->allocation();
     const Allocation &a2 = i2->allocation();
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
-    // sort items along dir
+    // sort widgets along dir
     if (dd1 != dd2)
       return dd1 < dd2;
     // same horizontal/vertical band distance, sort by closest edge distance
@@ -491,44 +474,44 @@ rect_center (const Allocation &a)
 bool
 ContainerImpl::move_focus (FocusDirType fdir)
 {
-  /* check focus ability */
+  // check focus ability
   if (!visible() || !sensitive())
     return false;
-  /* focus self */
-  if (!has_focus() && can_focus())
+  // focus self
+  if (!has_focus() && can_focus() && !test_any_flag (FOCUS_CHAIN))
     return grab_focus();
-  ItemImpl *last_child = get_data (&focus_child_key);
-  /* let last focus descendant handle movement */
+  // allow last focus descendant to handle movement
+  WidgetImpl *last_child = get_data (&focus_child_key);
   if (last_child && last_child->move_focus (fdir))
     return true;
-  /* copy children */
-  vector<ItemImpl*> children;
+  // copy children
+  vector<WidgetImpl*> children;
   ChildWalker lw = local_children();
   while (lw.has_next())
     children.push_back (&*lw++);
-  /* sort children according to direction and current focus */
+  // sort children according to direction and current focus
   const Allocation &area = allocation();
   Point upper_left (area.x, area.y + area.height);
   Point lower_right (area.x + area.width, area.y);
   Point refpoint;
   switch (fdir)
     {
-      ItemImpl *current;
+      WidgetImpl *current;
     case FOCUS_NEXT:
-      stable_sort (children.begin(), children.end(), LesserItemByHBand());
+      stable_sort (children.begin(), children.end(), LesserWidgetByHBand());
       break;
     case FOCUS_PREV:
-      stable_sort (children.begin(), children.end(), LesserItemByHBand());
+      stable_sort (children.begin(), children.end(), LesserWidgetByHBand());
       reverse (children.begin(), children.end());
       break;
     case FOCUS_UP:
     case FOCUS_LEFT:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
-      { /* filter items with negative distance (not ahead in focus direction) */
-        LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
-        vector<ItemImpl*> children2;
-        for (vector<ItemImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
+      { // filter widgets with negative distance (not ahead in focus direction)
+        LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
+        vector<WidgetImpl*> children2;
+        for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
           if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
@@ -539,10 +522,10 @@ ContainerImpl::move_focus (FocusDirType fdir)
     case FOCUS_DOWN:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
-      { /* filter items with negative distance (not ahead in focus direction) */
-        LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
-        vector<ItemImpl*> children2;
-        for (vector<ItemImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
+      { // filter widgets with negative distance (not ahead in focus direction)
+        LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
+        vector<WidgetImpl*> children2;
+        for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
           if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
@@ -550,16 +533,16 @@ ContainerImpl::move_focus (FocusDirType fdir)
       }
       break;
     }
-  /* skip children beyond last focus descendant */
-  Walker<ItemImpl*> cw = walker (children);
+  // skip children beyond last focus descendant
+  Walker<WidgetImpl*> cw = walker (children);
   if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
     while (cw.has_next())
       if (last_child == *cw++)
         break;
-  /* let remaining descendants handle movement */
+  // let remaining descendants handle movement
   while (cw.has_next())
     {
-      ItemImpl *child = *cw;
+      WidgetImpl *child = *cw;
       if (child->move_focus (fdir))
         return true;
       cw++;
@@ -570,13 +553,13 @@ ContainerImpl::move_focus (FocusDirType fdir)
 void
 ContainerImpl::expose_enclosure ()
 {
-  /* expose without children */
-  Region region (allocation());
+  // expose without children
+  Region region (clipped_allocation());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     if (cw->drawable())
       {
-        ItemImpl &child = *cw;
-        Region cregion (child.allocation());
+        WidgetImpl &child = *cw;
+        Region cregion (child.clipped_allocation());
         cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
       }
@@ -584,18 +567,24 @@ ContainerImpl::expose_enclosure ()
 }
 
 void
+ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
+{
+  child.set_flag (UNVIEWABLE, b);
+}
+
+void
 ContainerImpl::point_children (Point               p, /* window coordinates relative */
-                               std::vector<ItemImpl*> &stack)
+                               std::vector<WidgetImpl*> &stack)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
+      WidgetImpl &child = *cw;
       Point cp = child_affine (child).point (p);
       if (child.point (cp))
         {
           child.ref();
           stack.push_back (&child);
-          ContainerImpl *cc = dynamic_cast<ContainerImpl*> (&child);
+          ContainerImpl *cc = child.as_container_impl();
           if (cc)
             cc->point_children (cp, stack);
         }
@@ -604,25 +593,24 @@ ContainerImpl::point_children (Point               p, /* window coordinates rela
 
 void
 ContainerImpl::screen_window_point_children (Point                   p, /* screen_window coordinates relative */
-                                             std::vector<ItemImpl*> &stack)
+                                             std::vector<WidgetImpl*> &stack)
 {
   point_children (point_from_screen_window (p), stack);
 }
 
 void
-ContainerImpl::render_item (RenderContext &rcontext)
+ContainerImpl::render_recursive (RenderContext &rcontext)
 {
-  ItemImpl::render_item (rcontext);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
-      if (child.drawable() && rendering_region (rcontext).contains (child.allocation()) != Region::OUTSIDE)
+      WidgetImpl &child = *cw;
+      if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
-          if (child.test_flags (INVALID_REQUISITION))
-            critical ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
-          if (child.test_flags (INVALID_ALLOCATION))
-            critical ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
-          child.render_item (rcontext);
+          if (child.test_any_flag (INVALID_REQUISITION))
+            critical ("rendering widget with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
+          if (child.test_any_flag (INVALID_ALLOCATION))
+            critical ("rendering widget with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
+          child.render_widget (rcontext);
         }
     }
 }
@@ -634,8 +622,8 @@ ContainerImpl::debug_tree (String indent)
             allocation().width, allocation().height, allocation().x, allocation().y);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      ItemImpl &child = *cw;
-      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&child);
+      WidgetImpl &child = *cw;
+      ContainerImpl *c = child.as_container_impl();
       if (c)
         c->debug_tree (indent + "  ");
       else
@@ -647,66 +635,67 @@ ContainerImpl::debug_tree (String indent)
 void
 ContainerImpl::dump_test_data (TestStream &tstream)
 {
+  WidgetImpl::dump_test_data (tstream);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     cw->make_test_dump (tstream);
 }
 
-ItemIface*
-ContainerImpl::create_child (const std::string   &item_identifier,
-                             const StringSeqImpl &args)
+WidgetIface*
+ContainerImpl::create_child (const std::string   &widget_identifier,
+                             const StringSeq &args)
 {
-  ItemImpl &item = Factory::create_ui_item (item_identifier, args);
-  ref_sink (item);
+  WidgetImpl &widget = Factory::create_ui_widget (widget_identifier, args);
+  ref_sink (widget);
   try {
-    add (item);
+    add (widget);
   } catch (...) {
-    unref (item);
+    unref (widget);
     return NULL;
   }
-  unref (item);
-  return &item;
+  unref (widget);
+  return &widget;
 }
 
 SingleContainerImpl::SingleContainerImpl () :
-  child_item (NULL)
+  child_widget (NULL)
 {}
 
 ContainerImpl::ChildWalker
 SingleContainerImpl::local_children () const
 {
-  ItemImpl **iter = const_cast<ItemImpl**> (&child_item), **iend = iter;
-  if (child_item)
+  WidgetImpl **iter = const_cast<WidgetImpl**> (&child_widget), **iend = iter;
+  if (child_widget)
     iend++;
-  return value_walker (PointerIterator<ItemImpl*> (iter), PointerIterator<ItemImpl*> (iend));
+  return value_walker (PointerIterator<WidgetImpl*> (iter), PointerIterator<WidgetImpl*> (iend));
 }
 
 void
-SingleContainerImpl::add_child (ItemImpl &item)
+SingleContainerImpl::add_child (WidgetImpl &widget)
 {
-  if (child_item)
-    throw Exception ("invalid attempt to add child \"", item.name(), "\" to single-child container \"", name(), "\" ",
-                     "which already has a child \"", child_item->name(), "\"");
-  item.ref_sink();
-  ClassDoctor::item_set_parent (item, this);
-  child_item = &item;
+  if (child_widget)
+    throw Exception ("invalid attempt to add child \"", widget.name(), "\" to single-child container \"", name(), "\" ",
+                     "which already has a child \"", child_widget->name(), "\"");
+  widget.ref_sink();
+  ClassDoctor::widget_set_parent (widget, this);
+  child_widget = &widget;
 }
 
 void
-SingleContainerImpl::remove_child (ItemImpl &item)
+SingleContainerImpl::remove_child (WidgetImpl &widget)
 {
-  assert (child_item == &item); /* ensured by remove() */
-  child_item = NULL;
-  ClassDoctor::item_set_parent (item, NULL);
-  item.unref();
+  assert (child_widget == &widget); /* ensured by remove() */
+  child_widget = NULL;
+  ClassDoctor::widget_set_parent (widget, NULL);
+  widget.unref();
 }
 
 void
 SingleContainerImpl::size_request_child (Requisition &requisition, bool *hspread, bool *vspread)
 {
   bool chspread = false, cvspread = false;
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
-      ItemImpl &child = get_child();
+      WidgetImpl &child = get_child();
       Requisition cr = child.requisition ();
       const PackInfo &pi = child.pack_info();
       requisition.width = pi.left_spacing + cr.width + pi.right_spacing;
@@ -731,7 +720,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
 }
 
 Allocation
-ContainerImpl::layout_child (ItemImpl         &child,
+ContainerImpl::layout_child (WidgetImpl         &child,
                              const Allocation &carea)
 {
   Requisition rq = child.requisition();
@@ -761,9 +750,9 @@ ContainerImpl::layout_child (ItemImpl         &child,
 void
 SingleContainerImpl::size_allocate (Allocation area, bool changed)
 {
-  if (has_allocatable_child())
+  if (has_visible_child())
     {
-      ItemImpl &child = get_child();
+      WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, area);
       child.set_allocation (child_area);
     }
@@ -772,32 +761,60 @@ SingleContainerImpl::size_allocate (Allocation area, bool changed)
 void
 SingleContainerImpl::pre_finalize()
 {
-  while (child_item)
-    remove (child_item);
+  while (child_widget)
+    remove (child_widget);
   ContainerImpl::pre_finalize();
 }
 
 SingleContainerImpl::~SingleContainerImpl()
 {
-  while (child_item)
-    remove (child_item);
+  while (child_widget)
+    remove (child_widget);
 }
 
 ResizeContainerImpl::ResizeContainerImpl() :
-  m_tunable_requisition_counter (0), m_resizer (0)
-{}
+  tunable_requisition_counter_ (0), resizer_ (0)
+{
+  anchor_info_.resize_container = this;
+  update_anchor_info();
+}
 
 ResizeContainerImpl::~ResizeContainerImpl()
 {
-  clear_exec (&m_resizer);
+  clear_exec (&resizer_);
+  anchor_info_.resize_container = NULL;
+}
+
+void
+ResizeContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  update_anchor_info();
+  SingleContainerImpl::hierarchy_changed (old_toplevel);
+}
+
+void
+ResizeContainerImpl::update_anchor_info ()
+{
+  WidgetImpl *last, *widget;
+  anchor_info_.viewport = NULL;
+  // find first ViewportImpl
+  for (last = widget = this; widget && !anchor_info_.viewport; last = widget, widget = last->parent())
+    anchor_info_.viewport = dynamic_cast<ViewportImpl*> (widget);
+  // find topmost parent
+  widget = last;
+  while (widget)
+    last = widget, widget = last->parent();
+  widget = last;
+  // assign window iff one is found
+  anchor_info_.window = window_cast (widget);
 }
 
 static inline String
-impl_type (ItemImpl *item)
+impl_type (WidgetImpl *widget)
 {
   String tag;
-  if (item)
-    tag = Factory::factory_context_impl_type (item->factory_context());
+  if (widget)
+    tag = Factory::factory_context_impl_type (widget->factory_context());
   const size_t cpos = tag.rfind (':');
   return cpos != String::npos ? tag.c_str() + cpos + 1 : tag;
 }
@@ -805,8 +822,8 @@ impl_type (ItemImpl *item)
 void
 ResizeContainerImpl::idle_sizing ()
 {
-  assert_return (m_resizer != 0);
-  m_resizer = 0;
+  assert_return (resizer_ != 0);
+  resizer_ = 0;
   if (anchored() && drawable())
     {
       ContainerImpl *pc = parent();
@@ -831,21 +848,21 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = debug_enabled() && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_debugging = debug_enabled() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (need_debugging)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
                   !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
-  /* this is the core of the resizing loop. via Item.tune_requisition(), we
-   * allow items to adjust the requisition from within size_allocate().
+  /* this is the core of the resizing loop. via Widget.tune_requisition(), we
+   * allow widgets to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
-   * m_tunable_requisition_counter.
+   * tunable_requisition_counter_.
    * currently, we simply freeze the allocation after 3 iterations. for the
    * future it's possible to honor the tuned requisition only partially or
-   * proportionally as m_tunable_requisition_counter decreases, so to mimick
+   * proportionally as tunable_requisition_counter_ decreases, so to mimick
    * a simulated annealing process yielding the final layout.
    */
-  m_tunable_requisition_counter = 3;
-  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  tunable_requisition_counter_ = 3;
+  while (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Requisition creq = requisition(); // unsets INVALID_REQUISITION
       if (!have_allocation)
@@ -855,10 +872,10 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
           area.height = creq.height;
         }
       set_allocation (area); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
-      if (m_tunable_requisition_counter)
-        m_tunable_requisition_counter--;
+      if (tunable_requisition_counter_)
+        tunable_requisition_counter_--;
     }
-  m_tunable_requisition_counter = 0;
+  tunable_requisition_counter_ = 0;
   if (need_debugging && !carea)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
 }
@@ -868,12 +885,12 @@ ResizeContainerImpl::invalidate_parent ()
 {
   if (anchored() && drawable())
     {
-      if (!m_resizer)
+      if (!resizer_)
         {
           WindowImpl *w = get_window();
           EventLoop *loop = w ? w->get_loop() : NULL;
           if (loop)
-            m_resizer = loop->exec_timer (0, slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
+            resizer_ = loop->exec_timer (0, Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
         }
       return;
     }
@@ -884,38 +901,38 @@ MultiContainerImpl::MultiContainerImpl ()
 {}
 
 void
-MultiContainerImpl::add_child (ItemImpl &item)
+MultiContainerImpl::add_child (WidgetImpl &widget)
 {
-  item.ref_sink();
-  ClassDoctor::item_set_parent (item, this);
-  items.push_back (&item);
+  widget.ref_sink();
+  ClassDoctor::widget_set_parent (widget, this);
+  widgets.push_back (&widget);
 }
 
 void
-MultiContainerImpl::remove_child (ItemImpl &item)
+MultiContainerImpl::remove_child (WidgetImpl &widget)
 {
-  vector<ItemImpl*>::iterator it;
-  for (it = items.begin(); it != items.end(); it++)
-    if (*it == &item)
+  vector<WidgetImpl*>::iterator it;
+  for (it = widgets.begin(); it != widgets.end(); it++)
+    if (*it == &widget)
       {
-        items.erase (it);
-        ClassDoctor::item_set_parent (item, NULL);
-        item.unref();
+        widgets.erase (it);
+        ClassDoctor::widget_set_parent (widget, NULL);
+        widget.unref();
         return;
       }
   assert_unreached();
 }
 
 void
-MultiContainerImpl::raise_child (ItemImpl &item)
+MultiContainerImpl::raise_child (WidgetImpl &widget)
 {
-  for (uint i = 0; i < items.size(); i++)
-    if (items[i] == &item)
+  for (uint i = 0; i < widgets.size(); i++)
+    if (widgets[i] == &widget)
       {
-        if (i + 1 != items.size())
+        if (i + 1 != widgets.size())
           {
-            items.erase (items.begin() + i);
-            items.push_back (&item);
+            widgets.erase (widgets.begin() + i);
+            widgets.push_back (&widget);
             invalidate();
           }
         break;
@@ -923,15 +940,15 @@ MultiContainerImpl::raise_child (ItemImpl &item)
 }
 
 void
-MultiContainerImpl::lower_child (ItemImpl &item)
+MultiContainerImpl::lower_child (WidgetImpl &widget)
 {
-  for (uint i = 0; i < items.size(); i++)
-    if (items[i] == &item)
+  for (uint i = 0; i < widgets.size(); i++)
+    if (widgets[i] == &widget)
       {
         if (i != 0)
           {
-            items.erase (items.begin() + i);
-            items.insert (items.begin(), &item);
+            widgets.erase (widgets.begin() + i);
+            widgets.insert (widgets.begin(), &widget);
             invalidate();
           }
         break;
@@ -941,8 +958,8 @@ MultiContainerImpl::lower_child (ItemImpl &item)
 void
 MultiContainerImpl::remove_all_children ()
 {
-  while (items.size())
-    remove (*items[items.size() - 1]);
+  while (widgets.size())
+    remove (*widgets[widgets.size() - 1]);
 }
 
 void
@@ -954,8 +971,8 @@ MultiContainerImpl::pre_finalize()
 
 MultiContainerImpl::~MultiContainerImpl()
 {
-  while (items.size())
-    remove (*items[items.size() - 1]);
+  while (widgets.size())
+    remove (*widgets[widgets.size() - 1]);
 }
 
 } // Rapicorn

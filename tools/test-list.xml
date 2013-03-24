@@ -1,24 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<!-- Rapicorn Examples
- ! Copyright (C) 2008 Tim Janik
- !
- ! This library is free software; you can redistribute it and/or
- ! modify it under the terms of the GNU Lesser General Public
- ! License as published by the Free Software Foundation; either
- ! version 2.1 of the License, or (at your option) any later version.
- !
- ! This library is distributed in the hope that it will be useful,
- ! but WITHOUT ANY WARRANTY; without even the implied warranty of
- ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- ! Lesser General Public License for more details.
- !
- ! A copy of the GNU Lesser General Public License should ship along
- ! with this library; if not, see http://www.gnu.org/copyleft/.
- !-->
+<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- list construction -->
-  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::ItemList"/>
+  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
   <tmpl:define id="ListAreaTable" inherit="Table" />
   <tmpl:define id="ListRow" inherit="Ambience" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
@@ -27,7 +12,7 @@
     </Frame>
   </tmpl:define>
 
-  <tmpl:define id="item-list" inherit="Alignment" >
+  <tmpl:define id="widget-list" inherit="Alignment" >
     <Table>
       <Frame     hposition="0" vposition="2" frame-type="in" hexpand="1" vexpand="1">
 	<ListArea/>
@@ -43,7 +28,7 @@
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >
-	  <item-list hspread="1" vspread="1"/>
+	  <widget-list hspread="1" vspread="1"/>
 	  <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	</VBox>
       </Alignment>

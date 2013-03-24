@@ -4,23 +4,244 @@
  * @brief Rapicorn user interface API classes.
  */
 
-include "../rcore/basics.idl";
 include "hardcoded.idl";
 
 namespace Rapicorn {
 
+Const MAXINT32 = +4294967295;
+Const MAXINT31 = +2147483647;
+Const MININT31 = -2147483648;
+
+/// Enum used to specify how adjustments are picked from widget ancestry.
+enum AdjustmentSourceType {
+  ADJUSTMENT_SOURCE_NONE = 0,
+  ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL,
+  ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL,
+  ADJUSTMENT_SOURCE_ANCESTRY_VALUE
+};
+
+/// Enum generally used for text paragraph alignments.
+enum AlignType  {
+  ALIGN_LEFT = 1,
+  ALIGN_CENTER,
+  ALIGN_RIGHT,
+};
+
+/// Enum to specify an anchoring point for graphical elements.
+enum AnchorType {
+  ANCHOR_NONE = 0,
+  ANCHOR_CENTER,
+  ANCHOR_EAST,
+  ANCHOR_NORTH_EAST,
+  ANCHOR_NORTH,
+  ANCHOR_NORTH_WEST,
+  ANCHOR_WEST,
+  ANCHOR_SOUTH_WEST,
+  ANCHOR_SOUTH,
+  ANCHOR_SOUTH_EAST,
+};
+
+/// Enum to specify button click behaviour.
+enum ClickType {
+  CLICK_ON_PRESS = 1,
+  CLICK_ON_RELEASE,
+  CLICK_SLOW_REPEAT,
+  CLICK_FAST_REPEAT,
+  CLICK_KEY_REPEAT,
+};
+
+/// Enum used to index various predefined colors.
+enum ColorType {
+  COLOR_NONE = 0,
+  COLOR_FOREGROUND,
+  COLOR_BACKGROUND,
+  COLOR_BACKGROUND_EVEN,
+  COLOR_BACKGROUND_ODD,
+  COLOR_DARK,
+  COLOR_DARK_SHADOW,
+  COLOR_DARK_GLINT,
+  COLOR_LIGHT,
+  COLOR_LIGHT_SHADOW,
+  COLOR_LIGHT_GLINT,
+  COLOR_FOCUS,
+  COLOR_BLACK,
+  COLOR_WHITE,
+  COLOR_RED,
+  COLOR_YELLOW,
+  COLOR_GREEN,
+  COLOR_CYAN,
+  COLOR_BLUE,
+  COLOR_MAGENTA,
+};
+
+/// Enum used to specify the color schemes of widgets.
+enum ColorSchemeType {
+  COLOR_INHERIT = 0,    ///< Inherit color from parent component
+  COLOR_NORMAL,         ///< Normal color specification
+  COLOR_SELECTED,       ///< Color used for selected areas
+  COLOR_BASE,           ///< Color used for text or scroll fields
+};
+
+///< Enum type for directional elements like arrows.
+enum DirType {
+  DIR_NONE = 0,
+  DIR_RIGHT,
+  DIR_UP,
+  DIR_LEFT,
+  DIR_DOWN,
+};
+
+///< Enum type for text ellipsization.
+enum EllipsizeType {
+  ELLIPSIZE_START = 1,
+  ELLIPSIZE_MIDDLE,
+  ELLIPSIZE_END
+};
+
+///< Enum values used to navigate the focus chain.
+enum FocusDirType {
+  FOCUS_NEXT = 1,
+  FOCUS_PREV,
+  FOCUS_RIGHT,
+  FOCUS_UP,
+  FOCUS_LEFT,
+  FOCUS_DOWN
+};
+
+///< Enum type to discriminate various Frame widget types.
+enum FrameType {
+  FRAME_NONE = 0,
+  FRAME_BACKGROUND,
+  FRAME_IN,
+  FRAME_OUT,
+  FRAME_ETCHED_IN,
+  FRAME_ETCHED_OUT,
+  FRAME_FOCUS,
+  FRAME_ALERT_FOCUS,
+};
+
+///< Enum with various lighting types.
+flags enum LightingType {
+  LIGHTING_NONE = 0,
+  LIGHTING_UPPER_LEFT,
+  LIGHTING_UPPER_RIGHT,
+  LIGHTING_LOWER_LEFT,
+  LIGHTING_LOWER_RIGHT,
+  LIGHTING_CENTER,
+  LIGHTING_DIFFUSE,
+  LIGHTING_DARK_FLAG         = 0x80,
+  LIGHTING_DARK_UPPER_LEFT   = LIGHTING_DARK_FLAG | LIGHTING_UPPER_LEFT,
+  LIGHTING_DARK_UPPER_RIGHT  = LIGHTING_DARK_FLAG | LIGHTING_UPPER_RIGHT,
+  LIGHTING_DARK_LOWER_LEFT   = LIGHTING_DARK_FLAG | LIGHTING_LOWER_LEFT,
+  LIGHTING_DARK_LOWER_RIGHT  = LIGHTING_DARK_FLAG | LIGHTING_LOWER_RIGHT,
+  LIGHTING_DARK_CENTER       = LIGHTING_DARK_FLAG | LIGHTING_CENTER,
+  LIGHTING_DARK_DIFFUSE      = LIGHTING_DARK_FLAG | LIGHTING_DIFFUSE,
+};
+
+///< Enum type for list widget selection behaviour.
+enum SelectionMode {
+  SELECTION_NONE = 0,   ///< No selection possible
+  SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
+  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
+  SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
+};
+
+///< Enum policy type for sizing trade offs.
+enum SizePolicyType {
+  SIZE_POLICY_NORMAL = 0,
+  SIZE_POLICY_WIDTH_FROM_HEIGHT,
+  SIZE_POLICY_HEIGHT_FROM_WIDTH,
+};
+
+///< Enum type for widget states.
+flags enum StateType {
+  STATE_NORMAL          = 0,
+  STATE_INSENSITIVE     = 1 << 0,
+  STATE_PRELIGHT        = 1 << 1,
+  STATE_IMPRESSED       = 1 << 2,
+  STATE_FOCUS           = 1 << 3,
+  STATE_DEFAULT         = 1 << 4,
+};
+
+///< Enum type to discriminate various Text widget types.
+enum TextMode {
+  TEXT_MODE_WRAPPED = 1,
+  TEXT_MODE_ELLIPSIZED,
+  TEXT_MODE_SINGLE_LINE,
+};
+
+///< Enum type to discriminate various toplevel Window types.
+enum WindowType {
+  WINDOW_TYPE_NORMAL = 0,       ///< Normal window
+  WINDOW_TYPE_DESKTOP,          ///< Desktop background
+  WINDOW_TYPE_DOCK,             ///< Dock or panel
+  WINDOW_TYPE_TOOLBAR,          ///< Torn-off toolbar
+  WINDOW_TYPE_MENU,             ///< Torn-off menu
+  WINDOW_TYPE_UTILITY,          ///< Palette or toolbox
+  WINDOW_TYPE_SPLASH,           ///< Startup/splash screen
+  WINDOW_TYPE_DIALOG,           ///< Dialog window, usually transient
+  WINDOW_TYPE_DROPDOWN_MENU,    ///< Menu, opened from menubar
+  WINDOW_TYPE_POPUP_MENU,       ///< Menu, opened as context menu
+  WINDOW_TYPE_TOOLTIP,          ///< Transient context info window
+  WINDOW_TYPE_NOTIFICATION,     ///< Transient info window (e.g. info bubble)
+  WINDOW_TYPE_COMBO,            ///< Combo box menu or list window
+  WINDOW_TYPE_DND,              ///< Window for dragged during DND operations
+};
+
+/// A sequence of booleans.
+sequence BoolSeq { bool bools; };
+
+/// A sequence of strings (in C++ of std::string).
+sequence StringSeq { String strings; };
+
+/// A sequence of @a Any objects, useful when the sequence element types need to be determined at runtime.
+sequence AnySeq { Any vany; };
+
+/// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
+sequence AnySeqSeq { AnySeq seq; };
+
+/// A sequence of ARGB pixel values.
+sequence PixelSeq { int32 argb; };
+
+/// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
+record Pixbuf {
+  int32     row_length;         ///< Length of a Pixbuf row in pixels.
+  PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
+  StringSeq variables;
+};
+
+/// Classification for element update request messages.
+enum UpdateKind {
+  UPDATE_READ,                  ///< Indicates an element range read request.
+  UPDATE_CHANGE,                ///< Indicates element range changes.
+  UPDATE_INSERTION,             ///< Indicates element range insertions.
+  UPDATE_DELETION               ///< Indicates deletion of a range of elements.
+};
+
+/// Specification of a span with start position and extent length. The upper bound is retrieved as start + length;
+record UpdateSpan {
+  int32 start;                  ///< Start of the span.
+  int32 length;                 ///< Length of the span.
+};
+
+/// An update request specifies the kind of update, the element ranges affected and optional context variables.
+record UpdateRequest {
+  UpdateKind kind;              ///< Classifies the update request type.
+  UpdateSpan rowspan;           ///< List of rows affected.
+  UpdateSpan colspan;           ///< List of columns affected.
+  StringSeq  variables;         ///< Optional "key=UTF-8 string" pairs to provide auxillary information.
+  Any        value;             ///< Row or cell value newly inserted, possibly sequences thereof.
+};
+
 /**
  * The ListModel interface serves as a row-oriented data provider for list views.
- * For most model implementations, in-order read outs should be of complexity O(1),
+ * For many model implementations, in-order read outs should be of complexity O(1),
  * while random order read outs may be of O(log n) or even O(n).
  */
 interface ListModel {
-  int         size     () = 0;		      ///< Obtain the number of rows provided by this model.
-  int         columns  () = 0;		      ///< Obtain the number of columns provided by this model.
-  AnySeq      row      (int n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
-  signal void inserted (int first, int last); ///< Notify about insertion of last-first+1 rows.
-  signal void changed  (int first, int last); ///< Notify about changes in last-first+1 rows.
-  signal void removed  (int first, int last); ///< Notify about removal of last-first+1 rows.
+  int32       count   () = 0;		        ///< Obtain the number of rows provided by this model.
+  Any         row     (int32 index) = 0;        ///< Read-out row at @a index. In-order read outs are generally fastest.
+  signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
 };
 
 /**
@@ -29,52 +250,62 @@ interface ListModel {
  * be displayed is provided sparsely on demand through explicit API calls.
  */
 interface ListModelRelay {
-  void        resize     (int size) = 0;		///< Resize the ListModel to the given number of rows.
-  void        inserted   (int first, int last = 0) = 0; ///< Issue model notification for row insertion.
-  void        changed    (int first, int last = 0) = 0; ///< Issue model notification for row changes.
-  void        removed    (int first, int last = 0) = 0; ///< Issue model notification for row removal.
-  void        fill       (int first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
-  signal void refill     (int first, int last);         ///< Refill requests row data for last-first+1 rows.
-  ListModel   model      () = 0; ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
+  ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
+  void        fill   (int32 first, AnySeq asq) = 0;   ///< Provide row data as requested by refill().
+  signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
+  void        update (UpdateRequest urequest) = 0;    ///< Issue model notification for row change, insertion and deletion.
 };
 
-/**
- * @param width         requested width
- * @param height        requested height
- * Requisition information, providing requisition @a width and @a height.
- */
+/// Requisition information, providing requisition @a width and @a height.
 record Requisition {
-  float width;
-  float height;
+  float64 width;          ///< Request width.
+  float64 height;         ///< Request height.
 };
 
-interface Item;
+interface Widget;
 
-/**
- * A sequence of Item objects.
- */
-sequence ItemSeq {
-  Item  items;
+/// A sequence of Widget objects.
+sequence WidgetSeq { Widget  widgets; };
+
+/// Widget is the base type for all UI elements.
+interface Widget {
+  bool          match_selector          (String selector) = 0; //< Check if selector matches this widget.
+  Widget          query_selector          (String selector) = 0; //< Returns first selector match.
+  WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
+  Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
+  String	test_dump               () = 0;
+  String name = String (_("Name"), _("Identification name of the widget"), "rw");
+  float64 width   = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
+  float64 height  = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
+  bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
+  bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
+  bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this widget and all its parents horizontally"), "rw");
+  bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this widget and all its parents vertically"), "rw");
+  bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the widget may be shrunken horizontally"), "rw");
+  bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the widget may be shrunken vertically"), "rw");
+  bool  visible   = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
+  bool  sensitive = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the widget"), "Prw", 0, 99999, 5);
+  float64 hspan     = Range (_("Horizontal Span"),     _("Horizontal span for widget layout"), "Prw", 1, 100000, 5);
+  float64 vposition = Range (_("Vertical Position"),   _("Vertical layout position for the widget"), "Prw", 0, 99999, 5);
+  float64 vspan     = Range (_("Vertical Span"),       _("Vertical span for widget layout"), "Prw", 1, 100000, 5);
+  int32 left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, 65535, 3);
+  int32 right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, 65535, 3);
+  int32 bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
+  int32 top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
+  float64 hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float64 vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float64 halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
+  float64 hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  float64 valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
+  float64 vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
+  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
 };
 
-/**
- * Item is the base type for all UI elements.
- */
-interface Item {
-  bool          match_selector          (string selector) = 0; //< Check if selector matches this item.
-  Item          query_selector          (string selector) = 0; //< Returns first selector match.
-  ItemSeq       query_selector_all      (string selector) = 0; //< Returns all selector matches.
-  Item          query_selector_unique   (string selector) = 0; //< Returns single selector match if unique.
-  string	test_dump               () = 0;
-  string        name = String (_("Name"), _("Identification name of the item"), "rw");
-};
-
-/**
- * Container is a special type of Item that can contain other items.
- */
-interface Container : Item {
-  /// Create a child item from the @a item_identifier template and add it to the container.
-  Item          create_child            (string item_identifier, StringSeq args = 0) = 0;
+/// Container is a special type of Widget that can contain other widgets.
+interface Container : Widget {
+  /// Create a child widget from the @a widget_identifier template and add it to the container.
+  Widget create_child (String widget_identifier, StringSeq args = 0) = 0;
 };
 
 /**
@@ -83,15 +314,31 @@ interface Container : Item {
  * respective mouse button is clicked.
  */
 interface ButtonArea : Container {
-  string	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
-  string	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
-  string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+  String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
 };
 
 /// The Drawable interface allows display of custom images, created by client-side rendering.
-interface Drawable : Item {
-  signal void redraw    (int x, int y, int w, int h);	        ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int x, int y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
+interface Drawable : Widget {
+  signal void redraw    (int32 x, int32 y, int32 w, int32 h);	        ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
+};
+
+/**
+ * List widget is a widget that displays a list of widgets generated according to a data source.
+ */
+interface WidgetList : Container {
+  String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+  SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
+                                                               "Single - allow a single selected row<br/>"
+                                                               "Browse - always select a single row<br/>"
+                                                               "Multiple - allow any row selection combinations<br/>"),
+                                        "rw");
+  void          set_selection  (BoolSeq selection) = 0;
+  BoolSeq       get_selection  () = 0;
+  void          select_range   (int32 first, int32 length) = 0;
+  void          unselect_range (int32 first, int32 length) = 0;
 };
 
 /**
@@ -100,26 +347,27 @@ interface Drawable : Item {
  * like buttons and text fields, and the neccessary logic for UI event processing.
  */
 interface Window : Container {
+  String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
+  bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
   bool          viewable                () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
   void          close                   () = 0;
-  bool          snapshot                (string     pngname) = 0;
-  signal bool   commands                (string     cmdname, StringSeq args);
+  bool          snapshot                (String     pngname) = 0;
+  signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();
-  bool          synthesize_click        (Item       item,
-                                         int        button,
-                                         float      xalign = 0.5,
-                                         float      yalign = 0.5) = 0;
-  bool          synthesize_enter        (float      xalign = 0.5,
-                                         float      yalign = 0.5) = 0;
+  bool          synthesize_click        (Widget       widget,
+                                         int32        button,
+                                         float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
+  bool          synthesize_enter        (float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
   bool          synthesize_leave        () = 0;
   bool          synthesize_delete       () = 0;
 };
 
-sequence WindowList {
-  Window windows;
-};
+/// A sequence of Window objects.
+sequence WindowList { Window windows; };
 
 /**
  * For each Rapicorn program, there exists one global Application singleton.
@@ -129,33 +377,34 @@ sequence WindowList {
  */
 interface Application {
   /// @name Application Startup
-  string        auto_path       (string         file_name,
-                                 string         binary_path,
+  String        auto_path       (String         file_name,
+                                 String         binary_path,
                                  bool           search_vpath = true) = 0;
-  StringSeq     auto_load       (string         defs_domain,
-                                 string         file_name,
-                                 string         binary_path,
-                                 string         i18n_domain = "") = 0;
-  bool          factory_window  (string         factory_definition);
-  void          load_string     (string         defs_domain,
-                                 string         xml_string,
-                                 string         i18n_domain = "") = 0;
+  StringSeq     auto_load       (String         defs_domain,
+                                 String         file_name,
+                                 String         binary_path,
+                                 String         i18n_domain = "") = 0;
+  bool          factory_window  (String         factory_definition);
+  void          load_string     (String         defs_domain,
+                                 String         xml_string,
+                                 String         i18n_domain = "") = 0;
   /// @name Window handling
-  Window        create_window   (string window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
+  Window        create_window   (String window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
   bool          finishable      ();                     ///< Indicates whether all windows and other primary event sources are gone.
   signal void   missing_primary ();                     ///< Indicates the Application entering finishable() state.
   void          close_all       () = 0;                 ///< Forces closing of all windows.
-  Window        query_window    (string selector) = 0;  ///< Returns first Window match for @a selector.
-  WindowList    query_windows   (string selector) = 0;  ///< Returns all Window matches for @a selector.
+  Window        query_window    (String selector) = 0;  ///< Returns first Window match for @a selector.
+  WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
   /// @name Application Registries
   ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
-  ListModelRelay create_list_model_relay (int n_columns, string name = "") = 0;
+  ListModelRelay create_list_model_relay (String name = "") = 0;
   /// @name Test counter for debugging/profiling
-  void          test_counter_set        (int val) = 0;  ///< Testing, set the test counter.
-  void          test_counter_add        (int val) = 0;  ///< Testing, add to the test counter.
-  int           test_counter_get        () = 0;         ///< Testing, retrieve the test counter value.
-  int           test_counter_inc_fetch  () = 0;         ///< Testing, increment and return the resulting test counter value.
+  void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
+  void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.
+  int32         test_counter_get        () = 0;           ///< Testing, retrieve the test counter value.
+  int32         test_counter_inc_fetch  () = 0;           ///< Testing, increment and return the resulting test counter value.
+  int64         test_hook               () = 0;
 };
 
 enum TestEnum {
@@ -164,15 +413,15 @@ enum TestEnum {
   TEST_ENUM_VALUE3,
 };
 
-interface IdlTestItem : Item {
+interface IdlTestWidget : Widget {
   bool           bool_prop;
-  int            int_prop;
-  float          float_prop;
-  string         string_prop;
+  int32          int_prop;
+  float64        float_prop;
+  String         string_prop;
   TestEnum       enum_prop;
   Requisition    record_prop;
   StringSeq      sequence_prop;
-  IdlTestItem    self_prop;
+  IdlTestWidget    self_prop;
 };
 
 } // Rapicorn

@@ -1,34 +1,42 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
+INCLUDES   += -I$(top_srcdir)
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 
-# test programs
-noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
+# == Build Classes ==
+noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS) $(NOINSTPRGS)
 noinst_DATA	 =
 LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
+NOINSTPRGS =
+
+# == Programs ==
+NOINSTPRGS        += imgcheck
+imgcheck_SOURCES   = imgcheck.cc
+imgcheck_LDADD     = $(LDADDS)
 
 # environment
 export VPATH   # needed by test programs to find builddir relative input files
 
-# test programs
+# == Test Programs ==
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
 servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
-		       items.cc primitives.cc testitems.cc sinfextest.cc stores.cc testselector.cc
+		       widgets.cc primitives.cc testwidgets.cc sinfextest.cc stores.cc testselector.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
-XML_FILES    	    += factory.xml testitems.xml
+XML_FILES    	    += factory.xml testwidgets.xml
 EXTRA_DIST          += servertests.hh $(XML_FILES) servertests.ref
 TEST_PROGS	    += clienttests
-clienttests_SOURCES  = clienttests.cc
+clienttests_SOURCES  = clienttests.cc pixmaps.cc
 clienttests_LDADD    = $(LDADDS)
+EXTRA_DIST          += testpixs.c testpixs.png
 
 SINFEX_SHELL=./servertests --shell
 check: sinfex-expressions
-sinfex-expressions: $(srcdir)/expressions.ref
+sinfex-expressions: $(srcdir)/expressions.ref ./servertests
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
 	&& $(X11TEST_SERVER) && \
 	  COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \

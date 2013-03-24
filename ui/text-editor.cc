@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "text-editor.hh"
 #include "factory.hh"
 #include "container.hh"
@@ -90,7 +75,7 @@ Editor::Client::plain_text () const
 }
 
 const PropertyList&
-Editor::Client::client_list_properties()
+Editor::Client::client__property_list()
 {
   static Property *properties[] = {
     MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
@@ -103,7 +88,7 @@ Editor::Client::client_list_properties()
 
 
 const PropertyList&
-Editor::list_properties()
+Editor::_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
@@ -112,19 +97,19 @@ Editor::list_properties()
     MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
     MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::_property_list());
   return property_list;
 }
 
 class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, public virtual EventHandler {
-  uint     m_request_chars, m_request_digits;
-  int      m_cursor;
-  TextMode m_text_mode;
+  uint     request_chars_, request_digits_;
+  int      cursor_;
+  TextMode text_mode_;
   Client*       get_client () const { return interface<Client*>(); }
 public:
   EditorImpl() :
-    m_request_chars (0), m_request_digits (0),
-    m_cursor (0), m_text_mode (TEXT_MODE_SINGLE_LINE)
+    request_chars_ (0), request_digits_ (0),
+    cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE)
   {}
 private:
   virtual void
@@ -133,10 +118,10 @@ private:
     update_client();
     SingleContainerImpl::size_request (requisition);
     uint fallback_chars = 0, fallback_digits = 0;
-    if (m_text_mode == TEXT_MODE_SINGLE_LINE)
+    if (text_mode_ == TEXT_MODE_SINGLE_LINE)
       {
         requisition.width = 0;
-        if (m_request_chars <= 0 && m_request_digits <= 0)
+        if (request_chars_ <= 0 && request_digits_ <= 0)
           {
             fallback_chars = 26;
             fallback_digits = 10;
@@ -144,7 +129,7 @@ private:
       }
     Client *client = get_client();
     if (client)
-      requisition.width += client->text_requisition (fallback_chars + m_request_chars, fallback_digits + m_request_digits);
+      requisition.width += client->text_requisition (fallback_chars + request_chars_, fallback_digits + request_digits_);
   }
   virtual bool
   can_focus () const
@@ -201,7 +186,7 @@ private:
               int m = client->mark();
               if (o != m)
                 {
-                  m_cursor = m;
+                  cursor_ = m;
                   client->mark2cursor();
                   changed();
                 }
@@ -217,7 +202,7 @@ private:
   int
   cursor () const
   {
-    return m_cursor;
+    return cursor_;
   }
   bool
   move_cursor (CursorMovement cm)
@@ -225,7 +210,7 @@ private:
     Client *client = get_client();
     if (client)
       {
-        client->mark (m_cursor);
+        client->mark (cursor_);
         int o = client->mark();
         switch (cm)
           {
@@ -237,7 +222,7 @@ private:
         int m = client->mark();
         if (o == m)
           return false;
-        m_cursor = m;
+        cursor_ = m;
         client->mark2cursor();
         changed();
         return true;
@@ -250,7 +235,7 @@ private:
     Client *client = get_client();
     if (client && uc)
       {
-        client->mark (m_cursor);
+        client->mark (cursor_);
         char str[8];
         utf8_from_unichar (uc, str);
         client->mark_insert (str);
@@ -266,13 +251,13 @@ private:
     Client *client = get_client();
     if (client)
       {
-        client->mark (m_cursor);
+        client->mark (cursor_);
         int o = client->mark();
         client->step_mark (-1);
         int m = client->mark();
         if (o == m)
           return false;
-        m_cursor = m;
+        cursor_ = m;
         client->mark2cursor();
         client->mark_delete (1);
         changed();
@@ -286,7 +271,7 @@ private:
     Client *client = get_client();
     if (client)
       {
-        client->mark (m_cursor);
+        client->mark (cursor_);
         if (client->mark_at_end())
           return false;
         client->mark_delete (1);
@@ -315,29 +300,29 @@ private:
     Client *client = get_client();
     if (client)
       {
-        client->text_mode (m_text_mode);
+        client->text_mode (text_mode_);
         // client->markup_text (markup);
       }
   }
-  virtual TextMode text_mode      () const                      { return m_text_mode; }
+  virtual TextMode text_mode      () const                      { return text_mode_; }
   virtual void     text_mode      (TextMode      text_mode)
   {
-    m_text_mode = text_mode;
+    text_mode_ = text_mode;
     Client *client = get_client();
     if (client)
-      client->text_mode (m_text_mode);
+      client->text_mode (text_mode_);
     invalidate_size();
   }
   virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->markup_text() : ""; }
   virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
   virtual String   plain_text     () const                      { Client *client = get_client(); return client ? client->plain_text() : ""; }
   virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
-  virtual uint     request_chars  () const                      { return m_request_chars; }
-  virtual void     request_chars  (uint nc)                     { m_request_chars = nc; invalidate_size(); }
-  virtual uint     request_digits () const                      { return m_request_digits; }
-  virtual void     request_digits (uint nd)                     { m_request_digits = nd; invalidate_size(); }
+  virtual uint     request_chars  () const                      { return request_chars_; }
+  virtual void     request_chars  (uint nc)                     { request_chars_ = nc; invalidate_size(); }
+  virtual uint     request_digits () const                      { return request_digits_; }
+  virtual void     request_digits (uint nd)                     { request_digits_ = nd; invalidate_size(); }
 };
-static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
+static const WidgetFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 
 
 } // Text

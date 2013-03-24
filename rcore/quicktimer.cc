@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 
 namespace Rapicorn {
 
@@ -117,8 +118,8 @@ QuickTimer::unref_timers()
 bool
 QuickTimer::time_elapsed ()
 {
-  uint64 s = timestamp_realtime(), d = MAX (m_start, s) - MIN (m_start, s);
-  return d >= m_usecs;
+  uint64 s = timestamp_realtime(), d = MAX (start_, s) - MIN (start_, s);
+  return d >= usecs_;
 }
 
 /**
@@ -127,8 +128,8 @@ QuickTimer::time_elapsed ()
 void
 QuickTimer::start ()
 {
-  m_start = timestamp_realtime();
-  m_mark = 0;
+  start_ = timestamp_realtime();
+  mark_ = 0;
   expired(); // calibrate
 }
 
@@ -138,7 +139,7 @@ QuickTimer::start ()
 void
 QuickTimer::start (uint64 usecs)
 {
-  m_usecs = usecs;
+  usecs_ = usecs;
   start();
 }
 
@@ -151,13 +152,13 @@ QuickTimer::~QuickTimer ()
  * Construct a QuickTimer object, suitable to expire after @a usecs micro seconds.
  */
 QuickTimer::QuickTimer (uint64 usecs) :
-  m_usecs (0), m_start (0), m_mark (0)
+  usecs_ (0), start_ (0), mark_ (0)
 {
   ref_timers();
   start (usecs);
 }
 
-#ifdef DOXYGEN
+#ifdef RAPICORN_DOXYGEN
 /**
  * The QuickTimer class allows fast timer expiration checks from inner loops.
  * On Unix the implementation uses CLOCK_PROCESS_CPUTIME_ID or CLOCK_REALTIME in
@@ -174,6 +175,6 @@ class QuickTimer;
  * @returns Whether the time period that QuickTimer was setup for has expired.
  */
 bool QuickTimer::expired();
-#endif // DOXYGEN
+#endif // RAPICORN_DOXYGEN
 
 } // Rapicorn

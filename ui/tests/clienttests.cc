@@ -10,39 +10,39 @@ static WindowH
 create_plain_window ()
 {
   WindowH window = app.create_window ("Window");
-  TASSERT (window._is_null() == false);
+  TASSERT (window != NULL);
   return window;
 }
 
 static void
-test_item_usage()
+test_widget_usage()
 {
   WindowH window = create_plain_window();
-  ItemH item = window;
-  TASSERT (item._is_null() == false);
-  ContainerH c = ContainerH::downcast (item);
-  TASSERT (c._is_null() == false);
-  TASSERT (WindowH::downcast (c)._is_null() == false);
+  WidgetH widget = window;
+  TASSERT (widget != NULL);
+  ContainerH c = ContainerH::down_cast (widget);
+  TASSERT (c != NULL);
+  TASSERT (WindowH::down_cast (c) != NULL);
   window.close();
-  TASSERT (ItemH::downcast (app)._is_null() == true);
-  TASSERT (ContainerH::downcast (app)._is_null() == true);
-  TASSERT (WindowH::downcast (app)._is_null() == true);
+  TASSERT (WidgetH::down_cast (app) == NULL);
+  TASSERT (ContainerH::down_cast (app) == NULL);
+  TASSERT (WindowH::down_cast (app) == NULL);
   const char *testname = "3e3b0d44-ded6-4fc5-a134-c16569c23d96";
-  String name = item.name();
+  String name = widget.name();
   TASSERT (name != testname);
-  item.name (testname);
-  name = item.name();
+  widget.name (testname);
+  name = widget.name();
   TASSERT (name == testname);
   window.name ("Test-Name");
-  TASSERT ("Test-Name" == item.name());
-  TASSERT (c.component<WindowH> (".Window")._is_null() == false);
-  TASSERT (c.component<WindowH> (":root")._is_null() == false);
-  TASSERT (window.component<ContainerH> (".Window")._is_null() == false);
-  TASSERT (item.component<ButtonAreaH> (".Window")._is_null() == true);
-  TASSERT (item.component<ItemH> (".Window")._is_null() == false);
-  TASSERT (item.component<ItemH> ("FrobodoNotHere")._is_null() == true);
+  TASSERT ("Test-Name" == widget.name());
+  TASSERT (c.component<WindowH> (".Window") != NULL);
+  TASSERT (c.component<WindowH> (":root") != NULL);
+  TASSERT (window.component<ContainerH> (".Window") != NULL);
+  TASSERT (widget.component<ButtonAreaH> (".Window") == NULL);
+  TASSERT (widget.component<WidgetH> (".Window") != NULL);
+  TASSERT (widget.component<WidgetH> ("FrobodoNotHere") == NULL);
 }
-REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
+REGISTER_TEST ("Client/Basic Widget Usage", test_widget_usage);
 
 } // Anon
 
@@ -50,7 +50,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  app = init_test_app (__SOURCE_COMPONENT__, &argc, argv);
+  app = init_test_app (__PRETTY_FILE__, &argc, argv);
 
   return Test::run();
 }

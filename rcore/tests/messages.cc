@@ -24,39 +24,6 @@ using namespace Rapicorn;
 #define throw_if_fail(expr)     do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
 
 static void
-test_dialog_messages ()
-{
-  TASSERT (Msg::NONE    == Msg::lookup_type ("none"));
-  TASSERT (Msg::ALWAYS  == Msg::lookup_type ("always"));
-  TASSERT (Msg::ERROR   == Msg::lookup_type ("error"));
-  TASSERT (Msg::WARNING == Msg::lookup_type ("warning"));
-  TASSERT (Msg::SCRIPT  == Msg::lookup_type ("script"));
-  TASSERT (Msg::INFO    == Msg::lookup_type ("info"));
-  TASSERT (Msg::DIAG    == Msg::lookup_type ("diag"));
-  TASSERT (Msg::DEBUG   == Msg::lookup_type ("debug"));
-  TASSERT (Msg::check (Msg::NONE) == false);
-  TASSERT (Msg::check (Msg::ALWAYS) == true);
-  Msg::enable (Msg::NONE);
-  Msg::disable (Msg::ALWAYS);
-  TASSERT (Msg::check (Msg::NONE) == false);
-  TASSERT (Msg::check (Msg::ALWAYS) == true);
-  TASSERT (Msg::check (Msg::INFO) == true);
-  Msg::disable (Msg::INFO);
-  TASSERT (Msg::check (Msg::INFO) == false);
-  Msg::enable (Msg::INFO);
-  TASSERT (Msg::check (Msg::INFO) == true);
-  Msg::display (Msg::WARNING,
-                Msg::Title ("Warning Title"),
-                Msg::Text1 ("Primary warning message."),
-                Msg::Text2 ("Secondary warning message."),
-                Msg::Text2 ("Continuation of secondary warning message."),
-                Msg::Text3 ("Message details: 1, 2, 3."),
-                Msg::Text3 ("And more message details: a, b, c."),
-                Msg::Check ("Show this message again."));
-}
-REGISTER_LOGTEST ("Message/Dialog Message Types", test_dialog_messages);
-
-static void
 bogus_func ()
 {
   assert_return (0 == "assert-return-void");
@@ -106,7 +73,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  init_core_test (__SOURCE_COMPONENT__, &argc, argv);
+  init_core_test (__PRETTY_FILE__, &argc, argv);
 
   if (argc >= 2 || Test::logging())
     {

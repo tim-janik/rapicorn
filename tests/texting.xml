@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- test dialog -->
-  <tmpl:define id="main-shell" inherit="Window">
+  <tmpl:define id="main-shell" inherit="Window" auto_focus="0">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <VBox sensitive="1" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />

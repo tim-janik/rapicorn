@@ -2,44 +2,43 @@
 #ifndef __RAPICORN_MODELS_HH__
 #define __RAPICORN_MODELS_HH__
 
-#include <ui/item.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
-class ListModelRelayImpl : public virtual ListModelRelayIface, public virtual ListModelIface {
-  int                           m_size, m_columns;
-  vector<AnySeqImpl>            m_rows;
-  explicit                      ListModelRelayImpl (int n_columns);
+class ListModelRelayImpl : public virtual ListModelRelayIface {
+  struct RelayModel : public virtual ListModelIface {
+    vector<Any>                 rows_;
+    virtual int                 count           ()              { return rows_.size(); }
+    virtual Any                 row             (int n);
+    virtual void                delete_this     ()              { /* do nothing for embedded object */ }
+  };
+  RelayModel                    model_;
+  void                          emit_updated            (UpdateKind kind, uint start, uint length);
+  explicit                      ListModelRelayImpl      ();
 protected:
-  virtual                      ~ListModelRelayImpl ();
-  static ListModelRelayImpl&    create_list_model_relay (int n_columns);
+  virtual                      ~ListModelRelayImpl      ();
+  static ListModelRelayImpl&    create_list_model_relay ();
 public:
-  // model API
-  virtual int                   size            ()              { return m_size; }
-  virtual int                   columns         ();
-  virtual AnySeqImpl            row             (int n);
-  // relay API
-  virtual void                  resize          (int size);
-  virtual void                  inserted        (int first, int last);
-  virtual void                  changed         (int first, int last);
-  virtual void                  removed         (int first, int last);
-  virtual void                  fill            (int first, const AnySeqSeqImpl &ss);
-  virtual ListModelIface*       model           ()              { return this; }
-  void                          refill          (int first, int last);
+  virtual void                  update          (const UpdateRequest &urequest);
+  virtual void                  fill            (int first, const AnySeq &aseq);
+  virtual ListModelIface*       model           ()              { return &model_; }
+  void                          refill          (int start, int length);
 };
 
 class MemoryListStore : public virtual ListModelIface {
-  uint                  m_columns;
-  vector<AnySeqImpl>    m_rows;
+  vector<Any>           rows_;
+  uint                  columns_;
+  void                  emit_updated    (UpdateKind kind, uint start, uint length);
 public:
   explicit              MemoryListStore (int n_columns);
-  virtual int           size            ()              { return m_rows.size(); }
-  virtual int           columns         ()              { return m_columns; }
-  virtual AnySeqImpl    row             (int n);
-  void                  insert          (int  n, const AnySeqImpl &aseq);
-  void                  update          (uint n, const AnySeqImpl &aseq);
-  void                  remove          (uint first, uint last = 0);
+  virtual int           count           ()              { return rows_.size(); }
+  virtual Any           row             (int n);
+  void                  insert          (int  n, const Any &aseq);
+  void                  update_row      (uint n, const Any &aseq);
+  void                  remove          (uint start, uint length);
 };
+
 
 } // Rapicorn
 

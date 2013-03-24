@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "events.hh"
 
 namespace Rapicorn {
@@ -39,8 +24,7 @@ public:
     assert ((etype >= MOUSE_ENTER && etype <= MOUSE_LEAVE) ||
             (etype >= FOCUS_IN    && etype <= FOCUS_OUT) ||
             (etype >= SCROLL_UP   && etype <= SCROLL_RIGHT) ||
-            etype == CANCEL_EVENTS ||
-            etype == WIN_DELETE);
+            etype == CANCEL_EVENTS || etype == WIN_DELETE || etype == WIN_DESTROY);
   }
 };
 
@@ -70,8 +54,8 @@ string_from_event_type (EventType etype)
     case SCROLL_RIGHT:          return "ScrollRight";
     case CANCEL_EVENTS:         return "CancelEvents";
     case WIN_SIZE:              return "WinSize";
-    case WIN_DRAW:              return "WinDraw";
     case WIN_DELETE:            return "WinDelete";
+    case WIN_DESTROY:           return "WinDestroy";
     case EVENT_NONE:
     case EVENT_LAST:
     default:                    return "<unknown>";
@@ -139,17 +123,10 @@ create_event_transformed (const Event  &source_event,
     case WIN_SIZE:
       {
         const EventWinSize *source = dynamic_cast<const EventWinSize*> (&source_event);
-        return create_event_win_size (dcontext, source->draw_stamp, affine.hexpansion() * source->width, affine.vexpansion() * source->height);
-      }
-    case WIN_DRAW:
-      {
-        const EventWinDraw *source = dynamic_cast<const EventWinDraw*> (&source_event);
-        std::vector<Rect> rects;
-        for (uint i = 0; i < source->rectangles.size(); i++)
-          rects.push_back (Rect (affine.point (source->rectangles[i].lower_left()), affine.point (source->rectangles[i].upper_right()))); // FIXME: transform 4 points
-        return create_event_win_draw (dcontext, source->draw_stamp, rects);
+        return create_event_win_size (dcontext, affine.hexpansion() * source->width, affine.vexpansion() * source->height, source->intermediate);
       }
     case WIN_DELETE:            return create_event_win_delete (dcontext);
+    case WIN_DESTROY:           return create_event_win_destroy (dcontext);
     case EVENT_NONE:
     case EVENT_LAST:
     default:                    fatal ("uncopyable event type: %s", string_from_event_type (source_event.type));
@@ -254,62 +231,30 @@ EventWinSize::~EventWinSize()
 
 EventWinSize::EventWinSize (EventType           etype,
                             const EventContext &econtext,
-                            uint                _draw_stamp,
                             double              _width,
-                            double              _height) :
+                            double              _height,
+                            bool                _intermediate) :
   Event (etype, econtext),
-  draw_stamp (_draw_stamp),
-  width (_width), height (_height)
+  width (_width), height (_height),
+  intermediate (_intermediate)
 {}
 
 EventWinSize*
 create_event_win_size (const EventContext &econtext,
-                       uint                draw_stamp,
                        double              width,
-                       double              height)
+                       double              height,
+                       bool                intermediate)
 {
   struct EventWinSizeImpl : public EventWinSize {
     EventWinSizeImpl (EventType           etype,
                       const EventContext &econtext,
-                      uint                _draw_stamp,
                       double              _width,
-                      double              _height) :
-      EventWinSize (etype, econtext, _draw_stamp, _width, _height)
+                      double              _height,
+                      bool                _intermediate) :
+      EventWinSize (etype, econtext, _width, _height, _intermediate)
     {}
   };
-  EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, draw_stamp, width, height);
-  return wevent;
-}
-
-EventWinDraw::~EventWinDraw()
-{}
-
-EventWinDraw::EventWinDraw (EventType                etype,
-                            const EventContext      &econtext,
-                            uint                     _draw_stamp,
-                            const std::vector<Rect> &_rects) :
-  Event (etype, econtext),
-  draw_stamp (_draw_stamp),
-  rectangles (_rects)
-{
-  for (uint i = 0; i < rectangles.size(); i++)
-    bbox.rect_union (rectangles[i]);
-}
-
-EventWinDraw*
-create_event_win_draw (const EventContext      &econtext,
-                       uint                     draw_stamp,
-                       const std::vector<Rect> &rects)
-{
-  struct EventWinDrawImpl : public EventWinDraw {
-    EventWinDrawImpl (EventType                etype,
-                      const EventContext      &econtext,
-                      uint                     _draw_stamp,
-                      const std::vector<Rect> &_rects) :
-      EventWinDraw (etype, econtext, _draw_stamp, _rects)
-    {}
-  };
-  EventWinDraw *wevent = new EventWinDrawImpl (WIN_DRAW, econtext, draw_stamp, rects);
+  EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, width, height, intermediate);
   return wevent;
 }
 
@@ -317,6 +262,13 @@ EventWinDelete*
 create_event_win_delete (const EventContext &econtext)
 {
   EventMouse *event = new EventImpl (WIN_DELETE, econtext);
+  return event;
+}
+
+EventWinDestroy*
+create_event_win_destroy (const EventContext &econtext)
+{
+  EventMouse *event = new EventImpl (WIN_DESTROY, econtext);
   return event;
 }
 
@@ -382,7 +334,68 @@ key_value_is_focus_dir (uint32 keysym)
   return key_value_to_focus_dir (keysym) != 0;
 }
 
+ActivateKeyType
+key_value_to_activation (uint32 keysym)
+{
+  switch (keysym)
+    {
+    case KEY_KP_Space:                  return ACTIVATE_FOCUS;
+    case KEY_space:                     return ACTIVATE_FOCUS;
+    case KEY_Return:                    return ACTIVATE_DEFAULT;
+    case KEY_KP_Enter:                  return ACTIVATE_DEFAULT;
+    case KEY_ISO_Enter:                 return ACTIVATE_DEFAULT;
+    default:                            return ACTIVATE_NONE;
+    }
+}
+
+bool
+key_value_is_cancellation (uint32 keysym)
+{
+  switch (keysym)
+    {
+    case KEY_Cancel:                    return true;
+    case KEY_Escape:                    return true;
+    default:                            return false;
+    }
+}
+
 } // Rapicorn
 
-/* implement key_value_to_unichar() */
-#include "key2utf8.cc"
+// implements XLib's KeySymToUcs4
+typedef uint KeySym;
+#include "key2ucs4.cc"
+
+namespace Rapicorn {
+
+unichar
+key_value_to_unichar (uint32 keysym)
+{
+  // first check for Latin-1 characters (1:1 mapping)
+  if ((keysym >= 0x0020 && keysym <= 0x007e) || (keysym >= 0x00a0 && keysym <= 0x00ff))
+    return keysym;
+
+  // also check for directly encoded 24-bit UCS characters
+  if ((keysym & 0xff000000) == 0x01000000)
+    return keysym & 0x00ffffff;
+
+  // lookup symbol like XLib
+  const uint u = KeySymToUcs4 (keysym);
+  if (u)
+    return u;
+
+  // handle miscellaneous keys
+  static const struct { uint keysym, ucs4; } key_list[] = {
+    // keypad codes
+    { 0xff80, ' ' }, { 0xffaa, '*' }, { 0xffab, '+' }, { 0xffac, ',' }, { 0xffad, '-' }, { 0xffae, '.' }, { 0xffaf, '/' },
+    { 0xffb0, '0' }, { 0xffb1, '1' }, { 0xffb2, '2' }, { 0xffb3, '3' }, { 0xffb4, '4' }, { 0xffb5, '5' }, { 0xffb6, '6' },
+    { 0xffb7, '7' }, { 0xffb8, '8' }, { 0xffb9, '9' }, { 0xffbd, '=' },
+  };
+  for (size_t i = 0; i < ARRAY_SIZE (key_list); i++)
+    if (key_list[i].keysym == keysym)
+      return key_list[i].ucs4;
+
+  // no match
+  return 0;
+}
+
+} // Rapicorn

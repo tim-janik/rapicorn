@@ -19,14 +19,14 @@ custom_commands (WindowH &window, const String &command, const StringSeq &args)
   return true;
 }
 
-#include "../rcore/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+#include "../ui/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
 main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__PRETTY_FILE__, &argc, argv);
 
 #if 0 // FIMXE: test builtin images
   ApplicationIface::pixstream ("testimage-alpha-rle", alpha_rle);
@@ -40,7 +40,7 @@ main (int   argc,
 
   // create window, handle commands
   WindowH window = app.create_window ("RapicornTest:tour-dialog");
-  window.sig_commands() += custom_commands;
+  window.sig_commands() += [&window] (const String &command, const StringSeq &args) -> bool { return custom_commands (window, command, args); };
 
   // display window and enter main event loop
   window.show();

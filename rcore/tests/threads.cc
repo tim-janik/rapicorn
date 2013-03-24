@@ -2,6 +2,7 @@
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <thread>
 
 #if     __SIZEOF_POINTER__ == 8
@@ -15,6 +16,42 @@ template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
 
 namespace {
 using namespace Rapicorn;
+
+// == constexpr ctors ==
+// the following code checks constexpr initialization of types. these checks are run
+// before main(), so we have to roll our own assertion and cannot register a real test.
+#define QUICK_ASSERT(cond)      do {                                    \
+    if (cond) ; else { printerr ("\n%s:%d: assertion failed: %s\n", __FILE__, __LINE__, #cond); abort(); } \
+  } while (0)
+
+// demo to check for non-constexpr ctor behavior
+struct ComplexType { vector<int> v; int a; ComplexType (int a0) { v.push_back (a0); if (v.size()) a = a0; } };
+static ptrdiff_t    read_complex_int     ();
+static Init         complex_int_assert_0 ([]() { QUICK_ASSERT (read_complex_int() == 0); });    // first ctor, checks static mem (0)
+static ComplexType  complex_int          (1337);                                                // second ctor, assigns non-0
+static ptrdiff_t    read_complex_int     () { return complex_int.v.size() ? complex_int.a : 0; }
+static Init         complex_int_assert_1 ([]() { QUICK_ASSERT (read_complex_int() == 1337); }); // third ctor, checks non-0
+// check for constexpr ctor Atomic<int*>
+static ptrdiff_t    read_atomic_ptr     ();
+static Init         atomic_ptr_assert_0 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // first ctor, check constexpr mem
+static Atomic<int*> atomic_ptr          ((int*) 17);    // second ctor, constexpr affects static mem initialization
+static ptrdiff_t    read_atomic_ptr     () { return ptrdiff_t (atomic_ptr.load()); }
+static Init         atomic_ptr_assert_1 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // third ctor, runs last
+// check for constexpr ctor Atomic<ptrdiff_t>
+static ptrdiff_t    read_atomic_pdt     ();
+static Init         atomic_pdt_assert_0 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // first ctor, check constexpr mem
+static Atomic<int*> atomic_pdt          ((int*) 879);   // second ctor, constexpr affects static mem initialization
+static ptrdiff_t    read_atomic_pdt     () { return ptrdiff_t (atomic_pdt.load()); }
+static Init         atomic_pdt_assert_1 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // third ctor, runs last
+
+static void
+test_constexpr_ctors ()
+{
+  QUICK_ASSERT (read_complex_int() == 1337);
+  QUICK_ASSERT (read_atomic_ptr() == 17);
+  QUICK_ASSERT (read_atomic_pdt() == 879);
+}
+REGISTER_TEST ("Threads/Constexpr Constructors", test_constexpr_ctors);
 
 // == atomicity tests ==
 template<typename V> static void
@@ -224,6 +261,48 @@ test_spin_lock_simple (void)
 }
 REGISTER_TEST ("Threads/C++SpinLock", test_spin_lock_simple);
 
+// == Simple RWLock test ==
+static RWLock static_read_write_lock;
+static void
+test_rwlock_simple (void)
+{
+  RWLock &rwl = static_read_write_lock;
+  bool l;
+  // try_rdlock + try_wrlock
+  l = rwl.try_rdlock();
+  TASSERT (l == true);
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // rdlock + try_wrlock
+  rwl.rdlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // try_wrlock
+  l = rwl.try_wrlock();
+  TASSERT (l == true);
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // wrlock + try_wrlock
+  rwl.wrlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // rdlock + try_wrlock
+  rwl.rdlock();
+  l = rwl.try_wrlock();
+  TASSERT (l == false);
+  rwl.unlock();
+  // wrlock + try_rdlock
+  rwl.wrlock();
+  l = rwl.try_rdlock();
+  TASSERT (l == false);
+  rwl.unlock();
+}
+REGISTER_TEST ("Threads/C++RWLock", test_rwlock_simple);
+
 // == ScopedLock test ==
 template<class M> static bool
 lockable (M &mutex)
@@ -383,96 +462,6 @@ test_thread_atomic_cxx (void)
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
 // == Atomic Ring Buffer
-template<typename T>
-class RingBuffer : protected Rapicorn::NonCopyable {
-  const uint    m_size;
-  Atomic<uint>  m_wmark, m_rmark;
-  T            *m_buffer;
-public:
-  explicit
-  RingBuffer (uint bsize) :
-    m_size (bsize + 1), m_wmark (0), m_rmark (0), m_buffer (new T[m_size])
-  {}
-  ~RingBuffer()
-  {
-    // m_size = 0;
-    T *old = m_buffer;
-    m_buffer = NULL;
-    m_rmark = 0;
-    m_wmark = 0;
-    delete[] old;
-  }
-  uint
-  n_writable() const
-  {
-    const uint rm = m_rmark.load();
-    const uint wm = m_wmark.load();
-    const uint space = (m_size - 1 + rm - wm) % m_size;
-    return space;
-  }
-  uint
-  write (uint length, const T *data, bool partial = true)
-  {
-    const uint orig_length = length;
-    const uint rm = m_rmark.load();
-    uint wm = m_wmark.load();
-    uint space = (m_size - 1 + rm - wm) % m_size;
-    if (!partial && length > space)
-      return 0;
-    while (length)
-      {
-        if (rm <= wm)
-          space = m_size - wm + (rm == 0 ? -1 : 0);
-        else
-          space = rm - wm -1;
-        if (!space)
-          break;
-        space = MIN (space, length);
-        std::copy (data, &data[space], &m_buffer[wm]);
-        wm = (wm + space) % m_size;
-        data += space;
-        length -= space;
-      }
-    RAPICORN_SFENCE; // wmb ensures m_buffer writes are made visible before the m_wmark update
-    m_wmark.store (wm);
-    return orig_length - length;
-  }
-  uint
-  n_readable() const
-  {
-    const uint wm = m_wmark.load();
-    const uint rm = m_rmark.load();
-    const uint space = (m_size + wm - rm) % m_size;
-    return space;
-  }
-  uint
-  read (uint length, T *data, bool partial = true)
-  {
-    const uint orig_length = length;
-    RAPICORN_LFENCE; // rmb ensures m_buffer contents are seen before m_wmark updates
-    const uint wm = m_wmark.load();
-    uint rm = m_rmark.load();
-    uint space = (m_size + wm - rm) % m_size;
-    if (!partial && length > space)
-      return 0;
-    while (length)
-      {
-        if (wm < rm)
-          space = m_size - rm;
-        else
-          space = wm - rm;
-        if (!space)
-          break;
-        space = MIN (space, length);
-        std::copy (&m_buffer[rm], &m_buffer[rm + space], data);
-        rm = (rm + space) % m_size;
-        data += space;
-        length -= space;
-      }
-    m_rmark.store (rm);
-    return orig_length - length;
-  }
-};
 
 static inline void
 handle_contention ()
@@ -495,7 +484,7 @@ handle_contention ()
   usleep (500); // 1usec is the minimum value to cause an effect
 }
 
-typedef RingBuffer<int> IntRingBuffer;
+typedef AsyncRingBuffer<int> IntRingBuffer;
 class IntSequence {
   uint32 accu;
 public:
@@ -598,7 +587,7 @@ test_ring_buffer ()
 {
   static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
-  RingBuffer<char> rb1 (ttl);
+  AsyncRingBuffer<char> rb1 (ttl);
   TCMP (rb1.n_writable(), ==, ttl);
   n = rb1.write (ttl, testtext);
   TCMP (n, ==, ttl);
@@ -642,8 +631,8 @@ test_ring_buffer ()
   w_thread.join();
   TASSERT (rbr.total != 0 && rbr.total == rbw.total);
 }
-REGISTER_TEST ("Threads/RingBuffer", test_ring_buffer);
-REGISTER_SLOWTEST ("Threads/RingBuffer (slow)", test_ring_buffer);
+REGISTER_TEST ("Threads/AsyncRingBuffer", test_ring_buffer);
+REGISTER_SLOWTEST ("Threads/AsyncRingBuffer (slow)", test_ring_buffer);
 
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;
@@ -675,6 +664,7 @@ struct MyDeletableHook : public Deletable::DeletionHook {
   {
     if (deletable)
       deletable = NULL;
+    // not deleting this, due to stack allocation
   }
   virtual
   ~MyDeletableHook ()

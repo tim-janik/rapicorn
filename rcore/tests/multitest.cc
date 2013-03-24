@@ -1,12 +1,14 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <poll.h>
 #include <errno.h>
 #include <algorithm>
+#include <fcntl.h>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
@@ -102,13 +104,23 @@ test_failing ()
   TASSERT (Test::trap_aborted() == true);
   TASSERT (Test::trap_stderr().find ("fail") != String::npos);
   TASSERT (Test::trap_stderr().find ("reach") != String::npos);
+
+  if (Test::trap_fork_silent())
+    {
+      struct ReferenceCountableWrapper : public ReferenceCountable {};
+      ReferenceCountableWrapper invalid_ref_countable_on_stack; // fatal: object allocated on stack instead of heap
+      _exit (0);
+    }
+  TASSERT (Test::trap_aborted() == true);
+  TASSERT (Test::trap_stderr().find ("alloc") != String::npos);
+  TASSERT (Test::trap_stderr().find ("stack") != String::npos);
 }
 REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 
 static void
 test_cpu_info (void)
 {
-  const RapicornCPUInfo cpi = cpu_info ();
+  const CPUInfo cpi = cpu_info ();
   TCMPS (cpi.machine, !=, NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);
@@ -253,8 +265,8 @@ test_virtual_typeid()
   TypeA a;
   TypeB b;
   TCMP (a.typeid_name(), !=, b.typeid_name());
-  TCMPS (strstr (a.typeid_pretty_name().c_str(), "TypeA"), !=, NULL);
-  TCMPS (strstr (b.typeid_pretty_name().c_str(), "TypeB"), !=, NULL);
+  TCMPS (strstr (a.typeid_name().c_str(), "TypeA"), !=, NULL);
+  TCMPS (strstr (b.typeid_name().c_str(), "TypeB"), !=, NULL);
 }
 REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
 
@@ -317,67 +329,6 @@ test_id_allocator ()
   delete &ida;
 }
 REGISTER_TEST ("General/Id Allocator", test_id_allocator);
-
-static void
-test_locatable_ids ()
-{
-  SomeObject *o1 = new SomeObject();
-  SomeObject *o2 = new SomeObject();
-  SomeObject *o3 = new SomeObject();
-  uint64 id1 = o1->locatable_id();
-  uint64 id2 = o2->locatable_id();
-  uint64 id3 = o3->locatable_id();
-  assert (id1 != id2);
-  assert (id2 != id3);
-  assert (id1 != id3);
-  Locatable *l0 = Locatable::from_locatable_id (0x00ff00ff00ff00ffULL);
-  assert (l0 == NULL);
-  Locatable *l1 = Locatable::from_locatable_id (id1);
-  Locatable *l2 = Locatable::from_locatable_id (id2);
-  Locatable *l3 = Locatable::from_locatable_id (id3);
-  assert (l1 == o1);
-  assert (l2 == o2);
-  assert (l3 == o3);
-  assert (id1 == l1->locatable_id());
-  assert (id2 == l2->locatable_id());
-  assert (id3 == l3->locatable_id());
-  unref (ref_sink (o1));
-  unref (ref_sink (o2));
-  unref (ref_sink (o3));
-  l1 = Locatable::from_locatable_id (id1);
-  l2 = Locatable::from_locatable_id (id2);
-  l3 = Locatable::from_locatable_id (id3);
-  assert (l1 == NULL);
-  assert (l2 == NULL);
-  assert (l3 == NULL);
-  o1 = new SomeObject();
-  assert (o1->locatable_id() != id1);
-  assert (o1->locatable_id() != id2);
-  assert (o1->locatable_id() != id3);
-  o2 = new SomeObject();
-  assert (o2->locatable_id() != id1);
-  assert (o2->locatable_id() != id2);
-  assert (o2->locatable_id() != id3);
-  o3 = new SomeObject();
-  assert (o3->locatable_id() != id1);
-  assert (o3->locatable_id() != id2);
-  assert (o3->locatable_id() != id3);
-  assert (o1 == Locatable::from_locatable_id (o1->locatable_id()));
-  assert (o2 == Locatable::from_locatable_id (o2->locatable_id()));
-  assert (o3 == Locatable::from_locatable_id (o3->locatable_id()));
-  unref (ref_sink (o1));
-  unref (ref_sink (o2));
-  unref (ref_sink (o3));
-  const uint big = 999;
-  SomeObject *buffer[big];
-  for (uint j = 0; j < big; j++)
-    buffer[j] = ref_sink (new SomeObject());
-  for (uint j = 0; j < big; j++)
-    assert (buffer[j] == Locatable::from_locatable_id (buffer[j]->locatable_id()));
-  for (uint j = 0; j < big; j++)
-    unref (buffer[j]);
-}
-REGISTER_TEST ("General/Locatable IDs", test_locatable_ids);
 
 static void
 test_dtoi32()
@@ -651,31 +602,81 @@ binary_lookup_tests()
 }
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
-/// [ResourceBlob-EXAMPLE]
+/// [Blob-EXAMPLE]
 // Declare text resources for later use in a program.
 RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
-RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "res:tests/text_resource.txt");
-// If a resource data length is given, it must be correct (and may or may not include the trailing zero).
+RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "tests/text_resource.txt");
+
+// If a resource data length is given, it must match the initializer size (it may omit the trailing zero).
 RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
-RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "res:tests/digit_resource.txt", 10);
+RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
 
 static void // Access a previously declared resource from anywhere within a program.
 access_text_resources ()
 {
   // Load a Blob from "tests/text_resource.txt"
-  ResourceBlob blob = ResourceBlob::load ("res:tests/text_resource.txt");
+  Blob blob = Blob::load ("res:tests/text_resource.txt");
   assert (blob.size() > 0); // Verify lookup success.
-  // Access the Blob as string (automatically strips the trailing 0).
+
+  // Access the Blob as string (automatically strips trailing 0s).
   std::string text = blob.string();
-  assert (text == "Alpha Beta Gamma\0"); // Verify its contents.
+  assert (text == "Alpha Beta Gamma"); // Verify its contents.
 
   // Load the other defined "tests/digit_resource.txt" blob.
-  blob = ResourceBlob::load ("res:tests/digit_resource.txt");
-  // Check the blobs size and data,
-  assert (10 == blob.size() && 0 == strcmp ((const char*) blob.data(), "0123456789"));
+  blob = Blob::load ("res:tests/digit_resource.txt");
+
+  // Access Blob size and data,
+  assert (10 == blob.size() && 0 == strcmp (blob.data(), "0123456789"));
 }
-/// [ResourceBlob-EXAMPLE]
+/// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
+
+static void
+more_blob_tests ()
+{
+  // load this source file and check for a random string
+  Blob fblob = Blob::load ("file:" + Path::vpath_find (__FILE__));
+  assert (!!fblob);
+  assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
+  // create a big example file aceeding internal mmap thresholds
+  String temporary_filename; {
+    char tmp_buffer[L_tmpnam + 1], *tmp_filename = tmpnam (tmp_buffer);
+    assert (tmp_filename);
+    temporary_filename = tmp_filename;
+  }
+  int temporary_fd = open (temporary_filename.c_str(), O_WRONLY | O_EXCL | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 0600);
+  assert (temporary_fd >= 0);
+  String string_data =
+    string_multiply (string_multiply ("blub", 1024), 128) +
+    "LONGshot" +
+    string_multiply (string_multiply ("COOL", 1024), 128) +
+    String ("\0\0\0\0", 4); // 0-termination
+  ssize_t result = write (temporary_fd, string_data.c_str(), string_data.size());
+  assert (result > 0);
+  result = close (temporary_fd);
+  assert (result == 0);
+  // load big example file to excercise mmap() code path
+  fblob = Blob::load ("file:" + temporary_filename);
+  assert (fblob && fblob.size());
+  assert (fblob.data()[fblob.size() - 1] == 0); // ensure 0-termination for strstr
+  assert (strstr (fblob.data(), "blubblubLONGshotCOOLCOOL") != NULL); // accessing data() avoids string copy
+  unlink (temporary_filename.c_str()); // cleanup example file
+  // load a file with unknown size
+  fblob = Blob::load ("file:///proc/cpuinfo");
+  assert (fblob || errno == ENOENT);
+  if (fblob)
+    assert (fblob.string().find ("cpu") != String::npos);
+  // test string blobs
+  const String foo = "foo";
+  fblob = Blob::from (foo);
+  Blob bblob = Blob::from ("bar");
+  assert (fblob && bblob);
+  assert (fblob.string() == foo);
+  assert (bblob.string() == "bar");
+  assert (fblob.string() != bblob.string());
+  assert (fblob.name() != bblob.name());
+}
+REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
 
 static void // Test Mutextes before g_thread_init()
 test_before_thread_init()
@@ -704,19 +705,26 @@ main (int   argc,
 
   test_before_thread_init();
 
-  String app_ident = __SOURCE_COMPONENT__;
+  String app_ident = __PRETTY_FILE__;
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
       init_core (app_ident, &argc, argv);
       printout ("%s", process_handle().c_str());
       return 0;
     }
-
-  if (argc >= 2 && String ("--print-locatable-id") == argv[1])
+  if (argc >= 3 && String ("--task-status") == argv[1])
     {
       init_core (app_ident, &argc, argv);
-      SomeObject *obj = new SomeObject();
-      printout ("0x%016llx\n", obj->locatable_id());
+      TaskStatus ts = TaskStatus (string_to_int (argv[2]));
+      String result;
+      bool valid = ts.update();
+      sleep (1);
+      valid &= ts.update();
+      if (valid)
+        result = ts.string();
+      else
+        result = "no stats";
+      printout ("TaskStatus: %s\n", result.c_str());
       return 0;
     }
 

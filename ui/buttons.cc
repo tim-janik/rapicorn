@@ -1,126 +1,135 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "buttons.hh"
 #include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
+#include <unistd.h>
 
 namespace Rapicorn {
 
 ButtonAreaImpl::ButtonAreaImpl() :
-  m_button (0), m_repeater (0),
-  m_click_type (CLICK_ON_RELEASE),
-  m_focus_frame (NULL),
-  sig_check_activate (*this),
-  sig_activate (*this)
+  button_ (0), repeater_ (0), unpress_ (0),
+  click_type_ (CLICK_ON_RELEASE),
+  focus_frame_ (NULL)
 {}
 
 const PropertyList&
-ButtonAreaImpl::list_properties()
+ButtonAreaImpl::_property_list()
 {
   static Property *properties[] = {
-    MakeProperty (ButtonAreaImpl, on_click,   _("On CLick"),   _("Command on button1 click"), "rw"),
-    MakeProperty (ButtonAreaImpl, on_click2,  _("On CLick2"),  _("Command on button2 click"), "rw"),
-    MakeProperty (ButtonAreaImpl, on_click3,  _("On CLick3"),  _("Command on button3 click"), "rw"),
     MakeProperty (ButtonAreaImpl, click_type, _("CLick Type"), _("Click event generation type"), "rw"),
   };
-  static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
+  static const PropertyList property_list (properties, SingleContainerImpl::_property_list(), ButtonAreaIface::_property_list());
   return property_list;
 }
 
 void
 ButtonAreaImpl::dump_private_data (TestStream &tstream)
 {
-  tstream.dump_intern ("m_button", m_button);
-  tstream.dump_intern ("m_repeater", m_repeater);
+  SingleContainerImpl::dump_private_data (tstream);
+  tstream.dump_intern ("button_", button_);
+  tstream.dump_intern ("repeater_", repeater_);
+}
+
+bool
+ButtonAreaImpl::activate_widget ()
+{
+  ButtonAreaImpl &view = *this;
+  WindowImpl *window = get_window();
+  EventLoop *loop = window ? window->get_loop() : NULL;
+  bool handled = false;
+  if (loop)
+    {
+      view.impressed (true);
+      window->draw_child (view);
+      handled = activate_button_command (1);
+      if (!unpress_)
+        unpress_ = loop->exec_timer (50, 0, [this, &view] () {
+            view.impressed (false);
+            remove_exec (unpress_);
+            unpress_ = 0;
+            return false;
+          });
+    }
+  return handled;
 }
 
 bool
 ButtonAreaImpl::activate_button_command (int button)
 {
-  if (button >= 1 && button <= 3 && m_on_click[button - 1] != "")
+  if (button >= 1 && button <= 3 && on_click_[button - 1] != "")
     {
-      exec_command (m_on_click[button - 1]);
-      return TRUE;
+      exec_command (on_click_[button - 1]);
+      return true;
     }
   else
-    return FALSE;
+    return false;
 }
 
 bool
 ButtonAreaImpl::activate_command()
 {
-  return activate_button_command (m_button);
+  return activate_button_command (button_);
 }
 
 void
 ButtonAreaImpl::activate_click (int       button,
                                 EventType etype)
 {
-  bool need_repeat = etype == BUTTON_PRESS && (m_click_type == CLICK_KEY_REPEAT || m_click_type == CLICK_SLOW_REPEAT || m_click_type == CLICK_FAST_REPEAT);
+  bool need_repeat = etype == BUTTON_PRESS && (click_type_ == CLICK_KEY_REPEAT || click_type_ == CLICK_SLOW_REPEAT || click_type_ == CLICK_FAST_REPEAT);
   bool need_click = need_repeat;
-  need_click |= etype == BUTTON_PRESS && m_click_type == CLICK_ON_PRESS;
-  need_click |= etype == BUTTON_RELEASE && m_click_type == CLICK_ON_RELEASE;
+  need_click |= etype == BUTTON_PRESS && click_type_ == CLICK_ON_PRESS;
+  need_click |= etype == BUTTON_RELEASE && click_type_ == CLICK_ON_RELEASE;
   bool can_exec = need_click && activate_button_command (button);
   need_repeat &= can_exec;
-  if (need_repeat && !m_repeater)
+  if (need_repeat && !repeater_)
     {
-      if (m_click_type == CLICK_FAST_REPEAT)
-        m_repeater = exec_fast_repeater (slot (*this, &ButtonAreaImpl::activate_command));
-      else if (m_click_type == CLICK_SLOW_REPEAT)
-        m_repeater = exec_slow_repeater (slot (*this, &ButtonAreaImpl::activate_command));
-      else if (m_click_type == CLICK_KEY_REPEAT)
-        m_repeater = exec_key_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+      if (click_type_ == CLICK_FAST_REPEAT)
+        repeater_ = exec_fast_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
+      else if (click_type_ == CLICK_SLOW_REPEAT)
+        repeater_ = exec_slow_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
+      else if (click_type_ == CLICK_KEY_REPEAT)
+        repeater_ = exec_key_repeater (Aida::slot (*this, &ButtonAreaImpl::activate_command));
     }
-  else if (!need_repeat && m_repeater)
+  else if (!need_repeat && repeater_)
     {
-      remove_exec (m_repeater);
-      m_repeater = 0;
+      remove_exec (repeater_);
+      repeater_ = 0;
     }
 }
 
 bool
 ButtonAreaImpl::can_focus () const
 {
-  return m_focus_frame != NULL;
+  return focus_frame_ != NULL;
 }
 
 bool
 ButtonAreaImpl::register_focus_frame (FocusFrame &frame)
 {
-  if (!m_focus_frame)
-    m_focus_frame = &frame;
-  return m_focus_frame == &frame;
+  if (!focus_frame_)
+    focus_frame_ = &frame;
+  return focus_frame_ == &frame;
 }
 
 void
 ButtonAreaImpl::unregister_focus_frame (FocusFrame &frame)
 {
-  if (m_focus_frame == &frame)
-    m_focus_frame = NULL;
+  if (focus_frame_ == &frame)
+    focus_frame_ = NULL;
 }
 
 void
 ButtonAreaImpl::reset (ResetMode mode)
 {
-  remove_exec (m_repeater);
-  m_repeater = 0;
-  m_button = 0;
+  ButtonAreaImpl &view = *this;
+  view.impressed (false);
+  remove_exec (unpress_);
+  unpress_ = 0;
+  remove_exec (repeater_);
+  repeater_ = 0;
+  button_ = 0;
 }
 
 bool
@@ -132,22 +141,22 @@ ButtonAreaImpl::handle_event (const Event &event)
     {
       const EventButton *bevent;
     case MOUSE_ENTER:
-      view.impressed (m_button != 0);
+      view.impressed (button_ != 0);
       view.prelight (true);
       break;
     case MOUSE_LEAVE:
       view.prelight (false);
-      view.impressed (m_button != 0);
+      view.impressed (button_ != 0);
       break;
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
     case BUTTON_3PRESS:
       bevent = dynamic_cast<const EventButton*> (&event);
-      if (!m_button and bevent->button >= 1 and bevent->button <= 3 and
-          m_on_click[bevent->button - 1] != "")
+      if (!button_ and bevent->button >= 1 and bevent->button <= 3 and
+          on_click_[bevent->button - 1] != "")
         {
           bool inbutton = view.prelight();
-          m_button = bevent->button;
+          button_ = bevent->button;
           view.impressed (true);
           if (inbutton && can_focus())
             grab_focus();
@@ -162,11 +171,11 @@ ButtonAreaImpl::handle_event (const Event &event)
       proper_release = true;
     case BUTTON_CANCELED:
       bevent = dynamic_cast<const EventButton*> (&event);
-      if (m_button == bevent->button)
+      if (button_ == bevent->button)
         {
           bool inbutton = view.prelight();
           view.get_window()->remove_grab (*this);
-          m_button = 0;
+          button_ = 0;
           // activation may recurse here
           activate_click (bevent->button, inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
           view.impressed (false);
@@ -184,6 +193,6 @@ ButtonAreaImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const ItemFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::Factory::ButtonArea");
+static const WidgetFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::Factory::ButtonArea");
 
 } // Rapicorn

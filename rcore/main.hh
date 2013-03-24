@@ -10,18 +10,18 @@
 
 namespace Rapicorn {
 
-// === initialization ===
+// == initialization ==
 void    init_core               (const String       &app_ident,
                                  int                *argcp,
                                  char              **argv,
                                  const StringVector &args = StringVector());
 struct InitSettings {
-  static bool  autonomous()    { return sis->m_autonomous; } ///< self-contained runtime, no rcfiles, boot scripts, etc
-  static uint  test_codes()    { return sis->m_test_codes; } // internal test flags
+  static bool  autonomous()    { return sis->autonomous_; } ///< self-contained runtime, no rcfiles, boot scripts, etc
+  static uint  test_codes()    { return sis->test_codes_; } // internal test flags
 protected:
   static const InitSettings *sis;
-  bool m_autonomous;
-  uint m_test_codes;
+  bool autonomous_;
+  uint test_codes_;
 };
 
 bool    arg_parse_option        (uint         argc,
@@ -38,23 +38,44 @@ int     arg_parse_collapse      (int         *argcp,
 String  rapicorn_version        ();
 String  rapicorn_buildid        ();
 
+// == locale ==
 
-// === process info ===
+/// Class to push a specific locale_t for the scope of its lifetime.
+class ScopedLocale {
+  locale_t      locale_;
+  /*copy*/      ScopedLocale (const ScopedLocale&) = delete;
+  ScopedLocale& operator=    (const ScopedLocale&) = delete;
+protected:
+  explicit      ScopedLocale (locale_t scope_locale);
+public:
+  // explicit   ScopedLocale (const String &locale_name = ""); // not supported
+  /*dtor*/     ~ScopedLocale ();
+};
+
+/// Class to push the POSIX/C locale_t (UTF-8) for the scope of its lifetime.
+class ScopedPosixLocale : public ScopedLocale {
+public:
+  explicit        ScopedPosixLocale ();
+  static locale_t posix_locale      (); ///< Retrieve the (UTF-8) POSIX/C locale_t.
+};
+
+// == process info ==
 String       program_file       ();
 String       program_alias      ();
 String       program_ident      ();
 String       program_cwd        ();
 
-// === initialization hooks ===
-class InitHook : protected NonCopyable {
+// == initialization hooks ==
+class InitHook {
   typedef void (*InitHookFunc) (const StringVector &args);
   InitHook    *next;
   InitHookFunc hook;
-  const String m_name;
+  const String name_;
+  RAPICORN_CLASS_NON_COPYABLE (InitHook);
 protected:
   static void  invoke_hooks (const String&, int*, char**, const StringVector&);
 public:
-  String       name () const { return m_name; }
+  String       name () const { return name_; }
   StringVector main_args () const;
   explicit     InitHook (const String &fname, InitHookFunc func);
 };

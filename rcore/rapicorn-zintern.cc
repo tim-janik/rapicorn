@@ -1,20 +1,6 @@
-/* rapicorn-zintern - small C source compression utility
- * Copyright (C) 2003-2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#include <rapicorncdefs.h>
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// rapicorn-zintern - small C source compression utility
+#include <cxxaux.hh>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +8,7 @@
 #include <zlib.h>
 #include <string>
 
-typedef RapicornUInt8 uint8;
+typedef Rapicorn::uint8 uint8;
 typedef std::string String;
 
 namespace {
@@ -39,7 +25,7 @@ zintern_error  (const char     *format,
   va_start (args, format);
   buffer = g_strdup_vprintf (format, args);
   va_end (args);
-  g_printerr ("\nERROR: %s", buffer);
+  g_printerr ("\nERROR: %s\n", buffer);
   _exit (1);
   g_free (buffer);
 }
@@ -200,7 +186,7 @@ gen_zfile (const char *name,
       printf ("\"; // %lu + 1\n", rlen);
 
       config = config_init;
-      printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"res:", ident);
+      printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident);
       for (i = 0; i < strlen (name); i++)
         print_uchar (&config, name[i]);
       printf ("\", %u);\n", dlen);

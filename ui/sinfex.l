@@ -1,19 +1,4 @@
-/* Rapicorn                                                     -*-mode:c++;-*-
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*- */
 %option 8bit reentrant stack noyywrap yylineno
 %option ansi-definitions ansi-prototypes nounistd
 %option bison-bridge bison-locations
@@ -43,12 +28,12 @@ IDENTIFIER              [a-z_A-Z][0-9a-z_A-Z]*
 {WHITESPACE}+           { /* return ANYSPACE; */ }
 \n                      { /* return '\n'; */ }
 
-{INTEGER}               { if (yyleng <= 17) { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
-			  else { yylval->df = strtold (yytext, NULL); return FLOAT; } }
+{INTEGER}               { if (yyleng <= 17) { yylval->li = string_to_uint (yytext, 0); return INTEGER; }
+			  else { yylval->df = string_to_double (yytext); return FLOAT; } }
 
-{HEXNUM}                { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
+{HEXNUM}                { yylval->li = string_to_uint (yytext, 0); return INTEGER; }
 
-{FLOAT}                 { yylval->df = strtold (yytext, NULL); return FLOAT; }
+{FLOAT}                 { yylval->df = string_to_double (yytext, NULL); return FLOAT; }
 
 {STRING}                { yylval->cs = new String (yytext); return STRING; }
 

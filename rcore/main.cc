@@ -17,7 +17,7 @@ String  rapicorn_buildid ()     { return RAPICORN_BUILDID; }
 static InitHook *init_hooks = NULL;
 
 InitHook::InitHook (const String &fname, InitHookFunc func) :
-  next (NULL), hook (func), m_name (fname)
+  next (NULL), hook (func), name_ (fname)
 {
   next = init_hooks;
   init_hooks = this;
@@ -173,9 +173,9 @@ parse_bool_option (const String &s, const char *arg, bool *boolp)
 
 // === initialization ===
 struct VInitSettings : InitSettings {
-  bool& autonomous()    { return m_autonomous; }
-  uint& test_codes()    { return m_test_codes; }
-  VInitSettings() { m_autonomous = false; m_test_codes = 0; }
+  bool& autonomous()    { return autonomous_; }
+  uint& test_codes()    { return test_codes_; }
+  VInitSettings() { autonomous_ = false; test_codes_ = 0; }
 } static vsettings;
 static VInitSettings vinit_settings;
 const InitSettings  *InitSettings::sis = &vinit_settings;
@@ -274,6 +274,61 @@ program_cwd ()
 {
   return program_cwd0;
 }
+
+ScopedLocale::ScopedLocale (locale_t scope_locale) :
+  locale_ (NULL)
+{
+  if (!scope_locale)
+    locale_ = uselocale (LC_GLOBAL_LOCALE);     // use process locale
+  else
+    locale_ = uselocale (scope_locale);         // use custom locale
+  assert (locale_ != NULL);
+}
+
+ScopedLocale::~ScopedLocale ()
+{
+  uselocale (locale_);                          // restore locale
+}
+
+#if 0
+ScopedLocale::ScopedLocale (const String &locale_name = "")
+{
+  /* this constructor should:
+   * - uselocale (LC_GLOBAL_LOCALE) if locale_name == "",
+   * - create newlocale from locale_name, use it and later delete it, but:
+   * - freelocale(newlocale()) seems buggy on glibc-2.7 (crashes)
+   */
+}
+#endif
+
+ScopedPosixLocale::ScopedPosixLocale () :
+  ScopedLocale (posix_locale())
+{}
+
+locale_t
+ScopedPosixLocale::posix_locale ()
+{
+  static locale_t volatile posix_locale_ = NULL;
+  if (!posix_locale_)
+    {
+      locale_t posix_locale = NULL;
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "POSIX.UTF-8", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "C.UTF-8", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "POSIX", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, "C", NULL);
+      if (!posix_locale)
+        posix_locale = newlocale (LC_ALL_MASK, NULL, NULL);
+      assert (posix_locale != NULL);
+      if (!__sync_bool_compare_and_swap (&posix_locale_, NULL, posix_locale))
+        freelocale (posix_locale_);
+    }
+  return posix_locale_;
+}
+
 
 static struct __StaticCTorTest {
   int v;

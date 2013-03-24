@@ -1,8 +1,8 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
+INCLUDES   += -I$(top_srcdir)
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 
 # variables
 noinst_PROGRAMS  = # auto-cleaned
@@ -14,9 +14,7 @@ X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREX
 
 
 # === tests ===
-TEST_PYPROGS =
-TEST_PYPROGS     += simple.py
-TEST_PYPROGS     += loop.py
+TEST_PYPROGS = simple.py loop.py testrapicorn.py
 
 # === python-call-info ===
 python-call-info:

@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_HERITAGE_HH__
 #define __RAPICORN_HERITAGE_HH__
 
@@ -22,24 +7,24 @@
 namespace Rapicorn {
 
 class WindowImpl;
-class ItemImpl;
+class WidgetImpl;
 
-class Heritage : public virtual BaseObject {
+class Heritage : public virtual ReferenceCountable {
   friend        class ClassDoctor;
   class Internals;
-  Internals    *m_internals;
-  WindowImpl   &m_window;
+  Internals    *internals_;
+  WindowImpl   &window_;
   explicit      Heritage        (WindowImpl &window,
                                  Internals  *internals);
   /*Des*/      ~Heritage        ();
   static
   Heritage*     create_heritage (WindowImpl     &window,
-                                 ItemImpl       &item,
+                                 WidgetImpl       &widget,
                                  ColorSchemeType color_scheme);
 public:
-  Heritage*     adapt_heritage  (ItemImpl           &item,
+  Heritage*     adapt_heritage  (WidgetImpl           &widget,
                                  ColorSchemeType color_scheme);
-  WindowImpl&   window          () const { return m_window; }
+  WindowImpl&   window          () const { return window_; }
   /* colors */
   Color         get_color       (StateType state,
                                  ColorType ct) const;

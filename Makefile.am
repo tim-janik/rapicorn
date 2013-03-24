@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS     = . po data plic rcore ui rope tools tests pytests examples docs
+SUBDIRS     = . po data rcore res aidacc ui rope tools tests pytests examples docs
 
 docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 noinst_DATA =
@@ -102,7 +102,7 @@ check-list_properties: # only public interfaces should export properties
 	$(Q) cd $(srcdir) \
 	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
 	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc \
-	     --exclude ui/item.cc --exclude ui/container.cc --exclude ui/buttons.cc
+	     --exclude ui/widget.cc --exclude ui/container.cc --exclude ui/buttons.cc --exclude ui/window.cc
 check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
 # === automake fixes ===
@@ -112,11 +112,11 @@ distcleancheck_listfiles = true # find . -type f -print
 
 # == ChangeLog & Release Rules ==
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
-	$(srcdir)/mkrelease.sh ChangeLog -R 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
 noinst_DATA += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
-	@$(srcdir)/mkrelease.sh news
+	@$(srcdir)/mkrelease.sh news --first-parent --body
 release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw

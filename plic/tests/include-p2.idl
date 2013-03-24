@@ -1,6 +1,0 @@
-namespace IncludeTest {
-  record SomeRecord {
-    int x;
-    int y;
-  };
-}

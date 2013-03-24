@@ -1,22 +1,16 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "selector.hh"
-#include "container.hh"
 #include "factory.hh"
 #include <string.h>
 
 #define ISDIGIT(c)      (c >= '0' && c <= '9')
 #define ISHEXDIGIT(c)   (ISDIGIT (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
 #define ISALPHA(c)      ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+#define ISALNUM(c)      ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || ISDIGIT (c))
 #define HEXVALUE(c)     (c <= '9' ? c - '0' : 10 + c - (c >= 'a' ? 'a' : 'A'))
 #define ISASCIISPACE(c) (c == ' ' || (c >= 9 && c <= 13)) // ' \t\n\v\f\r'
 
 namespace Rapicorn {
-
-struct ClassDoctor {
-  static inline bool item_pseudo_selector (ItemImpl &item, const String &ident, const String &arg, String &error)
-  { return item.pseudo_selector (ident, arg, error); }
-};
-
 namespace Selector {
 
 #ifdef  UNOPTIMIZE // work around valgrind reporting uninitialized reads due to sse4.2 registers exceeding string bounds
@@ -40,15 +34,6 @@ strcasestr (const char *haystack, const char *needle)
 #endif // UNOPTIMIZE
 
 Atomic<CustomPseudoRegistry*> CustomPseudoRegistry::stack_head = NULL;
-
-static bool
-find_custom_pseudo (const String &ident)
-{
-  for (CustomPseudoRegistry *node = CustomPseudoRegistry::head(); node; node = node->next())
-    if (strcasecmp (node->ident().c_str(), ident.c_str()) == 0)
-      return true;
-  return false;
-}
 
 bool
 parse_spaces (const char **stringp, int min_spaces)
@@ -583,6 +568,51 @@ parse_string (const char **stringp, String &ident)
 }
 
 static bool
+allow_custom_pseudo (const String &string)
+{
+  const size_t total = string.size();
+  return_unless (total >= 3, false);
+  const char *p = string.data();
+  return_unless (ISALPHA (p[0]) || p[0] == '_', false);
+  for (size_t i = 1; i < total; i++)
+    if (!(ISALNUM (p[i]) || p[i] == '-' || p[i] == '_'))
+      return false;
+  return true;
+}
+
+static bool
+find_pseudo_element (const String &string)
+{
+  const char *const elements[] = {
+    "first-line", "first-letter", "before", "after", // syntactically, these 4 are supported as legacy classes
+    "selection",
+  };
+  for (uint i = 0; i < ARRAY_SIZE (elements); i++)
+    if (strcasecmp (string.c_str(), elements[i]) == 0)
+      return true;
+  return false;
+}
+
+static bool
+find_pseudo_class (const String &string)
+{
+  const char *const classes[] = {
+    // CSS3:
+    "not", "root", "nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type",
+    "link", "visited", "hover", "active", "focus", "target", "lang", "enabled", "disabled", "checked", "indeterminate",
+    "first-child", "last-child", "first-of-type", "last-of-type", "only-child", "only-of-type", "empty",
+    // CSS4:
+    "scope", "any-link", "local-link", "past", "current", "future", "matches", "dir",
+    "default", "valid", "invalid", "in-range", "out-of-range", "required", "optional", "read-only", "read-write",
+    "nth-match", "nth-last-match", "nth-column", "nth-last-column", "column",
+  };
+  for (uint i = 0; i < ARRAY_SIZE (classes); i++)
+    if (strcasecmp (string.c_str(), classes[i]) == 0)
+      return true;
+  return false;
+}
+
+static bool
 parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_colons)
 { // pseudo : ':' [ 'not' '(' S* negation_arg S* ')' | ':'? identifier [ '(' S* expression ')' ] ]
   const char *p = *stringp;
@@ -595,44 +625,11 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
     return false;
   const bool is_pseudo_element = parsed_colons == 2;
   const bool is_pseudo_class = parsed_colons == 1;
-  const char *const elements[] = {
-    "first-line", "first-letter", "before", "after", // syntactically, these 4 are supported as legacy classes
-    "selection",
-  };
-  const char *const classes[] = {
-    // CSS3:
-    "not", "root", "nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type",
-    "link", "visited", "hover", "active", "focus", "target", "lang", "enabled", "disabled", "checked", "indeterminate",
-    "first-child", "last-child", "first-of-type", "last-of-type", "only-child", "only-of-type", "empty",
-    // CSS4:
-    "scope", "any-link", "local-link", "past", "current", "future", "matches", "dir",
-    "default", "valid", "invalid", "in-range", "out-of-range", "required", "optional", "read-only", "read-write",
-    "nth-match", "nth-last-match", "nth-column", "nth-last-column", "column",
-  };
-  if (is_pseudo_element)
-    {
-      for (uint i = 0; i < ARRAY_SIZE (elements); i++)
-        if (strcasecmp (node.ident.c_str(), elements[i]) == 0)
-          {
-            node.kind = PSEUDO_ELEMENT;
-            chain.push_back (node);
-            *stringp = p;
-            return true;
-          }
-      return false;
-    }
-  bool pseudo_match = false;
-  if (is_pseudo_class)
-    {
-      for (uint i = 0; i < ARRAY_SIZE (classes); i++)
-        if (strcasecmp (node.ident.c_str(), classes[i]) == 0)
-          {
-            pseudo_match = true;
-            break;
-          }
-      pseudo_match = pseudo_match || find_custom_pseudo (node.ident);
-    }
-  if (!pseudo_match)
+  if (is_pseudo_element && (find_pseudo_element (node.ident) || allow_custom_pseudo (node.ident)))
+    node.kind = PSEUDO_ELEMENT;
+  else if (is_pseudo_class && (find_pseudo_class (node.ident) || allow_custom_pseudo (node.ident)))
+    node.kind = PSEUDO_CLASS;
+  else
     return false;
   // '(' S* expression S* ')'
   if (*p == '(')
@@ -647,11 +644,10 @@ parse_pseudo_selector (const char **stringp, SelectorChain &chain, int parsed_co
       while (t >= e && ISASCIISPACE (*t))
         t--;
       if (t < e)
-        return false;   // pseudo_class expression should be non-empty
+        return false;   // pseudo selector expression should be non-empty
       node.arg = String (e, t - e + 1);
       p++;
     }
-  node.kind = PSEUDO_CLASS;
   chain.push_back (node);
   *stringp = p;
   return true;
@@ -859,6 +855,8 @@ SelectorChain::parse (const char **stringp, const bool with_combinators)
               p = q;
             }
         }
+      if (*p == '!')
+        p++; // ignore trailing subject indicator
       this->swap (tmpchain);
       *stringp = p;
       return true;
@@ -960,13 +958,13 @@ SelectorChain::string (size_t first)
 }
 
 bool
-Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
+Matcher::match_attribute_selector (Selob &selob, const SelectorNode &snode)
 {
   const Kind kind = snode.kind;
-  const bool existing = item.lookup_property (snode.ident);
+  const bool existing = selob.has_property (snode.ident);
   if (kind == ATTRIBUTE_EXISTS || kind == ATTRIBUTE_EXISTS_I)
     return existing;
-  const String value = existing ? item.get_property (snode.ident) : "";
+  const String value = existing ? selob.get_property (snode.ident) : "";
   const size_t vs = value.size(), as = snode.arg.size(), ms = min (vs, as);
   const char *const vd = value.data(), *const ad = snode.arg.data();
   switch (kind)
@@ -1000,84 +998,85 @@ Matcher::match_attribute_selector (ItemImpl &item, const SelectorNode &snode)
   return false;
 }
 
-bool
-Matcher::match_pseudo_element (ItemImpl &item, const SelectorNode &snode)
+Selob*
+Matcher::match_pseudo_element (Selob &selob, const SelectorNode &snode)
 {
-  return false; // unknown pseudo element
+  if (allow_custom_pseudo (snode.ident)) // custom pseudo element
+    {
+      String error;
+      Selob *selob_match = selob.pseudo_selector ("::" + string_tolower (snode.ident), snode.arg, error);
+      if (!error.empty())
+        {
+          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          return NULL;
+        }
+      return selob_match;
+    }
+  return NULL; // unknown pseudo element
 }
 
 bool
-Matcher::match_pseudo_class (ItemImpl &item, const SelectorNode &snode)
+Matcher::match_pseudo_class (Selob &selob, const SelectorNode &snode)
 {
   if (snode.ident == "not")
     {
       Matcher matcher;
-      if (!matcher.parse_selector (snode.arg, false))
+      String errstr;
+      if (!matcher.parse_selector (snode.arg, false, &errstr))
         return false;
-      return !matcher.match_selector (item);
+      return !matcher.match_selector_chain (selob);
     }
   else if (snode.ident == "empty")
     {
-      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
-      return !c || !c->has_children();
+      return !selob.has_children();
     }
   else if (snode.ident == "only-child")
     {
-      ContainerImpl *p = item.parent();
-      return p && p->n_children() == 1;
+      Selob *pselob = selob.get_parent();
+      return pselob && pselob->n_children() == 1;
     }
   else if (snode.ident == "root")
     {
-      ContainerImpl *p = item.parent();
-      return !p;
+      Selob *pselob = selob.get_parent();
+      return !pselob;
     }
   else if (snode.ident == "first-child")
     {
-      ContainerImpl *p = item.parent();
-      if (!p)
-        return false;
-      ContainerImpl::ChildWalker cw = p->local_children();
-      return cw.has_next() && &item == &*cw;
+      return selob.is_nth_child (1);
     }
   else if (snode.ident == "last-child")
     {
-      ContainerImpl *p = item.parent();
-      if (!p)
-        return false;
-      ItemImpl *last = NULL;
-      for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
-        last = &*cw;
-      return &item == last;
+      return selob.is_nth_child (-1);
     }
-  else if (find_custom_pseudo (snode.ident)) // custom pseudo class
+  else if (allow_custom_pseudo (snode.ident)) // custom pseudo class
     {
       String error;
-      const bool item_match = ClassDoctor::item_pseudo_selector (item, string_tolower (snode.ident), snode.arg, error);
+      Selob *selob_match = selob.pseudo_selector (":" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
           DEBUG ("SELECTOR-MATCH: %s", error.c_str());
           return false;
         }
-      return item_match;
+      return Selector::Selob::is_true_match (selob_match);
     }
   return false; // unknown pseudo class
 }
 
 bool
-Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
+Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
 {
   switch (snode.kind)
     {
     case UNIVERSAL:     return true;
-    case ID:            return snode.ident == item.name();
-    case TYPE:          return snode.ident == Factory::factory_context_type (item.factory_context());
+    case ID:            return snode.ident == selob.get_id();
+    case TYPE:          return snode.ident == selob.get_type();
     default:            return false;   // unreached
     case CLASS:         ; // pass through
     }
   // CLASS:
-  StringSeq tags = Factory::factory_context_tags (item.factory_context());
+  const StringVector &ctags = selob.get_type_list();
   bool result = false;
-  for (StringSeq::const_iterator it = tags.begin(); it != tags.end() && !result; it++)
+  for (StringVector::const_iterator it = ctags.begin(); it != ctags.end() && !result; it++)
     {
       const String &tag = *it;
       size_t i = tag.rfind (snode.ident);
@@ -1088,161 +1087,146 @@ Matcher::match_element_selector (ItemImpl &item, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", tags).c_str(), result);
+  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
   return result;
 }
 
-template<int CDIR> bool
-Matcher::match_selector_stepwise (ItemImpl &item, const size_t chain_index)
+template<int CDIR> Selob*
+Matcher::match_selector_stepwise (Selob &selob, const size_t chain_index)
 {
-  assert_return (chain_index < chain.size(), false);
+  assert_return (chain_index < chain.size(), NULL);
   RAPICORN_STATIC_ASSERT (CDIR);
   const SelectorNode &snode = chain[chain_index];
+  Selob *next_selob = &selob;
+  bool force_current_subject = false;
   switch (snode.kind)
     {
     default:
     case NONE:
+      break;
     case SUBJECT:
-      break; // automatic match
+      force_current_subject = true;
+      break;
     case TYPE: case UNIVERSAL: case CLASS: case ID:
-      if (match_element_selector (item, snode))
-        break;
-      return false;
+      if (!match_element_selector (selob, snode))
+        return NULL;
+      break;
     case PSEUDO_ELEMENT:
-      if (match_pseudo_element (item, snode))
-        break;
-      return false;
+      next_selob = match_pseudo_element (selob, snode);
+      if (!next_selob)
+        return NULL;
+      else if (Selob::is_true_match (next_selob))
+        next_selob = &selob;
+      break;
     case PSEUDO_CLASS:
-      if (match_pseudo_class (item, snode))
-        break;
-      return false;
+      if (!match_pseudo_class (selob, snode))
+        return NULL;
+      break;
     case ATTRIBUTE_EXISTS:    case ATTRIBUTE_EXISTS_I:    case ATTRIBUTE_EQUALS:    case ATTRIBUTE_EQUALS_I:
     case ATTRIBUTE_UNEQUALS:  case ATTRIBUTE_UNEQUALS_I:  case ATTRIBUTE_PREFIX:    case ATTRIBUTE_PREFIX_I:
     case ATTRIBUTE_SUFFIX:    case ATTRIBUTE_SUFFIX_I:    case ATTRIBUTE_DASHSTART: case ATTRIBUTE_DASHSTART_I:
     case ATTRIBUTE_SUBSTRING: case ATTRIBUTE_SUBSTRING_I: case ATTRIBUTE_INCLUDES:  case ATTRIBUTE_INCLUDES_I:
-      if (match_attribute_selector (item, snode))
-        break;
-      return false;
+      if (!match_attribute_selector (selob, snode))
+        return NULL;
+      break;
     case CHILD:
       if (CDIR < 0)
         {
-          ContainerImpl *p = item.parent();
-          if (p && chain_index > 0 && match_selector_stepwise<CDIR> (*p, chain_index - 1))
-            return true;
-          return false;
+          Selob *pselob = selob.get_parent();
+          if (pselob && chain_index > 0)
+            return match_selector_stepwise<CDIR> (*pselob, chain_index - 1);
         }
-      else // CDIR > 0
+      else if (chain_index + 1 < chain.size()) // CDIR > 0
         {
-          ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
-          if (c && chain_index + 1 < chain.size())
-            for (ContainerImpl::ChildWalker cw = c->local_children(); cw.has_next(); cw++)
-              {
-                if (match_selector_stepwise<CDIR> (*cw, chain_index + 1))
-                  return true;
-              }
-          return false;
+          const size_t n_children = selob.n_children();
+          for (size_t i = 0; i < n_children; i++)
+            {
+              Selob *result = match_selector_stepwise<CDIR> (*selob.get_child (i), chain_index + 1);
+              if (result)
+                return result;
+            }
         }
+      return NULL; // no match
     case DESCENDANT:
       if (CDIR < 0)
         {
           if (chain_index < 1)
-            return false; // bogus chaining
-          ContainerImpl *p = item.parent();
-          while (p)
+            return NULL; // bogus chaining
+          Selob *pselob = selob.get_parent();
+          while (pselob)
             {
-              if (match_selector_stepwise<CDIR> (*p, chain_index - 1))
-                return true;
-              p = p->parent();
+              Selob *result = match_selector_stepwise<CDIR> (*pselob, chain_index - 1);
+              if (result)
+                return result;
+              pselob = pselob->get_parent();
             }
-          return false;
         }
-      else // CDIR > 0
-        {
-          ContainerImpl *c = dynamic_cast<ContainerImpl*> (&item);
-          if (c && chain_index + 1 < chain.size() &&
-              match_selector_children (*c, chain_index + 1))
-            return true;
-          return false;
-        }
+      else if (chain_index + 1 < chain.size()) // CDIR > 0
+        return match_selector_descendants (selob, chain_index + 1);
+      return NULL; // no match
     case ADJACENT:
       if (CDIR < 0)
         {
-          ContainerImpl *p = item.parent();
-          if (p && chain_index > 0)
-            {
-              ItemImpl *last = NULL;
-              for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); last = &*cw, cw++)
-                if (&item == &*cw)
-                  {
-                    if (!last)
-                      break;
-                    return match_selector_stepwise<CDIR> (*last, chain_index - 1);
-                  }
-            }
+          Selob *sibling = selob.get_sibling (-1);
+          if (chain_index > 0 && sibling)
+            return match_selector_stepwise<CDIR> (*sibling, chain_index - 1);
         }
       else // CDIR > 0
         {
-          ContainerImpl *p = item.parent();
-          if (p && chain_index + 1 < chain.size())
-            for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
-              if (&item == &*cw)
-                {
-                  cw++;
-                  if (!cw.has_next())
-                    break;
-                  return match_selector_stepwise<CDIR> (*cw, chain_index + 1);
-                }
+          Selob *sibling = selob.get_sibling (+1);
+          if (chain_index + 1 < chain.size() && sibling)
+            return match_selector_stepwise<CDIR> (*sibling, chain_index + 1);
         }
-      return false; // no adjacent sibling present
+      return NULL; // no adjacent sibling
     case NEIGHBORING:
       if (CDIR < 0)
         {
-          ContainerImpl *p = item.parent();
-          if (p && chain_index > 0)
-            for (ContainerImpl::ChildWalker cw = p->local_children(); cw.has_next(); cw++)
-              if (&item == &*cw)
-                break;
-              else if (match_selector_stepwise<CDIR> (*cw, chain_index - 1))
-                return true;
+          if (chain_index > 0)
+            for (Selob *sibling = selob.get_sibling (-1); sibling; sibling = sibling->get_sibling (-1))
+              {
+                Selob *result = match_selector_stepwise<CDIR> (*sibling, chain_index - 1);
+                if (result)
+                  return result;
+              }
         }
-      else // CDIR > 0
-        {
-          ContainerImpl *p = item.parent();
-          if (p && chain_index + 1 < chain.size())
-            {
-              ContainerImpl::ChildWalker cw;
-              for (cw = p->local_children(); cw.has_next(); cw++)
-                if (&item == &*cw)
-                  {
-                    cw++;
-                    break;
-                  }
-              for (; cw.has_next(); cw++)
-                if (match_selector_stepwise<CDIR> (*cw, chain_index + 1))
-                  return true;
-            }
-        }
-      return false; // no matching sibling
+      else if (chain_index + 1 < chain.size()) // CDIR > 0
+        for (Selob *sibling = selob.get_sibling (+1); sibling; sibling = sibling->get_sibling (+1))
+          {
+            Selob *result = match_selector_stepwise<CDIR> (*sibling, chain_index + 1);
+            if (result)
+              return result;
+          }
+      return NULL; // no match
     }
+  // step passed, continue in chain
   if (CDIR < 0 && chain_index > 0)
-    return match_selector_stepwise<CDIR> (item, chain_index - 1);
+    {
+      Selob *result = match_selector_stepwise<CDIR> (*next_selob, chain_index - 1);
+      return result && force_current_subject ? &selob : result;
+    }
   if (CDIR > 0 && chain_index + 1 < chain.size())
-    return match_selector_stepwise<CDIR> (item, chain_index + 1);
-  return true;
+    {
+      Selob *result = match_selector_stepwise<CDIR> (*next_selob, chain_index + 1);
+      return result && force_current_subject ? &selob : result;
+    }
+  // end of chain
+  return next_selob;
 }
 
-bool
-Matcher::match_selector_children (ContainerImpl &container, const size_t chain_index)
+Selob*
+Matcher::match_selector_descendants (Selob &selob, const size_t chain_index)
 {
-  for (ContainerImpl::ChildWalker cw = container.local_children(); cw.has_next(); cw++)
+  const size_t n_children = selob.n_children();
+  for (size_t i = 0; i < n_children; i++)
     {
-      if (match_selector_stepwise<+1> (*cw, chain_index))
-        return true;
-      ContainerImpl *c = dynamic_cast<ContainerImpl*> (&*cw);
-      if (c && match_selector_children (*c, chain_index))
-        return true;
+      Selob *cselob = selob.get_child (i);
+      Selob *result = match_selector_stepwise<+1> (*cselob, chain_index);
+      if (!result)
+        result = match_selector_descendants (*cselob, chain_index);
+      if (result)
+        return result;
     }
-  return false;
+  return NULL;
 }
 
 bool
@@ -1255,113 +1239,151 @@ Matcher::parse_selector (const String &selector,
   String error;
   // parse selector string
   if (!chain.parse (&s, with_combinators) || chain.empty())
-    error = string_printf ("%s: invalid selector syntax: %s\n", __func__, string_to_cquote (selector).c_str());
+    error = string_printf ("invalid selector syntax: %s\n", string_to_cquote (selector).c_str());
   else if (*s)
-    error = string_printf ("%s: unexpected junk in selector (%s): %s\n", __func__,
-                           string_to_cquote (String (selector.c_str(), s - selector.c_str())).c_str(),
-                           string_to_cquote (s).c_str());
-  // report errors
+    error = string_printf ("unexpected junk in selector (%s): %s\n",
+                           string_to_cquote (string_lstrip (s)).c_str(), string_to_cquote (selector).c_str());
   if (!error.empty())
-    {
-      if (errorp)
-        *errorp = error;
-      else
-        DEBUG ("SELECTOR-PARSE: %s", error.c_str());
-      return false;
-    }
-  // find subject element
-  subject_index = chain.size() - 1;
+    goto error;
+  // find special indices
   for (size_t i = 0; i < chain.size(); i++)
     if (chain[i].kind == SUBJECT)
       {
+        if (subject_index != UINT_MAX)
+          error = string_printf ("selector contains multiple subjects: %s", string_to_cquote (selector).c_str());
         subject_index = i;
-        break;
       }
-  return true;
+    else if (chain[i].kind == PSEUDO_ELEMENT)
+      first_pseudo_element = MIN (first_pseudo_element, i);
+    else if (is_combinator (chain[i].kind))
+      last_combinator = i;
+  if (first_pseudo_element < last_combinator && last_combinator != UINT_MAX)
+    error = string_printf ("selector uses combinator after pseudo element: %s", string_to_cquote (selector).c_str());
+  if (subject_index < first_pseudo_element && first_pseudo_element != UINT_MAX)
+    error = string_printf ("selector uses pseudo element for non-subject: %s", string_to_cquote (selector).c_str());
+  if (subject_index == UINT_MAX)
+    subject_index = last_combinator == UINT_MAX ? 0 : last_combinator + 1;
+  if (error.empty())
+    return true;
+  // encountered error
+ error:
+  if (errorp)
+    *errorp = error;
+  return false;
 }
 
-bool
-Matcher::match_selector (ItemImpl &item)
+Selob*
+Matcher::match_selector_chain (Selob &selob)
 {
-  if (subject_index < chain.size() && !match_selector_stepwise<-1> (item, subject_index))
-    return false;
-  if (subject_index + 1 < chain.size() && !match_selector_stepwise<+1> (item, subject_index + 1))
-    return false;
-  return true;
+  Selob *result = &selob;
+  if (subject_index < chain.size() && subject_index > 0 && !match_selector_stepwise<-1> (selob, subject_index - 1))
+    return NULL;
+  if (subject_index < chain.size())
+    result = match_selector_stepwise<+1> (selob, subject_index);
+  return result;
 }
 
-template<size_t COUNT> vector<ItemImpl*>
-Matcher::recurse_selector (ItemImpl &item)
+template<size_t COUNT> vector<Selob*>
+Matcher::recurse_selector (Selob &selob)
 {
-  vector<ItemImpl*> result;
-  if (match_selector (item))
+  vector<Selob*> rvector;
+  Selob *result = match_selector_chain (selob);
+  if (result)
     {
-      result.push_back (&item);
+      rvector.push_back (result);
       if (COUNT == 1)
-        return result;
+        return rvector;
     }
-  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item);
-  if (!container)
-    return result;
-  for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+  const size_t n_children = selob.n_children();
+  for (size_t i = 0; i < n_children; i++)
     {
-      vector<ItemImpl*> subs;
-      if (COUNT == 2 && result.size() == 1)
-        subs = recurse_selector<1> (*cw);
-      else // COUNT==0 || result.empty())
-        subs = recurse_selector<COUNT> (*cw);
+      Selob *cselob = selob.get_child (i);
+      vector<Selob*> subs;
+      if (COUNT == 2 && rvector.size() == 1)
+        subs = recurse_selector<1> (*cselob);
+      else // rvector.empty() || COUNT unlimited
+        subs = recurse_selector<COUNT> (*cselob);
       if (!subs.empty())
         {
-          if (result.empty())
-            result.swap (subs);
+          if (rvector.empty())
+            rvector.swap (subs);
           else
-            result.insert (result.end(), subs.begin(), subs.end());
-          if (COUNT && result.size() >= COUNT)
+            rvector.insert (rvector.end(), subs.begin(), subs.end());
+          if (COUNT && rvector.size() >= COUNT)
             break;
         }
     }
-  return result;
+  return rvector;
 }
 
 bool
-Matcher::match_selector (const String &selector, ItemImpl &item)
+Matcher::query_selector_bool (const String &selector, Selob &selob, String *errorp)
 {
   Matcher matcher;
-  if (!matcher.parse_selector (selector, true))
+  if (!matcher.parse_selector (selector, true, errorp))
     return false;
-  if (!matcher.match_selector (item))
+  if (!matcher.match_selector_chain (selob))
     return false;
   return true;
 }
 
-vector<ItemImpl*>
-Matcher::query_selector_all (const String &selector, ItemImpl &item)
+vector<Selob*>
+Matcher::query_selector_all (const String &selector, Selob &selob, String *errorp)
 {
   Matcher matcher;
-  vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector, true))
-    result = matcher.recurse_selector<0> (item);
+  vector<Selob*> result;
+  if (matcher.parse_selector (selector, true, errorp))
+    result = matcher.recurse_selector<0> (selob);
   return result;
 }
 
-ItemImpl*
-Matcher::query_selector_first (const String &selector, ItemImpl &item)
+Selob*
+Matcher::query_selector_first (const String &selector, Selob &selob, String *errorp)
 {
   Matcher matcher;
-  vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector, true))
-    result = matcher.recurse_selector<1> (item);
+  vector<Selob*> result;
+  if (matcher.parse_selector (selector, true, errorp))
+    result = matcher.recurse_selector<1> (selob);
   return result.empty() ? NULL : result[0];
 }
 
-ItemImpl*
-Matcher::query_selector_unique (const String &selector, ItemImpl &item)
+Selob*
+Matcher::query_selector_unique (const String &selector, Selob &selob, String *errorp)
 {
   Matcher matcher;
-  vector<ItemImpl*> result;
-  if (matcher.parse_selector (selector, true))
-    result = matcher.recurse_selector<2> (item);
+  vector<Selob*> result;
+  if (matcher.parse_selector (selector, true, errorp))
+    result = matcher.recurse_selector<2> (selob);
   return result.size() != 1 ? NULL : result[0];
+}
+
+class SelobTrue : public Selob {
+  StringVector type_list_;
+  virtual String       get_id          ()                     { return "true"; }
+  virtual String       get_type        ()                     { return "Rapicorn::Selector::Selob::True"; }
+  virtual ConstTypes&  get_type_list   ()                     { return type_list_; }
+  virtual bool         has_property    (const String &name)   { return false; }
+  virtual String       get_property    (const String &name)   { return ""; }
+  virtual Selob*       get_parent      ()                     { return NULL; }
+  virtual Selob*       get_sibling     (int64 dir)            { return NULL; }
+  virtual bool         has_children    ()                     { return false; }
+  virtual int64        n_children      ()                     { return 0; }
+  virtual Selob*       get_child       (int64 index)          { return NULL; }
+  virtual bool         is_nth_child    (int64 nth1based)      { return false; }
+  virtual Selob*       pseudo_selector (const String &ident, const String &arg, String &error) { return NULL; }
+public:
+  explicit             SelobTrue       ()                     { type_list_.push_back (get_type()); }
+};
+
+Selob*
+Selob::true_match ()
+{
+  static SelobTrue *singleton = NULL;
+  do_once {
+    static int64 mem[(sizeof (SelobTrue) + 7) / 8];
+    singleton = new (mem) SelobTrue;
+  }
+  return singleton;
 }
 
 } // Selector

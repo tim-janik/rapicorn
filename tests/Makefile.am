@@ -1,10 +1,11 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
+INCLUDES   += -I$(top_srcdir)
+DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
 
-noinst_PROGRAMS  = $(EXAMPLES)
+noinst_PROGRAMS  = benchaida $(EXAMPLES)
 noinst_DATA      =
 XML_FILES        =
 EXAMPLES         =
@@ -12,12 +13,17 @@ EXTRA_DIST      += $(XML_FILES)
 
 LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
-IMGCHECK = $(top_builddir)/rcore/tests/imgcheck
+IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11TEST_SERVER) && rrun() { $(RAPIDRUN) --fatal-warnings "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+
+# == benchaida ==
+benchaida_SOURCES  = benchaida.cc
+benchaida_LDADD    = $(LDADDS)
 
 # === programs ===
 EXAMPLES        += fileview
 fileview_SOURCES = fileview.cc
+EXTRA_DIST	+= liststore.cc
 fileview_LDADD   = $(LDADDS)
 XML_FILES       += fileview.xml
 

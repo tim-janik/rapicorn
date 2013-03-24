@@ -4,7 +4,7 @@
 
 PROJECT=Rapicorn
 TEST_TYPE=-f
-FILE=ui/item.hh
+FILE=ui/widget.hh
 AUTOMAKE=automake
 AUTOMAKE_POSTFIX=1.9
 AUTOMAKE_VERSION=1.9

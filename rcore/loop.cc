@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <algorithm>
 #include <list>
 #include <cstring>
@@ -172,49 +173,49 @@ release_id (uint id)
 // === QuickArray ===
 template<class Data>
 class QuickArray {
-  Data  *m_data;
-  uint   m_n_elements;
-  uint   m_n_reserved;
-  Data  *m_reserved;
+  Data  *data_;
+  uint   n_elements_;
+  uint   n_reserved_;
+  Data  *reserved_;
   template<class D> void swap (D &a, D &b) { D t = a; a = b; b = t; }
 public:
   typedef Data* iterator;
-  QuickArray (uint n_reserved, Data *reserved) : m_data (reserved), m_n_elements (0), m_n_reserved (n_reserved), m_reserved (reserved) {}
-  ~QuickArray()                         { if (LIKELY (m_data) && UNLIKELY (m_data != m_reserved)) free (m_data); }
-  uint        size       () const       { return m_n_elements; }
-  bool        empty      () const       { return m_n_elements == 0; }
-  Data*       data       () const       { return m_data; }
-  Data&       operator[] (uint n)       { return m_data[n]; }
-  const Data& operator[] (uint n) const { return m_data[n]; }
-  iterator    begin      ()             { return &m_data[0]; }
-  iterator    end        ()             { return &m_data[m_n_elements]; }
-  void        shrink     (uint n)       { m_n_elements = MIN (m_n_elements, n); }
+  QuickArray (uint n_reserved, Data *reserved) : data_ (reserved), n_elements_ (0), n_reserved_ (n_reserved), reserved_ (reserved) {}
+  ~QuickArray()                         { if (LIKELY (data_) && UNLIKELY (data_ != reserved_)) free (data_); }
+  uint        size       () const       { return n_elements_; }
+  bool        empty      () const       { return n_elements_ == 0; }
+  Data*       data       () const       { return data_; }
+  Data&       operator[] (uint n)       { return data_[n]; }
+  const Data& operator[] (uint n) const { return data_[n]; }
+  iterator    begin      ()             { return &data_[0]; }
+  iterator    end        ()             { return &data_[n_elements_]; }
+  void        shrink     (uint n)       { n_elements_ = MIN (n_elements_, n); }
   void        swap       (QuickArray &o)
   {
-    swap (m_data,       o.m_data);
-    swap (m_n_elements, o.m_n_elements);
-    swap (m_n_reserved, o.m_n_reserved);
-    swap (m_reserved,   o.m_reserved);
+    swap (data_,       o.data_);
+    swap (n_elements_, o.n_elements_);
+    swap (n_reserved_, o.n_reserved_);
+    swap (reserved_,   o.reserved_);
   }
   void        push       (const Data &d)
   {
-    const uint idx = m_n_elements++;
-    if (UNLIKELY (m_n_elements > m_n_reserved))                 // reserved memory exceeded
+    const uint idx = n_elements_++;
+    if (UNLIKELY (n_elements_ > n_reserved_))                 // reserved memory exceeded
       {
-        const size_t sz = m_n_elements * sizeof (Data);
-        const bool migrate = UNLIKELY (m_data == m_reserved);   // migrate from reserved to malloced
-        Data *mem = (Data*) (migrate ? malloc (sz) : realloc (m_data, sz));
+        const size_t sz = n_elements_ * sizeof (Data);
+        const bool migrate = UNLIKELY (data_ == reserved_);   // migrate from reserved to malloced
+        Data *mem = (Data*) (migrate ? malloc (sz) : realloc (data_, sz));
         if (UNLIKELY (!mem))
           fatal ("OOM");
         if (migrate)
           {
-            memcpy (mem, m_data, sz - 1 * sizeof (Data));
-            m_reserved = NULL;
-            m_n_reserved = 0;
+            memcpy (mem, data_, sz - 1 * sizeof (Data));
+            reserved_ = NULL;
+            n_reserved_ = 0;
           }
-        m_data = mem;
+        data_ = mem;
       }
-    m_data[idx] = d;
+    data_[idx] = d;
   }
 };
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
@@ -226,30 +227,30 @@ struct EventLoop::QuickSourceArray : public QuickArray<Source*> {
 
 // === EventLoop ===
 EventLoop::EventLoop (MainLoop &main) :
-  m_main_loop (main), m_dispatch_priority (0), m_poll_sources (*new (pollmem1) QuickSourceArray (0, NULL)), m_primary (false)
+  main_loop_ (main), dispatch_priority_ (0), poll_sources_ (*new (pollmem1) QuickSourceArray (0, NULL)), primary_ (false)
 {
   RAPICORN_STATIC_ASSERT (sizeof (QuickSourceArray) <= sizeof (EventLoop::pollmem1));
-  // we cannot *use* m_main_loop yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
+  // we cannot *use* main_loop_ yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
 }
 
 EventLoop::~EventLoop ()
 {
   unpoll_sources_U();
-  m_poll_sources.~QuickSourceArray();
-  // we cannot *use* m_main_loop anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
+  poll_sources_.~QuickSourceArray();
+  // we cannot *use* main_loop_ anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
 }
 
 inline EventLoop::Source*
 EventLoop::find_first_L()
 {
-  return m_sources.empty() ? NULL : m_sources[0];
+  return sources_.empty() ? NULL : sources_[0];
 }
 
 inline EventLoop::Source*
 EventLoop::find_source_L (uint id)
 {
-  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
-    if (id == (*lit)->m_id)
+  for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
+    if (id == (*lit)->id_)
       return *lit;
   return NULL;
 }
@@ -257,9 +258,9 @@ EventLoop::find_source_L (uint id)
 bool
 EventLoop::has_primary_L()
 {
-  if (m_primary)
+  if (primary_)
     return true;
-  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
+  for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     if ((*lit)->primary())
       return true;
   return false;
@@ -268,17 +269,17 @@ EventLoop::has_primary_L()
 bool
 EventLoop::has_primary()
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
+  ScopedLock<Mutex> locker (main_loop_.mutex());
   return has_primary_L();
 }
 
 bool
 EventLoop::flag_primary (bool on)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
-  const bool was_primary = m_primary;
-  m_primary = on;
-  if (m_primary != was_primary)
+  ScopedLock<Mutex> locker (main_loop_.mutex());
+  const bool was_primary = primary_;
+  primary_ = on;
+  if (primary_ != was_primary)
     wakeup();
   return was_primary;
 }
@@ -287,29 +288,29 @@ uint
 EventLoop::add (Source *source,
                 int     priority)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
-  assert_return (source->m_loop == NULL, 0);
-  source->m_loop = this;
+  ScopedLock<Mutex> locker (main_loop_.mutex());
+  assert_return (source->loop_ == NULL, 0);
+  source->loop_ = this;
   ref_sink (source);
-  source->m_id = alloc_id();
-  source->m_loop_state = WAITING;
-  source->m_priority = priority;
-  m_sources.push_back (source);
+  source->id_ = alloc_id();
+  source->loop_state_ = WAITING;
+  source->priority_ = priority;
+  sources_.push_back (source);
   locker.unlock();
   wakeup();
-  return source->m_id;
+  return source->id_;
 }
 
 void
 EventLoop::remove_source_Lm (Source *source)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED_LOCK);
-  assert_return (source->m_loop == this);
-  source->m_loop = NULL;
-  source->m_loop_state = WAITING;
-  m_sources.erase (find (m_sources.begin(), m_sources.end(), source));
-  release_id (source->m_id);
-  source->m_id = 0;
+  ScopedLock<Mutex> locker (main_loop_.mutex(), BALANCED_LOCK);
+  assert_return (source->loop_ == this);
+  source->loop_ = NULL;
+  source->loop_state_ = WAITING;
+  sources_.erase (find (sources_.begin(), sources_.end(), source));
+  release_id (source->id_);
+  source->id_ = 0;
   locker.unlock();
   source->destroy();
   unref (source);
@@ -319,7 +320,7 @@ EventLoop::remove_source_Lm (Source *source)
 bool
 EventLoop::try_remove (uint id)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
+  ScopedLock<Mutex> locker (main_loop_.mutex());
   Source *source = find_source_L (id);
   if (source)
     {
@@ -351,7 +352,7 @@ EventLoop::kill_sources_Lm()
 {
   for (Source *source = find_first_L(); source != NULL; source = find_first_L())
     remove_source_Lm (source);
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED_LOCK);
+  ScopedLock<Mutex> locker (main_loop_.mutex(), BALANCED_LOCK);
   locker.unlock();
   unpoll_sources_U(); // unlocked
   locker.lock();
@@ -360,7 +361,7 @@ EventLoop::kill_sources_Lm()
 void
 EventLoop::kill_sources()
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
+  ScopedLock<Mutex> locker (main_loop_.mutex());
   kill_sources_Lm();
   locker.unlock();
   wakeup();
@@ -370,86 +371,86 @@ void
 EventLoop::wakeup ()
 {
   // this needs to work unlocked
-  m_main_loop.wakeup_poll();
+  main_loop_.wakeup_poll();
 }
 
 // === MainLoop ===
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  m_rr_index (0), m_running (true), m_quit_code (0), m_lock_hooks_locked (false)
+  rr_index_ (0), running_ (true), quit_code_ (0), lock_hooks_locked_ (false)
 {
   set_lock_hooks ([] () { return false; }, [] () {}, [] () {});
-  ScopedLock<Mutex> locker (m_main_loop.mutex());
+  ScopedLock<Mutex> locker (main_loop_.mutex());
   add_loop_L (*this);
-  int err = m_eventfd.open();
+  int err = eventfd_.open();
   if (err < 0)
     fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
-  // m_running and m_eventfd need to be setup here, so calling quit() before run() works
+  // running_ and eventfd_ need to be setup here, so calling quit() before run() works
 }
 
 MainLoop::~MainLoop()
 {
   kill_loops(); // this->kill_sources_Lm()
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   remove_loop_L (*this);
-  assert_return (m_loops.empty() == true);
-  assert_return (m_lock_hooks_locked == false);
+  assert_return (loops_.empty() == true);
+  assert_return (lock_hooks_locked_ == false);
 }
 
 void
 MainLoop::set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock)
 {
-  ScopedLock<Mutex> locker (m_mutex);
-  assert_return (m_lock_hooks_locked == false);
+  ScopedLock<Mutex> locker (mutex_);
+  assert_return (lock_hooks_locked_ == false);
   assert_return (sense && lock && unlock);
-  m_lock_hooks.sense  = sense;
-  m_lock_hooks.lock   = lock;
-  m_lock_hooks.unlock = unlock;
+  lock_hooks_.sense  = sense;
+  lock_hooks_.lock   = lock;
+  lock_hooks_.unlock = unlock;
 }
 
 void
 MainLoop::wakeup_poll()
 {
-  if (m_eventfd.opened())
-    m_eventfd.wakeup();
+  if (eventfd_.opened())
+    eventfd_.wakeup();
 }
 
 void
 MainLoop::add_loop_L (EventLoop &loop)
 {
-  assert_return (this == &loop.m_main_loop);
-  m_loops.push_back (&loop);
+  assert_return (this == &loop.main_loop_);
+  loops_.push_back (&loop);
   wakeup_poll();
 }
 
 void
 MainLoop::remove_loop_L (EventLoop &loop)
 {
-  assert_return (this == &loop.m_main_loop);
-  vector<EventLoop*>::iterator it = std::find (m_loops.begin(), m_loops.end(), &loop);
-  assert_return (it != m_loops.end());
-  m_loops.erase (it);
+  assert_return (this == &loop.main_loop_);
+  vector<EventLoop*>::iterator it = std::find (loops_.begin(), loops_.end(), &loop);
+  assert_return (it != loops_.end());
+  loops_.erase (it);
   wakeup_poll();
 }
 
 void
 MainLoop::kill_loops()
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   EventLoop *spare = this;
   // create referenced loop list
   std::list<EventLoop*> loops;
-  for (size_t i = 0; i < m_loops.size(); i++)
+  for (size_t i = 0; i < loops_.size(); i++)
     {
-      loops.push_back (m_loops[i]);
-      if (spare != m_loops[i]) // avoid ref(this) during dtor
-        ref (m_loops[i]);
+      loops.push_back (loops_[i]);
+      if (spare != loops_[i]) // avoid ref(this) during dtor
+        ref (loops_[i]);
     }
   // kill loops
   for (std::list<EventLoop*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoop &loop = **lit;
-      if (this == &loop.m_main_loop)
+      if (this == &loop.main_loop_)
         loop.kill_sources_Lm();
     }
   this->kill_sources_Lm();
@@ -467,26 +468,26 @@ MainLoop::kill_loops()
 int
 MainLoop::run ()
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   State state;
-  while (ISLIKELY (m_running))
+  while (ISLIKELY (running_))
     iterate_loops_Lm (state, true, true);
-  return m_quit_code;
+  return quit_code_;
 }
 
 bool
 MainLoop::running ()
 {
-  ScopedLock<Mutex> locker (m_mutex);
-  return m_running;
+  ScopedLock<Mutex> locker (mutex_);
+  return running_;
 }
 
 void
 MainLoop::quit (int quit_code)
 {
-  ScopedLock<Mutex> locker (m_mutex);
-  m_quit_code = quit_code;
-  m_running = false;
+  ScopedLock<Mutex> locker (mutex_);
+  quit_code_ = quit_code;
+  running_ = false;
   wakeup();
 }
 
@@ -494,9 +495,9 @@ bool
 MainLoop::finishable_L()
 {
   // loop list shouldn't be modified by querying finishable state
-  bool found_primary = m_primary;
-  for (size_t i = 0; !found_primary && i < m_loops.size(); i++)
-    if (m_loops[i]->has_primary_L())
+  bool found_primary = primary_;
+  for (size_t i = 0; !found_primary && i < loops_.size(); i++)
+    if (loops_[i]->has_primary_L())
       found_primary = true;
   return !found_primary; // finishable if no primary sources remain
 }
@@ -504,7 +505,7 @@ MainLoop::finishable_L()
 bool
 MainLoop::finishable()
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   return finishable_L();
 }
 
@@ -521,7 +522,7 @@ MainLoop::finishable()
 bool
 MainLoop::iterate (bool may_block)
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   State state;
   return iterate_loops_Lm (state, may_block, true);
 }
@@ -529,7 +530,7 @@ MainLoop::iterate (bool may_block)
 void
 MainLoop::iterate_pending()
 {
-  ScopedLock<Mutex> locker (m_mutex);
+  ScopedLock<Mutex> locker (mutex_);
   State state;
   while (iterate_loops_Lm (state, false, true));
 }
@@ -539,7 +540,7 @@ EventLoop::unpoll_sources_U() // must be unlocked!
 {
   QuickSourceArray sources (0, NULL);
   // clear poll sources
-  sources.swap (m_poll_sources);
+  sources.swap (poll_sources_);
   for (QuickSourceArray::iterator lit = sources.begin(); lit != sources.end(); lit++)
     unref (*lit); // unlocked
 }
@@ -550,45 +551,45 @@ void
 EventLoop::collect_sources_Lm (State &state)
 {
   // enforce clean slate
-  if (UNLIKELY (!m_poll_sources.empty()))
+  if (UNLIKELY (!poll_sources_.empty()))
     {
-      Mutex &main_mutex = m_main_loop.mutex();
+      Mutex &main_mutex = main_loop_.mutex();
       main_mutex.unlock();
       unpoll_sources_U(); // unlocked
       main_mutex.lock();
-      assert (m_poll_sources.empty());
+      assert (poll_sources_.empty());
     }
-  if (UNLIKELY (!state.seen_primary && m_primary))
+  if (UNLIKELY (!state.seen_primary && primary_))
     state.seen_primary = true;
-  // since m_poll_sources is empty, poll_candidates can reuse pollmem2
+  // since poll_sources_ is empty, poll_candidates can reuse pollmem2
   QuickSourceArray poll_candidates (ARRAY_SIZE (pollmem2), pollmem2);
   // determine dispatch priority & collect sources for preparing
-  m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
-  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
+  dispatch_priority_ = supraint_priobase; // dispatch priority, cover full int32 range initially
+  for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     {
       Source &source = **lit;
-      if (UNLIKELY (!state.seen_primary && source.m_primary))
+      if (UNLIKELY (!state.seen_primary && source.primary_))
         state.seen_primary = true;
-      if (source.m_loop != this ||                              // consider undestroyed
-          (source.m_dispatching && !source.m_may_recurse))      // avoid unallowed recursion
+      if (source.loop_ != this ||                              // consider undestroyed
+          (source.dispatching_ && !source.may_recurse_))      // avoid unallowed recursion
         continue;
-      if (source.m_priority < m_dispatch_priority &&
-          source.m_loop_state == NEEDS_DISPATCH)                // dispatch priority needs adjusting
-        m_dispatch_priority = source.m_priority;                // upgrade dispatch priority
-      if (source.m_priority < m_dispatch_priority ||            // prepare preempting sources
-          (source.m_priority == m_dispatch_priority &&
-           source.m_loop_state == NEEDS_DISPATCH))              // re-poll sources that need dispatching
+      if (source.priority_ < dispatch_priority_ &&
+          source.loop_state_ == NEEDS_DISPATCH)                // dispatch priority needs adjusting
+        dispatch_priority_ = source.priority_;                // upgrade dispatch priority
+      if (source.priority_ < dispatch_priority_ ||            // prepare preempting sources
+          (source.priority_ == dispatch_priority_ &&
+           source.loop_state_ == NEEDS_DISPATCH))              // re-poll sources that need dispatching
         poll_candidates.push (&source);                         // collect only, adding ref() next
     }
   // ensure ref counts on all prepare sources
   uint j = 0;
   for (uint i = 0; i < poll_candidates.size(); i++)
-    if (poll_candidates[i]->m_priority < m_dispatch_priority || // throw away lower priority sources
-        (poll_candidates[i]->m_priority == m_dispatch_priority &&
-         poll_candidates[i]->m_loop_state == NEEDS_DISPATCH))   // re-poll sources that need dispatching
+    if (poll_candidates[i]->priority_ < dispatch_priority_ || // throw away lower priority sources
+        (poll_candidates[i]->priority_ == dispatch_priority_ &&
+         poll_candidates[i]->loop_state_ == NEEDS_DISPATCH))   // re-poll sources that need dispatching
       poll_candidates[j++] = ref (poll_candidates[i]);
   poll_candidates.shrink (j);
-  m_poll_sources.swap (poll_candidates);                // ref()ed sources <= dispatch priority
+  poll_sources_.swap (poll_candidates);                // ref()ed sources <= dispatch priority
   assert (poll_candidates.empty());
 }
 
@@ -597,113 +598,113 @@ EventLoop::prepare_sources_Lm (State          &state,
                                int64          *timeout_usecs,
                                QuickPfdArray  &pfda)
 {
-  Mutex &main_mutex = m_main_loop.mutex();
+  Mutex &main_mutex = main_loop_.mutex();
   // prepare sources, up to NEEDS_DISPATCH priority
-  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_loop != this) // test undestroyed
+      if (source.loop_ != this) // test undestroyed
         continue;
       int64 timeout = -1;
       main_mutex.unlock();
       const bool need_dispatch = source.prepare (state, &timeout);
       main_mutex.lock();
-      if (source.m_loop != this)
+      if (source.loop_ != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
-          m_dispatch_priority = MIN (m_dispatch_priority, source.m_priority); // upgrade dispatch priority
-          source.m_loop_state = NEEDS_DISPATCH;
+          dispatch_priority_ = MIN (dispatch_priority_, source.priority_); // upgrade dispatch priority
+          source.loop_state_ = NEEDS_DISPATCH;
           continue;
         }
-      source.m_loop_state = PREPARED;
+      source.loop_state_ = PREPARED;
       if (timeout >= 0)
         *timeout_usecs = MIN (*timeout_usecs, timeout);
       uint npfds = source.n_pfds();
       for (uint i = 0; i < npfds; i++)
-        if (source.m_pfds[i].pfd->fd >= 0)
+        if (source.pfds_[i].pfd->fd >= 0)
           {
             uint idx = pfda.size();
-            source.m_pfds[i].idx = idx;
-            pfda.push (*source.m_pfds[i].pfd);
+            source.pfds_[i].idx = idx;
+            pfda.push (*source.pfds_[i].pfd);
             pfda[idx].revents = 0;
           }
         else
-          source.m_pfds[i].idx = UINT_MAX;
+          source.pfds_[i].idx = UINT_MAX;
     }
-  return m_dispatch_priority < supraint_priobase;
+  return dispatch_priority_ < supraint_priobase;
 }
 
 bool
 EventLoop::check_sources_Lm (State               &state,
                              const QuickPfdArray &pfda)
 {
-  Mutex &main_mutex = m_main_loop.mutex();
+  Mutex &main_mutex = main_loop_.mutex();
   // check polled sources
-  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_loop != this && // test undestroyed
-          source.m_loop_state != PREPARED)
+      if (source.loop_ != this && // test undestroyed
+          source.loop_state_ != PREPARED)
         continue; // only check prepared sources
       uint npfds = source.n_pfds();
       for (uint i = 0; i < npfds; i++)
         {
-          uint idx = source.m_pfds[i].idx;
+          uint idx = source.pfds_[i].idx;
           if (idx < pfda.size() &&
-              source.m_pfds[i].pfd->fd == pfda[idx].fd)
-            source.m_pfds[i].pfd->revents = pfda[idx].revents;
+              source.pfds_[i].pfd->fd == pfda[idx].fd)
+            source.pfds_[i].pfd->revents = pfda[idx].revents;
           else
-            source.m_pfds[i].idx = UINT_MAX;
+            source.pfds_[i].idx = UINT_MAX;
         }
       main_mutex.unlock();
       bool need_dispatch = source.check (state);
       main_mutex.lock();
-      if (source.m_loop != this)
+      if (source.loop_ != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
-          m_dispatch_priority = MIN (m_dispatch_priority, source.m_priority); // upgrade dispatch priority
-          source.m_loop_state = NEEDS_DISPATCH;
+          dispatch_priority_ = MIN (dispatch_priority_, source.priority_); // upgrade dispatch priority
+          source.loop_state_ = NEEDS_DISPATCH;
         }
       else
-        source.m_loop_state = WAITING;
+        source.loop_state_ = WAITING;
     }
-  return m_dispatch_priority < supraint_priobase;
+  return dispatch_priority_ < supraint_priobase;
 }
 
 EventLoop::Source*
 EventLoop::dispatch_source_Lm (State &state)
 {
-  Mutex &main_mutex = m_main_loop.mutex();
-  // find a source to dispatch at m_dispatch_priority
+  Mutex &main_mutex = main_loop_.mutex();
+  // find a source to dispatch at dispatch_priority_
   Source *dispatch_source = NULL;
-  for (QuickSourceArray::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
+  for (QuickSourceArray::iterator lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_loop == this &&                    // test undestroyed
-          source.m_priority == m_dispatch_priority && // only dispatch at dispatch priority
-          source.m_loop_state == NEEDS_DISPATCH)
+      if (source.loop_ == this &&                    // test undestroyed
+          source.priority_ == dispatch_priority_ && // only dispatch at dispatch priority
+          source.loop_state_ == NEEDS_DISPATCH)
         {
           dispatch_source = &source;
           break;
         }
     }
-  m_dispatch_priority = supraint_priobase;
+  dispatch_priority_ = supraint_priobase;
   // dispatch single source
   if (dispatch_source)
     {
-      dispatch_source->m_loop_state = WAITING;
-      const bool old_was_dispatching = dispatch_source->m_was_dispatching;
-      dispatch_source->m_was_dispatching = dispatch_source->m_dispatching;
-      dispatch_source->m_dispatching = true;
+      dispatch_source->loop_state_ = WAITING;
+      const bool old_was_dispatching = dispatch_source->was_dispatching_;
+      dispatch_source->was_dispatching_ = dispatch_source->dispatching_;
+      dispatch_source->dispatching_ = true;
       ref (dispatch_source);    // ref() to keep alive even if everything else is destroyed
       main_mutex.unlock();
       const bool keep_alive = dispatch_source->dispatch (state);
       main_mutex.lock();
-      dispatch_source->m_dispatching = dispatch_source->m_was_dispatching;
-      dispatch_source->m_was_dispatching = old_was_dispatching;
-      if (dispatch_source->m_loop == this && !keep_alive)
+      dispatch_source->dispatching_ = dispatch_source->was_dispatching_;
+      dispatch_source->was_dispatching_ = old_was_dispatching;
+      if (dispatch_source->loop_ == this && !keep_alive)
         remove_source_Lm (dispatch_source);
     }
   return dispatch_source;       // unref() carried out by caller
@@ -713,21 +714,21 @@ bool
 MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
 {
   assert_return (state.phase == state.NONE, false);
-  Mutex &main_mutex = m_main_loop.mutex();
+  Mutex &main_mutex = main_loop_.mutex();
   int64 timeout_usecs = INT64_MAX;
   bool any_dispatchable = false;
   PollFD reserved_pfd_mem[7];   // store PollFD array in stack memory, to reduce malloc overhead
   QuickPfdArray pfda (ARRAY_SIZE (reserved_pfd_mem), reserved_pfd_mem); // pfda.size() == 0
   // allow poll wakeups
-  const PollFD wakeup = { m_eventfd.inputfd(), PollFD::IN, 0 };
+  const PollFD wakeup = { eventfd_.inputfd(), PollFD::IN, 0 };
   const uint wakeup_idx = 0; // wakeup_idx = pfda.size();
   pfda.push (wakeup);
   // create referenced loop list
-  const uint nloops = m_loops.size();
+  const uint nloops = loops_.size();
   EventLoop* loops[nloops];
   bool dispatchable[nloops];
   for (size_t i = 0; i < nloops; i++)
-    loops[i] = ref (m_loops[i]);
+    loops[i] = ref (loops_[i]);
   // collect
   state.phase = state.COLLECT;
   state.seen_primary = false;
@@ -747,8 +748,8 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     timeout_msecs = 1;
   if (!may_block || any_dispatchable)
     timeout_msecs = 0;
-  LookHooks lock_hooks = m_lock_hooks;
-  m_lock_hooks_locked = true; // protect hooks from alterations
+  LockHooks lock_hooks = lock_hooks_;
+  lock_hooks_locked_ = true; // protect hooks from alterations
   main_mutex.unlock();
   int presult;
   const bool needs_locking = lock_hooks.sense();
@@ -760,11 +761,11 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   if (needs_locking)
     lock_hooks.lock();
   main_mutex.lock();
-  m_lock_hooks_locked = false;
+  lock_hooks_locked_ = false;
   if (presult < 0)
     critical ("MainLoop: poll() failed: %s", strerror());
   else if (pfda[wakeup_idx].revents)
-    m_eventfd.flush(); // restart queueing wakeups, possibly triggered by dispatching
+    eventfd_.flush(); // restart queueing wakeups, possibly triggered by dispatching
   // check
   state.phase = state.CHECK;
   state.current_time_usecs = timestamp_realtime();
@@ -779,7 +780,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     {
       size_t index, i = nloops;
       do        // find next dispatchable loop in round-robin fashion
-        index = m_rr_index++ % nloops;
+        index = rr_index_++ % nloops;
       while (!dispatchable[index] && i--);
       state.phase = state.DISPATCH;
       unref_source = loops[index]->dispatch_source_Lm (state); // passes on dispatch_source reference
@@ -802,17 +803,17 @@ struct SlaveLoop : public EventLoop {
   SlaveLoop (MainLoop &main) :
     EventLoop (main)
   {
-    ScopedLock<Mutex> locker (m_main_loop.mutex());
-    ref (m_main_loop);
-    m_main_loop.add_loop_L (*this);
+    ScopedLock<Mutex> locker (main_loop_.mutex());
+    ref (main_loop_);
+    main_loop_.add_loop_L (*this);
   }
   ~SlaveLoop()
   {
-    ScopedLock<Mutex> locker (m_main_loop.mutex());
+    ScopedLock<Mutex> locker (main_loop_.mutex());
     kill_sources_Lm();
-    m_main_loop.remove_loop_L (*this);
+    main_loop_.remove_loop_L (*this);
     locker.unlock();
-    unref (m_main_loop); // unlocked
+    unref (main_loop_); // unlocked
   }
 };
 
@@ -835,23 +836,23 @@ EventLoop::State::State() :
 
 // === EventLoop::Source ===
 EventLoop::Source::Source () :
-  m_loop (NULL),
-  m_pfds (NULL),
-  m_id (0),
-  m_priority (INT_MAX),
-  m_loop_state (0),
-  m_may_recurse (0),
-  m_dispatching (0),
-  m_was_dispatching (0),
-  m_primary (0)
+  loop_ (NULL),
+  pfds_ (NULL),
+  id_ (0),
+  priority_ (INT_MAX),
+  loop_state_ (0),
+  may_recurse_ (0),
+  dispatching_ (0),
+  was_dispatching_ (0),
+  primary_ (0)
 {}
 
 uint
 EventLoop::Source::n_pfds ()
 {
   uint i = 0;
-  if (m_pfds)
-    while (m_pfds[i].pfd)
+  if (pfds_)
+    while (pfds_[i].pfd)
       i++;
   return i;
 }
@@ -859,31 +860,31 @@ EventLoop::Source::n_pfds ()
 void
 EventLoop::Source::may_recurse (bool may_recurse)
 {
-  m_may_recurse = may_recurse;
+  may_recurse_ = may_recurse;
 }
 
 bool
 EventLoop::Source::may_recurse () const
 {
-  return m_may_recurse;
+  return may_recurse_;
 }
 
 bool
 EventLoop::Source::primary () const
 {
-  return m_primary;
+  return primary_;
 }
 
 void
 EventLoop::Source::primary (bool is_primary)
 {
-  m_primary = is_primary;
+  primary_ = is_primary;
 }
 
 bool
 EventLoop::Source::recursion () const
 {
-  return m_dispatching && m_was_dispatching;
+  return dispatching_ && was_dispatching_;
 }
 
 void
@@ -891,13 +892,13 @@ EventLoop::Source::add_poll (PollFD *const pfd)
 {
   const uint idx = n_pfds();
   uint npfds = idx + 1;
-  m_pfds = (typeof (m_pfds)) realloc (m_pfds, sizeof (m_pfds[0]) * (npfds + 1));
-  if (!m_pfds)
+  pfds_ = (typeof (pfds_)) realloc (pfds_, sizeof (pfds_[0]) * (npfds + 1));
+  if (!pfds_)
     fatal ("EventLoopSource: out of memory");
-  m_pfds[npfds].idx = UINT_MAX;
-  m_pfds[npfds].pfd = NULL;
-  m_pfds[idx].idx = UINT_MAX;
-  m_pfds[idx].pfd = pfd;
+  pfds_[npfds].idx = UINT_MAX;
+  pfds_[npfds].pfd = NULL;
+  pfds_[idx].idx = UINT_MAX;
+  pfds_[idx].pfd = pfd;
 }
 
 void
@@ -905,15 +906,15 @@ EventLoop::Source::remove_poll (PollFD *const pfd)
 {
   uint idx, npfds = n_pfds();
   for (idx = 0; idx < npfds; idx++)
-    if (m_pfds[idx].pfd == pfd)
+    if (pfds_[idx].pfd == pfd)
       break;
   if (idx < npfds)
     {
-      m_pfds[idx].idx = UINT_MAX;
-      m_pfds[idx].pfd = m_pfds[npfds - 1].pfd;
-      m_pfds[idx].idx = m_pfds[npfds - 1].idx;
-      m_pfds[npfds - 1].idx = UINT_MAX;
-      m_pfds[npfds - 1].pfd = NULL;
+      pfds_[idx].idx = UINT_MAX;
+      pfds_[idx].pfd = pfds_[npfds - 1].pfd;
+      pfds_[idx].idx = pfds_[npfds - 1].idx;
+      pfds_[npfds - 1].idx = UINT_MAX;
+      pfds_[npfds - 1].pfd = NULL;
     }
   else
     critical ("EventLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
@@ -926,45 +927,43 @@ EventLoop::Source::destroy ()
 void
 EventLoop::Source::loop_remove ()
 {
-  if (m_loop)
-    m_loop->try_remove (source_id());
+  if (loop_)
+    loop_->try_remove (source_id());
 }
 
 EventLoop::Source::~Source ()
 {
-  RAPICORN_ASSERT (m_loop == NULL);
-  if (m_pfds)
-    free (m_pfds);
+  RAPICORN_ASSERT (loop_ == NULL);
+  if (pfds_)
+    free (pfds_);
 }
 
 // == EventLoop::DispatcherSource ==
-EventLoop::DispatcherSource::DispatcherSource (Signals::Trampoline1<bool,const State&> &tr) :
-  m_trampoline (ref_sink (&tr))
+EventLoop::DispatcherSource::DispatcherSource (const DispatcherSlot &slot) :
+  slot_ (slot)
 {}
 
 EventLoop::DispatcherSource::~DispatcherSource ()
 {
-  Signals::Trampoline1<bool,const State&> *old_trampoline = m_trampoline;
-  m_trampoline = NULL;
-  unref (old_trampoline);
+  slot_ = NULL;
 }
 
 bool
 EventLoop::DispatcherSource::prepare (const State &state, int64 *timeout_usecs_p)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 bool
 EventLoop::DispatcherSource::check (const State &state)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 bool
 EventLoop::DispatcherSource::dispatch (const State &state)
 {
-  return (*m_trampoline) (state);
+  return slot_ (state);
 }
 
 void
@@ -972,68 +971,64 @@ EventLoop::DispatcherSource::destroy()
 {
   State state;
   state.phase = state.DESTROY;
-  (*m_trampoline) (state);
+  slot_ (state);
 }
 
 // == EventLoop::TimedSource ==
-EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
-                                     uint initial_interval_msecs,
-                                     uint repeat_interval_msecs) :
-  m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
-  m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
-  m_oneshot (true), m_vtrampoline (ref_sink (&vt))
+EventLoop::TimedSource::TimedSource (const VoidSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
+  expiration_usecs_ (timestamp_realtime() + 1000ULL * initial_interval_msecs),
+  interval_msecs_ (repeat_interval_msecs), first_interval_ (true),
+  oneshot_ (true), void_slot_ (slot)
 {}
 
-EventLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
-                                     uint initial_interval_msecs,
-                                     uint repeat_interval_msecs) :
-  m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
-  m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
-  m_oneshot (false), m_btrampoline (ref_sink (&bt))
+EventLoop::TimedSource::TimedSource (const BoolSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
+  expiration_usecs_ (timestamp_realtime() + 1000ULL * initial_interval_msecs),
+  interval_msecs_ (repeat_interval_msecs), first_interval_ (true),
+  oneshot_ (false), bool_slot_ (slot)
 {}
 
 bool
 EventLoop::TimedSource::prepare (const State &state,
                                  int64 *timeout_usecs_p)
 {
-  if (state.current_time_usecs >= m_expiration_usecs)
+  if (state.current_time_usecs >= expiration_usecs_)
     return true;                                            /* timeout expired */
-  if (!m_first_interval)
+  if (!first_interval_)
     {
-      uint64 interval = m_interval_msecs * 1000ULL;
-      if (state.current_time_usecs + interval < m_expiration_usecs)
-        m_expiration_usecs = state.current_time_usecs + interval; /* clock warped back in time */
+      uint64 interval = interval_msecs_ * 1000ULL;
+      if (state.current_time_usecs + interval < expiration_usecs_)
+        expiration_usecs_ = state.current_time_usecs + interval; /* clock warped back in time */
     }
-  *timeout_usecs_p = MIN (INT_MAX, m_expiration_usecs - state.current_time_usecs);
+  *timeout_usecs_p = MIN (INT_MAX, expiration_usecs_ - state.current_time_usecs);
   return 0 == *timeout_usecs_p;
 }
 
 bool
 EventLoop::TimedSource::check (const State &state)
 {
-  return state.current_time_usecs >= m_expiration_usecs;
+  return state.current_time_usecs >= expiration_usecs_;
 }
 
 bool
 EventLoop::TimedSource::dispatch (const State &state)
 {
   bool repeat = false;
-  m_first_interval = false;
-  if (m_oneshot && m_vtrampoline->callable())
-    (*m_vtrampoline) ();
-  else if (!m_oneshot && m_btrampoline->callable())
-    repeat = (*m_btrampoline) ();
+  first_interval_ = false;
+  if (oneshot_ && void_slot_ != NULL)
+    void_slot_ ();
+  else if (!oneshot_ && bool_slot_ != NULL)
+    repeat = bool_slot_ ();
   if (repeat)
-    m_expiration_usecs = timestamp_realtime() + 1000ULL * m_interval_msecs;
+    expiration_usecs_ = timestamp_realtime() + 1000ULL * interval_msecs_;
   return repeat;
 }
 
 EventLoop::TimedSource::~TimedSource ()
 {
-  if (m_oneshot)
-    unref (m_vtrampoline);
+  if (oneshot_)
+    void_slot_.~VoidSlot();
   else
-    unref (m_btrampoline);
+    bool_slot_.~BoolSlot();
 }
 
 // == EventLoop::PollFDSource ==
@@ -1050,26 +1045,22 @@ EventLoop::TimedSource::~TimedSource ()
  * @li @c "H" - ignore hangup (or auto destroy)
  * @li @c "C" - prevent auto close on destroy
  */
-EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
-                                       int                                 fd,
-                                       const String                       &mode) :
-  m_pfd ((PollFD) { fd, 0, 0 }),
-  m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
-  m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
-  m_never_close (strchr (mode.c_str(), 'C') != NULL),
-  m_oneshot (false), m_btrampoline (ref_sink (&bt))
+EventLoop::PollFDSource::PollFDSource (const BPfdSlot &slot, int fd, const String &mode) :
+  pfd_ ((PollFD) { fd, 0, 0 }),
+  ignore_errors_ (strchr (mode.c_str(), 'E') != NULL),
+  ignore_hangup_ (strchr (mode.c_str(), 'H') != NULL),
+  never_close_ (strchr (mode.c_str(), 'C') != NULL),
+  oneshot_ (false), bool_poll_slot_ (slot)
 {
   construct (mode);
 }
 
-EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
-                                       int                                 fd,
-                                       const String                       &mode) :
-  m_pfd ((PollFD) { fd, 0, 0 }),
-  m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
-  m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
-  m_never_close (strchr (mode.c_str(), 'C') != NULL),
-  m_oneshot (true), m_vtrampoline (ref_sink (&vt))
+EventLoop::PollFDSource::PollFDSource (const VPfdSlot &slot, int fd, const String &mode) :
+  pfd_ ((PollFD) { fd, 0, 0 }),
+  ignore_errors_ (strchr (mode.c_str(), 'E') != NULL),
+  ignore_hangup_ (strchr (mode.c_str(), 'H') != NULL),
+  never_close_ (strchr (mode.c_str(), 'C') != NULL),
+  oneshot_ (true), void_poll_slot_ (slot)
 {
   construct (mode);
 }
@@ -1077,13 +1068,13 @@ EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
 void
 EventLoop::PollFDSource::construct (const String &mode)
 {
-  add_poll (&m_pfd);
-  m_pfd.events |= strchr (mode.c_str(), 'w') ? PollFD::OUT : 0;
-  m_pfd.events |= strchr (mode.c_str(), 'r') ? PollFD::IN : 0;
-  m_pfd.events |= strchr (mode.c_str(), 'p') ? PollFD::PRI : 0;
-  if (m_pfd.fd >= 0)
+  add_poll (&pfd_);
+  pfd_.events |= strchr (mode.c_str(), 'w') ? PollFD::OUT : 0;
+  pfd_.events |= strchr (mode.c_str(), 'r') ? PollFD::IN : 0;
+  pfd_.events |= strchr (mode.c_str(), 'p') ? PollFD::PRI : 0;
+  if (pfd_.fd >= 0)
     {
-      const long lflags = fcntl (m_pfd.fd, F_GETFL, 0);
+      const long lflags = fcntl (pfd_.fd, F_GETFL, 0);
       long nflags = lflags;
       if (strchr (mode.c_str(), 'b'))
         nflags &= ~long (O_NONBLOCK);
@@ -1093,7 +1084,7 @@ EventLoop::PollFDSource::construct (const String &mode)
         {
           int err;
           do
-            err = fcntl (m_pfd.fd, F_SETFL, nflags);
+            err = fcntl (pfd_.fd, F_SETFL, nflags);
           while (err < 0 && (errno == EINTR || errno == EAGAIN));
         }
     }
@@ -1103,36 +1094,36 @@ bool
 EventLoop::PollFDSource::prepare (const State &state,
                                   int64 *timeout_usecs_p)
 {
-  m_pfd.revents = 0;
-  return m_pfd.fd < 0;
+  pfd_.revents = 0;
+  return pfd_.fd < 0;
 }
 
 bool
 EventLoop::PollFDSource::check (const State &state)
 {
-  return m_pfd.fd < 0 || m_pfd.revents != 0;
+  return pfd_.fd < 0 || pfd_.revents != 0;
 }
 
 bool
 EventLoop::PollFDSource::dispatch (const State &state)
 {
   bool keep_alive = false;
-  if (m_pfd.fd >= 0 && (m_pfd.revents & PollFD::NVAL))
+  if (pfd_.fd >= 0 && (pfd_.revents & PollFD::NVAL))
     ; // close down
-  else if (m_pfd.fd >= 0 && !m_ignore_errors && (m_pfd.revents & PollFD::ERR))
+  else if (pfd_.fd >= 0 && !ignore_errors_ && (pfd_.revents & PollFD::ERR))
     ; // close down
-  else if (m_pfd.fd >= 0 && !m_ignore_hangup && (m_pfd.revents & PollFD::HUP))
+  else if (pfd_.fd >= 0 && !ignore_hangup_ && (pfd_.revents & PollFD::HUP))
     ; // close down
-  else if (m_oneshot && m_vtrampoline->callable())
-    (*m_vtrampoline) (m_pfd);
-  else if (!m_oneshot && m_btrampoline->callable())
-    keep_alive = (*m_btrampoline) (m_pfd);
+  else if (oneshot_ && void_poll_slot_ != NULL)
+    void_poll_slot_ (pfd_);
+  else if (!oneshot_ && bool_poll_slot_ != NULL)
+    keep_alive = bool_poll_slot_ (pfd_);
   /* close down */
   if (!keep_alive)
     {
-      if (!m_never_close && m_pfd.fd >= 0)
-        close (m_pfd.fd);
-      m_pfd.fd = -1;
+      if (!never_close_ && pfd_.fd >= 0)
+        close (pfd_.fd);
+      pfd_.fd = -1;
     }
   return keep_alive;
 }
@@ -1141,17 +1132,17 @@ void
 EventLoop::PollFDSource::destroy()
 {
   /* close down */
-  if (!m_never_close && m_pfd.fd >= 0)
-    close (m_pfd.fd);
-  m_pfd.fd = -1;
+  if (!never_close_ && pfd_.fd >= 0)
+    close (pfd_.fd);
+  pfd_.fd = -1;
 }
 
 EventLoop::PollFDSource::~PollFDSource ()
 {
-  if (m_oneshot)
-    unref (m_vtrampoline);
+  if (oneshot_)
+    void_poll_slot_.~VPfdSlot();
   else
-    unref (m_btrampoline);
+    bool_poll_slot_.~BPfdSlot();
 }
 
 } // Rapicorn

@@ -51,7 +51,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  ApplicationH app = init_app (__SOURCE_COMPONENT__, &argc, argv);
+  ApplicationH app = init_app (__PRETTY_FILE__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
@@ -61,8 +61,8 @@ main (int   argc,
 
   // hook up drawable test
   DrawableH drawable = window.component<DrawableH> ("Drawable#drawable1");
-  RAPICORN_ASSERT (drawable._is_null() == false);
-  drawable.sig_redraw() += slot (&drawable_redraw);
+  RAPICORN_ASSERT (drawable != NULL);
+  drawable.sig_redraw() += [&drawable] (int x, int y, int w, int h) { drawable_redraw (drawable, x, y, w, h); };
 
   // show main window
   window.show();
