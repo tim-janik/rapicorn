@@ -9,7 +9,7 @@ namespace Rapicorn {
 class Arrow : public virtual WidgetImpl {
 protected:
   virtual
-  const PropertyList&    _property_list();
+  const PropertyList&    __aida_properties__();
 public:
   virtual void           arrow_dir      (DirType dir) = 0;
   virtual DirType        arrow_dir      () const = 0;
@@ -21,7 +21,7 @@ class DotGrid : public virtual WidgetImpl {
   FrameType             dot_type        () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
   virtual
-  const PropertyList&   _property_list      ();
+  const PropertyList&   __aida_properties__      ();
 public:
   void                  dot_type            (FrameType ft);
   virtual void          normal_dot          (FrameType ft) = 0;
@@ -49,7 +49,7 @@ protected:
   virtual void  size_request    (Requisition &requisition);
   virtual void  size_allocate   (Allocation area, bool changed);
   virtual void  render          (RenderContext &rcontext, const Rect &rect);
-  virtual const PropertyList&   _property_list ();
+  virtual const PropertyList&   __aida_properties__ ();
 public:
   explicit      DrawableImpl    ();
 };

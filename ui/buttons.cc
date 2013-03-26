@@ -15,12 +15,12 @@ ButtonAreaImpl::ButtonAreaImpl() :
 {}
 
 const PropertyList&
-ButtonAreaImpl::_property_list()
+ButtonAreaImpl::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (ButtonAreaImpl, click_type, _("CLick Type"), _("Click event generation type"), "rw"),
   };
-  static const PropertyList property_list (properties, SingleContainerImpl::_property_list(), ButtonAreaIface::_property_list());
+  static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__(), ButtonAreaIface::__aida_properties__());
   return property_list;
 }
 

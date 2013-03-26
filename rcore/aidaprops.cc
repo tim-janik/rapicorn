@@ -22,7 +22,7 @@ propcanonify (String s)
 
 // == PropertyHostInterface ==
 const PropertyList&
-ImplicitBase::_property_list ()
+ImplicitBase::__aida_properties__ ()
 {
   static const PropertyList empty_property_list;
   return empty_property_list;
@@ -42,7 +42,7 @@ ImplicitBase::_property_lookup (const String &property_name)
     plist_map = new (space) std::map<const PropertyList*,PropertyMap*>();
   }
   // find or construct property map
-  const PropertyList &plist = _property_list();
+  const PropertyList &plist = __aida_properties__();
   ScopedLock<Mutex> plist_map_locker (plist_map_mutex);
   PropertyMap *pmap = (*plist_map)[&plist];
   if (!pmap)

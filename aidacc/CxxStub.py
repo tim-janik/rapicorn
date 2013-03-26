@@ -493,7 +493,7 @@ class Generator:
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
       s += '  virtual ' + self.F ('void') + ' _list_types (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
-        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
+        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__();\n'
       s += '  template<class SmartHandle>\n'
@@ -663,12 +663,12 @@ class Generator:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '}\n'
     return s
-  def generate_server_property_list (self, class_info):
+  def generate_server_list_properties (self, class_info):
     if not self.property_list:
       return ''
     assert self.gen_mode == G4SERVANT
     s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
-    s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
+    s += constPList + '&\n' + classC + '::__aida_properties__ ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
     for fl in class_info.fields:
       cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
@@ -677,7 +677,7 @@ class Generator:
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
-    calls = [cl + '::_property_list()' for cl in precls]
+    calls = [cl + '::__aida_properties__()' for cl in precls]
     s += '  static ' + constPList + ' property_list (properties, %s);\n' % (', ').join (calls)
     s += '  return property_list;\n'
     s += '}\n'
@@ -1200,7 +1200,7 @@ class Generator:
           if self.gen_servercc:
             s += self.open_namespace (tp)
             s += self.generate_server_class_methods (tp)
-            s += self.generate_server_property_list (tp)
+            s += self.generate_server_list_properties (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             for sg in tp.signals:

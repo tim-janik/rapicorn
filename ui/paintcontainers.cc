@@ -34,7 +34,7 @@ Ambience::shade (LightingType sh)
 }
 
 const PropertyList&
-Ambience::_property_list()
+Ambience::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
@@ -53,7 +53,7 @@ Ambience::_property_list()
     MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "wo"),
     MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "wo"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
@@ -196,7 +196,7 @@ Frame::frame_type (FrameType ft)
 }
 
 const PropertyList&
-Frame::_property_list()
+Frame::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
@@ -205,7 +205,7 @@ Frame::_property_list()
     MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "rw"),
     MakeProperty (Frame, tight_focus,     _("Tight Focus"),    _("Prevent extra padding around focus frames"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
@@ -351,12 +351,12 @@ public:
 static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 
 const PropertyList&
-FocusFrame::_property_list()
+FocusFrame::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
   };
-  static const PropertyList property_list (properties, Frame::_property_list());
+  static const PropertyList property_list (properties, Frame::__aida_properties__());
   return property_list;
 }
 

@@ -1241,10 +1241,10 @@ protected:
     rapicorn_pango_mutex.unlock();
   }
   virtual const PropertyList&
-  _property_list() // escape check-_property_list ';'
+  __aida_properties__() // escape check-__aida_properties__ ';'
   {
     static Property *properties[] = {};
-    static const PropertyList property_list (properties, WidgetImpl::_property_list(), Client::client__property_list());
+    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), Client::client_property_list());
     return property_list;
   }
 };

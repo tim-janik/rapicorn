@@ -16,7 +16,7 @@ TestContainer::TestContainer()
 #define DFLTEPS (1e-8)
 
 const PropertyList&
-TestContainer::_property_list()
+TestContainer::__aida_properties__()
 {
   /* not using _() here, because TestContainer is just a developer tool */
   static Property *properties[] = {
@@ -34,7 +34,7 @@ TestContainer::_property_list()
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
     MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
@@ -180,12 +180,12 @@ protected:
 static const WidgetFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 const PropertyList&
-TestBox::_property_list()
+TestBox::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
@@ -264,7 +264,7 @@ class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidge
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}
-  virtual const PropertyList& _property_list () { return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::_property_list(), IdlTestWidgetIface::_property_list()); }
+  virtual const PropertyList& __aida_properties__ () { return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::__aida_properties__(), IdlTestWidgetIface::__aida_properties__()); }
 };
 static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::Factory::IdlTestWidget");
 

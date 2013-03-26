@@ -19,13 +19,13 @@ class WidgetListRowImpl : public virtual SingleContainerImpl,
   WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
 protected:
   virtual const PropertyList&
-  _property_list ()
+  __aida_properties__ ()
   {
     static Property *properties[] = {
       MakeProperty (WidgetListRowImpl, selected,  _("Selected"), _("Indicates wether this row is selected"), "rw"),
       MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), "ro"),
     };
-    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
+    static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__());
     return property_list;
   }
   virtual void
@@ -118,13 +118,13 @@ static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn
 static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
 
 const PropertyList&
-WidgetListImpl::_property_list()
+WidgetListImpl::__aida_properties__()
 {
   static Property *properties[] = {};
   static const PropertyList property_list (properties,
-                                           WidgetListIface::_property_list(),
-                                           MultiContainerImpl::_property_list(),
-                                           AdjustmentSource::_property_list());
+                                           WidgetListIface::__aida_properties__(),
+                                           MultiContainerImpl::__aida_properties__(),
+                                           AdjustmentSource::__aida_properties__());
   return property_list;
 }
 

@@ -104,7 +104,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "MandatoryNamespace::FirstInterface"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          void_func             ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
@@ -158,7 +158,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::UIWidgetArea"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          dummy    () const = 0;
   virtual void                          dummy    (bool) = 0;
   virtual std::string                   on_click () const = 0;
@@ -203,7 +203,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Parent"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
@@ -221,7 +221,7 @@ protected:
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Child"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
@@ -239,7 +239,7 @@ protected:
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Descendant"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
@@ -257,7 +257,7 @@ protected:
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::GrandChild"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
@@ -276,7 +276,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::QuickIface"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          simple_function   (int i = 9);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
@@ -296,7 +296,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::MethodTestInterface"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          method_with_void           ();
   virtual bool                          method_with_bools          (bool input,
                                                                     bool optval = 0);
@@ -338,7 +338,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::SignalTestInterface"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
   typedef Rapicorn::Aida::AsyncSignal<int ()> Signal_int32_result;
@@ -404,7 +404,7 @@ protected:
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::ChildInheritingSignals"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
@@ -424,7 +424,7 @@ protected:
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::AnotherChild"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
@@ -443,7 +443,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::PropertyTester"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          bool_prop      () const = 0;
   virtual void                          bool_prop      (bool) = 0;
   virtual int                           int32_prop     () const = 0;
@@ -487,7 +487,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::ButtonArea"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual std::string                   on_click   () const = 0;
   virtual void                          on_click   (const std::string&) = 0;
   virtual std::string                   on_click2  () const = 0;
@@ -520,7 +520,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::PureMethods"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual int                           pure_method        (double f) = 0;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
@@ -543,7 +543,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "Other::NameTests"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
                                                                    const OtherNamespace::SomeRecord &sr);
@@ -568,7 +568,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "BseTest::Compressor"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual double                        threshold () const = 0;
   virtual void                          threshold (double) = 0;
   virtual double                        ratio     () const = 0;
@@ -591,7 +591,7 @@ public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "BseTest::SoundModule"; }
   virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);
@@ -638,11 +638,11 @@ I_FirstInterfaceIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x22113f623903ac14ULL, 0x3fe8e50c1a9a78d2ULL)); // FirstInterface
 }
 const Rapicorn::Aida::PropertyList&
-I_FirstInterfaceIface::_property_list ()
+I_FirstInterfaceIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 } // MandatoryNamespace
@@ -684,13 +684,13 @@ I_UIWidgetAreaIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x11db82aaba1ee248ULL, 0xd2359653ff87e972ULL)); // UIWidgetArea
 }
 const Rapicorn::Aida::PropertyList&
-I_UIWidgetAreaIface::_property_list ()
+I_UIWidgetAreaIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     // RAPICORN_AIDA_PROPERTY (I_UIWidgetAreaIface, dummy, "dummy", "", ""),
     RAPICORN_AIDA_PROPERTY (I_UIWidgetAreaIface, on_click, _("On CLick"), _("Command on button1 click"), "rw"),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -729,11 +729,11 @@ I_ParentIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
 }
 const Rapicorn::Aida::PropertyList&
-I_ParentIface::_property_list ()
+I_ParentIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -768,11 +768,11 @@ I_ChildIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
 }
 const Rapicorn::Aida::PropertyList&
-I_ChildIface::_property_list ()
+I_ChildIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, I_ParentIface::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, I_ParentIface::__aida_properties__());
   return property_list;
 }
 
@@ -808,11 +808,11 @@ I_DescendantIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL)); // Descendant
 }
 const Rapicorn::Aida::PropertyList&
-I_DescendantIface::_property_list ()
+I_DescendantIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, I_ChildIface::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, I_ChildIface::__aida_properties__());
   return property_list;
 }
 
@@ -849,11 +849,11 @@ I_GrandChildIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xf6975e5e92250718ULL, 0x53730d44919c46f9ULL)); // GrandChild
 }
 const Rapicorn::Aida::PropertyList&
-I_GrandChildIface::_property_list ()
+I_GrandChildIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, I_DescendantIface::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, I_DescendantIface::__aida_properties__());
   return property_list;
 }
 
@@ -892,11 +892,11 @@ I_QuickIfaceIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x4524ee119d4e454cULL, 0xbeb61f7c3cc04f7dULL)); // QuickIface
 }
 const Rapicorn::Aida::PropertyList&
-I_QuickIfaceIface::_property_list ()
+I_QuickIfaceIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -935,11 +935,11 @@ I_MethodTestInterfaceIface::_list_types (Rapicorn::Aida::TypeHashList &thl) cons
   thl.push_back (Rapicorn::Aida::TypeHash (0x6bf684458ac5f01aULL, 0xf64c02611b807180ULL)); // MethodTestInterface
 }
 const Rapicorn::Aida::PropertyList&
-I_MethodTestInterfaceIface::_property_list ()
+I_MethodTestInterfaceIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -978,11 +978,11 @@ I_SignalTestInterfaceIface::_list_types (Rapicorn::Aida::TypeHashList &thl) cons
   thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
 }
 const Rapicorn::Aida::PropertyList&
-I_SignalTestInterfaceIface::_property_list ()
+I_SignalTestInterfaceIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -1017,11 +1017,11 @@ I_ChildInheritingSignalsIface::_list_types (Rapicorn::Aida::TypeHashList &thl) c
   thl.push_back (Rapicorn::Aida::TypeHash (0xf20ff30241b5b694ULL, 0x9f544b2626e183f0ULL)); // ChildInheritingSignals
 }
 const Rapicorn::Aida::PropertyList&
-I_ChildInheritingSignalsIface::_property_list ()
+I_ChildInheritingSignalsIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, I_SignalTestInterfaceIface::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, I_SignalTestInterfaceIface::__aida_properties__());
   return property_list;
 }
 
@@ -1056,11 +1056,11 @@ I_AnotherChildIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x9a33af1b27f7e36dULL, 0xdf625f7bd18934faULL)); // AnotherChild
 }
 const Rapicorn::Aida::PropertyList&
-I_AnotherChildIface::_property_list ()
+I_AnotherChildIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, I_SignalTestInterfaceIface::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, I_SignalTestInterfaceIface::__aida_properties__());
   return property_list;
 }
 
@@ -1099,7 +1099,7 @@ I_PropertyTesterIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xa37ab462c55a3b3cULL, 0x4f3fd1c9ad9689fbULL)); // PropertyTester
 }
 const Rapicorn::Aida::PropertyList&
-I_PropertyTesterIface::_property_list ()
+I_PropertyTesterIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, bool_prop, "bool_prop", "", ""),
@@ -1114,7 +1114,7 @@ I_PropertyTesterIface::_property_list ()
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, self_prop, "self_prop", "", ""),
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, any_prop, "any_prop", "", ""),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 } // InterfaceTests
@@ -1156,7 +1156,7 @@ I_ButtonAreaIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xec371b296fa57436ULL, 0x92e4310e386fc92eULL)); // ButtonArea
 }
 const Rapicorn::Aida::PropertyList&
-I_ButtonAreaIface::_property_list ()
+I_ButtonAreaIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     // RAPICORN_AIDA_PROPERTY (I_ButtonAreaIface, on_click, "on_click", "", ""),
@@ -1164,7 +1164,7 @@ I_ButtonAreaIface::_property_list ()
     // RAPICORN_AIDA_PROPERTY (I_ButtonAreaIface, on_click3, "on_click3", "", ""),
     // RAPICORN_AIDA_PROPERTY (I_ButtonAreaIface, click_type, "click_type", "", ""),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -1203,11 +1203,11 @@ I_PureMethodsIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0xddc2a514d04d3af5ULL, 0xc0046740434c0486ULL)); // PureMethods
 }
 const Rapicorn::Aida::PropertyList&
-I_PureMethodsIface::_property_list ()
+I_PureMethodsIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 } // RapicornAidaTest
@@ -1249,11 +1249,11 @@ I_NameTestsIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x542d40cd7d8fcd40ULL, 0x8c1782df29c9b936ULL)); // NameTests
 }
 const Rapicorn::Aida::PropertyList&
-I_NameTestsIface::_property_list ()
+I_NameTestsIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 } // Other
@@ -1295,13 +1295,13 @@ I_CompressorIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x42057a05d51182dfULL, 0x6a0d69cda274433eULL)); // Compressor
 }
 const Rapicorn::Aida::PropertyList&
-I_CompressorIface::_property_list ()
+I_CompressorIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     RAPICORN_AIDA_PROPERTY (I_CompressorIface, threshold, "", "", "w"),
     RAPICORN_AIDA_PROPERTY (I_CompressorIface, ratio, "", "", "w"),
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 
@@ -1340,11 +1340,11 @@ I_SoundModuleIface::_list_types (Rapicorn::Aida::TypeHashList &thl) const
   thl.push_back (Rapicorn::Aida::TypeHash (0x06447b38b51e0198ULL, 0x848669199cc311deULL)); // SoundModule
 }
 const Rapicorn::Aida::PropertyList&
-I_SoundModuleIface::_property_list ()
+I_SoundModuleIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
   };
-  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::_property_list());
+  static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
 

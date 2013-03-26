@@ -590,7 +590,7 @@ WidgetImpl::set_property (const String &property_name, const String &value)
 const PropertyList&
 WidgetImpl::list_properties ()
 {
-  return _property_list();
+  return __aida_properties__();
 }
 
 bool
