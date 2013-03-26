@@ -571,19 +571,19 @@ WidgetImpl::list_commands ()
 Property*
 WidgetImpl::lookup_property (const String &property_name)
 {
-  return _property_lookup (property_name);
+  return __aida_lookup__ (property_name);
 }
 
 String
 WidgetImpl::get_property (const String &property_name)
 {
-  return _property_get (property_name);
+  return __aida_getter__ (property_name);
 }
 
 void
 WidgetImpl::set_property (const String &property_name, const String &value)
 {
-  if (!_property_set (property_name, value))
+  if (!__aida_setter__ (property_name, value))
     throw Exception ("no such property: " + name() + "::" + property_name);
 }
 
@@ -596,7 +596,7 @@ WidgetImpl::list_properties ()
 bool
 WidgetImpl::try_set_property (const String &property_name, const String &value)
 {
-  return _property_set (property_name, value);
+  return __aida_setter__ (property_name, value);
 }
 
 static class OvrKey : public DataKey<Requisition> {

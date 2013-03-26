@@ -135,9 +135,9 @@ class ImplicitBase /// Abstract base interface that all IDL interfaces are impli
 protected:
   virtual                     ~ImplicitBase       () = 0; // abstract class
   virtual const PropertyList& __aida_properties__ () = 0; ///< Retrieve the list properties of an instance.
-  Property*                   _property_lookup    (const std::string &property_name);
-  bool                        _property_set       (const std::string &property_name, const std::string &value);
-  std::string                 _property_get       (const std::string &property_name);
+  Property*                   __aida_lookup__     (const std::string &property_name);
+  bool                        __aida_setter__     (const std::string &property_name, const std::string &value);
+  std::string                 __aida_getter__     (const std::string &property_name);
 public:
   virtual std::string        __aida_type_name__   () = 0; ///< Retrieve the IDL type name of an instance.
 };

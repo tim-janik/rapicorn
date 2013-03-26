@@ -32,7 +32,7 @@ ImplicitBase::__aida_properties__ ()
 static Mutex plist_map_mutex;
 
 Property*
-ImplicitBase::_property_lookup (const String &property_name)
+ImplicitBase::__aida_lookup__ (const String &property_name)
 {
   // provide PropertyMaps globally
   typedef std::unordered_map<String, Property*> PropertyMap;
@@ -69,9 +69,9 @@ ImplicitBase::_property_lookup (const String &property_name)
 }
 
 bool
-ImplicitBase::_property_set (const String &property_name, const String &value)
+ImplicitBase::__aida_setter__ (const String &property_name, const String &value)
 {
-  Property *prop = _property_lookup (property_name);
+  Property *prop = __aida_lookup__ (property_name);
   if (!prop)
     return false;
   prop->set_value (*this, value);
@@ -79,9 +79,9 @@ ImplicitBase::_property_set (const String &property_name, const String &value)
 }
 
 String
-ImplicitBase::_property_get (const String &property_name)
+ImplicitBase::__aida_getter__ (const String &property_name)
 {
-  Property *prop = _property_lookup (property_name);
+  Property *prop = __aida_lookup__ (property_name);
   if (!prop)
     return ""; // be more verbose here?
   return prop->get_value (*this);
