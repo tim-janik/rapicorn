@@ -97,25 +97,25 @@ EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
-	${AIDACC} -x CxxStub -G serverhh -G iface-base=Rapicorn::BaseObject -G iface-postfix=Iface \
+	${AIDACC} -x CxxStub -G serverhh -G iface-base=Rapicorn::BaseObject \
 	  -G cppguard=__RAPICORN_SERVERAPI_HH_ \
 	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
-	${AIDACC} -x CxxStub -G servercc -G iface-base=Rapicorn::BaseObject -G iface-postfix=Iface \
+	${AIDACC} -x CxxStub -G servercc -G iface-base=Rapicorn::BaseObject \
 	  --inclusions '"widget.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.hh
 clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.hh
-	${AIDACC} -x CxxStub -G clienthh -G iface-base=Rapicorn::BaseObject -G iface-postfix=Iface \
+	${AIDACC} -x CxxStub -G clienthh -G iface-base=Rapicorn::BaseObject \
 	  -G cppguard=__RAPICORN_CLIENTAPI_HH_ \
 	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
-	${AIDACC} -x CxxStub -G clientcc -G iface-base=Rapicorn::BaseObject -G iface-postfix=Iface \
+	${AIDACC} -x CxxStub -G clientcc -G iface-base=Rapicorn::BaseObject \
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
@@ -126,7 +126,7 @@ skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	  *.lo) . "./$$obj" ; o="$$pic_object" ;; *.o|*) o="$$obj" ;; esac ; \
 	  nm -C "$$o" ; done | grep -v '^[[:space:]]*U[[:space:]]' | \
 	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
-	${AIDACC} -x CxxStub -G server-skel -G iface-postfix=Iface --skip-skels xgen-syms-$(@F) \
+	${AIDACC} -x CxxStub -G server-skel --skip-skels xgen-syms-$(@F) \
 	  $(srcdir)/interfaces.idl -o xgen-$(@F)
 	rm -f xgen-syms-$(@F)
 	mv xgen-$(@F) $@
