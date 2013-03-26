@@ -19,35 +19,6 @@ rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 """
 
-gencc_boilerplate = r"""
-// --- ClientCC/ServerCC Boilerplate ---
-#include <string>
-#include <vector>
-#include <stdexcept>
-#ifndef __AIDA_GENERIC_CC_BOILERPLATE__
-#define __AIDA_GENERIC_CC_BOILERPLATE__
-
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
-
-namespace { // Anon
-using Rapicorn::Aida::uint64_t;
-
-namespace __AIDA_Local__ {
-using namespace Rapicorn::Aida;
-static __attribute__ ((__format__ (__printf__, 1, 2), unused)) FieldBuffer*
-error (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  error_vprintf (format, args);
-  va_end (args);
-  return NULL;
-}
-} } // Anon::__AIDA_Local__
-#endif // __AIDA_GENERIC_CC_BOILERPLATE__
-"""
-
-
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
@@ -1055,9 +1026,9 @@ class Generator:
       s += serverhh_boilerplate
       s += rapicornsignal_boilerplate
     if self.gen_servercc:
-      s += gencc_boilerplate + '\n' + text_expand (TmplFiles.CxxStub_server_cc) + '\n'
+      s += text_expand (TmplFiles.CxxStub_server_cc) + '\n'
     if self.gen_clientcc:
-      s += gencc_boilerplate + '\n' + TmplFiles.CxxStub_client_cc + '\n'
+      s += TmplFiles.CxxStub_client_cc + '\n'
     self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
