@@ -189,7 +189,7 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e
 class FirstInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static FirstInterfaceHandle            __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -455,7 +455,7 @@ class UIWidgetAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> __Aida_Signal__sample_signal;
   size_t __aida_connect__sample_signal (size_t, const std::function<double (UIWidgetAreaHandle &ba1, int someint)>&);
   static UIWidgetAreaHandle              __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -498,7 +498,7 @@ typedef UIWidgetAreaHandle UIWidgetAreaH; ///< Convenience alias for the IDL typ
 class ParentHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static ParentHandle                    __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -517,7 +517,7 @@ typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
 class ChildHandle : public ParentHandle
 {
   static ChildHandle                     __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -535,7 +535,7 @@ typedef ChildHandle ChildH; ///< Convenience alias for the IDL type Child.
 class DescendantHandle : public ChildHandle
 {
   static DescendantHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -553,7 +553,7 @@ typedef DescendantHandle DescendantH; ///< Convenience alias for the IDL type De
 class GrandChildHandle : public DescendantHandle
 {
   static GrandChildHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -600,7 +600,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
 class QuickIfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static QuickIfaceHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -620,7 +620,7 @@ typedef QuickIfaceHandle QuickIfaceH; ///< Convenience alias for the IDL type Qu
 class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static MethodTestInterfaceHandle       __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -710,7 +710,7 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> __Aida_Signal__self_args;
   size_t __aida_connect__self_args (size_t, const std::function<void (SignalTestInterfaceHandle &self_)>&);
   static SignalTestInterfaceHandle       __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -755,7 +755,7 @@ class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
   typedef Rapicorn::Aida::Connector<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> __Aida_Signal__child_signal;
   size_t __aida_connect__child_signal (size_t, const std::function<void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)>&);
   static ChildInheritingSignalsHandle    __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -774,7 +774,7 @@ typedef ChildInheritingSignalsHandle ChildInheritingSignalsH; ///< Convenience a
 class AnotherChildHandle : public SignalTestInterfaceHandle
 {
   static AnotherChildHandle              __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -792,7 +792,7 @@ typedef AnotherChildHandle AnotherChildH; ///< Convenience alias for the IDL typ
 class PropertyTesterHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static PropertyTesterHandle            __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -850,7 +850,7 @@ class ButtonAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<ButtonAreaHandle, void ()> __Aida_Signal__activate;
   size_t __aida_connect__activate (size_t, const std::function<void ()>&);
   static ButtonAreaHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -881,7 +881,7 @@ class PureMethodsHandle;
 class PureMethodsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static PureMethodsHandle               __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -921,7 +921,7 @@ namespace Other {
 class NameTestsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static NameTestsHandle                 __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -946,7 +946,7 @@ namespace BseTest {
 class CompressorHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static CompressorHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -984,7 +984,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
 class SoundModuleHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static SoundModuleHandle               __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -1177,7 +1177,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, FirstInterfaceHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-FirstInterfaceHandle::__aida_type__()
+FirstInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x22113f623903ac14ULL, 0x3fe8e50c1a9a78d2ULL);
   return type_hash;
@@ -1185,7 +1185,7 @@ FirstInterfaceHandle::__aida_type__()
 FirstInterfaceHandle
 FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<FirstInterfaceHandle> (other);
@@ -1666,7 +1666,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, UIWidgetAreaHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-UIWidgetAreaHandle::__aida_type__()
+UIWidgetAreaHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x11db82aaba1ee248ULL, 0xd2359653ff87e972ULL);
   return type_hash;
@@ -1674,7 +1674,7 @@ UIWidgetAreaHandle::__aida_type__()
 UIWidgetAreaHandle
 UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<UIWidgetAreaHandle> (other);
@@ -1921,7 +1921,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ParentHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ParentHandle::__aida_type__()
+ParentHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL);
   return type_hash;
@@ -1929,7 +1929,7 @@ ParentHandle::__aida_type__()
 ParentHandle
 ParentHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ParentHandle> (other);
@@ -1975,7 +1975,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ChildHandle::__aida_type__()
+ChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL);
   return type_hash;
@@ -1983,7 +1983,7 @@ ChildHandle::__aida_type__()
 ChildHandle
 ChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ChildHandle> (other);
@@ -2024,7 +2024,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, DescendantHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-DescendantHandle::__aida_type__()
+DescendantHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL);
   return type_hash;
@@ -2032,7 +2032,7 @@ DescendantHandle::__aida_type__()
 DescendantHandle
 DescendantHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<DescendantHandle> (other);
@@ -2073,7 +2073,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, GrandChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-GrandChildHandle::__aida_type__()
+GrandChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf6975e5e92250718ULL, 0x53730d44919c46f9ULL);
   return type_hash;
@@ -2081,7 +2081,7 @@ GrandChildHandle::__aida_type__()
 GrandChildHandle
 GrandChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<GrandChildHandle> (other);
@@ -2169,7 +2169,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, QuickIfaceHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-QuickIfaceHandle::__aida_type__()
+QuickIfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x4524ee119d4e454cULL, 0xbeb61f7c3cc04f7dULL);
   return type_hash;
@@ -2177,7 +2177,7 @@ QuickIfaceHandle::__aida_type__()
 QuickIfaceHandle
 QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<QuickIfaceHandle> (other);
@@ -2233,7 +2233,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, MethodTestInterfaceHandle &handle
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-MethodTestInterfaceHandle::__aida_type__()
+MethodTestInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x6bf684458ac5f01aULL, 0xf64c02611b807180ULL);
   return type_hash;
@@ -2241,7 +2241,7 @@ MethodTestInterfaceHandle::__aida_type__()
 MethodTestInterfaceHandle
 MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<MethodTestInterfaceHandle> (other);
@@ -2924,7 +2924,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, SignalTestInterfaceHandle &handle
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-SignalTestInterfaceHandle::__aida_type__()
+SignalTestInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL);
   return type_hash;
@@ -2932,7 +2932,7 @@ SignalTestInterfaceHandle::__aida_type__()
 SignalTestInterfaceHandle
 SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<SignalTestInterfaceHandle> (other);
@@ -2995,7 +2995,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildInheritingSignalsHandle &han
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ChildInheritingSignalsHandle::__aida_type__()
+ChildInheritingSignalsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf20ff30241b5b694ULL, 0x9f544b2626e183f0ULL);
   return type_hash;
@@ -3003,7 +3003,7 @@ ChildInheritingSignalsHandle::__aida_type__()
 ChildInheritingSignalsHandle
 ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ChildInheritingSignalsHandle> (other);
@@ -3044,7 +3044,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, AnotherChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-AnotherChildHandle::__aida_type__()
+AnotherChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x9a33af1b27f7e36dULL, 0xdf625f7bd18934faULL);
   return type_hash;
@@ -3052,7 +3052,7 @@ AnotherChildHandle::__aida_type__()
 AnotherChildHandle
 AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<AnotherChildHandle> (other);
@@ -3093,7 +3093,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, PropertyTesterHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-PropertyTesterHandle::__aida_type__()
+PropertyTesterHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xa37ab462c55a3b3cULL, 0x4f3fd1c9ad9689fbULL);
   return type_hash;
@@ -3101,7 +3101,7 @@ PropertyTesterHandle::__aida_type__()
 PropertyTesterHandle
 PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<PropertyTesterHandle> (other);
@@ -3462,7 +3462,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ButtonAreaHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ButtonAreaHandle::__aida_type__()
+ButtonAreaHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xec371b296fa57436ULL, 0x92e4310e386fc92eULL);
   return type_hash;
@@ -3470,7 +3470,7 @@ ButtonAreaHandle::__aida_type__()
 ButtonAreaHandle
 ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ButtonAreaHandle> (other);
@@ -3612,7 +3612,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, PureMethodsHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-PureMethodsHandle::__aida_type__()
+PureMethodsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xddc2a514d04d3af5ULL, 0xc0046740434c0486ULL);
   return type_hash;
@@ -3620,7 +3620,7 @@ PureMethodsHandle::__aida_type__()
 PureMethodsHandle
 PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<PureMethodsHandle> (other);
@@ -3702,7 +3702,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, NameTestsHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-NameTestsHandle::__aida_type__()
+NameTestsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x542d40cd7d8fcd40ULL, 0x8c1782df29c9b936ULL);
   return type_hash;
@@ -3710,7 +3710,7 @@ NameTestsHandle::__aida_type__()
 NameTestsHandle
 NameTestsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<NameTestsHandle> (other);
@@ -3773,7 +3773,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, CompressorHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-CompressorHandle::__aida_type__()
+CompressorHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x42057a05d51182dfULL, 0x6a0d69cda274433eULL);
   return type_hash;
@@ -3781,7 +3781,7 @@ CompressorHandle::__aida_type__()
 CompressorHandle
 CompressorHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<CompressorHandle> (other);
@@ -3896,7 +3896,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, SoundModuleHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-SoundModuleHandle::__aida_type__()
+SoundModuleHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x06447b38b51e0198ULL, 0x848669199cc311deULL);
   return type_hash;
@@ -3904,7 +3904,7 @@ SoundModuleHandle::__aida_type__()
 SoundModuleHandle
 SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<SoundModuleHandle> (other);
