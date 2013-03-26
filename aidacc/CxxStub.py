@@ -400,7 +400,7 @@ class Generator:
   def class_digest (self, class_info):
     return self.digest2cbytes (class_info.type_hash())
   def list_types_digest (self, class_info):
-    return self.digest2cbytes (class_info.twoway_hash ('__AIDA__list_types # internal-method'))
+    return self.digest2cbytes (class_info.twoway_hash ('__aida_typelist__ # internal-method'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -491,7 +491,7 @@ class Generator:
       s += c
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
-      s += '  virtual ' + self.F ('void') + ' _list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
@@ -656,7 +656,7 @@ class Generator:
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'void\n'
-    s += '%s::_list_types (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
+    s += '%s::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)
     ancestors.reverse()
     for an in ancestors:
@@ -855,7 +855,7 @@ class Generator:
   def generate_server_list_types (self, class_info, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__aida_typesof__%s' % class_info.name
+    dispatcher_name = '__aida_call__%s____aida_typelist__' % class_info.name
     digest = self.list_types_digest (class_info)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -867,7 +867,7 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  self->_list_types (thl);\n'
+    s += '  self->__aida_typelist__ (thl);\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
     s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'

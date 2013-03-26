@@ -1200,7 +1200,7 @@ const Rapicorn::Aida::TypeHashList
 FirstInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1689,7 +1689,7 @@ const Rapicorn::Aida::TypeHashList
 UIWidgetAreaHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1944,7 +1944,7 @@ const Rapicorn::Aida::TypeHashList
 ParentHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1993,7 +1993,7 @@ const Rapicorn::Aida::TypeHashList
 ChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2042,7 +2042,7 @@ const Rapicorn::Aida::TypeHashList
 DescendantHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2091,7 +2091,7 @@ const Rapicorn::Aida::TypeHashList
 GrandChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2192,7 +2192,7 @@ const Rapicorn::Aida::TypeHashList
 QuickIfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2256,7 +2256,7 @@ const Rapicorn::Aida::TypeHashList
 MethodTestInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x61574837fdd015afULL, 0x893c7eca775ea115ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2947,7 +2947,7 @@ const Rapicorn::Aida::TypeHashList
 SignalTestInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3013,7 +3013,7 @@ const Rapicorn::Aida::TypeHashList
 ChildInheritingSignalsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3062,7 +3062,7 @@ const Rapicorn::Aida::TypeHashList
 AnotherChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3116,7 +3116,7 @@ const Rapicorn::Aida::TypeHashList
 PropertyTesterHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3485,7 +3485,7 @@ const Rapicorn::Aida::TypeHashList
 ButtonAreaHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3635,7 +3635,7 @@ const Rapicorn::Aida::TypeHashList
 PureMethodsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3725,7 +3725,7 @@ const Rapicorn::Aida::TypeHashList
 NameTestsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3796,7 +3796,7 @@ const Rapicorn::Aida::TypeHashList
 CompressorHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3919,7 +3919,7 @@ const Rapicorn::Aida::TypeHashList
 SoundModuleHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
