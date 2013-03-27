@@ -213,25 +213,11 @@ class YYGlobals (object):
     type_info = self.resolve_type (typename, flags.get ('void', 0))
     return type_info.clone (type_info.name, yy.impl_includes)
   def resolve_type (self, typename, void = False):
-    def mkstream (ioj):
-      ti = Decls.TypeInfo (ioj + 'Stream', Decls.STREAM, false)
-      ti.set_stream_type (ioj)
-      return ti
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
-      type_info = {
-        'bool'    : Decls.TypeInfo ('bool',     Decls.BOOL, false),
-        'int32'   : Decls.TypeInfo ('int32',    Decls.INT32, false),
-        'int64'   : Decls.TypeInfo ('int64',    Decls.INT64, false),
-        'float64' : Decls.TypeInfo ('float64',  Decls.FLOAT64, false),
-        'String'  : Decls.TypeInfo ('String',   Decls.STRING, false),
-        'IStream' : mkstream ('I'),
-        'OStream' : mkstream ('O'),
-        'JStream' : mkstream ('J'),
-        'Any'     : Decls.TypeInfo ('Any',      Decls.ANY, false),
-      }.get (typename, None);
-    if not type_info and void and typename == 'void':   # builtin void
-      type_info = Decls.TypeInfo ('void', Decls.VOID, false)
+      type_info = Decls.TypeInfo.builtin_type (typename)
+    if type_info and type_info.storage == Decls.VOID and not void:
+      type_info = None
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
