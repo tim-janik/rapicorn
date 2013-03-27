@@ -40,6 +40,7 @@ class Generator:
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
     self.idl_file = idl_file
+    self.apikey = ""
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -1003,9 +1004,11 @@ class Generator:
     w = re.findall (r'(\b[a-zA-Z_][a-zA-Z_0-9$:]*)(?:\()', txt)
     self.skip_symbols.update (set (w))
   def client_feature_keys (self):
-    return '":AidaClientConnection:CxxStub:idl_file=%s:"' % os.path.abspath (self.idl_file)
+    ak = ':' + self.apikey if self.apikey else ''
+    return '"%s:AidaClientConnection:CxxStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
   def server_feature_keys (self):
-    return '":AidaServerConnection:CxxStub:idl_file=%s:"' % os.path.abspath (self.idl_file)
+    ak = ':' + self.apikey if self.apikey else ''
+    return '"%s:AidaServerConnection:CxxStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
   def generate_impl_types (self, implementation_types):
     def text_expand (txt):
       txt = txt.replace ('$AIDA_iface_base$', self.iface_base)
@@ -1161,6 +1164,8 @@ def generate (namespace_list, **args):
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
+    if opt.startswith ('apikey='):
+      gg.apikey += opt[7:]
     if opt.startswith ('cppguard='):
       gg.cppguard += opt[9:]
     if opt.startswith ('iface-postfix='):

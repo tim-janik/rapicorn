@@ -43,6 +43,7 @@ class Generator:
     self.idl_file = idl_file
     self.module_name = module_name
     self.namespaces = []
+    self.apikey = ""
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -629,7 +630,8 @@ class Generator:
     if typename == 'string': return 'std::string'
     return typename
   def pyclient_feature_keys (self):
-    return '":AidaClientConnection:PyStub:idl_file=%s:"' % os.path.abspath (self.idl_file)
+    ak = ':' + self.apikey if self.apikey else ''
+    return '"%s:AidaClientConnection:PyStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
   def text_expand (self, txt):
     txt = txt.replace ('$AIDA_pyclient_feature_keys$', self.pyclient_feature_keys())
     return txt
@@ -693,6 +695,9 @@ def generate (namespace_list, **args):
   if len (idlfiles) != 1:
     raise RuntimeError ("PyStub: exactly one IDL input file is required")
   gg = Generator (idlfiles[0], outname)
+  for opt in config['backend-options']:
+    if opt.startswith ('apikey='):
+      gg.apikey += opt[7:]
   if 1:
     fname = outname + '.cc'
     print "  GEN   ", fname
