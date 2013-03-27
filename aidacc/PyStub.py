@@ -44,6 +44,7 @@ class Generator:
     self.module_name = module_name
     self.namespaces = []
     self.apikey = ""
+    self.strip_path = ""
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -629,9 +630,14 @@ class Generator:
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
     return typename
+  def idl_path (self):
+    apath = os.path.abspath (self.idl_file)
+    if self.strip_path and apath.startswith (self.strip_path):
+      apath = apath[len (self.strip_path):]
+    return apath
   def pyclient_feature_keys (self):
     ak = ':' + self.apikey if self.apikey else ''
-    return '"%s:AidaClientConnection:PyStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
+    return '"%s:AidaClientConnection:PyStub:idl_file=%s:"' % (ak, self.idl_path())
   def text_expand (self, txt):
     txt = txt.replace ('$AIDA_pyclient_feature_keys$', self.pyclient_feature_keys())
     return txt
@@ -698,6 +704,8 @@ def generate (namespace_list, **args):
   for opt in config['backend-options']:
     if opt.startswith ('apikey='):
       gg.apikey += opt[7:]
+    if opt.startswith ('strip-path='):
+      gg.strip_path += opt[11:]
   if 1:
     fname = outname + '.cc'
     print "  GEN   ", fname

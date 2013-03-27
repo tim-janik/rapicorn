@@ -41,6 +41,7 @@ class Generator:
     self.gen_mode = None
     self.idl_file = idl_file
     self.apikey = ""
+    self.strip_path = ""
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -1003,12 +1004,17 @@ class Generator:
     import re
     w = re.findall (r'(\b[a-zA-Z_][a-zA-Z_0-9$:]*)(?:\()', txt)
     self.skip_symbols.update (set (w))
+  def idl_path (self):
+    apath = os.path.abspath (self.idl_file)
+    if self.strip_path and apath.startswith (self.strip_path):
+      apath = apath[len (self.strip_path):]
+    return apath
   def client_feature_keys (self):
     ak = ':' + self.apikey if self.apikey else ''
-    return '"%s:AidaClientConnection:CxxStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
+    return '"%s:AidaClientConnection:CxxStub:idl_file=%s:"' % (ak, self.idl_path())
   def server_feature_keys (self):
     ak = ':' + self.apikey if self.apikey else ''
-    return '"%s:AidaServerConnection:CxxStub:idl_file=%s:"' % (ak, os.path.abspath (self.idl_file))
+    return '"%s:AidaServerConnection:CxxStub:idl_file=%s:"' % (ak, self.idl_path())
   def generate_impl_types (self, implementation_types):
     def text_expand (txt):
       txt = txt.replace ('$AIDA_iface_base$', self.iface_base)
@@ -1168,6 +1174,8 @@ def generate (namespace_list, **args):
       gg.apikey += opt[7:]
     if opt.startswith ('cppguard='):
       gg.cppguard += opt[9:]
+    if opt.startswith ('strip-path='):
+      gg.strip_path += opt[11:]
     if opt.startswith ('iface-postfix='):
       I_prefix_postfix = (I_prefix_postfix[0], opt[14:])
     if opt.startswith ('iface-prefix='):
