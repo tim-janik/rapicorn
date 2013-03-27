@@ -329,11 +329,12 @@ public:
   static void              pop_handle (FieldReader&, SmartHandle&);
   static void              dup_handle (const uint64_t[2], SmartHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
-  static ServerConnection* new_server_connection     ();
-  static ClientConnection* new_client_connection     ();
+  static ServerConnection* new_server_connection (const std::string &feature_keys);
+  static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64_t orbid)        { return IdentifierParts (orbid).orbid_connection; }
   static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
@@ -467,13 +468,14 @@ public:
 // == Connections ==
 /// Base connection context for ORB message exchange.
 class BaseConnection {
-  uint          index_;
+  uint               index_;
+  const std::string &feature_keys_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
   void                   register_connection  ();
   void                   unregister_connection();
-  explicit               BaseConnection  ();
+  explicit               BaseConnection  (const std::string &feature_keys);
   virtual               ~BaseConnection  ();
   virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   static BaseConnection* connection_from_id (uint id);  ///< Lookup for connection, used by ORB for message delivery.
@@ -491,7 +493,7 @@ typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection ();
+  /*ctor*/           ServerConnection (const std::string &feature_keys);
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
   virtual uint64_t      instance2orbid (ImplicitBase*) = 0;
@@ -514,7 +516,7 @@ public:
 class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 protected:
-  explicit              ClientConnection ();
+  explicit              ClientConnection (const std::string &feature_keys);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.

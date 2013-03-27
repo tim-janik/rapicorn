@@ -33,7 +33,7 @@ using Rapicorn::Aida::FieldReader;
 
 static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
 static Rapicorn::Init __AIDA_init__client_connection ([]() {
-  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection();
+  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection ($AIDA_pyclient_feature_keys$);
 });
 
 static PyObject*

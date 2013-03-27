@@ -2,6 +2,7 @@
 #include "aida.hh"
 #include "aidaprops.hh"
 #include "thread.hh"
+#include "regex.hh"
 
 #include <string.h>
 #include <stdio.h>
@@ -906,9 +907,11 @@ unregister_connection (uint *indexp)
   global_connections[index].store (NULL);
 }
 
-BaseConnection::BaseConnection () :
-  index_ (~uint (0))
-{}
+BaseConnection::BaseConnection (const std::string &feature_keys) :
+  index_ (~uint (0)), feature_keys_ (feature_keys)
+{
+  AIDA_ASSERT (feature_keys_.size() && feature_keys_[0] == ':' && feature_keys_[feature_keys_.size()-1] == ':');
+}
 
 BaseConnection::~BaseConnection ()
 {
@@ -943,7 +946,8 @@ BaseConnection::connection_from_id (uint id)
 }
 
 // == ClientConnection ==
-ClientConnection::ClientConnection()
+ClientConnection::ClientConnection (const std::string &feature_keys) :
+  BaseConnection (feature_keys)
 {}
 
 ClientConnection::~ClientConnection ()
@@ -963,8 +967,8 @@ class ClientConnectionImpl : public ClientConnection {
   typedef std::set<uint64_t> UIntSet;
   UIntSet                   ehandler_set;
 public:
-  ClientConnectionImpl() :
-    ClientConnection(), blocking_for_sem_ (false)
+  ClientConnectionImpl (const std::string &feature_keys) :
+    ClientConnection (feature_keys), blocking_for_sem_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
@@ -1202,7 +1206,7 @@ class ServerConnectionImpl : public ServerConnection {
   std::vector<ptrdiff_t>                 addr_vector;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map;
 public:
-  explicit              ServerConnectionImpl ();
+  explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
   virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
   virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
@@ -1214,7 +1218,8 @@ public:
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
 };
 
-ServerConnectionImpl::ServerConnectionImpl ()
+ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
+  ServerConnection (feature_keys)
 {
   addr_map[0] = 0;                                      // lookiing up NULL yields uint64_t (0)
   addr_vector.push_back (0);                            // orbid uint64_t (0) yields NULL
@@ -1318,7 +1323,8 @@ ServerConnectionImpl::emit_result_handler_pop (size_t id)
 }
 
 // == ServerConnection ==
-ServerConnection::ServerConnection()
+ServerConnection::ServerConnection (const std::string &feature_keys) :
+  BaseConnection (feature_keys)
 {}
 
 ServerConnection::~ServerConnection()
@@ -1397,17 +1403,49 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 
 // == ObjectBroker ==
 ServerConnection*
-ObjectBroker::new_server_connection ()
+ObjectBroker::new_server_connection (const std::string &feature_keys)
 {
-  ServerConnectionImpl *simpl = new ServerConnectionImpl();
+  ServerConnectionImpl *simpl = new ServerConnectionImpl (feature_keys);
   return simpl;
 }
 
 ClientConnection*
-ObjectBroker::new_client_connection ()
+ObjectBroker::new_client_connection (const std::string &feature_keys)
 {
-  ClientConnectionImpl *cimpl = new ClientConnectionImpl();
+  ClientConnectionImpl *cimpl = new ClientConnectionImpl (feature_keys);
   return cimpl;
+}
+
+uint
+ObjectBroker::connection_id_from_keys (const vector<std::string> &feature_key_list)
+{ // feature_key_list is a list of key=regex_pattern pairs
+  for (uint i = 0; i < MAX_CONNECTIONS; i++)
+    {
+      BaseConnection *bcon = BaseConnection::connection_from_id (i);
+      if (!bcon)
+        continue;
+      const String &feature_keys = bcon->feature_keys_;
+      for (auto keyvalue : feature_key_list)
+        {
+          String key, value;
+          const size_t eq = keyvalue.find ('=');
+          if (eq != std::string::npos)
+            {
+              key = keyvalue.substr (0, eq);
+              value = keyvalue.substr (eq + 1);
+            }
+          else
+            {
+              key = keyvalue;
+              value = "1";
+            }
+          if (!Regex::match_simple (value, string_option_get (feature_keys, key), Regex::EXTENDED | Regex::CASELESS, Regex::MATCH_NORMAL))
+            goto mismatch;
+        }
+      return i; // all of feature_key_list matched
+    mismatch: ;
+    }
+  return 0;     // unmatched
 }
 
 void
