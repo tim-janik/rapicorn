@@ -38,7 +38,7 @@ static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
 
 // connection initialization
 static Rapicorn::Init __AIDA_init__client_connection ([]() {
-  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection (":AidaClientConnection:PyStub:idl_file=/opt/src/rapicorn/aidacc/tests/testpass.idl:");
+  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection (":AidaClientConnection:PyStub:idl_file=aidacc/tests/testpass.idl:");
 });
 
 // helpers

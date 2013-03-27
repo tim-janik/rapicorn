@@ -22,7 +22,8 @@ python-call-info:
 # == pyrapicorn.py & pyrapicorn.cc ==
 pyrapicorn.py pyrapicorn.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
 	@: # compile IDL definitions into RapicornYYMM.{cc,py}
-	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -G apikey=$(RAPICORN_NAMESPACE_NAME) -o pyrapicorn
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o pyrapicorn \
+	  -G strip-path=$(abs_top_srcdir)/ -G apikey=$(RAPICORN_NAMESPACE_NAME)
 CLEANFILES += pyrapicorn.py pyrapicorn.cc
 $(srcdir)/py-rope.cc: pyrapicorn.cc
 
@@ -38,6 +39,7 @@ EXTRA_DIST += testpystub.ref testcxxpystub.ref
 check-PyStub-testpass-generation: $(srcdir)/testpystub.ref $(srcdir)/testcxxpystub.ref
 	@: # generate .cc and .py
 	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub.py $(srcdir)/../aidacc/tests/testpass.idl -o testpass \
+	  -G strip-path=$(abs_top_srcdir)/ \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	@: # check .py generation
 	$(Q) mv testpass.py $(TSTOUT)
