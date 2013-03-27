@@ -339,6 +339,7 @@ public:
   static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  template<class TargetHandle> static TargetHandle smart_handle_down_cast (SmartHandle smh);
 };
 
 // == FieldBuffer ==
@@ -528,6 +529,14 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
+template<class TargetHandle> TargetHandle
+ObjectBroker::smart_handle_down_cast (SmartHandle smh)
+{
+  TargetHandle target;
+  target.assign (smh);                        // aka reinterpret_cast
+  return TargetHandle::down_cast (target);    // aka dynamic_cast (remote)
+}
+
 inline void
 FieldBuffer::reset()
 {
