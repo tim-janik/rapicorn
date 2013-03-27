@@ -253,7 +253,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  auto keys = string_split ("CxxStub:AidaServerConnection:idl_file=\\brapicorn/ui/interfaces.idl", ":");
+  auto keys = string_split (RAPICORN_NAMESPACE_NAME ":CxxStub:AidaServerConnection:idl_file=\\brapicorn/ui/interfaces.idl", ":");
   return Aida::ObjectBroker::smart_handle_down_cast<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
 }
 

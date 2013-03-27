@@ -22,7 +22,7 @@ python-call-info:
 # == pyrapicorn.py & pyrapicorn.cc ==
 pyrapicorn.py pyrapicorn.cc: $(RAPICORNIDL) $(srcdir)/../aidacc/PyStub.py
 	@: # compile IDL definitions into RapicornYYMM.{cc,py}
-	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -o pyrapicorn
+	$(Q) ${AIDACC} -x $(srcdir)/../aidacc/PyStub $(RAPICORNIDL) -G apikey=$(RAPICORN_NAMESPACE_NAME) -o pyrapicorn
 CLEANFILES += pyrapicorn.py pyrapicorn.cc
 $(srcdir)/py-rope.cc: pyrapicorn.cc
 
