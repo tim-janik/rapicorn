@@ -76,7 +76,7 @@ Aida::BaseConnection *ServerConnectionSource::connection_ = NULL;
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Mutex mutex; Cond cond; ApplicationH app;
+  Mutex mutex; Cond cond; bool done;
 };
 
 static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
@@ -151,9 +151,11 @@ private:
     assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
+    // Setup root handle for remote calls
+    ApplicationImpl::the().__aida_connection__()->remote_origin (&ApplicationImpl::the());
     // Complete initialization by signalling caller
+    idata_->done = true;
     idata_->mutex.lock();
-    idata_->app = &ApplicationImpl::the()->*Aida::_handle;
     idata_->cond.signal();
     idata_->mutex.unlock();
     idata_ = NULL;
@@ -240,18 +242,19 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   // setup client/server connection pair
   Initializer idata;
   // initialize and create UIThread
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args;
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.done = false;
   // start and syncronize with thread
   idata.mutex.lock();
   the_uithread = new UIThread (&idata);
   the_uithread->start();
-  while (idata.app == NULL)
+  while (!idata.done)
     idata.cond.wait (idata.mutex);
   idata.mutex.unlock();
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  return idata.app;
+  auto keys = string_split ("CxxStub:AidaServerConnection:idl_file=\\brapicorn/ui/interfaces.idl", ":");
+  return Aida::ObjectBroker::smart_handle_down_cast<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
 }
 
 } // Rapicorn
