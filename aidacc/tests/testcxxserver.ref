@@ -27,7 +27,7 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::Imp
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection (":AidaServerConnection:CxxStub:idl_file=/opt/src/rapicorn/aidacc/tests/testpass.idl:");
+  server_connection = ObjectBroker::new_server_connection (":AidaServerConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
 });
 
 // EmitResultHandler
