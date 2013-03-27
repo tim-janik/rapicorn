@@ -10,7 +10,7 @@ class Image : public virtual WidgetImpl {
   virtual String        image_file      () const { RAPICORN_ASSERT_UNREACHED(); }
   virtual String        stock_pixmap    () const { RAPICORN_ASSERT_UNREACHED(); }
 protected:
-  const PropertyList&   _property_list ();
+  const PropertyList&   __aida_properties__ ();
 public:
   virtual void             pixbuf       (const Pixbuf &pixbuf) = 0;
   virtual Pixbuf           pixbuf       (void) = 0;

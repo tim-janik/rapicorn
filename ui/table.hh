@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class Table : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   _property_list ();
+  virtual const PropertyList&   __aida_properties__ ();
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_widgets) = 0;

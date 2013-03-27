@@ -3,7 +3,7 @@
 
 More details at http://www.rapicorn.org/
 """
-import Decls, GenUtils, re
+import Decls, GenUtils, TmplFiles, re
 
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
@@ -17,123 +17,6 @@ serverhh_boilerplate = r"""
 
 rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
-"""
-
-gencc_boilerplate = r"""
-// --- ClientCC/ServerCC Boilerplate ---
-#include <string>
-#include <vector>
-#include <stdexcept>
-#ifndef __AIDA_GENERIC_CC_BOILERPLATE__
-#define __AIDA_GENERIC_CC_BOILERPLATE__
-
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
-
-namespace { // Anon
-using Rapicorn::Aida::uint64_t;
-
-namespace __AIDA_Local__ {
-using namespace Rapicorn::Aida;
-static __attribute__ ((__format__ (__printf__, 1, 2), unused)) FieldBuffer*
-error (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  error_vprintf (format, args);
-  va_end (args);
-  return NULL;
-}
-} } // Anon::__AIDA_Local__
-#endif // __AIDA_GENERIC_CC_BOILERPLATE__
-"""
-
-servercc_boilerplate = r"""
-namespace { // Anon
-namespace __AIDA_Local__ {
-// types
-typedef ServerConnection::EmitResultHandler EmitResultHandler;
-typedef ServerConnection::MethodRegistry    MethodRegistry;
-typedef ServerConnection::MethodEntry       MethodEntry;
-static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>::value,
-               "IDL interface base '$AIDA_iface_base$' must derive 'Rapicorn::Aida::ImplicitBase'");
-// connection
-static Rapicorn::Aida::ServerConnection *server_connection = NULL;
-static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection();
-});
-// EmitResultHandler
-static inline void erhandler_add (size_t id, const EmitResultHandler &function)
-{ return server_connection->emit_result_handler_add (id, function); }
-// objects
-template<class Target> static inline Target* id2obj (uint64_t oid)
-{
-  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
-  return dynamic_cast<Target*> (instance);
-}
-static inline uint64_t obj2id  (Rapicorn::Aida::ImplicitBase *obj)
-{ return server_connection->instance2orbid (obj); }
-template<class Object> static inline Object* smh2obj (const SmartHandle &sh) { return id2obj<Object> (sh._orbid()); }
-template<class SMH> static inline SMH obj2smh ($AIDA_iface_base$ *self)
-{
-  const uint64_t orbid = obj2id (self);
-  SMH target;
-  const uint64_t input[2] = { orbid, target._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
-  return target;
-}
-// messages
-static inline void post_msg (FieldBuffer *fb) { ObjectBroker::post_msg (fb); }
-static inline void add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
-static inline void add_header1_emit   (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l); }
-static inline void add_header2_emit   (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
-{ fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id),
-                  server_connection->connection_id(), h, l); }
-static inline FieldBuffer* new_call_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
-{ return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
-static inline FieldBuffer* new_connect_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
-{ return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n); }
-// slot
-template<class SharedPtr, class R, class... Args> std::function<R (Args...)>
-slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
-{
-  return [sp, fp] (Args... args) { return fp (sp, args...); };
-}
-
-} } // Anon::__AIDA_Local__
-"""
-
-clientcc_boilerplate = r"""
-namespace { // Anon
-namespace __AIDA_Local__ {
-// connection
-static Rapicorn::Aida::ClientConnection *client_connection = NULL;
-static Rapicorn::Init init_client_connection ([]() {
-  client_connection = ObjectBroker::new_client_connection();
-});
-// helper
-static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (size_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
-static size_t        signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
-                                       { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
-static inline uint64_t smh2id (const SmartHandle &sh) { return sh._orbid(); }
-template<class SMH> SMH smh2cast (const SmartHandle &handle) {
-  const uint64_t orbid = __AIDA_Local__::smh2id (handle);
-  SMH target;
-  const uint64_t input[2] = { orbid, target._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
-  return target;
-}
-static inline void add_header2_call (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, ObjectBroker::connection_id_from_handle (sh),
-                  client_connection->connection_id(), h, l); }
-static inline void add_header1_call (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, ObjectBroker::connection_id_from_handle (sh), h, l); }
-static inline FieldBuffer* new_emit_result (const FieldBuffer *fb, uint64_t h, uint64_t l, uint32_t n)
-{ return ObjectBroker::renew_into_result (const_cast<FieldBuffer*> (fb), Rapicorn::Aida::MSGID_EMIT_RESULT, ObjectBroker::receiver_connection_id (fb->first_id()), h, l, n); }
-
-} } // Anon::__AIDA_Local__
 """
 
 def reindent (prefix, lines):
@@ -400,7 +283,7 @@ class Generator:
   def class_digest (self, class_info):
     return self.digest2cbytes (class_info.type_hash())
   def list_types_digest (self, class_info):
-    return self.digest2cbytes (class_info.twoway_hash ('__AIDA__list_types # internal-method'))
+    return self.digest2cbytes (class_info.twoway_hash ('__aida_typelist__ # internal-method'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -479,7 +362,7 @@ class Generator:
       for sg in type_info.signals:
         s += self.generate_client_signal_decl (sg, type_info)
       s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
-      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_type__ ();\n'
+      s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_typeid__();\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVANT:
@@ -491,9 +374,9 @@ class Generator:
       s += c
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
-      s += '  virtual ' + self.F ('void') + ' _list_types (Rapicorn::Aida::TypeHashList&) const;\n'
+      s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
-        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '_property_list ();\n'
+        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__();\n'
       s += '  template<class SmartHandle>\n'
@@ -600,12 +483,12 @@ class Generator:
     s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
-    s += '%s::__aida_type__()\n{\n' % classH
+    s += '%s::__aida_typeid__()\n{\n' % classH
     s += '  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (%s);\n' % self.class_digest (class_info)
     s += '  return type_hash;\n'
     s += '}\n'
     s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();\n'
+    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
     s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
@@ -656,19 +539,19 @@ class Generator:
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'void\n'
-    s += '%s::_list_types (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
+    s += '%s::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)
     ancestors.reverse()
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '}\n'
     return s
-  def generate_server_property_list (self, class_info):
+  def generate_server_list_properties (self, class_info):
     if not self.property_list:
       return ''
     assert self.gen_mode == G4SERVANT
     s, classC, constPList = '', self.C (class_info), 'const ' + self.property_list
-    s += constPList + '&\n' + classC + '::_property_list ()\n{\n'
+    s += constPList + '&\n' + classC + '::__aida_properties__ ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
     for fl in class_info.fields:
       cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
@@ -677,7 +560,7 @@ class Generator:
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
-    calls = [cl + '::_property_list()' for cl in precls]
+    calls = [cl + '::__aida_properties__()' for cl in precls]
     s += '  static ' + constPList + ' property_list (properties, %s);\n' % (', ').join (calls)
     s += '  return property_list;\n'
     s += '}\n'
@@ -855,7 +738,7 @@ class Generator:
   def generate_server_list_types (self, class_info, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__aida_typesof__%s' % class_info.name
+    dispatcher_name = '__aida_call__%s____aida_typelist__' % class_info.name
     digest = self.list_types_digest (class_info)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
@@ -867,7 +750,7 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  self->_list_types (thl);\n'
+    s += '  self->__aida_typelist__ (thl);\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
     s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'
@@ -1143,9 +1026,9 @@ class Generator:
       s += serverhh_boilerplate
       s += rapicornsignal_boilerplate
     if self.gen_servercc:
-      s += gencc_boilerplate + '\n' + text_expand (servercc_boilerplate) + '\n'
+      s += text_expand (TmplFiles.CxxStub_server_cc) + '\n'
     if self.gen_clientcc:
-      s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
+      s += TmplFiles.CxxStub_client_cc + '\n'
     self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
@@ -1200,7 +1083,7 @@ class Generator:
           if self.gen_servercc:
             s += self.open_namespace (tp)
             s += self.generate_server_class_methods (tp)
-            s += self.generate_server_property_list (tp)
+            s += self.generate_server_list_properties (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             for sg in tp.signals:

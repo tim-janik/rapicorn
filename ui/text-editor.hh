@@ -32,12 +32,12 @@ struct AttrState {
 
 class Editor : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList& _property_list();
+  virtual const PropertyList& __aida_properties__();
 public:
   /* Text::Editor::Client */
   class Client {
   protected:
-    const PropertyList& client__property_list();
+    const PropertyList& client_property_list();
     virtual String      save_markup  () const = 0;
     virtual void        load_markup  (const String    &markup) = 0;
   public:

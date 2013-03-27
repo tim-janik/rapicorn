@@ -33,7 +33,7 @@ public:
   virtual void          on_click3       (const String &command) { on_click_[2] = string_strip (command); }
   virtual ClickType     click_type      () const                { return click_type_; }
   virtual void          click_type      (ClickType  click_type) { reset(); click_type_ = click_type; }
-  virtual const PropertyList& _property_list ();
+  virtual const PropertyList& __aida_properties__ ();
 };
 
 } // Rapicorn

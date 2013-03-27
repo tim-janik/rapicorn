@@ -199,14 +199,14 @@ TableImpl::size_allocate (Allocation area, bool changed)
 }
 
 const PropertyList&
-Table::_property_list()
+Table::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Table, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
     MakeProperty (Table, col_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
     MakeProperty (Table, row_spacing, _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 

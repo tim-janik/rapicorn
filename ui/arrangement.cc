@@ -5,7 +5,7 @@
 namespace Rapicorn {
 
 const PropertyList&
-Arrangement::_property_list()
+Arrangement::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Arrangement, xorigin,        _("X-Origin"),           _("The x coordinate origin to be displayed by the arrangement"), -MAXDOUBLE, +MAXDOUBLE, 10, "rw"),
@@ -13,7 +13,7 @@ Arrangement::_property_list()
     MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
     MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 

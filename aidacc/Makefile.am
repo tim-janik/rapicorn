@@ -72,7 +72,7 @@ backendfiles    = PrettyDump.py TypeMap.py CxxStub.py TmplFiles.py PyStub.py
 noinst_SCRIPTS += $(backendfiles)
 
 # == Templates & Copy-Paste Files ==
-template_files = PyStub-glue.py PyStub-glue.cc
+template_files = PyStub-glue.py PyStub-glue.cc CxxStub-client.cc CxxStub-server.cc
 EXTRA_DIST += $(template_files)
 TmplFiles.py: Makefile.am $(template_files)
 	$(AM_V_GEN)

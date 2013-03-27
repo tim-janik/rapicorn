@@ -11,7 +11,7 @@ class SliderArea : public virtual ContainerImpl {
   bool                  move              (MoveType);
 protected:
   virtual const CommandList&    list_commands  ();
-  virtual const PropertyList&   _property_list ();
+  virtual const PropertyList&   __aida_properties__ ();
   explicit              SliderArea        ();
   virtual void          control           (const String   &command_name,
                                            const String   &arg) = 0;

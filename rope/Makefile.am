@@ -55,6 +55,7 @@ __testpass_la_SOURCES = testpystub.cc	# forces C++ syntax check
 __testpass_la_LIBADD  = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 __testpass_la_LDFLAGS = -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS) -rpath /nowhere # -rpath forces .so
 testpystub.cc: testcxxpystub.ref
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) check-PyStub-testpass-generation # force testcxxpystub.ref check before using it
 	$(Q) cp $(srcdir)/testcxxpystub.ref xgen-$@
 	$(Q) echo "static PyMethodDef __testpass_methods__[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >> xgen-$@
 	$(Q) echo 'PyMODINIT_FUNC init__testpass (void) { Py_InitModule ("__testpass", __testpass_methods__); }' >> xgen-$@

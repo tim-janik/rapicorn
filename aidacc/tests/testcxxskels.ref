@@ -20,8 +20,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "MandatoryNamespace::FirstInterface"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          void_func             ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
@@ -74,8 +74,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::UIWidgetArea"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          dummy    () const = 0;
   virtual void                          dummy    (bool) = 0;
   virtual std::string                   on_click () const = 0;
@@ -119,8 +119,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Parent"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
@@ -137,8 +137,8 @@ protected:
   virtual /*Des*/                       ~I_ChildIface () = 0;
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Child"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
@@ -155,8 +155,8 @@ protected:
   virtual /*Des*/                       ~I_DescendantIface () = 0;
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::Descendant"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
@@ -173,8 +173,8 @@ protected:
   virtual /*Des*/                       ~I_GrandChildIface () = 0;
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::GrandChild"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
@@ -192,8 +192,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::QuickIface"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          simple_function   (int i = 9);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
@@ -212,8 +212,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::MethodTestInterface"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          method_with_void           ();
   virtual bool                          method_with_bools          (bool input,
                                                                     bool optval = 0);
@@ -254,8 +254,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::SignalTestInterface"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
   typedef Rapicorn::Aida::AsyncSignal<int ()> Signal_int32_result;
@@ -320,8 +320,8 @@ protected:
   virtual /*Des*/                       ~I_ChildInheritingSignalsIface () = 0;
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::ChildInheritingSignals"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
@@ -340,8 +340,8 @@ protected:
   virtual /*Des*/                       ~I_AnotherChildIface () = 0;
 public:
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::AnotherChild"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
@@ -359,8 +359,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "InterfaceTests::PropertyTester"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          bool_prop      () const = 0;
   virtual void                          bool_prop      (bool) = 0;
   virtual int                           int32_prop     () const = 0;
@@ -403,8 +403,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::ButtonArea"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual std::string                   on_click   () const = 0;
   virtual void                          on_click   (const std::string&) = 0;
   virtual std::string                   on_click2  () const = 0;
@@ -436,8 +436,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "RapicornAidaTest::PureMethods"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual int                           pure_method        (double f) = 0;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
@@ -459,8 +459,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "Other::NameTests"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
                                                                    const OtherNamespace::SomeRecord &sr);
@@ -484,8 +484,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "BseTest::Compressor"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual double                        threshold () const = 0;
   virtual void                          threshold (double) = 0;
   virtual double                        ratio     () const = 0;
@@ -507,8 +507,8 @@ protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ ()	{ return "BseTest::SoundModule"; }
-  virtual void                           _list_types (Rapicorn::Aida::TypeHashList&) const;
-  virtual const Rapicorn::Aida::PropertyList& _property_list ();
+  virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);

@@ -75,7 +75,7 @@ Editor::Client::plain_text () const
 }
 
 const PropertyList&
-Editor::Client::client__property_list()
+Editor::Client::client_property_list()
 {
   static Property *properties[] = {
     MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
@@ -88,7 +88,7 @@ Editor::Client::client__property_list()
 
 
 const PropertyList&
-Editor::_property_list()
+Editor::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
@@ -97,7 +97,7 @@ Editor::_property_list()
     MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
     MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
