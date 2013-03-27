@@ -31,11 +31,15 @@ using ::uint64_t;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
 
+// connection
 static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
+
+// connection initialization
 static Rapicorn::Init __AIDA_init__client_connection ([]() {
   __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection ($AIDA_pyclient_feature_keys$);
 });
 
+// helpers
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {

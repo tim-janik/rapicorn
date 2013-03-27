@@ -1119,8 +1119,8 @@ class Generator:
           for sg in tp.signals:
             s += self.generate_server_signal_dispatcher (tp, sg, reglines)
           s += '\n'
-      s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
+      s += self.generate_server_method_registry (reglines) + '\n'
     # generate interface method skeletons
     if self.gen_server_skel:
       s += self.open_namespace (None)

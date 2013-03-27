@@ -12,7 +12,7 @@ using namespace Rapicorn::Aida;
 // connection
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 static Rapicorn::Init init_client_connection ([]() {
-  client_connection = ObjectBroker::new_client_connection ($AIDA_server_feature_keys$);
+  client_connection = ObjectBroker::new_client_connection ($AIDA_client_feature_keys$);
 });
 
 // helper
