@@ -17,7 +17,7 @@ using namespace Rapicorn::Aida;
 // connection
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 static Rapicorn::Init init_client_connection ([]() {
-  client_connection = ObjectBroker::new_client_connection();
+  client_connection = ObjectBroker::new_client_connection (":AidaClientConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
 });
 
 // helper

@@ -2,6 +2,7 @@
 #include "aida.hh"
 #include "aidaprops.hh"
 #include "thread.hh"
+#include "regex.hh"
 
 #include <string.h>
 #include <stdio.h>
@@ -906,9 +907,11 @@ unregister_connection (uint *indexp)
   global_connections[index].store (NULL);
 }
 
-BaseConnection::BaseConnection () :
-  index_ (~uint (0))
-{}
+BaseConnection::BaseConnection (const std::string &feature_keys) :
+  index_ (~uint (0)), feature_keys_ (feature_keys)
+{
+  AIDA_ASSERT (feature_keys_.size() && feature_keys_[0] == ':' && feature_keys_[feature_keys_.size()-1] == ':');
+}
 
 BaseConnection::~BaseConnection ()
 {
@@ -942,8 +945,27 @@ BaseConnection::connection_from_id (uint id)
   return id && id <= MAX_CONNECTIONS ? global_connections[id-1].load() : NULL;
 }
 
+/// Provide initial handle for remote connections.
+void
+BaseConnection::remote_origin (ImplicitBase*)
+{
+  assertion_error (__FILE__, __LINE__, "not supported by this object type");
+}
+
+/** Retrieve initial handle after remote connection has been established.
+ * The @a feature_key_list contains key=value pairs, where value is assumed to be "1" if
+ * omitted and generally treated as a regular expression to match against connection
+ * feature keys as registered with the ObjectBroker.
+ */
+SmartHandle
+BaseConnection::remote_origin (const vector<std::string> &feature_key_list)
+{
+  assertion_error (__FILE__, __LINE__, "not supported by this object type");
+}
+
 // == ClientConnection ==
-ClientConnection::ClientConnection()
+ClientConnection::ClientConnection (const std::string &feature_keys) :
+  BaseConnection (feature_keys)
 {}
 
 ClientConnection::~ClientConnection ()
@@ -951,20 +973,19 @@ ClientConnection::~ClientConnection ()
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
+  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
+  typedef std::set<uint64_t> UIntSet;
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages sent to client
   sem_t                         transport_sem_;         // signal incomming results
   std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
-  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
   std::vector<SignalHandler*>   signal_handlers_;
-  bool                          blocking_for_sem_;
   SignalHandler*                signal_lookup (size_t handler_id);
-  // client event handler
-  typedef std::set<uint64_t> UIntSet;
-  UIntSet                   ehandler_set;
+  UIntSet                       ehandler_set; // client event handler
+  bool                          blocking_for_sem_;
 public:
-  ClientConnectionImpl() :
-    ClientConnection(), blocking_for_sem_ (false)
+  ClientConnectionImpl (const std::string &feature_keys) :
+    ClientConnection (feature_keys), blocking_for_sem_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
@@ -991,6 +1012,7 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
+  virtual SmartHandle   remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_orbid (uint64_t orbid);
@@ -1004,6 +1026,24 @@ ClientConnectionImpl::pop ()
   FieldBuffer *fb = event_queue_.front();
   event_queue_.pop_front();
   return fb;
+}
+
+SmartHandle
+ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
+{
+  SmartMember<SmartHandle> rorigin = SmartHandle::_null_handle();
+  const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
+  if (connection_id)
+    {
+      FieldBuffer *fb = FieldBuffer::_new (3);
+      fb->add_header2 (MSGID_HELLO_REQUEST, connection_id, this->connection_id(), 0, 0);
+      FieldBuffer *fr = this->call_remote (fb); // takes over fb
+      FieldReader frr (*fr);
+      frr.skip_header();
+      ObjectBroker::pop_handle (frr, rorigin);
+      delete fr;
+    }
+  return rorigin;
 }
 
 void
@@ -1046,6 +1086,7 @@ ClientConnectionImpl::dispatch ()
                           STRFUNC, handler_id, msgid, hashhigh, hashlow);
       }
       break;
+    case MSGID_HELLO_REPLY:     // handled in call_remote
     case MSGID_CALL_RESULT:     // handled in call_remote
     case MSGID_CONNECT_RESULT:  // handled in call_remote
     default:
@@ -1201,12 +1242,15 @@ class ServerConnectionImpl : public ServerConnection {
   std::unordered_map<ptrdiff_t,uint64_t> addr_map;
   std::vector<ptrdiff_t>                 addr_vector;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map;
+  ImplicitBase *remote_origin_;
 public:
-  explicit              ServerConnectionImpl ();
+  explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
   virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
   virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
   virtual void          dispatch   ();
+  virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
+  virtual void          remote_origin  (ImplicitBase *rorigin);
   virtual uint64_t      instance2orbid (ImplicitBase*);
   virtual ImplicitBase* orbid2instance (uint64_t);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
@@ -1214,11 +1258,22 @@ public:
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
 };
 
-ServerConnectionImpl::ServerConnectionImpl ()
+ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
+  ServerConnection (feature_keys), remote_origin_ (NULL)
 {
   addr_map[0] = 0;                                      // lookiing up NULL yields uint64_t (0)
   addr_vector.push_back (0);                            // orbid uint64_t (0) yields NULL
   register_connection();
+}
+
+void
+ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
+{
+  if (rorigin)
+    AIDA_ASSERT (remote_origin_ == NULL);
+  else // rorigin == NULL
+    AIDA_ASSERT (remote_origin_ != NULL);
+  remote_origin_ = rorigin;
 }
 
 uint64_t
@@ -1254,6 +1309,22 @@ ServerConnectionImpl::dispatch ()
   const uint64_t  idmask = msgid_mask (msgid);
   switch (idmask)
     {
+    case MSGID_HELLO_REQUEST:
+      {
+        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
+        AIDA_ASSERT (fbr.remaining() == 0);
+        fbr.reset (*fb);
+        ImplicitBase *rorigin = this->remote_origin();
+        FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
+        fr->add_object (this->instance2orbid (rorigin));
+        if (AIDA_LIKELY (fr == fb))
+          fb = NULL; // prevent deletion
+        const uint64_t resultmask = msgid_as_result (MessageId (idmask));
+        AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
+        ObjectBroker::post_msg (fr);
+      }
+      break;
     case MSGID_CONNECT:
     case MSGID_TWOWAY_CALL:
     case MSGID_ONEWAY_CALL:
@@ -1318,7 +1389,8 @@ ServerConnectionImpl::emit_result_handler_pop (size_t id)
 }
 
 // == ServerConnection ==
-ServerConnection::ServerConnection()
+ServerConnection::ServerConnection (const std::string &feature_keys) :
+  BaseConnection (feature_keys)
 {}
 
 ServerConnection::~ServerConnection()
@@ -1397,17 +1469,49 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 
 // == ObjectBroker ==
 ServerConnection*
-ObjectBroker::new_server_connection ()
+ObjectBroker::new_server_connection (const std::string &feature_keys)
 {
-  ServerConnectionImpl *simpl = new ServerConnectionImpl();
+  ServerConnectionImpl *simpl = new ServerConnectionImpl (feature_keys);
   return simpl;
 }
 
 ClientConnection*
-ObjectBroker::new_client_connection ()
+ObjectBroker::new_client_connection (const std::string &feature_keys)
 {
-  ClientConnectionImpl *cimpl = new ClientConnectionImpl();
+  ClientConnectionImpl *cimpl = new ClientConnectionImpl (feature_keys);
   return cimpl;
+}
+
+uint
+ObjectBroker::connection_id_from_keys (const vector<std::string> &feature_key_list)
+{ // feature_key_list is a list of key=regex_pattern pairs
+  for (uint id = 1; id <= MAX_CONNECTIONS; id++)
+    {
+      BaseConnection *bcon = BaseConnection::connection_from_id (id);
+      if (!bcon)
+        continue;
+      const String &feature_keys = bcon->feature_keys_;
+      for (auto keyvalue : feature_key_list)
+        {
+          String key, value;
+          const size_t eq = keyvalue.find ('=');
+          if (eq != std::string::npos)
+            {
+              key = keyvalue.substr (0, eq);
+              value = keyvalue.substr (eq + 1);
+            }
+          else
+            {
+              key = keyvalue;
+              value = "1";
+            }
+          if (!Regex::match_simple (value, string_option_get (feature_keys, key), Regex::EXTENDED | Regex::CASELESS, Regex::MATCH_NORMAL))
+            goto mismatch;
+        }
+      return id; // all of feature_key_list matched
+    mismatch: ;
+    }
+  return 0;     // unmatched
 }
 
 void

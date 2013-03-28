@@ -20,7 +20,7 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>:
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection();
+  server_connection = ObjectBroker::new_server_connection ($AIDA_server_feature_keys$);
 });
 
 // EmitResultHandler

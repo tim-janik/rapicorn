@@ -239,11 +239,11 @@ enum MessageId {
   // unused            = 0x5
   // unused            = 0x6
   // unused            = 0x7
-  // unused (twoway)   = 0x8
+  MSGID_HELLO_REQUEST  = 0x8000000000000000ULL, ///< Two-way hello message and connection request.
   MSGID_TWOWAY_CALL    = 0x9000000000000000ULL, ///< Two-way method call, returns result message.
   MSGID_CONNECT        = 0xa000000000000000ULL, ///< Signal handler connection/disconnection request.
   MSGID_EMIT_TWOWAY    = 0xb000000000000000ULL, ///< Two-way signal emissions, returns result message.
-  // unused (result)   = 0xc
+  MSGID_HELLO_REPLY    = 0xc000000000000000ULL, ///< Reply message for two-way hello request.
   MSGID_CALL_RESULT    = 0xd000000000000000ULL, ///< Result message for two-way call.
   MSGID_CONNECT_RESULT = 0xe000000000000000ULL, ///< Result message for signal handler connection/disconnection.
   MSGID_EMIT_RESULT    = 0xf000000000000000ULL, ///< Result message for two-way signal emissions.
@@ -329,15 +329,17 @@ public:
   static void              pop_handle (FieldReader&, SmartHandle&);
   static void              dup_handle (const uint64_t[2], SmartHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
-  static ServerConnection* new_server_connection     ();
-  static ClientConnection* new_client_connection     ();
+  static ServerConnection* new_server_connection (const std::string &feature_keys);
+  static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64_t orbid)        { return IdentifierParts (orbid).orbid_connection; }
   static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64_t msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64_t msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n = 1);
+  template<class TargetHandle> static TargetHandle smart_handle_down_cast (SmartHandle smh);
 };
 
 // == FieldBuffer ==
@@ -467,21 +469,24 @@ public:
 // == Connections ==
 /// Base connection context for ORB message exchange.
 class BaseConnection {
-  uint          index_;
+  uint              index_;
+  const std::string feature_keys_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
   void                   register_connection  ();
   void                   unregister_connection();
-  explicit               BaseConnection  ();
+  explicit               BaseConnection  (const std::string &feature_keys);
   virtual               ~BaseConnection  ();
   virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   static BaseConnection* connection_from_id (uint id);  ///< Lookup for connection, used by ORB for message delivery.
 public:
-  uint                   connection_id      () const;   ///< Get unique conneciton ID (returns 0 if unregistered).
-  virtual int            notify_fd          () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool           pending            () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
-  virtual void           dispatch           () = 0;     ///< Dispatch a single event if any is pending.
+  uint                   connection_id  () const;   ///< Get unique conneciton ID (returns 0 if unregistered).
+  virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
+  virtual void           remote_origin  (ImplicitBase *rorigin);
+  virtual SmartHandle    remote_origin  (const vector<std::string> &feature_key_list);
 };
 
 /// Function typoe for internal signal handling.
@@ -491,11 +496,12 @@ typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection ();
+  /*ctor*/           ServerConnection (const std::string &feature_keys);
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
   virtual uint64_t      instance2orbid (ImplicitBase*) = 0;
   virtual ImplicitBase* orbid2instance (uint64_t) = 0;
+  virtual ImplicitBase* remote_origin  () const = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
 public:
@@ -514,7 +520,7 @@ public:
 class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 protected:
-  explicit              ClientConnection ();
+  explicit              ClientConnection (const std::string &feature_keys);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
@@ -526,6 +532,14 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
+template<class TargetHandle> TargetHandle
+ObjectBroker::smart_handle_down_cast (SmartHandle smh)
+{
+  TargetHandle target;
+  target.assign (smh);                        // aka reinterpret_cast
+  return TargetHandle::down_cast (target);    // aka dynamic_cast (remote)
+}
+
 inline void
 FieldBuffer::reset()
 {

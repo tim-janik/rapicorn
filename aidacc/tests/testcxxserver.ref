@@ -27,7 +27,7 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::Imp
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection();
+  server_connection = ObjectBroker::new_server_connection (":AidaServerConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
 });
 
 // EmitResultHandler
@@ -4015,6 +4015,7 @@ __aida_call__SoundModule____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 
+} // BseTest
 static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, MandatoryNamespace::__aida_call__FirstInterface____aida_typelist__, },
   { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__aida_call__FirstInterface__void_func, },
@@ -4129,5 +4130,4 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
 };
 static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
-} // BseTest
 

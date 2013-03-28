@@ -68,15 +68,15 @@ check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
