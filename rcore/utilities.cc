@@ -680,18 +680,6 @@ pretty_file (const char *file_dir, const char *file)
   return String (file_dir) + "/" + file;
 }
 
-const char*
-strerror (void)
-{
-  return strerror (errno);
-}
-
-const char*
-strerror (int errnum)
-{
-  return ::strerror (errnum);
-}
-
 #define BACKTRACE_DEPTH         1024
 
 static std::vector<std::string>

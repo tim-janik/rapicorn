@@ -140,8 +140,6 @@ String      debug_help        ();
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
 
-const char* strerror    (void);         // simple wrapper for strerror (errno)
-const char* strerror    (int errnum);   // wrapper for ::strerror
 class DebugEntry {
   static void dbe_list  (DebugEntry*, int);
 public:

@@ -4,6 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <string>
+#include <cstring>
 
 namespace Rapicorn {
 
@@ -132,6 +133,10 @@ bool    text_convert    (const String &to_charset,
                          const String &input_string,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
+
+// == C strings ==
+using         ::strerror;       // introduce (const char* strerror (int))
+const char*     strerror ();    // simple wrapper for strerror (errno)
 
 // == Implementations ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \

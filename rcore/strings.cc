@@ -1074,4 +1074,10 @@ text_convert (const String &to_charset,
 
 }
 
+const char*
+strerror()
+{
+  return strerror (errno);
+}
+
 } // Rapicorn
