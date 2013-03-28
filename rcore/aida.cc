@@ -947,7 +947,7 @@ BaseConnection::connection_from_id (uint id)
 
 /// Provide initial handle for remote connections.
 void
-BaseConnection::remote_origin (ImplicitBase *fo)
+BaseConnection::remote_origin (ImplicitBase*)
 {
   assertion_error (__FILE__, __LINE__, "not supported by this object type");
 }
@@ -1012,7 +1012,7 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual SmartHandle   remote_origin    (const vector<std::string> &feature_key_list);
+  virtual SmartHandle   remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_orbid (uint64_t orbid);
@@ -1249,8 +1249,8 @@ public:
   virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
   virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
   virtual void          dispatch   ();
-  virtual ImplicitBase* remote_origin () const         { return remote_origin_; }
-  virtual void          remote_origin (ImplicitBase *rorigin);
+  virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
+  virtual void          remote_origin  (ImplicitBase *rorigin);
   virtual uint64_t      instance2orbid (ImplicitBase*);
   virtual ImplicitBase* orbid2instance (uint64_t);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }

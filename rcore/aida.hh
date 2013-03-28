@@ -485,8 +485,8 @@ public:
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin (ImplicitBase *rorigin);
-  virtual SmartHandle    remote_origin (const vector<std::string> &feature_key_list);
+  virtual void           remote_origin  (ImplicitBase *rorigin);
+  virtual SmartHandle    remote_origin  (const vector<std::string> &feature_key_list);
 };
 
 /// Function typoe for internal signal handling.
@@ -501,7 +501,7 @@ protected:
 public: /// @name API for remote calls
   virtual uint64_t      instance2orbid (ImplicitBase*) = 0;
   virtual ImplicitBase* orbid2instance (uint64_t) = 0;
-  virtual ImplicitBase* remote_origin () const = 0;
+  virtual ImplicitBase* remote_origin  () const = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
 public:
