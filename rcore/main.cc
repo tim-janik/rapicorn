@@ -384,14 +384,14 @@ init_core (const String       &app_ident,
            char              **argv,
            const StringVector &args)
 {
-  assert_return (app_ident.empty() == false);
+  assert_return (app_ident.empty() == false);   // application identifier is hard requirement
   // assert global_ctors work
   if (__staticctortest.v != 0x12affe17)
     fatal ("librapicorncore: link error: C++ constructors have not been executed");
 
   // guard against double initialization
   if (program_app_ident.empty() == false)
-    fatal ("librapicorncore: multiple calls to Rapicorn::init_app()");
+    return;
   program_app_ident = app_ident;
 
   // mandatory threading initialization
