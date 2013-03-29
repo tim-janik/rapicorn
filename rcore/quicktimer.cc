@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "quicktimer.hh"
+#include "memory.hh"
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>

@@ -246,25 +246,6 @@ uint cleanup_add                (uint                  timeout_ms,
                                  void                 *data);
 void cleanup_force_handlers     (void);
 
-/* --- memory utils --- */
-void* malloc_aligned            (size_t                total_size,
-                                 size_t                alignment,
-                                 uint8               **free_pointer);
-int   fmsb                      (uint64                value) RAPICORN_CONST;
-
-/* --- Id Allocator --- */
-class IdAllocator {
-  RAPICORN_CLASS_NON_COPYABLE (IdAllocator);
-protected:
-  explicit            IdAllocator ();
-public:
-  virtual            ~IdAllocator ();
-  virtual uint        alloc_id    () = 0;
-  virtual void        release_id  (uint unique_id) = 0;
-  virtual bool        seen_id     (uint unique_id) = 0;
-  static IdAllocator* _new        (uint startval = 1);
-};
-
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,
                                  const unsigned char  *cdata,

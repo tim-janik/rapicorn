@@ -14,8 +14,8 @@ rapicorn_public_headers = $(strip	\
 					math.hh				unicode.hh   \
 	objects.hh	aidaenums.hh	aidaprops.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
-			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
-	thread.hh	\
+			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
+	quicktimer.hh	thread.hh	\
 	$(rapicorn_impl_headers) \
 	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
@@ -25,8 +25,8 @@ rapicorn_cc_sources = $(sort	\
 					math.cc				unicode.cc   \
 	objects.cc	aidaenums.cc	aidaprops.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
-			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
-	thread.cc	\
+			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
+	quicktimer.cc	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	aidacxx.hh			\

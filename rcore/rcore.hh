@@ -14,6 +14,7 @@
 #include <rcore/loop.hh>
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
+#include <rcore/memory.hh>
 #include <rcore/objects.hh>
 #include <rcore/quicktimer.hh>
 #include <rcore/thread.hh>
