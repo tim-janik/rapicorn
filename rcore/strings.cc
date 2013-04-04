@@ -291,7 +291,15 @@ string_join (const String &junctor, const StringVector &strvec)
 bool
 string_to_bool (const String &string, bool fallback)
 {
-  const char *p = string.c_str();
+  return cstring_to_bool (string.c_str(), fallback);
+}
+
+bool
+cstring_to_bool (const char *string, bool fallback)
+{
+  if (!string)
+    return fallback;
+  const char *p = string;
   // skip spaces
   while (*p && isspace (*p))
     p++;

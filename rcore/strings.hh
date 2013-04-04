@@ -23,6 +23,9 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #define STRING_VECTOR_FROM_ARRAY(ConstCharArray)        RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)
 #endif // RAPICORN_CONVENIENCE
 
+// == C-String ==
+bool    			cstring_to_bool          (const char *string, bool fallback = false);
+
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
 String                          string_canonify          (const String &s, const String &valid_chars, const String &substitute);
