@@ -848,7 +848,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = debug_enabled() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
+  const bool need_debugging = rapicorn_debug_enabled() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (need_debugging)
     DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
                   !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
