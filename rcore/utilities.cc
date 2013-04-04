@@ -197,10 +197,7 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 }
 
 // === Logging ===
-bool                        _debug_flag = true; // bootup default before _init()
 bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
-static Atomic<char>         conftest_general_debugging = false;
-static Atomic<char>         conftest_key_debugging = false;
 static Atomic<KeyConfig*>   conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
 
@@ -233,10 +230,6 @@ debug_configure (const String &options)
 {
   bool seen_debug_key = false;
   conftest_procure().configure (options, seen_debug_key);
-  if (seen_debug_key)
-    conftest_key_debugging.store (true);
-  conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
-  Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
   Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
   if (debug_confbool ("help"))
     do_once { printerr ("%s", debug_help().c_str()); }
@@ -660,6 +653,12 @@ rapicorn_debug (const char *key, const char *file_path, const int line, const ch
 }
 
 volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
+
+bool
+_rapicorn_debug_enabled (const char *key)
+{
+  return debug_envkey_check ("RAPICORN_DEBUG", key, &_cached_rapicorn_debug);
+}
 
 static int
 cstring_option_sense (const char *option_string, const char *option, char *value, const int offset = 0)

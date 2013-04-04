@@ -128,13 +128,16 @@ String  pretty_file                             (const char *file_dir, const cha
 bool debug_envkey_check   (const char*, const char*, volatile bool* = NULL);
 void debug_envkey_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
 
+// === Rapicorn Debugging Functions ===
+extern bool volatile _cached_rapicorn_debug; ///< Caching flag to inhibit useless rapicorn_debug() calls.
+void        rapicorn_debug         (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+bool       _rapicorn_debug_enabled (const char *key);
+inline bool rapicorn_debug_enabled (const char *key = NULL) { return RAPICORN_UNLIKELY (_cached_rapicorn_debug) && _rapicorn_debug_enabled (key); }
+
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
-extern bool _debug_flag, _devel_flag;
+extern bool _devel_flag;
 inline bool devel_enabled     () { return RAPICORN_UNLIKELY (_devel_flag); }
-bool        debug_key_enabled (const char *key);
-inline bool debug_enabled     () { return RAPICORN_UNLIKELY (_debug_flag); }
-inline bool debug_enabled     (const char *key) { return RAPICORN_UNLIKELY (_debug_flag) && debug_key_enabled (key); }
 void        debug_configure   (const String &options);
 String      debug_confstring  (const String &option, const String &vdefault = "");
 bool        debug_confbool    (const String &option, bool vdefault = false);
@@ -162,8 +165,6 @@ void debug_fassert        (const char*, int, const char*) RAPICORN_NORETURN;
 void debug_fatal          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
 void debug_critical       (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
 void debug_fixit          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void rapicorn_debug       (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
-extern bool volatile _cached_rapicorn_debug; ///< Caching flag to inhibit useless rapicorn_debug() calls.
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg
