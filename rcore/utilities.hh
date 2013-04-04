@@ -33,7 +33,6 @@
 #define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
 #define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
 #define DEBUG            RAPICORN_DEBUG             ///< Conditionally issue a message if debugging is enabled.
-#define KEY_DEBUG        RAPICORN_KEY_DEBUG         ///< Conditionally issue a message if the debugging @a key is enabled.
 #define BREAKPOINT       Rapicorn::breakpoint       ///< Cause a debugging breakpoint, for development only.
 #define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
 #endif // RAPICORN_CONVENIENCE
@@ -122,8 +121,12 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_general (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (RAPICORN_PRETTY_FILE, __LINE__, __k_, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+
+// === Debugging Functions ===
+bool debug_envkey_check   (const char*, const char*, volatile bool* = NULL);
+void debug_envkey_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
@@ -154,13 +157,13 @@ public:
 };
 
 // implementation prototypes
-void        debug_assert     (const char*, int, const char*);
-void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
-void        debug_fatal      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
-void        debug_critical   (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_fixit      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_general    (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_keymsg     (const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (4, 5);
+void debug_assert         (const char*, int, const char*);
+void debug_fassert        (const char*, int, const char*) RAPICORN_NORETURN;
+void debug_fatal          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
+void debug_critical       (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void debug_fixit          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void rapicorn_debug       (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+extern bool volatile _cached_rapicorn_debug; ///< Caching flag to inhibit useless rapicorn_debug() calls.
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg

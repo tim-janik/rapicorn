@@ -53,7 +53,7 @@ check-assertion-handlers: testrcore2
 check: check-assertion-handlers
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
-	$(Q) rm -f $(TSTOUT) ; RAPICORN=debug:no-syslog:no-fatal-syslog \
+	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
 	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; eval "$$TSTDIAGNOSE"
 	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
 	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"

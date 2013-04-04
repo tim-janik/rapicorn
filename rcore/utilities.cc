@@ -240,6 +240,7 @@ debug_configure (const String &options)
   Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
   if (debug_confbool ("help"))
     do_once { printerr ("%s", debug_help().c_str()); }
+  _cached_rapicorn_debug = true; // possibly re-enable debugging (reset cache)
 }
 
 static std::list<DebugEntry*> *debug_entries;
@@ -483,7 +484,6 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
     case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
     case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
-    case 'K': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug with key
     }
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
   f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
@@ -646,28 +646,118 @@ debug_fixit (const char *file_path, const int line, const char *format, ...)
   debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
+/** Issue debugging message after checking RAPICORN_DEBUG.
+ * Checks the environment variable $RAPICORN_DEBUG for @a key, and issues a debugging
+ * message with source location @a file_path and @a line.
+ */
 void
-debug_general (const char *file_path, const int line, const char *format, ...)
+rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
 {
-  if (!conftest_general_debugging)
-    return;
   va_list vargs;
   va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
+  debug_envkey_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_cached_rapicorn_debug);
   va_end (vargs);
-  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg);
 }
 
-void
-debug_keymsg (const char *file_path, const int line, const char *key, const char *format, ...)
+volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
+
+static int
+cstring_option_sense (const char *option_string, const char *option, char *value, const int offset = 0)
 {
-  if (!debug_enabled (key))
+  const char *haystack = option_string + offset;
+  const char *p = strstr (haystack, option);
+  if (p)                                // found possible match
+    {
+      const int l = strlen (option);
+      if (p == haystack || (p > haystack && (p[-1] == ':' || p[-1] == ';')))
+        {                               // start matches (word boundary)
+          const char *d1 = strchr (p + l, ':'), *d2 = strchr (p + l, ';'), *d = MAX (d1, d2);
+          d = d ? d : p + l + strlen (p + l);
+          bool match = true;
+          if (p[l] == '=')              // found value
+            {
+              const char *v = p + l + 1;
+              strncpy (value, v, d - v);
+            }
+          else if (p[l] == 0 || p[l] == ':' || p[l] == ';')
+            {                           // option present
+              strcpy (value, "1");
+            }
+          else
+            match = false;              // no match
+          if (match)
+            {
+              const int pos = d - option_string;
+              if (d[0])
+                {
+                  const int next = cstring_option_sense (option_string, option, value, pos);
+                  if (next >= 0)        // found overriding match
+                    return next;
+                }
+              return pos;               // this match is last match
+            }
+        }                               // unmatched, keep searching
+      return cstring_option_sense (option_string, option, value, p + l - option_string);
+    }
+  return -1;                            // not present in haystack
+}
+
+static bool
+fast_envkey_check (const char *option_string, const char *key)
+{
+  const int l = max (size_t (64), strlen (option_string) + 1);
+  char kvalue[l];
+  strcpy (kvalue, "0");
+  const int keypos = !key ? -1 : cstring_option_sense (option_string, key, kvalue);
+  char avalue[l];
+  strcpy (avalue, "0");
+  const int allpos = cstring_option_sense (option_string, "all", avalue);
+  if (keypos > allpos)
+    return cstring_to_bool (kvalue, false);
+  else if (allpos > keypos)
+    return cstring_to_bool (avalue, false);
+  else
+    return false;       // neither key nor "all" found
+}
+
+/** Check whether to print debugging message.
+ * This function first checks the environment variable @a env_var for @a key, if the key is present,
+ * 'all' is present or if @a env_var is NULL, the debugging message will be printed.
+ * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
+ * empty (so no debugging is enabled), so the caching variable can be used to prevent unneccessary
+ * future debugging calls, e.g. to debug_envkey_message().
+ */
+bool
+debug_envkey_check (const char *env_var, const char *key, volatile bool *cachep)
+{
+  if (env_var)
+    {
+      const char *val = getenv (env_var);
+      if (!val || val[0] == 0)
+        {
+          if (cachep)
+            *cachep = 0;
+          return false;
+        }
+      if (!fast_envkey_check (val, key))
+        return false;
+    }
+  return true;
+}
+
+/** Conditionally print debugging message.
+ * This function first checks whether debugging is enabled via debug_envkey_check() and returns if not.
+ * The arguments @a file_path and @a line are used to denote the debugging message source location,
+ * @a format and @a va_args are formatting the message analogously to vprintf(3).
+ */
+void
+debug_envkey_message (const char *env_var, const char *key, const char *file_path, const int line,
+                      const char *format, va_list va_args, volatile bool *cachep)
+{
+  if (!debug_envkey_check (env_var, key, cachep))
     return;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('K', string_printf ("%s:%d", file_path, line), msg, key);
+  String msg = string_vprintf (format, va_args);
+  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
 }
 
 String
