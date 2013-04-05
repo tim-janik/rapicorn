@@ -9,5 +9,34 @@ See Rapicorn::rapicorn_flipper_check() to check for flipper settings in #$RAPICO
 refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
 */
 
-/// Environment variable containing feature toggles, see @ref flippers.
+/** Environment variable for feature toggles.
+ * The RAPICORN_FLIPPER environment variable may contain a colon separated list of features that
+ * can enable additional runtime behaviour. This is especially useful to allow rolling releases
+ * while some features are still under development, for further details, see @Wikipedia{Feature toggle}.
+ * A summary about feature toggles used by Rapicorn is provided on the page @ref flippers.
+ */
 $RAPICORN_FLIPPER = "";
+
+/** Build system macro definition of compiler CWD.
+ * To improve source file location information in debugging and error messages,
+ * RAPICORN_PRETTY_FILE is provided (aliased to __PRETTY_FILE__ if RAPICORN_CONVENIENCE is
+ * enabled). This macro provides a full path variant of __FILE__, which works by
+ * by prefixing __FILE__ with __FILE_DIR__ which should be defined to the
+ * compiler CWD during compilation.
+ * The best way to provide this information is as follows: <pre>
+ * <b>Makefile.am:</b>
+ * DEFS += @@DEFINE__FILE_DIR__@@
+ * <b>configure.ac:</b>
+ * if echo $VERSION | grep -iq devel ; then
+ *   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
+ * else
+ *   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"$PROJECT_NAME/${subdir}\"'
+ * fi
+ * AC_SUBST(DEFINE__FILE_DIR__)
+ * </pre>
+ * The above configure code special cases development versions allowing absolute path matching as
+ * __FILE_DIR__/__FILE__:__LINE__ for debugging messages.
+ * During stable versions $PROJECT_NAME/__FILE__ provides a clue about the originating
+ * component for failure messages.
+ */
+__FILE_DIR__ = "";
