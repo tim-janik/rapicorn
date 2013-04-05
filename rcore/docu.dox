@@ -1,0 +1,13 @@
+// == docu.dox ==
+// This file contains various general documentation snippets for Rapicorn.
+
+// Extra text to add to the flippers.html collection
+/*! @page flippers Flippers - Feature Toggles
+Flippers are feature toggles that can be used to enable certain development features at runtime.
+Features are enabled by listing them separated with colons in the environment variable #$RAPICORN_FLIPPER.
+See Rapicorn::rapicorn_flipper_check() to check for flipper settings in #$RAPICORN_FLIPPER, and
+refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
+*/
+
+/// Environment variable containing feature toggles, see @ref flippers.
+$RAPICORN_FLIPPER = "";

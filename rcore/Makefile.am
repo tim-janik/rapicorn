@@ -43,6 +43,7 @@ rapicorn_private_files = $(strip	\
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
 )
+EXTRA_DIST += docu.dox
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === CPU flags ===
