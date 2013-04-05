@@ -125,14 +125,16 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_KEY_DEBUG(key,...)     do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Debugging Functions ===
-bool debug_envkey_check   (const char*, const char*, volatile bool* = NULL);
-void debug_envkey_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
+bool envkey_flipper_check (const char*, const char*);
+bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
+void envkey_debug_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
 
 // === Rapicorn Debugging Functions ===
 extern bool volatile _cached_rapicorn_debug; ///< Caching flag to inhibit useless rapicorn_debug() calls.
 void        rapicorn_debug         (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
 bool       _rapicorn_debug_enabled (const char *key);
 inline bool rapicorn_debug_enabled (const char *key = NULL) { return RAPICORN_UNLIKELY (_cached_rapicorn_debug) && _rapicorn_debug_enabled (key); }
+bool        rapicorn_flipper_check (const char *key);
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));

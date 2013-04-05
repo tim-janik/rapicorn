@@ -648,16 +648,29 @@ rapicorn_debug (const char *key, const char *file_path, const int line, const ch
 {
   va_list vargs;
   va_start (vargs, format);
-  debug_envkey_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_cached_rapicorn_debug);
+  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_cached_rapicorn_debug);
   va_end (vargs);
 }
 
 volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
 
+/** @fn rapicorn_debug_enabled
+ * Check if debugging is enabled for @a key.
+ * This function checks if $RAPICORN_DEBUG contains @a key or "all" and returns true
+ * if debugging is enabled for the given key. The @a key argument may be NULL in which
+ * case the function checks if general debugging is enabled.
+ */
 bool
 _rapicorn_debug_enabled (const char *key)
 {
-  return debug_envkey_check ("RAPICORN_DEBUG", key, &_cached_rapicorn_debug);
+  return envkey_debug_check ("RAPICORN_DEBUG", key, &_cached_rapicorn_debug);
+}
+
+/// Check if the feature toggle @a key is enabled.
+bool
+rapicorn_flipper_check (const char *key)
+{
+  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
 }
 
 static int
@@ -719,15 +732,34 @@ fast_envkey_check (const char *option_string, const char *key)
     return false;       // neither key nor "all" found
 }
 
+/** Check whether a flipper (feature toggle) is enabled.
+ * This function first checks the environment variable @a env_var for @a key, if the key is present,
+ * @a true is returned, otherwise @a false.
+ */
+bool
+envkey_flipper_check (const char *env_var, const char *key)
+{
+  if (env_var && key)
+    {
+      const char *val = getenv (env_var);
+      if (val && val[0])
+        {
+          if (fast_envkey_check (val, key))
+            return true;
+        }
+    }
+  return false;
+}
+
 /** Check whether to print debugging message.
  * This function first checks the environment variable @a env_var for @a key, if the key is present,
  * 'all' is present or if @a env_var is NULL, the debugging message will be printed.
  * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
  * empty (so no debugging is enabled), so the caching variable can be used to prevent unneccessary
- * future debugging calls, e.g. to debug_envkey_message().
+ * future debugging calls, e.g. to envkey_debug_message().
  */
 bool
-debug_envkey_check (const char *env_var, const char *key, volatile bool *cachep)
+envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
 {
   if (env_var)
     {
@@ -745,15 +777,15 @@ debug_envkey_check (const char *env_var, const char *key, volatile bool *cachep)
 }
 
 /** Conditionally print debugging message.
- * This function first checks whether debugging is enabled via debug_envkey_check() and returns if not.
+ * This function first checks whether debugging is enabled via envkey_debug_check() and returns if not.
  * The arguments @a file_path and @a line are used to denote the debugging message source location,
  * @a format and @a va_args are formatting the message analogously to vprintf(3).
  */
 void
-debug_envkey_message (const char *env_var, const char *key, const char *file_path, const int line,
+envkey_debug_message (const char *env_var, const char *key, const char *file_path, const int line,
                       const char *format, va_list va_args, volatile bool *cachep)
 {
-  if (!debug_envkey_check (env_var, key, cachep))
+  if (!envkey_debug_check (env_var, key, cachep))
     return;
   String msg = string_vprintf (format, va_args);
   debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
