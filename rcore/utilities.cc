@@ -654,12 +654,15 @@ rapicorn_debug (const char *key, const char *file_path, const int line, const ch
 
 volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
 
-/** @fn rapicorn_debug_enabled
- * Check if debugging is enabled for @a key.
+#ifdef RAPICORN_DOXYGEN
+/** Check if debugging is enabled for @a key.
  * This function checks if $RAPICORN_DEBUG contains @a key or "all" and returns true
  * if debugging is enabled for the given key. The @a key argument may be NULL in which
  * case the function checks if general debugging is enabled.
  */
+bool rapicorn_debug_enabled (const char *key);
+#endif  // RAPICORN_DOXYGEN
+
 bool
 _rapicorn_debug_enabled (const char *key)
 {
