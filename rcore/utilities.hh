@@ -34,7 +34,6 @@
 #define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
 #define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
 #define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
-#define BREAKPOINT       Rapicorn::breakpoint       ///< Cause a debugging breakpoint, for development only.
 #define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
 #endif // RAPICORN_CONVENIENCE
 
@@ -177,6 +176,7 @@ void debug_fixit          (const char*, int, const char*, ...) RAPICORN_PRINTF (
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg
 #define RAPICORN_STARTUP_ASSERTi(e, _N) namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
 #define RAPICORN_STARTUP_ASSERT(expr)   RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
+#define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.
 #if (defined __i386__ || defined __x86_64__)
 inline void breakpoint() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__
