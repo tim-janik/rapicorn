@@ -1017,14 +1017,14 @@ user_warning (const UserSource &source, const char *format, ...)
 
 /**
  * @def RAPICORN_DEBUG(format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug.
+ * Issues a debugging message if $RAPICORN_DEBUG contains "debug" or "all".
  * The message @a format uses printf-like syntax.
  */
 /**
 
 /**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug-<KEY>, where <KEY> is given as @a key.
+ * Issues a debugging message if $RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
  */
 /**
