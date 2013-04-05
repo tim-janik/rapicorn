@@ -21,8 +21,6 @@
 #include <errno.h>
 using namespace Rapicorn;
 
-#define throw_if_fail(expr)     do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
-
 static void
 bogus_func ()
 {
@@ -57,11 +55,6 @@ test_logging (const char *logarg)
       RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
       RAPICORN_CRITICAL_UNLESS (errno == 0);
-      try {
-        throw_if_fail (0 == "throw-if-fail");
-      } catch (Rapicorn::AssertionError ar) {
-        printerr ("Caught exception: %s\n", ar.what());
-      }
       critical ("execution has reached a critical condition (\"test-critical\")");
       bogus_func();
       value_func (0);

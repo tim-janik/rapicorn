@@ -188,16 +188,6 @@ inline void breakpoint ();
 String      process_handle ();
 
 
-// == AssertionError ==
-class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
-{
-  const String msg_;
-public:
-  explicit            AssertionError  (const String &expr, const String &file = "", size_t line = 0);
-  virtual            ~AssertionError  () throw();
-  virtual const char* what            () const throw(); ///< Obtain a string describing the assertion error.
-};
-
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds
 uint64  timestamp_realtime   ();        // µseconds

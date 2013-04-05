@@ -929,40 +929,6 @@ user_warning (const UserSource &source, const char *format, ...)
   user_message (source, "warning", msg);
 }
 
-// == AssertionError ==
-static String
-construct_error_msg (const String &file, size_t line, const char *error, const String &expr)
-{
-  String s;
-  if (!file.empty())
-    {
-      s += file;
-      if (line > 0)
-        s += ":" + string_from_int (line);
-      s += ": ";
-    }
-  s += error;
-  if (!expr.empty())
-    {
-      s += ": ";
-      s += expr;
-    }
-  return s;
-}
-
-AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
-  msg_ (construct_error_msg (file, line, "assertion failed", expr))
-{}
-
-AssertionError::~AssertionError () throw()
-{}
-
-const char*
-AssertionError::what () const throw()
-{
-  return msg_.c_str();
-}
-
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
@@ -1067,16 +1033,6 @@ AssertionError::what () const throw()
 /**
  * @def KEY_DEBUG(format,...)
  * Shorthand for RAPICORN_KEY_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_THROW_IF_FAIL(expr)
- * Throws an AssertionError exception with error message if expression @a expr evaluates to false.
- * This is normally used as function entry condition.
- */
-/**
- * @def throw_if_fail
- * Shorthand for RAPICORN_THROW_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
  */
 
 
