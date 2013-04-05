@@ -125,7 +125,7 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_KEY_DEBUG(key,...)     do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Debugging Functions ===
-bool envkey_flipper_check (const char*, const char*);
+bool envkey_flipper_check (const char*, const char*, volatile bool* = NULL);
 bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
 void envkey_debug_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
 

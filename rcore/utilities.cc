@@ -735,18 +735,23 @@ fast_envkey_check (const char *option_string, const char *key)
 /** Check whether a flipper (feature toggle) is enabled.
  * This function first checks the environment variable @a env_var for @a key, if the key is present,
  * @a true is returned, otherwise @a false.
+ * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
+ * empty (i.e. no features can be enabled), so the caching variable can be used to prevent
+ * unneccessary future envkey_flipper_check() calls.
  */
 bool
-envkey_flipper_check (const char *env_var, const char *key)
+envkey_flipper_check (const char *env_var, const char *key, volatile bool *cachep)
 {
-  if (env_var && key)
+  if (env_var)          // require explicit activation
     {
       const char *val = getenv (env_var);
-      if (val && val[0])
+      if (!val || val[0] == 0)
         {
-          if (fast_envkey_check (val, key))
-            return true;
+          if (cachep)
+            *cachep = 0;
         }
+      else if (key && fast_envkey_check (val, key))
+        return true;
     }
   return false;
 }
@@ -754,6 +759,7 @@ envkey_flipper_check (const char *env_var, const char *key)
 /** Check whether to print debugging message.
  * This function first checks the environment variable @a env_var for @a key, if the key is present,
  * 'all' is present or if @a env_var is NULL, the debugging message will be printed.
+ * A NULL @a key checks for general debugging, it's equivalent to passing "debug" as @a key.
  * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
  * empty (so no debugging is enabled), so the caching variable can be used to prevent unneccessary
  * future debugging calls, e.g. to envkey_debug_message().
@@ -761,19 +767,9 @@ envkey_flipper_check (const char *env_var, const char *key)
 bool
 envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
 {
-  if (env_var)
-    {
-      const char *val = getenv (env_var);
-      if (!val || val[0] == 0)
-        {
-          if (cachep)
-            *cachep = 0;
-          return false;
-        }
-      if (!fast_envkey_check (val, key))
-        return false;
-    }
-  return true;
+  if (!env_var)
+    return true;        // unconditional debugging
+  return envkey_flipper_check (env_var, key ? key : "debug", cachep);
 }
 
 /** Conditionally print debugging message.
