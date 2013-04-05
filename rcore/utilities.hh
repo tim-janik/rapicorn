@@ -14,16 +14,18 @@
 
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
-#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
-#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
-#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
-#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
-#define __PRETTY_FILE__                 RAPICORN_PRETTY_FILE
+#include <assert.h>                     // needed to redefine assert()
+#ifdef  assert                          // only redefine if assert.h introduces an "assert" macro
+#undef  assert
+#define assert                          RAPICORN_ASSERT         ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#endif // assert
+#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR          ///< Shorthand for RAPICORN_DIR_SEPARATOR.
+#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S        ///< Shorthand for RAPICORN_DIR_SEPARATOR_S.
+#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
+#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR_S.
+#define __PRETTY_FILE__                 RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
 //#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
 #define STRLOC()         RAPICORN_STRLOC()          ///< Produces a const char C string, describing the current code location.
-#ifndef assert                                      // guard against previous inclusion of assert.h
-#define assert           RAPICORN_ASSERT            ///< Assert @a condition to be true at runtime.
-#endif // assert
 #define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Assertion used to label unreachable code.
 #define assert_return    RAPICORN_ASSERT_RETURN     ///< Issue an assertion warning and return @a ... if @a condition is false.
 #define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
@@ -95,11 +97,15 @@ struct UserSource {
 
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);
+/** @def RAPICORN_PRETTY_FILE
+ * Full source file path name.
+ * Macro that expands to __FILE_DIR__ "/" __FILE__, see also #__FILE_DIR__.
+ */
 #ifdef  __FILE_DIR__
 #define RAPICORN_PRETTY_FILE                    (__FILE_DIR__ "/" __FILE__)
 #else
-#define __FILE_DIR__                            ""
 #define RAPICORN_PRETTY_FILE                    (__FILE__)
+#define __FILE_DIR__                            ""
 #endif
 #define RAPICORN_STRLOC()                       ((RAPICORN_PRETTY_FILE + ::Rapicorn::String (":") + RAPICORN_STRINGIFY (__LINE__)).c_str()) ///< Return "FILE:LINE"
 #define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
