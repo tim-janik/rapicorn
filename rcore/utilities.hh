@@ -34,7 +34,6 @@
 #define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
 #define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
 #define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
-#define DEBUG            RAPICORN_DEBUG             ///< Conditionally issue a message if debugging is enabled.
 #define BREAKPOINT       Rapicorn::breakpoint       ///< Cause a debugging breakpoint, for development only.
 #define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
 #endif // RAPICORN_CONVENIENCE

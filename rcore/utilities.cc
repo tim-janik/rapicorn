@@ -1021,9 +1021,6 @@ user_warning (const UserSource &source, const char *format, ...)
  * The message @a format uses printf-like syntax.
  */
 /**
- * @def DEBUG(format,...)
- * Shorthand for RAPICORN_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
 
 /**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
@@ -1678,7 +1675,7 @@ url_test_show (const char *url)
                                    NULL, /* child_pid */
                                    &error);
         g_free (string);
-        DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
+        RAPICORN_DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
         g_clear_error (&error);
         if (success)
           return true;

@@ -1007,7 +1007,7 @@ Matcher::match_pseudo_element (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector ("::" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          RAPICORN_DEBUG ("SELECTOR-MATCH: %s", error.c_str());
           return NULL;
         }
       return selob_match;
@@ -1054,7 +1054,7 @@ Matcher::match_pseudo_class (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector (":" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          RAPICORN_DEBUG ("SELECTOR-MATCH: %s", error.c_str());
           return false;
         }
       return Selector::Selob::is_true_match (selob_match);
@@ -1087,7 +1087,7 @@ Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
+  // RAPICORN_DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
   return result;
 }
 
