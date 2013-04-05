@@ -932,87 +932,60 @@ user_warning (const UserSource &source, const char *format, ...)
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
+ * Expand to a string literal, describing the current code location.
  * Returns a string describing the current source code location, such as FILE and LINE number.
- */
-/**
- * @def STRLOC()
- * Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_IF(expr [, rvalue])
+ * Return if @a expr evaluates to true.
  * Silently return @a rvalue if expression @a expr evaluates to true. Returns void if @a rvalue was not specified.
- */
-/**
- * @def return_if(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_UNLESS(expr [, rvalue])
+ * Return if @a expr is false.
  * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
- */
-/**
- * @def return_unless(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_FATAL(format,...)
- * Issues an error message, and aborts the program. The error message @a format uses printf-like syntax.
- */
-/**
- * @def fatal(format,...)
- * Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+ * Abort the program with a fatal error message.
+ * Issues an error message and call abort() to abort the program.
+ * The error message @a format uses printf-like syntax.
  */
 
 /**
  * @def RAPICORN_ASSERT(cond)
  * Issue an error and abort the program if expression @a cond evaluates to false.
- */
-/**
- * @def assert(cond)
- * Shorthand for RAPICORN_ASSERT() if RAPICORN_CONVENIENCE is defined.
+ * Before aborting, a bracktrace is printed to aid debugging of the failing assertion.
  */
 
 /**
- * @def RAPICORN_ASSERT_RETURN(cond [, rvalue])
- * Issue an error and return @a rvalue if expression @a cond evaluates to false. Returns void if @a rvalue was not specified.
+ * @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
+ * Issue an assertion warning and return if @a condition is false.
+ * Issue an error and return @a rvalue if expression @a condition evaluates to false. Returns void if @a rvalue was not specified.
  * This is normally used as function entry condition.
- */
-/**
- * @def assert_return(cond [, rvalue])
- * Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_ASSERT_UNREACHED()
+ * Assertion used to label unreachable code.
  * Issues an error message, and aborts the program if it is reached at runtime.
  * This is normally used to label code conditions intended to be unreachable.
- */
-/**
- * @def assert_unreached
- * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_CRITICAL(format,...)
- * Issues an error message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
  * The error message @a format uses printf-like syntax.
- */
-/**
- * @def critical(format,...)
- * Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_CRITICAL_UNLESS(cond)
- * Behaves like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
+ * Issue a critical warning if @a condition is false, i.e. this macro behaves
+ * like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
  * This is normally used as a non-fatal assertion.
- */
-/**
- * @def critical_unless(cond)
- * Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
@@ -1020,18 +993,20 @@ user_warning (const UserSource &source, const char *format, ...)
  * Issues a debugging message if $RAPICORN_DEBUG contains "debug" or "all".
  * The message @a format uses printf-like syntax.
  */
-/**
 
 /**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
  * Issues a debugging message if $RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
  */
-/**
- * @def KEY_DEBUG(format,...)
- * Shorthand for RAPICORN_KEY_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
 
+/**
+ * @def RAPICORN_STARTUP_ASSERT(condition)
+ * Abort if @a condition is false.
+ * This macro expands to executing an assertion via a static constructor during program
+ * startup. In contrast to static_assert(), this macro can execute arbitrary code, e.g.
+ * to assert floating point number properties.
+ */
 
 // == utilities ==
 void

@@ -14,27 +14,27 @@
 
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
-#include <assert.h>                     // needed to redefine assert()
-#ifdef  assert                          // only redefine if assert.h introduces an "assert" macro
+#include <assert.h>                                             // needed to redefine assert()
+#if defined assert || defined RAPICORN_DOXYGEN                  // only redefine if assert.h introduces an "assert" macro
 #undef  assert
-#define assert                          RAPICORN_ASSERT         ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#define assert                  RAPICORN_ASSERT                 ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
 #endif // assert
-#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR          ///< Shorthand for RAPICORN_DIR_SEPARATOR.
-#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S        ///< Shorthand for RAPICORN_DIR_SEPARATOR_S.
-#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
-#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR_S.
-#define __PRETTY_FILE__                 RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
+#define DIR_SEPARATOR           RAPICORN_DIR_SEPARATOR          ///< Shorthand for RAPICORN_DIR_SEPARATOR.
+#define DIR_SEPARATOR_S         RAPICORN_DIR_SEPARATOR_S        ///< Shorthand for RAPICORN_DIR_SEPARATOR_S.
+#define SEARCHPATH_SEPARATOR    RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
+#define SEARCHPATH_SEPARATOR_S  RAPICORN_SEARCHPATH_SEPARATOR_S ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR_S.
+#define __PRETTY_FILE__         RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
 //#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
-#define STRLOC()         RAPICORN_STRLOC()          ///< Produces a const char C string, describing the current code location.
-#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Assertion used to label unreachable code.
-#define assert_return    RAPICORN_ASSERT_RETURN     ///< Issue an assertion warning and return @a ... if @a condition is false.
-#define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
-#define return_unless    RAPICORN_RETURN_UNLESS     ///< Return @a ... if @a condition is false.
-#define fatal            RAPICORN_FATAL             ///< Abort the program with a fatal error message.
-#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
-#define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
+#define STRLOC()         RAPICORN_STRLOC()          ///< Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
+#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+#define assert_return    RAPICORN_ASSERT_RETURN     ///< Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
+#define return_if        RAPICORN_RETURN_IF         ///< Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
+#define return_unless    RAPICORN_RETURN_UNLESS     ///< Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define fatal            RAPICORN_FATAL             ///< Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
+#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
-#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
