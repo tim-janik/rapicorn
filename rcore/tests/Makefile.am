@@ -60,7 +60,6 @@ check-logging-output: testrcore2
 	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return'"
 	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return+value'"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test critical()'"
-	$(Q) grep -q 'FIX''ME:.*FIX''ME() test' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test FIX''ME()'"
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output
 # process handle

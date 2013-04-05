@@ -48,8 +48,6 @@ test_logging (const char *logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)
     {
-#define FIXIT FIX##ME
-      FIXIT ("nothing to fix here, FIX""ME() test");
       debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
       RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
       RAPICORN_CRITICAL_UNLESS (0 > 1);

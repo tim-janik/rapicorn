@@ -34,7 +34,6 @@
 #define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
 #define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
 #define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
-#define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -122,7 +121,6 @@ String  pretty_file                             (const char *file_dir, const cha
 // === Development Messages ===
 #define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
 #define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
 #define RAPICORN_DEBUG(...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
