@@ -82,6 +82,7 @@ all-docs: $(git_stamp) doxygen.cfg
 	&& echo "INPUT		  = $(SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
+	&& echo "GENERATE_TAGFILE = html.tmp/html/tagfile.xml" \
 	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
 	) | nice $(DOXYGEN) - >error.log 2>&1
 	$(Q) test ! -s error.log && rm -f error.log \
