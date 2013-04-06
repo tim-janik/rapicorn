@@ -1,114 +1,85 @@
-# Build and upload development documentation
-include $(top_srcdir)/Makefile.decl
+# Rules to build documentation via Doxygen		-*-mode:makefile;-*-
 
-all: build-stamp
-build-stamp:
-	$(MAKE) all-docs
-	touch $@
+DOXYGEN_PROJECT_NUMBER = ${VERSION}
 
-top_srcdir  = ../..
-git_stamp   = $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
-REL_VERSION   = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-DSC_VERSION   = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
-PRJ_VERSION   = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
-DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
-SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
-
-DOC_FILES   = rapicorn-core.hh rapicorn.hh
-DOC_DIRS    = rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOCU_GLOBS  = *.dox *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
-SRCTREE     = srctree
+DOXYGEN_SRCTREE     = doxygen-srctree
 DOXYGENV    = doxygen-1.7.4
 DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 GPRINT	    = @printf '  %-7s%s\n'
 Q           = $(if $(findstring 1, $(V)) ,, @)
-QSTDOUT     = $(Q:@=1>/dev/null)
-QSTDERR     = $(Q:@=2>/dev/null)
 
-EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
-
-CHANGELOG_PGT = "Rapicorn Development ChangeLog"
 CHANGELOG_SED = -e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
 		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
 		-e 's/^/ * /'
 
-.PHONY: $(SRCTREE)
-$(SRCTREE):
-	$(GPRINT) "GEN" $(SRCTREE)/
-	$(Q) rm -rf $(SRCTREE)/ && mkdir -p $(SRCTREE)/
+.PHONY: $(DOXYGEN_SRCTREE)
+$(DOXYGEN_SRCTREE):
+	$(GPRINT) "GEN" $(DOXYGEN_SRCTREE)/
+	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ && mkdir -p $(DOXYGEN_SRCTREE)/
 	$(GPRINT) "GEN" "ChangeLog"
 	$(Q) test -f $(top_srcdir)/ChangeLog || { echo "Missing $(top_srcdir)/ChangeLog" >&2 ; false ; }
-	$(Q) echo '/*! @page ChangeLog' $(CHANGELOG_PGT)	 > $(SRCTREE)/ChangeLog
-	$(Q) sed -r $(CHANGELOG_SED) <$(top_srcdir)/ChangeLog	>> $(SRCTREE)/ChangeLog
-	$(Q) echo ' */' 					>> $(SRCTREE)/ChangeLog
+	$(Q) echo '/*! @page ChangeLog' $(DOXYGEN_CHANGELOG_TITLE)	 > $(DOXYGEN_SRCTREE)/ChangeLog
+	$(Q) sed -r $(CHANGELOG_SED) <$(top_srcdir)/ChangeLog	>> $(DOXYGEN_SRCTREE)/ChangeLog
+	$(Q) echo ' */' 					>> $(DOXYGEN_SRCTREE)/ChangeLog
 	$(GPRINT) "COPY" "Source tree..." \
 	&& CWD=`pwd` \
-	&& for dir in $(DOC_DIRS) ; do \
-	  (mkdir -p $$CWD/$(SRCTREE)/$$dir/ \
+	&& for dir in $(DOXYGEN_DOC_DIRS) ; do \
+	  (mkdir -p $$CWD/$(DOXYGEN_SRCTREE)/$$dir/ \
 	   && cd $(top_srcdir)/$$dir \
 	   && find . -maxdepth 1 -type f \( $(patsubst %,-name '%' -o, $(DOCU_CGLOBS)) -false \) \
-	      -exec cp {} $$CWD/$(SRCTREE)/$$dir/{} \; ) || exit $? ; \
+	      -exec cp {} $$CWD/$(DOXYGEN_SRCTREE)/$$dir/{} \; ) || exit $? ; \
 	  done \
-	$(foreach FILE, $(DOC_FILES), \
-	  && cp $(top_srcdir)/$(FILE) $(SRCTREE)/$(dir $(FILE)))
+	$(foreach FILE, $(DOXYGEN_DOC_FILES), \
+	  && cp $(top_srcdir)/$(FILE) $(DOXYGEN_SRCTREE)/$(dir $(FILE)))
 	$(GPRINT) "ADD" "File docu commands..." \
-	&& cd $(SRCTREE)/ \
+	&& cd $(DOXYGEN_SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
 	$(GPRINT) "PRUNE" "Generated IDL enums" \
-	&& cd $(SRCTREE)/ \
+	&& cd $(DOXYGEN_SRCTREE)/ \
 	&& sed 's/^enum\b/#ifndef DOXYGEN\nenum/ ; s/\(operator>>=.*\.pop_evalue().*\)/\1\n#endif/' \
 	    */clientapi.hh */serverapi.hh --in-place
 	$(GPRINT) "PRUNE" "Exclude files..." \
-	&& rm -f $(patsubst %, $(SRCTREE)/%, $(EXCLUDES))
+	&& rm -f $(patsubst %, $(DOXYGEN_SRCTREE)/%, $(DOXYGEN_EXCLUDES))
 	$(GPRINT) "ADD" "Enumeration docu commands..." \
-	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
+	&& find $(DOXYGEN_SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
 	| xargs -0 python enumdoc.py
 
-LINK_PROJECT_NAME = \
-	-e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
-R_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
+DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
-all-docs: $(git_stamp) doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
+doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(GPRINT) "TIDY" "Temporaries..."
-	$(Q) rm -rf html.tmp/ && mkdir -p html.tmp/
-	$(Q) $(MAKE) $(SRCTREE)
+	$(Q) rm -rf doxygen-html.tmp/ && mkdir -p doxygen-html.tmp/
+	$(Q) $(MAKE) $(DOXYGEN_SRCTREE)
 	$(GPRINT) "GEN" "HTML Documentation..."
 	$(Q) (cat doxygen.cfg \
-	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
-	&& echo "INPUT		  = $(SRCTREE)/" \
-	&& echo "EXAMPLE_PATH	  = $(SRCTREE)/" \
-	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
-	&& echo "GENERATE_TAGFILE = html.tmp/html/tagfile.xml" \
+	&& echo "STRIP_FROM_PATH  = `pwd`/$(DOXYGEN_SRCTREE)" \
+	&& echo "INPUT		  = $(DOXYGEN_SRCTREE)/" \
+	&& echo "EXAMPLE_PATH	  = $(DOXYGEN_SRCTREE)/" \
+	&& echo "OUTPUT_DIRECTORY = doxygen-html.tmp/" \
+	&& echo "GENERATE_TAGFILE = doxygen-html.tmp/html/tagfile.xml" \
 	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/ \\" \
 	&& echo "                   tagfile-unix.xml=http://www.unix.org/" \
-	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
-	) | nice $(DOXYGEN) - >error.log 2>&1
+	&& echo -n "PROJECT_NUMBER = $(DOXYGEN_PROJECT_NUMBER)" \
+	) | nice $(DOXYGEN) - > error.log 2>&1
 	$(Q) test ! -s error.log && rm -f error.log \
-	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(QSTDOUT) ; }
+	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(Q:@=1>/dev/null) ; }
 	$(GPRINT) "POLISH" "HTML Files..."
-	$(Q) sed $(LINK_PROJECT_NAME) -i html.tmp/html/*.html
-	$(Q) sed -r $(R_ACCESSKEY_AS_F) -i html.tmp/html/*.html
-	$(Q) mv html.tmp/html/ html.tmp/$(DOC_VERSION)/
-	$(Q) ln -s $(DOC_VERSION) html.tmp/latest
-	$(GPRINT) "RSYNC" "HTML Documentation..."
-	$(Q) rsync -aH --del html.tmp/ html/
+	$(Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-html.tmp/html/*.html
+	$(GPRINT) "MOVE" "doxygen-html/..."
+	$(Q) rm -rf doxygen-html/ && mv doxygen-html.tmp/html/ doxygen-html/
 	$(GPRINT) "CLEAN" "Temporaries..."
-	$(Q) rm -rf $(SRCTREE)/ html.tmp/
+	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-html.tmp/
+.PHONY: doxygen-html
 
-# upload release versions directly, otherwise upload as latest/
-upload: all
-	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html/${DOC_VERSION}"  "testbit:/srv/dev/html/rapicorn/" ; }
-	$(Q) test "${REL_VERSION}" = "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html/${DOC_VERSION}/"  "testbit:/srv/dev/html/rapicorn/latest/" ; }
+clean-local: doxygen-clean
 
-clean:
-	rm -f build-stamp
-	rm -rf $(SRCTREE)/ html.tmp/
-	rm -rf html/
-maintainer-clean: clean
+doxygen-clean:
+	rm -rf $(DOXYGEN_SRCTREE)/ doxygen-html.tmp/ doxygen-html/
+	rm -rf error.log
+.PHONY: doxygen-clean
