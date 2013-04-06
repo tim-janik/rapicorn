@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<tagfile>
+  <compound kind="file">
+  <name>The Single UNIX Specification</name>
+  <filename>version4</filename>
+  <path>http://www.unix.org/</path>
+
+  <member kind='variable'><name>LP64</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+  <member kind='variable'><name>ILP64</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+  <member kind='variable'><name>LLP64</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+
+  <member kind='typedef'><name>int</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+  <member kind='typedef'><name>long</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+  <member kind='typedef'><name>long long</name> <anchorfile>whitepapers/64bit.html</anchorfile> </member>
+
+  </compound>
+</tagfile>

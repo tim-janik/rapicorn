@@ -72,7 +72,7 @@ LINK_PROJECT_NAME = \
 	-e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 R_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
-all-docs: $(git_stamp) doxygen.cfg
+all-docs: $(git_stamp) doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(GPRINT) "TIDY" "Temporaries..."
 	$(Q) rm -rf html.tmp/ && mkdir -p html.tmp/
 	$(Q) $(MAKE) $(SRCTREE)
@@ -80,9 +80,11 @@ all-docs: $(git_stamp) doxygen.cfg
 	$(Q) (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
 	&& echo "INPUT		  = $(SRCTREE)/" \
-	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
+	&& echo "EXAMPLE_PATH	  = $(SRCTREE)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
 	&& echo "GENERATE_TAGFILE = html.tmp/html/tagfile.xml" \
+	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/ \\" \
+	&& echo "                   tagfile-unix.xml=http://www.unix.org/" \
 	&& echo -n "PROJECT_NUMBER = $(PRJ_VERSION)" \
 	) | nice $(DOXYGEN) - >error.log 2>&1
 	$(Q) test ! -s error.log && rm -f error.log \
