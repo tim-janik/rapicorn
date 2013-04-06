@@ -778,7 +778,7 @@ envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
 /** Conditionally print debugging message.
  * This function first checks whether debugging is enabled via envkey_debug_check() and returns if not.
  * The arguments @a file_path and @a line are used to denote the debugging message source location,
- * @a format and @a va_args are formatting the message analogously to vprintf(3).
+ * @a format and @a va_args are formatting the message analogously to vprintf().
  */
 void
 envkey_debug_message (const char *env_var, const char *key, const char *file_path, const int line,
