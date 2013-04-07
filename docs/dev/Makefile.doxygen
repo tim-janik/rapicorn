@@ -40,15 +40,8 @@ $(DOXYGEN_SRCTREE):
 	&& cd $(DOXYGEN_SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
-	$(GPRINT) "PRUNE" "Generated IDL enums" \
-	&& cd $(DOXYGEN_SRCTREE)/ \
-	&& sed 's/^enum\b/#ifndef DOXYGEN\nenum/ ; s/\(operator>>=.*\.pop_evalue().*\)/\1\n#endif/' \
-	    */clientapi.hh */serverapi.hh --in-place
 	$(GPRINT) "PRUNE" "Exclude files..." \
 	&& rm -f $(patsubst %, $(DOXYGEN_SRCTREE)/%, $(DOXYGEN_EXCLUDES))
-	$(GPRINT) "ADD" "Enumeration docu commands..." \
-	&& find $(DOXYGEN_SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
-	| xargs -0 python enumdoc.py
 
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
