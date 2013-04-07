@@ -18,7 +18,7 @@ all: build-stamp
 build-stamp:
 	$(Q) $(MAKE) --no-print-directory all-docs
 	$(Q) touch $@
-CLEANFILES = build-stamp
+CLEANFILES += build-stamp
 
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 
