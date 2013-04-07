@@ -1,6 +1,7 @@
 # Rules to build documentation via Doxygen		-*-mode:makefile;-*-
 
 DOXYGEN_PROJECT_NUMBER = ${VERSION}
+EXTRA_DIST += acdoxygen.m4
 
 DOCU_GLOBS  = *.dox *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc

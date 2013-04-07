@@ -397,13 +397,6 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
-dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
-AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
-[
-  # need doxygen to generate documentation
-  AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
-])
-
 dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
 AC_DEFUN([RAPICORN_CPU_FLAGS],
 [
@@ -499,8 +492,10 @@ RAPICORN_ROPE_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
-RAPICORN_DOC_REQUIREMENTS
 RAPICORN_CPU_FLAGS
+
+builtin(include, docs/dev/acdoxygen.m4) dnl # import MC_DOXYGEN which defines DOXYGEN and DOT
+MC_DOXYGEN
 
 # automake @VARIABLE@ exports.
 AC_SUBST(CFLAGS)
