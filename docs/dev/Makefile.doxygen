@@ -46,7 +46,7 @@ $(DOXYGEN_SRCTREE):
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
 # configure and run doxygen, handle DOXYGEN="" by creating a dummy docu target
-doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
+doxygen-html: doxygen.cfg tagfile-susv4.xml
 	$(DOXYGEN_V) "TIDY" "Temporaries..."
 	$(DOXYGEN_Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
 	$(DOXYGEN_Q) $(MAKE) $(DOXYGEN_SRCTREE)
@@ -59,8 +59,7 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
-	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/ \\" \
-	&& echo "                   tagfile-unix.xml=http://www.unix.org/" \
+	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/" \
 	&& echo -n "PROJECT_NUMBER = $(DOXYGEN_PROJECT_NUMBER)" \
 	) | nice $(DOXYGEN) - > error.log 2>&1
 	$(DOXYGEN_Q) test ! -s error.log && rm -f error.log \
