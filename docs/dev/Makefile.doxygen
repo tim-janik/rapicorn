@@ -48,15 +48,15 @@ DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=
 
 doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(GPRINT) "TIDY" "Temporaries..."
-	$(Q) rm -rf doxygen-html.tmp/ && mkdir -p doxygen-html.tmp/
+	$(Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
 	$(Q) $(MAKE) $(DOXYGEN_SRCTREE)
 	$(GPRINT) "GEN" "HTML Documentation..."
 	$(Q) (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(DOXYGEN_SRCTREE)" \
 	&& echo "INPUT		  = $(DOXYGEN_SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(DOXYGEN_SRCTREE)/" \
-	&& echo "OUTPUT_DIRECTORY = doxygen-html.tmp/" \
-	&& echo "GENERATE_TAGFILE = doxygen-html.tmp/html/tagfile.xml" \
+	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
+	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/ \\" \
 	&& echo "                   tagfile-unix.xml=http://www.unix.org/" \
 	&& echo -n "PROJECT_NUMBER = $(DOXYGEN_PROJECT_NUMBER)" \
@@ -64,16 +64,16 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(Q) test ! -s error.log && rm -f error.log \
 	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(Q:@=1>/dev/null) ; }
 	$(GPRINT) "POLISH" "HTML Files..."
-	$(Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-html.tmp/html/*.html
+	$(Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html
 	$(GPRINT) "MOVE" "doxygen-html/..."
-	$(Q) rm -rf doxygen-html/ && mv doxygen-html.tmp/html/ doxygen-html/
+	$(Q) rm -rf doxygen-html/ && mv doxygen-tmp/html/ doxygen-html/
 	$(GPRINT) "CLEAN" "Temporaries..."
-	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-html.tmp/
+	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-tmp/
 .PHONY: doxygen-html
 
 clean-local: doxygen-clean
 
 doxygen-clean:
-	rm -rf $(DOXYGEN_SRCTREE)/ doxygen-html.tmp/ doxygen-html/
+	rm -rf $(DOXYGEN_SRCTREE)/ doxygen-tmp/ doxygen-html/
 	rm -rf error.log
 .PHONY: doxygen-clean
