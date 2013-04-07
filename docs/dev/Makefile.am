@@ -6,7 +6,6 @@ REL_VERSION	= $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
 DSC_VERSION	= $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
 PRJ_VERSION	= $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
 DOC_VERSION	= $(or $(DSC_VERSION), $(PRJ_VERSION))
-git_stamp	= $(wildcard $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD) $(top_srcdir)/.git/packed-refs)
 TARGET_HTML_DIRECTORY	= $(or $(DSC_VERSION), $(PRJ_VERSION))
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
@@ -14,21 +13,21 @@ DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariant
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 QPRINT		        = @printf '  %-7s%s\n'
 
-# fetch commithash to figure if docs need to be rebuild
-commithash = $(shell test ! -x $(top_srcdir)/.git/ || git rev-parse HEAD)
-# conditional stamp, depending on commithash changes
-stamp_cond = $(shell test -e 'stamp-docu' && test "`cat stamp-docu`" = "$(commithash)" || echo stamp-docu)
+# fetch HEAD commit hash to figure if docs need to be rebuild
+git_head_commit = $(shell test ! -x $(top_srcdir)/.git/ || git rev-parse HEAD)
+git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
 
-all: $(stamp_cond)
-stamp-docu:
-	$(Q) $(MAKE) --no-print-directory all-docs
-	$(Q) rm -f $@ && echo "$(commithash)" > $@
+all: stamp-docu
+stamp-docu: $(git_index_file)	# conditionally rebuild, depending on HEAD changes
+	$(AM_V_GEN)
+	$(Q) test -e html/ && test -e $@ && test "`cat $@`" = "$(git_head_commit)" \
+	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory all-docs
+	$(Q) rm -f $@ && echo "$(git_head_commit)" > $@
 CLEANFILES += stamp-docu
-.PHONY: stamp-docu
 
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 
-all-docs: $(git_stamp)
+all-docs:
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html
 	$(QPRINT) "RSYNC" "HTML Documentation..."
@@ -36,6 +35,7 @@ all-docs: $(git_stamp)
 	$(Q) rm -f html/latest && ln -s $(TARGET_HTML_DIRECTORY) html/latest
 	$(QPRINT) "CLEAN" "Temporaries..."
 	$(Q) rm -rf doxygen-html/
+.PHONY: all-docs
 
 clean-local:
 	rm -rf html/
