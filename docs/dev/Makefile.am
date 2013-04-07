@@ -14,11 +14,17 @@ DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariant
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 QPRINT		        = @printf '  %-7s%s\n'
 
-all: build-stamp
-build-stamp:
+# fetch commithash to figure if docs need to be rebuild
+commithash = $(shell test ! -x $(top_srcdir)/.git/ || git rev-parse HEAD)
+# conditional stamp, depending on commithash changes
+stamp_cond = $(shell test -e 'stamp-docu' && test "`cat stamp-docu`" = "$(commithash)" || echo stamp-docu)
+
+all: $(stamp_cond)
+stamp-docu:
 	$(Q) $(MAKE) --no-print-directory all-docs
-	$(Q) touch $@
-CLEANFILES += build-stamp
+	$(Q) rm -f $@ && echo "$(commithash)" > $@
+CLEANFILES += stamp-docu
+.PHONY: stamp-docu
 
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 
