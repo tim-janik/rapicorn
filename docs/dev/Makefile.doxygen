@@ -44,12 +44,15 @@ $(DOXYGEN_SRCTREE):
 
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
+# configure and run doxygen, handle DOXYGEN="" by creating a dummy docu target
 doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(GPRINT) "TIDY" "Temporaries..."
 	$(Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
 	$(Q) $(MAKE) $(DOXYGEN_SRCTREE)
 	$(GPRINT) "GEN" "HTML Documentation..."
-	$(Q) (cat doxygen.cfg \
+	$(Q) test -n "$(DOXYGEN)" || \
+		( mkdir -p doxygen-tmp/html/ && echo "$(PACKAGE) $(DOXYGEN_PROJECT_NUMBER)" > doxygen-tmp/html/index.html )
+	$(Q) test -z "$(DOXYGEN)" || (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(DOXYGEN_SRCTREE)" \
 	&& echo "INPUT		  = $(DOXYGEN_SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(DOXYGEN_SRCTREE)/" \
