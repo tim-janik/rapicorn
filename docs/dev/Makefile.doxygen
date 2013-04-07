@@ -7,8 +7,6 @@ DOCU_GLOBS  = *.dox *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 DOXYGEN_SRCTREE     = doxygen-srctree
-DOXYGENV    = doxygen-1.7.4
-DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 GPRINT	    = @printf '  %-7s%s\n'
 Q           = $(if $(findstring 1, $(V)) ,, @)
 
