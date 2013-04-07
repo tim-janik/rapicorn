@@ -56,7 +56,7 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	$(DOXYGEN_Q) test -z "$(DOXYGEN)" || (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(DOXYGEN_SRCTREE)" \
 	&& echo "INPUT		  = $(DOXYGEN_SRCTREE)/" \
-	&& echo "EXAMPLE_PATH	  = $(DOXYGEN_SRCTREE)/" \
+	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/ \\" \
