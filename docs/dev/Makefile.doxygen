@@ -3,13 +3,15 @@
 DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh
 DOXYGEN_CONTENT_GLOBS	= *.c *.C *.cc
-EXTRA_DIST		+= acdoxygen.m4
+DOXYGEN_SRCTREE		= doxygen-srctree
+DOXYGEN_V		= @printf '  %-7s%s\n'
+DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
 
-DOXYGEN_SRCTREE     = doxygen-srctree
-GPRINT	    = @printf '  %-7s%s\n'
-Q           = $(if $(findstring 1, $(V)) ,, @)
+EXTRA_DIST	       += acdoxygen.m4
 
-CHANGELOG_SED = -e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
+# sed: escape @ < & >, add sections, handle * bullets
+DOXYGEN_CHANGELOG_SED = \
+		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
 		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
@@ -17,14 +19,14 @@ CHANGELOG_SED = -e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*
 
 .PHONY: $(DOXYGEN_SRCTREE)
 $(DOXYGEN_SRCTREE):
-	$(GPRINT) "GEN" $(DOXYGEN_SRCTREE)/
-	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ && mkdir -p $(DOXYGEN_SRCTREE)/
-	$(GPRINT) "GEN" "ChangeLog"
-	$(Q) test -f $(top_srcdir)/ChangeLog || { echo "Missing $(top_srcdir)/ChangeLog" >&2 ; false ; }
-	$(Q) echo '/*! @page ChangeLog' $(DOXYGEN_CHANGELOG_TITLE)	 > $(DOXYGEN_SRCTREE)/ChangeLog
-	$(Q) sed -r $(CHANGELOG_SED) <$(top_srcdir)/ChangeLog	>> $(DOXYGEN_SRCTREE)/ChangeLog
-	$(Q) echo ' */' 					>> $(DOXYGEN_SRCTREE)/ChangeLog
-	$(GPRINT) "COPY" "Source tree..." \
+	$(DOXYGEN_V) "GEN" $(DOXYGEN_SRCTREE)/
+	$(DOXYGEN_Q) rm -rf $(DOXYGEN_SRCTREE)/ && mkdir -p $(DOXYGEN_SRCTREE)/
+	$(DOXYGEN_V) "GEN" "ChangeLog"
+	$(DOXYGEN_Q) test -f $(top_srcdir)/ChangeLog || { echo "Missing $(top_srcdir)/ChangeLog" >&2 ; false ; }
+	$(DOXYGEN_Q) echo '/*! @page ChangeLog' $(DOXYGEN_CHANGELOG_TITLE)	 > $(DOXYGEN_SRCTREE)/ChangeLog
+	$(DOXYGEN_Q) sed -r $(DOXYGEN_CHANGELOG_SED) <$(top_srcdir)/ChangeLog	>> $(DOXYGEN_SRCTREE)/ChangeLog
+	$(DOXYGEN_Q) echo ' */' 						>> $(DOXYGEN_SRCTREE)/ChangeLog
+	$(DOXYGEN_V) "COPY" "Source tree..." \
 	&& CWD=`pwd` \
 	&& for dir in $(DOXYGEN_DOC_DIRS) ; do \
 	  (mkdir -p $$CWD/$(DOXYGEN_SRCTREE)/$$dir/ \
@@ -34,24 +36,24 @@ $(DOXYGEN_SRCTREE):
 	  done \
 	$(foreach FILE, $(DOXYGEN_DOC_FILES), \
 	  && cp $(top_srcdir)/$(FILE) $(DOXYGEN_SRCTREE)/$(dir $(FILE)))
-	$(GPRINT) "ADD" "File docu commands..." \
+	$(DOXYGEN_V) "ADD" "File docu commands..." \
 	&& cd $(DOXYGEN_SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOXYGEN_DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
-	$(GPRINT) "PRUNE" "Exclude files..." \
+	$(DOXYGEN_V) "PRUNE" "Exclude files..." \
 	&& rm -f $(patsubst %, $(DOXYGEN_SRCTREE)/%, $(DOXYGEN_EXCLUDES))
 
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
 # configure and run doxygen, handle DOXYGEN="" by creating a dummy docu target
 doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
-	$(GPRINT) "TIDY" "Temporaries..."
-	$(Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
-	$(Q) $(MAKE) $(DOXYGEN_SRCTREE)
-	$(GPRINT) "GEN" "HTML Documentation..."
-	$(Q) test -n "$(DOXYGEN)" || \
+	$(DOXYGEN_V) "TIDY" "Temporaries..."
+	$(DOXYGEN_Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
+	$(DOXYGEN_Q) $(MAKE) $(DOXYGEN_SRCTREE)
+	$(DOXYGEN_V) "GEN" "HTML Documentation..."
+	$(DOXYGEN_Q) test -n "$(DOXYGEN)" || \
 		( mkdir -p doxygen-tmp/html/ && echo "$(PACKAGE) $(DOXYGEN_PROJECT_NUMBER)" > doxygen-tmp/html/index.html )
-	$(Q) test -z "$(DOXYGEN)" || (cat doxygen.cfg \
+	$(DOXYGEN_Q) test -z "$(DOXYGEN)" || (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(DOXYGEN_SRCTREE)" \
 	&& echo "INPUT		  = $(DOXYGEN_SRCTREE)/" \
 	&& echo "EXAMPLE_PATH	  = $(DOXYGEN_SRCTREE)/" \
@@ -61,14 +63,14 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml tagfile-unix.xml
 	&& echo "                   tagfile-unix.xml=http://www.unix.org/" \
 	&& echo -n "PROJECT_NUMBER = $(DOXYGEN_PROJECT_NUMBER)" \
 	) | nice $(DOXYGEN) - > error.log 2>&1
-	$(Q) test ! -s error.log && rm -f error.log \
-	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(Q:@=1>/dev/null) ; }
-	$(GPRINT) "POLISH" "HTML Files..."
-	$(Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html
-	$(GPRINT) "MOVE" "doxygen-html/..."
-	$(Q) rm -rf doxygen-html/ && mv doxygen-tmp/html/ doxygen-html/
-	$(GPRINT) "CLEAN" "Temporaries..."
-	$(Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-tmp/
+	$(DOXYGEN_Q) test ! -s error.log && rm -f error.log \
+	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(DOXYGEN_Q:@=1>/dev/null) ; }
+	$(DOXYGEN_V) "POLISH" "HTML Files..."
+	$(DOXYGEN_Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html
+	$(DOXYGEN_V) "MOVE" "doxygen-html/..."
+	$(DOXYGEN_Q) rm -rf doxygen-html/ && mv doxygen-tmp/html/ doxygen-html/
+	$(DOXYGEN_V) "CLEAN" "Temporaries..."
+	$(DOXYGEN_Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-tmp/
 .PHONY: doxygen-html
 
 clean-local: doxygen-clean

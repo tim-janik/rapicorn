@@ -12,6 +12,7 @@ DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
+QPRINT		        = @printf '  %-7s%s\n'
 
 all: build-stamp
 build-stamp:
@@ -24,10 +25,10 @@ LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><
 all-docs: $(git_stamp)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html
-	$(GPRINT) "RSYNC" "HTML Documentation..."
+	$(QPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/$(TARGET_HTML_DIRECTORY)
 	$(Q) rm -f html/latest && ln -s $(TARGET_HTML_DIRECTORY) html/latest
-	$(GPRINT) "CLEAN" "Temporaries..."
+	$(QPRINT) "CLEAN" "Temporaries..."
 	$(Q) rm -rf doxygen-html/
 
 clean-local:
