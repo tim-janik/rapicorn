@@ -176,18 +176,22 @@ class Generator:
     return '0'
   def generate_recseq_decl (self, type_info):
     s = '\n'
-    s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
+    # s += self.generate_shortdoc (type_info)   # doxygen IDL snippet
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
+      #s += '/// @cond GeneratedRecords\n'
       s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.M (fl[1]) + '>\n'
       s += '{\n'
     else:
+      #s += '/// @cond GeneratedSequences\n'
       s += 'struct %s\n' % self.C (type_info)
       s += '{\n'
     if type_info.storage == Decls.RECORD:
+      s += '  /// @cond GeneratedFields\n'
       fieldlist = type_info.fields
       for fl in fieldlist:
         s += '  ' + self.F (self.M (fl[1])) + fl[0] + ';\n'
+      s += '  /// @endcond\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.M (fl[1]) + '> Sequence;\n'
       s += '  reference append_back(); ///< Append data at the end, returns write reference to data.\n'
@@ -202,6 +206,7 @@ class Generator:
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
+    #s += '/// @endcond\n'
     return s
   def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
     s = ''
