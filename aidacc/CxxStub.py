@@ -952,6 +952,7 @@ class Generator:
     s = '\n'
     nm = type_info.name
     l = []
+    s += '/// @cond GeneratedEnums\n'
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
@@ -969,6 +970,7 @@ class Generator:
       s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
       s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
+    s += '/// @endcond\n'
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
