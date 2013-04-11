@@ -138,7 +138,7 @@ define check_logtest_TEMPLATE
 check_logtest--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
-	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) 2>&1 \
+	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
 	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"

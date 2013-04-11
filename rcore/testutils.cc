@@ -361,7 +361,7 @@ init_core_test (const String       &app_ident,
   // check that NULL is defined to __null in C++ on 64bit
   RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
   // Rapicorn initialization
-  const char *ivalues[] = { "autonomous=1", "parse-testargs=1" };
+  const char *ivalues[] = { "autonomous=1", "rapicorn-test-initialization=1" };
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
   init_core (app_ident, argcp, argv, targs);
@@ -371,7 +371,7 @@ init_core_test (const String       &app_ident,
   CPUInfo ci = cpu_info(); // initialize cpu info
   (void) ci; // silence compiler
   Test::flag_test_slow = (InitSettings::test_codes() & Test::MODE_SLOW) || debug_confbool ("test-slow", Test::flag_test_slow);
-  Test::flag_test_log = (InitSettings::test_codes() & Test::MODE_READOUT) || debug_confbool ("test-log", Test::flag_test_log);
+  Test::flag_test_log = (InitSettings::test_codes() & Test::MODE_READOUT) || debug_confbool ("test-readout", Test::flag_test_log);
   Test::flag_test_verbose = (InitSettings::test_codes() & Test::MODE_VERBOSE)
                             || debug_confbool ("test-verbose", Test::flag_test_verbose | Test::flag_test_log);
   TTITLE ("%s", Path::basename (argv[0]).c_str());

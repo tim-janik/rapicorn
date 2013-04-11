@@ -182,24 +182,24 @@ static VInitSettings vinit_settings;
 const InitSettings  &InitSettings::is = vinit_settings;
 
 static void
-parse_settings_and_args (VInitSettings      &vsettings,
-                         const StringVector &args,
-                         int                *argcp,
-                         char              **argv)
+parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
 {
   bool b = 0, pta = false;
+  int tco = 0;
   // apply init settings
   for (StringVector::const_iterator it = args.begin(); it != args.end(); it++)
     if      (parse_bool_option (*it, "autonomous", &b))
       vsettings.autonomous() = b;
-    else if (parse_bool_option (*it, "parse-testargs", &b))
+    else if (parse_bool_option (*it, "rapicorn-test-initialization", &b))
       pta = b;
     else if (parse_bool_option (*it, "test-verbose", &b))
-      vsettings.test_codes() |= Test::MODE_VERBOSE;
-    else if (parse_bool_option (*it, "test-log", &b))
-      vsettings.test_codes() |= Test::MODE_READOUT;
+      tco |= Test::MODE_VERBOSE;
+    else if (parse_bool_option (*it, "test-readout", &b))
+      tco |= Test::MODE_READOUT;
     else if (parse_bool_option (*it, "test-slow", &b))
-      vsettings.test_codes() |= Test::MODE_SLOW;
+      tco |= Test::MODE_SLOW;
+  if (pta)
+    vsettings.test_codes() |= tco;
   // parse command line args
   const size_t argc = *argcp;
   for (size_t i = 1; i < argc; i++)
@@ -213,7 +213,7 @@ parse_settings_and_args (VInitSettings      &vsettings,
         }
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
         vsettings.test_codes() |= Test::MODE_VERBOSE;
-      else if (pta && arg_parse_option (*argcp, argv, &i, "--test-log"))
+      else if (pta && arg_parse_option (*argcp, argv, &i, "--test-readout"))
         vsettings.test_codes() |= Test::MODE_READOUT;
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-slow"))
         vsettings.test_codes() |= Test::MODE_SLOW;
@@ -348,17 +348,17 @@ sgetenv (const char *var)
  * Initialize the Rapicorn toolkit core, including threading, CPU detection, loading resource libraries, etc.
  * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
  * are stripped.
- * Supported command line arguments are:
- * - @c --test-verbose - execute test cases verbosely.
- * - @c --test-log - execute logtest test cases.
- * - @c --test-slow - execute slow test cases.
+ * If 'rapicorn-test-initialization=1' is passed in @a args, these command line arguments are supported:
+ * - @c --test-verbose - Execute test cases with verbose message generation.
+ * - @c --test-readout - Execute only data driven test cases to verify readouts.
+ * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
  * .
  * Additional initialization arguments can be passed in @a args, currently supported are:
- * - @c autonomous - For test programs to request a self-contained runtime environment.
+ * - @c autonomous - Flag indicating a self-contained runtime environment (e.g. for tests) without loading rc-files, etc.
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c parse-testargs - Used by init_core_test() internally.
+ * - @c rapicorn-test-initialization - Enable testing frame work, used by init_core_test().
  * - @c test-verbose - acts like --test-verbose.
- * - @c test-log - acts like --test-log.
+ * - @c test-readout - acts like --test-readout.
  * - @c test-slow - acts like --test-slow.
  * .
  * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
@@ -419,7 +419,7 @@ init_core (const String       &app_ident,
     }
 
   // setup init settings
-  parse_settings_and_args (vinit_settings, args, argcp, argv);
+  parse_settings_and_args (vinit_settings, argcp, argv, args);
 
   // initialize sub systems
   struct InitHookCaller : public InitHook {
