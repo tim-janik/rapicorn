@@ -736,14 +736,14 @@ fast_envkey_check (const char *option_string, const char *key)
 }
 
 /** Check whether a flipper (feature toggle) is enabled.
- * This function first checks the environment variable @a env_var for @a key, if the key is present,
- * @a true is returned, otherwise @a false.
+ * This function first checks the environment variable @a env_var for @a key, if it is present or if
+ * @a with_all_toggle is true and 'all' is present, the function returns @a true, otherwise @a false.
  * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
  * empty (i.e. no features can be enabled), so the caching variable can be used to prevent
  * unneccessary future envkey_flipper_check() calls.
  */
 bool
-envkey_flipper_check (const char *env_var, const char *key, volatile bool *cachep)
+envkey_flipper_check (const char *env_var, const char *key, bool with_all_toggle, volatile bool *cachep)
 {
   if (env_var)          // require explicit activation
     {
@@ -772,7 +772,7 @@ envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
 {
   if (!env_var)
     return true;        // unconditional debugging
-  return envkey_flipper_check (env_var, key ? key : "debug", cachep);
+  return envkey_flipper_check (env_var, key ? key : "debug", true, cachep);
 }
 
 /** Conditionally print debugging message.
