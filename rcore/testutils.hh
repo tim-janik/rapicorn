@@ -135,18 +135,6 @@ public:
   static void test_set_trigger (TestTrigger func);
 };
 
-/// Register a standard test function for execution as unit test.
-#define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
-
-/// Register a slow test function for execution as during slow unit testing.
-#define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
-
-/// Register a logging test function for output recording and verification.
-#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
-
 // == Deterministic random numbers for tests ===
 char    rand_bit                (void);                                 ///< Return a random bit.
 int32   rand_int                (void);                                 ///< Return random int.
@@ -168,6 +156,24 @@ bool    trap_passed        ();
 bool    trap_aborted       ();
 String  trap_stdout        ();
 String  trap_stderr        ();
+
+/// Register a standard test function for execution as unit test.
+#define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+
+/// Register a slow test function for execution as during slow unit testing.
+#define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+
+/// Register a logging test function for output recording and verification.
+#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
+
+enum ModeType {
+  MODE_VERBOSE  = 0x1,  ///< Enable extra verbosity during test runs.
+  MODE_READOUT  = 0x2,  ///< Execute data driven tests to verify readouts according to a reference.
+  MODE_SLOW     = 0x4,  ///< Allow tests to excercise slow code paths or loops.
+};
 
 } // Test
 } // Rapicorn

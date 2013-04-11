@@ -2,6 +2,7 @@
 #include "main.hh"
 #include "strings.hh"
 #include "thread.hh"
+#include "testutils.hh"
 #include "configbits.cc"
 #include <string.h>
 #include <algorithm>
@@ -176,9 +177,9 @@ struct VInitSettings : InitSettings {
   bool& autonomous()    { return autonomous_; }
   uint& test_codes()    { return test_codes_; }
   VInitSettings() { autonomous_ = false; test_codes_ = 0; }
-} static vsettings;
+};
 static VInitSettings vinit_settings;
-const InitSettings  *InitSettings::sis = &vinit_settings;
+const InitSettings  &InitSettings::is = vinit_settings;
 
 static void
 parse_settings_and_args (VInitSettings      &vsettings,
@@ -194,11 +195,11 @@ parse_settings_and_args (VInitSettings      &vsettings,
     else if (parse_bool_option (*it, "parse-testargs", &b))
       pta = b;
     else if (parse_bool_option (*it, "test-verbose", &b))
-      vsettings.test_codes() |= 0x1;
+      vsettings.test_codes() |= Test::MODE_VERBOSE;
     else if (parse_bool_option (*it, "test-log", &b))
-      vsettings.test_codes() |= 0x2;
+      vsettings.test_codes() |= Test::MODE_READOUT;
     else if (parse_bool_option (*it, "test-slow", &b))
-      vsettings.test_codes() |= 0x4;
+      vsettings.test_codes() |= Test::MODE_SLOW;
   // parse command line args
   const size_t argc = *argcp;
   for (size_t i = 1; i < argc; i++)
@@ -211,14 +212,14 @@ parse_settings_and_args (VInitSettings      &vsettings,
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
         }
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
-        vsettings.test_codes() |= 0x1;
+        vsettings.test_codes() |= Test::MODE_VERBOSE;
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-log"))
-        vsettings.test_codes() |= 0x2;
+        vsettings.test_codes() |= Test::MODE_READOUT;
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-slow"))
-        vsettings.test_codes() |= 0x4;
+        vsettings.test_codes() |= Test::MODE_SLOW;
       else if (pta && strcmp ("--verbose", argv[i]) == 0)
         {
-          vsettings.test_codes() |= 0x1;
+          vsettings.test_codes() |= Test::MODE_VERBOSE;
           /* interpret --verbose for GLib compat but don't delete the argument
            * since regular non-test programs may need this. could be fixed by
            * having a separate test program argument parser.

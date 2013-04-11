@@ -370,10 +370,10 @@ init_core_test (const String       &app_ident,
   g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   CPUInfo ci = cpu_info(); // initialize cpu info
   (void) ci; // silence compiler
-  Test::flag_test_log = (InitSettings::test_codes() & 0x2) || debug_confbool ("test-log", Test::flag_test_log);
-  Test::flag_test_verbose = (InitSettings::test_codes() & 0x1) || debug_confbool ("test-verbose", Test::flag_test_verbose |
-                                                                               Test::flag_test_log);
-  Test::flag_test_slow = (InitSettings::test_codes() & 0x4) || debug_confbool ("test-slow", Test::flag_test_slow);
+  Test::flag_test_slow = (InitSettings::test_codes() & Test::MODE_SLOW) || debug_confbool ("test-slow", Test::flag_test_slow);
+  Test::flag_test_log = (InitSettings::test_codes() & Test::MODE_READOUT) || debug_confbool ("test-log", Test::flag_test_log);
+  Test::flag_test_verbose = (InitSettings::test_codes() & Test::MODE_VERBOSE)
+                            || debug_confbool ("test-verbose", Test::flag_test_verbose | Test::flag_test_log);
   TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
 
