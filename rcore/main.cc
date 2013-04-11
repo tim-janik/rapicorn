@@ -217,14 +217,6 @@ parse_settings_and_args (VInitSettings      &vsettings,
         vsettings.test_codes() |= Test::MODE_READOUT;
       else if (pta && arg_parse_option (*argcp, argv, &i, "--test-slow"))
         vsettings.test_codes() |= Test::MODE_SLOW;
-      else if (pta && strcmp ("--verbose", argv[i]) == 0)
-        {
-          vsettings.test_codes() |= Test::MODE_VERBOSE;
-          /* interpret --verbose for GLib compat but don't delete the argument
-           * since regular non-test programs may need this. could be fixed by
-           * having a separate test program argument parser.
-           */
-        }
     }
   // collapse NULL arguments
   arg_parse_collapse (argcp, argv);
@@ -353,14 +345,13 @@ sgetenv (const char *var)
  * @param argv          location of the 'argv' arguments to main()
  * @param args          program specific initialization values
  *
- * Initialize the Rapicorn toolkit, including threading, CPU detection, loading resource libraries, etc.
+ * Initialize the Rapicorn toolkit core, including threading, CPU detection, loading resource libraries, etc.
  * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
  * are stripped.
  * Supported command line arguments are:
  * - @c --test-verbose - execute test cases verbosely.
  * - @c --test-log - execute logtest test cases.
  * - @c --test-slow - execute slow test cases.
- * - @c --verbose - behaves like @c --test-verbose, this option is recognized but not stripped.
  * .
  * Additional initialization arguments can be passed in @a args, currently supported are:
  * - @c autonomous - For test programs to request a self-contained runtime environment.
