@@ -170,9 +170,10 @@ String  trap_stderr        ();
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
 
 enum ModeType {
-  MODE_VERBOSE  = 0x1,  ///< Enable extra verbosity during test runs.
-  MODE_READOUT  = 0x2,  ///< Execute data driven tests to verify readouts according to a reference.
-  MODE_SLOW     = 0x4,  ///< Allow tests to excercise slow code paths or loops.
+  MODE_TESTING  = 0x1,  ///< Enable execution of test cases.
+  MODE_VERBOSE  = 0x2,  ///< Enable extra verbosity during test runs.
+  MODE_READOUT  = 0x4,  ///< Execute data driven tests to verify readouts according to a reference.
+  MODE_SLOW     = 0x8,  ///< Allow tests to excercise slow code paths or loops.
 };
 
 } // Test

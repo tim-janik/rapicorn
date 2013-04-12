@@ -18,11 +18,11 @@ void    init_core               (const String       &app_ident,
 class InitSettings {
   static const InitSettings &is;
 protected:
-  uint test_codes_;
-  bool autonomous_;
+  uint64 test_codes_;
+  bool   autonomous_;
 public:
-  static bool  autonomous()    { return is.autonomous_; } ///< self-contained runtime, no rcfiles, boot scripts, etc
-  static uint  test_codes()    { return is.test_codes_; } // internal test flags
+  static bool   autonomous()    { return is.autonomous_; } ///< Indicates self-contained runtime, no rcfiles, boot scripts, etc.
+  static uint64 test_codes()    { return is.test_codes_; } ///< Internal test flags.
 };
 
 bool    arg_parse_option        (uint         argc,

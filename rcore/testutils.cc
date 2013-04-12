@@ -223,31 +223,28 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   while (!test_entry_list.cas (te->next, te));
 }
 
-static bool flag_test_verbose = false;
-static bool flag_test_readout = false;
-static bool flag_test_slow = false;
 static bool flag_test_ui = false;
 
 bool
-verbose (void)
+verbose()
 {
-  return flag_test_verbose;
+  return InitSettings::test_codes() & MODE_VERBOSE;
 }
 
 bool
-logging (void)
+logging()
 {
-  return flag_test_readout;
+  return InitSettings::test_codes() & MODE_READOUT;
 }
 
 bool
-slow (void)
+slow()
 {
-  return flag_test_slow;
+  return InitSettings::test_codes() & MODE_SLOW;
 }
 
 bool
-ui_test (void)
+ui_test()
 {
   return flag_test_ui;
 }
@@ -352,31 +349,18 @@ test_rand_double_range (double range_start,
 
 namespace Rapicorn {
 
-static bool test_flipper_check (const char *key) { return envkey_flipper_check ("RAPICORN_TEST", key, false); }
-
 /** Initialize the Rapicorn toolkit core for a test program.
- * See also init_core() and #$RAPICORN_TEST.
+ * Initialize the Rapicorn toolkit core to execute unit tests. Calling this function is
+ * equivalent to calling init_core() with args "autonomous=1" and "rapicorn-test-initialization=1".
+ * See also #$RAPICORN_TEST.
  */
 void
 init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
-  // check that NULL is defined to __null in C++ on 64bit
-  RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
-  // Rapicorn initialization
   const char *ivalues[] = { "autonomous=1", "rapicorn-test-initialization=1" };
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
   init_core (app_ident, argcp, argv, targs);
-  debug_configure ("fatal-warnings");
-  const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
-  g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-  CPUInfo ci = cpu_info(); // initialize cpu info
-  (void) ci; // silence compiler
-  Test::flag_test_verbose = (InitSettings::test_codes() & Test::MODE_VERBOSE) || test_flipper_check ("test-verbose");
-  Test::flag_test_readout = (InitSettings::test_codes() & Test::MODE_READOUT) || test_flipper_check ("test-readout");
-  Test::flag_test_slow = (InitSettings::test_codes() & Test::MODE_SLOW) || test_flipper_check ("test-slow");
-  Test::flag_test_verbose |= Test::flag_test_readout;
-  TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
 
 } // Rapicorn
