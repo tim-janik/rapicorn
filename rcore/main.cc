@@ -356,7 +356,7 @@ sgetenv (const char *var)
  * Additional initialization arguments can be passed in @a args, currently supported are:
  * - @c autonomous - Flag indicating a self-contained runtime environment (e.g. for tests) without loading rc-files, etc.
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c rapicorn-test-initialization - Enable testing frame work, used by init_core_test().
+ * - @c rapicorn-test-initialization - Enable testing frame work, used by init_core_test(), see also #$RAPICORN_TEST.
  * - @c test-verbose - acts like --test-verbose.
  * - @c test-readout - acts like --test-readout.
  * - @c test-slow - acts like --test-slow.
