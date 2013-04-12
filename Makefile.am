@@ -33,7 +33,7 @@ EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # === rapicorn toplevel include file ===
 toprapicorn_includedir      = $(includedir)/rapicorn@RAPICORN_RELEASE@/
-toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn.hh
+toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
 EXTRA_DIST += $(toprapicorn_include_HEADERS)
 
 # === rapicorn*.pc ===
@@ -75,6 +75,7 @@ distcheck-hook: # check API version upon make distcheck
 installcheck-local:
 	$(Q) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
+	&& echo '#include <rapicorn-test.hh>'				>> tmpx.cc \
 	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
