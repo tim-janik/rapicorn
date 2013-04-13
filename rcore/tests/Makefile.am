@@ -40,18 +40,19 @@ noinst_DATA  = resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting
-check-assertion-handlers: testrcore2
+check-assertion-handler: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \
-	       for arg in --test-assert --test-unreached --test-fatal --test-TASSERT --test-TCMP ; do \
+	       for arg in --test-assert --test-unreached --test-fatal --test-TASSERT --test-TCMP --test-assertion-hook ; do \
 	         ! ./testrcore2 $$arg 2>>$(TSTOUT) || exit $? ; done ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) failing assert'"
-	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) failing unreached'"
+	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) assert'"
+	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) unreached'"
 	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) fatal error'"
-	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) failing TASSERT()'"
-	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) failing TCMP()'"
+	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) TASSERT()'"
+	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) TCMP()'"
+	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) Test::set_assertion_hook()'"
 	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) aborting'"
 	$(Q) rm -f $(TSTOUT)
-check: check-assertion-handlers
+check: check-assertion-handler
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
 	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \

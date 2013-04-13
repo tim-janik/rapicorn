@@ -189,6 +189,14 @@ test_output (int kind, const char *format, ...)
     }
 }
 
+static std::function<void()> assertion_hook;
+
+void
+set_assertion_hook (const std::function<void()> &hook)
+{
+  assertion_hook = hook;
+}
+
 void
 assertion_failed (const char *file, int line, const char *message)
 {
@@ -211,6 +219,11 @@ assertion_failed (const char *file, int line, const char *message)
   fflush (stdout);
   fputs (sout.c_str(), stderr);
   fflush (stderr);
+
+  if (assertion_hook)
+    assertion_hook();
+
+  return Rapicorn::breakpoint();
 }
 
 static vector<void(*)(void*)> testfuncs;

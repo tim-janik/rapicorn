@@ -46,6 +46,11 @@ test_logging (const char *logarg)
     fatal ("execution has reached a fatal condition (\"test-fatal\")");
   if (String ("--test-TASSERT") == logarg)
     TASSERT (0 == "test-TASSERT");
+  if (String ("--test-assertion-hook") == logarg)
+    {
+      Test::set_assertion_hook ([] () { printerr ("assertion-hook triggered: magic=0x%x\n", 0xdecaff); });
+      TASSERT (0 == "test-assertion-hook");
+    }
   if (String ("--test-TCMP") == logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)

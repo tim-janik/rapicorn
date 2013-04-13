@@ -26,14 +26,13 @@ namespace Test {
 
 /// @cond
 #define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
-    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); Rapicorn::breakpoint(); } while (0)
+    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
   Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
   Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
     __tassert_as = Rapicorn::string_printf ("'%s %s %s': %s %s %s", \
                                             sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
   Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
-  Rapicorn::breakpoint();                                               \
   } while (0)
 /// @endcond
 
@@ -89,21 +88,16 @@ bool    logging         (void);         ///< Indicates whether only logging test
 bool    slow            (void);         ///< Indicates whether only slow tests should be run.
 bool    ui_test         (void);         ///< Indicates execution of ui-thread tests.
 
-void    test_output      (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
-void    assertion_failed (const char *file, int line, const char *message);
+void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook tobe called when assertions fail.
+void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
 
-void    add_internal    (const String &testname,
-                         void        (*test_func) (void*),
-                         void         *data);
-void    add             (const String &funcname,
-                         void (*test_func) (void));
-template<typename D>
-void    add             (const String &testname,
-                         void        (*test_func) (D*),
-                         D            *data)
-{
-  add_internal (testname, (void(*)(void*)) test_func, (void*) data);
-}
+/// @cond
+void                        test_output   (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void                        add_internal  (const String &testname, void (*test_func) (void*), void *data);
+void                        add           (const String &funcname, void (*test_func) (void));
+template<typename D> void   add           (const String &testname, void (*test_func) (D*), D *data)
+{ add_internal (testname, (void(*)(void*)) test_func, (void*) data); }
+/// @endcond
 
 /// == Stringify Args ==
 inline String                   stringify_arg  (const char   *a, const char *str_a) { return a ? string_to_cquote (a) : "(__null)"; }
