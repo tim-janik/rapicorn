@@ -44,6 +44,8 @@ test_logging (const char *logarg)
     RAPICORN_ASSERT_UNREACHED();
   if (String ("--test-fatal") == logarg)
     fatal ("execution has reached a fatal condition (\"test-fatal\")");
+  if (String ("--test-TASSERT") == logarg)
+    TASSERT (0 == "test-TASSERT");
   if (String ("--test-TCMP") == logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)

@@ -371,7 +371,7 @@ test_selector_validation ()
   const vector<Selector::Selob*> empty_selobs;
   String errstr;
   errstr = ""; Selector::Matcher::query_selector_objects ("Window * .VBox > Button:baz ~ Frame:bar(7) + Label::after!", empty_selobs.begin(), empty_selobs.end(), &errstr);
-  TASSERT_EMPTY (errstr);
+  TCMP (errstr, ==, ""); // OK
   errstr = ""; Selector::Matcher::query_selector_objects ("> >> ~", empty_selobs.begin(), empty_selobs.end(), &errstr);
   TCMP (errstr, !=, ""); // snytax
   errstr = ""; Selector::Matcher::query_selector_objects ("Window! VBox || <invalidchars>", empty_selobs.begin(), empty_selobs.end(), &errstr);

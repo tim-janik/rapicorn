@@ -18,21 +18,24 @@ namespace Test {
 #define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__) ///< Unconditional test message.
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__) ///< Issue a non-fatal test warning.
-#define TOK()                   do {} while (0)                              ///< Indicator for successful test progress.
-#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)                     ///< Compare @a a and @a b according to operator @a cmp.
+#define TOK()                   do {} while (0)                 ///< Indicator for successful test progress.
+#define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
+#define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.
+#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)        ///< Compare @a a and @a b according to operator @a cmp.
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr) ///< Variant of TCMP() for C strings.
-#define TASSERT                 RAPICORN_ASSERT                              ///< Unconditional test assertion, fatal if not met.
-#define TASSERT_AT(L,cond)      do { if (RAPICORN_LIKELY (cond)) break; \
-                                     Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, L, #cond); } while (0)
-#define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
-    Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, "error: %s", __s.c_str()); } while (0)
-#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
-  String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
-  String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
-  Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__,                \
-                         "assertion failed: %s %s %s: %s %s %s",        \
-                         sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+
+/// @cond
+#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
+    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); Rapicorn::breakpoint(); } while (0)
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
+  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
+  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
+    __tassert_as = Rapicorn::string_printf ("'%s %s %s': %s %s %s", \
+                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
+  Rapicorn::breakpoint();                                               \
   } while (0)
+/// @endcond
 
 /** Class for profiling benchmark tests.
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
@@ -86,7 +89,8 @@ bool    logging         (void);         ///< Indicates whether only logging test
 bool    slow            (void);         ///< Indicates whether only slow tests should be run.
 bool    ui_test         (void);         ///< Indicates execution of ui-thread tests.
 
-void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void    test_output      (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void    assertion_failed (const char *file, int line, const char *message);
 
 void    add_internal    (const String &testname,
                          void        (*test_func) (void*),
@@ -152,6 +156,7 @@ bool    trap_fork_silent   ();
 bool    trap_timed_out     ();
 bool    trap_passed        ();
 bool    trap_aborted       ();
+bool    trap_sigtrap       ();
 String  trap_stdout        ();
 String  trap_stderr        ();
 

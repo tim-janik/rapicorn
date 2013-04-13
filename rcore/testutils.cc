@@ -189,6 +189,30 @@ test_output (int kind, const char *format, ...)
     }
 }
 
+void
+assertion_failed (const char *file, int line, const char *message)
+{
+  String m;
+  if (file)
+    {
+      m += String (file) + ":";
+      if (line >= 0)
+        m += string_printf ("%u:", line);
+    }
+  else
+    {
+      const String pfile = program_file();
+      if (!pfile.empty())
+        m += pfile + ":";
+    }
+  m += " assertion failed: ";
+  m += message;
+  String sout = ensure_newline (m);
+  fflush (stdout);
+  fputs (sout.c_str(), stderr);
+  fflush (stderr);
+}
+
 static vector<void(*)(void*)> testfuncs;
 static vector<void*>          testdatas;
 static vector<String>         testnames;
@@ -615,6 +639,13 @@ trap_aborted ()
 {
   assert_return (test_trap_last_pid != 0, false);
   return (test_trap_last_status >> 12) == SIGABRT;
+}
+
+bool
+trap_sigtrap ()
+{
+  assert_return (test_trap_last_pid != 0, false);
+  return (test_trap_last_status >> 12) == SIGTRAP;
 }
 
 String
