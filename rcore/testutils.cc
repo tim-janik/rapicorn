@@ -10,9 +10,12 @@
 #include <string.h>
 #include <malloc.h>
 
-#define VERBOSE_TAG     100
-
 namespace Rapicorn {
+
+/** The Test namespace offers utilities for unit tests.
+ * The Test namespace is made available by <code> \#include <rapicorn-test.hh> </code> <br/>
+ * See also rcore/testutils.hh.
+ */
 namespace Test {
 
 Timer::Timer (double deadline_in_secs) :
@@ -95,6 +98,7 @@ static __thread char *test_start = NULL;
 void
 test_output (int kind, const char *format, ...)
 {
+  constexpr int VERBOSE_TAG = 1000000000;
   va_list args;
   va_start (args, format);
   String msg = string_vprintf (format, args);
@@ -102,13 +106,19 @@ test_output (int kind, const char *format, ...)
   String sout, bar;
   switch (verbose() ? VERBOSE_TAG + kind : kind)
     {
-    case 1:                     // test message
-    case 1 + VERBOSE_TAG:       // test message
+    default:
+    case 0:                     // TOUT() - ignore when non-verbose
+      break;
+    case 0 + VERBOSE_TAG:       // TOUT() - literal output
+      sout = msg;
+      break;
+    case 1:                     // TMSG() - unconditional test message
+    case 1 + VERBOSE_TAG:
       sout = ensure_newline (msg);
       break;
-    case 2:                     // conditional test info
+    case 2:                     // TINFO() - ignore when non-verbose
       break;
-    case 2 + VERBOSE_TAG:       // conditional test info
+    case 2 + VERBOSE_TAG:       // TINFO() - conditional test message
       sout = ensure_newline (msg);
       break;
     case 3:                     // test program title
@@ -125,20 +135,22 @@ test_output (int kind, const char *format, ...)
       msg = "### ** +  " + msg + "  + ** ###";
       sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n\n";
       break;
-    case 4: case 4 + VERBOSE_TAG:       // test start
+    case 4:
+    case 4 + VERBOSE_TAG:       // TSTART() - verbose test case start
       sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
       if (!test_start)
         {
           test_start = strdup (sout.c_str());
           sout = "";
         }
-      if (verbose())
+      if (verbose())            // TSTART() - queue msg for later if non-verbose
         sout = "# Test:  " + msg + " ...\n";
       break;
-    case 5: case 5 + VERBOSE_TAG:       // test done
+    case 5:
+    case 5 + VERBOSE_TAG:       // TDONE() - test case done, issue "OK"
       if (test_start)
         {
-          sout = test_start;
+          sout = test_start;    // issue delayed TSTART message
           free (test_start);
           test_start = NULL;
         }
@@ -147,14 +159,14 @@ test_output (int kind, const char *format, ...)
       if (test_warning)
         {
           String w (test_warning);
-          free (test_warning);
+          free (test_warning);  // issue delayed TWARN message
           test_warning = NULL;
           sout += "WARN\n" + ensure_newline (w);
         }
       else
         sout += "OK\n";
       break;
-    case 6:                     // test warning
+    case 6:                     // TWARN() - queue test warning for later
       {
         String w;
         if (test_warning)
@@ -165,18 +177,16 @@ test_output (int kind, const char *format, ...)
         test_warning = strdup ((w + ensure_newline (msg)).c_str());
       }
       break;
-    case 6 + VERBOSE_TAG:       // test warning
+    case 6 + VERBOSE_TAG:       // TWARN() - immediate warning in verbose mode
       sout = "WARNING: " + ensure_newline (msg);
       break;
-    default:
-    case 0 + VERBOSE_TAG:       // regular msg
-    case 0:                     // regular msg
-      sout = msg;
-      break;
     }
-  fflush (stdout);
-  fputs (sout.c_str(), stderr);
-  fflush (stderr);
+  if (!sout.empty())            // actual output to stderr
+    {
+      fflush (stdout);
+      fputs (sout.c_str(), stderr);
+      fflush (stderr);
+    }
 }
 
 static vector<void(*)(void*)> testfuncs;

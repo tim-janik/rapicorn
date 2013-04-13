@@ -4,19 +4,24 @@
 
 #include <rcore/rcore.hh>
 
+namespace Rapicorn {
+
+void init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
+
+namespace Test {
+
 // Test Macros
-#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
-#define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__)
-#define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")
-#define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__)
-#define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
-#define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
-#define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
-#define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
-#define TOK()                   do {} while (0) // printerr (".")
-#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
-#define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
-#define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
+#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__) ///< Print out the test program title.
+#define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__) ///< Print message once a test case starts.
+#define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")    ///< Print message for test case end.
+#define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__) ///< Test output for verbose mode, like fputs().
+#define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__) ///< Unconditional test message.
+#define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
+#define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__) ///< Issue a non-fatal test warning.
+#define TOK()                   do {} while (0)                              ///< Indicator for successful test progress.
+#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)                     ///< Compare @a a and @a b according to operator @a cmp.
+#define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr) ///< Variant of TCMP() for C strings.
+#define TASSERT                 RAPICORN_ASSERT                              ///< Unconditional test assertion, fatal if not met.
 #define TASSERT_AT(L,cond)      do { if (RAPICORN_LIKELY (cond)) break; \
                                      Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, L, #cond); } while (0)
 #define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
@@ -29,14 +34,7 @@
                          sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
   } while (0)
 
-namespace Rapicorn {
-
-void init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
-
-namespace Test {
-
-/**
- * Class for profiling benchmark tests.
+/** Class for profiling benchmark tests.
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
  */
 class Timer {
