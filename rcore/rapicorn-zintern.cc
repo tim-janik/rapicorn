@@ -1,6 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "cxxaux.hh"
-#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -129,9 +128,8 @@ static void
 gen_zfile (const char *name,
 	   const char *file)
 {
-  uint8 *data = NULL;
+  std::vector<uint8> vdata;
   uint i, dlen = 0, mlen = 0;
-  Bytef *cdata;
   uLongf clen;
   String fname = use_base_name ? base_name (file) : file;
   Config config;
@@ -143,22 +141,23 @@ gen_zfile (const char *name,
       if (mlen <= dlen + 1024)
 	{
 	  mlen += 8192;
-	  data = g_renew (uint8, data, mlen);
+          vdata.resize (mlen);
 	}
-      dlen += fread (data + dlen, 1, mlen - dlen, f);
+      dlen += fread (&vdata[dlen], 1, mlen - dlen, f);
     }
   while (!feof (f));
 
   if (ferror (f))
     zintern_error ("failed to read from \"%s\": %s", file, strerror (errno));
 
+  std::vector<uint8> cdata;
   if (use_compression || as_resource)
     {
       int result;
       const char *err;
       clen = dlen + dlen / 100 + 64;
-      cdata = g_new (uint8, clen);
-      result = compress2 (cdata, &clen, data, dlen, Z_BEST_COMPRESSION);
+      cdata.resize (clen);
+      result = compress2 (&cdata[0], &clen, &vdata[0], dlen, Z_BEST_COMPRESSION);
       switch (result)
 	{
 	case Z_OK:
@@ -180,7 +179,7 @@ gen_zfile (const char *name,
   else
     {
       clen = dlen;
-      cdata = data;
+      cdata = vdata;
     }
 
   printf ("/* rapicorn-zintern file dump of %s */\n", file);
@@ -196,7 +195,7 @@ gen_zfile (const char *name,
        */
       const bool compress_resource = clen <= 0.75 * dlen && clen + 1 < dlen;
       const size_t rlen = compress_resource ? clen : dlen;
-      const uint8 *rdata = rlen == dlen ? data : cdata;
+      const uint8 *rdata = rlen == dlen ? &vdata[0] : &cdata[0];
       String ident = canonify (name, "0123456789abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ", "_");
 
       config = config_init;
@@ -230,9 +229,6 @@ gen_zfile (const char *name,
     }
 
   fclose (f);
-  g_free (data);
-  if (cdata != data)
-    g_free (cdata);
 }
 
 static int
