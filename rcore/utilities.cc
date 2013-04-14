@@ -197,10 +197,7 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 }
 
 // === Logging ===
-bool                        _debug_flag = true; // bootup default before _init()
 bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
-static Atomic<char>         conftest_general_debugging = false;
-static Atomic<char>         conftest_key_debugging = false;
 static Atomic<KeyConfig*>   conftest_map = NULL;
 static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
 
@@ -233,13 +230,10 @@ debug_configure (const String &options)
 {
   bool seen_debug_key = false;
   conftest_procure().configure (options, seen_debug_key);
-  if (seen_debug_key)
-    conftest_key_debugging.store (true);
-  conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
-  Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
   Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
   if (debug_confbool ("help"))
     do_once { printerr ("%s", debug_help().c_str()); }
+  _cached_rapicorn_debug = true; // possibly re-enable debugging (reset cache)
 }
 
 static std::list<DebugEntry*> *debug_entries;
@@ -483,7 +477,6 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
     case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
     case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
-    case 'K': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug with key
     }
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
   f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
@@ -646,28 +639,155 @@ debug_fixit (const char *file_path, const int line, const char *format, ...)
   debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
+/** Issue debugging message after checking RAPICORN_DEBUG.
+ * Checks the environment variable $RAPICORN_DEBUG for @a key, and issues a debugging
+ * message with source location @a file_path and @a line.
+ */
 void
-debug_general (const char *file_path, const int line, const char *format, ...)
+rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
 {
-  if (!conftest_general_debugging)
-    return;
   va_list vargs;
   va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
+  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_cached_rapicorn_debug);
   va_end (vargs);
-  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg);
 }
 
-void
-debug_keymsg (const char *file_path, const int line, const char *key, const char *format, ...)
+volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
+
+#ifdef RAPICORN_DOXYGEN
+/** Check if debugging is enabled for @a key.
+ * This function checks if $RAPICORN_DEBUG contains @a key or "all" and returns true
+ * if debugging is enabled for the given key. The @a key argument may be NULL in which
+ * case the function checks if general debugging is enabled.
+ */
+bool rapicorn_debug_enabled (const char *key);
+#endif  // RAPICORN_DOXYGEN
+
+bool
+_rapicorn_debug_enabled (const char *key)
 {
-  if (!debug_enabled (key))
+  return envkey_debug_check ("RAPICORN_DEBUG", key, &_cached_rapicorn_debug);
+}
+
+/// Check if the feature toggle @a key is enabled.
+bool
+rapicorn_flipper_check (const char *key)
+{
+  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
+}
+
+static int
+cstring_option_sense (const char *option_string, const char *option, char *value, const int offset = 0)
+{
+  const char *haystack = option_string + offset;
+  const char *p = strstr (haystack, option);
+  if (p)                                // found possible match
+    {
+      const int l = strlen (option);
+      if (p == haystack || (p > haystack && (p[-1] == ':' || p[-1] == ';')))
+        {                               // start matches (word boundary)
+          const char *d1 = strchr (p + l, ':'), *d2 = strchr (p + l, ';'), *d = MAX (d1, d2);
+          d = d ? d : p + l + strlen (p + l);
+          bool match = true;
+          if (p[l] == '=')              // found value
+            {
+              const char *v = p + l + 1;
+              strncpy (value, v, d - v);
+            }
+          else if (p[l] == 0 || p[l] == ':' || p[l] == ';')
+            {                           // option present
+              strcpy (value, "1");
+            }
+          else
+            match = false;              // no match
+          if (match)
+            {
+              const int pos = d - option_string;
+              if (d[0])
+                {
+                  const int next = cstring_option_sense (option_string, option, value, pos);
+                  if (next >= 0)        // found overriding match
+                    return next;
+                }
+              return pos;               // this match is last match
+            }
+        }                               // unmatched, keep searching
+      return cstring_option_sense (option_string, option, value, p + l - option_string);
+    }
+  return -1;                            // not present in haystack
+}
+
+static bool
+fast_envkey_check (const char *option_string, const char *key)
+{
+  const int l = max (size_t (64), strlen (option_string) + 1);
+  char kvalue[l];
+  strcpy (kvalue, "0");
+  const int keypos = !key ? -1 : cstring_option_sense (option_string, key, kvalue);
+  char avalue[l];
+  strcpy (avalue, "0");
+  const int allpos = cstring_option_sense (option_string, "all", avalue);
+  if (keypos > allpos)
+    return cstring_to_bool (kvalue, false);
+  else if (allpos > keypos)
+    return cstring_to_bool (avalue, false);
+  else
+    return false;       // neither key nor "all" found
+}
+
+/** Check whether a flipper (feature toggle) is enabled.
+ * This function first checks the environment variable @a env_var for @a key, if the key is present,
+ * @a true is returned, otherwise @a false.
+ * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
+ * empty (i.e. no features can be enabled), so the caching variable can be used to prevent
+ * unneccessary future envkey_flipper_check() calls.
+ */
+bool
+envkey_flipper_check (const char *env_var, const char *key, volatile bool *cachep)
+{
+  if (env_var)          // require explicit activation
+    {
+      const char *val = getenv (env_var);
+      if (!val || val[0] == 0)
+        {
+          if (cachep)
+            *cachep = 0;
+        }
+      else if (key && fast_envkey_check (val, key))
+        return true;
+    }
+  return false;
+}
+
+/** Check whether to print debugging message.
+ * This function first checks the environment variable @a env_var for @a key, if the key is present,
+ * 'all' is present or if @a env_var is NULL, the debugging message will be printed.
+ * A NULL @a key checks for general debugging, it's equivalent to passing "debug" as @a key.
+ * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
+ * empty (so no debugging is enabled), so the caching variable can be used to prevent unneccessary
+ * future debugging calls, e.g. to envkey_debug_message().
+ */
+bool
+envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
+{
+  if (!env_var)
+    return true;        // unconditional debugging
+  return envkey_flipper_check (env_var, key ? key : "debug", cachep);
+}
+
+/** Conditionally print debugging message.
+ * This function first checks whether debugging is enabled via envkey_debug_check() and returns if not.
+ * The arguments @a file_path and @a line are used to denote the debugging message source location,
+ * @a format and @a va_args are formatting the message analogously to vprintf().
+ */
+void
+envkey_debug_message (const char *env_var, const char *key, const char *file_path, const int line,
+                      const char *format, va_list va_args, volatile bool *cachep)
+{
+  if (!envkey_debug_check (env_var, key, cachep))
     return;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('K', string_printf ("%s:%d", file_path, line), msg, key);
+  String msg = string_vprintf (format, va_args);
+  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
 }
 
 String
@@ -678,18 +798,6 @@ pretty_file (const char *file_dir, const char *file)
   if (RAPICORN_IS_ABSPATH (file) || !file_dir || !file_dir[0])
     return file;
   return String (file_dir) + "/" + file;
-}
-
-const char*
-strerror (void)
-{
-  return strerror (errno);
-}
-
-const char*
-strerror (int errnum)
-{
-  return ::strerror (errnum);
 }
 
 #define BACKTRACE_DEPTH         1024
@@ -824,156 +932,84 @@ user_warning (const UserSource &source, const char *format, ...)
   user_message (source, "warning", msg);
 }
 
-// == AssertionError ==
-static String
-construct_error_msg (const String &file, size_t line, const char *error, const String &expr)
-{
-  String s;
-  if (!file.empty())
-    {
-      s += file;
-      if (line > 0)
-        s += ":" + string_from_int (line);
-      s += ": ";
-    }
-  s += error;
-  if (!expr.empty())
-    {
-      s += ": ";
-      s += expr;
-    }
-  return s;
-}
-
-AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
-  msg_ (construct_error_msg (file, line, "assertion failed", expr))
-{}
-
-AssertionError::~AssertionError () throw()
-{}
-
-const char*
-AssertionError::what () const throw()
-{
-  return msg_.c_str();
-}
-
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
+ * Expand to a string literal, describing the current code location.
  * Returns a string describing the current source code location, such as FILE and LINE number.
- */
-/**
- * @def STRLOC()
- * Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_IF(expr [, rvalue])
+ * Return if @a expr evaluates to true.
  * Silently return @a rvalue if expression @a expr evaluates to true. Returns void if @a rvalue was not specified.
- */
-/**
- * @def return_if(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_UNLESS(expr [, rvalue])
+ * Return if @a expr is false.
  * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
- */
-/**
- * @def return_unless(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_FATAL(format,...)
- * Issues an error message, and aborts the program. The error message @a format uses printf-like syntax.
- */
-/**
- * @def fatal(format,...)
- * Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+ * Abort the program with a fatal error message.
+ * Issues an error message and call abort() to abort the program.
+ * The error message @a format uses printf-like syntax.
  */
 
 /**
  * @def RAPICORN_ASSERT(cond)
  * Issue an error and abort the program if expression @a cond evaluates to false.
- */
-/**
- * @def assert(cond)
- * Shorthand for RAPICORN_ASSERT() if RAPICORN_CONVENIENCE is defined.
+ * Before aborting, a bracktrace is printed to aid debugging of the failing assertion.
  */
 
 /**
- * @def RAPICORN_ASSERT_RETURN(cond [, rvalue])
- * Issue an error and return @a rvalue if expression @a cond evaluates to false. Returns void if @a rvalue was not specified.
+ * @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
+ * Issue an assertion warning and return if @a condition is false.
+ * Issue an error and return @a rvalue if expression @a condition evaluates to false. Returns void if @a rvalue was not specified.
  * This is normally used as function entry condition.
- */
-/**
- * @def assert_return(cond [, rvalue])
- * Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_ASSERT_UNREACHED()
+ * Assertion used to label unreachable code.
  * Issues an error message, and aborts the program if it is reached at runtime.
  * This is normally used to label code conditions intended to be unreachable.
- */
-/**
- * @def assert_unreached
- * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_CRITICAL(format,...)
- * Issues an error message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
  * The error message @a format uses printf-like syntax.
- */
-/**
- * @def critical(format,...)
- * Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_CRITICAL_UNLESS(cond)
- * Behaves like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
+ * Issue a critical warning if @a condition is false, i.e. this macro behaves
+ * like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
  * This is normally used as a non-fatal assertion.
- */
-/**
- * @def critical_unless(cond)
- * Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_DEBUG(format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug.
+ * Issues a debugging message if $RAPICORN_DEBUG contains "debug" or "all".
  * The message @a format uses printf-like syntax.
- */
-/**
- * @def DEBUG(format,...)
- * Shorthand for RAPICORN_DEBUG() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug-<KEY>, where <KEY> is given as @a key.
+ * Issues a debugging message if $RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
  */
-/**
- * @def KEY_DEBUG(format,...)
- * Shorthand for RAPICORN_KEY_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
 
 /**
- * @def RAPICORN_THROW_IF_FAIL(expr)
- * Throws an AssertionError exception with error message if expression @a expr evaluates to false.
- * This is normally used as function entry condition.
+ * @def RAPICORN_STARTUP_ASSERT(condition)
+ * Abort if @a condition is false.
+ * This macro expands to executing an assertion via a static constructor during program
+ * startup. In contrast to static_assert(), this macro can execute arbitrary code, e.g.
+ * to assert floating point number properties.
  */
-/**
- * @def throw_if_fail
- * Shorthand for RAPICORN_THROW_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
- */
-
 
 // == utilities ==
 void
@@ -1480,87 +1516,6 @@ memfree (char *memread_mem)
 
 } // Path
 
-/* --- Id Allocator --- */
-IdAllocator::IdAllocator ()
-{}
-
-IdAllocator::~IdAllocator ()
-{}
-
-class IdAllocatorImpl : public IdAllocator {
-  Spinlock     mutex;
-  const uint   counterstart, wbuffer_capacity;
-  uint         counter, wbuffer_pos, wbuffer_size;
-  uint        *wbuffer;
-  vector<uint> free_ids;
-public:
-  explicit     IdAllocatorImpl (uint startval, uint wbuffercap);
-  virtual     ~IdAllocatorImpl () { delete[] wbuffer; }
-  virtual uint alloc_id        ();
-  virtual void release_id      (uint unique_id);
-  virtual bool seen_id         (uint unique_id);
-};
-
-IdAllocator*
-IdAllocator::_new (uint startval)
-{
-  return new IdAllocatorImpl (startval, 97);
-}
-
-IdAllocatorImpl::IdAllocatorImpl (uint startval, uint wbuffercap) :
-  counterstart (startval), wbuffer_capacity (wbuffercap),
-  counter (counterstart), wbuffer_pos (0), wbuffer_size (0)
-{
-  wbuffer = new uint[wbuffer_capacity];
-}
-
-void
-IdAllocatorImpl::release_id (uint unique_id)
-{
-  assert_return (unique_id >= counterstart && unique_id < counter);
-  /* protect */
-  mutex.lock();
-  /* release oldest withheld id */
-  if (wbuffer_size >= wbuffer_capacity)
-    free_ids.push_back (wbuffer[wbuffer_pos]);
-  /* withhold released id */
-  wbuffer[wbuffer_pos++] = unique_id;
-  wbuffer_size = MAX (wbuffer_size, wbuffer_pos);
-  if (wbuffer_pos >= wbuffer_capacity)
-    wbuffer_pos = 0;
-  /* cleanup */
-  mutex.unlock();
-}
-
-uint
-IdAllocatorImpl::alloc_id ()
-{
-  uint64 unique_id;
-  mutex.lock();
-  if (free_ids.empty())
-    unique_id = counter++;
-  else
-    {
-      uint64 randomize = uint64 (this) + (uint64 (&randomize) >> 3); // cheap random data
-      randomize += wbuffer[wbuffer_pos] + wbuffer_pos + counter; // add entropy
-      uint random_pos = randomize % free_ids.size();
-      unique_id = free_ids[random_pos];
-      free_ids[random_pos] = free_ids.back();
-      free_ids.pop_back();
-    }
-  mutex.unlock();
-  return unique_id;
-}
-
-bool
-IdAllocatorImpl::seen_id (uint unique_id)
-{
-  mutex.lock();
-  bool inrange = unique_id >= counterstart && unique_id < counter;
-  mutex.unlock();
-  return inrange;
-}
-
 /* --- DataList --- */
 DataList::NodeBase::~NodeBase ()
 {}
@@ -1698,7 +1653,7 @@ url_test_show (const char *url)
                                    NULL, /* child_pid */
                                    &error);
         g_free (string);
-        DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
+        RAPICORN_DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
         g_clear_error (&error);
         if (success)
           return true;
@@ -1877,45 +1832,6 @@ cleanup_add (guint          timeout_ms,
   cleanup_list = g_slist_prepend (cleanup_list, cleanup);
   cleanup_mutex.unlock();
   return cleanup->id;
-}
-
-/* --- memory utils --- */
-void*
-malloc_aligned (gsize	  total_size,
-                gsize	  alignment,
-                guint8	**free_pointer)
-{
-  uint8 *aligned_mem = (uint8*) g_malloc (total_size);
-  *free_pointer = aligned_mem;
-  if (!alignment || !size_t (aligned_mem) % alignment)
-    return aligned_mem;
-  g_free (aligned_mem);
-  aligned_mem = (uint8*) g_malloc (total_size + alignment - 1);
-  *free_pointer = aligned_mem;
-  if (size_t (aligned_mem) % alignment)
-    aligned_mem += alignment - size_t (aligned_mem) % alignment;
-  return aligned_mem;
-}
-
-/**
- * The fmsb() function returns the position of the most significant bit set in the word @a val.
- * The least significant bit is position 1 and the most significant position is, for example, 32 or 64.
- * @returns The position of the most significant bit set is returned, or 0 if no bits were set.
- */
-int // 0 or 1..64
-fmsb (uint64 val)
-{
-  if (val >> 32)
-    return 32 + fmsb (val >> 32);
-  int nb = 32;
-  do
-    {
-      nb--;
-      if (val & (1U << nb))
-        return nb + 1;  /* 1..32 */
-    }
-  while (nb > 0);
-  return 0; /* none found */
 }
 
 /* --- zintern support --- */

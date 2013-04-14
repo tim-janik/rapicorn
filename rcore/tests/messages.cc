@@ -21,8 +21,6 @@
 #include <errno.h>
 using namespace Rapicorn;
 
-#define throw_if_fail(expr)     do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
-
 static void
 bogus_func ()
 {
@@ -50,18 +48,11 @@ test_logging (const char *logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)
     {
-#define FIXIT FIX##ME
-      FIXIT ("nothing to fix here, FIX""ME() test");
       debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
       RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
       RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
       RAPICORN_CRITICAL_UNLESS (errno == 0);
-      try {
-        throw_if_fail (0 == "throw-if-fail");
-      } catch (Rapicorn::AssertionError ar) {
-        printerr ("Caught exception: %s\n", ar.what());
-      }
       critical ("execution has reached a critical condition (\"test-critical\")");
       bogus_func();
       value_func (0);

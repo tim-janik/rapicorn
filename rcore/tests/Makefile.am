@@ -53,15 +53,13 @@ check-assertion-handlers: testrcore2
 check: check-assertion-handlers
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
-	$(Q) rm -f $(TSTOUT) ; RAPICORN=debug:no-syslog:no-fatal-syslog \
+	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
 	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; eval "$$TSTDIAGNOSE"
 	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
 	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
-	$(Q) grep -q 'exception.*"throw-if-fail"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) throw-if-fail'"
 	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return'"
 	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return+value'"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test critical()'"
-	$(Q) grep -q 'FIX''ME:.*FIX''ME() test' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test FIX''ME()'"
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output
 # process handle

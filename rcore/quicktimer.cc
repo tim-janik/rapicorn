@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "quicktimer.hh"
+#include "memory.hh"
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -7,12 +8,6 @@
 #include <unistd.h>
 
 namespace Rapicorn {
-
-static bool
-check_env (String what)
-{
-  return debug_confbool (what, 1);
-}
 
 QuickTimer::Type       QuickTimer::timer_type = QuickTimer::NONE;
 uint64 volatile        QuickTimer::timer_pcounter = ~uint64 (0);   // changes every few milliseconds while busy
@@ -35,6 +30,29 @@ QuickTimer::toggle_timers (bool onoff)
   return timer_settime (quick_timer_ptimer, 0, onoff ? &ptimer : &disarm, NULL) == 0;
 }
 
+#ifdef RAPICORN_DOXYGEN
+/**
+ * Perform a very fast check of a global variable for timer expiration.
+ * Usually, this function is inlined and does not consume more time than a regular volatile variable access,
+ * which means it's ideally suited to check for time period expiration from inside inner loops.
+ * @returns Whether the time period that QuickTimer was setup for has expired.
+ */
+bool QuickTimer::expired();
+#endif // RAPICORN_DOXYGEN
+
+/** @class QuickTimer
+ * The QuickTimer class allows fast timer expiration checks from inner loops.
+ * On Unix the implementation uses CLOCK_PROCESS_CPUTIME_ID or CLOCK_REALTIME in
+ * a concurrent handler which updates a global volatile variable periodically.
+ * This allows very fast expiration checks in worker threads, with negligible
+ * overhead for most uses.
+ * Upon initialization, the operational mode can be configured with the following:
+ * @flipper quick-timer-threadfunc - Use a separate thread to update a timer variable.
+ * @flipper quick-timer-cputime - Use CLOCK_PROCESS_CPUTIME_ID which measures consumed CPU time.
+ * @flipper quick-timer-realtime - Use CLOCK_REALTIME, the system wide realtime clock.
+ * @flipper quick-timer-rdtsc - Use the X86 architecture RDTSC assembler command as a timer.
+ */
+
 void
 QuickTimer::init_timers ()
 {
@@ -43,11 +61,11 @@ QuickTimer::init_timers ()
   struct sigevent sevent = { { 0 } };
   sevent.sigev_notify = SIGEV_THREAD;                   // invoke sigev_notify_function
   sevent.sigev_notify_function = (void(*)(sigval_t)) inc_pcounter;
-  if (check_env ("quick-timer-threadfunc") &&
+  if (rapicorn_flipper_check ("quick-timer-threadfunc") &&
 #ifdef    _POSIX_CPUTIME
-      ((check_env ("quick-timer-cputime") && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
+      ((rapicorn_flipper_check ("quick-timer-cputime") && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
 #endif
-       (check_env ("quick-timer-realtime") && timer_create (CLOCK_REALTIME, &sevent, &quick_timer_ptimer) == 0)))
+       (rapicorn_flipper_check ("quick-timer-realtime") && timer_create (CLOCK_REALTIME, &sevent, &quick_timer_ptimer) == 0)))
     {
       if (toggle_timers (true) && toggle_timers (false))
         {
@@ -58,7 +76,7 @@ QuickTimer::init_timers ()
       quick_timer_ptimer = 0;
     }
   // RDTSC is the next best choice
-  if (check_env ("quick-timer-rdtsc") && !rdtsc_mask && 0 != RAPICORN_X86_RDTSC() && timer_pcounter != RAPICORN_X86_RDTSC())
+  if (rapicorn_flipper_check ("quick-timer-rdtsc") && !rdtsc_mask && 0 != RAPICORN_X86_RDTSC() && timer_pcounter != RAPICORN_X86_RDTSC())
     {
       uint64 freq = 666 * 1000000; // fallback to assume 666MHz ticks for rdtsc
       int fd = open ("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", O_RDONLY);
@@ -157,24 +175,5 @@ QuickTimer::QuickTimer (uint64 usecs) :
   ref_timers();
   start (usecs);
 }
-
-#ifdef RAPICORN_DOXYGEN
-/**
- * The QuickTimer class allows fast timer expiration checks from inner loops.
- * On Unix the implementation uses CLOCK_PROCESS_CPUTIME_ID or CLOCK_REALTIME in
- * a concurrent handler which updates a global volatile variable periodically.
- * This allows very fast expiration checks in worker threads, with negligible
- * overhead for most uses.
- */
-class QuickTimer;
-
-/**
- * Perform a very fast check of a global variable for timer expiration.
- * Usually, this function is inlined and does not consume more time than a regular volatile variable access,
- * which means it's ideally suited to check for time period expiration from inside inner loops.
- * @returns Whether the time period that QuickTimer was setup for has expired.
- */
-bool QuickTimer::expired();
-#endif // RAPICORN_DOXYGEN
 
 } // Rapicorn

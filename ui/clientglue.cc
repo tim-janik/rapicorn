@@ -56,7 +56,7 @@ ApplicationH::the ()
  * @param status        The exit status returned to the parent process.
  */
 void
-exit (int status)
+exit_app (int status)
 {
   uithread_shutdown();
   ::exit (status);

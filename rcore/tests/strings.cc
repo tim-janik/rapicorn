@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <stdio.h>
@@ -437,6 +422,39 @@ test_string_functions (void)
   TASSERT (string_endswith ("foo", "loo") == false);
 }
 REGISTER_TEST ("Strings/String Functions", test_string_functions);
+
+struct AAData
+{
+  static int destructor_calls;
+  int value;
+  AAData()      { value = 42; }
+  ~AAData()
+  {
+    TASSERT (value == 42);
+    value = 0;
+    destructor_calls++;
+  }
+};
+
+int AAData::destructor_calls = 0;
+
+static void
+test_aligned_array()
+{
+  AlignedArray<int, 65540> array (3);           // choose an alignment that is unlikely to occur by chance
+  TASSERT (array[0] == 0);
+  TASSERT (array[1] == 0);
+  TASSERT (array[2] == 0);
+  TASSERT (size_t (&array[0]) % 65540 == 0);
+  {
+    AlignedArray<AAData, 40> foo_array (5);
+    TASSERT (size_t (&foo_array[0]) % 40 == 0);
+    for (size_t i = 0; i < foo_array.size(); i++)
+      TASSERT (foo_array[i].value == 42);
+  }
+  TASSERT (AAData::destructor_calls == 5);      // verifies that all elements have been destructed
+}
+REGISTER_TEST ("Memory/AlignedArray", test_aligned_array);
 
 } // Anon
 

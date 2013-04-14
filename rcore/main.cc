@@ -384,14 +384,14 @@ init_core (const String       &app_ident,
            char              **argv,
            const StringVector &args)
 {
-  assert_return (app_ident.empty() == false);
+  assert_return (app_ident.empty() == false);   // application identifier is hard requirement
   // assert global_ctors work
   if (__staticctortest.v != 0x12affe17)
     fatal ("librapicorncore: link error: C++ constructors have not been executed");
 
   // guard against double initialization
   if (program_app_ident.empty() == false)
-    fatal ("librapicorncore: multiple calls to Rapicorn::init_app()");
+    return;
   program_app_ident = app_ident;
 
   // mandatory threading initialization
@@ -421,9 +421,9 @@ init_core (const String       &app_ident,
       String lv = string_printf ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
                                  sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
                                  sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
-      DEBUG ("environment: %s", lv.c_str());
+      RAPICORN_DEBUG ("environment: %s", lv.c_str());
       setlocale (LC_ALL, "C");
-      DEBUG ("failed to initialize locale, falling back to \"C\"");
+      RAPICORN_DEBUG ("failed to initialize locale, falling back to \"C\"");
     }
 
   // setup init settings

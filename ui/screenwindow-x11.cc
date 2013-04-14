@@ -476,7 +476,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ClientMessage: {
       const XClientMessageEvent &xev = xevent.xclient;
-      if (debug_enabled()) // avoid atom() round-trips
+      if (rapicorn_debug_enabled()) // avoid atom() round-trips
         {
           const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
           EDEBUG ("ClMsg: %c=%lu w=%lu t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
@@ -587,7 +587,7 @@ ScreenWindowX11::force_update (Window window)
   if (ignored < updates.size())
     {
       update_state (state_);
-      if (debug_enabled())
+      if (rapicorn_debug_enabled())
         {
           const unsigned long update_serial = XNextRequest (x11context.display) - 1;
           if (old_state.visible_title != state_.visible_title)
@@ -680,7 +680,7 @@ ScreenWindowX11::blit_expose_region()
   CHECK_CAIRO_STATUS (xcr);
   XFlush (x11context.display);
   // debugging info
-  if (debug_enabled())
+  if (rapicorn_debug_enabled())
     {
       const Rect extents = expose_region_.extents();
       VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, window_,

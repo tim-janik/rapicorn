@@ -4,6 +4,7 @@
 
 #include <rcore/utilities.hh>
 #include <string>
+#include <cstring>
 
 namespace Rapicorn {
 
@@ -21,6 +22,9 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 /// Create a Rapicorn::StringVector, from a const char* C-style array.
 #define STRING_VECTOR_FROM_ARRAY(ConstCharArray)        RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)
 #endif // RAPICORN_CONVENIENCE
+
+// == C-String ==
+bool    			cstring_to_bool          (const char *string, bool fallback = false);
 
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
@@ -132,6 +136,10 @@ bool    text_convert    (const String &to_charset,
                          const String &input_string,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
+
+// == C strings ==
+using         ::strerror;       // introduce (const char* strerror (int))
+const char*     strerror ();    // simple wrapper for strerror (errno)
 
 // == Implementations ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \

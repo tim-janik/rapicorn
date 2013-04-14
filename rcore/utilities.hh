@@ -14,28 +14,26 @@
 
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
-#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
-#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
-#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
-#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
-#define __PRETTY_FILE__                 RAPICORN_PRETTY_FILE
-//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
-#define STRLOC()         RAPICORN_STRLOC()          ///< Produces a const char C string, describing the current code location.
-#ifndef assert                                      // guard against previous inclusion of assert.h
-#define assert           RAPICORN_ASSERT            ///< Assert @a condition to be true at runtime.
+#include <assert.h>                                             // needed to redefine assert()
+#if defined assert || defined RAPICORN_DOXYGEN                  // only redefine if assert.h introduces an "assert" macro
+#undef  assert
+#define assert                  RAPICORN_ASSERT                 ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
 #endif // assert
-#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Assertion used to label unreachable code.
-#define assert_return    RAPICORN_ASSERT_RETURN     ///< Issue an assertion warning and return @a ... if @a condition is false.
-#define return_if        RAPICORN_RETURN_IF         ///< Return @a ... if @a condition evaluates to true.
-#define return_unless    RAPICORN_RETURN_UNLESS     ///< Return @a ... if @a condition is false.
-#define fatal            RAPICORN_FATAL             ///< Abort the program with a fatal error message.
-#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Issue a critical warning if @a condition is false.
-#define critical         RAPICORN_CRITICAL          ///< Issue a critical warning.
-#define FIXME            RAPICORN_FIXME             ///< Issue a warning about needed fixups on stderr, for development only.
-#define DEBUG            RAPICORN_DEBUG             ///< Conditionally issue a message if debugging is enabled.
-#define KEY_DEBUG        RAPICORN_KEY_DEBUG         ///< Conditionally issue a message if the debugging @a key is enabled.
-#define BREAKPOINT       Rapicorn::breakpoint       ///< Cause a debugging breakpoint, for development only.
-#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Runtime check for @a condition to be true before main() starts.
+#define DIR_SEPARATOR           RAPICORN_DIR_SEPARATOR          ///< Shorthand for RAPICORN_DIR_SEPARATOR.
+#define DIR_SEPARATOR_S         RAPICORN_DIR_SEPARATOR_S        ///< Shorthand for RAPICORN_DIR_SEPARATOR_S.
+#define SEARCHPATH_SEPARATOR    RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
+#define SEARCHPATH_SEPARATOR_S  RAPICORN_SEARCHPATH_SEPARATOR_S ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR_S.
+#define __PRETTY_FILE__         RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
+//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
+#define STRLOC()         RAPICORN_STRLOC()          ///< Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
+#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+#define assert_return    RAPICORN_ASSERT_RETURN     ///< Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
+#define return_if        RAPICORN_RETURN_IF         ///< Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
+#define return_unless    RAPICORN_RETURN_UNLESS     ///< Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define fatal            RAPICORN_FATAL             ///< Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
+#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -96,11 +94,15 @@ struct UserSource {
 
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);
+/** @def RAPICORN_PRETTY_FILE
+ * Full source file path name.
+ * Macro that expands to __FILE_DIR__ "/" __FILE__, see also #__FILE_DIR__.
+ */
 #ifdef  __FILE_DIR__
 #define RAPICORN_PRETTY_FILE                    (__FILE_DIR__ "/" __FILE__)
 #else
-#define __FILE_DIR__                            ""
 #define RAPICORN_PRETTY_FILE                    (__FILE__)
+#define __FILE_DIR__                            ""
 #endif
 #define RAPICORN_STRLOC()                       ((RAPICORN_PRETTY_FILE + ::Rapicorn::String (":") + RAPICORN_STRINGIFY (__LINE__)).c_str()) ///< Return "FILE:LINE"
 #define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
@@ -119,19 +121,27 @@ String  pretty_file                             (const char *file_dir, const cha
 // === Development Messages ===
 #define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
 #define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)             do { Rapicorn::debug_fixit (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
-#define RAPICORN_DEBUG(...)             do { if (Rapicorn::debug_enabled()) Rapicorn::debug_general (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)     do { const char *__k_ = key; if (Rapicorn::debug_enabled (__k_)) Rapicorn::debug_keymsg (RAPICORN_PRETTY_FILE, __LINE__, __k_, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)     do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+
+// === Debugging Functions ===
+bool envkey_flipper_check (const char*, const char*, volatile bool* = NULL);
+bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
+void envkey_debug_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
+
+// === Rapicorn Debugging Functions ===
+extern bool volatile _cached_rapicorn_debug; ///< Caching flag to inhibit useless rapicorn_debug() calls.
+void        rapicorn_debug         (const char*, const char*, int, const char*, ...) RAPICORN_PRINTF (4, 5);
+bool       _rapicorn_debug_enabled (const char *key);
+inline bool rapicorn_debug_enabled (const char *key = NULL) { return RAPICORN_UNLIKELY (_cached_rapicorn_debug) && _rapicorn_debug_enabled (key); }
+bool        rapicorn_flipper_check (const char *key);
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
-extern bool _debug_flag, _devel_flag;
+extern bool _devel_flag;
 inline bool devel_enabled     () { return RAPICORN_UNLIKELY (_devel_flag); }
-bool        debug_key_enabled (const char *key);
-inline bool debug_enabled     () { return RAPICORN_UNLIKELY (_debug_flag); }
-inline bool debug_enabled     (const char *key) { return RAPICORN_UNLIKELY (_debug_flag) && debug_key_enabled (key); }
 void        debug_configure   (const String &options);
 String      debug_confstring  (const String &option, const String &vdefault = "");
 bool        debug_confbool    (const String &option, bool vdefault = false);
@@ -140,8 +150,6 @@ String      debug_help        ();
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
 
-const char* strerror    (void);         // simple wrapper for strerror (errno)
-const char* strerror    (int errnum);   // wrapper for ::strerror
 class DebugEntry {
   static void dbe_list  (DebugEntry*, int);
 public:
@@ -156,18 +164,17 @@ public:
 };
 
 // implementation prototypes
-void        debug_assert     (const char*, int, const char*);
-void        debug_fassert    (const char*, int, const char*) RAPICORN_NORETURN;
-void        debug_fatal      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
-void        debug_critical   (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_fixit      (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_general    (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
-void        debug_keymsg     (const char*, int, const char*, const char*, ...) RAPICORN_PRINTF (4, 5);
+void debug_assert         (const char*, int, const char*);
+void debug_fassert        (const char*, int, const char*) RAPICORN_NORETURN;
+void debug_fatal          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4) RAPICORN_NORETURN;
+void debug_critical       (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
+void debug_fixit          (const char*, int, const char*, ...) RAPICORN_PRINTF (3, 4);
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg
 #define RAPICORN_STARTUP_ASSERTi(e, _N) namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
 #define RAPICORN_STARTUP_ASSERT(expr)   RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
+#define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.
 #if (defined __i386__ || defined __x86_64__)
 inline void breakpoint() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__
@@ -183,16 +190,6 @@ void        printout   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 inline void breakpoint ();
 String      process_handle ();
 
-
-// == AssertionError ==
-class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
-{
-  const String msg_;
-public:
-  explicit            AssertionError  (const String &expr, const String &file = "", size_t line = 0);
-  virtual            ~AssertionError  () throw();
-  virtual const char* what            () const throw(); ///< Obtain a string describing the assertion error.
-};
 
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds
@@ -247,25 +244,6 @@ uint cleanup_add                (uint                  timeout_ms,
                                  void                (*destroy_data) (void*),
                                  void                 *data);
 void cleanup_force_handlers     (void);
-
-/* --- memory utils --- */
-void* malloc_aligned            (size_t                total_size,
-                                 size_t                alignment,
-                                 uint8               **free_pointer);
-int   fmsb                      (uint64                value) RAPICORN_CONST;
-
-/* --- Id Allocator --- */
-class IdAllocator {
-  RAPICORN_CLASS_NON_COPYABLE (IdAllocator);
-protected:
-  explicit            IdAllocator ();
-public:
-  virtual            ~IdAllocator ();
-  virtual uint        alloc_id    () = 0;
-  virtual void        release_id  (uint unique_id) = 0;
-  virtual bool        seen_id     (uint unique_id) = 0;
-  static IdAllocator* _new        (uint startval = 1);
-};
 
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,
