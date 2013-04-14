@@ -255,6 +255,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     if test -z "$LIBZ"; then
         AC_MSG_ERROR([Compression library libz is missing, but required])
     fi
+    AC_SUBST(LIBZ)
 
     dnl --- require libpng ---
     if test -z "$LIBPNG"; then
