@@ -86,7 +86,7 @@
 #define RAPICORN_CPP_PASTE2(a,b)                RAPICORN_CPP_PASTE2_ (a,b)
 #define RAPICORN_CPP_STRINGIFY_(s)              #s      // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_STRINGIFY(s)               RAPICORN_CPP_STRINGIFY_ (s)
-#define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr)
+#define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr) ///< Shorthand for static_assert (condition, "condition")
 
 // == GCC Attributes ==
 #if     __GNUC__ >= 4
