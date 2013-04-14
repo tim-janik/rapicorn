@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <zlib.h>
+#include <vector>
 #include <string>
 using namespace Rapicorn;
 
@@ -235,9 +236,11 @@ gen_zfile (const char *name,
 }
 
 static int
-help (char *arg)
+help (int exitcode)
 {
   printf ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
+  if (exitcode != 0)
+    exit (exitcode);
   printf ("  -h  Print usage information\n");
   printf ("  -b  Strip directories from file names\n");
   printf ("  -n  Break output lines after newlines raw data\n");
@@ -245,13 +248,13 @@ help (char *arg)
   printf ("  -z  Compress data blocks with libz\n");
   printf ("Parse (name, file) pairs and generate C source\n");
   printf ("containing inlined data blocks of the files given.\n");
-  return arg != NULL;
+  exit (0);
 }
 
 int
 main (int argc, char *argv[])
 {
-  GSList *plist = NULL;
+  std::vector<String> arg_strings;
 
   for (int i = 1; i < argc; i++)
     {
@@ -273,25 +276,19 @@ main (int argc, char *argv[])
 	}
       else if (strcmp ("-h", argv[i]) == 0)
 	{
-	  return help (NULL);
+	  return help (0);
 	}
       else
-	plist = g_slist_append (plist, argv[i]);
+	arg_strings.push_back (argv[i]);
     }
 
-  if (argc <= 1)
-    return help (NULL);
+  if (arg_strings.size() % 2)
+    return help (1);
 
-  while (plist && plist->next)
+  for (size_t i = 0; i < arg_strings.size(); i += 2)
     {
-      const char *name = (char*) plist->data;
-      GSList *tmp = plist;
-      plist = tmp->next;
-      g_slist_free_1 (tmp);
-      const char *file = (char*) plist->data;
-      tmp = plist;
-      plist = tmp->next;
-      g_slist_free_1 (tmp);
+      const char *name = arg_strings[i + 0].c_str();
+      const char *file = arg_strings[i + 1].c_str();
       gen_zfile (name, file);
     }
 
