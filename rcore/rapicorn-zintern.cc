@@ -1,38 +1,34 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 // rapicorn-zintern - small C source compression utility
-#include <cxxaux.hh>
+#include "cxxaux.hh"
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <zlib.h>
 #include <string>
+using namespace Rapicorn;
 
-typedef Rapicorn::uint8 uint8;
 typedef std::string String;
 
-namespace {
-
-static void     zintern_error  (const char     *format,
-                                ...) RAPICORN_PRINTF (1, 2);
+static void zintern_error  (const char *format, ...) RAPICORN_PRINTF (1, 2);
 
 static void
-zintern_error  (const char     *format,
-                ...)
+zintern_error (const char *format, ...)
 {
-  gchar *buffer;
+  char buffer[4096];
   va_list args;
   va_start (args, format);
-  buffer = g_strdup_vprintf (format, args);
+  vsnprintf (buffer, sizeof (buffer), format, args);
   va_end (args);
-  g_printerr ("\nERROR: %s\n", buffer);
+  buffer[sizeof (buffer) - 1] = 0;
+  fprintf (stderr, "\nERROR: %s\n", buffer);
   _exit (1);
-  g_free (buffer);
 }
 
-static bool use_compression = FALSE;
-static bool use_base_name = FALSE;
-static bool break_at_newlines = FALSE;
+static bool use_compression = false;
+static bool use_base_name = false;
+static bool break_at_newlines = false;
 static bool as_resource = false;
 
 typedef struct {
@@ -49,7 +45,7 @@ print_uchar (Config *config,
     {
       printf ("\"\n  \"");
       config->pos = 3;
-      config->pad = FALSE;
+      config->pad = false;
     }
   if (d == '\\')
     {
@@ -86,7 +82,7 @@ print_uchar (Config *config,
       printf ("%c", d);
       config->pos += 1;
     }
-  config->pad = FALSE;
+  config->pad = false;
 }
 
 #define to_upper(c)     ((c) >='a' && (c) <='z' ? (c) - 'a' + 'A' : (c))
@@ -230,9 +226,8 @@ help (char *arg)
   return arg != NULL;
 }
 
-extern "C" int
-main (int   argc,
-      char *argv[])
+int
+main (int argc, char *argv[])
 {
   GSList *plist = NULL;
 
@@ -240,7 +235,7 @@ main (int   argc,
     {
       if (strcmp ("-z", argv[i]) == 0)
 	{
-	  use_compression = TRUE;
+	  use_compression = true;
 	}
       else if (strcmp ("-r", argv[i]) == 0)
 	{
@@ -248,11 +243,11 @@ main (int   argc,
 	}
       else if (strcmp ("-b", argv[i]) == 0)
 	{
-	  use_base_name = TRUE;
+	  use_base_name = true;
 	}
       else if (strcmp ("-n", argv[i]) == 0)
 	{
-	  break_at_newlines = TRUE;
+	  break_at_newlines = true;
 	}
       else if (strcmp ("-h", argv[i]) == 0)
 	{
@@ -280,5 +275,3 @@ main (int   argc,
 
   return 0;
 }
-
-} // anon
