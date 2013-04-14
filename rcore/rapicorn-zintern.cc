@@ -1,5 +1,4 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-// rapicorn-zintern - small C source compression utility
 #include "cxxaux.hh"
 #include <glib.h>
 #include <stdio.h>
@@ -8,6 +7,10 @@
 #include <zlib.h>
 #include <string>
 using namespace Rapicorn;
+
+/* rapicorn-zintern - small C source compression utility
+ * Implemented without linking against librapicorn, as it may be used during the rapicorn build process.
+ */
 
 typedef std::string String;
 
