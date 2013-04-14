@@ -82,8 +82,9 @@ api-content:
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
-# rapicorn-zintern
-noinst_PROGRAMS       += rapicorn-zintern
+
+# == Utilities (for installation) ==
+bin_PROGRAMS      	 = rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(LIBZ) # $(progs_ldadd)
 
