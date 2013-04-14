@@ -34,6 +34,7 @@
 #define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
 #define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
 #define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
+#define STATIC_ASSERT    RAPICORN_STATIC_ASSERT     ///< Shorthand for RAPICORN_STATIC_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -127,7 +128,7 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_KEY_DEBUG(key,...)     do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Debugging Functions ===
-bool envkey_flipper_check (const char*, const char*, volatile bool* = NULL);
+bool envkey_flipper_check (const char*, const char*, bool with_all_toggle = true, volatile bool* = NULL);
 bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
 void envkey_debug_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
 

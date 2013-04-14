@@ -1,4 +1,4 @@
-// == docu.dox ==
+// == docu.dox ==						-*-mode:c++-*-
 // This file contains various general documentation snippets for Rapicorn.
 
 // Extra text to add to the flippers.html collection
@@ -16,6 +16,17 @@ refer to Rapicorn::envkey_flipper_check() to check for flipper settings generica
  * A summary about feature toggles used by Rapicorn is provided on the page @ref flippers.
  */
 $RAPICORN_FLIPPER = "";
+
+/** Environment variable for unit tests.
+ * The RAPICORN_TEST environment variable may contain a colon separated list of flags that
+ * are used during test runs. In particular:
+ * - @c test-verbose - Execute test cases with verbose message generation.
+ * - @c test-readout - Execute only data driven test cases to verify readouts.
+ * - @c test-slow - Execute only test cases excercising slow code paths or loops.
+ * .
+ * See also Rapicorn::init_core() and Rapicorn::init_core_test().
+ */
+$RAPICORN_TEST = "";
 
 /** Build system macro definition of compiler CWD.
  * To improve source file location information in debugging and error messages,

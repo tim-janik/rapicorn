@@ -2,7 +2,9 @@
 #include "main.hh"
 #include "strings.hh"
 #include "thread.hh"
+#include "testutils.hh"
 #include "configbits.cc"
+#include <unistd.h>
 #include <string.h>
 #include <algorithm>
 
@@ -173,32 +175,32 @@ parse_bool_option (const String &s, const char *arg, bool *boolp)
 
 // === initialization ===
 struct VInitSettings : InitSettings {
-  bool& autonomous()    { return autonomous_; }
-  uint& test_codes()    { return test_codes_; }
+  bool&   autonomous()  { return autonomous_; }
+  uint64& test_codes()  { return test_codes_; }
   VInitSettings() { autonomous_ = false; test_codes_ = 0; }
-} static vsettings;
+};
 static VInitSettings vinit_settings;
-const InitSettings  *InitSettings::sis = &vinit_settings;
+const InitSettings  &InitSettings::is = vinit_settings;
 
 static void
-parse_settings_and_args (VInitSettings      &vsettings,
-                         const StringVector &args,
-                         int                *argcp,
-                         char              **argv)
+parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
 {
-  bool b = 0, pta = false;
+  bool b, testing_mode = false;
+  uint64 tco = 0;
   // apply init settings
   for (StringVector::const_iterator it = args.begin(); it != args.end(); it++)
     if      (parse_bool_option (*it, "autonomous", &b))
       vsettings.autonomous() = b;
-    else if (parse_bool_option (*it, "parse-testargs", &b))
-      pta = b;
+    else if (parse_bool_option (*it, "rapicorn-test-initialization", &b))
+      testing_mode = b;
     else if (parse_bool_option (*it, "test-verbose", &b))
-      vsettings.test_codes() |= 0x1;
-    else if (parse_bool_option (*it, "test-log", &b))
-      vsettings.test_codes() |= 0x2;
+      tco |= Test::MODE_VERBOSE;
+    else if (parse_bool_option (*it, "test-readout", &b))
+      tco |= Test::MODE_READOUT;
     else if (parse_bool_option (*it, "test-slow", &b))
-      vsettings.test_codes() |= 0x4;
+      tco |= Test::MODE_SLOW;
+  if (testing_mode)
+    vsettings.test_codes() |= Test::MODE_TESTING | tco;
   // parse command line args
   const size_t argc = *argcp;
   for (size_t i = 1; i < argc; i++)
@@ -210,23 +212,25 @@ parse_settings_and_args (VInitSettings      &vsettings,
           const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
         }
-      else if (pta && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
-        vsettings.test_codes() |= 0x1;
-      else if (pta && arg_parse_option (*argcp, argv, &i, "--test-log"))
-        vsettings.test_codes() |= 0x2;
-      else if (pta && arg_parse_option (*argcp, argv, &i, "--test-slow"))
-        vsettings.test_codes() |= 0x4;
-      else if (pta && strcmp ("--verbose", argv[i]) == 0)
-        {
-          vsettings.test_codes() |= 0x1;
-          /* interpret --verbose for GLib compat but don't delete the argument
-           * since regular non-test programs may need this. could be fixed by
-           * having a separate test program argument parser.
-           */
-        }
+      else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
+        vsettings.test_codes() |= Test::MODE_VERBOSE;
+      else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-readout"))
+        vsettings.test_codes() |= Test::MODE_READOUT;
+      else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-slow"))
+        vsettings.test_codes() |= Test::MODE_SLOW;
     }
   // collapse NULL arguments
   arg_parse_collapse (argcp, argv);
+  // incorporate test flags from RAPICORN_TEST
+  if (testing_mode)
+    {
+      auto test_flipper_check = [] (const char *key) { return envkey_flipper_check ("RAPICORN_TEST", key, false); };
+      vsettings.test_codes() |= test_flipper_check ("test-verbose") ? Test::MODE_VERBOSE : 0;
+      vsettings.test_codes() |= test_flipper_check ("test-readout") ? Test::MODE_READOUT : 0;
+      vsettings.test_codes() |= test_flipper_check ("test-slow") ? Test::MODE_SLOW : 0;
+      if (vsettings.test_codes() & Test::MODE_READOUT)
+        vsettings.test_codes() |= Test::MODE_VERBOSE;
+    }
 }
 
 static String program_argv0 = "";
@@ -339,34 +343,26 @@ static struct __StaticCTorTest {
   }
 } __staticctortest;
 
-static const char*
-sgetenv (const char *var)
-{
-  const char *str = getenv (var);
-  return str ? str : "";
-}
-
 /**
  * @param app_ident     Application identifier, used to associate persistent resources
  * @param argcp         location of the 'argc' argument to main()
  * @param argv          location of the 'argv' arguments to main()
  * @param args          program specific initialization values
  *
- * Initialize the Rapicorn toolkit, including threading, CPU detection, loading resource libraries, etc.
+ * Initialize the Rapicorn toolkit core, including threading, CPU detection, loading resource libraries, etc.
  * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
  * are stripped.
- * Supported command line arguments are:
- * - @c --test-verbose - execute test cases verbosely.
- * - @c --test-log - execute logtest test cases.
- * - @c --test-slow - execute slow test cases.
- * - @c --verbose - behaves like @c --test-verbose, this option is recognized but not stripped.
+ * If 'rapicorn-test-initialization=1' is passed in @a args, these command line arguments are supported:
+ * - @c --test-verbose - Execute test cases with verbose message generation.
+ * - @c --test-readout - Execute only data driven test cases to verify readouts.
+ * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
  * .
  * Additional initialization arguments can be passed in @a args, currently supported are:
- * - @c autonomous - For test programs to request a self-contained runtime environment.
+ * - @c autonomous - Flag indicating a self-contained runtime environment (e.g. for tests) without loading rc-files, etc.
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c parse-testargs - Used by init_core_test() internally.
+ * - @c rapicorn-test-initialization - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
  * - @c test-verbose - acts like --test-verbose.
- * - @c test-log - acts like --test-log.
+ * - @c test-readout - acts like --test-readout.
  * - @c test-slow - acts like --test-slow.
  * .
  * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
@@ -385,9 +381,14 @@ init_core (const String       &app_ident,
            const StringVector &args)
 {
   assert_return (app_ident.empty() == false);   // application identifier is hard requirement
-  // assert global_ctors work
-  if (__staticctortest.v != 0x12affe17)
-    fatal ("librapicorncore: link error: C++ constructors have not been executed");
+  // rudimentary tests
+  if (__staticctortest.v != 0x12affe17)                 // check global_ctors work
+    {
+      errno = ENOTSUP;
+      perror ("librapicorncore: link error: C++ constructors have not been executed");
+      _exit (127);
+    }
+  static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
 
   // guard against double initialization
   if (program_app_ident.empty() == false)
@@ -418,6 +419,10 @@ init_core (const String       &app_ident,
   // full locale initialization is needed by X11, etc
   if (!setlocale (LC_ALL,""))
     {
+      auto sgetenv = [] (const char *var)  {
+        const char *str = getenv (var);
+        return str ? str : "";
+      };
       String lv = string_printf ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
                                  sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
                                  sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
@@ -427,7 +432,7 @@ init_core (const String       &app_ident,
     }
 
   // setup init settings
-  parse_settings_and_args (vinit_settings, args, argcp, argv);
+  parse_settings_and_args (vinit_settings, argcp, argv, args);
 
   // initialize sub systems
   struct InitHookCaller : public InitHook {
@@ -436,6 +441,17 @@ init_core (const String       &app_ident,
   };
   InitHookCaller::invoke ("core/", argcp, argv, args);
   InitHookCaller::invoke ("threading/", argcp, argv, args);
+
+  // initialize testing framework
+  if (vinit_settings.test_codes() & Test::MODE_TESTING)
+    {
+      debug_configure ("fatal-warnings");
+      const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
+      g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
+      CPUInfo ci = cpu_info(); // initialize cpu info
+      (void) ci; // silence compiler
+      TTITLE ("%s", Path::basename (argv[0]).c_str());
+    }
 }
 
 } // Rapicorn

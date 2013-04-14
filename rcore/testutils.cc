@@ -10,9 +10,12 @@
 #include <string.h>
 #include <malloc.h>
 
-#define VERBOSE_TAG     100
-
 namespace Rapicorn {
+
+/** The Test namespace offers utilities for unit tests.
+ * The Test namespace is made available by <code> \#include <rapicorn-test.hh> </code> <br/>
+ * See also rcore/testutils.hh.
+ */
 namespace Test {
 
 Timer::Timer (double deadline_in_secs) :
@@ -95,6 +98,7 @@ static __thread char *test_start = NULL;
 void
 test_output (int kind, const char *format, ...)
 {
+  constexpr int VERBOSE_TAG = 1000000000;
   va_list args;
   va_start (args, format);
   String msg = string_vprintf (format, args);
@@ -102,13 +106,19 @@ test_output (int kind, const char *format, ...)
   String sout, bar;
   switch (verbose() ? VERBOSE_TAG + kind : kind)
     {
-    case 1:                     // test message
-    case 1 + VERBOSE_TAG:       // test message
+    default:
+    case 0:                     // TOUT() - ignore when non-verbose
+      break;
+    case 0 + VERBOSE_TAG:       // TOUT() - literal output
+      sout = msg;
+      break;
+    case 1:                     // TMSG() - unconditional test message
+    case 1 + VERBOSE_TAG:
       sout = ensure_newline (msg);
       break;
-    case 2:                     // conditional test info
+    case 2:                     // TINFO() - ignore when non-verbose
       break;
-    case 2 + VERBOSE_TAG:       // conditional test info
+    case 2 + VERBOSE_TAG:       // TINFO() - conditional test message
       sout = ensure_newline (msg);
       break;
     case 3:                     // test program title
@@ -125,20 +135,22 @@ test_output (int kind, const char *format, ...)
       msg = "### ** +  " + msg + "  + ** ###";
       sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n\n";
       break;
-    case 4: case 4 + VERBOSE_TAG:       // test start
+    case 4:
+    case 4 + VERBOSE_TAG:       // TSTART() - verbose test case start
       sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
       if (!test_start)
         {
           test_start = strdup (sout.c_str());
           sout = "";
         }
-      if (verbose())
+      if (verbose())            // TSTART() - queue msg for later if non-verbose
         sout = "# Test:  " + msg + " ...\n";
       break;
-    case 5: case 5 + VERBOSE_TAG:       // test done
+    case 5:
+    case 5 + VERBOSE_TAG:       // TDONE() - test case done, issue "OK"
       if (test_start)
         {
-          sout = test_start;
+          sout = test_start;    // issue delayed TSTART message
           free (test_start);
           test_start = NULL;
         }
@@ -147,14 +159,14 @@ test_output (int kind, const char *format, ...)
       if (test_warning)
         {
           String w (test_warning);
-          free (test_warning);
+          free (test_warning);  // issue delayed TWARN message
           test_warning = NULL;
           sout += "WARN\n" + ensure_newline (w);
         }
       else
         sout += "OK\n";
       break;
-    case 6:                     // test warning
+    case 6:                     // TWARN() - queue test warning for later
       {
         String w;
         if (test_warning)
@@ -165,18 +177,53 @@ test_output (int kind, const char *format, ...)
         test_warning = strdup ((w + ensure_newline (msg)).c_str());
       }
       break;
-    case 6 + VERBOSE_TAG:       // test warning
+    case 6 + VERBOSE_TAG:       // TWARN() - immediate warning in verbose mode
       sout = "WARNING: " + ensure_newline (msg);
       break;
-    default:
-    case 0 + VERBOSE_TAG:       // regular msg
-    case 0:                     // regular msg
-      sout = msg;
-      break;
     }
+  if (!sout.empty())            // actual output to stderr
+    {
+      fflush (stdout);
+      fputs (sout.c_str(), stderr);
+      fflush (stderr);
+    }
+}
+
+static std::function<void()> assertion_hook;
+
+void
+set_assertion_hook (const std::function<void()> &hook)
+{
+  assertion_hook = hook;
+}
+
+void
+assertion_failed (const char *file, int line, const char *message)
+{
+  String m;
+  if (file)
+    {
+      m += String (file) + ":";
+      if (line >= 0)
+        m += string_printf ("%u:", line);
+    }
+  else
+    {
+      const String pfile = program_file();
+      if (!pfile.empty())
+        m += pfile + ":";
+    }
+  m += " assertion failed: ";
+  m += message;
+  String sout = ensure_newline (m);
   fflush (stdout);
   fputs (sout.c_str(), stderr);
   fflush (stderr);
+
+  if (assertion_hook)
+    assertion_hook();
+
+  return Rapicorn::breakpoint();
 }
 
 static vector<void(*)(void*)> testfuncs;
@@ -223,31 +270,28 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   while (!test_entry_list.cas (te->next, te));
 }
 
-static bool flag_test_verbose = false;
-static bool flag_test_log = false;
-static bool flag_test_slow = false;
 static bool flag_test_ui = false;
 
 bool
-verbose (void)
+verbose()
 {
-  return flag_test_verbose;
+  return InitSettings::test_codes() & MODE_VERBOSE;
 }
 
 bool
-logging (void)
+logging()
 {
-  return flag_test_log;
+  return InitSettings::test_codes() & MODE_READOUT;
 }
 
 bool
-slow (void)
+slow()
 {
-  return flag_test_slow;
+  return InitSettings::test_codes() & MODE_SLOW;
 }
 
 bool
-ui_test (void)
+ui_test()
 {
   return flag_test_ui;
 }
@@ -352,29 +396,18 @@ test_rand_double_range (double range_start,
 
 namespace Rapicorn {
 
+/** Initialize the Rapicorn toolkit core for a test program.
+ * Initialize the Rapicorn toolkit core to execute unit tests. Calling this function is
+ * equivalent to calling init_core() with args "autonomous=1" and "rapicorn-test-initialization=1".
+ * See also #$RAPICORN_TEST.
+ */
 void
-init_core_test (const String       &app_ident,
-                int                *argcp,
-                char              **argv,
-                const StringVector &args)
+init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
-  // check that NULL is defined to __null in C++ on 64bit
-  RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
-  // Rapicorn initialization
-  const char *ivalues[] = { "autonomous=1", "parse-testargs=1" };
+  const char *ivalues[] = { "autonomous=1", "rapicorn-test-initialization=1" };
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
   init_core (app_ident, argcp, argv, targs);
-  debug_configure ("fatal-warnings");
-  const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
-  g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-  CPUInfo ci = cpu_info(); // initialize cpu info
-  (void) ci; // silence compiler
-  Test::flag_test_log = (InitSettings::test_codes() & 0x2) || debug_confbool ("test-log", Test::flag_test_log);
-  Test::flag_test_verbose = (InitSettings::test_codes() & 0x1) || debug_confbool ("test-verbose", Test::flag_test_verbose |
-                                                                               Test::flag_test_log);
-  Test::flag_test_slow = (InitSettings::test_codes() & 0x4) || debug_confbool ("test-slow", Test::flag_test_slow);
-  TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
 
 } // Rapicorn
@@ -619,6 +652,13 @@ trap_aborted ()
 {
   assert_return (test_trap_last_pid != 0, false);
   return (test_trap_last_status >> 12) == SIGABRT;
+}
+
+bool
+trap_sigtrap ()
+{
+  assert_return (test_trap_last_pid != 0, false);
+  return (test_trap_last_status >> 12) == SIGTRAP;
 }
 
 String

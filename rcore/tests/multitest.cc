@@ -33,7 +33,7 @@ test_failing ()
       TASSERT (0 == "TASSERT is working...");
       _exit (0);
     }
-  if (Test::trap_aborted() == false)
+  if (!Test::trap_aborted() && !Test::trap_sigtrap())
     {
       errno = ENOSYS;
       perror ("Rapicorn: Failed to verify working TASSERT()");

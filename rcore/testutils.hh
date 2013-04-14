@@ -4,39 +4,39 @@
 
 #include <rcore/rcore.hh>
 
-// Test Macros
-#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
-#define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__)
-#define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")
-#define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__)
-#define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
-#define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
-#define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
-#define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
-#define TOK()                   do {} while (0) // printerr (".")
-#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)
-#define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr)
-#define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
-#define TASSERT_AT(L,cond)      do { if (RAPICORN_LIKELY (cond)) break; \
-                                     Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, L, #cond); } while (0)
-#define TASSERT_EMPTY(str)      do { const String &__s = str; if (__s.empty()) break; \
-    Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, "error: %s", __s.c_str()); } while (0)
-#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
-  String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a);   \
-  String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b);   \
-  Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__,                \
-                         "assertion failed: %s %s %s: %s %s %s",        \
-                         sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-  } while (0)
-
 namespace Rapicorn {
 
 void init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
 
 namespace Test {
 
-/**
- * Class for profiling benchmark tests.
+// Test Macros
+#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__) ///< Print out the test program title.
+#define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__) ///< Print message once a test case starts.
+#define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")    ///< Print message for test case end.
+#define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__) ///< Test output for verbose mode, like fputs().
+#define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__) ///< Unconditional test message.
+#define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
+#define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__) ///< Issue a non-fatal test warning.
+#define TOK()                   do {} while (0)                 ///< Indicator for successful test progress.
+#define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
+#define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.
+#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)        ///< Compare @a a and @a b according to operator @a cmp.
+#define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr) ///< Variant of TCMP() for C strings.
+
+/// @cond
+#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
+    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
+  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
+  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
+    __tassert_as = Rapicorn::string_printf ("'%s %s %s': %s %s %s", \
+                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
+  } while (0)
+/// @endcond
+
+/** Class for profiling benchmark tests.
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
  */
 class Timer {
@@ -88,20 +88,16 @@ bool    logging         (void);         ///< Indicates whether only logging test
 bool    slow            (void);         ///< Indicates whether only slow tests should be run.
 bool    ui_test         (void);         ///< Indicates execution of ui-thread tests.
 
-void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook tobe called when assertions fail.
+void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
 
-void    add_internal    (const String &testname,
-                         void        (*test_func) (void*),
-                         void         *data);
-void    add             (const String &funcname,
-                         void (*test_func) (void));
-template<typename D>
-void    add             (const String &testname,
-                         void        (*test_func) (D*),
-                         D            *data)
-{
-  add_internal (testname, (void(*)(void*)) test_func, (void*) data);
-}
+/// @cond
+void                        test_output   (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void                        add_internal  (const String &testname, void (*test_func) (void*), void *data);
+void                        add           (const String &funcname, void (*test_func) (void));
+template<typename D> void   add           (const String &testname, void (*test_func) (D*), D *data)
+{ add_internal (testname, (void(*)(void*)) test_func, (void*) data); }
+/// @endcond
 
 /// == Stringify Args ==
 inline String                   stringify_arg  (const char   *a, const char *str_a) { return a ? string_to_cquote (a) : "(__null)"; }
@@ -135,18 +131,6 @@ public:
   static void test_set_trigger (TestTrigger func);
 };
 
-/// Register a standard test function for execution as unit test.
-#define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
-
-/// Register a slow test function for execution as during slow unit testing.
-#define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
-
-/// Register a logging test function for output recording and verification.
-#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
-
 // == Deterministic random numbers for tests ===
 char    rand_bit                (void);                                 ///< Return a random bit.
 int32   rand_int                (void);                                 ///< Return random int.
@@ -166,8 +150,28 @@ bool    trap_fork_silent   ();
 bool    trap_timed_out     ();
 bool    trap_passed        ();
 bool    trap_aborted       ();
+bool    trap_sigtrap       ();
 String  trap_stdout        ();
 String  trap_stderr        ();
+
+/// Register a standard test function for execution as unit test.
+#define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+
+/// Register a slow test function for execution as during slow unit testing.
+#define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+
+/// Register a logging test function for output recording and verification.
+#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
+
+enum ModeType {
+  MODE_TESTING  = 0x1,  ///< Enable execution of test cases.
+  MODE_VERBOSE  = 0x2,  ///< Enable extra verbosity during test runs.
+  MODE_READOUT  = 0x4,  ///< Execute data driven tests to verify readouts according to a reference.
+  MODE_SLOW     = 0x8,  ///< Allow tests to excercise slow code paths or loops.
+};
 
 } // Test
 } // Rapicorn
