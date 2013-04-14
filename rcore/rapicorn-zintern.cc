@@ -1,5 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "cxxaux.hh"
+#include "rapicornconfig.h"
+#include "configbits.cc"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -237,11 +239,12 @@ help (int exitcode)
   printf ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
   if (exitcode != 0)
     exit (exitcode);
-  printf ("  -h  Print usage information\n");
-  printf ("  -b  Strip directories from file names\n");
-  printf ("  -n  Break output lines after newlines raw data\n");
-  printf ("  -r  Produce Rapicorn resource declarations\n");
-  printf ("  -z  Compress data blocks with libz\n");
+  printf ("  -h, --help    Print usage information\n");
+  printf ("  -v, --version Print version and file paths\n");
+  printf ("  -b            Strip directories from file names\n");
+  printf ("  -n            Break output lines after newlines raw data\n");
+  printf ("  -r            Produce Rapicorn resource declarations\n");
+  printf ("  -z            Compress data blocks with libz\n");
   printf ("Parse (name, file) pairs and generate C source\n");
   printf ("containing inlined data blocks of the files given.\n");
   exit (0);
@@ -270,9 +273,18 @@ main (int argc, char *argv[])
 	{
 	  break_at_newlines = true;
 	}
-      else if (strcmp ("-h", argv[i]) == 0)
+      else if (strcmp ("-h", argv[i]) == 0 || strcmp ("--help", argv[i]) == 0)
 	{
 	  return help (0);
+	}
+      else if (strcmp ("-v", argv[i]) == 0 || strcmp ("--version", argv[i]) == 0)
+	{
+          printf ("rapidrun (Rapicorn utilities) %s (Build ID: %s)\n", RAPICORN_VERSION, RAPICORN_BUILDID);
+          printf ("Copyright (C) 2007 Tim Janik.\n");
+          printf ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
+          printf ("the source for copying conditions. Sources, examples and contact\n");
+          printf ("information are available at http://rapicorn.org/.\n");
+          exit (0);
 	}
       else
 	arg_strings.push_back (argv[i]);
