@@ -85,32 +85,41 @@ new_emit_result (const FieldBuffer *fb, uint64_t h, uint64_t l, uint32_t n)
 
 namespace MandatoryNamespace {
 
+/// @cond GeneratedEnums
 enum Enum1 {
   E1_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum1c {
   E1C_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
@@ -118,7 +127,9 @@ enum Enum3 {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
@@ -126,7 +137,9 @@ enum Enum3c {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4a {
   E4A_A = 1,
   E4A_B = 2,
@@ -135,7 +148,9 @@ enum Enum4a {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4b {
   E4B_A = 1,
   E4B_B = 2,
@@ -144,7 +159,9 @@ enum Enum4b {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4c {
   E4C_A = 1,
   E4C_B = 2,
@@ -153,7 +170,9 @@ enum Enum4c {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4d {
   E4D_A = 1,
   E4D_B = 2,
@@ -162,7 +181,9 @@ enum Enum4d {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum ExtensiveEnum {
   V1a = 1,
   V1b = 1,
@@ -202,6 +223,7 @@ enum ExtensiveEnum {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+/// @endcond
 
 /** @interface FirstInterface
  * See also the corresponding C++ stub class FirstInterfaceHandle. */
@@ -223,11 +245,9 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const FirstInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
 
-/** @interface XFooRecord
- * See also the corresponding C++ stub class XFooRecord. */
-/// See also the corresponding IDL class XFooRecord.
 struct XFooRecord
 {
+  /// @cond GeneratedFields
   bool                          single_bool;
   int                           single_num;
   Rapicorn::Aida::int64_t       num64;
@@ -246,14 +266,12 @@ struct XFooRecord
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
+  /// @endcond
   inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
 
-/** @interface XFooSequence
- * See also the corresponding C++ stub class XFooSequence. */
-/// See also the corresponding IDL class XFooSequence.
 struct XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
@@ -262,9 +280,6 @@ struct XFooSequence : public std::vector<bool>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
 
-/** @interface IntSequence
- * See also the corresponding C++ stub class IntSequence. */
-/// See also the corresponding IDL class IntSequence.
 struct IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
@@ -273,9 +288,6 @@ struct IntSequence : public std::vector<int>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
 
-/** @interface FloatSequence
- * See also the corresponding C++ stub class FloatSequence. */
-/// See also the corresponding IDL class FloatSequence.
 struct FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
@@ -284,9 +296,6 @@ struct FloatSequence : public std::vector<double>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
 
-/** @interface StringSequence
- * See also the corresponding C++ stub class StringSequence. */
-/// See also the corresponding IDL class StringSequence.
 struct StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
@@ -295,9 +304,6 @@ struct StringSequence : public std::vector<std::string>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
 
-/** @interface ExtensiveEnumSequence
- * See also the corresponding C++ stub class ExtensiveEnumSequence. */
-/// See also the corresponding IDL class ExtensiveEnumSequence.
 struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
@@ -306,9 +312,6 @@ struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
 
-/** @interface RecordSequence
- * See also the corresponding C++ stub class RecordSequence. */
-/// See also the corresponding IDL class RecordSequence.
 struct RecordSequence : public std::vector<XFooRecord>
 {
   typedef std::vector<XFooRecord> Sequence;
@@ -317,9 +320,6 @@ struct RecordSequence : public std::vector<XFooRecord>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
 
-/** @interface SequenceSequence
- * See also the corresponding C++ stub class SequenceSequence. */
-/// See also the corresponding IDL class SequenceSequence.
 struct SequenceSequence : public std::vector<IntSequence>
 {
   typedef std::vector<IntSequence> Sequence;
@@ -328,9 +328,6 @@ struct SequenceSequence : public std::vector<IntSequence>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
 
-/** @interface InterfaceSequence
- * See also the corresponding C++ stub class InterfaceSequence. */
-/// See also the corresponding IDL class InterfaceSequence.
 struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
 {
   typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
@@ -339,9 +336,6 @@ struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstI
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
 
-/** @interface AnySequence
- * See also the corresponding C++ stub class AnySequence. */
-/// See also the corresponding IDL class AnySequence.
 struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
@@ -350,21 +344,17 @@ struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
 
-/** @interface NestedTypesRec
- * See also the corresponding C++ stub class NestedTypesRec. */
-/// See also the corresponding IDL class NestedTypesRec.
 struct NestedTypesRec
 {
+  /// @cond GeneratedFields
   XFooRecord                    rec;
   XFooSequence                  seq;
+  /// @endcond
   inline                        NestedTypesRec () { }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
 
-/** @interface NestedTypesSeq
- * See also the corresponding C++ stub class NestedTypesSeq. */
-/// See also the corresponding IDL class NestedTypesSeq.
 struct NestedTypesSeq : public std::vector<NestedTypesRec>
 {
   typedef std::vector<NestedTypesRec> Sequence;
@@ -391,15 +381,14 @@ typedef XFooSequence AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
-/** @interface NewRecord
- * See also the corresponding C++ stub class NewRecord. */
-/// See also the corresponding IDL class NewRecord.
 struct NewRecord
 {
+  /// @cond GeneratedFields
   int                           i;
   Enum1                         enum1;
   XFooSequence                  xfs;
   NestedTypesRec                ntr;
+  /// @endcond
   inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
@@ -407,26 +396,24 @@ void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
 
 namespace Inner {
 
-/** @interface InnerRecord
- * See also the corresponding C++ stub class InnerRecord. */
-/// See also the corresponding IDL class InnerRecord.
 struct InnerRecord
 {
+  /// @cond GeneratedFields
   int                           x;
   int                           y;
   NewRecord                     rec;
+  /// @endcond
   inline                        InnerRecord () { x = 0; y = 0; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
 } // Inner
 
-/** @interface Refer2Inner
- * See also the corresponding C++ stub class Refer2Inner. */
-/// See also the corresponding IDL class Refer2Inner.
 struct Refer2Inner
 {
+  /// @cond GeneratedFields
   Inner::InnerRecord            r;
+  /// @endcond
   inline                        Refer2Inner () { }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
@@ -435,15 +422,14 @@ void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
 
 namespace OtherNamespace {
 
-/** @interface SomeRecord
- * See also the corresponding C++ stub class SomeRecord. */
-/// See also the corresponding IDL class SomeRecord.
 struct SomeRecord
 {
+  /// @cond GeneratedFields
   MandatoryNamespace::NewRecord r1;
   MandatoryNamespace::NewRecord r2;
   MandatoryNamespace::Inner::InnerRecord r3;
   MandatoryNamespace::Inner::InnerRecord r4;
+  /// @endcond
   inline                        SomeRecord () { }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
@@ -585,27 +571,25 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const GrandChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, GrandChildHandle&);
 typedef GrandChildHandle GrandChildH; ///< Convenience alias for the IDL type GrandChild.
 
+/// @cond GeneratedEnums
 enum QuickEnum {
   ZERO = 0,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+/// @endcond
 
-/** @interface QuickRecord
- * See also the corresponding C++ stub class QuickRecord. */
-/// See also the corresponding IDL class QuickRecord.
 struct QuickRecord
 {
+  /// @cond GeneratedFields
   int                           int1;
   int                           int2;
+  /// @endcond
   inline                        QuickRecord () { int1 = 0; int2 = 0; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
 
-/** @interface QuickSequence
- * See also the corresponding C++ stub class QuickSequence. */
-/// See also the corresponding IDL class QuickSequence.
 struct QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
@@ -850,6 +834,7 @@ typedef PropertyTesterHandle PropertyTesterH; ///< Convenience alias for the IDL
 
 namespace RapicornAidaTest {
 
+/// @cond GeneratedEnums
 enum ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
@@ -859,6 +844,7 @@ enum ClickType {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+/// @endcond
 
 /** @interface ButtonArea
  * See also the corresponding C++ stub class ButtonAreaHandle. */
@@ -915,6 +901,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
 typedef PureMethodsHandle PureMethodsH; ///< Convenience alias for the IDL type PureMethods.
 
+/// @cond GeneratedEnums
 enum MathExpressions {
   RESULT_2 = 2,
   RESULT_5 = 5,
@@ -931,6 +918,7 @@ enum MathExpressions {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+/// @endcond
 } // RapicornAidaTest
 
 namespace Other {
@@ -983,16 +971,15 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
 typedef CompressorHandle CompressorH; ///< Convenience alias for the IDL type Compressor.
 
-/** @interface RecordForGroups
- * See also the corresponding C++ stub class RecordForGroups. */
-/// See also the corresponding IDL class RecordForGroups.
 struct RecordForGroups
 {
+  /// @cond GeneratedFields
   int                           i;
   double                        ratio;
   bool                          ordinary_bool;
   double                        threshold1;
   double                        threshold2;
+  /// @endcond
   inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
