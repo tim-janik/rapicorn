@@ -100,6 +100,20 @@ to_cupper (const String &str)
 }
 
 static String
+canonify (const String &string, const String &valid_chars, const String &substitute)
+{
+  const size_t l = string.size();
+  const char *p = string.c_str();
+  String d;
+  for (size_t i = 0; i < l; i++)
+    if (strchr (valid_chars.c_str(), p[i]))
+      d += p[i];
+    else
+      d += substitute;
+  return d;
+}
+
+static String
 base_name (const String &fname)
 {
   const char *name = fname.c_str();
@@ -179,20 +193,19 @@ gen_zfile (const char *name,
       const bool compress_resource = clen <= 0.75 * dlen && clen + 1 < dlen;
       const size_t rlen = compress_resource ? clen : dlen;
       const uint8 *rdata = rlen == dlen ? data : cdata;
-      gchar *ident = g_strcanon (g_strdup (name), "0123456789abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ", '_');
+      String ident = canonify (name, "0123456789abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ", "_");
 
       config = config_init;
-      printf ("RAPICORN_STATIC_RESOURCE_DATA (%s) =\n  \"", ident);
+      printf ("RAPICORN_STATIC_RESOURCE_DATA (%s) =\n  \"", ident.c_str());
       for (i = 0; i < rlen; i++)
         print_uchar (&config, rdata[i]);
       printf ("\"; // %lu + 1\n", rlen);
 
       config = config_init;
-      printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident);
+      printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident.c_str());
       for (i = 0; i < strlen (name); i++)
         print_uchar (&config, name[i]);
       printf ("\", %u);\n", dlen);
-      g_free (ident);
     }
   else
     {
