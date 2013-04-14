@@ -99,21 +99,27 @@ to_cupper (const String &str)
   return s;
 }
 
+static String
+base_name (const String &fname)
+{
+  const char *name = fname.c_str();
+  const char *b = strrchr (name, RAPICORN_DIR_SEPARATOR);
+  return b ? b + 1 : name;
+}
+
 static void
 gen_zfile (const char *name,
 	   const char *file)
 {
-  FILE *f = fopen (file, "r");
   uint8 *data = NULL;
   uint i, dlen = 0, mlen = 0;
   Bytef *cdata;
   uLongf clen;
-  gchar *basefile = g_path_get_basename (file);
-  String fname = use_base_name ? basefile : file;
-  g_free (basefile); basefile = NULL;
+  String fname = use_base_name ? base_name (file) : file;
   Config config;
+  FILE *f = fopen (file, "r");
   if (!f)
-    zintern_error ("failed to open \"%s\": %s", file, g_strerror (errno));
+    zintern_error ("failed to open \"%s\": %s", file, strerror (errno));
   do
     {
       if (mlen <= dlen + 1024)
@@ -126,7 +132,7 @@ gen_zfile (const char *name,
   while (!feof (f));
 
   if (ferror (f))
-    zintern_error ("failed to read from \"%s\": %s", file, g_strerror (errno));
+    zintern_error ("failed to read from \"%s\": %s", file, strerror (errno));
 
   if (use_compression || as_resource)
     {
@@ -159,12 +165,12 @@ gen_zfile (const char *name,
       cdata = data;
     }
 
-  g_print ("/* rapicorn-zintern file dump of %s */\n", file);
+  printf ("/* rapicorn-zintern file dump of %s */\n", file);
 
   if (as_resource)
     {
       if (name[0] == '/')
-        g_error ("invalid absolute resource path (must be relative): %s", name);
+        zintern_error ("invalid absolute resource path (must be relative): %s", name);
       /* two things to consider for using the compressed data:
        * 1) for the reader code, pack_size + 1 must be smaller than data_size to identify compressed data.
        * 2) using compressed data requires runtime unpacking overhead and extra dynamic memory allocation,
@@ -215,14 +221,14 @@ gen_zfile (const char *name,
 static int
 help (char *arg)
 {
-  g_printerr ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
-  g_printerr ("  -h  Print usage information\n");
-  g_printerr ("  -b  Strip directories from file names\n");
-  g_printerr ("  -n  Break output lines after newlines raw data\n");
-  g_printerr ("  -r  Produce Rapicorn resource declarations\n");
-  g_printerr ("  -z  Compress data blocks with libz\n");
-  g_printerr ("Parse (name, file) pairs and generate C source\n");
-  g_printerr ("containing inlined data blocks of the files given.\n");
+  printf ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
+  printf ("  -h  Print usage information\n");
+  printf ("  -b  Strip directories from file names\n");
+  printf ("  -n  Break output lines after newlines raw data\n");
+  printf ("  -r  Produce Rapicorn resource declarations\n");
+  printf ("  -z  Compress data blocks with libz\n");
+  printf ("Parse (name, file) pairs and generate C source\n");
+  printf ("containing inlined data blocks of the files given.\n");
   return arg != NULL;
 }
 
