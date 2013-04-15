@@ -59,6 +59,7 @@ IGNORE: // close last _scope
 global_scope:
 namespace Rapicorn {
 
+bool              init_app_initialized    ();
 ApplicationHandle init_app                (const String       &app_ident,
                                            int                *argcp,
                                            char              **argv,
