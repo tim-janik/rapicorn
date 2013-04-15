@@ -234,7 +234,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
 }
 
 static String program_argv0 = "";
-static String program_app_ident = "";
+static String program_app_ident = ""; // used to flag init_core() initialization
 static String program_cwd0 = "";
 
 /**
@@ -261,9 +261,7 @@ program_alias ()
 #endif
 }
 
-/**
- * The program identifier @a app_ident as specified during initialization of Rapicorn.
- */
+/// The program identifier @a app_ident as specified during initialization of Rapicorn.
 String
 program_ident ()
 {
@@ -343,6 +341,13 @@ static struct __StaticCTorTest {
   }
 } __staticctortest;
 
+/// Check and return if init_core() has already been called.
+bool
+init_core_initialized ()
+{
+  return program_app_ident.empty() == false;
+}
+
 /**
  * @param app_ident     Application identifier, used to associate persistent resources
  * @param argcp         location of the 'argc' argument to main()
@@ -375,10 +380,7 @@ static struct __StaticCTorTest {
  * .
  */
 void
-init_core (const String       &app_ident,
-           int                *argcp,
-           char              **argv,
-           const StringVector &args)
+init_core (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
   assert_return (app_ident.empty() == false);   // application identifier is hard requirement
   // rudimentary tests
@@ -390,8 +392,8 @@ init_core (const String       &app_ident,
     }
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
 
-  // guard against double initialization
-  if (program_app_ident.empty() == false)
+  // guard against double initialization, checks if program_app_ident has already been set
+  if (init_core_initialized())
     return;
   program_app_ident = app_ident;
 
