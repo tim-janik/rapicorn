@@ -82,10 +82,27 @@ api-content:
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
-# rapicorn-zintern
-noinst_PROGRAMS       += rapicorn-zintern
+
+# == Utilities (for installation) ==
+bin_PROGRAMS      	 = rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
+rapicorn_zintern_LDADD   = $(LIBZ) # $(progs_ldadd)
+
+zintern-installcheck:
+	$(Q) cd . \
+	&& echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a'	> xtmp-empty.dat \
+	; eval "$$TSTDIAGNOSE" "'Create zintern sample data'"
+	$(Q) $(bindir)/rapicorn-zintern -z -b $(srcdir)/xtmp-empty.dat $(srcdir)/xtmp-empty.dat	> xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Run    rapicorn-zintern'"
+	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output file name'"
+	$(Q) test `grep _SIZE xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output length'"
+	$(Q) test $$[`grep _DATA xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output compression'"
+	$(Q) rm -f xtmp-empty.dat xtmp-empty.out
+installcheck-local: zintern-installcheck
+CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
