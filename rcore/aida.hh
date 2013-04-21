@@ -90,7 +90,8 @@ struct TypeCode /// Representation of type information to describe structured ty
   TypeCode&             operator=       (const TypeCode&);
   /*dtor*/             ~TypeCode        ();
   void                  swap            (TypeCode &other); ///< Swap the contents of @a this and @a other in constant time.
-  class InternalType;  class MapHandle;
+  class InternalType;
+  class MapHandle;
 private: // implementation bits
   explicit              TypeCode        (MapHandle*, InternalType*);
   static TypeCode       notype          (MapHandle*);
@@ -101,7 +102,8 @@ private: // implementation bits
 
 class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
 {
-  TypeCode::MapHandle  *handle_;     friend class TypeCode::MapHandle;
+  TypeCode::MapHandle  *handle_;
+  friend class TypeCode::MapHandle;
   explicit              TypeMap      (TypeCode::MapHandle*);
   static TypeMap        builtins     ();
 public:
@@ -148,9 +150,9 @@ class Any /// Generic value type that can hold values of all other types.
   typedef std::string String;
   TypeCode type_code;
   typedef std::vector<Any> AnyVector;
-  union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys;
-    uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8];
-    String& vstring() { return *(String*) this; }
+  union {
+    int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys;
+    String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u;
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
