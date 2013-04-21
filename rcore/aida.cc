@@ -108,6 +108,9 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
+RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*));
+RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + sizeof (void*));
+
 Any::Any() :
   type_code (TypeMap::notype())
 {
@@ -129,9 +132,9 @@ Any::operator= (const Any &clone)
   type_code = clone.type_code;
   switch (kind())
     {
-    case STRING:        new (&u) String (*(String*) &clone.u);          break;
-    case SEQUENCE:      new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
-    case RECORD:        new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case STRING:        new (&u.vstring()) String (clone.u.vstring());  break;
+    case SEQUENCE:      u.vanys = new AnyVector (*clone.u.vanys);       break;
+    case RECORD:        u.vanys = new AnyVector (*clone.u.vanys);       break;
     case ANY:           u.vany = new Any (*clone.u.vany);               break;
     default:            u = clone.u;                                    break;
     }
@@ -143,9 +146,9 @@ Any::reset()
 {
   switch (kind())
     {
-    case STRING:        ((String*) &u)->~String();              break;
-    case SEQUENCE:      ((AnyVector*) &u)->~AnyVector();        break;
-    case RECORD:        ((AnyVector*) &u)->~AnyVector();        break;
+    case STRING:        u.vstring().~String();                  break;
+    case SEQUENCE:      delete u.vanys;                         break;
+    case RECORD:        delete u.vanys;                         break;
     case ANY:           delete u.vany;                          break;
     default: ;
     }
@@ -167,10 +170,10 @@ Any::rekind (TypeKind _kind)
     case INT64:       type = "int64";                                   break;
     case FLOAT64:     type = "float64";                                 break;
     case ENUM:        type = "int";                                     break;
-    case STRING:      type = "String";          new (&u) String();      break;
-    case ANY:         type = "Any";             u.vany = new Any();     break;
-    case SEQUENCE:    type = "Aida::AnySeq";    new (&u) AnyVector();   break;
-    case RECORD:      type = "Aida::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
+    case STRING:      type = "String";     new (&u.vstring()) String(); break;
+    case ANY:         type = "Any";          u.vany = new Any();        break;
+    case SEQUENCE:    type = "Aida::AnySeq"; u.vanys = new AnyVector(); break;
+    case RECORD:      type = "Aida::AnyRec"; u.vanys = new AnyVector(); break;
     case INSTANCE:    type = "Aida::Instance";                          break; // FIXME: missing details
     default:
       error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
@@ -195,10 +198,10 @@ Any::operator== (const Any &clone) const
     case INT32:
     case INT64:       if (u.vint64 != clone.u.vint64) return false;                     break;
     case FLOAT64:     if (u.vdouble != clone.u.vdouble) return false;                   break;
-    case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
-    case SEQUENCE:    if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
-    case RECORD:      if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
-    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME
+    case STRING:      if (u.vstring() != clone.u.vstring()) return false;               break;
+    case SEQUENCE:    if (*u.vanys != *clone.u.vanys) return false;                     break;
+    case RECORD:      if (*u.vanys != *clone.u.vanys) return false;                     break;
+    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME: missing details
     case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
     default:
       error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
@@ -232,11 +235,11 @@ Any::retype (const TypeCode &tc)
 void
 Any::swap (Any &other)
 {
-  const size_t usize = sizeof (this->u);
-  char *buffer[usize];
-  memcpy (buffer, &other.u, usize);
-  memcpy (&other.u, &this->u, usize);
-  memcpy (&this->u, buffer, usize);
+  constexpr size_t USIZE = sizeof (this->u);
+  uint64_t buffer[(USIZE + 7) / 8];
+  memcpy (buffer, &other.u, USIZE);
+  memcpy (&other.u, &this->u, USIZE);
+  memcpy (&this->u, buffer, USIZE);
   type_code.swap (other.type_code);
 }
 
@@ -274,7 +277,7 @@ Any::as_int () const
     case INT64:         return u.vint64;
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
-    case STRING:        return !((String*) &u)->empty();
+    case STRING:        return !u.vstring().empty();
     default:            return 0;
     }
 }
@@ -289,7 +292,7 @@ Any::as_float () const
     case INT64:         return u.vint64;
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
-    case STRING:        return !((String*) &u)->empty();
+    case STRING:        return !u.vstring().empty();
     default:            return 0;
     }
 }
@@ -303,7 +306,7 @@ Any::as_string() const
     case INT32:
     case INT64:         return string_printf ("%lli", u.vint64);
     case FLOAT64:       return string_printf ("%.17g", u.vdouble);
-    case STRING:        return *(String*) &u;
+    case STRING:        return u.vstring();
     default:            return "";
     }
 }
@@ -329,7 +332,7 @@ Any::operator>>= (std::string &v) const
 {
   if (kind() != STRING)
     return false;
-  v = *(String*) &u;
+  v = u.vstring();
   return true;
 }
 
@@ -372,7 +375,7 @@ void
 Any::operator<<= (const String &v)
 {
   ensure (STRING);
-  ((String*) &u)->assign (v);
+  u.vstring().assign (v);
 }
 
 void
@@ -392,7 +395,7 @@ void
 Any::resize (size_t n)
 {
   ensure (SEQUENCE);
-  ((AnyVector*) &u)->resize (n);
+  u.vanys->resize (n);
 }
 
 // == OrbObject ==

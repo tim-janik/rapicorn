@@ -148,8 +148,11 @@ class Any /// Generic value type that can hold values of all other types.
   typedef std::string String;
   TypeCode type_code;
   typedef std::vector<Any> AnyVector;
-  union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; uint64_t qmem[(sizeof (AnyVector) + 7) / 8];
-    uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8]; } u;
+  union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys;
+    uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8];
+    String& vstring() { return *(String*) this; }
+    const String& vstring() const { return *(const String*) this; }
+  } u;
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
