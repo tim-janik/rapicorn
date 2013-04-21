@@ -209,7 +209,6 @@ public:
   // <<= sequence
   // <<= record
   // <<= instance
-  void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
 };
 
 // == Type Hash ==

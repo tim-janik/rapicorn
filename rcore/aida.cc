@@ -395,13 +395,6 @@ Any::operator<<= (const Any &v)
     }
 }
 
-void
-Any::resize (size_t n)
-{
-  ensure (SEQUENCE);
-  u.vanys->resize (n);
-}
-
 // == OrbObject ==
 OrbObject::OrbObject (uint64_t orbid) :
   orbid_ (orbid)
