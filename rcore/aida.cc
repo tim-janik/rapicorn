@@ -278,6 +278,8 @@ Any::as_int () const
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
     case STRING:        return !u.vstring().empty();
+    case SEQUENCE:      return !u.vanys->empty();
+    case RECORD:        return !u.vanys->empty();
     default:            return 0;
     }
 }
@@ -293,6 +295,8 @@ Any::as_float () const
     case FLOAT64:       return u.vdouble;
     case ENUM:          return u.vint64;
     case STRING:        return !u.vstring().empty();
+    case SEQUENCE:      return !u.vanys->empty();
+    case RECORD:        return !u.vanys->empty();
     default:            return 0;
     }
 }
