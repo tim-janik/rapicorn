@@ -565,6 +565,13 @@ Any::Any (const V &value) :
   this->operator<<= (value);
 }
 
+template<> inline
+Any::Any<Any::Field> (const Any::Field &clone) :
+  type_code (TypeMap::notype()), u {0}
+{
+  this->operator= (clone);
+}
+
 inline
 Any::Any() :
   type_code (TypeMap::notype()), u {0}
