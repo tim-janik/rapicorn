@@ -149,6 +149,14 @@ standard_tests ()
   assert (tcany.kind() == ANY);
   assert (tcany.name() == "Any");
   assert (tcany.kind_name () == "ANY");
+  TypeCode tcseq = TypeMap::lookup ("Aida::DynamicSequence");
+  assert (tcseq.kind_name() == "SEQUENCE");
+  assert (tcseq.kind() == SEQUENCE);
+  assert (tcseq.name() == "Aida::DynamicSequence");
+  TypeCode tcrec = TypeMap::lookup ("Aida::DynamicRecord");
+  assert (tcrec.kind_name() == "RECORD");
+  assert (tcrec.kind() == RECORD);
+  assert (tcrec.name() == "Aida::DynamicRecord");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
   // SmartHandle
