@@ -291,7 +291,7 @@ type_code_tests ()
     assert (f.name() == "anyfield");
   }
   // done
-  printf ("  TEST   Aida type code IDL tests                                        OK\n");
+  printf ("  TEST   Aida IDL type codes                                             OK\n");
 }
 
 static const double test_double_value = 7.76576e-306;
@@ -395,6 +395,40 @@ test_any()
   printf ("  TEST   Aida Any equality                                               OK\n");
 }
 
+static void
+test_dynamics()
+{
+  Any::FieldVector fv;
+  fv.push_back (Any::Field ("otto", 7.7));
+  fv.push_back (Any::Field ("anna", 3));
+  fv.push_back (Any::Field ("ida", "ida"));
+  assert (fv[0].name == "otto" && fv[0].as_float() == 7.7);
+  assert (fv[1].name == "anna" && fv[1].as_int() == 3);
+  assert (fv[2].name == "ida" && fv[2].as_string() == "ida");
+  Any::FieldVector gv = fv;
+  assert (fv == gv);
+  gv[1] <<= 5;
+  assert (fv != gv);
+  gv[1] <<= 3;
+  assert (fv == gv);
+  printf ("  TEST   Aida Any dynamic FieldVector                                    OK\n");
+  Any::AnyVector av;
+  av.push_back (Any (7.7));
+  av.push_back (Any (3));
+  av.push_back (Any ("ida"));
+  Any::AnyVector bv;
+  assert (av != bv);
+  for (auto const &f : fv)
+    bv.push_back (f);
+  assert (av == bv);
+  printf ("  TEST   Aida Any dynamic AnyVector                                      OK\n");
+  if (0)        // compare av (DynamicSequence) with fv (DynamicRecord)
+    Rapicorn::printerr ("test-compare: %s == %s\n", Any (av).to_string().c_str(), Any (fv).to_string().c_str());
+  Any::AnyVector cv (fv.begin(), fv.end());     // initialize AnyVector with { 7.7, 3, "ida" } from FieldVector
+  assert (av == cv);                            // Any::Field is_a Any, and both vectors contain { 7.7, 3, "ida" }
+  printf ("  TEST   Aida Any dynamics                                               OK\n");
+}
+
 } // Anon
 
 int
@@ -411,6 +445,7 @@ main (int   argc,
           standard_tests();
           type_code_tests();
           test_any();
+          test_dynamics();
           return 0;
         }
       else if (strcmp (argv[i], "--") == 0)
