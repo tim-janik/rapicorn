@@ -55,8 +55,8 @@ enum TypeKind {
   FLOAT64        = 'd', ///< Floating point type of IEEE-754 Double precision.
   STRING         = 's', ///< String type for character sequence in UTF-8 encoding.
   ENUM           = 'E', ///< Enumeration type to represent choices.
-  SEQUENCE       = 'Q', ///< Type to form sequences of other types.
-  RECORD         = 'R', ///< Record type containing named field.
+  SEQUENCE       = 'Q', ///< Type to form sequences of an other type.
+  RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
   FUNC           = 'F', ///< Type of methods or signals.
   TYPE_REFERENCE = 'T', ///< Type reference for record fields.
