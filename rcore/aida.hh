@@ -173,7 +173,7 @@ public:
 private:
   TypeCode type_code;
   union {
-    int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
+    uint64_t vuint64; int64_t vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u;
@@ -182,9 +182,11 @@ private:
   void    reset   ();
   bool    to_int  (int64_t &v, char b) const;
 public:
-  /*dtor*/ ~Any    ();
-  explicit  Any    ();
+  /*dtor*/ ~Any    ();                                   ///< Any destructor.
+  explicit  Any    ();                                   ///< Default initialize Any with no type.
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
+  template<class V>
+  explicit  Any    (const V &value);                     ///< Initialize Any with a @a value convertible to an Any.
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
@@ -556,6 +558,31 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
+template<class V> inline
+Any::Any (const V &value) :
+  type_code (TypeMap::notype()), u {0}
+{
+  this->operator<<= (value);
+}
+
+inline
+Any::Any() :
+  type_code (TypeMap::notype()), u {0}
+{}
+
+inline
+Any::Any (const Any &clone) :
+  type_code (TypeMap::notype()), u {0}
+{
+  this->operator= (clone);
+}
+
+inline
+Any::~Any ()
+{
+  reset();
+}
+
 template<class TargetHandle> TargetHandle
 ObjectBroker::smart_handle_down_cast (SmartHandle smh)
 {

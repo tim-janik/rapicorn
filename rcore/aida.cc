@@ -111,19 +111,6 @@ ImplicitBase::~ImplicitBase()
 RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*));
 RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + sizeof (void*));
 
-Any::Any() :
-  type_code (TypeMap::notype())
-{
-  memset (&u, 0, sizeof (u));
-}
-
-Any::Any (const Any &clone) :
-  type_code (TypeMap::notype())
-{
-  memset (&u, 0, sizeof (u));
-  this->operator= (clone);
-}
-
 Any&
 Any::operator= (const Any &clone)
 {
@@ -154,7 +141,7 @@ Any::reset()
     default: ;
     }
   type_code = TypeMap::notype();
-  memset (&u, 0, sizeof (u));
+  u.vuint64 = 0;
 }
 
 void
@@ -214,11 +201,6 @@ bool
 Any::operator!= (const Any &clone) const
 {
   return !operator== (clone);
-}
-
-Any::~Any ()
-{
-  reset();
 }
 
 void
