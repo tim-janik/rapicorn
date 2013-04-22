@@ -438,6 +438,15 @@ test_dynamics()
     Rapicorn::printerr ("test-compare: %s == %s\n", Any (av).to_string().c_str(), Any (fv).to_string().c_str());
   Any::AnyVector cv (fv.begin(), fv.end());     // initialize AnyVector with { 7.7, 3, "ida" } from FieldVector (Field is-a Any)
   assert (av == cv);                            // as AnyVector (FieldVector) copy, both vectors contain { 7.7, 3, "ida" }
+  // -- Any::DynamicSequence & Any::DynamicRecord --
+  Any arec (fv), aseq (av);
+  assert (arec != aseq);
+  const Any::FieldVector *arv;
+  arec >>= arv;
+  assert (*arv == fv);
+  const Any::AnyVector *asv;
+  aseq >>= asv;
+  assert (*asv == av);
   printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
 }
 
