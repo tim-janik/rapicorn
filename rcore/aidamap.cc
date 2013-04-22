@@ -158,7 +158,7 @@ InternalMap::internal_list (uint32_t offset) const
   if (AIDA_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
     __AIDA_return_EFAULT (NULL);
   InternalList *il = (InternalList*) (((char*) this) + offset);
-  if (AIDA_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
+  if (AIDA_UNLIKELY (il->length > seg_strings || offset + sizeof (*il) + il->length * 4 > seg_strings))
     __AIDA_return_EFAULT (NULL);
   return il;
 }
