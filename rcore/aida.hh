@@ -147,10 +147,33 @@ public:
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
+  ///@cond
+  template<class ANY> struct AnyField : ANY { // We must wrap Any::Field into a template, because "Any" is not yet fully defined.
+    std::string name;
+    AnyField () = default;
+    AnyField (const std::string &_name, const ANY &any) : name (_name) { this->ANY::operator= (any); }
+    template<class V>
+    AnyField (const std::string &_name, const V &value) : name (_name) { this->operator<<= (value); }
+  };
+  ///@endcond
+public:
+#ifndef DOXYGEN
+  typedef AnyField<Any> Field;  // See DOXYGEN section for the "unwrapped" definition.
+#else // DOXYGEN
+  struct Field : Any    /// Any::Field is an Any with a std::string @a name attached.
+  {
+    String name;        ///< The @a name of this Any::Field, as used in e.g. #RECORD types.
+    AnyField();         ///< Default initialize Any::Field.
+    AnyField (const String &name, const Any &any);                   ///< Initialize Any::Field with @a name and an @a any value.
+    template<class V> AnyField (const String &name, const V &value); ///< Initialize Any::Field with a @a value convertible to an Any.
+  };
+#endif // DOXYGEN
+  typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
+  typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
+private:
   TypeCode type_code;
-  typedef std::vector<Any> AnyVector;
   union {
-    int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys;
+    int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u;
@@ -180,16 +203,16 @@ public:
   bool operator>>= (uint64_t      &v) const { int64_t d; const bool r = to_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
   bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
-  bool operator>>= (const char   *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
-  bool operator>>= (std::string   &v) const; ///< Extract a std::string if possible.
-  bool operator>>= (const Any    *&v) const; ///< Extract an Any if possible.
+  bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
+  bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
+  bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
+  bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
+  bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
   const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
   // >>= enum
-  // >>= sequence
-  // >>= record
   // >>= instance
   void operator<<= (bool           v) { operator<<= (int64_t (v)); }
   void operator<<= (char           v) { operator<<= (int64_t (v)); }
@@ -202,13 +225,13 @@ public:
   void operator<<= (int64_t        v); ///< Store a 64bit integer.
   void operator<<= (float          v) { operator<<= (double (v)); }
   void operator<<= (double         v); ///< Store a double floating point number.
-  void operator<<= (const char    *v) { operator<<= (std::string (v)); }
-  void operator<<= (char          *v) { operator<<= (std::string (v)); }
-  void operator<<= (const String  &v); ///< Store a std::string.
-  void operator<<= (const Any     &v); ///< Store an Any,
+  void operator<<= (const char        *v) { operator<<= (std::string (v)); }
+  void operator<<= (char              *v) { operator<<= (std::string (v)); }
+  void operator<<= (const String      &v); ///< Store a std::string.
+  void operator<<= (const Any         &v); ///< Store an Any.
+  void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
+  void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
   // <<= enum
-  // <<= sequence
-  // <<= record
   // <<= instance
 };
 

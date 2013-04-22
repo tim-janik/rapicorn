@@ -134,9 +134,9 @@ Any::operator= (const Any &clone)
   switch (kind())
     {
     case STRING:        new (&u.vstring()) String (clone.u.vstring());  break;
-    case SEQUENCE:      u.vanys = new AnyVector (*clone.u.vanys);       break;
-    case RECORD:        u.vanys = new AnyVector (*clone.u.vanys);       break;
     case ANY:           u.vany = new Any (*clone.u.vany);               break;
+    case SEQUENCE:      u.vanys = new AnyVector (*clone.u.vanys);       break;
+    case RECORD:        u.vfields = new FieldVector (*clone.u.vfields); break;
     default:            u = clone.u;                                    break;
     }
   return *this;
@@ -148,9 +148,9 @@ Any::reset()
   switch (kind())
     {
     case STRING:        u.vstring().~String();                  break;
-    case SEQUENCE:      delete u.vanys;                         break;
-    case RECORD:        delete u.vanys;                         break;
     case ANY:           delete u.vany;                          break;
+    case SEQUENCE:      delete u.vanys;                         break;
+    case RECORD:        delete u.vfields;                       break;
     default: ;
     }
   type_code = TypeMap::notype();
@@ -174,7 +174,7 @@ Any::rekind (TypeKind _kind)
     case STRING:      type = "String";     new (&u.vstring()) String(); break;
     case ANY:         type = "Any";          u.vany = new Any();        break;
     case SEQUENCE:    type = "Aida::AnySeq"; u.vanys = new AnyVector(); break;
-    case RECORD:      type = "Aida::AnyRec"; u.vanys = new AnyVector(); break;
+    case RECORD:      type = "Aida::AnyRec"; u.vfields = new FieldVector(); break;
     case INSTANCE:    type = "Aida::Instance";                          break; // FIXME: missing details
     default:
       error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
@@ -201,7 +201,7 @@ Any::operator== (const Any &clone) const
     case FLOAT64:     if (u.vdouble != clone.u.vdouble) return false;                   break;
     case STRING:      if (u.vstring() != clone.u.vstring()) return false;               break;
     case SEQUENCE:    if (*u.vanys != *clone.u.vanys) return false;                     break;
-    case RECORD:      if (*u.vanys != *clone.u.vanys) return false;                     break;
+    case RECORD:      if (*u.vfields != *clone.u.vfields) return false;                 break;
     case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME: missing details
     case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
     default:
@@ -280,7 +280,7 @@ Any::as_int () const
     case ENUM:          return u.vint64;
     case STRING:        return !u.vstring().empty();
     case SEQUENCE:      return !u.vanys->empty();
-    case RECORD:        return !u.vanys->empty();
+    case RECORD:        return !u.vfields->empty();
     default:            return 0;
     }
 }
@@ -297,7 +297,7 @@ Any::as_float () const
     case ENUM:          return u.vint64;
     case STRING:        return !u.vstring().empty();
     case SEQUENCE:      return !u.vanys->empty();
-    case RECORD:        return !u.vanys->empty();
+    case RECORD:        return !u.vfields->empty();
     default:            return 0;
     }
 }
@@ -350,6 +350,24 @@ Any::operator>>= (const Any *&v) const
   return true;
 }
 
+bool
+Any::operator>>= (const AnyVector *&v) const
+{
+  if (kind() != SEQUENCE)
+    return false;
+  v = u.vanys;
+  return true;
+}
+
+bool
+Any::operator>>= (const FieldVector *&v) const
+{
+  if (kind() != RECORD)
+    return false;
+  v = u.vfields;
+  return true;
+}
+
 void
 Any::operator<<= (uint64_t v)
 {
@@ -391,6 +409,32 @@ Any::operator<<= (const Any &v)
     {
       Any *old = u.vany;
       u.vany = new Any (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::operator<<= (const AnyVector &v)
+{
+  ensure (SEQUENCE);
+  if (u.vanys != &v)
+    {
+      AnyVector *old = u.vanys;
+      u.vanys = new AnyVector (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::operator<<= (const FieldVector &v)
+{
+  ensure (RECORD);
+  if (u.vfields != &v)
+    {
+      FieldVector *old = u.vfields;
+      u.vfields = new FieldVector (v);
       if (old)
         delete old;
     }
