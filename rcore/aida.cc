@@ -173,6 +173,50 @@ Any::rekind (TypeKind _kind)
     error_printf ("Aida::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
 }
 
+template<class T> String any_field_name (const T          &);
+template<>        String any_field_name (const Any        &any) { return ""; }
+template<>        String any_field_name (const Any::Field &any) { return any.name; }
+
+template<class AnyVector> static String
+any_vector_to_string (const AnyVector &av)
+{
+  String s;
+  for (auto const &any : av)
+    {
+      if (!s.empty())
+        s += ", ";
+      s += any.to_string (any_field_name (any));
+    }
+  s = s.empty() ? "[]" : "[ " + s + " ]";
+  return s;
+}
+
+String
+Any::to_string (const String &field_name) const
+{
+  String s = "{ ";
+  s += "type=" + Rapicorn::string_to_cquote (type().name());
+  if (!field_name.empty())
+    s += ", name=" + Rapicorn::string_to_cquote (field_name);
+  switch (kind())
+    {
+    case BOOL:
+    case ENUM:
+    case INT32:
+    case INT64:         s += string_printf (", value=%lld", u.vint64);                          break;
+    case FLOAT64:       s += string_printf (", value=%.17g", u.vdouble);                        break;
+    case ANY:           s += ", value=" + u.vany->to_string();                                  break;
+    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u.vstring());             break;
+    case SEQUENCE:      if (u.vanys) s += ", value=" + any_vector_to_string (*u.vanys);         break;
+    case RECORD:        if (u.vfields) s += ", value=" + any_vector_to_string (*u.vfields);     break;
+    case INSTANCE:      s += string_printf (", value=instance...");                             break; // FIXME: missing details
+    default:            ;
+    case UNTYPED:       break;
+    }
+  s += " }";
+  return s;
+}
+
 bool
 Any::operator== (const Any &clone) const
 {

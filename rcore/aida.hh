@@ -210,6 +210,7 @@ public:
   bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
   bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
+  String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
