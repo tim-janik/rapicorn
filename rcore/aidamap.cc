@@ -46,11 +46,11 @@ struct InternalString {
 struct TypeCode::InternalType {
   uint32_t      tkind;          // type kind
   uint32_t      name;           // string index
-  uint32_t      aux_strings;    // list[string index] index; assignment strings
-  uint32_t      custom;         // custom index
-  // enum:      list[string index] index; 3 strings per value
-  // interface: list[string index] index; prerequisite names
-  // record:    list[type index] index; InternalType per field
+  uint32_t      aux_strings;    // index of list<string index>; assignment strings
+  uint32_t      custom;         // custom index, used as follows:
+  // enum:      index of list<string index>; 3 strings per value (list length is 3 * enum_count())
+  // interface: index of list<string index>; prerequisite names
+  // record:    index of list<type index>; InternalType per field
   // sequence:  type index; InternalType for sequence field
   // reference: string index; name of referenced type
 };
@@ -63,7 +63,7 @@ struct InternalMap {
   uint32_t      seg_lists;      // list segment offset
   uint32_t      seg_strings;    // string segment offset
   uint32_t      pad3;
-  uint32_t      types;          // list[type index] index; public types
+  uint32_t      types;          // index of list<type index>; public types
   uint32_t      pad4, pad5, pad6;
   bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
   bool          check_magic     () { return (magic[0] == 0x61646941 && magic[1] == 0x65707954 &&
