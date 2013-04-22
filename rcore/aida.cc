@@ -120,6 +120,7 @@ Any::Any() :
 Any::Any (const Any &clone) :
   type_code (TypeMap::notype())
 {
+  memset (&u, 0, sizeof (u));
   this->operator= (clone);
 }
 
