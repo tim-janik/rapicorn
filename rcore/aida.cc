@@ -171,11 +171,11 @@ Any::rekind (TypeKind _kind)
     case INT64:       type = "int64";                                   break;
     case FLOAT64:     type = "float64";                                 break;
     case ENUM:        type = "int";                                     break;
-    case STRING:      type = "String";     new (&u.vstring()) String(); break;
-    case ANY:         type = "Any";          u.vany = new Any();        break;
-    case SEQUENCE:    type = "Aida::AnySeq"; u.vanys = new AnyVector(); break;
-    case RECORD:      type = "Aida::AnyRec"; u.vfields = new FieldVector(); break;
-    case INSTANCE:    type = "Aida::Instance";                          break; // FIXME: missing details
+    case STRING:      type = "String";                new (&u.vstring()) String();      break;
+    case ANY:         type = "Any";                   u.vany = new Any();               break;
+    case SEQUENCE:    type = "Aida::DynamicSequence"; u.vanys = new AnyVector();        break;
+    case RECORD:      type = "Aida::DynamicRecord";   u.vfields = new FieldVector();    break;
+    case INSTANCE:    ; // type = "Aida::Instance"; break; // FIXME: missing details
     default:
       error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
     }

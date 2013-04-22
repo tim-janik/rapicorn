@@ -66,7 +66,10 @@ class YYGlobals (object):
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
-    if len (rfields) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (rfields) == 1 and rfields[0][0] == '__builtin__deleteme__'):
+      rfields = []
+    elif len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
     rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
     self.parse_assign_auxdata (rfields)
