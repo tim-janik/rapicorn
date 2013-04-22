@@ -89,6 +89,7 @@ String  string_from_pretty_function_name                 (const char *gnuc_prett
 String  string_to_cescape                                (const String &str);
 String  string_to_cquote                                 (const String &str);
 String  string_from_cquote                               (const String &input);
+String  string_hexdump                                   (const void *addr, size_t length, size_t initial_offset = 0);
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);

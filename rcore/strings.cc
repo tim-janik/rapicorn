@@ -726,6 +726,43 @@ string_substitute_char (const String &input, const char match, const char subst)
   return output;
 }
 
+/** Produce hexdump of a memory region.
+ * Each output line consists of its hexadecimal offset, 16 hexadecimal bytes and the ASCII representation of the same 16 bytes.
+ */
+String
+string_hexdump (const void *addr, size_t length, size_t initial_offset)
+{
+  // 000000d0  00 34 00 00 08 00 00 00  40 00 00 00 61 00 00 00  |.4......@...a...|
+  const unsigned char *data = (const unsigned char*) addr;
+  size_t i;
+  String out, cx, cc = "|";
+  for (i = 0; i < length; i++)
+    {
+      if (i % 16 == 0)
+        {
+          if (i)
+            {
+              cc += "|";
+              out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+              cx = "";
+              cc = "|";
+            }
+        }
+      else if (i % 8 == 0)
+        cx += " ";
+      cx += string_printf (" %02x", data[i]);
+      cc += string_printf ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
+    }
+  if (i < ((length + 15) & ~15))
+    {
+      cc += "|";
+      for (; i < ((length + 15) & ~15); i++)
+        cx += "   ";
+      out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+    }
+  return out;
+}
+
 /// Fill a memory area with a 32-bit quantitiy.
 void
 memset4 (uint32 *mem, uint32 filler, uint length)
