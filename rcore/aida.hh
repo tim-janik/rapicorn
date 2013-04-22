@@ -41,6 +41,7 @@ namespace Rapicorn { namespace Aida {
 
 // == Standard Types ==
 using std::vector;
+typedef std::string String;
 typedef signed long long int   int64_t;  // libc's int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64_t; // libc's uint64_t is a long on AMD64 which breaks printf
 
@@ -67,7 +68,6 @@ const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a
 // == TypeCode ==
 struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
 {
-  typedef std::string String;
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
   std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
@@ -147,7 +147,6 @@ public:
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
-  typedef std::string String;
   TypeCode type_code;
   typedef std::vector<Any> AnyVector;
   union {
@@ -362,7 +361,6 @@ union FieldUnion {
 struct EnumValue { int64_t v; EnumValue (int64_t e) : v (e) {} };
 
 class FieldBuffer { // buffer for marshalling procedure calls
-  typedef std::string String;
   friend class FieldReader;
   void               check_internal ();
   inline FieldUnion& upeek (uint32_t n) const { return buffermem[offset() + n]; }
@@ -421,7 +419,6 @@ public:
 };
 
 class FieldReader { // read field buffer contents
-  typedef std::string String;
   const FieldBuffer *fb_;
   uint32_t           nth_;
   void               check_request (int type);
