@@ -406,6 +406,7 @@ test_any()
 static void
 test_dynamics()
 {
+  // -- FieldVector --
   Any::FieldVector fv;
   fv.push_back (Any::Field ("otto", 7.7));
   fv.push_back (Any::Field ("anna", 3));
@@ -419,7 +420,7 @@ test_dynamics()
   assert (fv != gv);
   gv[1] <<= 3;
   assert (fv == gv);
-  printf ("  TEST   Aida Any dynamic FieldVector                                    OK\n");
+  // -- AnyVector --
   Any::AnyVector av;
   av.push_back (Any (7.7));
   av.push_back (Any (3));
@@ -429,12 +430,12 @@ test_dynamics()
   for (auto const &f : fv)
     bv.push_back (f);
   assert (av == bv);
-  printf ("  TEST   Aida Any dynamic AnyVector                                      OK\n");
+  // -- FieldVector & AnyVector --
   if (0)        // compare av (DynamicSequence) with fv (DynamicRecord)
     Rapicorn::printerr ("test-compare: %s == %s\n", Any (av).to_string().c_str(), Any (fv).to_string().c_str());
-  Any::AnyVector cv (fv.begin(), fv.end());     // initialize AnyVector with { 7.7, 3, "ida" } from FieldVector
-  assert (av == cv);                            // Any::Field is_a Any, and both vectors contain { 7.7, 3, "ida" }
-  printf ("  TEST   Aida Any dynamics                                               OK\n");
+  Any::AnyVector cv (fv.begin(), fv.end());     // initialize AnyVector with { 7.7, 3, "ida" } from FieldVector (Field is-a Any)
+  assert (av == cv);                            // as AnyVector (FieldVector) copy, both vectors contain { 7.7, 3, "ida" }
+  printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
 }
 
 } // Anon
