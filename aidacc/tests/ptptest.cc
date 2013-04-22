@@ -425,6 +425,9 @@ test_dynamics()
   av.push_back (Any (7.7));
   av.push_back (Any (3));
   av.push_back (Any ("ida"));
+  assert (av[0].as_float() == 7.7);
+  assert (av[1].as_int() == 3);
+  assert (av[2].as_string() == "ida");
   Any::AnyVector bv;
   assert (av != bv);
   for (auto const &f : fv)
