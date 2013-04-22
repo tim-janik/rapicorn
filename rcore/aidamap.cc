@@ -672,7 +672,7 @@ TypeMap::load_local (std::string filename)
 #include "aidabuiltins.cc" // defines intern_builtins_typ
 
 TypeMap
-TypeMap::builtins ()
+TypeMap::builtins()
 {
   InternalMap *imap = (InternalMap*) intern_builtins_typ;
   const size_t length = sizeof (intern_builtins_typ);
@@ -688,7 +688,7 @@ TypeMap::builtins ()
       perror ("ERROR: accessing builtin Aida types");
       abort();
     }
-  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
+  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, false);
   errno = 0;
   return type_map;
 }
