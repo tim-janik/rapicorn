@@ -239,6 +239,11 @@ def cquote (text):
   s += '"'
   return s
 
+def generate_type_map (type_list, **args):
+  gg = Generator (args)
+  binary_type_map = gg.generate_type_map (type_list)
+  return binary_type_map
+
 def generate_file (namespace_list, **args):
   import sys, tempfile, os
   config = { 'output' : 'idltypes.map' }

@@ -106,6 +106,7 @@ class TypeMap /// A TypeMap serves as a repository and loader for IDL type infor
   friend class TypeCode::MapHandle;
   explicit              TypeMap      (TypeCode::MapHandle*);
   static TypeMap        builtins     ();
+  static TypeMap        enlist_map   (size_t length, const char *static_type_map);
 public:
   /*copy*/              TypeMap      (const TypeMap&);
   TypeMap&              operator=    (const TypeMap&);
@@ -118,6 +119,8 @@ public:
   static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
   TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
   static TypeCode       notype       ();
+  template<ssize_t S>
+  static void           enlist_map   (const char (&static_type_map)[S]) { enlist_map (S, static_type_map); }
 };
 
 // == Type Declarations ==

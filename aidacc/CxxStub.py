@@ -924,6 +924,19 @@ class Generator:
     s += '};\n'
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
+  def generate_type_map (self, types):
+    s = '\n'
+    import TypeMap
+    binary_type_map = TypeMap.generate_type_map (types)
+    s += 'namespace { // Anon\n'
+    s += 'static const char __aida_type_map__[] =\n  '
+    cq = TypeMap.cquote (binary_type_map)
+    s += re.sub ('\n', '\n  ', cq) + ';\n\n'
+    s += 'static Rapicorn::Init __aida_autoinit_type_map__ ([]() {\n'
+    s += '  Rapicorn::Aida::TypeMap::enlist_map (__aida_type_map__);\n'
+    s += '});\n'
+    s += '} // Anon\n'
+    return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVANT
     s = ''
@@ -1116,6 +1129,10 @@ class Generator:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
+    # generate unmarshalling server calls
+    if self.gen_clientcc:
+      s += self.open_namespace (None)
+      s += self.generate_type_map (types) + '\n'
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT

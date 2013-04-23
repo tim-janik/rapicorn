@@ -669,28 +669,26 @@ TypeMap::load_local (std::string filename)
   return type_map;
 }
 
+TypeMap
+TypeMap::enlist_map (const size_t length, const char *static_type_map)
+{
+  assert (length >= sizeof (InternalMap) + 4);
+  assert (static_type_map != NULL);
+  assert (static_type_map[length - 1] == 0);
+  InternalMap *imap = (InternalMap*) static_type_map;
+  const bool valid_type_map_magics = imap->check_magic() && imap->check_lengths (length) && imap->check_tail();
+  assert (valid_type_map_magics == true);
+  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, false);
+  errno = 0;
+  return type_map;
+}
+
 #include "aidabuiltins.cc" // defines intern_builtins_typ
 
 TypeMap
 TypeMap::builtins()
 {
-  InternalMap *imap = (InternalMap*) intern_builtins_typ;
-  const size_t length = sizeof (intern_builtins_typ);
-  if (!imap || sizeof (intern_builtins_typ) < sizeof (*imap) + 4)
-    {
-      errno = ENODATA;
-      perror ("ERROR: accessing builtin Aida types");
-      abort();
-    }
-  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
-    {
-      errno = ELIBBAD;
-      perror ("ERROR: accessing builtin Aida types");
-      abort();
-    }
-  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, false);
-  errno = 0;
-  return type_map;
+  return enlist_map (sizeof (intern_builtins_typ), intern_builtins_typ);
 }
 
 } } // Rapicorn::Aida
