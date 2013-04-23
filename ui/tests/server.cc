@@ -107,3 +107,14 @@ test_application_xurl()
   lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == NULL);
 }
 REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
+
+static void
+test_type_codes()
+{
+  ApplicationImpl &app = ApplicationImpl::the();
+  Aida::TypeCode tc = app.__aida_type_code__();
+  assert (tc.kind() == Aida::INSTANCE);
+  assert (tc.name() == "Rapicorn::Application");
+  assert (tc.untyped() == false);
+}
+REGISTER_UITHREAD_TEST ("Server/IDL Type Codes", test_type_codes);
