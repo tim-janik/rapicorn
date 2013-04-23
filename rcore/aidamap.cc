@@ -670,7 +670,7 @@ TypeMap::load_local (std::string filename)
 }
 
 TypeMap
-TypeMap::enlist_map (const size_t length, const char *static_type_map)
+TypeMap::enlist_map (const size_t length, const char *static_type_map, bool global)
 {
   assert (length >= sizeof (InternalMap) + 4);
   assert (static_type_map != NULL);
@@ -679,6 +679,11 @@ TypeMap::enlist_map (const size_t length, const char *static_type_map)
   const bool valid_type_map_magics = imap->check_magic() && imap->check_lengths (length) && imap->check_tail();
   assert (valid_type_map_magics == true);
   TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, false);
+  if (!type_map.error_status() && global)
+    {
+      type_registry_initialize();
+      type_registry->add (type_map);
+    }
   errno = 0;
   return type_map;
 }
@@ -688,7 +693,7 @@ TypeMap::enlist_map (const size_t length, const char *static_type_map)
 TypeMap
 TypeMap::builtins()
 {
-  return enlist_map (sizeof (intern_builtins_typ), intern_builtins_typ);
+  return enlist_map (sizeof (intern_builtins_typ), intern_builtins_typ, false);
 }
 
 } } // Rapicorn::Aida
