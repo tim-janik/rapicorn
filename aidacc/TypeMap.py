@@ -125,6 +125,9 @@ def encode_type_map (nodes):
   return s
 
 class Generator:
+  def __init__ (self, config = {}):
+    self.config = {}
+    self.config.update (config)
   def aux_strings (self, auxdata):
     result = []
     for ad in auxdata.items():
@@ -187,7 +190,7 @@ class Generator:
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # FIXME: filter types for isimpl
     return types
-  def generate_pack (self, namespace_list, strip_system_typedefs):
+  def generate_namespace_type_map (self, namespace_list):
     # sort namespaces for binary lookups
     namespace_list = namespace_list[:]  # list copy
     namespace_list.sort (lambda o1, o2: cmp (o1.name, o2.name))
@@ -195,6 +198,9 @@ class Generator:
     types = []
     for ns in namespace_list:
       types += self.namespace_types (ns)
+    return self.generate_type_map (types)
+  def generate_type_map (self, type_list):
+    types = type_list[:] # list copy
     # sort namespaced types for binary lookups
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # serialize types
@@ -203,7 +209,7 @@ class Generator:
       t = self.generate_type (tp)
       tsl += [ t ]
     # strip builtin typedefs
-    if strip_system_typedefs:
+    if self.config['system-typedefs']:
       import re
       otsl,tsl = tsl,[]
       for tp in otsl:
@@ -218,12 +224,26 @@ def error (msg):
   print >>sys.stderr, sys.argv[0] + ":", msg
   sys.exit (127)
 
-def generate (namespace_list, **args):
+def cquote (text):
+  s, lastoctal = '', False
+  for c in text:
+    oldnl = len (s) / 70
+    shortoctal = False
+    if   c == '\\':                             s += r'\\'
+    elif c == '"':                              s += r'"'
+    elif c >= '0' and c <= '9' and lastoctal:   s += r'""' + c
+    elif c >= ' ' and c <= '~':                 s += c
+    else:                                       s += '\%o' % ord (c) ; shortoctal = ord (c) < 64;
+    lastoctal = shortoctal
+    if len (s) / 70 != oldnl:                   s += '"\n"'
+  return s
+
+def generate_file (namespace_list, **args):
   import sys, tempfile, os
   config = { 'output' : 'idltypes.map' }
   config.update (args)
-  gg = Generator()
-  packdata = gg.generate_pack (namespace_list, config['system-typedefs'])
+  gg = Generator (config)
+  packdata = gg.generate_namespace_type_map (namespace_list)
   outputname = config['output']
   # print strcquote (packdata)
   # write data into a temporary file in the same dir as outputname
@@ -249,4 +269,4 @@ def generate (namespace_list, **args):
     error ('Failed to atomically replace "%s": %s' % (outputname, rex))
 
 # register extension hooks
-__Aida__.add_backend (__file__, generate, __doc__)
+__Aida__.add_backend (__file__, generate_file, __doc__)
