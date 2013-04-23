@@ -85,6 +85,8 @@ int                             string_cmp_uuid          (const String &uuid_str
                                                           const String &uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 bool                            string_startswith        (const String &string, const String &fragment);
 bool                            string_endswith          (const String &string, const String &fragment);
+bool    string_match_identifier                          (const String &ident1, const String &ident2);
+bool    string_match_identifier_tail                     (const String &ident, const String &tail);
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cescape                                (const String &str);
 String  string_to_cquote                                 (const String &str);

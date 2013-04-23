@@ -354,6 +354,22 @@ test_string_misc (void)
 REGISTER_TEST ("Strings/Misc", test_string_misc);
 
 static void
+test_string_matching()
+{
+  assert (string_match_identifier ("foo", "foo") == true);
+  assert (string_match_identifier ("foo", "ffoo") == false);
+  assert (string_match_identifier ("foo", "oo") == false);
+  assert (string_match_identifier ("foo", "bar") == false);
+  assert (string_match_identifier ("FOO", "foo") == true);
+  assert (string_match_identifier ("x.FOO", "X-Foo") == true);
+  assert (string_match_identifier ("x.FOO", "Foo") == false);
+  assert (string_match_identifier_tail ("x.FOO", "Foo") == true);
+  assert (string_match_identifier_tail ("x.FOO", "-Foo") == true);
+  assert (string_match_identifier_tail ("xFOO", "Foo") == false);
+}
+REGISTER_TEST ("Strings/Matching", test_string_matching);
+
+static void
 test_string_stripping (void)
 {
   TCMP (string_strip (""), ==, "");
