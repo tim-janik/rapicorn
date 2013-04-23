@@ -235,7 +235,7 @@ def cquote (text):
     elif c >= ' ' and c <= '~':                 s += c
     else:                                       s += '\%o' % ord (c) ; shortoctal = ord (c) < 64;
     lastoctal = shortoctal
-    if len (s) / 70 != oldnl:                   s += '"\n"'
+    if len (s) / 70 != oldnl:                   s += '"\n"'; lastoctal = False
   return s
 
 def generate_file (namespace_list, **args):
