@@ -19,8 +19,6 @@ struct EnumInfo
   String        enum_name       () const                                        { return name_; }
   String        enum_namespace  () const                                        { return namespace_; }
   bool          flag_combinable () const                                        { return flag_combinable_; }
-  bool          match_partial   (const String &value_name1, const String &partial_value_name) const;
-  bool          match           (const String &value_name1, const String &value_name2) const;
   const Value*  find_first      (int64 value) const;
   const Value*  find_first      (const String &value_name) const;
   int64         parse           (const String &value_string, String *error = NULL) const;

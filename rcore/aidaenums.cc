@@ -51,76 +51,6 @@ EnumInfo::EnumInfo () :
   namespace_ (NULL), name_ (NULL), values_ (NULL), n_values_ (0), flag_combinable_ (0)
 {}
 
-static bool
-c_isalnum (uint8 c)
-{
-  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
-}
-
-static inline char
-char_canon (char c)
-{
-  if (c >= '0' && c <= '9')
-    return c;
-  else if (c >= 'A' && c <= 'Z')
-    return c - 'A' + 'a';
-  else if (c >= 'a' && c <= 'z')
-    return c;
-  else
-    return '-';
-}
-
-static inline bool
-eval_match (const char *str1, const char *str2)
-{
-  while (*str1 && *str2)
-    {
-      uint8 s1 = char_canon (*str1++);
-      uint8 s2 = char_canon (*str2++);
-      if (s1 != s2)
-        return false;
-    }
-  return *str1 == 0 && *str2 == 0;
-}
-
-static bool
-name_match_detailed (const char *value_name1, size_t name1_length, const char *value_name2, size_t name2_length)
-{
-  if (name2_length > name1_length)
-    {
-      const char *ts = value_name2;
-      value_name2 = value_name1;
-      value_name1 = ts;
-      size_t tl = name2_length;
-      name2_length = name1_length;
-      name1_length = tl;
-    }
-  const char *name1 = value_name1 + name1_length - min (name1_length, name2_length);
-  const char *name2 = value_name2 + name2_length - min (name1_length, name2_length);
-  if (name1 > value_name1)      // allow partial matches on word boundary only
-    {
-      if (c_isalnum (name1[-1]) && c_isalnum (name1[0])) // no word boundary
-        return false;
-    }
-  return name2[0] && eval_match (name1, name2);
-}
-
-bool
-EnumInfo::match_partial (const String &value_name1, const String &partial_value_name) const
-{
-  const size_t length1 = value_name1.size();
-  const size_t length2 = partial_value_name.size();
-  if (length1 < length2)        // length1 must be >= length2 for partial matches
-    return false;
-  return name_match_detailed (value_name1.data(), length1, partial_value_name.data(), length2);
-}
-
-bool
-EnumInfo::match (const String &value_name1, const String &value_name2) const
-{
-  return name_match_detailed (value_name1.data(), value_name1.size(), value_name2.data(), value_name2.size());
-}
-
 const EnumInfo::Value*
 EnumInfo::find_first (int64 value) const
 {
@@ -137,17 +67,15 @@ EnumInfo::find_first (int64 value) const
 const EnumInfo::Value*
 EnumInfo::find_first (const String &value_name) const
 {
-  const size_t length2 = value_name.size();
-  const char *const vname = value_name.c_str();
   size_t n_values = 0;
   const Value *values;
   list_values (&n_values, &values);
   for (size_t i = 0; i < n_values; i++)
     {
-      const size_t length1 = values[i].length;
-      if (length1 < length2)    // length1 must be >= length2 for partial matches
+      const size_t length = values[i].length;
+      if (length < value_name.size())    // length must be >= value_name for partial matches
         continue;
-      if (name_match_detailed (values[i].name, length1, vname, length2))
+      if (string_match_identifier_tail (String (values[i].name, length), value_name))
         return &values[i];
     }
   return NULL;
