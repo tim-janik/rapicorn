@@ -209,7 +209,7 @@ class Generator:
       t = self.generate_type (tp)
       tsl += [ t ]
     # strip builtin typedefs
-    if self.config['system-typedefs']:
+    if self.config.get ('system-typedefs', 0):
       import re
       otsl,tsl = tsl,[]
       for tp in otsl:
@@ -225,7 +225,7 @@ def error (msg):
   sys.exit (127)
 
 def cquote (text):
-  s, lastoctal = '', False
+  s, lastoctal = '"', False
   for c in text:
     oldnl = len (s) / 70
     shortoctal = False
@@ -236,6 +236,7 @@ def cquote (text):
     else:                                       s += '\%o' % ord (c) ; shortoctal = ord (c) < 64;
     lastoctal = shortoctal
     if len (s) / 70 != oldnl:                   s += '"\n"'; lastoctal = False
+  s += '"'
   return s
 
 def generate_file (namespace_list, **args):
