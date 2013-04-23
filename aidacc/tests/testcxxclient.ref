@@ -268,6 +268,8 @@ struct XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::XFooRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
@@ -276,6 +278,8 @@ struct XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::XFooSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
@@ -284,6 +288,8 @@ struct IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::IntSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
@@ -292,6 +298,8 @@ struct FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::FloatSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
@@ -300,6 +308,8 @@ struct StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::StringSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
@@ -308,6 +318,8 @@ struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
@@ -316,6 +328,8 @@ struct RecordSequence : public std::vector<XFooRecord>
 {
   typedef std::vector<XFooRecord> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::RecordSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
@@ -324,6 +338,8 @@ struct SequenceSequence : public std::vector<IntSequence>
 {
   typedef std::vector<IntSequence> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::SequenceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
@@ -332,6 +348,8 @@ struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstI
 {
   typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::InterfaceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
@@ -340,6 +358,8 @@ struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::AnySequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
@@ -351,6 +371,8 @@ struct NestedTypesRec
   XFooSequence                  seq;
   /// @endcond
   inline                        NestedTypesRec () { }
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NestedTypesRec"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
@@ -359,6 +381,8 @@ struct NestedTypesSeq : public std::vector<NestedTypesRec>
 {
   typedef std::vector<NestedTypesRec> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
@@ -390,6 +414,8 @@ struct NewRecord
   NestedTypesRec                ntr;
   /// @endcond
   inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NewRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
@@ -404,6 +430,8 @@ struct InnerRecord
   NewRecord                     rec;
   /// @endcond
   inline                        InnerRecord () { x = 0; y = 0; }
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
@@ -415,6 +443,8 @@ struct Refer2Inner
   Inner::InnerRecord            r;
   /// @endcond
   inline                        Refer2Inner () { }
+  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::Refer2Inner"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
 void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
@@ -431,6 +461,8 @@ struct SomeRecord
   MandatoryNamespace::Inner::InnerRecord r4;
   /// @endcond
   inline                        SomeRecord () { }
+  std::string                   __aida_type_name__ ()	{ return "OtherNamespace::SomeRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
@@ -586,6 +618,8 @@ struct QuickRecord
   int                           int2;
   /// @endcond
   inline                        QuickRecord () { int1 = 0; int2 = 0; }
+  std::string                   __aida_type_name__ ()	{ return "InterfaceTests::QuickRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
@@ -594,6 +628,8 @@ struct QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ ()	{ return "InterfaceTests::QuickSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
@@ -981,6 +1017,8 @@ struct RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+  std::string                   __aida_type_name__ ()	{ return "BseTest::RecordForGroups"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);

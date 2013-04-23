@@ -176,6 +176,7 @@ class Generator:
     return '0'
   def generate_recseq_decl (self, type_info):
     s = '\n'
+    classFull = self.namespaced_identifier (type_info.name)
     # s += self.generate_shortdoc (type_info)   # doxygen IDL snippet
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
@@ -201,6 +202,8 @@ class Generator:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
+    s += '  ' + self.F ('std::string') + '__aida_type_name__ ()\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ ()\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -380,6 +383,9 @@ class Generator:
     c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if ddc:
       s += c
+    if ddc and self.gen_mode == G4SERVANT:
+      s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '         __aida_type_code__ ()\t'
+      s += '{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
       s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
