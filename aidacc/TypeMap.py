@@ -230,8 +230,8 @@ def cquote (text):
     oldnl = len (s) / 70
     shortoctal = False
     if   c == '\\':                             s += r'\\'
-    elif c == '"':                              s += r'"'
-    elif c >= '0' and c <= '9' and lastoctal:   s += r'""' + c
+    elif c == '"':                              s += '\\"'
+    elif c >= '0' and c <= '9' and lastoctal:   s += '""' + c
     elif c >= ' ' and c <= '~':                 s += c
     else:                                       s += '\%o' % ord (c) ; shortoctal = ord (c) < 64;
     lastoctal = shortoctal
