@@ -116,5 +116,14 @@ test_type_codes()
   assert (tc.kind() == Aida::INSTANCE);
   assert (tc.name() == "Rapicorn::Application");
   assert (tc.untyped() == false);
+  Pixbuf pixbuf;
+  tc = pixbuf.__aida_type_code__();
+  assert (tc.kind() == Aida::RECORD);
+  assert (tc.name() == "Rapicorn::Pixbuf");
+  assert (tc.untyped() == false);
+  assert (tc.field_count() == 3);
+  assert (tc.field (0).name() == "row_length"); (void) pixbuf.row_length;
+  assert (tc.field (1).name() == "pixels");     (void) pixbuf.pixels;
+  assert (tc.field (2).name() == "variables");  (void) pixbuf.variables;
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Type Codes", test_type_codes);
