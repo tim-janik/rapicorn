@@ -111,13 +111,25 @@ REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
 static void
 test_idl_enums()
 {
-  Aida::TypeCode t = Aida::TypeMap::lookup ("Rapicorn::AnchorType");
-  assert (t.kind() == Aida::ENUM);
-  assert (t.name() == "Rapicorn::AnchorType");
-  assert (t == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
+  Aida::TypeCode at = Aida::TypeMap::lookup ("Rapicorn::AnchorType");
+  assert (at.kind() == Aida::ENUM);
+  assert (at.name() == "Rapicorn::AnchorType");
+  assert (at == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
   Aida::TypeCode::EnumValue ev;
-  ev = t.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
-  ev = t.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
+  ev = at.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
+  ev = at.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
+  assert (at.enum_combinable() == false);
+  assert (at.enum_string (ANCHOR_NORTH) == "ANCHOR_NORTH");
+  uint64 amask = at.enum_parse ("south-west");
+  assert (amask == ANCHOR_SOUTH_WEST);
+  Aida::TypeCode st = Aida::TypeCode::from_enum<StateType>();
+  assert (st.kind() == Aida::ENUM);
+  assert (st.name() == "Rapicorn::StateType");
+  assert (st.enum_combinable() == true);
+  uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_PRELIGHT|STATE_IMPRESSED");
+  assert (smask == (STATE_INSENSITIVE | STATE_PRELIGHT | STATE_IMPRESSED));
+  assert (st.enum_string (STATE_INSENSITIVE) == "STATE_INSENSITIVE");
+  assert (st.enum_string (STATE_INSENSITIVE|STATE_IMPRESSED) == "STATE_IMPRESSED|STATE_INSENSITIVE");
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
 

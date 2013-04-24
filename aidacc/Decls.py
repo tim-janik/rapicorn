@@ -222,6 +222,7 @@ class TypeInfo (BaseDecl):
   def set_combinable (self, as_flags):
     assert self.storage == ENUM
     self.combinable = as_flags
+    self.update_auxdata ({ 'enum_combinable' : int (bool (self.combinable)) })
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)

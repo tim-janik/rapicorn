@@ -482,6 +482,87 @@ TypeCode::enum_find (const String &name) const
   return ev;
 }
 
+bool
+TypeCode::enum_combinable () const
+{
+  return string_to_bool (aux_value ("enum_combinable"));
+}
+
+String
+TypeCode::enum_string (int64 mask) const
+{
+  if (kind() != ENUM)
+    return "";
+  if (!enum_combinable())
+    {
+      const EnumValue ev = enum_find (mask);
+      return ev.ident ? ev.ident : "";
+    }
+  const size_t n_evalues = enum_count();
+  EnumValue evalues[n_evalues];
+  for (size_t i = 0; i < n_evalues; i++)
+    evalues[i] = enum_value (i);
+  String s;
+  // combine flags
+  while (mask)
+    {
+      const EnumValue *match1 = NULL;
+      for (size_t i = 0; i < n_evalues; i++)
+        if (evalues[i].value && evalues[i].value == (mask & evalues[i].value))
+          // choose the greatest match, needed by mixed flags/enum types (StateMask)
+          match1 = match1 && match1->value > evalues[i].value ? match1 : &evalues[i];
+      if (match1)
+        {
+          if (s[0])
+            s = s + "|" + String (match1->ident);
+          else
+            s = String (match1->ident);
+          mask &= ~match1->value;
+        }
+      else
+        mask = 0; // no match
+    }
+  if (!s[0] && mask == 0)
+    for (uint i = 0; i < n_evalues; i++)
+      if (evalues[i].value == 0)
+        {
+          s = evalues[i].ident;
+          break;
+        }
+  return s;
+}
+
+int64
+TypeCode::enum_parse (const String &value_string, String *errorp) const
+{
+  if (!enum_combinable())
+    {
+      const EnumValue ev = enum_find (value_string);
+      if (ev.ident)
+        return ev.value;
+      if (errorp)
+        *errorp = value_string;
+      return 0;
+    }
+  // parse flags
+  uint64 result = 0;
+  const char *cstring = value_string.c_str();
+  const char *sep = strchr (cstring, '|');
+  while (sep)
+    {
+      String token (cstring, sep - cstring);
+      result |= enum_parse (token, errorp);
+      cstring = sep + 1; // reminder
+      sep = strchr (cstring, '|');
+    }
+  const EnumValue ev = enum_find (cstring);
+  if (ev.ident)
+    result |= ev.value;
+  else if (errorp)
+    *errorp = sep;
+  return result;
+}
+
 size_t
 TypeCode::prerequisite_count () const
 {
