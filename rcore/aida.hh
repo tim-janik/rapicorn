@@ -75,8 +75,9 @@ struct TypeCode /// Representation of type information to describe structured ty
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
   std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
   std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
+  struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
   size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  std::vector<String>   enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
+  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.

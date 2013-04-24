@@ -64,7 +64,7 @@ class Encoder:
     return s
   def encode_value (self, v):
     n = None
-    if isinstance (v, int):
+    if isinstance (v, (int, long)):
       n = v
     elif isinstance (v, str):
       n = self.string_index (v)
@@ -77,9 +77,9 @@ class Encoder:
     return self.encode_unsigned (n)
   @staticmethod
   def encode_string (string):
-    r = len (string) % 4
-    r = r and 4 - r or 0
-    return Encoder.encode_unsigned (len (string)) + string + ' ' * r
+    r = (len (string) + 1) % 4
+    r = 4 - r if r else 0
+    return Encoder.encode_unsigned (len (string)) + string + '\0' + r * ' '
   @staticmethod
   def encode_unsigned (num):
     assert num >= 0 and num <= 0xffffffff
@@ -173,8 +173,14 @@ class Generator:
       fields += [ members ]
     elif tp.storage == Decls.ENUM:
       s = []
-      for op in tp.options:
-        s += [ op[0], op[1], op[2] ] # ident, label, blurb
+      for opt in tp.options:
+        (ident, label, blurb, number) = opt
+        number = number if number >= 0 else 0x10000000000000000 + number # turn into uint64
+        low, high = number & 0xffffffff, number >> 32
+        for num in (low, high):
+          if not (num >= 0 and num <= 0xffffffff):
+            raise Exception ("Invalid enum value: %d" % num)
+        s += [ low, high, ident, label, blurb ] # low, high, ident, label, blurb
       fields += [ s ]
     elif tp.storage == Decls.INTERFACE:
       s = []

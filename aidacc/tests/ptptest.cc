@@ -247,8 +247,10 @@ type_code_tests ()
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
     assert (t.enum_count() == 2);
-    assert (t.enum_value (0)[0] == "ENUM_VALUE0");
-    assert (t.enum_value (1)[0] == "ENUM_VALUE1");
+    assert (t.enum_value (0).ident == String ("ENUM_VALUE0"));
+    assert (t.enum_value (0).value == 1);
+    assert (t.enum_value (1).ident == String ("ENUM_VALUE1"));
+    assert (t.enum_value (1).value == 2);
   }
   { // SEQUENCE
     TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");

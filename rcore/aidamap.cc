@@ -74,9 +74,10 @@ struct InternalMap {
             seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
             length >= seg_strings);
   }
-  InternalList*   internal_list   (uint32_t offset) const;
-  InternalType*   internal_type   (uint32_t offset) const;
-  InternalString* internal_string (uint32_t offset) const;
+  InternalList*   internal_list    (uint32_t offset) const;
+  InternalType*   internal_type    (uint32_t offset) const;
+  InternalString* internal_string  (uint32_t offset) const;
+  static uint64_t internal_big_int (uint32_t low, uint32_t high) { return low + (uint64_t (high) << 32); }
 };
 static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalType))] = { 0, };
 struct TypeCode::MapHandle {
@@ -86,16 +87,27 @@ private:
   const size_t      length_;
   const bool        needs_free_;
   int               status_;
+  Spinlock          mutex_;
+  std::map<int32,int> cache_;
 public:
-  int             status          ()                { return status_; }
-  InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
-  InternalType*   internal_type   (uint32_t offset) { return imap->internal_type (offset); }
-  InternalString* internal_string (uint32_t offset) { return imap->internal_string (offset); }
+  int             status           ()                { return status_; }
+  InternalList*   internal_list    (uint32_t offset) { return imap->internal_list (offset); }
+  InternalType*   internal_type    (uint32_t offset) { return imap->internal_type (offset); }
+  InternalString* internal_string  (uint32_t offset) { return imap->internal_string (offset); }
+  uint64_t        internal_big_int (uint32_t low, uint32_t high) { return imap->internal_big_int (low, high); }
   std::string
   simple_string (uint32_t offset)
   {
     InternalString *is = internal_string (offset);
     return AIDA_LIKELY (is) ? std::string (is->chars, is->length) : "";
+  }
+  const char*
+  simple_cstring (uint32_t offset)
+  {
+    InternalString *is = internal_string (offset);
+    if (AIDA_UNLIKELY (!is || !is->chars || (is->length && is->chars[is->length] != 0)))
+      return NULL;
+    return is->length ? is->chars : "";
   }
   MapHandle*
   ref()
@@ -415,22 +427,23 @@ TypeCode::enum_count () const
   if (kind() != ENUM)
     return 0;
   InternalList *il = handle_->internal_list (type_->custom);
-  return il ? il->length / 3 : 0;
+  return il && il->length % 5 == 0 ? il->length / 5 : 0;
 }
 
-std::vector<std::string>
-TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
+TypeCode::EnumValue
+TypeCode::enum_value (const size_t index) const
 {
-  std::vector<String> sv;
+  EnumValue ev;
   if (kind() != ENUM)
-    return sv;
+    return ev;
   InternalList *il = handle_->internal_list (type_->custom);
-  if (!il || index * 3 > il->length)
-    __AIDA_return_EFAULT (sv);
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 0]));   // ident
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 1]));   // label
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 2]));   // blurb
-  return sv;
+  if (!il || il->length == 0 || il->length % 5 != 0 || index >= il->length / 5)
+    __AIDA_return_EFAULT (ev);
+  ev.value = handle_->internal_big_int (il->items[index * 5 + 0], il->items[index * 5 + 1]);
+  ev.ident = handle_->simple_cstring (il->items[index * 5 + 2]);
+  ev.label = handle_->simple_cstring (il->items[index * 5 + 3]);
+  ev.blurb = handle_->simple_cstring (il->items[index * 5 + 4]);
+  return ev;
 }
 
 size_t
@@ -515,8 +528,9 @@ TypeCode::pretty (const std::string &indent) const
       s += std::string (": ") + buffer;
       for (uint32_t i = 0; i < enum_count(); i++)
         {
-          std::vector<String> sv = enum_value (i);
-          s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
+          EnumValue ev = enum_value (i);
+          s += std::string ("\n") + indent + indent + string_printf ("0x%08llx", ev.value);
+          s += String() + ", " + ev.ident + ", " + ev.label + ", " + ev.blurb;
         }
       break;
     case INSTANCE:

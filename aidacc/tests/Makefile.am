@@ -6,6 +6,7 @@ INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
+TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
@@ -24,7 +25,7 @@ TESTPASS_AUXTESTS = --aux-test label=AuxF64 --aux-test AuxStr --aux-test Aux32 \
 		    --aux-test default=10007 --aux-test hints=rw
 
 ### Aida build rule for binary type maps
-%.typ: %.idl
+%.typ: %.idl $(TYPEMAP_PY)
 	$(AM_V_GEN)
 	$(Q) ${AIDACC} $< -x TypeMap -o xtmp-$(@F)
 	$(Q) rm -f $@ && mv xtmp-$(@F) $@
@@ -60,8 +61,8 @@ check-aida-standard-types: ptptest
 check-local: check-aida-standard-types
 
 # == Test TypeMap ==
-check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${AIDACC} $(srcdir)/testpass.idl -x TypeMap  ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
+check-aida-format-TypeMap: $(srcdir)/testpass.idl $(TYPEMAP_PY) ptptest
+	$(Q) ${AIDACC} $< -x TypeMap ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
 	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f idltypes.map
 check-local: check-aida-format-TypeMap
