@@ -284,6 +284,8 @@ class Generator:
     return s
   def generate_enum_info_specialization (self, type_info):
     s = '\n'
+    classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
+    s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
     ns, nm = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
     s += 'template<> inline EnumInfo enum_info<%s::%s>() { return EnumInfo::from_nsid ("%s", "%s"); }\n' % (ns, nm, ns, nm)
     return s

@@ -109,6 +109,19 @@ test_application_xurl()
 REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
 
 static void
+test_idl_enums()
+{
+  Aida::TypeCode t = Aida::TypeMap::lookup ("Rapicorn::AnchorType");
+  assert (t.kind() == Aida::ENUM);
+  assert (t.name() == "Rapicorn::AnchorType");
+  assert (t == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
+  Aida::TypeCode::EnumValue ev;
+  ev = t.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
+  ev = t.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
+}
+REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
+
+static void
 test_type_codes()
 {
   ApplicationImpl &app = ApplicationImpl::the();

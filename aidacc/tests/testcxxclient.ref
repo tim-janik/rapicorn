@@ -1047,32 +1047,46 @@ namespace Rapicorn {
 
 namespace Aida {
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1>() { return TypeMap::lookup ("MandatoryNamespace::Enum1"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1c>() { return TypeMap::lookup ("MandatoryNamespace::Enum1c"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1c"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2>() { return TypeMap::lookup ("MandatoryNamespace::Enum2"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2c>() { return TypeMap::lookup ("MandatoryNamespace::Enum2c"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2c"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3>() { return TypeMap::lookup ("MandatoryNamespace::Enum3"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3c>() { return TypeMap::lookup ("MandatoryNamespace::Enum3c"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3c"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4a>() { return TypeMap::lookup ("MandatoryNamespace::Enum4a"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4a>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4a"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4b>() { return TypeMap::lookup ("MandatoryNamespace::Enum4b"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4b>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4b"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4c>() { return TypeMap::lookup ("MandatoryNamespace::Enum4c"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4c"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4d>() { return TypeMap::lookup ("MandatoryNamespace::Enum4d"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4d>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4d"); }
 
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::ExtensiveEnum>() { return TypeMap::lookup ("MandatoryNamespace::ExtensiveEnum"); }
 template<> inline EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum>() { return EnumInfo::from_nsid ("MandatoryNamespace", "ExtensiveEnum"); }
 
+template<> inline TypeCode TypeCode::from_enum<InterfaceTests::QuickEnum>() { return TypeMap::lookup ("InterfaceTests::QuickEnum"); }
 template<> inline EnumInfo enum_info<InterfaceTests::QuickEnum>() { return EnumInfo::from_nsid ("InterfaceTests", "QuickEnum"); }
 
+template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::ClickType>() { return TypeMap::lookup ("RapicornAidaTest::ClickType"); }
 template<> inline EnumInfo enum_info<RapicornAidaTest::ClickType>() { return EnumInfo::from_nsid ("RapicornAidaTest", "ClickType"); }
 
+template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::MathExpressions>() { return TypeMap::lookup ("RapicornAidaTest::MathExpressions"); }
 template<> inline EnumInfo enum_info<RapicornAidaTest::MathExpressions>() { return EnumInfo::from_nsid ("RapicornAidaTest", "MathExpressions"); }
 } // Aida
 } // Rapicorn

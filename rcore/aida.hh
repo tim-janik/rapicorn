@@ -68,6 +68,12 @@ const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a
 // == TypeCode ==
 struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
 {
+  /*copy*/              TypeCode        (const TypeCode&);
+  /*dtor*/             ~TypeCode        ();
+  bool                  operator!=      (const TypeCode&) const;
+  bool                  operator==      (const TypeCode&) const;
+  TypeCode&             operator=       (const TypeCode&);
+  void                  swap            (TypeCode &other);      ///< Swap the contents of @a this and @a other in constant time.
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
   std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
@@ -75,11 +81,6 @@ struct TypeCode /// Representation of type information to describe structured ty
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
   std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
   std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
-  struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
-  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
-  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
-  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.
@@ -87,12 +88,13 @@ struct TypeCode /// Representation of type information to describe structured ty
   std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
   bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
-  bool                  operator!=      (const TypeCode &o) const;
-  bool                  operator==      (const TypeCode&) const;
-  /*copy*/              TypeCode        (const TypeCode&);
-  TypeCode&             operator=       (const TypeCode&);
-  /*dtor*/             ~TypeCode        ();
-  void                  swap            (TypeCode &other); ///< Swap the contents of @a this and @a other in constant time.
+  struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
+  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
+  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
+  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
+  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
+  template<class E> static
+  inline TypeCode       from_enum       ();
   class InternalType;
   class MapHandle;
 private: // implementation bits
@@ -565,6 +567,13 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
+template<class E> inline TypeCode
+TypeCode::from_enum () // fallback for unspecialized types
+{
+  static_assert (0 * sizeof (E), "no EnumInfo specialisation for this type");
+  return *(TypeCode*) NULL; // silence compiler
+}
+
 template<class V> inline
 Any::Any (const V &value) :
   type_code (TypeMap::notype()), u {0}
