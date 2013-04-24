@@ -246,11 +246,18 @@ type_code_tests ()
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
-    assert (t.enum_count() == 2);
-    assert (t.enum_value (0).ident == String ("ENUM_VALUE0"));
-    assert (t.enum_value (0).value == 1);
-    assert (t.enum_value (1).ident == String ("ENUM_VALUE1"));
-    assert (t.enum_value (1).value == 2);
+    assert (t.enum_count() == 10);
+    TypeCode::EnumValue ev;
+    ev = t.enum_value (0); assert (ev.ident == String ("ENUM_VALUE_0") && ev.value == 0);
+    ev = t.enum_value (1); assert (ev.ident == String ("ENUM_VALUE_1") && ev.value == 1);
+    ev = t.enum_value (2); assert (ev.ident == String ("ENUM_VALUE__1") && ev.value == -1);
+    ev = t.enum_value (3); assert (ev.ident == String ("ENUM_VALUE_4294967295") && ev.value == 4294967295);
+    ev = t.enum_value (4); assert (ev.ident == String ("ENUM_VALUE_4294967296") && ev.value == 4294967296);
+    ev = t.enum_value (5); assert (ev.ident == String ("ENUM_VALUE__4294967296") && ev.value == -4294967296);
+    ev = t.enum_value (6); assert (ev.ident == String ("ENUM_VALUE_9223372036854775807") && ev.value == 9223372036854775807);
+    ev = t.enum_value (7); assert (ev.ident == String ("ENUM_VALUE__9223372036854775808") && ev.value == -9223372036854775808);
+    ev = t.enum_value (8); assert (ev.ident == String ("ENUM_VALUE_9223372036854775808") && uint64_t (ev.value) == 9223372036854775808);
+    ev = t.enum_value (9); assert (ev.ident == String ("ENUM_VALUE_18446744073709551615") && uint64_t (ev.value) == 18446744073709551615);
   }
   { // SEQUENCE
     TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");

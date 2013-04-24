@@ -227,7 +227,7 @@ class TypeInfo (BaseDecl):
     assert isinstance (ident, str)
     assert isinstance (label, str)
     assert isinstance (blurb, str)
-    assert isinstance (number, int)
+    assert isinstance (number, (int, long))
     self.options += [ (ident, label, blurb, number) ]
   def has_option (self, ident = None, label = None, blurb = None, number = None):
     assert self.storage == ENUM

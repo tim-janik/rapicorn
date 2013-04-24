@@ -141,7 +141,7 @@ class YYGlobals (object):
     if adef == None:
       pass # no default arg
     elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64):
-      if not isinstance (adef, (bool, int, float)):
+      if not isinstance (adef, (bool, int, long, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
       if adef != 0:
@@ -280,7 +280,7 @@ def unquote (qstring):
   import rfc822
   return rfc822.unquote (qstring)
 def TN (number_candidate):  # test number
-  return isinstance (number_candidate, int) or isinstance (number_candidate, float)
+  return isinstance (number_candidate, (int, long)) or isinstance (number_candidate, float)
 def TS (string_candidate):  # test string
   return isinstance (string_candidate, str) and len (string_candidate) >= 2
 def TSp (string_candidate): # test plain string

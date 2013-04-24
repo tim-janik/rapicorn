@@ -12,7 +12,18 @@ namespace AidaTests {
   typedef float64 FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
   typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
 
-  enum EnumType { ENUM_VALUE0, ENUM_VALUE1 };
+  enum EnumType {
+    ENUM_VALUE_0 = 0,
+    ENUM_VALUE_1 = 1,
+    ENUM_VALUE__1 = -1,
+    ENUM_VALUE_4294967295 = 4294967295,
+    ENUM_VALUE_4294967296 = 4294967296,
+    ENUM_VALUE__4294967296 = -4294967296,
+    ENUM_VALUE_9223372036854775807 = 9223372036854775807,
+    ENUM_VALUE__9223372036854775808 = -9223372036854775808,
+    ENUM_VALUE_9223372036854775808 = 9223372036854775808,
+    ENUM_VALUE_18446744073709551615 = 18446744073709551615,
+  };
 
   typedef EnumType Enum1;
 
