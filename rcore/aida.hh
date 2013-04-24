@@ -78,6 +78,8 @@ struct TypeCode /// Representation of type information to describe structured ty
   struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
   size_t                enum_count      () const;               ///< Number of enum values for an enum type.
   EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
+  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
+  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.

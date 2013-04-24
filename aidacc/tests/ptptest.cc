@@ -250,14 +250,24 @@ type_code_tests ()
     TypeCode::EnumValue ev;
     ev = t.enum_value (0); assert (ev.ident == String ("ENUM_VALUE_0") && ev.value == 0);
     ev = t.enum_value (1); assert (ev.ident == String ("ENUM_VALUE_1") && ev.value == 1);
-    ev = t.enum_value (2); assert (ev.ident == String ("ENUM_VALUE__1") && ev.value == -1);
+    ev = t.enum_value (2); assert (ev.ident == String ("ENUM_VALUE__2") && ev.value == -2);
     ev = t.enum_value (3); assert (ev.ident == String ("ENUM_VALUE_4294967295") && ev.value == 4294967295);
     ev = t.enum_value (4); assert (ev.ident == String ("ENUM_VALUE_4294967296") && ev.value == 4294967296);
     ev = t.enum_value (5); assert (ev.ident == String ("ENUM_VALUE__4294967296") && ev.value == -4294967296);
     ev = t.enum_value (6); assert (ev.ident == String ("ENUM_VALUE_9223372036854775807") && ev.value == 9223372036854775807);
-    ev = t.enum_value (7); assert (ev.ident == String ("ENUM_VALUE__9223372036854775808") && ev.value == -9223372036854775808);
-    ev = t.enum_value (8); assert (ev.ident == String ("ENUM_VALUE_9223372036854775808") && uint64_t (ev.value) == 9223372036854775808);
-    ev = t.enum_value (9); assert (ev.ident == String ("ENUM_VALUE_18446744073709551615") && uint64_t (ev.value) == 18446744073709551615);
+    ev = t.enum_value (7); assert (ev.ident == String ("ENUM_VALUE__9223372036854775808") && uint64_t (ev.value) == -9223372036854775808U);
+    ev = t.enum_value (8); assert (ev.ident == String ("ENUM_VALUE_9223372036854775808") && uint64_t (ev.value) == 9223372036854775808U);
+    ev = t.enum_value (9); assert (ev.ident == String ("ENUM_VALUE_18446744073709551615") && uint64_t (ev.value) == 18446744073709551615U);
+    ev = t.enum_find (-4294967296); assert (ev.ident == String ("ENUM_VALUE__4294967296"));
+    ev = t.enum_find (-9223372036854775808U); assert (ev.ident == String ("ENUM_VALUE__9223372036854775808"));
+    ev = t.enum_find (18446744073709551615U); assert (ev.ident == String ("ENUM_VALUE_18446744073709551615"));
+    ev = t.enum_find ("ENUM_VALUE_1"); assert (ev.value == 1);
+    ev = t.enum_find ("ENUM_VALUE__2"); assert (ev.value == -2);
+    ev = t.enum_find ("ENUM_VALUE_9223372036854775807"); assert (ev.value == 9223372036854775807);
+    ev = t.enum_find ("ENUM_VALUE_18446744073709551615"); assert (uint64_t (ev.value) == 18446744073709551615U);
+    ev = t.enum_find ("__2"); assert (ev.value == -2);
+    ev = t.enum_find ("VALUE--2"); assert (ev.value == -2);
+    ev = t.enum_find ("-VALUE--2"); assert (ev.value == -2);
   }
   { // SEQUENCE
     TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");

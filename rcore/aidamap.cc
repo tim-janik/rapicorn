@@ -446,6 +446,42 @@ TypeCode::enum_value (const size_t index) const
   return ev;
 }
 
+TypeCode::EnumValue
+TypeCode::enum_find (int64 value) const
+{
+  const EnumValue ev;
+  if (kind() != ENUM)
+    return ev;
+  InternalList *il = handle_->internal_list (type_->custom);
+  if (!il || il->length == 0 || il->length % 5 != 0)
+    __AIDA_return_EFAULT (ev);
+  for (size_t i = 0; i < il->length / 5; i++)
+    {
+      const int64 evalue = handle_->internal_big_int (il->items[i * 5 + 0], il->items[i * 5 + 1]);
+      if (value == evalue)
+        return enum_value (i);
+    }
+  return ev;
+}
+
+TypeCode::EnumValue
+TypeCode::enum_find (const String &name) const
+{
+  const EnumValue ev;
+  if (kind() != ENUM)
+    return ev;
+  InternalList *il = handle_->internal_list (type_->custom);
+  if (!il || il->length == 0 || il->length % 5 != 0)
+    __AIDA_return_EFAULT (ev);
+  for (size_t i = 0; i < il->length / 5; i++)
+    {
+      const char *ident = handle_->simple_cstring (il->items[i * 5 + 2]);
+      if (ident && string_match_identifier_tail (ident, name))
+        return enum_value (i);
+    }
+  return ev;
+}
+
 size_t
 TypeCode::prerequisite_count () const
 {
