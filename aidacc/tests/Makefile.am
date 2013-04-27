@@ -8,13 +8,20 @@ AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
+# == ptptest ==
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 ptptest_LDFLAGS = -pthread -lpthread
 ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
-$(srcdir)/ptptest.cc: typecodetests.typ
+ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
 EXTRA_DIST += typecodetests.idl
-CLEANFILES += typecodetests.typ
+typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC) $(CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) ${AIDACC} -x CxxStub -G clienthh $< -o xgen-$(@F).hh
+	$(Q) ${AIDACC} -x CxxStub -G clientcc $< -o xgen-$(@F).cc
+	$(Q) cat xgen-$(@F).hh xgen-$(@F).cc >$@
+	$(Q) rm -f xgen-$(@F).hh xgen-$(@F).cc
+CLEANFILES += typecodetests.typ typecodetests-api.cc
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
 EXTRA_DIST += testfail.ref

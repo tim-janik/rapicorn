@@ -4,6 +4,7 @@
 #include <rapicorn-core.hh>
 #include <cstring>
 #include <cassert>
+#include "typecodetests-api.cc"
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
@@ -314,8 +315,11 @@ type_code_tests ()
     assert (f.kind() == STRING);
     assert (f.name() == "stringfield");
     f = t.field (3);
-    assert (f.kind() == ANY);
-    assert (f.name() == "anyfield");
+    assert (f.name() == "enumfield");
+    assert (f.kind() == TYPE_REFERENCE);
+    TypeCode e = TypeMap::lookup (f.origin());
+    assert (e.kind() == ENUM);
+    assert (e.name() == "AidaTests::EnumType");
   }
   // done
   printf ("  TEST   Aida IDL type codes                                             OK\n");
@@ -369,6 +373,24 @@ any_test_get (const Any &a, int what)
                  !(*p >>= s)) return false;     assert (s == "SecondAny"); break;
     }
   return true;
+}
+
+static void
+test_records ()
+{
+  AidaTests::SimpleRecord sr;
+  sr.intfield = 4;
+  sr.floatfield = 3.3;
+  sr.stringfield = "two";
+  sr.enumfield = AidaTests::ENUM_VALUE_1;
+  FieldBuffer8 fb8;
+  fb8 <<= sr;
+  AidaTests::SimpleRecord sq;
+  assert (sq.intfield != sr.intfield && sq.floatfield != sr.floatfield && sq.stringfield != sr.stringfield && sq.enumfield != sr.enumfield);
+  FieldReader fbr (fb8);
+  fbr >>= sq;
+  assert (sq.intfield == sr.intfield && sq.floatfield == sr.floatfield && sq.stringfield == sr.stringfield && sq.enumfield == sr.enumfield);
+  printf ("  TEST   Aida Record tests                                               OK\n");
 }
 
 static void
@@ -486,6 +508,7 @@ main (int   argc,
           type_code_tests();
           test_any();
           test_dynamics();
+          test_records();
           return 0;
         }
       else if (strcmp (argv[i], "--") == 0)

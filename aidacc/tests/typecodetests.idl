@@ -37,8 +37,13 @@ namespace AidaTests {
   record SimpleRecord {
     int32    intfield;
     float64  floatfield;
-    String stringfield;
-    Any    anyfield;
+    String   stringfield;
+    EnumType enumfield;
   };
 
-}
+  record ComboRecord {
+    SimpleRecord simple_rec;
+    Any          any_field;
+  };
+
+} // AidaTests
