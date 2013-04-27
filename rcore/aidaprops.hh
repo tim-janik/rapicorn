@@ -2,7 +2,8 @@
 #ifndef __RAPICORN_AIDA_PROPS_HH__
 #define __RAPICORN_AIDA_PROPS_HH__
 
-#include <rcore/aidaenums.hh>
+#include <rcore/aida.hh>
+#include <rcore/strings.hh>
 
 namespace Rapicorn { namespace Aida {
 

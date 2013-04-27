@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
 	aida.hh		blobres.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
-	objects.hh	aidaenums.hh	aidaprops.hh	\
+	objects.hh	aidaprops.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
 	quicktimer.hh	thread.hh	\
@@ -23,7 +23,7 @@ rapicorn_cc_sources = $(sort	\
 	aida.cc		blobres.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
-	objects.cc	aidaenums.cc	aidaprops.cc	\
+	objects.cc	aidaprops.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
 	quicktimer.cc	thread.cc	\

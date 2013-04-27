@@ -270,24 +270,10 @@ class Generator:
     s += '  return back();\n'
     s += '}\n'
     return s
-  def generate_enum_impl (self, type_info):
-    s = '\n'
-    ns, nm = self.namespaced_identifier (None), type_info.name
-    s += 'static Rapicorn::Init __aida_autoinit__%s ([]() {\n' % nm
-    s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
-    for opt in type_info.options:
-      (ident, label, blurb, number) = opt
-      s += '    RAPICORN_AIDA_ENUM_INFO_VALUE (%s),\n' % ident
-    s += '  };\n'
-    s += '  Rapicorn::Aida::EnumInfo::enlist ("%s", "%s", enum_values);\n' % (ns, nm)
-    s += '});\n'
-    return s
   def generate_enum_info_specialization (self, type_info):
     s = '\n'
     classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
     s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
-    ns, nm = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
-    s += 'template<> inline EnumInfo enum_info<%s::%s>() { return EnumInfo::from_nsid ("%s", "%s"); }\n' % (ns, nm, ns, nm)
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -1120,9 +1106,6 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
-          s += self.open_namespace (tp)
-          s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             s += self.open_namespace (tp)
