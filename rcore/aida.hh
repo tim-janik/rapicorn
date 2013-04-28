@@ -181,6 +181,8 @@ public:
 #endif // DOXYGEN
   typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
   typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
+protected:
+  bool  plain_zero_type (TypeKind kind);
 private:
   TypeCode type_code;
   union {
@@ -195,6 +197,7 @@ private:
 public:
   /*dtor*/ ~Any    ();                                   ///< Any destructor.
   explicit  Any    ();                                   ///< Default initialize Any with no type.
+  explicit  Any    (const TypeCode &tc);                 ///< Default initialize Any for a specific type.
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
   template<class V>
   explicit  Any    (const V &value);                     ///< Initialize Any with a @a value convertible to an Any.
@@ -597,6 +600,27 @@ inline
 Any::Any() :
   type_code (TypeMap::notype()), u {0}
 {}
+
+inline
+Any::Any (const TypeCode &tc) :
+  type_code (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u {0}
+{
+  if (!plain_zero_type (tc.kind()))
+    retype (tc);        // carry out special initializations
+}
+
+inline bool
+Any::plain_zero_type (TypeKind kind)
+{
+  switch (kind)
+    {
+    case UNTYPED: case BOOL: case INT32: case INT64: case FLOAT64: case ENUM:
+      return true;      // simple, properly initialized with u {0}
+    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE:
+    default:
+      return false;     // complex types, needing special initializations
+    }
+}
 
 inline
 Any::Any (const Any &clone) :
