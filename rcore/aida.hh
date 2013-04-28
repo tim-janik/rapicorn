@@ -346,6 +346,8 @@ public:
   explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
   bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
   bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
+  bool              operator==    (const SmartHandle&) const noexcept;
+  bool              operator!=    (const SmartHandle&) const noexcept;
 };
 inline bool operator== (std::nullptr_t, const SmartHandle &shd) noexcept { return !static_cast<bool> (shd); }
 inline bool operator!= (std::nullptr_t, const SmartHandle &shd) noexcept { return static_cast<bool> (shd); }

@@ -386,10 +386,10 @@ test_records ()
   FieldBuffer8 fb8;
   fb8 <<= sr;
   AidaTests::SimpleRecord sq;
-  assert (sq.intfield != sr.intfield && sq.floatfield != sr.floatfield && sq.stringfield != sr.stringfield && sq.enumfield != sr.enumfield);
+  assert (sq != sr);
   FieldReader fbr (fb8);
   fbr >>= sq;
-  assert (sq.intfield == sr.intfield && sq.floatfield == sr.floatfield && sq.stringfield == sr.stringfield && sq.enumfield == sr.enumfield);
+  assert (sq == sr);
   printf ("  TEST   Aida Record tests                                               OK\n");
 }
 

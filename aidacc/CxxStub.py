@@ -204,6 +204,9 @@ class Generator:
       s += ' }\n'
     s += '  ' + self.F ('std::string') + '__aida_type_name__ ()\t{ return "%s"; }\n' % classFull
     s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ ()\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
+    if type_info.storage == Decls.RECORD:
+      s += '  ' + self.F ('bool') + 'operator== (const %s &other) const;\n' % self.C (type_info)
+      s += '  ' + self.F ('bool') + 'operator!= (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -227,6 +230,13 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
+    s += 'bool\n'
+    s += '%s::operator== (const %s &other) const\n{\n' % (self.C (type_info), self.C (type_info))
+    for field in type_info.fields:
+      ident, type_node = field
+      s += '  if (this->%s != other.%s) return false;\n' % (ident, ident)
+    s += '  return true;\n'
+    s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)

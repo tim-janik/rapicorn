@@ -513,6 +513,20 @@ SmartHandle::assign (const SmartHandle &src)
 SmartHandle::~SmartHandle()
 {}
 
+bool
+SmartHandle::operator== (const SmartHandle &other) const noexcept
+{
+  if (orbo_ && other.orbo_)
+    return orbo_->orbid() == other.orbo_->orbid();
+  return orbo_ == other.orbo_;
+}
+
+bool
+SmartHandle::operator!= (const SmartHandle &other) const noexcept
+{
+  return !operator== (other);
+}
+
 // == ObjectBroker ==
 typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
 static OrboMap orbo_map;
