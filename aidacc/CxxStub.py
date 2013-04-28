@@ -970,6 +970,15 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_virtual_method_skel (m, type_info)
     return s
+  def c_long_postfix (self, number):
+    num, minus = (-number, '-') if number < 0 else (number, '')
+    if num <= 2147483647:
+      return minus + str (num)
+    if num <= 9223372036854775807:
+      return minus + str (num) + 'LL'
+    if num <= 18446744073709551615:
+      return minus + str (num) + 'uLL'
+    return number # not a ULL?
   def generate_enum_decl (self, type_info):
     s = '\n'
     nm = type_info.name
@@ -978,7 +987,7 @@ class Generator:
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
-      s += '  %s = %s,' % (ident, number)
+      s += '  %s = %s,' % (ident, self.c_long_postfix (number))
       if blurb:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
