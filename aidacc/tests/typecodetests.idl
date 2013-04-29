@@ -35,7 +35,10 @@ namespace AidaTests {
   };
 
   record SimpleRecord {
-    int32    intfield;
+    bool     b1;
+    bool     b2;
+    int32    int3;
+    int64    int6;
     float64  floatfield;
     String   stringfield;
     EnumType enumfield;

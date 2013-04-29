@@ -304,19 +304,29 @@ type_code_tests ()
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
-    assert (t.field_count() == 4);
-    TypeCode f = t.field (0);
+    uint i = 0;
+    TypeCode f = t.field (i++);
+    assert (f.kind() == BOOL);
+    assert (f.name() == "b1");
+    f = t.field (i++);
+    assert (f.kind() == BOOL);
+    assert (f.name() == "b2");
+    f = t.field (i++);
     assert (f.kind() == INT32);
-    assert (f.name() == "intfield");
-    f = t.field (1);
+    assert (f.name() == "int3");
+    f = t.field (i++);
+    assert (f.kind() == INT64);
+    assert (f.name() == "int6");
+    f = t.field (i++);
     assert (f.kind() == FLOAT64);
     assert (f.name() == "floatfield");
-    f = t.field (2);
+    f = t.field (i++);
     assert (f.kind() == STRING);
     assert (f.name() == "stringfield");
-    f = t.field (3);
+    f = t.field (i++);
     assert (f.name() == "enumfield");
     assert (f.kind() == TYPE_REFERENCE);
+    assert (t.field_count() == i);
     TypeCode e = TypeMap::lookup (f.origin());
     assert (e.kind() == ENUM);
     assert (e.name() == "AidaTests::EnumType");
@@ -391,7 +401,10 @@ static void
 test_records ()
 {
   AidaTests::SimpleRecord sr;
-  sr.intfield = 4;
+  sr.b1 = 1;
+  sr.b2 = 0;
+  sr.int3 = 3;
+  sr.int6 = -6;
   sr.floatfield = 3.3;
   sr.stringfield = "two";
   sr.enumfield = AidaTests::ENUM_VALUE_1;
