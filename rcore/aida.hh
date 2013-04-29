@@ -154,7 +154,7 @@ protected:
   bool                        __aida_setter__     (const std::string &property_name, const std::string &value);
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
-  virtual std::string        __aida_type_name__   () = 0; ///< Retrieve the IDL type name of an instance.
+  virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
 };
 
 // == Any Type ==
@@ -185,7 +185,7 @@ public:
   typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
 protected:
   bool  plain_zero_type (TypeKind kind);
-  template<class Rec> static void any_from_record (Any &any, Rec &record);
+  template<class Rec> static void any_from_record (Any &any, const Rec &record);
   template<class Rec> static void any_to_record   (Any &any, Rec &record);
 private:
   TypeCode type_code;
@@ -640,7 +640,7 @@ Any::~Any ()
 }
 
 template<class Rec> inline void
-Any::any_from_record (Any &any, Rec &record)
+Any::any_from_record (Any &any, const Rec &record)
 {
   const std::string record_type_name = record.__aida_type_name__();
   TypeCode type_code = TypeMap::lookup (record_type_name);

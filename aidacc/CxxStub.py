@@ -202,11 +202,13 @@ class Generator:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-    s += '  ' + self.F ('std::string') + '__aida_type_name__ ()\t{ return "%s"; }\n' % classFull
-    s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ ()\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
+    s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ () const\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if type_info.storage == Decls.RECORD:
-      s += '  ' + self.F ('bool') + 'operator== (const %s &other) const;\n' % self.C (type_info)
-      s += '  ' + self.F ('bool') + 'operator!= (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
+      s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
+      s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
+      s += '  ' + self.F ('void') + 'operator<<= (Rapicorn::Aida::Any &any);\n'
+      s += '  ' + self.F ('friend void') + 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec);\n' % self.C (type_info)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -236,6 +238,17 @@ class Generator:
       ident, type_node = field
       s += '  if (this->%s != other.%s) return false;\n' % (ident, ident)
     s += '  return true;\n'
+    s += '}\n'
+
+    s += 'void\n'
+    s += '%s::operator<<= (Rapicorn::Aida::Any &any)\n{\n' % self.C (type_info)
+    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };\n'
+    s += '  Any::any_to_record (any, *this);\n'
+    s += '}\n'
+    s += 'void\n' # friend decl
+    s += 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec)\n{\n' % self.C (type_info)
+    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };\n'
+    s += '  Any::any_from_record (any, rec);\n'
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
@@ -385,7 +398,7 @@ class Generator:
       s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '         __aida_type_code__ ()\t'
       s += '{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
+      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
       s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'

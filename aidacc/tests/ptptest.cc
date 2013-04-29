@@ -385,18 +385,6 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
-void operator<<= (Rapicorn::Aida::Any &any, AidaTests::SimpleRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
-}
-
-void operator<<= (AidaTests::SimpleRecord &rec, Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, rec);
-}
-
 static void
 test_records ()
 {

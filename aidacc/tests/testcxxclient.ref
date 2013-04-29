@@ -268,10 +268,12 @@ struct XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::XFooRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const XFooRecord &other) const;
-  bool                          operator!= (const XFooRecord &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const XFooRecord &other) const;
+  bool                          operator!=  (const XFooRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
@@ -280,8 +282,8 @@ struct XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::XFooSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
@@ -290,8 +292,8 @@ struct IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::IntSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
@@ -300,8 +302,8 @@ struct FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::FloatSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
@@ -310,8 +312,8 @@ struct StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::StringSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
@@ -320,8 +322,8 @@ struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
@@ -330,8 +332,8 @@ struct RecordSequence : public std::vector<XFooRecord>
 {
   typedef std::vector<XFooRecord> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::RecordSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
@@ -340,8 +342,8 @@ struct SequenceSequence : public std::vector<IntSequence>
 {
   typedef std::vector<IntSequence> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::SequenceSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
@@ -350,8 +352,8 @@ struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstI
 {
   typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::InterfaceSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
@@ -360,8 +362,8 @@ struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::AnySequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
@@ -373,10 +375,12 @@ struct NestedTypesRec
   XFooSequence                  seq;
   /// @endcond
   inline                        NestedTypesRec () { }
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NestedTypesRec"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const NestedTypesRec &other) const;
-  bool                          operator!= (const NestedTypesRec &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const NestedTypesRec &other) const;
+  bool                          operator!=  (const NestedTypesRec &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
@@ -385,8 +389,8 @@ struct NestedTypesSeq : public std::vector<NestedTypesRec>
 {
   typedef std::vector<NestedTypesRec> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NestedTypesSeq"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
@@ -418,10 +422,12 @@ struct NewRecord
   NestedTypesRec                ntr;
   /// @endcond
   inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::NewRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const NewRecord &other) const;
-  bool                          operator!= (const NewRecord &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const NewRecord &other) const;
+  bool                          operator!=  (const NewRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
@@ -436,10 +442,12 @@ struct InnerRecord
   NewRecord                     rec;
   /// @endcond
   inline                        InnerRecord () { x = 0; y = 0; }
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::Inner::InnerRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const InnerRecord &other) const;
-  bool                          operator!= (const InnerRecord &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const InnerRecord &other) const;
+  bool                          operator!=  (const InnerRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
@@ -451,10 +459,12 @@ struct Refer2Inner
   Inner::InnerRecord            r;
   /// @endcond
   inline                        Refer2Inner () { }
-  std::string                   __aida_type_name__ ()	{ return "MandatoryNamespace::Refer2Inner"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const Refer2Inner &other) const;
-  bool                          operator!= (const Refer2Inner &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const Refer2Inner &other) const;
+  bool                          operator!=  (const Refer2Inner &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
 void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
@@ -471,10 +481,12 @@ struct SomeRecord
   MandatoryNamespace::Inner::InnerRecord r4;
   /// @endcond
   inline                        SomeRecord () { }
-  std::string                   __aida_type_name__ ()	{ return "OtherNamespace::SomeRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const SomeRecord &other) const;
-  bool                          operator!= (const SomeRecord &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const SomeRecord &other) const;
+  bool                          operator!=  (const SomeRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
@@ -630,10 +642,12 @@ struct QuickRecord
   int                           int2;
   /// @endcond
   inline                        QuickRecord () { int1 = 0; int2 = 0; }
-  std::string                   __aida_type_name__ ()	{ return "InterfaceTests::QuickRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const QuickRecord &other) const;
-  bool                          operator!= (const QuickRecord &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const QuickRecord &other) const;
+  bool                          operator!=  (const QuickRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
@@ -642,8 +656,8 @@ struct QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ ()	{ return "InterfaceTests::QuickSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
@@ -1031,10 +1045,12 @@ struct RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
-  std::string                   __aida_type_name__ ()	{ return "BseTest::RecordForGroups"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
-  bool                          operator== (const RecordForGroups &other) const;
-  bool                          operator!= (const RecordForGroups &other) const { return !operator== (other); }
+  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const RecordForGroups &other) const;
+  bool                          operator!=  (const RecordForGroups &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
@@ -1181,6 +1197,18 @@ XFooRecord::operator== (const XFooRecord &other) const
   if (this->any2 != other.any2) return false;
   if (this->any3 != other.any3) return false;
   return true;
+}
+void
+XFooRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecord &self)
@@ -1461,6 +1489,18 @@ NestedTypesRec::operator== (const NestedTypesRec &other) const
   if (this->seq != other.seq) return false;
   return true;
 }
+void
+NestedTypesRec::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRec &self)
 {
@@ -1510,6 +1550,18 @@ NewRecord::operator== (const NewRecord &other) const
   if (this->ntr != other.ntr) return false;
   return true;
 }
+void
+NewRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecord &self)
 {
@@ -1539,6 +1591,18 @@ InnerRecord::operator== (const InnerRecord &other) const
   if (this->rec != other.rec) return false;
   return true;
 }
+void
+InnerRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecord &self)
 {
@@ -1562,6 +1626,18 @@ Refer2Inner::operator== (const Refer2Inner &other) const
 {
   if (this->r != other.r) return false;
   return true;
+}
+void
+Refer2Inner::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2Inner &self)
@@ -1587,6 +1663,18 @@ SomeRecord::operator== (const SomeRecord &other) const
   if (this->r3 != other.r3) return false;
   if (this->r4 != other.r4) return false;
   return true;
+}
+void
+SomeRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecord &self)
@@ -2109,6 +2197,18 @@ QuickRecord::operator== (const QuickRecord &other) const
   if (this->int1 != other.int1) return false;
   if (this->int2 != other.int2) return false;
   return true;
+}
+void
+QuickRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecord &self)
@@ -3836,6 +3936,18 @@ RecordForGroups::operator== (const RecordForGroups &other) const
   if (this->threshold1 != other.threshold1) return false;
   if (this->threshold2 != other.threshold2) return false;
   return true;
+}
+void
+RecordForGroups::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroups &self)
