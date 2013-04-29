@@ -28,6 +28,7 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_ISLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 1)
 #define AIDA_UNLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 0)
 #define AIDA_ASSERT(expr)       do { if (__builtin_expect (!(expr), 0)) ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); } while (0)
+#define AIDA_ASSERT_RETURN(expr,...) do { if (__builtin_expect (!!(expr), 1)) break; ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); return __VA_ARGS__; } while (0)
 #else   // !__GNUC__
 #define AIDA_UNUSED
 #define AIDA_DEPRECATED
