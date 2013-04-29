@@ -147,6 +147,22 @@ public:
     assert (handle->ref_count_ == 1);
     return type_map;
   }
+  TypeCode
+  lookup_local (std::string name)
+  {
+    InternalList *il = internal_list (imap->types);
+    const size_t clen = name.size();
+    const char* cname = name.data(); // not 0-terminated
+    if (AIDA_LIKELY (il))
+      for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
+        {
+          InternalType *it = internal_type (il->items[i]);
+          InternalString *is = AIDA_LIKELY (it) ? internal_string (it->name) : NULL;
+          if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
+            return TypeCode (this, it);
+        }
+    return TypeCode::notype (this);
+  }
 private:
   MapHandle (void *addr, size_t length, bool needs_free) :
     imap ((InternalMap*) addr), ref_count_ (0), length_ (length),
@@ -284,18 +300,7 @@ TypeMap::lookup (std::string name)
 TypeCode
 TypeMap::lookup_local (std::string name) const
 {
-  InternalList *il = handle_->internal_list (handle_->imap->types);
-  const size_t clen = name.size();
-  const char* cname = name.data(); // not 0-terminated
-  if (AIDA_LIKELY (il))
-    for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
-      {
-        InternalType *it = handle_->internal_type (il->items[i]);
-        InternalString *is = AIDA_LIKELY (it) ? handle_->internal_string (it->name) : NULL;
-        if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
-          return TypeCode (handle_, it);
-      }
-  return TypeCode::notype (handle_);
+  return handle_->lookup_local (name);
 }
 
 TypeCode
@@ -617,12 +622,27 @@ TypeCode::field (size_t index) const // RECORD or SEQUENCE
 }
 
 std::string
-TypeCode::origin () const // type for TYPE_REFERENCE
+TypeCode::origin () const // type name for TYPE_REFERENCE
 {
   std::string s;
   if (kind() != TYPE_REFERENCE)
     return s;
   return handle_->simple_string (type_->custom);
+}
+
+TypeCode
+TypeCode::resolve () const // type for TYPE_REFERENCE
+{
+  TypeCode tc = *this;
+  while (tc.kind() == TYPE_REFERENCE)
+    {
+      TypeCode rc = handle_->lookup_local (tc.origin());
+      if (rc.kind() == UNTYPED) // local lookup failed
+        tc = TypeMap::lookup (tc.origin());
+      else
+        tc = rc;
+    }
+  return tc;
 }
 
 bool

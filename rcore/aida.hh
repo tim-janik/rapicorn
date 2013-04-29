@@ -86,6 +86,7 @@ struct TypeCode /// Representation of type information to describe structured ty
   size_t                field_count     () const;               ///< Number of fields in a record type.
   TypeCode              field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
   std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
+  TypeCode              resolve         () const;               ///< Returns type code after resolving kind TYPE_REFERENCE.
   bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
   struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
