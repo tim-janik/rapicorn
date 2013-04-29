@@ -375,6 +375,18 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
+void operator<<= (Rapicorn::Aida::Any &any, AidaTests::SimpleRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
+
+void operator<<= (AidaTests::SimpleRecord &rec, Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, rec);
+}
+
 static void
 test_records ()
 {
@@ -391,6 +403,13 @@ test_records ()
   fbr >>= sq;
   assert (sq == sr);
   printf ("  TEST   Aida Record tests                                               OK\n");
+
+  Any any1;
+  any1 <<= sr;
+  AidaTests::SimpleRecord s2;
+  s2 <<= any1;
+  assert (s2 == sr);
+  printf ("  TEST   Aida Record to Any                                              OK\n");
 }
 
 static void
