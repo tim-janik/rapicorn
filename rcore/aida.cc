@@ -466,6 +466,108 @@ Any::operator<<= (const FieldVector &v)
     }
 }
 
+void
+Any::from_proto (const TypeCode type_code, FieldReader &fbr)
+{
+  assert_return (type_code.kind() == RECORD);
+  const size_t field_count = type_code.field_count();
+  assert_return (fbr.n_types() == field_count);
+  FieldVector fields;
+  for (size_t i = 0; i < field_count; i++)
+    {
+      TypeCode ftc = type_code.field (i).resolve();
+      Any fany (ftc);
+      switch (ftc.kind())
+        {
+        case BOOL:
+          fany <<= fbr.pop_bool();
+          break;
+        case INT32:
+          fany <<= fbr.pop_int64();
+          break;
+        case INT64:
+          fany <<= fbr.pop_int64();
+          break;
+        case FLOAT64:
+          fany <<= fbr.pop_double();
+          break;
+        case STRING:
+          fany <<= fbr.pop_string();
+          break;
+        case ENUM:
+          fany <<= fbr.pop_evalue();
+          break;
+        case ANY:
+          fany <<= fbr.pop_any();
+          break;
+        case INSTANCE:
+          fany <<= fbr.pop_object();
+          break;
+        case SEQUENCE: // ?
+        case RECORD: // ?
+        case TYPE_REFERENCE: // ?
+        default:
+          critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
+          break;
+        }
+      fields.push_back (Any::Field (ftc.name(), fany));
+    }
+  retype (type_code);
+  *this <<= fields;
+}
+
+void
+Any::to_proto (const TypeCode type_code, FieldBuffer &fb)
+{
+  AIDA_ASSERT_RETURN (kind() == RECORD);
+  assert_return (type_code.kind() == RECORD);
+  const size_t field_count = type_code.field_count();
+  assert_return (fb.capacity() - fb.size() >= field_count);
+  const FieldVector *fields = NULL;
+  *this >>= fields;
+  assert_return (fields != NULL);
+  for (size_t i = 0; i < field_count; i++)
+    {
+      TypeCode ftc = type_code.field (i).resolve();
+      const Any *pany = NULL;
+      for (size_t j = 0; j < fields->size(); j++)
+        if ((*fields)[j].name == ftc.name())
+          pany = &(*fields)[j];
+      uint64_t amem[(sizeof (Any) + 7) / 8];
+      const Any &fany = *(pany ? pany : new (amem) Any (ftc));          // stack Any constructor
+      switch (ftc.kind())
+        {
+        case BOOL:
+          fb.add_bool (fany.as_int());
+          break;
+        case INT32: case INT64:
+          fb.add_int64 (fany.as_int());
+          break;
+        case FLOAT64:
+          fb.add_double (fany.as_float());
+          break;
+        case STRING:
+          fb.add_string (fany.as_string());
+          break;
+        case ENUM:
+          fb.add_evalue (fany.as_int());
+          break;
+        case ANY:
+          fb.add_any (fany.as_any());
+          break;
+        case INSTANCE:  // ? fb.add_object (fany.as_int());
+        case SEQUENCE:  // ?
+        case RECORD:    // ?
+        case TYPE_REFERENCE: // ?
+        default:
+          critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
+          break;
+        }
+      if (!pany)
+        fany.~Any();                                                    // stack Any destructor
+    }
+}
+
 // == OrbObject ==
 OrbObject::OrbObject (uint64_t orbid) :
   orbid_ (orbid)

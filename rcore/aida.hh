@@ -185,6 +185,8 @@ public:
   typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
 protected:
   bool  plain_zero_type (TypeKind kind);
+  template<class Rec> static void any_from_record (Any &any, Rec &record);
+  template<class Rec> static void any_to_record   (Any &any, Rec &record);
 private:
   TypeCode type_code;
   union {
@@ -196,6 +198,8 @@ private:
   void    rekind  (TypeKind _kind);
   void    reset   ();
   bool    to_int  (int64_t &v, char b) const;
+  void    to_proto   (const TypeCode type_code, FieldBuffer &fb);
+  void    from_proto (const TypeCode type_code, FieldReader &fbr);
 public:
   /*dtor*/ ~Any    ();                                   ///< Any destructor.
   explicit  Any    ();                                   ///< Default initialize Any with no type.
@@ -633,6 +637,37 @@ inline
 Any::~Any ()
 {
   reset();
+}
+
+template<class Rec> inline void
+Any::any_from_record (Any &any, Rec &record)
+{
+  const std::string record_type_name = record.__aida_type_name__();
+  TypeCode type_code = TypeMap::lookup (record_type_name);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  FieldBuffer8 cfb (1);
+  cfb <<= record;
+  FieldReader fbr (cfb);
+  AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
+  const FieldBuffer &rfb = fbr.get_rec();
+  fbr.reset (rfb);
+  any.from_proto (type_code, fbr);
+}
+
+template<class Rec> inline void
+Any::any_to_record (Any &any, Rec &record)
+{
+  AIDA_ASSERT_RETURN (any.kind() == RECORD);
+  const std::string record_type_name = record.__aida_type_name__();
+  TypeCode type_code = TypeMap::lookup (record_type_name);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  const size_t field_count = type_code.field_count();
+  FieldBuffer8 cfb (1);
+  FieldBuffer &rfb = cfb.add_rec (field_count);
+  any.to_proto (type_code, rfb);
+  FieldReader fbr (cfb);
+  AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
+  fbr >>= record;
 }
 
 template<class TargetHandle> TargetHandle
