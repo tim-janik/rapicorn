@@ -389,16 +389,14 @@ public:
 };
 
 // == FieldBuffer ==
-class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
-
 union FieldUnion {
   int64_t      vint64;
   double       vdouble;
   Any         *vany;
-  uint64_t     smem[(sizeof (std::string) + 7) / 8];      // String
-  uint64_t     bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
+  uint64_t     smem[(sizeof (std::string) + 7) / 8];    // String memory
+  void        *pmem[2];                 // equate sizeof (FieldBuffer)
   uint8_t      bytes[8];                // FieldBuffer types
-  struct { uint32_t capacity, index; }; // FieldBuffer.buffermem[0]
+  struct { uint32_t index, capacity; }; // FieldBuffer.buffermem[0]
 };
 
 struct EnumValue { int64_t v; EnumValue (int64_t e) : v (e) {} };
@@ -413,16 +411,16 @@ protected:
   inline uint32_t    offset () const { const uint32_t offs = 1 + (capacity() + 7) / 8; return offs; }
   inline TypeKind    type_at  (uint32_t n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline uint32_t    size () const           { return buffermem[0].index; }
   inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline FieldUnion& uat (uint32_t n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
+  inline FieldUnion& uat (uint32_t n) const { return AIDA_LIKELY (n < size()) ? upeek (n) : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint32_t _ntypes);
   explicit           FieldBuffer (uint32_t, FieldUnion*, uint32_t);
 public:
   virtual     ~FieldBuffer();
+  inline uint32_t size     () const        { return buffermem[0].index; }
   inline uint32_t capacity () const        { return buffermem[0].capacity; }
-  inline uint64_t first_id () const        { return buffermem && size() && type_at (0) == INT64 ? upeek (0).vint64 : 0; }
+  inline uint64_t first_id () const        { return AIDA_LIKELY (buffermem && size() && type_at (0) == INT64) ? upeek (0).vint64 : 0; }
   inline void add_bool   (bool    vbool)   { FieldUnion &u = addu (BOOL); u.vint64 = vbool; }
   inline void add_int64  (int64_t vint64)  { FieldUnion &u = addu (INT64); u.vint64 = vint64; }
   inline void add_evalue (int64_t vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
@@ -458,7 +456,7 @@ class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 
   FieldUnion bmem[1 + 1 + 8];
 public:
   virtual ~FieldBuffer8 () { reset(); buffermem = NULL; }
-  inline   FieldBuffer8 (uint32_t ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
+  inline   FieldBuffer8 (uint32_t ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
 };
 
 class FieldReader { // read field buffer contents
