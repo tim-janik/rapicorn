@@ -466,113 +466,193 @@ Any::operator<<= (const FieldVector &v)
     }
 }
 
-void
-Any::from_proto (const TypeCode type_code, FieldReader &fbr)
+static void any_struct_from_proto (Any &any, const TypeCode type_code, FieldReader &pbr);
+
+static void
+any_value_from_proto (Any &any, const TypeCode type_code, FieldReader &pbr)
 {
-  assert_return (type_code.kind() == RECORD);
-  const size_t field_count = type_code.field_count();
-  assert_return (fbr.n_types() == field_count);
-  FieldVector fields;
-  for (size_t i = 0; i < field_count; i++)
+  switch (type_code.kind())
     {
-      TypeCode ftc = type_code.field (i).resolve();
-      Any fany (ftc);
-      switch (ftc.kind())
-        {
-        case BOOL:
-          fany <<= fbr.pop_bool();
-          break;
-        case INT32:
-          fany <<= fbr.pop_int64();
-          break;
-        case INT64:
-          fany <<= fbr.pop_int64();
-          break;
-        case FLOAT64:
-          fany <<= fbr.pop_double();
-          break;
-        case STRING:
-          fany <<= fbr.pop_string();
-          break;
-        case ENUM:
-          fany <<= fbr.pop_evalue();
-          break;
-        case ANY:
-          fany <<= fbr.pop_any();
-          break;
-        case INSTANCE:
-          fany <<= fbr.pop_object();
-          break;
-        case RECORD: {
-          const FieldBuffer &fb = fbr.pop_rec();
-          FieldReader rbr (fb);
-          fany.from_proto (ftc, rbr);
-        } break;
-        case SEQUENCE: // ?
-        case TYPE_REFERENCE: // ?
-        default:
-          critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
-          break;
-        }
-      fields.push_back (Any::Field (ftc.name(), fany));
+    case BOOL:
+      any <<= pbr.pop_bool();
+      break;
+    case INT32:
+      any <<= pbr.pop_int64();
+      break;
+    case INT64:
+      any <<= pbr.pop_int64();
+      break;
+    case FLOAT64:
+      any <<= pbr.pop_double();
+      break;
+    case STRING:
+      any <<= pbr.pop_string();
+      break;
+    case ENUM:
+      any <<= pbr.pop_evalue();
+      break;
+    case ANY:
+      any <<= pbr.pop_any();
+      break;
+    case INSTANCE:
+      any <<= pbr.pop_object();
+      break;
+    case RECORD: {
+      const FieldBuffer &pb = pbr.pop_rec();
+      FieldReader rbr (pb);
+      any_struct_from_proto (any, type_code, rbr);
+    } break;
+    case SEQUENCE: {
+      const FieldBuffer &pb = pbr.pop_seq();
+      FieldReader rbr (pb);
+      any_struct_from_proto (any, type_code, rbr);
+    } break;
+    case TYPE_REFERENCE: // ?
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
     }
-  retype (type_code);
-  *this <<= fields;
+}
+
+static void
+any_struct_from_proto (Any &any, const TypeCode type_code, FieldReader &pbr)
+{
+  switch (type_code.kind())
+    {
+    case RECORD: {
+      const size_t field_count = type_code.field_count();
+      assert_return (pbr.n_types() == field_count);
+      Any::FieldVector fields;
+      for (size_t i = 0; i < field_count; i++)
+        {
+          TypeCode ftc = type_code.field (i).resolve();
+          Any fany (ftc);
+          any_value_from_proto (fany, ftc, pbr);
+          fields.push_back (Any::Field (ftc.name(), fany));
+        }
+      any.retype (type_code);
+      any <<= fields;
+    } break;
+    case SEQUENCE: {
+      assert_return (type_code.field_count() == 1);
+      TypeCode ftc = type_code.field (0).resolve();
+      const size_t len = pbr.remaining();
+      Any::AnyVector anys;
+      anys.resize (len);
+      for (size_t k = 0; k < len; k++)
+        {
+          Any fany (ftc);
+          any_value_from_proto (fany, ftc, pbr);
+          anys.push_back (fany);
+        }
+      any.retype (type_code);
+      any <<= anys;
+    } break;
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
+    }
 }
 
 void
-Any::to_proto (const TypeCode type_code, FieldBuffer &fb) const
+Any::from_proto (const TypeCode type_code, FieldReader &pbr)
 {
-  AIDA_ASSERT_RETURN (kind() == RECORD);
-  assert_return (type_code.kind() == RECORD);
-  const size_t field_count = type_code.field_count();
-  assert_return (fb.capacity() - fb.size() >= field_count);
-  const FieldVector *fields = NULL;
-  *this >>= fields;
-  assert_return (fields != NULL);
-  for (size_t i = 0; i < field_count; i++)
+  any_struct_from_proto (*this, type_code, pbr);
+}
+
+static void any_struct_to_proto (const Any &any, const TypeCode type_code, FieldBuffer &pb);
+
+static void
+any_value_to_proto (const Any &any, const TypeCode type_code, FieldBuffer &pb)
+{
+  switch (type_code.kind())
     {
-      TypeCode ftc = type_code.field (i).resolve();
-      const Any *pany = NULL;
-      for (size_t j = 0; j < fields->size(); j++)
-        if ((*fields)[j].name == ftc.name())
-          pany = &(*fields)[j];
-      uint64_t amem[(sizeof (Any) + 7) / 8];
-      const Any &fany = *(pany ? pany : new (amem) Any (ftc));          // stack Any constructor
-      switch (ftc.kind())
-        {
-        case BOOL:
-          fb.add_bool (fany.as_int());
-          break;
-        case INT32: case INT64:
-          fb.add_int64 (fany.as_int());
-          break;
-        case FLOAT64:
-          fb.add_double (fany.as_float());
-          break;
-        case STRING:
-          fb.add_string (fany.as_string());
-          break;
-        case ENUM:
-          fb.add_evalue (fany.as_int());
-          break;
-        case ANY:
-          fb.add_any (fany.as_any());
-          break;
-        case RECORD: {
-          FieldBuffer &rb = fb.add_rec (ftc.field_count());
-          fany.to_proto (ftc, rb);
-        } break;
-        case INSTANCE:  // ? fb.add_object (fany.as_int());
-        case SEQUENCE:  // ?
-        case TYPE_REFERENCE: // ?
-        default:
-          critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
-          break;
-        }
-      if (!pany)
-        fany.~Any();                                                    // stack Any destructor
+    case BOOL:
+      pb.add_bool (any.as_int());
+      break;
+    case INT32: case INT64:
+      pb.add_int64 (any.as_int());
+      break;
+    case FLOAT64:
+      pb.add_double (any.as_float());
+      break;
+    case STRING:
+      pb.add_string (any.as_string());
+      break;
+    case ENUM:
+      pb.add_evalue (any.as_int());
+      break;
+    case ANY:
+      pb.add_any (any.as_any());
+      break;
+    case RECORD: {
+      FieldBuffer &rb = pb.add_rec (type_code.field_count());
+      any_struct_to_proto (any, type_code, rb);
+    } break;
+    case SEQUENCE: {
+      const Any::AnyVector *anys = NULL;
+      any >>= anys;
+      FieldBuffer &rb = pb.add_seq (anys ? anys->size() : 0);
+      any_struct_to_proto (any, type_code, rb);
+    } break;
+    case INSTANCE:  // ? pb.add_object (any.as_int());
+    case TYPE_REFERENCE: // ?
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
     }
+}
+
+static void
+any_struct_to_proto (const Any &any, const TypeCode type_code, FieldBuffer &pb)
+{
+  switch (any.kind())
+    {
+    case RECORD: {
+      assert_return (type_code.kind() == RECORD);
+      const size_t field_count = type_code.field_count();
+      assert_return (pb.capacity() - pb.size() >= field_count);
+      const Any::FieldVector *fields = NULL;
+      any >>= fields;
+      assert_return (fields != NULL);
+      for (size_t i = 0; i < field_count; i++)
+        {
+          TypeCode ftc = type_code.field (i).resolve();
+          const Any *pany = NULL;
+          for (size_t j = 0; j < fields->size(); j++)
+            if ((*fields)[j].name == ftc.name())
+              pany = &(*fields)[j];
+          uint64_t amem[(sizeof (Any) + 7) / 8];
+          const Any &fany = *(pany ? pany : new (amem) Any (ftc));          // stack Any constructor
+          any_value_to_proto (fany, ftc, pb);
+          if (!pany)
+            fany.~Any();                                                    // stack Any destructor
+        }
+    } break;
+    case SEQUENCE: {
+      assert_return (type_code.kind() == SEQUENCE);
+      assert_return (type_code.field_count() == 1);
+      TypeCode ftc = type_code.field (0).resolve();
+      const Any::AnyVector *anys = NULL;
+      any >>= anys;
+      const size_t len = anys ? anys->size() : 0;
+      assert_return (pb.capacity() - pb.size() == len);
+      for (size_t i = 0; i < len; i++)
+        {
+          const Any &fany = (*anys)[i];
+          any_value_to_proto (fany, ftc, pb);
+        }
+    } break;
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
+    }
+}
+
+void
+Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
+{
+  any_struct_to_proto (*this, type_code, pb);
 }
 
 // == OrbObject ==

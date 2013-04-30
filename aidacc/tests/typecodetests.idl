@@ -45,8 +45,9 @@ namespace AidaTests {
   };
 
   record ComboRecord {
-    SimpleRecord simple_rec;
-    Any          any_field;
+    SimpleRecord   simple_rec;
+    Any            any_field;
+    SimpleSequence simple_seq;
   };
 
 } // AidaTests
