@@ -198,7 +198,7 @@ private:
   void    rekind  (TypeKind _kind);
   void    reset   ();
   bool    to_int  (int64_t &v, char b) const;
-  void    to_proto   (const TypeCode type_code, FieldBuffer &fb);
+  void    to_proto   (const TypeCode type_code, FieldBuffer &fb) const;
   void    from_proto (const TypeCode type_code, FieldReader &fbr);
 public:
   /*dtor*/ ~Any    ();                                   ///< Any destructor.

@@ -418,8 +418,11 @@ test_records ()
   assert (cr.simple_rec.stringfield == "two");
   assert (cr.simple_rec.int6 == -6);
   assert (cr.any_field.as_string() == "STRING");
+  any1 <<= cr;
   AidaTests::ComboRecord c2;
   assert (c2 != cr && c2.simple_rec != cr.simple_rec && c2.any_field != cr.any_field);
+  c2 <<= any1;
+  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field);
   printf ("  TEST   Aida Record to Any                                              OK\n");
 }
 

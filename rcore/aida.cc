@@ -503,8 +503,12 @@ Any::from_proto (const TypeCode type_code, FieldReader &fbr)
         case INSTANCE:
           fany <<= fbr.pop_object();
           break;
+        case RECORD: {
+          const FieldBuffer &fb = fbr.pop_rec();
+          FieldReader rbr (fb);
+          fany.from_proto (ftc, rbr);
+        } break;
         case SEQUENCE: // ?
-        case RECORD: // ?
         case TYPE_REFERENCE: // ?
         default:
           critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
@@ -517,7 +521,7 @@ Any::from_proto (const TypeCode type_code, FieldReader &fbr)
 }
 
 void
-Any::to_proto (const TypeCode type_code, FieldBuffer &fb)
+Any::to_proto (const TypeCode type_code, FieldBuffer &fb) const
 {
   AIDA_ASSERT_RETURN (kind() == RECORD);
   assert_return (type_code.kind() == RECORD);
@@ -555,9 +559,12 @@ Any::to_proto (const TypeCode type_code, FieldBuffer &fb)
         case ANY:
           fb.add_any (fany.as_any());
           break;
+        case RECORD: {
+          FieldBuffer &rb = fb.add_rec (ftc.field_count());
+          fany.to_proto (ftc, rb);
+        } break;
         case INSTANCE:  // ? fb.add_object (fany.as_int());
         case SEQUENCE:  // ?
-        case RECORD:    // ?
         case TYPE_REFERENCE: // ?
         default:
           critical ("%s: unknown type: %s", STRLOC(), ftc.kind_name().c_str());
