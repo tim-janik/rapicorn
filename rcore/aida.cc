@@ -165,30 +165,30 @@ Any::retype (const TypeCode &tc)
 void
 Any::rekind (TypeKind _kind)
 {
-  reset();
-  const char *type = NULL;
+  const char *name;
   switch (_kind)
     {
-    case UNTYPED:     type = NULL;                                      break;
-    case BOOL:        type = "bool";                                    break;
-    case INT32:       type = "int32";                                   break;
-      // case UINT32: type = "uint32";                                  break;
-    case INT64:       type = "int64";                                   break;
-    case FLOAT64:     type = "float64";                                 break;
-    case ENUM:        type = "int";                                     break;
-    case STRING:      type = "String";                new (&u_.vstring()) String();      break;
-    case ANY:         type = "Any";                   u_.vany = new Any();               break;
-    case SEQUENCE:    type = "Aida::DynamicSequence"; u_.vanys = new AnyVector();        break;
-    case RECORD:      type = "Aida::DynamicRecord";   u_.vfields = new FieldVector();    break;
-    case INSTANCE:    type = "Aida::SmartHandle";     u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
+    case UNTYPED:
+      reset();
+      return;
+    case BOOL:          name = "bool";                  break;
+    case INT32:         name = "int32";                 break;
+      // case UINT32:   name = "uint32";                break;
+    case INT64:         name = "int64";                 break;
+    case FLOAT64:       name = "float64";               break;
+    case STRING:        name = "String";                break;
+    case ANY:           name = "Any";                   break;
+    case SEQUENCE:      name = "Aida::DynamicSequence"; break;
+    case RECORD:        name = "Aida::DynamicRecord";   break;
+    case ENUM:
+    case INSTANCE:
     default:
-      error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+      error_printf ("Aida::Any:rekind: incomplete type: %s", type_kind_name (_kind));
     }
-  type_code_ = TypeMap::lookup (type);
-  if (type_code_.untyped() && type != NULL)
-    error_printf ("Aida::Any:rekind: invalid type name: %s", type);
-  if (kind() != _kind)
-    error_printf ("Aida::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
+  TypeCode tc = TypeMap::lookup (name);
+  if (tc.untyped())
+    error_printf ("Aida::Any:rekind: unknown type: %s", name);
+  retype (tc);
 }
 
 template<class T> String any_field_name (const T          &);
