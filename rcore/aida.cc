@@ -568,7 +568,11 @@ Any::from_proto (const TypeCode type_code, FieldReader &pbr)
       any.retype (type_code);
       any <<= anys;
     } break;
-    case INSTANCE: // ? any <<= pbr.pop_object();
+    case INSTANCE: {
+      SmartMember<SmartHandle> sh;
+      ObjectBroker::pop_handle (pbr, sh);
+      any <<= sh;
+    } break;
     case TYPE_REFERENCE: // ?
     default:
       critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
@@ -634,7 +638,9 @@ Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
           fany.to_proto (ftc, rb);
         }
     } break;
-    case INSTANCE: // ? pb.add_object (any.as_int());
+    case INSTANCE:
+      pb.add_object (u_.shandle ? u_.shandle->_orbid() : 0);
+      break;
     case TYPE_REFERENCE: // ?
     default:
       critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
@@ -1783,7 +1789,7 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   const uint connection_id = ObjectBroker::sender_connection_id (msgid);
   BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)
-    error_printf ("Message with invalid connection ID: %016lx (connection_id=0x%08x)", msgid, connection_id);
+    error_printf ("Message ID without valid connection: %016lx (connection_id=%u)", msgid, connection_id);
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
