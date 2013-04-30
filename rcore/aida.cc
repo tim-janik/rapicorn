@@ -147,6 +147,22 @@ Any::reset()
 }
 
 void
+Any::retype (const TypeCode &tc)
+{
+  reset();
+  switch (tc.kind())
+    {
+    case STRING:   new (&u_.vstring()) String();                               break;
+    case ANY:      u_.vany = new Any();                                        break;
+    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
+    case RECORD:   u_.vfields = new FieldVector();                             break;
+    case INSTANCE: u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
+    default:    break;
+    }
+  type_code_ = tc;
+}
+
+void
 Any::rekind (TypeKind _kind)
 {
   reset();
@@ -247,18 +263,6 @@ bool
 Any::operator!= (const Any &clone) const
 {
   return !operator== (clone);
-}
-
-void
-Any::retype (const TypeCode &tc)
-{
-  if (type_code_.untyped())
-    reset();
-  else
-    {
-      rekind (tc.kind());
-      type_code_ = tc;
-    }
 }
 
 void
