@@ -648,23 +648,18 @@ Any::any_from_record (Any &any, const Rec &record)
   FieldBuffer8 cfb (1);
   cfb <<= record;
   FieldReader fbr (cfb);
-  AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
-  const FieldBuffer &rfb = fbr.get_rec();
-  fbr.reset (rfb);
   any.from_proto (type_code, fbr);
 }
 
 template<class Rec> inline void
 Any::any_to_record (Any &any, Rec &record)
 {
-  AIDA_ASSERT_RETURN (any.kind() == RECORD);
   const std::string record_type_name = record.__aida_type_name__();
   TypeCode type_code = TypeMap::lookup (record_type_name);
   AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
-  const size_t field_count = type_code.field_count();
+  AIDA_ASSERT_RETURN (any.kind() == RECORD);
   FieldBuffer8 cfb (1);
-  FieldBuffer &rfb = cfb.add_rec (field_count);
-  any.to_proto (type_code, rfb);
+  any.to_proto (type_code, cfb);
   FieldReader fbr (cfb);
   AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
   fbr >>= record;

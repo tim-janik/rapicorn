@@ -557,7 +557,11 @@ any_struct_from_proto (Any &any, const TypeCode type_code, FieldReader &pbr)
 void
 Any::from_proto (const TypeCode type_code, FieldReader &pbr)
 {
-  any_struct_from_proto (*this, type_code, pbr);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  AIDA_ASSERT_RETURN (pbr.get_type() == RECORD);
+  const FieldBuffer &rpb = pbr.get_rec();
+  FieldReader sbr (rpb);
+  any_struct_from_proto (*this, type_code, sbr);
 }
 
 static void any_struct_to_proto (const Any &any, const TypeCode type_code, FieldBuffer &pb);
@@ -652,7 +656,11 @@ any_struct_to_proto (const Any &any, const TypeCode type_code, FieldBuffer &pb)
 void
 Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
 {
-  any_struct_to_proto (*this, type_code, pb);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  assert_return (pb.capacity() - pb.size() >= 1);
+  const size_t field_count = type_code.field_count();
+  FieldBuffer &sb = pb.add_rec (field_count);
+  any_struct_to_proto (*this, type_code, sb);
 }
 
 // == OrbObject ==
