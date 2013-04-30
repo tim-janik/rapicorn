@@ -117,15 +117,15 @@ Any::operator= (const Any &clone)
   if (this == &clone)
     return *this;
   reset();
-  type_code = clone.type_code;
+  type_code_ = clone.type_code_;
   switch (kind())
     {
-    case STRING:        new (&u.vstring()) String (clone.u.vstring());  break;
-    case ANY:           u.vany = new Any (*clone.u.vany);               break;
-    case SEQUENCE:      u.vanys = new AnyVector (*clone.u.vanys);       break;
-    case RECORD:        u.vfields = new FieldVector (*clone.u.vfields); break;
-    case INSTANCE:      u.shandle = new SmartHandle (*clone.u.shandle); break;
-    default:            u = clone.u;                                    break;
+    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
+    case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
+    case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
+    case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
+    case INSTANCE:      u_.shandle = new SmartHandle (*clone.u_.shandle); break;
+    default:            u_ = clone.u_;                                    break;
     }
   return *this;
 }
@@ -135,15 +135,15 @@ Any::reset()
 {
   switch (kind())
     {
-    case STRING:        u.vstring().~String();                  break;
-    case ANY:           delete u.vany;                          break;
-    case SEQUENCE:      delete u.vanys;                         break;
-    case RECORD:        delete u.vfields;                       break;
-    case INSTANCE:      delete u.shandle;                       break;
+    case STRING:        u_.vstring().~String();                  break;
+    case ANY:           delete u_.vany;                          break;
+    case SEQUENCE:      delete u_.vanys;                         break;
+    case RECORD:        delete u_.vfields;                       break;
+    case INSTANCE:      delete u_.shandle;                       break;
     default: ;
     }
-  type_code = TypeMap::notype();
-  u.vuint64 = 0;
+  type_code_ = TypeMap::notype();
+  u_.vuint64 = 0;
 }
 
 void
@@ -160,16 +160,16 @@ Any::rekind (TypeKind _kind)
     case INT64:       type = "int64";                                   break;
     case FLOAT64:     type = "float64";                                 break;
     case ENUM:        type = "int";                                     break;
-    case STRING:      type = "String";                new (&u.vstring()) String();      break;
-    case ANY:         type = "Any";                   u.vany = new Any();               break;
-    case SEQUENCE:    type = "Aida::DynamicSequence"; u.vanys = new AnyVector();        break;
-    case RECORD:      type = "Aida::DynamicRecord";   u.vfields = new FieldVector();    break;
-    case INSTANCE:    type = "Aida::SmartHandle";     u.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
+    case STRING:      type = "String";                new (&u_.vstring()) String();      break;
+    case ANY:         type = "Any";                   u_.vany = new Any();               break;
+    case SEQUENCE:    type = "Aida::DynamicSequence"; u_.vanys = new AnyVector();        break;
+    case RECORD:      type = "Aida::DynamicRecord";   u_.vfields = new FieldVector();    break;
+    case INSTANCE:    type = "Aida::SmartHandle";     u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
     default:
       error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
     }
-  type_code = TypeMap::lookup (type);
-  if (type_code.untyped() && type != NULL)
+  type_code_ = TypeMap::lookup (type);
+  if (type_code_.untyped() && type != NULL)
     error_printf ("Aida::Any:rekind: invalid type name: %s", type);
   if (kind() != _kind)
     error_printf ("Aida::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
@@ -205,13 +205,13 @@ Any::to_string (const String &field_name) const
     case BOOL:
     case ENUM:
     case INT32:
-    case INT64:         s += string_printf (", value=%lld", u.vint64);                          break;
-    case FLOAT64:       s += string_printf (", value=%.17g", u.vdouble);                        break;
-    case ANY:           s += ", value=" + u.vany->to_string();                                  break;
-    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u.vstring());             break;
-    case SEQUENCE:      if (u.vanys) s += ", value=" + any_vector_to_string (*u.vanys);         break;
-    case RECORD:        if (u.vfields) s += ", value=" + any_vector_to_string (*u.vfields);     break;
-    case INSTANCE:      s += string_printf (", value=#%08llx", u.shandle->_orbid());            break;
+    case INT64:         s += string_printf (", value=%lld", u_.vint64);                          break;
+    case FLOAT64:       s += string_printf (", value=%.17g", u_.vdouble);                        break;
+    case ANY:           s += ", value=" + u_.vany->to_string();                                  break;
+    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());             break;
+    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);         break;
+    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);     break;
+    case INSTANCE:      s += string_printf (", value=#%08llx", u_.shandle->_orbid());            break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -222,7 +222,7 @@ Any::to_string (const String &field_name) const
 bool
 Any::operator== (const Any &clone) const
 {
-  if (type_code != clone.type_code)
+  if (type_code_ != clone.type_code_)
     return false;
   switch (kind())
     {
@@ -230,13 +230,13 @@ Any::operator== (const Any &clone) const
       // case UINT: // chain
     case BOOL: case ENUM: // chain
     case INT32:
-    case INT64:       if (u.vint64 != clone.u.vint64) return false;                     break;
-    case FLOAT64:     if (u.vdouble != clone.u.vdouble) return false;                   break;
-    case STRING:      if (u.vstring() != clone.u.vstring()) return false;               break;
-    case SEQUENCE:    if (*u.vanys != *clone.u.vanys) return false;                     break;
-    case RECORD:      if (*u.vfields != *clone.u.vfields) return false;                 break;
-    case INSTANCE:    if ((u.shandle ? u.shandle->_orbid() : 0) != (clone.u.shandle ? clone.u.shandle->_orbid() : 0)) return false; break;
-    case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
+    case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
+    case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
+    case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
+    case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
+    case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
+    case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
+    case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
     default:
       error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
     }
@@ -252,24 +252,24 @@ Any::operator!= (const Any &clone) const
 void
 Any::retype (const TypeCode &tc)
 {
-  if (type_code.untyped())
+  if (type_code_.untyped())
     reset();
   else
     {
       rekind (tc.kind());
-      type_code = tc;
+      type_code_ = tc;
     }
 }
 
 void
 Any::swap (Any &other)
 {
-  constexpr size_t USIZE = sizeof (this->u);
+  constexpr size_t USIZE = sizeof (this->u_);
   uint64_t buffer[(USIZE + 7) / 8];
-  memcpy (buffer, &other.u, USIZE);
-  memcpy (&other.u, &this->u, USIZE);
-  memcpy (&this->u, buffer, USIZE);
-  type_code.swap (other.type_code);
+  memcpy (buffer, &other.u_, USIZE);
+  memcpy (&other.u_, &this->u_, USIZE);
+  memcpy (&this->u_, buffer, USIZE);
+  type_code_.swap (other.type_code_);
 }
 
 bool
@@ -280,19 +280,19 @@ Any::to_int (int64_t &v, char b) const
   bool s = 0;
   switch (b)
     {
-    case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
-    case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
-    case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
+    case 1:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 1;        break;
+    case 7:     s =  u_.vint64 >=      -128 &&  u_.vint64 <= 127;      break;
+    case 8:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 256;      break;
     case 47:    s = sizeof (long) == sizeof (int64_t); // chain
-    case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
+    case 31:    s |= u_.vint64 >=   INT_MIN &&  u_.vint64 <= INT_MAX;  break;
     case 48:    s = sizeof (long) == sizeof (int64_t); // chain
-    case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
+    case 32:    s |= u_.vint64 >=         0 &&  u_.vint64 <= UINT_MAX; break;
     case 63:    s = 1; break;
     case 64:    s = 1; break;
     default:    s = 0; break;
     }
   if (s)
-    v = u.vint64;
+    v = u_.vint64;
   return s;
 }
 
@@ -302,12 +302,12 @@ Any::as_int () const
   switch (kind())
     {
     case BOOL: case INT32: case INT64:
-    case ENUM:          return u.vint64;
-    case FLOAT64:       return u.vdouble;
-    case STRING:        return !u.vstring().empty();
-    case SEQUENCE:      return !u.vanys->empty();
-    case RECORD:        return !u.vfields->empty();
-    case INSTANCE:      return u.shandle && u.shandle->_orbid();
+    case ENUM:          return u_.vint64;
+    case FLOAT64:       return u_.vdouble;
+    case STRING:        return !u_.vstring().empty();
+    case SEQUENCE:      return !u_.vanys->empty();
+    case RECORD:        return !u_.vfields->empty();
+    case INSTANCE:      return u_.shandle && u_.shandle->_orbid();
     default:            return 0;
     }
 }
@@ -317,7 +317,7 @@ Any::as_float () const
 {
   switch (kind())
     {
-    case FLOAT64:       return u.vdouble;
+    case FLOAT64:       return u_.vdouble;
     default:            return as_int();
     }
 }
@@ -329,9 +329,9 @@ Any::as_string() const
     {
     case BOOL: case ENUM:
     case INT32:
-    case INT64:         return string_printf ("%lli", u.vint64);
-    case FLOAT64:       return string_printf ("%.17g", u.vdouble);
-    case STRING:        return u.vstring();
+    case INT64:         return string_printf ("%lli", u_.vint64);
+    case FLOAT64:       return string_printf ("%.17g", u_.vdouble);
+    case STRING:        return u_.vstring();
     default:            return "";
     }
 }
@@ -348,7 +348,7 @@ Any::operator>>= (double &v) const
 {
   if (kind() != FLOAT64)
     return false;
-  v = u.vdouble;
+  v = u_.vdouble;
   return true;
 }
 
@@ -357,7 +357,7 @@ Any::operator>>= (std::string &v) const
 {
   if (kind() != STRING)
     return false;
-  v = u.vstring();
+  v = u_.vstring();
   return true;
 }
 
@@ -366,7 +366,7 @@ Any::operator>>= (const Any *&v) const
 {
   if (kind() != ANY)
     return false;
-  v = u.vany;
+  v = u_.vany;
   return true;
 }
 
@@ -375,7 +375,7 @@ Any::operator>>= (const AnyVector *&v) const
 {
   if (kind() != SEQUENCE)
     return false;
-  v = u.vanys;
+  v = u_.vanys;
   return true;
 }
 
@@ -384,7 +384,7 @@ Any::operator>>= (const FieldVector *&v) const
 {
   if (kind() != RECORD)
     return false;
-  v = u.vfields;
+  v = u_.vfields;
   return true;
 }
 
@@ -393,7 +393,7 @@ Any::operator>>= (SmartHandle &v)
 {
   if (kind() != INSTANCE)
     return false;
-  v = u.shandle ? *u.shandle : SmartHandle::_null_handle();
+  v = u_.shandle ? *u_.shandle : SmartHandle::_null_handle();
   return true;
 }
 
@@ -409,35 +409,35 @@ Any::operator<<= (int64_t v)
 {
   if (kind() == BOOL && v >= 0 && v <= 1)
     {
-      u.vint64 = v;
+      u_.vint64 = v;
       return;
     }
   ensure (INT64);
-  u.vint64 = v;
+  u_.vint64 = v;
 }
 
 void
 Any::operator<<= (double v)
 {
   ensure (FLOAT64);
-  u.vdouble = v;
+  u_.vdouble = v;
 }
 
 void
 Any::operator<<= (const String &v)
 {
   ensure (STRING);
-  u.vstring().assign (v);
+  u_.vstring().assign (v);
 }
 
 void
 Any::operator<<= (const Any &v)
 {
   ensure (ANY);
-  if (u.vany != &v)
+  if (u_.vany != &v)
     {
-      Any *old = u.vany;
-      u.vany = new Any (v);
+      Any *old = u_.vany;
+      u_.vany = new Any (v);
       if (old)
         delete old;
     }
@@ -447,10 +447,10 @@ void
 Any::operator<<= (const AnyVector &v)
 {
   ensure (SEQUENCE);
-  if (u.vanys != &v)
+  if (u_.vanys != &v)
     {
-      AnyVector *old = u.vanys;
-      u.vanys = new AnyVector (v);
+      AnyVector *old = u_.vanys;
+      u_.vanys = new AnyVector (v);
       if (old)
         delete old;
     }
@@ -460,10 +460,10 @@ void
 Any::operator<<= (const FieldVector &v)
 {
   ensure (RECORD);
-  if (u.vfields != &v)
+  if (u_.vfields != &v)
     {
-      FieldVector *old = u.vfields;
-      u.vfields = new FieldVector (v);
+      FieldVector *old = u_.vfields;
+      u_.vfields = new FieldVector (v);
       if (old)
         delete old;
     }
@@ -473,8 +473,8 @@ void
 Any::operator<<= (const SmartHandle &v)
 {
   ensure (INSTANCE);
-  SmartHandle *old = u.shandle;
-  u.shandle = new SmartHandle (v);
+  SmartHandle *old = u_.shandle;
+  u_.shandle = new SmartHandle (v);
   if (old)
     delete old;
 }

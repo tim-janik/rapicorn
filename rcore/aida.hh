@@ -191,12 +191,12 @@ protected:
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
   template<class Rec> static void any_to_record   (Any &any, Rec &record);
 private:
-  TypeCode type_code;
+  TypeCode type_code_;
   union {
     uint64_t vuint64; int64_t vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
-  } u;
+  } u_;
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
@@ -213,8 +213,8 @@ public:
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
-  TypeCode  type   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
-  TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
+  TypeCode  type   () const { return type_code_; }       ///< Obtain the full TypeCode for the contents of this Any.
+  TypeKind  kind   () const { return type_code_.kind(); } ///< Obtain the underlying primitive type kind.
   void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
   void      swap   (Any            &other);              ///< Swap the contents of @a this and @a other in constant time.
   bool operator>>= (bool          &v) const { int64_t d; const bool r = to_int (d, 1); v = d; return r; }
@@ -235,7 +235,7 @@ public:
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
   bool operator>>= (SmartHandle        &v);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
-  const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
@@ -591,26 +591,26 @@ TypeCode::from_enum () // fallback for unspecialized types
 
 template<class V> inline
 Any::Any (const V &value) :
-  type_code (TypeMap::notype()), u {0}
+  type_code_ (TypeMap::notype()), u_ {0}
 {
   this->operator<<= (value);
 }
 
 template<> inline
 Any::Any<Any::Field> (const Any::Field &clone) :
-  type_code (TypeMap::notype()), u {0}
+  type_code_ (TypeMap::notype()), u_ {0}
 {
   this->operator= (clone);
 }
 
 inline
 Any::Any() :
-  type_code (TypeMap::notype()), u {0}
+  type_code_ (TypeMap::notype()), u_ {0}
 {}
 
 inline
 Any::Any (const TypeCode &tc) :
-  type_code (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u {0}
+  type_code_ (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u_ {0}
 {
   if (!plain_zero_type (tc.kind()))
     retype (tc);        // carry out special initializations
@@ -631,7 +631,7 @@ Any::plain_zero_type (TypeKind kind)
 
 inline
 Any::Any (const Any &clone) :
-  type_code (TypeMap::notype()), u {0}
+  type_code_ (TypeMap::notype()), u_ {0}
 {
   this->operator= (clone);
 }
