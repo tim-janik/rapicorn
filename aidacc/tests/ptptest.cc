@@ -367,20 +367,19 @@ any_test_get (const Any &a, int what)
     {
       typedef unsigned char uchar;
       bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d; const Any *p;
-    case 0:  if (!(a >>= b))  return false;     assert (b == 0); break;
-    case 1:  if (!(a >>= b))  return false;     assert (b == true); break;
-    case 2:  if (!(a >>= c))  return false;     assert (c == -117); break;
-    case 3:  if (!(a >>= uc)) return false;     assert (uc == 250); break;
-    case 4:  if (!(a >>= i))  return false;     assert (i == -134217728); break;
-    case 5:  if (!(a >>= ui)) return false;     assert (ui == 4294967295U); break;
-    case 6:  if (!(a >>= l))  return false;     assert (l == -2147483648); break;
-    case 7:  if (!(a >>= ul)) return false;     assert (ul == 4294967295U); break;
-    case 8:  if (!(a >>= i6)) return false;     assert (i6 == -0xc0ffeec0ffeeLL); break;
-    case 9:  if (!(a >>= u6)) return false;     assert (u6 == 0xffffffffffffffffULL); break;
-    case 10: if (!(a >>= s))  return false;     assert (s == "Test4test"); break;
-    case 11: if (!(a >>= d))  return false;     assert (d = test_double_value); break;
-    case 12: if (!(a >>= p) ||
-                 !(*p >>= s)) return false;     assert (s == "SecondAny"); break;
+    case 0:  assert (a >>= b);	assert (b == 0); break;
+    case 1:  assert (a >>= b);	assert (b == true); break;
+    case 2:  assert (a >>= c);	assert (c == -117); break;
+    case 3:  assert (a >>= uc);	assert (uc == 250); break;
+    case 4:  assert (a >>= i);	assert (i == -134217728); break;
+    case 5:  assert (a >>= ui);	assert (ui == 4294967295U); break;
+    case 6:  assert (a >>= l);	assert (l == -2147483648); break;
+    case 7:  assert (a >>= ul);	assert (ul == 4294967295U); break;
+    case 8:  assert (a >>= i6);	assert (i6 == -0xc0ffeec0ffeeLL); break;
+    case 9:  assert (a >>= u6);	assert (u6 == 0xffffffffffffffffULL); break;
+    case 10: assert (a >>= s);	assert (s == "Test4test"); break;
+    case 11: assert (a >>= d);	assert (d = test_double_value); break;
+    case 12: assert (a >>= p); assert (*p >>= s);       assert (s == "SecondAny"); break;
     }
   return true;
 }
@@ -451,13 +450,17 @@ test_any()
           }
       }
   printf ("  TEST   Aida Any storage                                                OK\n");
+  a <<= bool (0);       assert (a.kind() == BOOL && a.as_int() == 0);
+  a <<= bool (1);       assert (a.kind() == BOOL && a.as_int() == 1);
   a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
   a <<= -1.;            assert (a.kind() == FLOAT64 && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
-  a <<= 1;              assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= -1;             assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= 0;              assert (a.kind() == INT64 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
-  a <<= 32767199;       assert (a.kind() == INT64 && a.as_int() == 32767199);
+  a <<= 1;              assert (a.kind() == INT32 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= -1;             assert (a.kind() == INT32 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= int64_t (1);    assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= int64_t (-1);   assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= 0;              assert (a.kind() == INT32 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
+  a <<= 32767199;       assert (a.kind() == INT32 && a.as_int() == 32767199);
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);

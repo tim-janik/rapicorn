@@ -279,7 +279,7 @@ Any::swap (Any &other)
 bool
 Any::to_int (int64_t &v, char b) const
 {
-  if (kind() != INT32 && kind() != INT64)
+  if (kind() != BOOL && kind() != INT32 && kind() != INT64)
     return false;
   bool s = 0;
   switch (b)
@@ -402,22 +402,31 @@ Any::operator>>= (SmartHandle &v)
 }
 
 void
-Any::operator<<= (uint64_t v)
+Any::operator<<= (bool v)
 {
-  // ensure (UINT);
-  operator<<= (int64_t (v));
+  ensure (BOOL);
+  u_.vint64 = v;
+}
+
+void
+Any::operator<<= (int32_t v)
+{
+  ensure (INT32);
+  u_.vint64 = v;
 }
 
 void
 Any::operator<<= (int64_t v)
 {
-  if (kind() == BOOL && v >= 0 && v <= 1)
-    {
-      u_.vint64 = v;
-      return;
-    }
   ensure (INT64);
   u_.vint64 = v;
+}
+
+void
+Any::operator<<= (uint64_t v)
+{
+  // ensure (UINT);
+  operator<<= (int64_t (v));
 }
 
 void

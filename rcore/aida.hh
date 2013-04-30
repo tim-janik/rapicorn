@@ -240,10 +240,10 @@ public:
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
   // >>= enum
-  void operator<<= (bool           v) { operator<<= (int64_t (v)); }
-  void operator<<= (char           v) { operator<<= (int64_t (v)); }
-  void operator<<= (unsigned char  v) { operator<<= (int64_t (v)); }
-  void operator<<= (int            v) { operator<<= (int64_t (v)); }
+  void operator<<= (bool           v);
+  void operator<<= (char           v) { operator<<= (int32_t (v)); }
+  void operator<<= (unsigned char  v) { operator<<= (int32_t (v)); }
+  void operator<<= (int32_t        v);
   void operator<<= (unsigned int   v) { operator<<= (int64_t (v)); }
   void operator<<= (long           v) { operator<<= (int64_t (v)); }
   void operator<<= (unsigned long  v) { operator<<= (int64_t (v)); }
