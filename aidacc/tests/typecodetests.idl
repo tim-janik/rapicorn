@@ -45,10 +45,13 @@ record SimpleRecord {
   EnumType enumfield;
 };
 
+interface Empty {};
+
 record ComboRecord {
   SimpleRecord   simple_rec;
   Any            any_field;
   SimpleSequence simple_seq;
+  Empty          empty_object;
 };
 
 } // AidaTests

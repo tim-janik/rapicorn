@@ -388,6 +388,19 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
+static SmartHandle
+generate_broken_smart_handle (uint64_t orbid)
+{
+  FieldBuffer8 fb (1);
+  fb.add_object (orbid);
+  FieldReader fbr (fb);
+  SmartMember<SmartHandle> sh;
+  assert (sh._orbid() == 0);
+  ObjectBroker::pop_handle (fbr, sh);
+  assert (sh._orbid() == orbid);
+  return sh;
+}
+
 static void
 test_records ()
 {
@@ -418,14 +431,17 @@ test_records ()
   AidaTests::ComboRecord cr;
   cr.simple_rec = sr;
   cr.any_field <<= "STRING";
+  SmartHandle sh = generate_broken_smart_handle (777); // handle doesn't work, but has an _orbid to test Any
+  cr.empty_object = *(AidaTests::EmptyH*) (void*) &sh;
   assert (cr.simple_rec.stringfield == "two");
   assert (cr.simple_rec.int6 == -6);
   assert (cr.any_field.as_string() == "STRING");
+  assert (cr.empty_object._orbid() == 777);
   any1 <<= cr;
   AidaTests::ComboRecord c2;
   assert (c2 != cr && c2.simple_rec != cr.simple_rec && c2.any_field != cr.any_field);
   c2 <<= any1;
-  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field);
+  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field && c2.empty_object._orbid() == 777);
   printf ("  TEST   Aida Record to Any                                              OK\n");
 }
 
