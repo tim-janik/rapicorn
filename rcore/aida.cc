@@ -124,6 +124,7 @@ Any::operator= (const Any &clone)
     case ANY:           u.vany = new Any (*clone.u.vany);               break;
     case SEQUENCE:      u.vanys = new AnyVector (*clone.u.vanys);       break;
     case RECORD:        u.vfields = new FieldVector (*clone.u.vfields); break;
+    case INSTANCE:      u.shandle = new SmartHandle (*clone.u.shandle); break;
     default:            u = clone.u;                                    break;
     }
   return *this;
@@ -138,6 +139,7 @@ Any::reset()
     case ANY:           delete u.vany;                          break;
     case SEQUENCE:      delete u.vanys;                         break;
     case RECORD:        delete u.vfields;                       break;
+    case INSTANCE:      delete u.shandle;                       break;
     default: ;
     }
   type_code = TypeMap::notype();
@@ -162,7 +164,7 @@ Any::rekind (TypeKind _kind)
     case ANY:         type = "Any";                   u.vany = new Any();               break;
     case SEQUENCE:    type = "Aida::DynamicSequence"; u.vanys = new AnyVector();        break;
     case RECORD:      type = "Aida::DynamicRecord";   u.vfields = new FieldVector();    break;
-    case INSTANCE:    ; // type = "Aida::Instance"; break; // FIXME: missing details
+    case INSTANCE:    type = "Aida::SmartHandle";     u.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
     default:
       error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
     }
@@ -209,7 +211,7 @@ Any::to_string (const String &field_name) const
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u.vstring());             break;
     case SEQUENCE:      if (u.vanys) s += ", value=" + any_vector_to_string (*u.vanys);         break;
     case RECORD:        if (u.vfields) s += ", value=" + any_vector_to_string (*u.vfields);     break;
-    case INSTANCE:      s += string_printf (", value=instance...");                             break; // FIXME: missing details
+    case INSTANCE:      s += string_printf (", value=#%08llx", u.shandle->_orbid());            break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -233,7 +235,7 @@ Any::operator== (const Any &clone) const
     case STRING:      if (u.vstring() != clone.u.vstring()) return false;               break;
     case SEQUENCE:    if (*u.vanys != *clone.u.vanys) return false;                     break;
     case RECORD:      if (*u.vfields != *clone.u.vfields) return false;                 break;
-    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME: missing details
+    case INSTANCE:    if ((u.shandle ? u.shandle->_orbid() : 0) != (clone.u.shandle ? clone.u.shandle->_orbid() : 0)) return false; break;
     case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
     default:
       error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
@@ -299,14 +301,13 @@ Any::as_int () const
 {
   switch (kind())
     {
-    case BOOL:          return u.vint64;
-    case INT32:
-    case INT64:         return u.vint64;
-    case FLOAT64:       return u.vdouble;
+    case BOOL: case INT32: case INT64:
     case ENUM:          return u.vint64;
+    case FLOAT64:       return u.vdouble;
     case STRING:        return !u.vstring().empty();
     case SEQUENCE:      return !u.vanys->empty();
     case RECORD:        return !u.vfields->empty();
+    case INSTANCE:      return u.shandle && u.shandle->_orbid();
     default:            return 0;
     }
 }
@@ -316,15 +317,8 @@ Any::as_float () const
 {
   switch (kind())
     {
-    case BOOL:          return u.vint64;
-    case INT32:
-    case INT64:         return u.vint64;
     case FLOAT64:       return u.vdouble;
-    case ENUM:          return u.vint64;
-    case STRING:        return !u.vstring().empty();
-    case SEQUENCE:      return !u.vanys->empty();
-    case RECORD:        return !u.vfields->empty();
-    default:            return 0;
+    default:            return as_int();
     }
 }
 
@@ -391,6 +385,15 @@ Any::operator>>= (const FieldVector *&v) const
   if (kind() != RECORD)
     return false;
   v = u.vfields;
+  return true;
+}
+
+bool
+Any::operator>>= (SmartHandle &v)
+{
+  if (kind() != INSTANCE)
+    return false;
+  v = u.shandle ? *u.shandle : SmartHandle::_null_handle();
   return true;
 }
 
@@ -464,6 +467,16 @@ Any::operator<<= (const FieldVector &v)
       if (old)
         delete old;
     }
+}
+
+void
+Any::operator<<= (const SmartHandle &v)
+{
+  ensure (INSTANCE);
+  SmartHandle *old = u.shandle;
+  u.shandle = new SmartHandle (v);
+  if (old)
+    delete old;
 }
 
 void

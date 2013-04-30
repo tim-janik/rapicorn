@@ -46,6 +46,9 @@ typedef std::string String;
 typedef signed long long int   int64_t;  // libc's int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64_t; // libc's uint64_t is a long on AMD64 which breaks printf
 
+// == Prototypes ==
+class SmartHandle;
+
 // == TypeKind ==
 /// Classification enum for the underlying kind of a TypeCode.
 enum TypeKind {
@@ -190,7 +193,7 @@ protected:
 private:
   TypeCode type_code;
   union {
-    uint64_t vuint64; int64_t vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
+    uint64_t vuint64; int64_t vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u;
@@ -230,13 +233,13 @@ public:
   bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
   bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
+  bool operator>>= (SmartHandle        &v);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
   // >>= enum
-  // >>= instance
   void operator<<= (bool           v) { operator<<= (int64_t (v)); }
   void operator<<= (char           v) { operator<<= (int64_t (v)); }
   void operator<<= (unsigned char  v) { operator<<= (int64_t (v)); }
@@ -254,8 +257,8 @@ public:
   void operator<<= (const Any         &v); ///< Store an Any.
   void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
   void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
+  void operator<<= (const SmartHandle &v);
   // <<= enum
-  // <<= instance
 };
 
 // == Type Hash ==
