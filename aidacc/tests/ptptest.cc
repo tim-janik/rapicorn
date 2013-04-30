@@ -356,6 +356,8 @@ any_test_set (Any &a, int what)
     case 10: a <<= "Test4test";         break;
     case 11: a <<= test_double_value;   break;
     case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
+    case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
+#define ANY_TEST_COUNT    14
     }
 }
 
@@ -363,6 +365,7 @@ static bool
 any_test_get (const Any &a, int what)
 {
   std::string s;
+  EnumValue e;
   switch (what)
     {
       typedef unsigned char uchar;
@@ -379,7 +382,8 @@ any_test_get (const Any &a, int what)
     case 9:  assert (a >>= u6);	assert (u6 == 0xffffffffffffffffULL); break;
     case 10: assert (a >>= s);	assert (s == "Test4test"); break;
     case 11: assert (a >>= d);	assert (d = test_double_value); break;
-    case 12: assert (a >>= p); assert (*p >>= s);       assert (s == "SecondAny"); break;
+    case 12: assert (a >>= p);  assert (*p >>= s);       assert (s == "SecondAny"); break;
+    case 13: assert (a >>= e);	assert (e.value == -0xc0ffeec0ffeeLL); break;
     }
   return true;
 }
@@ -429,7 +433,7 @@ static void
 test_any()
 {
   String s;
-  const size_t cases = 13;
+  const size_t cases = ANY_TEST_COUNT;
   Any a;
   for (size_t j = 0; j <= cases; j++)
     for (size_t k = 0; k <= cases; k++)

@@ -56,7 +56,10 @@ class YYGlobals (object):
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values, as_flags):
-    if len (enum_values) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (enum_values) == 1 and enum_values[0][0] == '__builtin__deleteme__'):
+      enum_values = []
+    elif len (enum_values) < 1:
       raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     if as_flags:

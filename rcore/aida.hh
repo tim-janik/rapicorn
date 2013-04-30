@@ -234,6 +234,7 @@ public:
   bool operator>>= (uint64_t      &v) const { int64_t d; const bool r = to_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
   bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
+  bool operator>>= (EnumValue          &v) const; ///< Extract the numeric representation of an EnumValue if possible.
   bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
   bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
   bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
@@ -245,7 +246,6 @@ public:
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
-  // >>= enum
   void operator<<= (bool           v);
   void operator<<= (char           v) { operator<<= (int32_t (v)); }
   void operator<<= (unsigned char  v) { operator<<= (int32_t (v)); }
@@ -257,6 +257,7 @@ public:
   void operator<<= (int64_t        v); ///< Store a 64bit integer.
   void operator<<= (float          v) { operator<<= (double (v)); }
   void operator<<= (double         v); ///< Store a double floating point number.
+  void operator<<= (const EnumValue   &v); ///< Store the numeric representation of an EnumValue.
   void operator<<= (const char        *v) { operator<<= (std::string (v)); }
   void operator<<= (char              *v) { operator<<= (std::string (v)); }
   void operator<<= (const String      &v); ///< Store a std::string.
@@ -264,7 +265,6 @@ public:
   void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
   void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
   void operator<<= (const SmartHandle &v);
-  // <<= enum
 };
 
 // == Type Hash ==

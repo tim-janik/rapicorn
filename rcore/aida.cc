@@ -178,9 +178,9 @@ Any::rekind (TypeKind _kind)
     case FLOAT64:       name = "float64";               break;
     case STRING:        name = "String";                break;
     case ANY:           name = "Any";                   break;
+    case ENUM:          name = "Aida::DynamicEnum";     break;
     case SEQUENCE:      name = "Aida::DynamicSequence"; break;
     case RECORD:        name = "Aida::DynamicRecord";   break;
-    case ENUM:
     case INSTANCE:
     default:
       error_printf ("Aida::Any:rekind: incomplete type: %s", type_kind_name (_kind));
@@ -348,6 +348,15 @@ Any::operator>>= (int64_t &v) const
 }
 
 bool
+Any::operator>>= (EnumValue &v) const
+{
+  if (kind() != ENUM)
+    return false;
+  v = EnumValue (u_.vint64);
+  return true;
+}
+
+bool
 Any::operator>>= (double &v) const
 {
   if (kind() != FLOAT64)
@@ -427,6 +436,13 @@ Any::operator<<= (uint64_t v)
 {
   // ensure (UINT);
   operator<<= (int64_t (v));
+}
+
+void
+Any::operator<<= (const EnumValue &v)
+{
+  ensure (ENUM);
+  u_.vint64 = v.value;
 }
 
 void
@@ -514,7 +530,7 @@ Any::from_proto (const TypeCode type_code, FieldReader &pbr)
       any <<= pbr.pop_string();
       break;
     case ENUM:
-      any <<= pbr.pop_evalue();
+      any <<= EnumValue (pbr.pop_evalue());
       break;
     case ANY:
       any <<= pbr.pop_any();
