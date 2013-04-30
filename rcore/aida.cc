@@ -726,20 +726,6 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
   sh.assign (SmartHandle (*orbo));
 }
 
-void
-ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
-{
-  AIDA_ASSERT (sh == NULL);
-  if (fake[1])
-    return;
-  const uint64_t orbid = fake[0];
-  ScopedLock<Mutex> locker (orbo_mutex);
-  OrbObject *orbo = orbo_map[orbid];
-  if (AIDA_UNLIKELY (!orbo))
-    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.assign (SmartHandle (*orbo));
-}
-
 uint
 ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
 {

@@ -387,7 +387,6 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle fro
 class ObjectBroker {
 public:
   static void              pop_handle (FieldReader&, SmartHandle&);
-  static void              dup_handle (const uint64_t[2], SmartHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
