@@ -715,15 +715,20 @@ static OrboMap orbo_map;
 static Mutex   orbo_mutex;
 
 void
-ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+ObjectBroker::tie_handle (SmartHandle &sh, const uint64_t orbid)
 {
   AIDA_ASSERT (NULL == sh);
-  const uint64_t orbid = fr.pop_object();
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
   sh.assign (SmartHandle (*orbo));
+}
+
+void
+ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+{
+  tie_handle (sh, fr.pop_object());
 }
 
 uint

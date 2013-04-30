@@ -385,6 +385,8 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle fro
 
 // == ObjectBroker ==
 class ObjectBroker {
+protected:
+  static void              tie_handle (SmartHandle&, uint64_t);
 public:
   static void              pop_handle (FieldReader&, SmartHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.

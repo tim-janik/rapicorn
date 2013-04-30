@@ -52,10 +52,8 @@ obj2smh ($AIDA_iface_base$ *self)
 {
   const uint64_t orbid = obj2id (self);
   SMH target;
-  FieldBuffer8 fb (1);
-  fb.add_object (orbid);
-  FieldReader fbr (fb);
-  ObjectBroker::pop_handle (fbr, target);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (target, orbid);
   return target;
 }
 
