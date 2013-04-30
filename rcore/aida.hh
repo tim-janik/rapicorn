@@ -69,6 +69,13 @@ enum TypeKind {
 };
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
+/// Aida wrapper for enumeration values.
+struct EnumValue {
+  int64_t value;
+  const char *ident, *label, *blurb;
+  constexpr EnumValue (int64_t dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
+};
+
 // == TypeCode ==
 struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
 {
@@ -93,7 +100,6 @@ struct TypeCode /// Representation of type information to describe structured ty
   TypeCode              resolve         () const;               ///< Returns type code after resolving kind TYPE_REFERENCE.
   bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
-  struct EnumValue { int64 value; const char *ident, *label, *blurb; EnumValue() : value (0), ident (0), label (0), blurb (0) {} };
   bool                  enum_combinable () const;               ///< Indicate if multiple enum values are combinable into a mask.
   size_t                enum_count      () const;               ///< Number of enum values for an enum type.
   EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
@@ -407,8 +413,6 @@ union FieldUnion {
   struct { uint32_t index, capacity; }; // FieldBuffer.buffermem[0]
 };
 
-struct EnumValue { int64_t v; EnumValue (int64_t e) : v (e) {} };
-
 class FieldBuffer { // buffer for marshalling procedure calls
   friend class FieldReader;
   void               check_internal ();
@@ -454,7 +458,7 @@ public:
   inline void operator<<= (int    v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (bool   v)          { FieldUnion &u = addu (BOOL); u.vint64 = v; }
   inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT64); u.vdouble = v; }
-  inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; }
+  inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (Any    v)          { FieldUnion &u = addu (ANY); u.vany = new Any (v); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
@@ -509,7 +513,7 @@ public:
   inline void operator>>= (int &v)             { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
   inline void operator>>= (bool &v)            { FieldUnion &u = fb_popu (BOOL); v = u.vint64; }
   inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
-  inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; }
+  inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.value = u.vint64; }
   inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *u.vany; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }

@@ -254,7 +254,7 @@ Heritage::resolve_color (const String  &color_name,
       c.alpha (0xff - c.alpha());
       return state_color (c, state, color_type);
     }
-  const Aida::TypeCode::EnumValue evalue = etype.enum_find (color_name);
+  const Aida::EnumValue evalue = etype.enum_find (color_name);
   if (evalue.ident)
     return get_color (state, ColorType (evalue.value));
   else

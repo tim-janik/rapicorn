@@ -435,7 +435,7 @@ TypeCode::enum_count () const
   return il && il->length % 5 == 0 ? il->length / 5 : 0;
 }
 
-TypeCode::EnumValue
+EnumValue
 TypeCode::enum_value (const size_t index) const
 {
   EnumValue ev;
@@ -451,7 +451,7 @@ TypeCode::enum_value (const size_t index) const
   return ev;
 }
 
-TypeCode::EnumValue
+EnumValue
 TypeCode::enum_find (int64 value) const
 {
   const EnumValue ev;
@@ -469,7 +469,7 @@ TypeCode::enum_find (int64 value) const
   return ev;
 }
 
-TypeCode::EnumValue
+EnumValue
 TypeCode::enum_find (const String &name) const
 {
   const EnumValue ev;

@@ -248,7 +248,7 @@ type_code_tests ()
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
     assert (t.enum_count() == 10);
-    TypeCode::EnumValue ev;
+    EnumValue ev;
     ev = t.enum_value (0); assert (ev.ident == String ("ENUM_VALUE_0") && ev.value == 0);
     ev = t.enum_value (1); assert (ev.ident == String ("ENUM_VALUE_1") && ev.value == 1);
     ev = t.enum_value (2); assert (ev.ident == String ("ENUM_VALUE__2") && ev.value == -2);

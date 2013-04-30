@@ -115,7 +115,7 @@ test_idl_enums()
   assert (at.kind() == Aida::ENUM);
   assert (at.name() == "Rapicorn::AnchorType");
   assert (at == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
-  Aida::TypeCode::EnumValue ev;
+  Aida::EnumValue ev;
   ev = at.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
   ev = at.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
   assert (at.enum_combinable() == false);
