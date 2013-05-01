@@ -28,7 +28,8 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 bool    			cstring_to_bool          (const char *string, bool fallback = false);
 
 // == String Formatting ==
-template<class... Args> RAPICORN_PRINTF (1, 0) String string_format (const char *format, Args... args);
+template<class... Args> RAPICORN_PRINTF (1, 0) String string_format        (const char *format, Args... args);
+template<class... Args> RAPICORN_PRINTF (1, 0) String string_locale_format (const char *format, Args... args);
 
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
@@ -157,10 +158,18 @@ const char*     strerror ();    // simple wrapper for strerror (errno)
   __a; })
 #define RAPICORN_CQUOTE(str)    (Rapicorn::string_to_cquote (str).c_str())
 
+/// Formatted printing ala printf() into a String, using the POSIX/C locale.
 template<class... Args> String
 string_format (const char *format, Args... args)
 {
   return Lib::StringFormatter::format (format, args...);
+}
+
+/// Formatted printing ala printf() into a String, using the current locale.
+template<class... Args> String
+string_locale_format (const char *format, Args... args)
+{
+  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
 }
 
 
