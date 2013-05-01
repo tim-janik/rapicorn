@@ -102,7 +102,7 @@
 #define RAPICORN_NO_INSTRUMENT                  __attribute__ ((__no_instrument_function__))
 #define RAPICORN_DEPRECATED                     __attribute__ ((__deprecated__))
 #define RAPICORN_ALWAYS_INLINE			__attribute__ ((always_inline))
-#define RAPICORN_NEVER_INLINE			__attribute__ ((noinline))
+#define RAPICORN_NOINLINE			__attribute__ ((noinline))
 #define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used))      // gcc-3.3 also needs "used" to emit code
 #define RAPICORN_MAY_ALIAS                      __attribute__ ((may_alias))
 #define	RAPICORN_SIMPLE_FUNCTION	       (::Rapicorn::string_from_pretty_function_name (__PRETTY_FUNCTION__).c_str())
@@ -119,7 +119,7 @@
 #define RAPICORN_NO_INSTRUMENT
 #define RAPICORN_DEPRECATED
 #define RAPICORN_ALWAYS_INLINE
-#define RAPICORN_NEVER_INLINE
+#define RAPICORN_NOINLINE
 #define RAPICORN_CONSTRUCTOR
 #define RAPICORN_MAY_ALIAS
 #define	RAPICORN_SIMPLE_FUNCTION	       (__func__)
