@@ -176,6 +176,7 @@ class Generator:
     return '0'
   def generate_recseq_decl (self, type_info):
     s = '\n'
+    classFull = self.namespaced_identifier (type_info.name)
     # s += self.generate_shortdoc (type_info)   # doxygen IDL snippet
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
@@ -201,6 +202,13 @@ class Generator:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
+    s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ () const\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
+    if type_info.storage == Decls.RECORD:
+      s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
+      s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
+      s += '  ' + self.F ('void') + 'operator<<= (Rapicorn::Aida::Any &any);\n'
+      s += '  ' + self.F ('friend void') + 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec);\n' % self.C (type_info)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -224,6 +232,24 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
+    s += 'bool\n'
+    s += '%s::operator== (const %s &other) const\n{\n' % (self.C (type_info), self.C (type_info))
+    for field in type_info.fields:
+      ident, type_node = field
+      s += '  if (this->%s != other.%s) return false;\n' % (ident, ident)
+    s += '  return true;\n'
+    s += '}\n'
+
+    s += 'void\n'
+    s += '%s::operator<<= (Rapicorn::Aida::Any &any)\n{\n' % self.C (type_info)
+    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };\n'
+    s += '  Any::any_to_record (any, *this);\n'
+    s += '}\n'
+    s += 'void\n' # friend decl
+    s += 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec)\n{\n' % self.C (type_info)
+    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };\n'
+    s += '  Any::any_from_record (any, rec);\n'
+    s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
@@ -267,22 +293,10 @@ class Generator:
     s += '  return back();\n'
     s += '}\n'
     return s
-  def generate_enum_impl (self, type_info):
-    s = '\n'
-    ns, nm = self.namespaced_identifier (None), type_info.name
-    s += 'static Rapicorn::Init __aida_autoinit__%s ([]() {\n' % nm
-    s += '  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {\n'
-    for opt in type_info.options:
-      (ident, label, blurb, number) = opt
-      s += '    RAPICORN_AIDA_ENUM_INFO_VALUE (%s),\n' % ident
-    s += '  };\n'
-    s += '  Rapicorn::Aida::EnumInfo::enlist ("%s", "%s", enum_values);\n' % (ns, nm)
-    s += '});\n'
-    return s
   def generate_enum_info_specialization (self, type_info):
     s = '\n'
-    ns, nm = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
-    s += 'template<> inline EnumInfo enum_info<%s::%s>() { return EnumInfo::from_nsid ("%s", "%s"); }\n' % (ns, nm, ns, nm)
+    classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
+    s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -380,8 +394,11 @@ class Generator:
     c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if ddc:
       s += c
+    if ddc and self.gen_mode == G4SERVANT:
+      s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '         __aida_type_code__ ()\t'
+      s += '{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ ()\t{ return "%s"; }\n' % classFull
+      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
       s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
@@ -924,6 +941,19 @@ class Generator:
     s += '};\n'
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
+  def generate_type_map (self, types):
+    s = '\n'
+    import TypeMap
+    binary_type_map = TypeMap.generate_type_map (types)
+    s += 'namespace { // Anon\n'
+    s += 'static const char __aida_type_map__[] =\n  '
+    cq = TypeMap.cquote (binary_type_map)
+    s += re.sub ('\n', '\n  ', cq) + ';\n\n'
+    s += 'static Rapicorn::Init __aida_autoinit_type_map__ ([]() {\n'
+    s += '  Rapicorn::Aida::TypeMap::enlist_map (__aida_type_map__);\n'
+    s += '});\n'
+    s += '} // Anon\n'
+    return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVANT
     s = ''
@@ -953,6 +983,15 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_virtual_method_skel (m, type_info)
     return s
+  def c_long_postfix (self, number):
+    num, minus = (-number, '-') if number < 0 else (number, '')
+    if num <= 2147483647:
+      return minus + str (num)
+    if num <= 9223372036854775807:
+      return minus + str (num) + 'LL'
+    if num <= 18446744073709551615:
+      return minus + str (num) + 'uLL'
+    return number # not a ULL?
   def generate_enum_decl (self, type_info):
     s = '\n'
     nm = type_info.name
@@ -961,7 +1000,7 @@ class Generator:
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
-      s += '  %s = %s,' % (ident, number)
+      s += '  %s = %s,' % (ident, self.c_long_postfix (number))
       if blurb:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
@@ -1099,9 +1138,6 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
-          s += self.open_namespace (tp)
-          s += self.generate_enum_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             s += self.open_namespace (tp)
@@ -1116,6 +1152,10 @@ class Generator:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
+    # generate unmarshalling server calls
+    if self.gen_clientcc:
+      s += self.open_namespace (None)
+      s += self.generate_type_map (types) + '\n'
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT

@@ -108,17 +108,8 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
-Any::Any() :
-  type_code (TypeMap::notype())
-{
-  memset (&u, 0, sizeof (u));
-}
-
-Any::Any (const Any &clone) :
-  type_code (TypeMap::notype())
-{
-  this->operator= (clone);
-}
+RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*));
+RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + sizeof (void*));
 
 Any&
 Any::operator= (const Any &clone)
@@ -126,14 +117,15 @@ Any::operator= (const Any &clone)
   if (this == &clone)
     return *this;
   reset();
-  type_code = clone.type_code;
+  type_code_ = clone.type_code_;
   switch (kind())
     {
-    case STRING:        new (&u) String (*(String*) &clone.u);          break;
-    case SEQUENCE:      new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
-    case RECORD:        new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
-    case ANY:           u.vany = new Any (*clone.u.vany);               break;
-    default:            u = clone.u;                                    break;
+    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
+    case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
+    case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
+    case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
+    case INSTANCE:      u_.shandle = new SmartHandle (*clone.u_.shandle); break;
+    default:            u_ = clone.u_;                                    break;
     }
   return *this;
 }
@@ -143,49 +135,110 @@ Any::reset()
 {
   switch (kind())
     {
-    case STRING:        ((String*) &u)->~String();              break;
-    case SEQUENCE:      ((AnyVector*) &u)->~AnyVector();        break;
-    case RECORD:        ((AnyVector*) &u)->~AnyVector();        break;
-    case ANY:           delete u.vany;                          break;
+    case STRING:        u_.vstring().~String();                  break;
+    case ANY:           delete u_.vany;                          break;
+    case SEQUENCE:      delete u_.vanys;                         break;
+    case RECORD:        delete u_.vfields;                       break;
+    case INSTANCE:      delete u_.shandle;                       break;
     default: ;
     }
-  type_code = TypeMap::notype();
-  memset (&u, 0, sizeof (u));
+  type_code_ = TypeMap::notype();
+  u_.vuint64 = 0;
+}
+
+void
+Any::retype (const TypeCode &tc)
+{
+  reset();
+  switch (tc.kind())
+    {
+    case STRING:   new (&u_.vstring()) String();                               break;
+    case ANY:      u_.vany = new Any();                                        break;
+    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
+    case RECORD:   u_.vfields = new FieldVector();                             break;
+    case INSTANCE: u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
+    default:    break;
+    }
+  type_code_ = tc;
 }
 
 void
 Any::rekind (TypeKind _kind)
 {
-  reset();
-  const char *type = NULL;
+  const char *name;
   switch (_kind)
     {
-    case UNTYPED:     type = NULL;                                      break;
-    case BOOL:        type = "bool";                                    break;
-    case INT32:       type = "int32";                                   break;
-      // case UINT32: type = "uint32";                                  break;
-    case INT64:       type = "int64";                                   break;
-    case FLOAT64:     type = "float64";                                 break;
-    case ENUM:        type = "int";                                     break;
-    case STRING:      type = "String";          new (&u) String();      break;
-    case ANY:         type = "Any";             u.vany = new Any();     break;
-    case SEQUENCE:    type = "Aida::AnySeq";    new (&u) AnyVector();   break;
-    case RECORD:      type = "Aida::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
-    case INSTANCE:    type = "Aida::Instance";                          break; // FIXME: missing details
+    case UNTYPED:
+      reset();
+      return;
+    case BOOL:          name = "bool";                  break;
+    case INT32:         name = "int32";                 break;
+      // case UINT32:   name = "uint32";                break;
+    case INT64:         name = "int64";                 break;
+    case FLOAT64:       name = "float64";               break;
+    case STRING:        name = "String";                break;
+    case ANY:           name = "Any";                   break;
+    case ENUM:          name = "Aida::DynamicEnum";     break;
+    case SEQUENCE:      name = "Aida::DynamicSequence"; break;
+    case RECORD:        name = "Aida::DynamicRecord";   break;
+    case INSTANCE:
     default:
-      error_printf ("Aida::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+      error_printf ("Aida::Any:rekind: incomplete type: %s", type_kind_name (_kind));
     }
-  type_code = TypeMap::lookup (type);
-  if (type_code.untyped() && type != NULL)
-    error_printf ("Aida::Any:rekind: invalid type name: %s", type);
-  if (kind() != _kind)
-    error_printf ("Aida::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
+  TypeCode tc = TypeMap::lookup (name);
+  if (tc.untyped())
+    error_printf ("Aida::Any:rekind: unknown type: %s", name);
+  retype (tc);
+}
+
+template<class T> String any_field_name (const T          &);
+template<>        String any_field_name (const Any        &any) { return ""; }
+template<>        String any_field_name (const Any::Field &any) { return any.name; }
+
+template<class AnyVector> static String
+any_vector_to_string (const AnyVector &av)
+{
+  String s;
+  for (auto const &any : av)
+    {
+      if (!s.empty())
+        s += ", ";
+      s += any.to_string (any_field_name (any));
+    }
+  s = s.empty() ? "[]" : "[ " + s + " ]";
+  return s;
+}
+
+String
+Any::to_string (const String &field_name) const
+{
+  String s = "{ ";
+  s += "type=" + Rapicorn::string_to_cquote (type().name());
+  if (!field_name.empty())
+    s += ", name=" + Rapicorn::string_to_cquote (field_name);
+  switch (kind())
+    {
+    case BOOL:
+    case ENUM:
+    case INT32:
+    case INT64:         s += string_printf (", value=%lld", u_.vint64);                          break;
+    case FLOAT64:       s += string_printf (", value=%.17g", u_.vdouble);                        break;
+    case ANY:           s += ", value=" + u_.vany->to_string();                                  break;
+    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());             break;
+    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);         break;
+    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);     break;
+    case INSTANCE:      s += string_printf (", value=#%08llx", u_.shandle->_orbid());            break;
+    default:            ;
+    case UNTYPED:       break;
+    }
+  s += " }";
+  return s;
 }
 
 bool
 Any::operator== (const Any &clone) const
 {
-  if (type_code != clone.type_code)
+  if (type_code_ != clone.type_code_)
     return false;
   switch (kind())
     {
@@ -193,13 +246,13 @@ Any::operator== (const Any &clone) const
       // case UINT: // chain
     case BOOL: case ENUM: // chain
     case INT32:
-    case INT64:       if (u.vint64 != clone.u.vint64) return false;                     break;
-    case FLOAT64:     if (u.vdouble != clone.u.vdouble) return false;                   break;
-    case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
-    case SEQUENCE:    if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
-    case RECORD:      if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
-    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME
-    case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
+    case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
+    case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
+    case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
+    case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
+    case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
+    case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
+    case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
     default:
       error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
     }
@@ -212,55 +265,38 @@ Any::operator!= (const Any &clone) const
   return !operator== (clone);
 }
 
-Any::~Any ()
-{
-  reset();
-}
-
-void
-Any::retype (const TypeCode &tc)
-{
-  if (type_code.untyped())
-    reset();
-  else
-    {
-      rekind (tc.kind());
-      type_code = tc;
-    }
-}
-
 void
 Any::swap (Any &other)
 {
-  const size_t usize = sizeof (this->u);
-  char *buffer[usize];
-  memcpy (buffer, &other.u, usize);
-  memcpy (&other.u, &this->u, usize);
-  memcpy (&this->u, buffer, usize);
-  type_code.swap (other.type_code);
+  constexpr size_t USIZE = sizeof (this->u_);
+  uint64_t buffer[(USIZE + 7) / 8];
+  memcpy (buffer, &other.u_, USIZE);
+  memcpy (&other.u_, &this->u_, USIZE);
+  memcpy (&this->u_, buffer, USIZE);
+  type_code_.swap (other.type_code_);
 }
 
 bool
 Any::to_int (int64_t &v, char b) const
 {
-  if (kind() != INT32 && kind() != INT64)
+  if (kind() != BOOL && kind() != INT32 && kind() != INT64)
     return false;
   bool s = 0;
   switch (b)
     {
-    case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
-    case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
-    case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
+    case 1:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 1;        break;
+    case 7:     s =  u_.vint64 >=      -128 &&  u_.vint64 <= 127;      break;
+    case 8:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 256;      break;
     case 47:    s = sizeof (long) == sizeof (int64_t); // chain
-    case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
+    case 31:    s |= u_.vint64 >=   INT_MIN &&  u_.vint64 <= INT_MAX;  break;
     case 48:    s = sizeof (long) == sizeof (int64_t); // chain
-    case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
+    case 32:    s |= u_.vint64 >=         0 &&  u_.vint64 <= UINT_MAX; break;
     case 63:    s = 1; break;
     case 64:    s = 1; break;
     default:    s = 0; break;
     }
   if (s)
-    v = u.vint64;
+    v = u_.vint64;
   return s;
 }
 
@@ -269,12 +305,13 @@ Any::as_int () const
 {
   switch (kind())
     {
-    case BOOL:          return u.vint64;
-    case INT32:
-    case INT64:         return u.vint64;
-    case FLOAT64:       return u.vdouble;
-    case ENUM:          return u.vint64;
-    case STRING:        return !((String*) &u)->empty();
+    case BOOL: case INT32: case INT64:
+    case ENUM:          return u_.vint64;
+    case FLOAT64:       return u_.vdouble;
+    case STRING:        return !u_.vstring().empty();
+    case SEQUENCE:      return !u_.vanys->empty();
+    case RECORD:        return !u_.vfields->empty();
+    case INSTANCE:      return u_.shandle && u_.shandle->_orbid();
     default:            return 0;
     }
 }
@@ -284,13 +321,8 @@ Any::as_float () const
 {
   switch (kind())
     {
-    case BOOL:          return u.vint64;
-    case INT32:
-    case INT64:         return u.vint64;
-    case FLOAT64:       return u.vdouble;
-    case ENUM:          return u.vint64;
-    case STRING:        return !((String*) &u)->empty();
-    default:            return 0;
+    case FLOAT64:       return u_.vdouble;
+    default:            return as_int();
     }
 }
 
@@ -301,9 +333,9 @@ Any::as_string() const
     {
     case BOOL: case ENUM:
     case INT32:
-    case INT64:         return string_printf ("%lli", u.vint64);
-    case FLOAT64:       return string_printf ("%.17g", u.vdouble);
-    case STRING:        return *(String*) &u;
+    case INT64:         return string_printf ("%lli", u_.vint64);
+    case FLOAT64:       return string_printf ("%.17g", u_.vdouble);
+    case STRING:        return u_.vstring();
     default:            return "";
     }
 }
@@ -316,11 +348,20 @@ Any::operator>>= (int64_t &v) const
 }
 
 bool
+Any::operator>>= (EnumValue &v) const
+{
+  if (kind() != ENUM)
+    return false;
+  v = EnumValue (u_.vint64);
+  return true;
+}
+
+bool
 Any::operator>>= (double &v) const
 {
   if (kind() != FLOAT64)
     return false;
-  v = u.vdouble;
+  v = u_.vdouble;
   return true;
 }
 
@@ -329,7 +370,7 @@ Any::operator>>= (std::string &v) const
 {
   if (kind() != STRING)
     return false;
-  v = *(String*) &u;
+  v = u_.vstring();
   return true;
 }
 
@@ -338,8 +379,56 @@ Any::operator>>= (const Any *&v) const
 {
   if (kind() != ANY)
     return false;
-  v = u.vany;
+  v = u_.vany;
   return true;
+}
+
+bool
+Any::operator>>= (const AnyVector *&v) const
+{
+  if (kind() != SEQUENCE)
+    return false;
+  v = u_.vanys;
+  return true;
+}
+
+bool
+Any::operator>>= (const FieldVector *&v) const
+{
+  if (kind() != RECORD)
+    return false;
+  v = u_.vfields;
+  return true;
+}
+
+bool
+Any::operator>>= (SmartHandle &v)
+{
+  if (kind() != INSTANCE)
+    return false;
+  v = u_.shandle ? *u_.shandle : SmartHandle::_null_handle();
+  return true;
+}
+
+void
+Any::operator<<= (bool v)
+{
+  ensure (BOOL);
+  u_.vint64 = v;
+}
+
+void
+Any::operator<<= (int32_t v)
+{
+  ensure (INT32);
+  u_.vint64 = v;
+}
+
+void
+Any::operator<<= (int64_t v)
+{
+  ensure (INT64);
+  u_.vint64 = v;
 }
 
 void
@@ -350,49 +439,213 @@ Any::operator<<= (uint64_t v)
 }
 
 void
-Any::operator<<= (int64_t v)
+Any::operator<<= (const EnumValue &v)
 {
-  if (kind() == BOOL && v >= 0 && v <= 1)
-    {
-      u.vint64 = v;
-      return;
-    }
-  ensure (INT64);
-  u.vint64 = v;
+  ensure (ENUM);
+  u_.vint64 = v.value;
 }
 
 void
 Any::operator<<= (double v)
 {
   ensure (FLOAT64);
-  u.vdouble = v;
+  u_.vdouble = v;
 }
 
 void
 Any::operator<<= (const String &v)
 {
   ensure (STRING);
-  ((String*) &u)->assign (v);
+  u_.vstring().assign (v);
 }
 
 void
 Any::operator<<= (const Any &v)
 {
   ensure (ANY);
-  if (u.vany != &v)
+  if (u_.vany != &v)
     {
-      Any *old = u.vany;
-      u.vany = new Any (v);
+      Any *old = u_.vany;
+      u_.vany = new Any (v);
       if (old)
         delete old;
     }
 }
 
 void
-Any::resize (size_t n)
+Any::operator<<= (const AnyVector &v)
 {
   ensure (SEQUENCE);
-  ((AnyVector*) &u)->resize (n);
+  if (u_.vanys != &v)
+    {
+      AnyVector *old = u_.vanys;
+      u_.vanys = new AnyVector (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::operator<<= (const FieldVector &v)
+{
+  ensure (RECORD);
+  if (u_.vfields != &v)
+    {
+      FieldVector *old = u_.vfields;
+      u_.vfields = new FieldVector (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::operator<<= (const SmartHandle &v)
+{
+  ensure (INSTANCE);
+  SmartHandle *old = u_.shandle;
+  u_.shandle = new SmartHandle (v);
+  if (old)
+    delete old;
+}
+
+void
+Any::from_proto (const TypeCode type_code, FieldReader &pbr)
+{
+  Any &any = *this;
+  switch (type_code.kind())
+    {
+    case BOOL:
+      any <<= pbr.pop_bool();
+      break;
+    case INT32:
+      any <<= pbr.pop_int64();
+      break;
+    case INT64:
+      any <<= pbr.pop_int64();
+      break;
+    case FLOAT64:
+      any <<= pbr.pop_double();
+      break;
+    case STRING:
+      any <<= pbr.pop_string();
+      break;
+    case ENUM:
+      any <<= EnumValue (pbr.pop_evalue());
+      break;
+    case ANY:
+      any <<= pbr.pop_any();
+      break;
+    case RECORD: {
+      const FieldBuffer &fb = pbr.pop_rec();
+      FieldReader fbr (fb);
+      const size_t field_count = type_code.field_count();
+      assert_return (fbr.n_types() == field_count);
+      Any::FieldVector fields;
+      for (size_t i = 0; i < field_count; i++)
+        {
+          TypeCode ftc = type_code.field (i).resolve();
+          Any fany (ftc);
+          fany.from_proto (ftc, fbr);
+          fields.push_back (Any::Field (ftc.name(), fany));
+        }
+      any.retype (type_code);
+      any <<= fields;
+    } break;
+    case SEQUENCE: {
+      const FieldBuffer &pb = pbr.pop_seq();
+      FieldReader rbr (pb);
+      assert_return (type_code.field_count() == 1);
+      TypeCode ftc = type_code.field (0).resolve();
+      const size_t len = rbr.remaining();
+      Any::AnyVector anys;
+      anys.resize (len);
+      for (size_t k = 0; k < len; k++)
+        {
+          Any fany (ftc);
+          fany.from_proto (ftc, rbr);
+          anys.push_back (fany);
+        }
+      any.retype (type_code);
+      any <<= anys;
+    } break;
+    case INSTANCE: {
+      SmartMember<SmartHandle> sh;
+      ObjectBroker::pop_handle (pbr, sh);
+      any <<= sh;
+    } break;
+    case TYPE_REFERENCE: // ?
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
+    }
+}
+
+void
+Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
+{
+  assert_return (pb.capacity() - pb.size() >= 1);
+  const Any &any = *this;
+  switch (type_code.kind())
+    {
+    case BOOL:
+      pb.add_bool (any.as_int());
+      break;
+    case INT32: case INT64:
+      pb.add_int64 (any.as_int());
+      break;
+    case FLOAT64:
+      pb.add_double (any.as_float());
+      break;
+    case STRING:
+      pb.add_string (any.as_string());
+      break;
+    case ENUM:
+      pb.add_evalue (any.as_int());
+      break;
+    case ANY:
+      pb.add_any (any.as_any());
+      break;
+    case RECORD: {
+      const size_t field_count = type_code.field_count();
+      FieldBuffer &rb = pb.add_rec (type_code.field_count());
+      assert_return (rb.capacity() - rb.size() >= field_count);
+      const Any::FieldVector *fields = NULL;
+      any >>= fields;
+      for (size_t i = 0; i < field_count; i++)
+        {
+          TypeCode ftc = type_code.field (i).resolve();
+          const Any *pany = NULL;
+          for (size_t j = 0; fields && j < fields->size(); j++)
+            if ((*fields)[j].name == ftc.name())
+              pany = &(*fields)[j];
+          uint64_t amem[(sizeof (Any) + 7) / 8];
+          const Any &fany = *(pany ? pany : new (amem) Any (ftc));      // stack Any constructor
+          fany.to_proto (ftc, rb);
+          if (!pany)
+            fany.~Any();                                                // stack Any destructor
+        }
+    } break;
+    case SEQUENCE: {
+      assert_return (type_code.field_count() == 1);
+      TypeCode ftc = type_code.field (0).resolve();
+      const Any::AnyVector *anys = NULL;
+      any >>= anys;
+      const size_t len = anys ? anys->size() : 0;
+      FieldBuffer &rb = pb.add_seq (len);
+      for (size_t i = 0; i < len; i++)
+        {
+          const Any &fany = (*anys)[i];
+          fany.to_proto (ftc, rb);
+        }
+    } break;
+    case INSTANCE:
+      pb.add_object (u_.shandle ? u_.shandle->_orbid() : 0);
+      break;
+    case TYPE_REFERENCE: // ?
+    default:
+      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
+      break;
+    }
 }
 
 // == OrbObject ==
@@ -442,16 +695,29 @@ SmartHandle::assign (const SmartHandle &src)
 SmartHandle::~SmartHandle()
 {}
 
+bool
+SmartHandle::operator== (const SmartHandle &other) const noexcept
+{
+  if (orbo_ && other.orbo_)
+    return orbo_->orbid() == other.orbo_->orbid();
+  return orbo_ == other.orbo_;
+}
+
+bool
+SmartHandle::operator!= (const SmartHandle &other) const noexcept
+{
+  return !operator== (other);
+}
+
 // == ObjectBroker ==
 typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
 static OrboMap orbo_map;
 static Mutex   orbo_mutex;
 
 void
-ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+ObjectBroker::tie_handle (SmartHandle &sh, const uint64_t orbid)
 {
   AIDA_ASSERT (NULL == sh);
-  const uint64_t orbid = fr.pop_object();
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
@@ -460,17 +726,9 @@ ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 }
 
 void
-ObjectBroker::dup_handle (const uint64_t fake[2], SmartHandle &sh)
+ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
 {
-  AIDA_ASSERT (sh == NULL);
-  if (fake[1])
-    return;
-  const uint64_t orbid = fake[0];
-  ScopedLock<Mutex> locker (orbo_mutex);
-  OrbObject *orbo = orbo_map[orbid];
-  if (AIDA_UNLIKELY (!orbo))
-    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.assign (SmartHandle (*orbo));
+  tie_handle (sh, fr.pop_object());
 }
 
 uint
@@ -1522,7 +1780,7 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   const uint connection_id = ObjectBroker::sender_connection_id (msgid);
   BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)
-    error_printf ("Message with invalid connection ID: %016lx (connection_id=0x%08x)", msgid, connection_id);
+    error_printf ("Message ID without valid connection: %016lx (connection_id=%u)", msgid, connection_id);
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards

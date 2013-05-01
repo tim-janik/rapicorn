@@ -2,7 +2,8 @@
 #ifndef __RAPICORN_AIDA_PROPS_HH__
 #define __RAPICORN_AIDA_PROPS_HH__
 
-#include <rcore/aidaenums.hh>
+#include <rcore/aida.hh>
+#include <rcore/strings.hh>
 
 namespace Rapicorn { namespace Aida {
 
@@ -163,12 +164,12 @@ create_property (void (Class::*setter) (const String&), String (Class::*getter) 
 // == Enum Properties ==
 template<class Class, typename Type>
 struct PropertyEnum : Property {
-  const EnumInfo enum_info;
+  const TypeCode enum_type;
   void (Class::*setter) (Type);
   Type (Class::*getter) () const;
   PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                 const char *cident, const char *clabel, const char *cblurb,
-                const EnumInfo &einfo, const char *chints);
+                const TypeCode &etype, const char *chints);
   virtual void   set_value   (PropertyHostInterface &obj, const String &svalue);
   virtual String get_value   (PropertyHostInterface &obj);
   virtual bool   get_range   (PropertyHostInterface &obj, double &minimum, double &maximum, double &stepping) { return false; }
@@ -177,8 +178,8 @@ template<class Class, typename Type> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 {
-  static const EnumInfo einfo = enum_info<Type>();
-  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, einfo, hints);
+  static const TypeCode etype = TypeCode::from_enum<Type>();
+  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, etype, hints);
 }
 
 /* --- implementations --- */
@@ -276,9 +277,9 @@ PropertyString<Class>::get_value (PropertyHostInterface &obj)
 template<class Class, typename Type>
 PropertyEnum<Class,Type>::PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                                         const char *cident, const char *clabel, const char *cblurb,
-                                        const EnumInfo &einfo, const char *chints) :
+                                        const TypeCode &etype, const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  enum_info (einfo),
+  enum_type (etype),
   setter (csetter),
   getter (cgetter)
 {}
@@ -287,11 +288,11 @@ template<class Class, typename Type> void
 PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &svalue)
 {
   String error_string;
-  uint64 value = enum_info.parse (svalue.c_str(), &error_string);
+  uint64 value = enum_type.enum_parse (svalue.c_str(), &error_string);
   // if (0 && error_string.size() && !value && string_has_int (svalue))
-  //   value = enum_info.constrain (string_to_int (svalue));
+  //   value = enum_type.constrain (string_to_int (svalue));
   if (error_string.size())
-    critical ("%s: invalid enum value name '%s': %s", RAPICORN_SIMPLE_FUNCTION, enum_info.enum_name().c_str(), error_string.c_str());
+    critical ("%s: invalid enum value name '%s': %s", RAPICORN_SIMPLE_FUNCTION, enum_type.name().c_str(), error_string.c_str());
   Type v = Type (value);
   Class *instance = dynamic_cast<Class*> (&obj);
   (instance->*setter) (v);
@@ -302,7 +303,7 @@ PropertyEnum<Class,Type>::get_value (PropertyHostInterface &obj)
 {
   Class *instance = dynamic_cast<Class*> (&obj);
   Type v = (instance->*getter) ();
-  return enum_info.string (v);
+  return enum_type.enum_string (v);
 }
 
 } } // Rapicorn::Aida

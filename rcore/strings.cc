@@ -553,6 +553,65 @@ string_endswith (const String &string, const String &fragment)
   return fragment.size() <= string.size() && 0 == string.compare (string.size() - fragment.size(), fragment.size(), fragment);
 }
 
+static inline bool
+c_isalnum (uint8 c)
+{
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+}
+
+static inline char
+identifier_char_canon (char c)
+{
+  if (c >= '0' && c <= '9')
+    return c;
+  else if (c >= 'A' && c <= 'Z')
+    return c - 'A' + 'a';
+  else if (c >= 'a' && c <= 'z')
+    return c;
+  else
+    return '-';
+}
+
+static inline bool
+identifier_match (const char *str1, const char *str2)
+{
+  while (*str1 && *str2)
+    {
+      const uint8 s1 = identifier_char_canon (*str1++);
+      const uint8 s2 = identifier_char_canon (*str2++);
+      if (s1 != s2)
+        return false;
+    }
+  return *str1 == 0 && *str2 == 0;
+}
+
+static bool
+match_identifier_detailed (const String &ident, const String &tail)
+{
+  assert_return (ident.size() >= tail.size(), false);
+  const char *word = ident.c_str() + ident.size() - tail.size();
+  if (word > ident.c_str()) // allow partial matches on word boundary only
+    {
+      if (c_isalnum (word[-1]) && c_isalnum (word[0])) // no word boundary
+        return false;
+    }
+  return identifier_match (word, tail.c_str());
+}
+
+/// Variant of string_match_identifier() that matches @a tail against @a ident at word boundary.
+bool
+string_match_identifier_tail (const String &ident, const String &tail)
+{
+  return ident.size() >= tail.size() && match_identifier_detailed (ident, tail);
+}
+
+/// Check equality of strings canonicalized to "[0-9a-z_]+".
+bool
+string_match_identifier (const String &ident1, const String &ident2)
+{
+  return ident1.size() == ident2.size() && match_identifier_detailed (ident1, ident2);
+}
+
 /// Extract the full function name from __PRETTY_FUNCTION__.
 /// See also RAPICORN_SIMPLE_FUNCTION.
 String
@@ -724,6 +783,43 @@ string_substitute_char (const String &input, const char match, const char subst)
       if (output.data()[i] == match)
         output[i] = subst; // unshares string
   return output;
+}
+
+/** Produce hexdump of a memory region.
+ * Each output line consists of its hexadecimal offset, 16 hexadecimal bytes and the ASCII representation of the same 16 bytes.
+ */
+String
+string_hexdump (const void *addr, size_t length, size_t initial_offset)
+{
+  // 000000d0  00 34 00 00 08 00 00 00  40 00 00 00 61 00 00 00  |.4......@...a...|
+  const unsigned char *data = (const unsigned char*) addr;
+  size_t i;
+  String out, cx, cc = "|";
+  for (i = 0; i < length; i++)
+    {
+      if (i % 16 == 0)
+        {
+          if (i)
+            {
+              cc += "|";
+              out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+              cx = "";
+              cc = "|";
+            }
+        }
+      else if (i % 8 == 0)
+        cx += " ";
+      cx += string_printf (" %02x", data[i]);
+      cc += string_printf ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
+    }
+  if (i < ((length + 15) & ~15))
+    {
+      cc += "|";
+      for (; i < ((length + 15) & ~15); i++)
+        cx += "   ";
+      out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+    }
+  return out;
 }
 
 /// Fill a memory area with a 32-bit quantitiy.

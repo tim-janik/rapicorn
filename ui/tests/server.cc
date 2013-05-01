@@ -107,3 +107,48 @@ test_application_xurl()
   lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == NULL);
 }
 REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
+
+static void
+test_idl_enums()
+{
+  Aida::TypeCode at = Aida::TypeMap::lookup ("Rapicorn::AnchorType");
+  assert (at.kind() == Aida::ENUM);
+  assert (at.name() == "Rapicorn::AnchorType");
+  assert (at == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
+  Aida::EnumValue ev;
+  ev = at.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
+  ev = at.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
+  assert (at.enum_combinable() == false);
+  assert (at.enum_string (ANCHOR_NORTH) == "ANCHOR_NORTH");
+  uint64 amask = at.enum_parse ("south-west");
+  assert (amask == ANCHOR_SOUTH_WEST);
+  Aida::TypeCode st = Aida::TypeCode::from_enum<StateType>();
+  assert (st.kind() == Aida::ENUM);
+  assert (st.name() == "Rapicorn::StateType");
+  assert (st.enum_combinable() == true);
+  uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_PRELIGHT|STATE_IMPRESSED");
+  assert (smask == (STATE_INSENSITIVE | STATE_PRELIGHT | STATE_IMPRESSED));
+  assert (st.enum_string (STATE_INSENSITIVE) == "STATE_INSENSITIVE");
+  assert (st.enum_string (STATE_INSENSITIVE|STATE_IMPRESSED) == "STATE_IMPRESSED|STATE_INSENSITIVE");
+}
+REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
+
+static void
+test_type_codes()
+{
+  ApplicationImpl &app = ApplicationImpl::the();
+  Aida::TypeCode tc = app.__aida_type_code__();
+  assert (tc.kind() == Aida::INSTANCE);
+  assert (tc.name() == "Rapicorn::Application");
+  assert (tc.untyped() == false);
+  Pixbuf pixbuf;
+  tc = pixbuf.__aida_type_code__();
+  assert (tc.kind() == Aida::RECORD);
+  assert (tc.name() == "Rapicorn::Pixbuf");
+  assert (tc.untyped() == false);
+  assert (tc.field_count() == 3);
+  assert (tc.field (0).name() == "row_length"); (void) pixbuf.row_length;
+  assert (tc.field (1).name() == "pixels");     (void) pixbuf.pixels;
+  assert (tc.field (2).name() == "variables");  (void) pixbuf.variables;
+}
+REGISTER_UITHREAD_TEST ("Server/IDL Type Codes", test_type_codes);

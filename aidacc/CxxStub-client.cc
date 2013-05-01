@@ -17,19 +17,19 @@ static Rapicorn::Init init_client_connection ([]() {
 
 // helper
 
-static FieldBuffer*
+static AIDA_UNUSED FieldBuffer*
 invoke (FieldBuffer *fb)                // async remote call, transfers memory
 {
   return client_connection->call_remote (fb);
 }
 
-static bool
+static AIDA_UNUSED bool
 signal_disconnect (size_t signal_handler_id)
 {
   return client_connection->signal_disconnect (signal_handler_id);
 }
 
-static size_t
+static AIDA_UNUSED size_t
 signal_connect (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
 {
   return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data);
@@ -46,8 +46,8 @@ smh2cast (const SmartHandle &handle)
 {
   const uint64_t orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
-  const uint64_t input[2] = { orbid, target._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (target, orbid);
   return target;
 }
 

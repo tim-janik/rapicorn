@@ -56,7 +56,10 @@ class YYGlobals (object):
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values, as_flags):
-    if len (enum_values) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (enum_values) == 1 and enum_values[0][0] == '__builtin__deleteme__'):
+      enum_values = []
+    elif len (enum_values) < 1:
       raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     if as_flags:
@@ -66,7 +69,10 @@ class YYGlobals (object):
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
-    if len (rfields) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (rfields) == 1 and rfields[0][0] == '__builtin__deleteme__'):
+      rfields = []
+    elif len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
     rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
     self.parse_assign_auxdata (rfields)
@@ -138,7 +144,7 @@ class YYGlobals (object):
     if adef == None:
       pass # no default arg
     elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64):
-      if not isinstance (adef, (bool, int, float)):
+      if not isinstance (adef, (bool, int, long, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
       if adef != 0:
@@ -277,7 +283,7 @@ def unquote (qstring):
   import rfc822
   return rfc822.unquote (qstring)
 def TN (number_candidate):  # test number
-  return isinstance (number_candidate, int) or isinstance (number_candidate, float)
+  return isinstance (number_candidate, (int, long)) or isinstance (number_candidate, float)
 def TS (string_candidate):  # test string
   return isinstance (string_candidate, str) and len (string_candidate) >= 2
 def TSp (string_candidate): # test plain string

@@ -28,6 +28,7 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_ISLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 1)
 #define AIDA_UNLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 0)
 #define AIDA_ASSERT(expr)       do { if (__builtin_expect (!(expr), 0)) ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); } while (0)
+#define AIDA_ASSERT_RETURN(expr,...) do { if (__builtin_expect (!!(expr), 1)) break; ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); return __VA_ARGS__; } while (0)
 #else   // !__GNUC__
 #define AIDA_UNUSED
 #define AIDA_DEPRECATED
@@ -41,8 +42,12 @@ namespace Rapicorn { namespace Aida {
 
 // == Standard Types ==
 using std::vector;
+typedef std::string String;
 typedef signed long long int   int64_t;  // libc's int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64_t; // libc's uint64_t is a long on AMD64 which breaks printf
+
+// == Prototypes ==
+class SmartHandle;
 
 // == TypeKind ==
 /// Classification enum for the underlying kind of a TypeCode.
@@ -55,8 +60,8 @@ enum TypeKind {
   FLOAT64        = 'd', ///< Floating point type of IEEE-754 Double precision.
   STRING         = 's', ///< String type for character sequence in UTF-8 encoding.
   ENUM           = 'E', ///< Enumeration type to represent choices.
-  SEQUENCE       = 'Q', ///< Type to form sequences of other types.
-  RECORD         = 'R', ///< Record type containing named field.
+  SEQUENCE       = 'Q', ///< Type to form sequences of an other type.
+  RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
   FUNC           = 'F', ///< Type of methods or signals.
   TYPE_REFERENCE = 'T', ///< Type reference for record fields.
@@ -64,10 +69,22 @@ enum TypeKind {
 };
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
+/// Aida wrapper for enumeration values.
+struct EnumValue {
+  int64_t value;
+  const char *ident, *label, *blurb;
+  constexpr EnumValue (int64_t dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
+};
+
 // == TypeCode ==
 struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
 {
-  typedef std::string String;
+  /*copy*/              TypeCode        (const TypeCode&);
+  /*dtor*/             ~TypeCode        ();
+  bool                  operator!=      (const TypeCode&) const;
+  bool                  operator==      (const TypeCode&) const;
+  TypeCode&             operator=       (const TypeCode&);
+  void                  swap            (TypeCode &other);      ///< Swap the contents of @a this and @a other in constant time.
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
   std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
@@ -75,22 +92,25 @@ struct TypeCode /// Representation of type information to describe structured ty
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
   std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
   std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
-  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  std::vector<String>   enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.
   TypeCode              field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
   std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
+  TypeCode              resolve         () const;               ///< Returns type code after resolving kind TYPE_REFERENCE.
   bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
-  bool                  operator!=      (const TypeCode &o) const;
-  bool                  operator==      (const TypeCode&) const;
-  /*copy*/              TypeCode        (const TypeCode&);
-  TypeCode&             operator=       (const TypeCode&);
-  /*dtor*/             ~TypeCode        ();
-  void                  swap            (TypeCode &other); ///< Swap the contents of @a this and @a other in constant time.
-  class InternalType;  class MapHandle;
+  bool                  enum_combinable () const;               ///< Indicate if multiple enum values are combinable into a mask.
+  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
+  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
+  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
+  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
+  String                enum_string     (int64 value) const;    ///< Convert enum value to string, possibly combining identifiers.
+  int64                 enum_parse      (const String &value_string, String *error = NULL) const; ///< Parse an enum_string() result.
+  template<class E> static
+  inline TypeCode       from_enum       ();                     ///< Retrieve a TypeCode by giving the enum C++ type.
+  class InternalType;
+  class MapHandle;
 private: // implementation bits
   explicit              TypeCode        (MapHandle*, InternalType*);
   static TypeCode       notype          (MapHandle*);
@@ -101,9 +121,11 @@ private: // implementation bits
 
 class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
 {
-  TypeCode::MapHandle  *handle_;     friend class TypeCode::MapHandle;
+  TypeCode::MapHandle  *handle_;
+  friend class TypeCode::MapHandle;
   explicit              TypeMap      (TypeCode::MapHandle*);
   static TypeMap        builtins     ();
+  static TypeMap        enlist_map   (size_t length, const char *static_type_map, bool global);
 public:
   /*copy*/              TypeMap      (const TypeMap&);
   TypeMap&              operator=    (const TypeMap&);
@@ -116,6 +138,8 @@ public:
   static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
   TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
   static TypeCode       notype       ();
+  template<ssize_t S>
+  static void           enlist_map   (const char (&static_type_map)[S]) { enlist_map (S, static_type_map, true); }
 };
 
 // == Type Declarations ==
@@ -139,30 +163,64 @@ protected:
   bool                        __aida_setter__     (const std::string &property_name, const std::string &value);
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
-  virtual std::string        __aida_type_name__   () = 0; ///< Retrieve the IDL type name of an instance.
+  virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
 };
 
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
-  typedef std::string String;
-  TypeCode type_code;
-  typedef std::vector<Any> AnyVector;
-  union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; uint64_t qmem[(sizeof (AnyVector) + 7) / 8];
-    uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8]; } u;
+  ///@cond
+  template<class ANY> struct AnyField : ANY { // We must wrap Any::Field into a template, because "Any" is not yet fully defined.
+    std::string name;
+    AnyField () = default;
+    AnyField (const std::string &_name, const ANY &any) : name (_name) { this->ANY::operator= (any); }
+    template<class V>
+    AnyField (const std::string &_name, const V &value) : name (_name) { this->operator<<= (value); }
+  };
+  ///@endcond
+public:
+#ifndef DOXYGEN
+  typedef AnyField<Any> Field;  // See DOXYGEN section for the "unwrapped" definition.
+#else // DOXYGEN
+  struct Field : Any    /// Any::Field is an Any with a std::string @a name attached.
+  {
+    String name;        ///< The @a name of this Any::Field, as used in e.g. #RECORD types.
+    AnyField();         ///< Default initialize Any::Field.
+    AnyField (const String &name, const Any &any);                   ///< Initialize Any::Field with @a name and an @a any value.
+    template<class V> AnyField (const String &name, const V &value); ///< Initialize Any::Field with a @a value convertible to an Any.
+  };
+#endif // DOXYGEN
+  typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
+  typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
+protected:
+  bool  plain_zero_type (TypeKind kind);
+  template<class Rec> static void any_from_record (Any &any, const Rec &record);
+  template<class Rec> static void any_to_record   (Any &any, Rec &record);
+private:
+  TypeCode type_code_;
+  union {
+    uint64_t vuint64; int64_t vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle;
+    String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
+    const String& vstring() const { return *(const String*) this; }
+  } u_;
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
   bool    to_int  (int64_t &v, char b) const;
+  void    to_proto   (const TypeCode type_code, FieldBuffer &fb) const;
+  void    from_proto (const TypeCode type_code, FieldReader &fbr);
 public:
-  /*dtor*/ ~Any    ();
-  explicit  Any    ();
+  /*dtor*/ ~Any    ();                                   ///< Any destructor.
+  explicit  Any    ();                                   ///< Default initialize Any with no type.
+  explicit  Any    (const TypeCode &tc);                 ///< Default initialize Any for a specific type.
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
+  template<class V>
+  explicit  Any    (const V &value);                     ///< Initialize Any with a @a value convertible to an Any.
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
-  TypeCode  type   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
-  TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
+  TypeCode  type   () const { return type_code_; }       ///< Obtain the full TypeCode for the contents of this Any.
+  TypeKind  kind   () const { return type_code_.kind(); } ///< Obtain the underlying primitive type kind.
   void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
   void      swap   (Any            &other);              ///< Swap the contents of @a this and @a other in constant time.
   bool operator>>= (bool          &v) const { int64_t d; const bool r = to_int (d, 1); v = d; return r; }
@@ -176,21 +234,22 @@ public:
   bool operator>>= (uint64_t      &v) const { int64_t d; const bool r = to_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
   bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
-  bool operator>>= (const char   *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
-  bool operator>>= (std::string   &v) const; ///< Extract a std::string if possible.
-  bool operator>>= (const Any    *&v) const; ///< Extract an Any if possible.
-  const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  bool operator>>= (EnumValue          &v) const; ///< Extract the numeric representation of an EnumValue if possible.
+  bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
+  bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
+  bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
+  bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
+  bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
+  bool operator>>= (SmartHandle        &v);
+  String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
+  const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64_t    as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
   String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
-  // >>= enum
-  // >>= sequence
-  // >>= record
-  // >>= instance
-  void operator<<= (bool           v) { operator<<= (int64_t (v)); }
-  void operator<<= (char           v) { operator<<= (int64_t (v)); }
-  void operator<<= (unsigned char  v) { operator<<= (int64_t (v)); }
-  void operator<<= (int            v) { operator<<= (int64_t (v)); }
+  void operator<<= (bool           v);
+  void operator<<= (char           v) { operator<<= (int32_t (v)); }
+  void operator<<= (unsigned char  v) { operator<<= (int32_t (v)); }
+  void operator<<= (int32_t        v);
   void operator<<= (unsigned int   v) { operator<<= (int64_t (v)); }
   void operator<<= (long           v) { operator<<= (int64_t (v)); }
   void operator<<= (unsigned long  v) { operator<<= (int64_t (v)); }
@@ -198,15 +257,14 @@ public:
   void operator<<= (int64_t        v); ///< Store a 64bit integer.
   void operator<<= (float          v) { operator<<= (double (v)); }
   void operator<<= (double         v); ///< Store a double floating point number.
-  void operator<<= (const char    *v) { operator<<= (std::string (v)); }
-  void operator<<= (char          *v) { operator<<= (std::string (v)); }
-  void operator<<= (const String  &v); ///< Store a std::string.
-  void operator<<= (const Any     &v); ///< Store an Any,
-  // <<= enum
-  // <<= sequence
-  // <<= record
-  // <<= instance
-  void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
+  void operator<<= (const EnumValue   &v); ///< Store the numeric representation of an EnumValue.
+  void operator<<= (const char        *v) { operator<<= (std::string (v)); }
+  void operator<<= (char              *v) { operator<<= (std::string (v)); }
+  void operator<<= (const String      &v); ///< Store a std::string.
+  void operator<<= (const Any         &v); ///< Store an Any.
+  void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
+  void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
+  void operator<<= (const SmartHandle &v);
 };
 
 // == Type Hash ==
@@ -306,6 +364,8 @@ public:
   explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
   bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
   bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
+  bool              operator==    (const SmartHandle&) const noexcept;
+  bool              operator!=    (const SmartHandle&) const noexcept;
 };
 inline bool operator== (std::nullptr_t, const SmartHandle &shd) noexcept { return !static_cast<bool> (shd); }
 inline bool operator!= (std::nullptr_t, const SmartHandle &shd) noexcept { return static_cast<bool> (shd); }
@@ -325,9 +385,10 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle fro
 
 // == ObjectBroker ==
 class ObjectBroker {
+protected:
+  static void              tie_handle (SmartHandle&, uint64_t);
 public:
   static void              pop_handle (FieldReader&, SmartHandle&);
-  static void              dup_handle (const uint64_t[2], SmartHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
@@ -343,22 +404,17 @@ public:
 };
 
 // == FieldBuffer ==
-class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
-
 union FieldUnion {
   int64_t      vint64;
   double       vdouble;
   Any         *vany;
-  uint64_t     smem[(sizeof (std::string) + 7) / 8];      // String
-  uint64_t     bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
+  uint64_t     smem[(sizeof (std::string) + 7) / 8];    // String memory
+  void        *pmem[2];                 // equate sizeof (FieldBuffer)
   uint8_t      bytes[8];                // FieldBuffer types
-  struct { uint32_t capacity, index; }; // FieldBuffer.buffermem[0]
+  struct { uint32_t index, capacity; }; // FieldBuffer.buffermem[0]
 };
 
-struct EnumValue { int64_t v; EnumValue (int64_t e) : v (e) {} };
-
 class FieldBuffer { // buffer for marshalling procedure calls
-  typedef std::string String;
   friend class FieldReader;
   void               check_internal ();
   inline FieldUnion& upeek (uint32_t n) const { return buffermem[offset() + n]; }
@@ -368,16 +424,16 @@ protected:
   inline uint32_t    offset () const { const uint32_t offs = 1 + (capacity() + 7) / 8; return offs; }
   inline TypeKind    type_at  (uint32_t n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline uint32_t    size () const           { return buffermem[0].index; }
   inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline FieldUnion& uat (uint32_t n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
+  inline FieldUnion& uat (uint32_t n) const { return AIDA_LIKELY (n < size()) ? upeek (n) : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint32_t _ntypes);
   explicit           FieldBuffer (uint32_t, FieldUnion*, uint32_t);
 public:
   virtual     ~FieldBuffer();
+  inline uint32_t size     () const        { return buffermem[0].index; }
   inline uint32_t capacity () const        { return buffermem[0].capacity; }
-  inline uint64_t first_id () const        { return buffermem && size() && type_at (0) == INT64 ? upeek (0).vint64 : 0; }
+  inline uint64_t first_id () const        { return AIDA_LIKELY (buffermem && size() && type_at (0) == INT64) ? upeek (0).vint64 : 0; }
   inline void add_bool   (bool    vbool)   { FieldUnion &u = addu (BOOL); u.vint64 = vbool; }
   inline void add_int64  (int64_t vint64)  { FieldUnion &u = addu (INT64); u.vint64 = vint64; }
   inline void add_evalue (int64_t vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
@@ -403,7 +459,7 @@ public:
   inline void operator<<= (int    v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (bool   v)          { FieldUnion &u = addu (BOOL); u.vint64 = v; }
   inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT64); u.vdouble = v; }
-  inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; }
+  inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (Any    v)          { FieldUnion &u = addu (ANY); u.vany = new Any (v); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
@@ -413,11 +469,10 @@ class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 
   FieldUnion bmem[1 + 1 + 8];
 public:
   virtual ~FieldBuffer8 () { reset(); buffermem = NULL; }
-  inline   FieldBuffer8 (uint32_t ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
+  inline   FieldBuffer8 (uint32_t ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
 };
 
 class FieldReader { // read field buffer contents
-  typedef std::string String;
   const FieldBuffer *fb_;
   uint32_t           nth_;
   void               check_request (int type);
@@ -459,7 +514,7 @@ public:
   inline void operator>>= (int &v)             { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
   inline void operator>>= (bool &v)            { FieldUnion &u = fb_popu (BOOL); v = u.vint64; }
   inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
-  inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; }
+  inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.value = u.vint64; }
   inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *u.vany; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
@@ -532,6 +587,92 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
+template<class E> inline TypeCode
+TypeCode::from_enum () // fallback for unspecialized types
+{
+  static_assert (0 * sizeof (E), "no EnumInfo specialisation for this type");
+  return *(TypeCode*) NULL; // silence compiler
+}
+
+template<class V> inline
+Any::Any (const V &value) :
+  type_code_ (TypeMap::notype()), u_ {0}
+{
+  this->operator<<= (value);
+}
+
+template<> inline
+Any::Any<Any::Field> (const Any::Field &clone) :
+  type_code_ (TypeMap::notype()), u_ {0}
+{
+  this->operator= (clone);
+}
+
+inline
+Any::Any() :
+  type_code_ (TypeMap::notype()), u_ {0}
+{}
+
+inline
+Any::Any (const TypeCode &tc) :
+  type_code_ (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u_ {0}
+{
+  if (!plain_zero_type (tc.kind()))
+    retype (tc);        // carry out special initializations
+}
+
+inline bool
+Any::plain_zero_type (TypeKind kind)
+{
+  switch (kind)
+    {
+    case UNTYPED: case BOOL: case INT32: case INT64: case FLOAT64: case ENUM:
+      return true;      // simple, properly initialized with u {0}
+    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE:
+    default:
+      return false;     // complex types, needing special initializations
+    }
+}
+
+inline
+Any::Any (const Any &clone) :
+  type_code_ (TypeMap::notype()), u_ {0}
+{
+  this->operator= (clone);
+}
+
+inline
+Any::~Any ()
+{
+  reset();
+}
+
+template<class Rec> inline void
+Any::any_from_record (Any &any, const Rec &record)
+{
+  const std::string record_type_name = record.__aida_type_name__();
+  TypeCode type_code = TypeMap::lookup (record_type_name);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  FieldBuffer8 cfb (1);
+  cfb <<= record;
+  FieldReader fbr (cfb);
+  any.from_proto (type_code, fbr);
+}
+
+template<class Rec> inline void
+Any::any_to_record (Any &any, Rec &record)
+{
+  const std::string record_type_name = record.__aida_type_name__();
+  TypeCode type_code = TypeMap::lookup (record_type_name);
+  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
+  AIDA_ASSERT_RETURN (any.kind() == RECORD);
+  FieldBuffer8 cfb (1);
+  any.to_proto (type_code, cfb);
+  FieldReader fbr (cfb);
+  AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
+  fbr >>= record;
+}
+
 template<class TargetHandle> TargetHandle
 ObjectBroker::smart_handle_down_cast (SmartHandle smh)
 {

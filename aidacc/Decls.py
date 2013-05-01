@@ -222,12 +222,13 @@ class TypeInfo (BaseDecl):
   def set_combinable (self, as_flags):
     assert self.storage == ENUM
     self.combinable = as_flags
+    self.update_auxdata ({ 'enum_combinable' : int (bool (self.combinable)) })
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)
     assert isinstance (label, str)
     assert isinstance (blurb, str)
-    assert isinstance (number, int)
+    assert isinstance (number, (int, long))
     self.options += [ (ident, label, blurb, number) ]
   def has_option (self, ident = None, label = None, blurb = None, number = None):
     assert self.storage == ENUM

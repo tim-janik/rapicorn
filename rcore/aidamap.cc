@@ -46,11 +46,11 @@ struct InternalString {
 struct TypeCode::InternalType {
   uint32_t      tkind;          // type kind
   uint32_t      name;           // string index
-  uint32_t      aux_strings;    // list[string index] index; assignment strings
-  uint32_t      custom;         // custom index
-  // enum:      list[string index] index; 3 strings per value
-  // interface: list[string index] index; prerequisite names
-  // record:    list[type index] index; InternalType per field
+  uint32_t      aux_strings;    // index of list<string index>; assignment strings
+  uint32_t      custom;         // custom index, used as follows:
+  // enum:      index of list<string index>; 3 strings per value (list length is 3 * enum_count())
+  // interface: index of list<string index>; prerequisite names
+  // record:    index of list<type index>; InternalType per field
   // sequence:  type index; InternalType for sequence field
   // reference: string index; name of referenced type
 };
@@ -63,7 +63,7 @@ struct InternalMap {
   uint32_t      seg_lists;      // list segment offset
   uint32_t      seg_strings;    // string segment offset
   uint32_t      pad3;
-  uint32_t      types;          // list[type index] index; public types
+  uint32_t      types;          // index of list<type index>; public types
   uint32_t      pad4, pad5, pad6;
   bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
   bool          check_magic     () { return (magic[0] == 0x61646941 && magic[1] == 0x65707954 &&
@@ -74,9 +74,10 @@ struct InternalMap {
             seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
             length >= seg_strings);
   }
-  InternalList*   internal_list   (uint32_t offset) const;
-  InternalType*   internal_type   (uint32_t offset) const;
-  InternalString* internal_string (uint32_t offset) const;
+  InternalList*   internal_list    (uint32_t offset) const;
+  InternalType*   internal_type    (uint32_t offset) const;
+  InternalString* internal_string  (uint32_t offset) const;
+  static uint64_t internal_big_int (uint32_t low, uint32_t high) { return low + (uint64_t (high) << 32); }
 };
 static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalType))] = { 0, };
 struct TypeCode::MapHandle {
@@ -86,16 +87,27 @@ private:
   const size_t      length_;
   const bool        needs_free_;
   int               status_;
+  Spinlock          mutex_;
+  std::map<int32,int> cache_;
 public:
-  int             status          ()                { return status_; }
-  InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
-  InternalType*   internal_type   (uint32_t offset) { return imap->internal_type (offset); }
-  InternalString* internal_string (uint32_t offset) { return imap->internal_string (offset); }
+  int             status           ()                { return status_; }
+  InternalList*   internal_list    (uint32_t offset) { return imap->internal_list (offset); }
+  InternalType*   internal_type    (uint32_t offset) { return imap->internal_type (offset); }
+  InternalString* internal_string  (uint32_t offset) { return imap->internal_string (offset); }
+  uint64_t        internal_big_int (uint32_t low, uint32_t high) { return imap->internal_big_int (low, high); }
   std::string
   simple_string (uint32_t offset)
   {
     InternalString *is = internal_string (offset);
     return AIDA_LIKELY (is) ? std::string (is->chars, is->length) : "";
+  }
+  const char*
+  simple_cstring (uint32_t offset)
+  {
+    InternalString *is = internal_string (offset);
+    if (AIDA_UNLIKELY (!is || !is->chars || (is->length && is->chars[is->length] != 0)))
+      return NULL;
+    return is->length ? is->chars : "";
   }
   MapHandle*
   ref()
@@ -135,6 +147,22 @@ public:
     assert (handle->ref_count_ == 1);
     return type_map;
   }
+  TypeCode
+  lookup_local (std::string name)
+  {
+    InternalList *il = internal_list (imap->types);
+    const size_t clen = name.size();
+    const char* cname = name.data(); // not 0-terminated
+    if (AIDA_LIKELY (il))
+      for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
+        {
+          InternalType *it = internal_type (il->items[i]);
+          InternalString *is = AIDA_LIKELY (it) ? internal_string (it->name) : NULL;
+          if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
+            return TypeCode (this, it);
+        }
+    return TypeCode::notype (this);
+  }
 private:
   MapHandle (void *addr, size_t length, bool needs_free) :
     imap ((InternalMap*) addr), ref_count_ (0), length_ (length),
@@ -158,7 +186,7 @@ InternalMap::internal_list (uint32_t offset) const
   if (AIDA_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
     __AIDA_return_EFAULT (NULL);
   InternalList *il = (InternalList*) (((char*) this) + offset);
-  if (AIDA_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
+  if (AIDA_UNLIKELY (il->length > seg_strings || offset + sizeof (*il) + il->length * 4 > seg_strings))
     __AIDA_return_EFAULT (NULL);
   return il;
 }
@@ -272,18 +300,7 @@ TypeMap::lookup (std::string name)
 TypeCode
 TypeMap::lookup_local (std::string name) const
 {
-  InternalList *il = handle_->internal_list (handle_->imap->types);
-  const size_t clen = name.size();
-  const char* cname = name.data(); // not 0-terminated
-  if (AIDA_LIKELY (il))
-    for (size_t i = 0; AIDA_LIKELY (i < il->length); i++)
-      {
-        InternalType *it = handle_->internal_type (il->items[i]);
-        InternalString *is = AIDA_LIKELY (it) ? handle_->internal_string (it->name) : NULL;
-        if (AIDA_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
-          return TypeCode (handle_, it);
-      }
-  return TypeCode::notype (handle_);
+  return handle_->lookup_local (name);
 }
 
 TypeCode
@@ -415,22 +432,140 @@ TypeCode::enum_count () const
   if (kind() != ENUM)
     return 0;
   InternalList *il = handle_->internal_list (type_->custom);
-  return il ? il->length / 3 : 0;
+  return il && il->length % 5 == 0 ? il->length / 5 : 0;
 }
 
-std::vector<std::string>
-TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
+EnumValue
+TypeCode::enum_value (const size_t index) const
 {
-  std::vector<String> sv;
+  EnumValue ev;
   if (kind() != ENUM)
-    return sv;
+    return ev;
   InternalList *il = handle_->internal_list (type_->custom);
-  if (!il || index * 3 > il->length)
-    __AIDA_return_EFAULT (sv);
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 0]));   // ident
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 1]));   // label
-  sv.push_back (handle_->simple_string (il->items[index * 3 + 2]));   // blurb
-  return sv;
+  if (!il || il->length == 0 || il->length % 5 != 0 || index >= il->length / 5)
+    __AIDA_return_EFAULT (ev);
+  ev.value = handle_->internal_big_int (il->items[index * 5 + 0], il->items[index * 5 + 1]);
+  ev.ident = handle_->simple_cstring (il->items[index * 5 + 2]);
+  ev.label = handle_->simple_cstring (il->items[index * 5 + 3]);
+  ev.blurb = handle_->simple_cstring (il->items[index * 5 + 4]);
+  return ev;
+}
+
+EnumValue
+TypeCode::enum_find (int64 value) const
+{
+  const EnumValue ev;
+  if (kind() != ENUM)
+    return ev;
+  InternalList *il = handle_->internal_list (type_->custom);
+  if (!il || il->length == 0 || il->length % 5 != 0)
+    __AIDA_return_EFAULT (ev);
+  for (size_t i = 0; i < il->length / 5; i++)
+    {
+      const int64 evalue = handle_->internal_big_int (il->items[i * 5 + 0], il->items[i * 5 + 1]);
+      if (value == evalue)
+        return enum_value (i);
+    }
+  return ev;
+}
+
+EnumValue
+TypeCode::enum_find (const String &name) const
+{
+  const EnumValue ev;
+  if (kind() != ENUM)
+    return ev;
+  InternalList *il = handle_->internal_list (type_->custom);
+  if (!il || il->length == 0 || il->length % 5 != 0)
+    __AIDA_return_EFAULT (ev);
+  for (size_t i = 0; i < il->length / 5; i++)
+    {
+      const char *ident = handle_->simple_cstring (il->items[i * 5 + 2]);
+      if (ident && string_match_identifier_tail (ident, name))
+        return enum_value (i);
+    }
+  return ev;
+}
+
+bool
+TypeCode::enum_combinable () const
+{
+  return string_to_bool (aux_value ("enum_combinable"));
+}
+
+String
+TypeCode::enum_string (int64 mask) const
+{
+  if (kind() != ENUM)
+    return "";
+  if (!enum_combinable())
+    {
+      const EnumValue ev = enum_find (mask);
+      return ev.ident ? ev.ident : "";
+    }
+  const size_t n_evalues = enum_count();
+  EnumValue evalues[n_evalues];
+  for (size_t i = 0; i < n_evalues; i++)
+    evalues[i] = enum_value (i);
+  String s;
+  // combine flags
+  while (mask)
+    {
+      const EnumValue *match1 = NULL;
+      for (size_t i = 0; i < n_evalues; i++)
+        if (evalues[i].value && evalues[i].value == (mask & evalues[i].value))
+          // choose the greatest match, needed by mixed flags/enum types (StateMask)
+          match1 = match1 && match1->value > evalues[i].value ? match1 : &evalues[i];
+      if (match1)
+        {
+          if (s[0])
+            s = s + "|" + String (match1->ident);
+          else
+            s = String (match1->ident);
+          mask &= ~match1->value;
+        }
+      else
+        mask = 0; // no match
+    }
+  if (!s[0] && mask == 0)
+    for (uint i = 0; i < n_evalues; i++)
+      if (evalues[i].value == 0)
+        {
+          s = evalues[i].ident;
+          break;
+        }
+  return s;
+}
+
+int64
+TypeCode::enum_parse (const String &value_string, String *errorp) const
+{
+  if (!enum_combinable())
+    {
+      const EnumValue ev = enum_find (value_string);
+      if (ev.ident)
+        return ev.value;
+      if (errorp)
+        *errorp = value_string;
+      return 0;
+    }
+  // parse flags
+  uint64 result = 0;
+  const char *cstring = value_string.c_str();
+  const char *sep = strchr (cstring, '|');
+  while (sep)
+    {
+      String token (cstring, sep - cstring);
+      result |= enum_parse (token, errorp);
+      cstring = sep + 1; // reminder
+      sep = strchr (cstring, '|');
+    }
+  const EnumValue ev = enum_find (cstring);
+  if (ev.ident)
+    result |= ev.value;
+  else if (errorp)
+    *errorp = sep;
+  return result;
 }
 
 size_t
@@ -487,12 +622,27 @@ TypeCode::field (size_t index) const // RECORD or SEQUENCE
 }
 
 std::string
-TypeCode::origin () const // type for TYPE_REFERENCE
+TypeCode::origin () const // type name for TYPE_REFERENCE
 {
   std::string s;
   if (kind() != TYPE_REFERENCE)
     return s;
   return handle_->simple_string (type_->custom);
+}
+
+TypeCode
+TypeCode::resolve () const // type for TYPE_REFERENCE
+{
+  TypeCode tc = *this;
+  while (tc.kind() == TYPE_REFERENCE)
+    {
+      TypeCode rc = handle_->lookup_local (tc.origin());
+      if (rc.kind() == UNTYPED) // local lookup failed
+        tc = TypeMap::lookup (tc.origin());
+      else
+        tc = rc;
+    }
+  return tc;
 }
 
 bool
@@ -515,8 +665,9 @@ TypeCode::pretty (const std::string &indent) const
       s += std::string (": ") + buffer;
       for (uint32_t i = 0; i < enum_count(); i++)
         {
-          std::vector<String> sv = enum_value (i);
-          s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
+          EnumValue ev = enum_value (i);
+          s += std::string ("\n") + indent + indent + string_printf ("0x%08llx", ev.value);
+          s += String() + ", " + ev.ident + ", " + ev.label + ", " + ev.blurb;
         }
       break;
     case INSTANCE:
@@ -669,28 +820,31 @@ TypeMap::load_local (std::string filename)
   return type_map;
 }
 
+TypeMap
+TypeMap::enlist_map (const size_t length, const char *static_type_map, bool global)
+{
+  assert (length >= sizeof (InternalMap) + 4);
+  assert (static_type_map != NULL);
+  assert (static_type_map[length - 1] == 0);
+  InternalMap *imap = (InternalMap*) static_type_map;
+  const bool valid_type_map_magics = imap->check_magic() && imap->check_lengths (length) && imap->check_tail();
+  assert (valid_type_map_magics == true);
+  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, false);
+  if (!type_map.error_status() && global)
+    {
+      type_registry_initialize();
+      type_registry->add (type_map);
+    }
+  errno = 0;
+  return type_map;
+}
+
 #include "aidabuiltins.cc" // defines intern_builtins_typ
 
 TypeMap
-TypeMap::builtins ()
+TypeMap::builtins()
 {
-  InternalMap *imap = (InternalMap*) intern_builtins_typ;
-  const size_t length = sizeof (intern_builtins_typ);
-  if (!imap || sizeof (intern_builtins_typ) < sizeof (*imap) + 4)
-    {
-      errno = ENODATA;
-      perror ("ERROR: accessing builtin Aida types");
-      abort();
-    }
-  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
-    {
-      errno = ELIBBAD;
-      perror ("ERROR: accessing builtin Aida types");
-      abort();
-    }
-  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
-  errno = 0;
-  return type_map;
+  return enlist_map (sizeof (intern_builtins_typ), intern_builtins_typ, false);
 }
 
 } } // Rapicorn::Aida

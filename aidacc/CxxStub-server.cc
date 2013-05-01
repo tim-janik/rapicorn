@@ -52,8 +52,8 @@ obj2smh ($AIDA_iface_base$ *self)
 {
   const uint64_t orbid = obj2id (self);
   SMH target;
-  const uint64_t input[2] = { orbid, target._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (target, orbid);
   return target;
 }
 

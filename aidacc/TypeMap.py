@@ -64,7 +64,7 @@ class Encoder:
     return s
   def encode_value (self, v):
     n = None
-    if isinstance (v, int):
+    if isinstance (v, (int, long)):
       n = v
     elif isinstance (v, str):
       n = self.string_index (v)
@@ -77,9 +77,9 @@ class Encoder:
     return self.encode_unsigned (n)
   @staticmethod
   def encode_string (string):
-    r = len (string) % 4
-    r = r and 4 - r or 0
-    return Encoder.encode_unsigned (len (string)) + string + ' ' * r
+    r = (len (string) + 1) % 4
+    r = 4 - r if r else 0
+    return Encoder.encode_unsigned (len (string)) + string + '\0' + r * ' '
   @staticmethod
   def encode_unsigned (num):
     assert num >= 0 and num <= 0xffffffff
@@ -125,6 +125,9 @@ def encode_type_map (nodes):
   return s
 
 class Generator:
+  def __init__ (self, config = {}):
+    self.config = {}
+    self.config.update (config)
   def aux_strings (self, auxdata):
     result = []
     for ad in auxdata.items():
@@ -170,8 +173,14 @@ class Generator:
       fields += [ members ]
     elif tp.storage == Decls.ENUM:
       s = []
-      for op in tp.options:
-        s += [ op[0], op[1], op[2] ] # ident, label, blurb
+      for opt in tp.options:
+        (ident, label, blurb, number) = opt
+        number = number if number >= 0 else 0x10000000000000000 + number # turn into uint64
+        low, high = number & 0xffffffff, number >> 32
+        for num in (low, high):
+          if not (num >= 0 and num <= 0xffffffff):
+            raise Exception ("Invalid enum value: %d" % num)
+        s += [ low, high, ident, label, blurb ] # low, high, ident, label, blurb
       fields += [ s ]
     elif tp.storage == Decls.INTERFACE:
       s = []
@@ -187,7 +196,7 @@ class Generator:
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # FIXME: filter types for isimpl
     return types
-  def generate_pack (self, namespace_list, strip_system_typedefs):
+  def generate_namespace_type_map (self, namespace_list):
     # sort namespaces for binary lookups
     namespace_list = namespace_list[:]  # list copy
     namespace_list.sort (lambda o1, o2: cmp (o1.name, o2.name))
@@ -195,6 +204,9 @@ class Generator:
     types = []
     for ns in namespace_list:
       types += self.namespace_types (ns)
+    return self.generate_type_map (types)
+  def generate_type_map (self, type_list):
+    types = type_list[:] # list copy
     # sort namespaced types for binary lookups
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # serialize types
@@ -203,7 +215,7 @@ class Generator:
       t = self.generate_type (tp)
       tsl += [ t ]
     # strip builtin typedefs
-    if strip_system_typedefs:
+    if self.config.get ('system-typedefs', 0):
       import re
       otsl,tsl = tsl,[]
       for tp in otsl:
@@ -218,12 +230,32 @@ def error (msg):
   print >>sys.stderr, sys.argv[0] + ":", msg
   sys.exit (127)
 
-def generate (namespace_list, **args):
+def cquote (text):
+  s, lastoctal = '"', False
+  for c in text:
+    oldnl = len (s) / 70
+    shortoctal = False
+    if   c == '\\':                             s += r'\\'
+    elif c == '"':                              s += '\\"'
+    elif c >= '0' and c <= '9' and lastoctal:   s += '""' + c
+    elif c >= ' ' and c <= '~':                 s += c
+    else:                                       s += '\%o' % ord (c) ; shortoctal = ord (c) < 64;
+    lastoctal = shortoctal
+    if len (s) / 70 != oldnl:                   s += '"\n"'; lastoctal = False
+  s += '"'
+  return s
+
+def generate_type_map (type_list, **args):
+  gg = Generator (args)
+  binary_type_map = gg.generate_type_map (type_list)
+  return binary_type_map
+
+def generate_file (namespace_list, **args):
   import sys, tempfile, os
   config = { 'output' : 'idltypes.map' }
   config.update (args)
-  gg = Generator()
-  packdata = gg.generate_pack (namespace_list, config['system-typedefs'])
+  gg = Generator (config)
+  packdata = gg.generate_namespace_type_map (namespace_list)
   outputname = config['output']
   # print strcquote (packdata)
   # write data into a temporary file in the same dir as outputname
@@ -249,4 +281,4 @@ def generate (namespace_list, **args):
     error ('Failed to atomically replace "%s": %s' % (outputname, rex))
 
 # register extension hooks
-__Aida__.add_backend (__file__, generate, __doc__)
+__Aida__.add_backend (__file__, generate_file, __doc__)
