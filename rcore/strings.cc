@@ -795,29 +795,31 @@ string_hexdump (const void *addr, size_t length, size_t initial_offset)
   const unsigned char *data = (const unsigned char*) addr;
   size_t i;
   String out, cx, cc = "|";
-  for (i = 0; i < length; i++)
+  for (i = 0; i < length;)
     {
-      if (i % 16 == 0)
-        {
-          if (i)
-            {
-              cc += "|";
-              out += string_format ("%08x %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
-              cx = "";
-              cc = "|";
-            }
-        }
-      else if (i % 8 == 0)
+      if (i % 8 == 0)
         cx += " ";
       cx += string_format (" %02x", data[i]);
       cc += string_format ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
+      i++;
+      if (i && i % 16 == 0)
+        {
+          cc += "|";
+          out += string_format ("%08x%s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+          cx = "";
+          cc = "|";
+        }
     }
-  if (i < ((length + 15) & ~15))
+  if (i % 16)
     {
+      for (; i % 16; i++)
+        {
+          if (i % 8 == 0)
+            cx += " ";
+          cx += "   ";
+        }
       cc += "|";
-      for (; i < ((length + 15) & ~15); i++)
-        cx += "   ";
-      out += string_format ("%08x %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+      out += string_format ("%08x%s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
     }
   return out;
 }
