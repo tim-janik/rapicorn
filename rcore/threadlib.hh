@@ -5,7 +5,7 @@
 #include <condition_variable>
 
 namespace Rapicorn {
-namespace Lib {
+namespace Lib { // Namespace for implementation internals
 
 #define RAPICORN_CACHE_LINE_ALIGNMENT   128
 #define RAPICORN_MFENCE    __sync_synchronize() ///< Memory Fence - prevent processor (and compiler) from reordering loads/stores (read/write barrier).
