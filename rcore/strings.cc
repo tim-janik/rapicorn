@@ -348,7 +348,7 @@ string_to_uint (const String &string, uint base)
 String
 string_from_uint (uint64 value)
 {
-  return string_printf ("%llu", value);
+  return string_format ("%u", value);
 }
 
 /// Checks if a string contains a digit, optionally preceeded by whitespaces.
@@ -376,7 +376,7 @@ string_to_int (const String &string, uint base)
 String
 string_from_int (int64 value)
 {
-  return string_printf ("%lld", value);
+  return string_format ("%d", value);
 }
 
 /// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
@@ -431,14 +431,14 @@ string_to_double (const char *dblstring, const char **endptr)
 String
 string_from_float (float value)
 {
-  return string_printf ("%.7g", value);
+  return string_format ("%.7g", value);
 }
 
 /// Convert a double into a string, using the POSIX/C locale.
 String
 string_from_double (double value)
 {
-  return string_printf ("%.17g", value);
+  return string_format ("%.17g", value);
 }
 
 /// Parse a string into a list of doubles, expects ';' as delimiter.
@@ -475,7 +475,7 @@ string_to_double_vector (const String &string)
       if (*d && strchr (delims, *d))
         d++;                                    /* eat delimiter */
     }
-  // printf ("vector: %d: %s\n", dvec.size(), string_from_double_vector (dvec).c_str());
+  // printerr ("vector: %d: %s\n", dvec.size(), string_from_double_vector (dvec).c_str());
   return dvec;
 }
 
@@ -658,7 +658,7 @@ string_to_cescape (const String &str)
       else if (d == '"')        buffer += "\\\"";
       else if (d == '\\')       buffer += "\\\\";
       else if (d < 32 || d > 126)
-        buffer += string_printf ("\\%03o", d);
+        buffer += string_format ("\\%03o", d);
       else
         buffer += d;
     }
@@ -802,22 +802,22 @@ string_hexdump (const void *addr, size_t length, size_t initial_offset)
           if (i)
             {
               cc += "|";
-              out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+              out += string_format ("%08x %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
               cx = "";
               cc = "|";
             }
         }
       else if (i % 8 == 0)
         cx += " ";
-      cx += string_printf (" %02x", data[i]);
-      cc += string_printf ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
+      cx += string_format (" %02x", data[i]);
+      cc += string_format ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
     }
   if (i < ((length + 15) & ~15))
     {
       cc += "|";
       for (; i < ((length + 15) & ~15); i++)
         cx += "   ";
-      out += string_printf ("%08zx %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+      out += string_format ("%08x %s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
     }
   return out;
 }
