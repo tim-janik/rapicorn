@@ -3,6 +3,7 @@
 #define __RAPICORN_STRINGS_HH__
 
 #include <rcore/utilities.hh>
+#include <rcore/formatter.hh>
 #include <string>
 #include <cstring>
 
@@ -25,6 +26,9 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 
 // == C-String ==
 bool    			cstring_to_bool          (const char *string, bool fallback = false);
+
+// == String Formatting ==
+template<class... Args> RAPICORN_PRINTF (1, 0) String string_format (const char *format, Args... args);
 
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
@@ -152,6 +156,13 @@ const char*     strerror ();    // simple wrapper for strerror (errno)
     __a.push_back (ConstCharArray[__ai]);                               \
   __a; })
 #define RAPICORN_CQUOTE(str)    (Rapicorn::string_to_cquote (str).c_str())
+
+template<class... Args> String
+string_format (const char *format, Args... args)
+{
+  return Lib::StringFormatter::format (format, args...);
+}
+
 
 } // Rapicorn
 
