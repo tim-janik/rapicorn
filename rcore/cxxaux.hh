@@ -18,10 +18,10 @@
 #ifndef TRUE
 #  define TRUE					true
 #endif
-#define RAPICORN_ABS(a)                       	((a) > -(a) ? (a) : -(a))
-#define RAPICORN_MIN(a,b)                         ((a) <= (b) ? (a) : (b))
-#define RAPICORN_MAX(a,b)                         ((a) >= (b) ? (a) : (b))
-#define RAPICORN_CLAMP(v,mi,ma)                   ((v) < (mi) ? (mi) : ((v) > (ma) ? (ma) : (v)))
+#define RAPICORN_ABS(a)                         ((a) < 0 ? -(a) : (a))
+#define RAPICORN_MIN(a,b)                       ((a) <= (b) ? (a) : (b))
+#define RAPICORN_MAX(a,b)                       ((a) >= (b) ? (a) : (b))
+#define RAPICORN_CLAMP(v,mi,ma)                 ((v) < (mi) ? (mi) : ((v) > (ma) ? (ma) : (v)))
 #define RAPICORN_ARRAY_SIZE(array)		(sizeof (array) / sizeof ((array)[0]))
 #undef ABS
 #define ABS                                     RAPICORN_ABS
