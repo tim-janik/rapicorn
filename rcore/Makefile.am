@@ -9,7 +9,7 @@ AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	aida.hh		blobres.hh	inifile.hh	\
+	aida.hh		blobres.hh	formatter.hh	inifile.hh	\
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
 	objects.hh	aidaprops.hh	\
@@ -20,7 +20,7 @@ rapicorn_public_headers = $(strip	\
 	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
-	aida.cc		blobres.cc	inifile.cc	\
+	aida.cc		blobres.cc	formatter.cc	inifile.cc	\
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
 	objects.cc	aidaprops.cc	\
