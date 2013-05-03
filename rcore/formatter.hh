@@ -47,7 +47,8 @@ class StringFormatter {
   {
     std::ostringstream os;
     os << arg;
-    assign (farg, os.str());
+    temporaries_.push_back (os.str());
+    assign (farg, temporaries_[temporaries_.size()-1]);
   }
   uint32_t    arg_as_width     (size_t nth);
   uint32_t    arg_as_precision (size_t nth);
@@ -66,9 +67,10 @@ class StringFormatter {
       field_width (0), precision (0), start (0), end (0), value_index (0), width_index (0), precision_index (0)
     {}
   };
-  FormatArg  *const fargs_;
-  const size_t nargs_;
-  const int    locale_context_;
+  FormatArg    *const fargs_;
+  const size_t        nargs_;
+  const int           locale_context_;
+  vector<std::string> temporaries_;
   static std::string            format_error     (const char *err, const char *format, size_t directive);
   static const char*            parse_directive  (const char **stringp, size_t *indexp, Directive *dirp);
   std::string                   locale_format    (size_t last, const char *format);
