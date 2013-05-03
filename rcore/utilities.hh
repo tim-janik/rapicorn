@@ -3,9 +3,6 @@
 #define __RAPICORN_CORE_UTILITIES_HH__
 
 #include <rcore/inout.hh>
-#include <string>
-#include <vector>
-#include <map>
 
 #if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn-core.hh> can be included directly.
@@ -38,11 +35,7 @@
 
 namespace Rapicorn {
 
-// == Convenient stdc++ & Aida Types ==
-using std::vector;
-using std::map;
-typedef std::string String;             ///< Convenience alias for std::string.
-typedef vector<String> StringVector;    ///< Convenience alias for a std::vector of std::string.
+// == Convenient Aida Types ==
 using Aida::Any;
 
 // == Common (stdc++) Utilities ==
