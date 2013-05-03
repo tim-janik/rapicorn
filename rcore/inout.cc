@@ -8,52 +8,8 @@
 
 namespace Rapicorn {
 
-// export debug_handler() symbol for debugging stacktraces and gdb
+// FIXME: remove // export debug_handler() symbol for debugging stacktraces and gdb
 extern void debug_handler (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
-
-void
-debug_assert (const char *file_path, const int line, const char *message)
-{
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
-}
-
-void
-debug_fassert (const char *file_path, const int line, const char *message)
-{
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
-  ::abort();
-}
-
-void
-debug_fatal (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
-  ::abort();
-}
-
-void
-debug_critical (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
-}
-
-void
-debug_fixit (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
-}
 
 // == envkey_ functions ==
 static int
@@ -168,6 +124,51 @@ envkey_debug_message (const char *env_var, const char *key, const char *file_pat
     return;
   String msg = string_vprintf (format, va_args);
   debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
+}
+
+// == debug_* functions ==
+void
+debug_assert (const char *file_path, const int line, const char *message)
+{
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+}
+
+void
+debug_fassert (const char *file_path, const int line, const char *message)
+{
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+  ::abort();
+}
+
+void
+debug_fatal (const char *file_path, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
+  ::abort();
+}
+
+void
+debug_critical (const char *file_path, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
+}
+
+void
+debug_fixit (const char *file_path, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
 // == AnsiColors ==
