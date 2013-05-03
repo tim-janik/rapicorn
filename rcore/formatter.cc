@@ -154,10 +154,10 @@ StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directiv
   while (strchr (modifiers, *p))
     p++;
   // conversion
-  const char *conversion = "dioucspmXxEeFfGgAa";
+  const char *conversion = "dioucspmXxEeFfGgAa%";
   if (!strchr (conversion, *p))
     return "missing conversion specifier";
-  if (fdir.value_index == 0 && *p != 'm')
+  if (fdir.value_index == 0 && !strchr ("m%", *p))
     fdir.value_index = index++;
   fdir.conversion = *p++;
   // success
@@ -255,7 +255,6 @@ StringFormatter::render_directive (const Directive &dir)
 {
   switch (dir.conversion)
     {
-      (void) "dioucspmXxEeFfGgAa";
     case 'm':
       return render_arg (dir, "", int (0)); // dummy arg to silence compiler
     case 'c':
@@ -268,6 +267,8 @@ StringFormatter::render_directive (const Directive &dir)
       return render_arg (dir, "ll", arg_as_lluint (dir.value_index));
     case 'f': case 'F': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A':
       return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
+    case '%':
+      return "%";
     }
   return std::string ("%") + dir.conversion;
 }
@@ -296,10 +297,15 @@ StringFormatter::render_format (const size_t last, const char *format)
   // parse format into Directive stack
   size_t nextarg = 1, ndirs = 0;
   const char *p = format;
-  while (1)
+  while (*p)
     {
-      while (*p && *p != '%')
-        p++;
+      do
+        {
+          if (p[0] == '%')
+            break;
+          p++;
+        }
+      while (*p);
       if (*p == 0)
         break;
       const size_t start = p - format;
