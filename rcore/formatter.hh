@@ -22,28 +22,33 @@ class StringFormatter {
   struct FormatArg {
     union { LDouble d; LLUInt i; void *p; const char *s; };
     char kind; // i d s p
-    inline void                   assign (bool               arg) { kind = 'i'; i = arg; }
-    inline void                   assign (char               arg) { kind = 'i'; i = arg; }
-    inline void                   assign (signed char        arg) { kind = 'i'; i = arg; }
-    inline void                   assign (unsigned char      arg) { kind = 'i'; i = arg; }
-    inline void                   assign (short              arg) { kind = 'i'; i = arg; }
-    inline void                   assign (unsigned short     arg) { kind = 'i'; i = arg; }
-    inline void                   assign (int                arg) { kind = 'i'; i = arg; }
-    inline void                   assign (unsigned int       arg) { kind = 'i'; i = arg; }
-    inline void                   assign (wchar_t            arg) { kind = 'i'; i = arg; }
-    inline void                   assign (long               arg) { kind = 'i'; i = arg; }
-    inline void                   assign (unsigned long      arg) { kind = 'i'; i = arg; }
-    inline void                   assign (long long          arg) { kind = 'i'; i = arg; }
-    inline void                   assign (unsigned long long arg) { kind = 'i'; i = arg; }
-    inline void                   assign (float              arg) { kind = 'd'; d = arg; }
-    inline void                   assign (double             arg) { kind = 'd'; d = arg; }
-    inline void                   assign (long double        arg) { kind = 'd'; d = arg; }
-    inline void                   assign (const char        *arg) { kind = 's'; s = arg; }
-    inline void                   assign (const std::string &arg) { kind = 's'; s = arg.c_str(); }
-    inline void                   assign (void              *arg) { kind = 'p'; p = arg; }
-    template<class T> inline void assign (T          *const &arg) { assign ((void*) arg); }
-    template<class T> inline void assign (const T           &arg) { std::ostringstream os; os << arg; assign (os.str()); }
   };
+  inline void assign (FormatArg &farg, bool               arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, char               arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, signed char        arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, unsigned char      arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, short              arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, unsigned short     arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, int                arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, unsigned int       arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, long               arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, long long          arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, float              arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, double             arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, long double        arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, const char        *arg) { farg.kind = 's'; farg.s = arg; }
+  inline void assign (FormatArg &farg, const std::string &arg) { assign (farg, arg.c_str()); }
+  inline void assign (FormatArg &farg, void              *arg) { farg.kind = 'p'; farg.p = arg; }
+  template<class T> inline void assign (FormatArg &farg, T *const &arg) { assign (farg, (void*) arg); }
+  template<class T> inline void assign (FormatArg &farg, const T &arg)
+  {
+    std::ostringstream os;
+    os << arg;
+    assign (farg, os.str());
+  }
   uint32_t    arg_as_width     (size_t nth);
   uint32_t    arg_as_precision (size_t nth);
   LLUInt      arg_as_lluint    (size_t nth);
@@ -78,7 +83,7 @@ class StringFormatter {
   template<size_t N, class A, class... Args> inline std::string
   intern_format (const char *format, A arg, Args... args)
   {
-    fargs_[N].assign (arg);
+    assign (fargs_[N], arg);
     return intern_format<N+1> (format, args...);
   }
   template<size_t N> inline constexpr
