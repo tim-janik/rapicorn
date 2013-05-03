@@ -258,6 +258,21 @@ public:
   void     push_link (V*volatile *nextp, V *newv) { do { *nextp = load(); } while (!cas (*nextp, newv)); }
 };
 
+/// Exclusive<> is a type wrapper that provides non-racy atomic access to a copyable @a Type.
+template<class Type>
+class Exclusive {
+  Mutex    mutex_;
+  Type    *data_;
+  uint64_t mem_[(sizeof (Type) + 7) / 8];
+  void      setup_L   (const Type &data)        { if (data_) return; data_ = new (mem_) Type (data); }
+  void      replace_L (const Type &data)        { if (!data_) setup_L (data); else *data_ = data; }
+public:
+  constexpr Exclusive () : mutex_(), data_ (0)  {}
+  void      operator= (const Type &data)        { ScopedLock<Mutex> locker (mutex_); replace_L (data); }
+  operator  Type      ()                        { ScopedLock<Mutex> locker (mutex_); if (!data_) setup_L (Type()); return *data_; }
+  /*dtor*/ ~Exclusive ()                        { ScopedLock<Mutex> locker (mutex_); if (data_) data_->~Type(); }
+};
+
 // == AsyncBlockingQueue ==
 /**
  * This is a thread-safe asyncronous queue which blocks in pop() until data is provided through push().
