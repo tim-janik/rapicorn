@@ -29,6 +29,7 @@ cstring_option_sense (const char *option_string, const char *option, char *value
             {
               const char *v = p + l + 1;
               strncpy (value, v, d - v);
+              value[d - v] = 0;
             }
           else if (p[l] == 0 || p[l] == ':' || p[l] == ';')
             {                           // option present
