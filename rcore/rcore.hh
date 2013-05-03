@@ -8,6 +8,7 @@
 #include <rcore/aidaprops.hh>
 #include <rcore/blobres.hh>
 #include <rcore/formatter.hh>
+#include <rcore/inout.hh>
 #include <rcore/inifile.hh>
 #include <rcore/platform.hh>
 #include <rcore/debugtools.hh>
