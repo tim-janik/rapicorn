@@ -427,6 +427,16 @@ test_string_options (void)
 }
 REGISTER_TEST ("Strings/String Options", test_string_options);
 
+struct Point {
+  double x, y;
+  friend std::ostream&
+  operator<< (std::ostream& stream, const Point &self)
+  {
+    stream << "{" << self.x << ";" << self.y << "}";
+    return stream;
+  }
+};
+
 static void
 test_string_functions (void)
 {
@@ -436,12 +446,17 @@ test_string_functions (void)
   TASSERT (string_endswith ("foo", "oo") == true);
   TASSERT (string_endswith ("foo", "foo") == true);
   TASSERT (string_endswith ("foo", "loo") == false);
+  // string_format
   enum { TEST17 = 17 };
   TCMP (string_format ("%d %s", -9223372036854775808uLL, "FOO"), ==, "-9223372036854775808 FOO");
   TCMP (string_format ("%g %d", 0.5, int (TEST17)), ==, "0.5 17"); // gcc corrupts anonymous enums without the cast
   TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
   static_assert (TEST17 == 17, "!");
-  TASSERT (string_format ("%c", 'A') == "A");
+  TCMP (string_format ("%c", 'A'), ==, "A");
+  Point point { 1, 2 };
+  vector<String> foo;
+  TCMP (string_format ("%s", point), ==, "{1;2}");
+  // string_hexdump
   String dump;
   const uint8 mem[] = { 0x00, 0x01, 0x02, 0x03, 0x34, 0x35, 0x36, 0x37,
                         0x63, 0x30, 0x66, 0x66, 0x65, 0x65, 0x2e, 0x20,
