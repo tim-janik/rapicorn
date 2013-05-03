@@ -427,14 +427,16 @@ test_string_options (void)
 }
 REGISTER_TEST ("Strings/String Options", test_string_options);
 
-struct Point {
+struct UncopyablePoint {
   double x, y;
   friend std::ostream&
-  operator<< (std::ostream& stream, const Point &self)
+  operator<< (std::ostream& stream, const UncopyablePoint &self)
   {
     stream << "{" << self.x << ";" << self.y << "}";
     return stream;
   }
+  UncopyablePoint (double _x, double _y) : x (_x), y (_y) {}
+  RAPICORN_CLASS_NON_COPYABLE (UncopyablePoint);
 };
 
 static void
@@ -453,7 +455,7 @@ test_string_functions (void)
   TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
   static_assert (TEST17 == 17, "!");
   TCMP (string_format ("%c", 'A'), ==, "A");
-  Point point { 1, 2 };
+  UncopyablePoint point { 1, 2 };
   vector<String> foo;
   TCMP (string_format ("%s", point), ==, "{1;2}");
   // string_hexdump

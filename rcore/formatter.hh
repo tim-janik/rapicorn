@@ -82,8 +82,8 @@ class StringFormatter {
   {
     return locale_format (N, format);
   }
-  template<size_t N, class A, class... Args> inline std::string
-  intern_format (const char *format, A arg, Args... args)
+  template<size_t N, class A, class ...Args> inline std::string
+  intern_format (const char *format, const A &arg, const Args &...args)
   {
     assign (fargs_[N], arg);
     return intern_format<N+1> (format, args...);
@@ -95,9 +95,9 @@ public:
     POSIX_LOCALE,
     CURRENT_LOCALE,
   };
-  template<LocaleContext LC = POSIX_LOCALE, class... Args>
+  template<LocaleContext LC = POSIX_LOCALE, class ...Args>
   static __attribute__ ((__format__ (printf, 1, 0), noinline)) std::string
-  format (const char *format, Args... args)
+  format (const char *format, const Args &...args)
   {
     constexpr size_t N = sizeof... (Args);
     FormatArg mem[N ? N : 1];
