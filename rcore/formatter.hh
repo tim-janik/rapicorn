@@ -15,6 +15,8 @@ namespace Lib { // Namespace for implementation internals
  *
  * See parse_directive() for supported flags, modifiers and conversions.
  * Currently missing are: n I S ls C lc
+ * Finding strings with size modifiers for possible cleanups:
+ * egrep "\"([^\"]|\\\")*%[0-9$]*[-+#0 \'I]*[*0-9$]*[.*0-9$]*[hlLqjzt]+[nSspmCcdiouXxFfGgEeAa]"
  */
 class StringFormatter {
   typedef long long unsigned int LLUInt;
