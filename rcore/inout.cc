@@ -172,6 +172,75 @@ debug_fixit (const char *file_path, const int line, const char *format, ...)
   debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
 }
 
+static Mutex              dbg_mutex;
+static String             dbg_envvar = "";
+static map<String,String> dbg_map;
+
+/// Parse environment variable @a name for debug configuration.
+void
+debug_envvar (const String &name)
+{
+  ScopedLock<Mutex> locker (dbg_mutex);
+  dbg_envvar = name;
+}
+
+/// Set debug configuration override.
+void
+debug_config_add (const String &option)
+{
+  ScopedLock<Mutex> locker (dbg_mutex);
+  String key, value;
+  const size_t eq = option.find ('=');
+  if (eq != std::string::npos)
+    {
+      key = option.substr (0, eq);
+      value = option.substr (eq + 1);
+    }
+  else
+    {
+      key = option;
+      value = "1";
+    }
+  if (!key.empty())
+    dbg_map[key] = value;
+}
+
+/// Unset debug configuration override.
+void
+debug_config_del (const String &key)
+{
+  ScopedLock<Mutex> locker (dbg_mutex);
+  dbg_map.erase (key);
+}
+
+/// Query debug configuration for option @a key, defaulting to @a default_value.
+String
+debug_config_get (const String &key, const String &default_value)
+{
+  ScopedLock<Mutex> locker (dbg_mutex);
+  auto pair = dbg_map.find (key);
+  if (pair != dbg_map.end())
+    return pair->second;
+  auto envstring = [] (const char *name) {
+    const char *c = getenv (name);
+    return c ? c : "";
+  };
+  const String options[3] = {
+    envstring (dbg_envvar.c_str()),
+    envstring ("RAPICORN_DEBUG"),
+  };
+  for (size_t i = 0; i < ARRAY_SIZE (options); i++)
+    {
+      const int l = max (size_t (64), options[i].size());
+      char value[l];
+      strcpy (value, "0");
+      const int keypos = cstring_option_sense (options[i].c_str(), key.c_str(), value);
+      if (keypos >= 0)
+        return value;
+    }
+  return default_value;
+}
+
 // == AnsiColors ==
 namespace AnsiColors {
 
