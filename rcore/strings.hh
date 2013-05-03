@@ -28,8 +28,12 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 bool    			cstring_to_bool          (const char *string, bool fallback = false);
 
 // == String Formatting ==
-template<class... Args> RAPICORN_PRINTF (1, 0) String string_format        (const char *format, const Args &...args);
-template<class... Args> RAPICORN_PRINTF (1, 0) String string_locale_format (const char *format, const Args &...args);
+template<class... Args> String string_format         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> String string_locale_format  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> String string_printf         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> String string_locale_printf  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+String                         string_vprintf        (const char *format, va_list vargs);
+String                         string_locale_vprintf (const char *format, va_list vargs);
 
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
@@ -40,10 +44,6 @@ String                          string_set_ascii_alnum   ();
 String  			string_tolower           (const String &str);
 String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
-String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
-String  			string_vprintf           (const char *format, va_list vargs);
-String  			string_locale_printf     (const char *format, ...) RAPICORN_PRINTF (1, 2);
-String  			string_locale_vprintf    (const char *format, va_list vargs);
 StringVector 			string_split             (const String &string, const String &splitter = "");
 String  			string_join              (const String &junctor, const StringVector &strvec);
 bool    			string_to_bool           (const String &string, bool fallback = false);
@@ -159,18 +159,33 @@ const char*     strerror ();    // simple wrapper for strerror (errno)
 #define RAPICORN_CQUOTE(str)    (Rapicorn::string_to_cquote (str).c_str())
 
 /// Formatted printing ala printf() into a String, using the POSIX/C locale.
-template<class... Args> String
+template<class... Args> RAPICORN_NOINLINE String
 string_format (const char *format, const Args &...args)
 {
   return Lib::StringFormatter::format (format, args...);
 }
 
 /// Formatted printing ala printf() into a String, using the current locale.
-template<class... Args> String
+template<class... Args> RAPICORN_NOINLINE String
 string_locale_format (const char *format, const Args &...args)
 {
   return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
 }
+
+/// Formatted printing ala printf() into a String, using the POSIX/C locale.
+template<class... Args> RAPICORN_NOINLINE String
+string_printf (const char *format, const Args &...args)
+{
+  return Lib::StringFormatter::format (format, args...);
+}
+
+/// Formatted printing ala printf() into a String, using the current locale.
+template<class... Args> RAPICORN_NOINLINE String
+string_locale_printf (const char *format, const Args &...args)
+{
+  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
+}
+
 
 
 } // Rapicorn

@@ -135,8 +135,8 @@ string_totitle (const String &str)
 #define STACK_BUFFER_SIZE       3072
 
 /// Formatted printing ala printf() into a String, using the POSIX/C locale.
-String
-string_printf (const char *format, ...)
+RAPICORN_PRINTF (1, 2) String
+string_cprintf (const char *format, ...) // FIXME: unused
 {
   ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
   va_list args;
@@ -160,9 +160,9 @@ string_printf (const char *format, ...)
   return string;
 }
 
-/// Formatted printing like string_printf using the current locale.
-String
-string_locale_printf (const char *format, ...)
+/// Formatted printing like string_cprintf using the current locale.
+RAPICORN_PRINTF (1, 2) String
+string_locale_cprintf (const char *format, ...) // FIXME: unused
 {
   va_list args;
   int l;
