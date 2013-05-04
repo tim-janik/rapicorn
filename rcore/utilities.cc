@@ -19,7 +19,6 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
-#include <syslog.h>
 #include <execinfo.h>
 #include <stdexcept>
 
@@ -314,24 +313,6 @@ debug_key_enabled (const char *key)
   return keycheck;
 }
 
-static int
-thread_pid()
-{
-  int tid = -1;
-#if     defined (__linux__) && defined (__NR_gettid)    /* present on linux >= 2.4.20 */
-  tid = syscall (__NR_gettid);
-#endif
-  if (tid < 0)
-    tid = getpid();
-  return tid;
-}
-
-static void
-ensure_openlog()
-{
-  do_once { openlog (NULL, LOG_PID, LOG_USER); } // force pid logging
-}
-
 static inline int
 logtest (const char **kindp, const char *mode, int advance, int flags)
 {
@@ -341,168 +322,6 @@ logtest (const char **kindp, const char *mode, int advance, int flags)
       return flags;
     }
   return 0;
-}
-
-static String
-dbg_prefix (const String &fileline)
-{
-  // reduce "foo/bar.c:77" to "bar"
-  String cxxstring = fileline;
-  char *string = &cxxstring[0];
-  char *d = strrchr (string, '.');
-  if (d)
-    {
-      char *s = strrchr (string, DIR_SEPARATOR);
-      if (d > s) // strip ".c:77"
-        {
-          *d = 0;
-          return s ? s + 1 : string;
-        }
-    }
-  return fileline;
-}
-
-
-void // internal function, this + caller are skipped in backtraces
-debug_handler (const char dkind, const String &file_line, const String &message, const char *key)
-{
-  /* The logging system must work before Rapicorn is initialized, and possibly even during
-   * global_ctor phase. So any initialization needed here needs to be handled on demand.
-   */
-  String msg = message;
-  const char kind = toupper (dkind);
-  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
-         DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXIT = 128, DO_BACKTRACE = 256, };
-  static int conftest_logfd = 0;
-  const String conftest_logfile = conftest_logfd == 0 ? conftest_procure().slookup ("logfile") : "";
-  const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
-  const int MAY_SYSLOG = debug_confbool ("syslog") ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = debug_confbool ("fatal-warnings") ? DO_ABORT  : 0;
-  const char *what = "DEBUG";
-  int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
-  switch (kind)
-    {
-    case 'F': what = "FATAL";    f |= DO_STDERR | FATAL_SYSLOG | DO_ABORT;  break;      // fatal, assertions
-    case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
-    case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
-    case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
-    }
-  f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
-  f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
-  const String where = file_line + (file_line.empty() ? "" : ": ");
-  const String wherewhat = where + what + ": ";
-  String emsg = "\n"; // (f & DO_ERRNO ? ": " + string_from_errno (saved_errno) : "")
-  if (kind == 'A')
-    msg = "assertion failed: " + msg;
-  else if (kind == 'U')
-    msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
-  else if (kind == 'I')
-    msg = "condition failed: " + msg;
-  const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
-  if (f & DO_STAMP)
-    do_once {
-      printerr ("[%s] %s[%u]: program started at: %.6f\n",
-                timestamp_format (delta).c_str(),
-                program_alias().c_str(), thread_pid(),
-                start / 1000000.0);
-    }
-  if (f & DO_DEBUG)
-    {
-      String intro, prefix = key ? key : dbg_prefix (file_line);
-      if (prefix.size())
-        prefix = prefix + ": ";
-      if (f & DO_STAMP)
-        intro = string_printf ("[%s]", timestamp_format (delta).c_str());
-      printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
-    }
-  if (f & DO_FIXIT)
-    {
-      printerr ("%s: %s%s%s", what, where.c_str(), msg.c_str(), emsg.c_str());
-    }
-  if (f & DO_STDERR)
-    {
-      using namespace AnsiColors;
-      const char *cy1 = color (FG_CYAN), *cy0 = color (FG_DEFAULT);
-      const char *bo1 = color (BOLD), *bo0 = color (BOLD_OFF);
-      const char *fgw = color (FG_WHITE), *fgc1 = fgw, *fgc0 = color (FG_DEFAULT), *fbo1 = "", *fbo0 = "";
-      switch (kind)
-        {
-        case 'F':
-          fgc1 = color (FG_RED);
-          fbo1 = bo1;                   fbo0 = bo0;
-          break;
-        case 'C':
-          fgc1 = color (FG_YELLOW);
-          break;
-        }
-      printerr ("%s%s%s%s%s%s%s%s[%u] %s%s%s:%s%s %s%s",
-                cy1, where.c_str(), cy0,
-                bo1, fgw, program_alias().c_str(), fgc0, bo0, thread_pid(),
-                fbo1, fgc1, what,
-                fgc0, fbo0,
-                msg.c_str(), emsg.c_str());
-      if (f & DO_ABORT)
-        printerr ("Aborting...\n");
-    }
-  if (f & DO_SYSLOG)
-    {
-      ensure_openlog();
-      String end = emsg;
-      if (!end.empty() && end[end.size()-1] == '\n')
-        end.resize (end.size()-1);
-      const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
-      const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
-      syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
-    }
-  String btmsg;
-  if (f & DO_BACKTRACE)
-    {
-      size_t addr;
-      const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_printf ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
-                             addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
-      for (size_t i = 0; i < syms.size(); i++)
-        btmsg += string_printf ("  %s\n", syms[i].c_str());
-    }
-  if (f & DO_LOGFILE)
-    {
-      String out;
-      do_once
-        {
-          int fd;
-          do
-            fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
-          while (conftest_logfd < 0 && errno == EINTR);
-          if (fd == 0) // invalid initialization value
-            {
-              fd = dup (fd);
-              close (0);
-            }
-          out = string_printf ("[%s] %s[%u]: program started at: %s\n",
-                               timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
-                               timestamp_format (start).c_str());
-          conftest_logfd = fd;
-        }
-      out += string_printf ("[%s] %s[%u]:%s%s%s",
-                            timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
-                            wherewhat.c_str(), msg.c_str(), emsg.c_str());
-      if (f & DO_ABORT)
-        out += "aborting...\n";
-      int err;
-      do
-        err = write (conftest_logfd, out.data(), out.size());
-      while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      if (f & DO_BACKTRACE)
-        do
-          err = write (conftest_logfd, btmsg.data(), btmsg.size());
-        while (err < 0 && (errno == EINTR || errno == EAGAIN));
-    }
-  if (f & DO_BACKTRACE)
-    printerr ("%s", btmsg.c_str());
-  if (f & DO_ABORT)
-    {
-      ::abort();
-    }
 }
 
 /** Issue debugging message after checking RAPICORN_DEBUG.
