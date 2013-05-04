@@ -313,17 +313,6 @@ debug_key_enabled (const char *key)
   return keycheck;
 }
 
-static inline int
-logtest (const char **kindp, const char *mode, int advance, int flags)
-{
-  if (strcmp (*kindp, mode) == 0)
-    {
-      *kindp += advance;
-      return flags;
-    }
-  return 0;
-}
-
 /** Issue debugging message after checking RAPICORN_DEBUG.
  * Checks the environment variable $RAPICORN_DEBUG for @a key, and issues a debugging
  * message with source location @a file_path and @a line.
