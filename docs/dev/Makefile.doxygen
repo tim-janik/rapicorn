@@ -17,7 +17,6 @@ DOXYGEN_CHANGELOG_SED = \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
 		-e 's/^/ * /'
 
-.PHONY: $(DOXYGEN_SRCTREE)
 $(DOXYGEN_SRCTREE):
 	$(DOXYGEN_V) "GEN" $(DOXYGEN_SRCTREE)/
 	$(DOXYGEN_Q) rm -rf $(DOXYGEN_SRCTREE)/ && mkdir -p $(DOXYGEN_SRCTREE)/
@@ -46,10 +45,9 @@ $(DOXYGEN_SRCTREE):
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
 
 # configure and run doxygen, handle DOXYGEN="" by creating a dummy docu target
-doxygen-html: doxygen.cfg tagfile-susv4.xml
+doxygen-html: doxygen.cfg tagfile-susv4.xml $(DOXYGEN_SRCTREE)
 	$(DOXYGEN_V) "TIDY" "Temporaries..."
 	$(DOXYGEN_Q) rm -rf doxygen-tmp/ && mkdir -p doxygen-tmp/
-	$(DOXYGEN_Q) $(MAKE) $(DOXYGEN_SRCTREE)
 	$(DOXYGEN_V) "GEN" "HTML Documentation..."
 	$(DOXYGEN_Q) test -n "$(DOXYGEN)" || \
 		( mkdir -p doxygen-tmp/html/ && echo "$(PACKAGE) $(DOXYGEN_PROJECT_NUMBER)" > doxygen-tmp/html/index.html )
