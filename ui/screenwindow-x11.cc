@@ -789,7 +789,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   // Background
   Color c1 = setup.bg_average, c2 = setup.bg_average;
-  if (devel_enabled())
+  if (debug_devel_check())
     {
       c1.tint (0, 0.96, 0.96);
       c2.tint (0, 1.03, 1.03);

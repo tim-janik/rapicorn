@@ -129,8 +129,6 @@ bool        rapicorn_flipper_check (const char *key);
 
 // === Debugging Functions (internal) ===
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
-extern bool _devel_flag;
-inline bool devel_enabled     () { return RAPICORN_UNLIKELY (_devel_flag); }
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
 

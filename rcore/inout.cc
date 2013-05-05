@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <cstring>
 
+static constexpr int UNCHECKED = -1;    // undetermined bool option
+
 namespace Rapicorn {
 
 // == debug_handler ==
@@ -305,12 +307,14 @@ envkey_debug_message (const char *env_var, const char *key, const char *file_pat
 }
 
 // == debug_* functions ==
+/// Issue a message about a failed assertion, see also #$RAPICORN_DEBUG.
 void
 debug_assert (const char *file_path, const int line, const char *message)
 {
   debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
 }
 
+/// Issue a message about a failed assertion and terminate the program, see also #$RAPICORN_DEBUG.
 void
 debug_fassert (const char *file_path, const int line, const char *message)
 {
@@ -318,6 +322,7 @@ debug_fassert (const char *file_path, const int line, const char *message)
   ::abort();
 }
 
+/// Issue a message about a fatal runtime condition and terminate the program, see also #$RAPICORN_DEBUG.
 void
 debug_fatal (const char *file_path, const int line, const char *format, ...)
 {
@@ -329,6 +334,7 @@ debug_fatal (const char *file_path, const int line, const char *format, ...)
   ::abort();
 }
 
+/// Issue a message about a critical runtime condition, see also #$RAPICORN_DEBUG.
 void
 debug_critical (const char *file_path, const int line, const char *format, ...)
 {
@@ -339,6 +345,7 @@ debug_critical (const char *file_path, const int line, const char *format, ...)
   debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
 }
 
+/// Issue a message about potential bugs in the program, see also #$RAPICORN_DEBUG.
 void
 debug_fixit (const char *file_path, const int line, const char *format, ...)
 {
@@ -405,6 +412,7 @@ debug_config_get (const String &key, const String &default_value)
   const String options[3] = {
     envstring (dbg_envvar.c_str()),
     envstring ("RAPICORN_DEBUG"),
+    string_format ("fatal-syslog=1:devel=%d", RAPICORN_DEVEL_VERSION), // debug config defaults
   };
   for (size_t i = 0; i < ARRAY_SIZE (options); i++)
     {
@@ -418,15 +426,28 @@ debug_config_get (const String &key, const String &default_value)
   return default_value;
 }
 
+/// Query debug configuration for option @a key, defaulting to @a default_value, return boolean.
 bool
 debug_config_bool (const String &key, bool default_value)
 {
   return string_to_bool (debug_config_get (key, string_from_int (default_value)));
 }
 
+static Atomic<int> debug_development_features = UNCHECKED;      // cached, checked only once after startup
+
+/// Check if debugging features for development versions should be enabled.
+bool
+debug_devel_check ()
+{
+  if (debug_development_features == UNCHECKED)
+    debug_development_features = RAPICORN_DEBUG_OPTION ("devel", "Enable debugging features for development versions.");
+  return debug_development_features;
+}
+
 // == AnsiColors ==
 namespace AnsiColors {
 
+/// Return ASCII code for the specified color.
 const char*
 color_code (Colors acolor)
 {
@@ -471,10 +492,10 @@ struct EnvKey {
   EnvKey() : var (""), key ("") {}
 };
 
-static constexpr int     UNCHECKED = 2;
 static Atomic<int>       colorize_stdout = UNCHECKED;   // cache stdout colorization check
 static Exclusive<EnvKey> env_key;
 
+/// Configure the environment variable that always/never/automatically allows colorization.
 void
 color_envkey (const String &env_var, const String &key)
 {
@@ -485,6 +506,7 @@ color_envkey (const String &env_var, const String &key)
   colorize_stdout = UNCHECKED; // Atomic access
 }
 
+/// Check whether the tty @a fd should use colorization.
 bool
 colorize_tty (int fd)
 {
@@ -525,6 +547,7 @@ colorize_tty (int fd)
   return false;
 }
 
+/// Return ASCII code for the specified color if stdout & stderr should be colorized.
 const char*
 color (Colors acolor)
 {

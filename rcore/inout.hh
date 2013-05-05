@@ -23,6 +23,7 @@ void   debug_config_add  (const String &option);
 void   debug_config_del  (const String &key);
 String debug_config_get  (const String &key, const String &default_value = "");
 bool   debug_config_bool (const String &key, bool default_value = 0);
+bool   debug_devel_check ();
 
 // == Debug Macros ==
 #define RAPICORN_DEBUG_OPTION(option, blurb)       Rapicorn::DebugOption (option)
@@ -46,16 +47,9 @@ enum Colors {
   BG_DEFAULT,
 };
 
-/// Return ASCII code for the specified color.
 const char*     color_code      (Colors acolor);
-
-/// Return ASCII code for the specified color if stdout & stderr should be colorized.
 const char*     color           (Colors acolor);
-
-/// Check whether the tty @a fd should use colorization.
 bool            colorize_tty    (int fd = 1);
-
-/// Configure the environment variable that always/never/automatically allows colorization.
 void            color_envkey    (const String &env_var, const String &key = "");
 
 } // AnsiColors

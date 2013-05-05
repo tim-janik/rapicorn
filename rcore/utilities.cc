@@ -197,8 +197,6 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 }
 
 // === Logging ===
-bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
-
 /** Issue debugging message after checking RAPICORN_DEBUG.
  * Checks the environment variable #$RAPICORN_DEBUG for @a key, and issues a debugging
  * message with source location @a file_path and @a line.
