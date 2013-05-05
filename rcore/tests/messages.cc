@@ -55,7 +55,7 @@ test_logging (const char *logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)
     {
-      debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
+      debug_config_add ("fatal-warnings=0"); // cancel fatal-warnings, usually enforced for tests
       RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
       RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
@@ -76,7 +76,7 @@ main (int   argc,
   if (argc >= 2 || Test::logging())
     {
       // set testing switch 'testpid0' to enforce deterministic ouput
-      debug_configure ("testpid0");
+      // debug_config_add ("testpid0");
     }
 
   if (argc >= 2)

@@ -546,7 +546,7 @@ trap_fork (uint64 usec_timeout, uint test_trap_flags)
       if (stderr_pipe[1] >= 3)
         close (stderr_pipe[1]);
       if (test_trap_flags & TRAP_NO_FATAL_SYSLOG)
-        debug_configure ("no-fatal-syslog");
+        debug_config_add ("fatal-syslog=0");
       return true;
     }
   else                          // parent

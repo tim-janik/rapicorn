@@ -131,26 +131,8 @@ bool        rapicorn_flipper_check (const char *key);
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
 extern bool _devel_flag;
 inline bool devel_enabled     () { return RAPICORN_UNLIKELY (_devel_flag); }
-void        debug_configure   (const String &options);
-String      debug_confstring  (const String &option, const String &vdefault = "");
-bool        debug_confbool    (const String &option, bool vdefault = false);
-int64       debug_confnum     (const String &option, int64 vdefault = 0);
-String      debug_help        ();
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
-
-class DebugEntry {
-  static void dbe_list  (DebugEntry*, int);
-public:
-  const char *const key, *const blurb;
-  String      confstring  (const String &vdefault = "") { return debug_confstring (key, vdefault); }
-  bool        confbool    (bool vdefault = false)       { return debug_confbool (key, vdefault); }
-  int64       confnum     (int64 vdefault = 0)          { return debug_confnum (key, vdefault); }
-  /*dtor*/   ~DebugEntry  ()                            { dbe_list (this, -1); }
-  explicit    DebugEntry  (const char *const dkey, const char *const dblurb = NULL) :
-    key (dkey), blurb (dblurb)
-  { dbe_list (this, +1); }
-};
 
 // === Macro Implementations ===
 #define RAPICORN_STRINGIFY_ARG(arg)     #arg

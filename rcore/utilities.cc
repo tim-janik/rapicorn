@@ -198,123 +198,9 @@ KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
 
 // === Logging ===
 bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
-static Atomic<KeyConfig*>   conftest_map = NULL;
-static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
-
-static inline KeyConfig&
-conftest_procure ()
-{
-  KeyConfig *kconfig = conftest_map.load();
-  if (UNLIKELY (kconfig == NULL))
-    {
-      kconfig = new KeyConfig();
-      bool dummy = 0;
-      kconfig->configure (conftest_defaults, dummy);
-      if (conftest_map.cas (NULL, kconfig))
-        {
-          const char *env_rapicorn = getenv ("RAPICORN");
-          // configure with support for aliases, caches, etc
-          debug_configure (env_rapicorn ? env_rapicorn : "");
-        }
-      else
-        {
-          delete kconfig; // some other thread was faster
-          kconfig = conftest_map.load();
-        }
-    }
-  return *kconfig;
-}
-
-void
-debug_configure (const String &options)
-{
-  bool seen_debug_key = false;
-  conftest_procure().configure (options, seen_debug_key);
-  Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
-  if (debug_confbool ("help"))
-    do_once { printerr ("%s", debug_help().c_str()); }
-  _cached_rapicorn_debug = true; // possibly re-enable debugging (reset cache)
-}
-
-static std::list<DebugEntry*> *debug_entries;
-
-void
-DebugEntry::dbe_list (DebugEntry *e, int what)
-{
-  do_once {
-    static uint64 space[sizeof (*debug_entries) / sizeof (uint64)];
-    debug_entries = new (space) std::list<DebugEntry*>();
-  }
-  if (what > 0)
-    debug_entries->push_back (e);
-  else if (what < 0)
-    debug_entries->remove (e);
-}
-
-String
-debug_help ()
-{
-  String s;
-  s += "$RAPICORN - Environment variable for debugging and configuration.\n";
-  s += "Colon seperated options can be listed here, listing an option enables it,\n";
-  s += "prefixing it with 'no-' disables it. Option assignments are supported with\n";
-  s += "the syntax 'option=VALUE'. The supported options are:\n";
-  s += "  :help:            Provide a brief description for this environment variable.\n";
-  s += "  :debug:           Enable general debugging messages, similar to :verbose:.\n";
-  s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
-  s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
-  s += "  :devel:           Enable development version behavior.\n";
-  s += "  :color:           Colorize error messages, can be 'never', 'always', 'auto'.\n";
-  s += "  :verbose:         Enable general information and diagnostic messages.\n";
-  s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
-  s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
-  s += "  :fatal-warnings:  Cast all warning messages into fatal conditions.\n";
-  for (auto it : *debug_entries)
-    {
-      String k = string_printf ("  :%s:", it->key);
-      if (!it->blurb)
-        s += k + "\n";
-      else if (k.size() >= 20)
-        s += k + "\n" + string_multiply (" ", 20) + it->blurb + "\n";
-      else
-        s += k + string_multiply (" ", 20 - k.size()) + it->blurb + "\n";
-    }
-  return s;
-}
-
-String
-debug_confstring (const String &option, const String &vdefault)
-{
-  String key = option;
-  std::transform (key.begin(), key.end(), key.begin(), ::tolower);
-  return conftest_procure().slookup (key, vdefault);
-}
-
-bool
-debug_confbool (const String &option, bool vdefault)
-{
-  return string_to_bool (debug_confstring (option, string_from_int (vdefault)));
-}
-
-int64
-debug_confnum (const String &option, int64 vdefault)
-{
-  return string_to_int (debug_confstring (option, string_from_int (vdefault)));
-}
-
-bool
-debug_key_enabled (const char *key)
-{
-  String dkey = key ? key : "";
-  std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
-  const bool keycheck = !key || debug_confbool ("debug-" + dkey) || // key selected
-                        (debug_confbool ("debug-all") &&            // all keys enabled by default
-                         debug_confbool ("debug-" + dkey, true));   // ensure key was not deselected
-  return keycheck;
-}
 
 /** Issue debugging message after checking RAPICORN_DEBUG.
- * Checks the environment variable $RAPICORN_DEBUG for @a key, and issues a debugging
+ * Checks the environment variable #$RAPICORN_DEBUG for @a key, and issues a debugging
  * message with source location @a file_path and @a line.
  */
 void
@@ -330,7 +216,7 @@ volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
 
 #ifdef RAPICORN_DOXYGEN
 /** Check if debugging is enabled for @a key.
- * This function checks if $RAPICORN_DEBUG contains @a key or "all" and returns true
+ * This function checks if #$RAPICORN_DEBUG contains @a key or "all" and returns true
  * if debugging is enabled for the given key. The @a key argument may be NULL in which
  * case the function checks if general debugging is enabled.
  */
@@ -553,13 +439,13 @@ user_warning (const UserSource &source, const char *format, ...)
 
 /**
  * @def RAPICORN_DEBUG(format,...)
- * Issues a debugging message if $RAPICORN_DEBUG contains "debug" or "all".
+ * Issues a debugging message if #$RAPICORN_DEBUG contains "debug" or "all".
  * The message @a format uses printf-like syntax.
  */
 
 /**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
- * Issues a debugging message if $RAPICORN_DEBUG contains the literal @a "key" or "all".
+ * Issues a debugging message if #$RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
  */
 

@@ -32,6 +32,20 @@ dbg_prefix (const String &fileline)
   return fileline;
 }
 
+/** @def RAPICORN_DEBUG_OPTION(option, blurb)
+ * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options,
+ * configured through #$RAPICORN_DEBUG.
+ * Typical use: @code
+ * static auto dbg_test_feature = RAPICORN_DEBUG_OPTION ("test-feature", "Switch use of the test-feature during debugging on or off.");
+ * if (dbg_test_feature)
+ *   enable_test_feature();
+ * @endcode
+ */
+
+static DebugOption dbe_syslog = RAPICORN_DEBUG_OPTION ("syslog", "Enable logging of general purpose messages through syslog(3).");
+static DebugOption dbe_fatal_syslog = RAPICORN_DEBUG_OPTION ("fatal-syslog", "Enable logging of fatal conditions through syslog(3).");
+static DebugOption dbe_fatal_warnings = RAPICORN_DEBUG_OPTION ("fatal-warnings", "Cast all warning messages into fatal errors.");
+
 static __attribute__ ((noinline)) void // internal function, this + caller are skipped in backtraces
 debug_handler (const char dkind, const String &file_line, const String &message, const char *key = NULL)
 {
@@ -43,10 +57,10 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
          DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXIT = 128, DO_BACKTRACE = 256, };
   static int conftest_logfd = 0;
-  const String conftest_logfile = conftest_logfd == 0 ? debug_confstring ("logfile") : "";
-  const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
-  const int MAY_SYSLOG = debug_confbool ("syslog") ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = debug_confbool ("fatal-warnings") ? DO_ABORT  : 0;
+  const String conftest_logfile = conftest_logfd == 0 ? debug_config_get ("logfile") : "";
+  const int FATAL_SYSLOG = dbe_fatal_syslog ? DO_SYSLOG : 0;
+  const int MAY_SYSLOG = dbe_syslog ? DO_SYSLOG : 0;
+  const int MAY_ABORT  = dbe_fatal_warnings ? DO_ABORT  : 0;
   const char *what = "DEBUG";
   int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
   switch (kind)
@@ -402,6 +416,12 @@ debug_config_get (const String &key, const String &default_value)
         return value;
     }
   return default_value;
+}
+
+bool
+debug_config_bool (const String &key, bool default_value)
+{
+  return string_to_bool (debug_config_get (key, string_from_int (default_value)));
 }
 
 // == AnsiColors ==

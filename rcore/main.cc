@@ -208,7 +208,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
       if (            arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
                       arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings")) // legacy option support
         {
-          debug_configure ("fatal-warnings");
+          debug_config_add ("fatal-warnings");
           const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
         }
@@ -414,7 +414,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
     ThreadInfo::self().name (string_printf ("%s-MainThread", Path::basename (program_argv0).c_str()));
 
   // ensure logging is fully initialized
-  debug_configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
   RAPICORN_DEBUG ("Startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
@@ -447,7 +446,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   // initialize testing framework
   if (vinit_settings.test_codes() & Test::MODE_TESTING)
     {
-      debug_configure ("fatal-warnings");
+      debug_config_add ("fatal-warnings");
       const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
       CPUInfo ci = cpu_info(); // initialize cpu info

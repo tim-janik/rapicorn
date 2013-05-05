@@ -7,7 +7,7 @@
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define VDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvent2", __VA_ARGS__) // verbose event debugging
-static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
+static auto dbe_x11sync = RAPICORN_DEBUG_OPTION ("x11sync", "Synchronize X11 operations for correct error attribution.");
 
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
@@ -936,7 +936,7 @@ X11Context::connect()
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (edsp ? edsp : ""), display ? "success" : "failed to connect");
   if (!display)
     return false;
-  XSynchronize (display, dbe_x11sync.confbool());
+  XSynchronize (display, dbe_x11sync);
   screen = DefaultScreen (display);
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);

@@ -29,8 +29,8 @@ x11_error (Display *error_display, XErrorEvent *error_event)
                                 addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
   for (size_t i = 0; i < syms.size(); i++)
     btmsg += string_printf ("  %s\n", syms[i].c_str());
-  printerr ("X11: received an XErrorEvent (RAPICORN=%s), aborting...\n%s",
-            CQUOTE (String (dbe_x11sync.confbool() ? "" : "no-") + dbe_x11sync.key), btmsg.c_str());
+  printerr ("X11: received an XErrorEvent ($RAPICORN_DEBUG=%s), aborting...\n%s",
+            CQUOTE (dbe_x11sync.key + String (dbe_x11sync ? "=1" : "=0")), btmsg.c_str());
   atexit (abort); // prevents other atexit() handlers from complaining about improper shutdown
   xlib_error_handler (error_display, error_event);
   abort(); // usually _XPrintDefaultError already aborted
