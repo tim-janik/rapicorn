@@ -11,10 +11,6 @@
 // === Convenience Macro Abbreviations ===
 #ifdef RAPICORN_CONVENIENCE
 #include <assert.h>                                             // needed to redefine assert()
-#if defined assert || defined RAPICORN_DOXYGEN                  // only redefine if assert.h introduces an "assert" macro
-#undef  assert
-#define assert                  RAPICORN_ASSERT                 ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
-#endif // assert
 #define DIR_SEPARATOR           RAPICORN_DIR_SEPARATOR          ///< Shorthand for RAPICORN_DIR_SEPARATOR.
 #define DIR_SEPARATOR_S         RAPICORN_DIR_SEPARATOR_S        ///< Shorthand for RAPICORN_DIR_SEPARATOR_S.
 #define SEARCHPATH_SEPARATOR    RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
@@ -22,15 +18,8 @@
 #define __PRETTY_FILE__         RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
 //#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
 #define STRLOC()         RAPICORN_STRLOC()          ///< Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
-#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
-#define assert_return    RAPICORN_ASSERT_RETURN     ///< Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
 #define return_if        RAPICORN_RETURN_IF         ///< Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
 #define return_unless    RAPICORN_RETURN_UNLESS     ///< Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
-#define fatal            RAPICORN_FATAL             ///< Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
-#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
-#define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
-#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
-#define STATIC_ASSERT    RAPICORN_STATIC_ASSERT     ///< Shorthand for RAPICORN_STATIC_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -100,20 +89,11 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_STRLOC()                       ((RAPICORN_PRETTY_FILE + ::Rapicorn::String (":") + RAPICORN_STRINGIFY (__LINE__)).c_str()) ///< Return "FILE:LINE"
 #define RAPICORN_STRFUNC()                      (std::string (__FUNCTION__).c_str())            ///< Return "FUNCTION()"
 #define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string)        ///< Return stringiified argument
+#define RAPICORN_STRINGIFY_ARG(arg)     #arg
 
 // === Control Flow Helpers ===
 #define RAPICORN_RETURN_IF(cond, ...)           do { if (RAPICORN_UNLIKELY (cond)) return __VA_ARGS__; } while (0)
 #define RAPICORN_RETURN_UNLESS(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; return __VA_ARGS__; } while (0)
-
-// === Development Guards ===
-#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
-#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
-#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "code must not be reached"); } while (0)
-
-// === Development Messages ===
-#define RAPICORN_CRITICAL_UNLESS(cond)  do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
-#define RAPICORN_CRITICAL(...)          do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // === Conditional Debugging ===
 #define RAPICORN_DEBUG(...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_cached_rapicorn_debug)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
@@ -133,9 +113,6 @@ void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
 
 // === Macro Implementations ===
-#define RAPICORN_STRINGIFY_ARG(arg)     #arg
-#define RAPICORN_STARTUP_ASSERTi(e, _N) namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
-#define RAPICORN_STARTUP_ASSERT(expr)   RAPICORN_STARTUP_ASSERTi (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 #define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.
 #if (defined __i386__ || defined __x86_64__)
 inline void breakpoint() { __asm__ __volatile__ ("int $03"); }

@@ -5,6 +5,13 @@
 #include <rcore/cxxaux.hh>
 #include <rcore/aida.hh>
 
+// For convenience, redefine assert() to get backtraces, logging, etc.
+#if !defined (assert) && defined (RAPICORN_CONVENIENCE) // dont redefine an existing custom macro
+#include <assert.h>                                     // import definition of assert() from libc
+#undef  assert
+#define assert  RAPICORN_ASSERT                         ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#endif // RAPICORN_CONVENIENCE
+
 namespace Rapicorn {
 
 // == Environment variable key functions ==
@@ -25,8 +32,15 @@ String debug_config_get  (const String &key, const String &default_value = "");
 bool   debug_config_bool (const String &key, bool default_value = 0);
 bool   debug_devel_check ();
 
-// == Debug Macros ==
-#define RAPICORN_DEBUG_OPTION(option, blurb)       Rapicorn::DebugOption (option)
+// == Debugging Macros ==
+#define RAPICORN_DEBUG_OPTION(option, blurb)    Rapicorn::DebugOption (option)
+#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "code must not be reached"); } while (0)
+#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
+#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
+#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_CRITICAL_UNLESS(cond)          do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
+#define RAPICORN_CRITICAL(...)                  do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_STARTUP_ASSERT(expr)           RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 
 // == AnsiColors ==
 /// The AnsiColors namespace contains utility functions for colored terminal output
@@ -54,13 +68,28 @@ void            color_envkey    (const String &env_var, const String &key = "");
 
 } // AnsiColors
 
+// == Convenience Macros ==
+#ifdef RAPICORN_CONVENIENCE
+#define assert_unreached RAPICORN_ASSERT_UNREACHED  ///< Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+#define assert_return    RAPICORN_ASSERT_RETURN     ///< Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
+#define fatal            RAPICORN_FATAL             ///< Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
+#define critical_unless  RAPICORN_CRITICAL_UNLESS   ///< Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define critical         RAPICORN_CRITICAL          ///< Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
+#define STARTUP_ASSERT   RAPICORN_STARTUP_ASSERT    ///< Shorthand for RAPICORN_STARTUP_ASSERT() if RAPICORN_CONVENIENCE is defined.
+#define STATIC_ASSERT    RAPICORN_STATIC_ASSERT     ///< Shorthand for RAPICORN_STATIC_ASSERT() if RAPICORN_CONVENIENCE is defined.
+#endif // RAPICORN_CONVENIENCE
+
 // == Implementation Bits ==
 /// @cond NOT_4_DOXYGEN
+
 struct DebugOption {
   const char *const key;
   constexpr DebugOption (const char *_key) : key (_key) {}
   operator  bool        () { return debug_config_bool (key); }
 };
+
+#define RAPICORN_STARTUP_ASSERT_decl(e, _N)     namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
+
 /// @endcond
 
 } // Rapicorn

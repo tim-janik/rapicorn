@@ -34,16 +34,6 @@ dbg_prefix (const String &fileline)
   return fileline;
 }
 
-/** @def RAPICORN_DEBUG_OPTION(option, blurb)
- * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options,
- * configured through #$RAPICORN_DEBUG.
- * Typical use: @code
- * static auto dbg_test_feature = RAPICORN_DEBUG_OPTION ("test-feature", "Switch use of the test-feature during debugging on or off.");
- * if (dbg_test_feature)
- *   enable_test_feature();
- * @endcode
- */
-
 static DebugOption dbe_syslog = RAPICORN_DEBUG_OPTION ("syslog", "Enable logging of general purpose messages through syslog(3).");
 static DebugOption dbe_fatal_syslog = RAPICORN_DEBUG_OPTION ("fatal-syslog", "Enable logging of fatal conditions through syslog(3).");
 static DebugOption dbe_fatal_warnings = RAPICORN_DEBUG_OPTION ("fatal-warnings", "Cast all warning messages into fatal errors.");
@@ -435,7 +425,7 @@ debug_config_bool (const String &key, bool default_value)
 
 static Atomic<int> debug_development_features = UNCHECKED;      // cached, checked only once after startup
 
-/// Check if debugging features for development versions should be enabled.
+/// Check if debugging features for development versions should be enabled, see also #$RAPICORN_DEBUG.
 bool
 debug_devel_check ()
 {
@@ -443,6 +433,64 @@ debug_devel_check ()
     debug_development_features = RAPICORN_DEBUG_OPTION ("devel", "Enable debugging features for development versions.");
   return debug_development_features;
 }
+
+/** @def RAPICORN_DEBUG_OPTION(option, blurb)
+ * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options,
+ * configured through #$RAPICORN_DEBUG.
+ * Typical use: @code
+ * static auto dbg_test_feature = RAPICORN_DEBUG_OPTION ("test-feature", "Switch use of the test-feature during debugging on or off.");
+ * if (dbg_test_feature)
+ *   enable_test_feature();
+ * @endcode
+ */
+
+/**
+ * @def RAPICORN_FATAL(format,...)
+ * Abort the program with a fatal error message.
+ * Issues an error message and call abort() to abort the program.
+ * The error message @a format uses printf-like syntax.
+ */
+
+/**
+ * @def RAPICORN_ASSERT(cond)
+ * Issue an error and abort the program if expression @a cond evaluates to false.
+ * Before aborting, a bracktrace is printed to aid debugging of the failing assertion.
+ */
+
+/**
+ * @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
+ * Issue an assertion warning and return if @a condition is false.
+ * Issue an error and return @a rvalue if expression @a condition evaluates to false. Returns void if @a rvalue was not specified.
+ * This is normally used as function entry condition.
+ */
+
+/**
+ * @def RAPICORN_ASSERT_UNREACHED()
+ * Assertion used to label unreachable code.
+ * Issues an error message, and aborts the program if it is reached at runtime.
+ * This is normally used to label code conditions intended to be unreachable.
+ */
+
+/**
+ * @def RAPICORN_CRITICAL(format,...)
+ * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * The error message @a format uses printf-like syntax.
+ */
+
+/**
+ * @def RAPICORN_CRITICAL_UNLESS(cond)
+ * Issue a critical warning if @a condition is false, i.e. this macro behaves
+ * like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
+ * This is normally used as a non-fatal assertion.
+ */
+
+/**
+ * @def RAPICORN_STARTUP_ASSERT(condition)
+ * Abort during program startup if @a condition is false.
+ * This macro expands to executing an assertion via a static constructor during program
+ * startup (before main()). In contrast to static_assert(), this macro can execute arbitrary
+ * code, e.g. to assert floating point number properties.
+ */
 
 // == AnsiColors ==
 namespace AnsiColors {

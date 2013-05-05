@@ -396,46 +396,6 @@ user_warning (const UserSource &source, const char *format, ...)
  */
 
 /**
- * @def RAPICORN_FATAL(format,...)
- * Abort the program with a fatal error message.
- * Issues an error message and call abort() to abort the program.
- * The error message @a format uses printf-like syntax.
- */
-
-/**
- * @def RAPICORN_ASSERT(cond)
- * Issue an error and abort the program if expression @a cond evaluates to false.
- * Before aborting, a bracktrace is printed to aid debugging of the failing assertion.
- */
-
-/**
- * @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
- * Issue an assertion warning and return if @a condition is false.
- * Issue an error and return @a rvalue if expression @a condition evaluates to false. Returns void if @a rvalue was not specified.
- * This is normally used as function entry condition.
- */
-
-/**
- * @def RAPICORN_ASSERT_UNREACHED()
- * Assertion used to label unreachable code.
- * Issues an error message, and aborts the program if it is reached at runtime.
- * This is normally used to label code conditions intended to be unreachable.
- */
-
-/**
- * @def RAPICORN_CRITICAL(format,...)
- * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
- * The error message @a format uses printf-like syntax.
- */
-
-/**
- * @def RAPICORN_CRITICAL_UNLESS(cond)
- * Issue a critical warning if @a condition is false, i.e. this macro behaves
- * like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
- * This is normally used as a non-fatal assertion.
- */
-
-/**
  * @def RAPICORN_DEBUG(format,...)
  * Issues a debugging message if #$RAPICORN_DEBUG contains "debug" or "all".
  * The message @a format uses printf-like syntax.
@@ -445,14 +405,6 @@ user_warning (const UserSource &source, const char *format, ...)
  * @def RAPICORN_KEY_DEBUG(key, format,...)
  * Issues a debugging message if #$RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
- */
-
-/**
- * @def RAPICORN_STARTUP_ASSERT(condition)
- * Abort if @a condition is false.
- * This macro expands to executing an assertion via a static constructor during program
- * startup. In contrast to static_assert(), this macro can execute arbitrary code, e.g.
- * to assert floating point number properties.
  */
 
 // == utilities ==
