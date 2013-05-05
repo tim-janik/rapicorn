@@ -70,6 +70,11 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml $(DOXYGEN_SRCTREE)
 	$(DOXYGEN_Q) rm -rf $(DOXYGEN_SRCTREE)/ doxygen-tmp/
 .PHONY: doxygen-html
 
+doxygen-full:
+	$(DOXYGEN_Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
+	$(DOXYGEN_Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
+.PHONY: doxygen-full
+
 clean-local: doxygen-clean
 
 doxygen-clean:
