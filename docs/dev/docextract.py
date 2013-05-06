@@ -2,6 +2,7 @@
 import sys, re
 
 rapicorn_debug_items = ''
+rapicorn_debug_keys = ''
 
 def process_start ():
   pass
@@ -17,11 +18,21 @@ def process_code (txt):
   matches = re.findall (pattern, txt, re.MULTILINE | re.VERBOSE)
   for m in matches:
     rapicorn_debug_items += '  * - @c %s - %s\n' % (m[0], m[1])
+  # RAPICORN_KEY_DEBUG (keys, ...)
+  global rapicorn_debug_keys
+  pattern = r'\b RAPICORN_KEY_DEBUG \s* \( \s* ' + cstring + r' \s* , \s* [^;] *? \)'
+  matches = re.findall (pattern, txt, re.MULTILINE | re.VERBOSE)
+  for m in matches:
+    rapicorn_debug_keys += '  * - @c %s - Debugging message key, =1 enable, =0 disable.\n' % m
 
 def process_end ():
   if rapicorn_debug_items:
     print '/** @var $RAPICORN_DEBUG'
     print rapicorn_debug_items
+    print '*/'
+  if rapicorn_debug_keys:
+    print '/** @var $RAPICORN_DEBUG'
+    print rapicorn_debug_keys
     print '*/'
 
 def process_specific (text):

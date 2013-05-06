@@ -34,6 +34,9 @@ dbg_prefix (const String &fileline)
   return fileline;
 }
 
+#if DOXYGEN
+static void docextract_definition = RAPICORN_DEBUG_OPTION ("all", "Enable all available debugging keys and generate lots of output.");
+#endif
 static DebugOption dbe_syslog = RAPICORN_DEBUG_OPTION ("syslog", "Enable logging of general purpose messages through syslog(3).");
 static DebugOption dbe_fatal_syslog = RAPICORN_DEBUG_OPTION ("fatal-syslog", "Enable logging of fatal conditions through syslog(3).");
 static DebugOption dbe_fatal_warnings = RAPICORN_DEBUG_OPTION ("fatal-warnings", "Cast all warning messages into fatal errors.");

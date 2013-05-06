@@ -29,8 +29,11 @@ $RAPICORN_FLIPPER = "";
 $RAPICORN_TEST = "";
 
 /** Environment variable for debugging.
- * The #$RAPICORN_DEBUG environment variable may contain a colon separated list of options that
+ * The #$RAPICORN_DEBUG environment variable may contain a colon separated list of options and kyes that
  * are used to configure debugging behaviour (see also RAPICORN_DEBUG_OPTION() and Rapicorn::debug_config_get()).
+ * A boolean debugging key enables (=1) or disables (=0) a specific set of debugging messages.
+ * The special key 'all' can be used to identify useful debugging messages, each generated message is prefixed
+ * by its debugging key. A key setting overrides 'all' if it appears later in the colon list.
  * A list of supported options extracted from the Rapicorn sources follows:
  */
 $RAPICORN_DEBUG = "";
