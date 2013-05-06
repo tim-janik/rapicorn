@@ -3,6 +3,7 @@ import sys, re
 
 rapicorn_debug_items, rapicorn_debug_items_set = '', set()
 rapicorn_debug_keys, rapicorn_debug_keys_set = '', set()
+rapicorn_flippers, rapicorn_flippers_set = '', set()
 
 def process_start ():
   pass
@@ -28,16 +29,25 @@ def process_code (txt):
     if not m in rapicorn_debug_keys_set:
       rapicorn_debug_keys += '  * - @c %s - Debugging message key, =1 enable, =0 disable.\n' % m
       rapicorn_debug_keys_set.add (m)
+  # RAPICORN_FLIPPER (option, blurb)
+  global rapicorn_flippers, rapicorn_flippers_set
+  pattern = r'\b RAPICORN_FLIPPER \s* \( \s* ' + cstring + r' \s* , \s* ' + cstring + ' \s* \) \s* ;'
+  matches = re.findall (pattern, txt, re.MULTILINE | re.VERBOSE)
+  for m in matches:
+    if not m[0] in rapicorn_flippers_set:
+      rapicorn_flippers += '  * - @c %s - %s\n' % (m[0], m[1])
+      rapicorn_flippers_set.add (m[0])
 
 def process_end ():
   if rapicorn_debug_items:
     print '/** @var $RAPICORN_DEBUG'
-    print rapicorn_debug_items
-    print '*/'
+    print rapicorn_debug_items, '*/'
   if rapicorn_debug_keys:
     print '/** @var $RAPICORN_DEBUG'
-    print rapicorn_debug_keys
-    print '*/'
+    print rapicorn_debug_keys, '*/'
+  if rapicorn_flippers:
+    print '/** @var $RAPICORN_FLIPPER'
+    print rapicorn_flippers, '*/'
 
 def process_specific (text):
   def is_comment (t):
