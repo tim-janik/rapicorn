@@ -1,8 +1,8 @@
 # Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 import sys, re
 
-rapicorn_debug_items = ''
-rapicorn_debug_keys = ''
+rapicorn_debug_items, rapicorn_debug_items_set = '', set()
+rapicorn_debug_keys, rapicorn_debug_keys_set = '', set()
 
 def process_start ():
   pass
@@ -13,17 +13,21 @@ def process_comment (txt):
 def process_code (txt):
   cstring = r' " ( (?: [^\\"] | \\ .) * ) " '
   # RAPICORN_DEBUG_OPTION (option, blurb)
-  global rapicorn_debug_items
+  global rapicorn_debug_items, rapicorn_debug_items_set
   pattern = r'\b RAPICORN_DEBUG_OPTION \s* \( \s* ' + cstring + r' \s* , \s* ' + cstring + ' \s* \) \s* ;'
   matches = re.findall (pattern, txt, re.MULTILINE | re.VERBOSE)
   for m in matches:
-    rapicorn_debug_items += '  * - @c %s - %s\n' % (m[0], m[1])
+    if not m[0] in rapicorn_debug_items_set:
+      rapicorn_debug_items += '  * - @c %s - %s\n' % (m[0], m[1])
+      rapicorn_debug_items_set.add (m[0])
   # RAPICORN_KEY_DEBUG (keys, ...)
-  global rapicorn_debug_keys
+  global rapicorn_debug_keys, rapicorn_debug_keys_set
   pattern = r'\b RAPICORN_KEY_DEBUG \s* \( \s* ' + cstring + r' \s* , \s* [^;] *? \)'
   matches = re.findall (pattern, txt, re.MULTILINE | re.VERBOSE)
   for m in matches:
-    rapicorn_debug_keys += '  * - @c %s - Debugging message key, =1 enable, =0 disable.\n' % m
+    if not m in rapicorn_debug_keys_set:
+      rapicorn_debug_keys += '  * - @c %s - Debugging message key, =1 enable, =0 disable.\n' % m
+      rapicorn_debug_keys_set.add (m)
 
 def process_end ():
   if rapicorn_debug_items:
