@@ -148,43 +148,6 @@ timestamp_format (uint64 stamp)
 }
 
 // === Logging ===
-/** Issue debugging message after checking RAPICORN_DEBUG.
- * Checks the environment variable #$RAPICORN_DEBUG for @a key, and issues a debugging
- * message with source location @a file_path and @a line.
- */
-void
-rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_cached_rapicorn_debug);
-  va_end (vargs);
-}
-
-volatile bool _cached_rapicorn_debug = true;    // initially enable debugging
-
-#ifdef RAPICORN_DOXYGEN
-/** Check if debugging is enabled for @a key.
- * This function checks if #$RAPICORN_DEBUG contains @a key or "all" and returns true
- * if debugging is enabled for the given key. The @a key argument may be NULL in which
- * case the function checks if general debugging is enabled.
- */
-bool rapicorn_debug_enabled (const char *key);
-#endif  // RAPICORN_DOXYGEN
-
-bool
-_rapicorn_debug_enabled (const char *key)
-{
-  return envkey_debug_check ("RAPICORN_DEBUG", key, &_cached_rapicorn_debug);
-}
-
-/// Check if the feature toggle @a key is enabled.
-bool
-rapicorn_flipper_check (const char *key)
-{
-  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
-}
-
 String
 pretty_file (const char *file_dir, const char *file)
 {
@@ -344,18 +307,6 @@ user_warning (const UserSource &source, const char *format, ...)
  * @def RAPICORN_RETURN_UNLESS(expr [, rvalue])
  * Return if @a expr is false.
  * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
- */
-
-/**
- * @def RAPICORN_DEBUG(format,...)
- * Issues a debugging message if #$RAPICORN_DEBUG contains "debug" or "all".
- * The message @a format uses printf-like syntax.
- */
-
-/**
- * @def RAPICORN_KEY_DEBUG(key, format,...)
- * Issues a debugging message if #$RAPICORN_DEBUG contains the literal @a "key" or "all".
- * The message @a format uses printf-like syntax.
  */
 
 // == utilities ==

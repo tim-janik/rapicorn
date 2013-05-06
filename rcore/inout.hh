@@ -33,6 +33,11 @@ String debug_config_get  (const String &key, const String &default_value = "");
 bool   debug_config_bool (const String &key, bool default_value = 0);
 bool   debug_devel_check ();
 
+// == Rapicorn Internals Debugging ==
+void rapicorn_debug         (const char*, const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 4, 5)));
+bool rapicorn_debug_check   (const char *key = NULL);
+bool rapicorn_flipper_check (const char *key);
+
 // == Debugging Macros ==
 #define RAPICORN_DEBUG_OPTION(option, blurb)    Rapicorn::DebugOption (option)
 #define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "code must not be reached"); } while (0)
@@ -43,6 +48,8 @@ bool   debug_devel_check ();
 #define RAPICORN_CRITICAL(...)                  do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 #define RAPICORN_STARTUP_ASSERT(expr)           RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 #define RAPICORN_DIAG(...)                      do { Rapicorn::debug_diag (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_DEBUG(...)                     do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_KEY_DEBUG(key,...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // == AnsiColors ==
 /// The AnsiColors namespace contains utility functions for colored terminal output
@@ -91,6 +98,15 @@ struct DebugOption {
 };
 
 #define RAPICORN_STARTUP_ASSERT_decl(e, _N)     namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
+
+extern bool volatile _rapicorn_debug_check_cache; ///< Caching flag to inhibit useless rapicorn_debug() calls.
+
+inline bool
+rapicorn_debug_check (const char *key)
+{
+  return (RAPICORN_UNLIKELY (_rapicorn_debug_check_cache) &&
+          envkey_debug_check ("RAPICORN_DEBUG", key, &_rapicorn_debug_check_cache));
+}
 
 /// @endcond
 

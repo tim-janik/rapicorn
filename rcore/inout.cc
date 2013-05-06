@@ -450,6 +450,37 @@ debug_devel_check ()
   return debug_development_features;
 }
 
+bool volatile _rapicorn_debug_check_cache = true; // initially enable debugging
+
+/** Issue debugging messages according to configuration.
+ * Checks the environment variable #$RAPICORN_DEBUG for @a key like rapicorn_debug_check(),
+ * and issues a debugging message with source location @a file_path and @a line.
+ * The message @a format uses printf-like syntax.
+ */
+void
+rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_rapicorn_debug_check_cache);
+  va_end (vargs);
+}
+
+/** Check if debugging is enabled for @a key.
+ * This function checks if #$RAPICORN_DEBUG contains @a key or "all" and returns true
+ * if debugging is enabled for the given key.
+ */
+bool rapicorn_debug_check   (const char *key);
+
+/** Check if the feature toggle @a key is enabled.
+ * Check for @a key in #$RAPICORN_FLIPPER via calling envkey_flipper_check().
+ */
+bool
+rapicorn_flipper_check (const char *key)
+{
+  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
+}
+
 /** @def RAPICORN_DEBUG_OPTION(option, blurb)
  * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options,
  * configured through #$RAPICORN_DEBUG.
@@ -505,6 +536,18 @@ debug_devel_check ()
  * Issues a diagnostic message, usually indicaintg I/O errors, or invalid user input.
  * Diagnostic message are enabled by default for dvelopment versions and can be enabled
  * other wise with #$RAPICORN_DEBUG=devel.
+ * The message @a format uses printf-like syntax.
+ */
+
+/**
+ * @def RAPICORN_DEBUG(format,...)
+ * Issues a debugging message if #$RAPICORN_DEBUG contains "debug" or "all".
+ * The message @a format uses printf-like syntax.
+ */
+
+/**
+ * @def RAPICORN_KEY_DEBUG(key, format,...)
+ * Issues a debugging message if #$RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.
  */
 
