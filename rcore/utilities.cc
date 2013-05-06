@@ -951,7 +951,7 @@ url_test_show (const char *url)
                                    NULL, /* child_pid */
                                    &error);
         g_free (string);
-        RAPICORN_DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
+        RAPICORN_KEY_DEBUG ("URL", "show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
         g_clear_error (&error);
         if (success)
           return true;

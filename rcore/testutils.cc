@@ -10,6 +10,8 @@
 #include <string.h>
 #include <malloc.h>
 
+#define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Test", __VA_ARGS__)
+
 namespace Rapicorn {
 
 /** The Test namespace offers utilities for unit tests.
@@ -315,7 +317,7 @@ run_tests (void)
   char ftype = logging() ? 'l' : (slow() ? 's' : 't');
   if (ui_test())
     ftype = toupper (ftype);
-  RAPICORN_DEBUG ("Test: running %zu + %zu tests", entries.size(), testfuncs.size());
+  TDEBUG ("running %zu + %zu tests", entries.size(), testfuncs.size());
   size_t skipped = 0, passed = 0;
   for (size_t i = 0; i < entries.size(); i++)
     {
@@ -337,8 +339,8 @@ run_tests (void)
       TDONE();
       passed++;
     }
-  RAPICORN_DEBUG ("Test: passed %zu tests", passed);
-  RAPICORN_DEBUG ("Test: skipped deselected %zu tests", skipped);
+  TDEBUG ("passed %zu tests", passed);
+  TDEBUG ("skipped deselected %zu tests", skipped);
 }
 
 void

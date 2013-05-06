@@ -56,7 +56,7 @@ test_logging (const char *logarg)
   if (String ("--test-logging") == logarg)
     {
       debug_config_add ("fatal-warnings=0"); // cancel fatal-warnings, usually enforced for tests
-      RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
+      RAPICORN_KEY_DEBUG ("Test", "logging test selected, enabling various debugging messages");
       RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
       RAPICORN_CRITICAL_UNLESS (errno == 0);

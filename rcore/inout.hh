@@ -48,7 +48,6 @@ bool rapicorn_flipper_check (const char *key);
 #define RAPICORN_CRITICAL(...)                  do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 #define RAPICORN_STARTUP_ASSERT(expr)           RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
 #define RAPICORN_DIAG(...)                      do { Rapicorn::debug_diag (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_DEBUG(...)                     do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (NULL, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 #define RAPICORN_KEY_DEBUG(key,...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // == AnsiColors ==
@@ -98,6 +97,10 @@ struct DebugOption {
 };
 
 #define RAPICORN_STARTUP_ASSERT_decl(e, _N)     namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
+
+#ifdef __RAPICORN_BUILD__
+#define RAPICORN_STARTUP_DEBUG(...)             RAPICORN_KEY_DEBUG ("StartUp", __VA_ARGS__)
+#endif
 
 extern bool volatile _rapicorn_debug_check_cache; ///< Caching flag to inhibit useless rapicorn_debug() calls.
 

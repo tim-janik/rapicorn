@@ -540,12 +540,6 @@ rapicorn_flipper_check (const char *key)
  */
 
 /**
- * @def RAPICORN_DEBUG(format,...)
- * Issues a debugging message if #$RAPICORN_DEBUG contains "debug" or "all".
- * The message @a format uses printf-like syntax.
- */
-
-/**
  * @def RAPICORN_KEY_DEBUG(key, format,...)
  * Issues a debugging message if #$RAPICORN_DEBUG contains the literal @a "key" or "all".
  * The message @a format uses printf-like syntax.

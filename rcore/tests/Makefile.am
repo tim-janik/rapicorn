@@ -57,7 +57,7 @@ check: check-assertion-handler
 check-logging-output: testrcore2
 	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
 	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
+	$(Q) grep -q 'debugging messages' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
 	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
 	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return'"
 	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return+value'"
