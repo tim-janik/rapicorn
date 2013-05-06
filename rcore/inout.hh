@@ -14,6 +14,22 @@
 
 namespace Rapicorn {
 
+// == Basic I/O ==
+void    printerr        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+void    printerr        (const std::string &msg);
+void    printout        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+
+// === User Messages ==
+class UserSource;
+void    user_notice     (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+void    user_warning    (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+
+struct UserSource       ///< Helper structure to capture the origin of a user message.
+{
+  String module, filename; int line;
+  UserSource (const String &module, const String &filename = "", int line = 0);
+};
+
 // == Environment variable key functions ==
 bool envkey_flipper_check (const char*, const char*, bool with_all_toggle = true, volatile bool* = NULL);
 bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);

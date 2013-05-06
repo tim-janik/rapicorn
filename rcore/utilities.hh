@@ -64,16 +64,6 @@ public:
   enum { TRUTH = sizeof (f()) != sizeof (f ((Y*) 0)), };
 };
 
-// === User Messages ==
-class UserSource;
-void    user_notice     (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
-void    user_warning    (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
-
-struct UserSource {
-  String line, filename; int lineno;
-  UserSource (String _filename, int _lineno = 0);
-};
-
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);
 /** @def RAPICORN_PRETTY_FILE
@@ -99,6 +89,8 @@ String  pretty_file                             (const char *file_dir, const cha
 vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
+inline void breakpoint ();
+String      process_handle ();
 
 // === Macro Implementations ===
 #define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.
@@ -109,14 +101,6 @@ inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 #else   // !__i386__ && !__alpha__
 inline void breakpoint() { __builtin_trap(); }
 #endif
-
-/* === printing, errors, warnings, debugging === */
-void        printerr   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        printerr   (const std::string &msg);
-void        printout   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void breakpoint ();
-String      process_handle ();
-
 
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds

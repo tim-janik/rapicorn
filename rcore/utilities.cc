@@ -246,50 +246,6 @@ debug_backtrace_showshot (size_t key)
   return btmsg;
 }
 
-// === User Messages ==
-/// Capture the filename and line number of a user provided resource file.
-UserSource::UserSource (String _filename, int _lineno) :
-  filename (_filename), lineno (_lineno)
-{}
-
-static void
-user_message (const UserSource &source, const String &kind, const String &message)
-{
-  String fname, mkind, pname = program_alias();
-  if (!pname.empty())
-    pname += ":";
-  if (!kind.empty())
-    mkind = " " + kind + ":";
-  if (!source.filename.empty())
-    fname = source.filename + ":";
-  if (source.lineno)
-    fname = fname + string_printf ("%d:", source.lineno);
-  // obey GNU warning style to allow automated location parsing
-  printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
-}
-
-/// Issue a notice about user resources.
-void
-user_notice (const UserSource &source, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "", msg);
-}
-
-/// Issue a warning about user resources that likely need fixing.
-void
-user_warning (const UserSource &source, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "warning", msg);
-}
-
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
@@ -308,31 +264,6 @@ user_warning (const UserSource &source, const char *format, ...)
  * Return if @a expr is false.
  * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
  */
-
-// == utilities ==
-void
-printerr (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stdout);
-  fputs (ers.c_str(), stderr);
-  fflush (stderr);
-}
-
-void
-printout (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stderr);
-  fputs (ers.c_str(), stdout);
-  fflush (stdout);
-}
 
 /* --- process handle --- */
 static struct {
@@ -967,7 +898,7 @@ static void
 browser_launch_warning (const char *url)
 {
   // FIXME: turn browser_launch_warning into a dialog
-  user_warning (UserSource (__FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
+  user_warning (UserSource ("URL", __FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
 }
 
 void

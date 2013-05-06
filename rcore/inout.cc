@@ -14,6 +14,77 @@ static constexpr int UNCHECKED = -1;    // undetermined bool option
 
 namespace Rapicorn {
 
+// == Basic I/O ==
+void
+printerr (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  fflush (stdout);
+  fputs (ers.c_str(), stderr);
+  fflush (stderr);
+}
+
+void
+printout (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  fflush (stderr);
+  fputs (ers.c_str(), stdout);
+  fflush (stdout);
+}
+
+// === User Messages ==
+/// Capture the module, filename and line number of a user provided resource file.
+UserSource::UserSource (const String &_module, const String &_filename, int _line) :
+  module (_module), filename (_filename), line (_line)
+{}
+
+static void
+user_message (const UserSource &source, const String &kind, const String &message)
+{
+  String fname, mkind, pname = program_alias();
+  if (!pname.empty())
+    pname += ":";
+  if (!kind.empty())
+    mkind = " " + kind + ":";
+  if (!source.module.empty())
+    mkind += " " + source.module + ":";
+  if (!source.filename.empty())
+    fname = source.filename + ":";
+  if (source.line)
+    fname = fname + string_printf ("%d:", source.line);
+  // obey GNU warning style to allow automated location parsing
+  printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
+}
+
+/// Issue a notice about user resources.
+void
+user_notice (const UserSource &source, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  user_message (source, "", msg);
+}
+
+/// Issue a warning about user resources that likely need fixing.
+void
+user_warning (const UserSource &source, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  user_message (source, "warning", msg);
+}
+
 // == debug_handler ==
 static String
 dbg_prefix (const String &fileline)
