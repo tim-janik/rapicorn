@@ -1,19 +1,15 @@
 // == docu.dox ==						-*-mode:c++-*-
 // This file contains various general documentation snippets for Rapicorn.
 
-// Extra text to add to the flippers.html collection
-/*! @page flippers Flippers - Feature Toggles
-Flippers are feature toggles that can be used to enable certain development features at runtime.
-Features are enabled by listing them separated with colons in the environment variable #$RAPICORN_FLIPPER.
-See Rapicorn::rapicorn_flipper_check() to check for flipper settings in #$RAPICORN_FLIPPER, and
-refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
-*/
-
-/** Environment variable for feature toggles.
- * The #$RAPICORN_FLIPPER environment variable may contain a colon separated list of features that
- * can enable additional runtime behaviour. This is especially useful to allow rolling releases
- * while some features are still under development, for further details, see @Wikipedia{Feature toggle}.
- * A summary about feature toggles used by Rapicorn is provided on the page @ref flippers.
+/** Environment variable for flippers.
+ * Flippers are feature toggles that are used to enable certain development behaviour at runtime.
+ * This is especially useful to allow early or rolling releases while some features are still
+ * under development. For further conceptual details see @Wikipedia{Feature toggle}.
+ * In Rapicorn, flippers are enabled by listing feature keywords separated with colons in the
+ * environment variable #$RAPICORN_FLIPPER.
+ * See RAPICORN_FLIPPER() to check for flipper settings in #$RAPICORN_FLIPPER, and
+ * refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
+ * A list of supported flippers extracted from the Rapicorn sources follows:
  */
 $RAPICORN_FLIPPER = "";
 

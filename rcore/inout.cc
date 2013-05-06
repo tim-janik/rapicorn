@@ -543,23 +543,32 @@ rapicorn_debug (const char *key, const char *file_path, const int line, const ch
  */
 bool rapicorn_debug_check   (const char *key);
 
-/** Check if the feature toggle @a key is enabled.
- * Check for @a key in #$RAPICORN_FLIPPER via calling envkey_flipper_check().
- */
 bool
-rapicorn_flipper_check (const char *key)
+FlipperOption::flipper_check (const char *key)
 {
   return envkey_flipper_check ("RAPICORN_FLIPPER", key);
 }
 
-/** @def RAPICORN_DEBUG_OPTION(option, blurb)
- * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options,
- * configured through #$RAPICORN_DEBUG.
+/** @def RAPICORN_DEBUG_OPTION(key, blurb)
+ * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options.
+ * When converted to bool, it is checked if #$RAPICORN_DEBUG enables or disables the debugging option @a key.
+ * Enabling can be achieved by just adding "key" to the colon separated list in the environment variable.
+ * Disabling can be achieved by leaving it out. Alternatively, "key=1" and "key=0" are also recognized
+ * to enable and disable the option respectively. Settings listed later can be used as overrides.
  * Typical use: @code
  * static auto dbg_test_feature = RAPICORN_DEBUG_OPTION ("test-feature", "Switch use of the test-feature during debugging on or off.");
  * if (dbg_test_feature)
  *   enable_test_feature();
  * @endcode
+ */
+
+/** @def RAPICORN_FLIPPER(key, blurb)
+ * Create a Rapicorn::FlipperOption object that can be used to query, cache and document feature toggles.
+ * When converted to bool, it is checked if #$RAPICORN_FLIPPER enables or disables the flipper @a key.
+ * Enabling can be achieved by just adding "key" to the colon separated list in the environment variable.
+ * Disabling can be achieved by leaving it out. Alternatively, "key=1" and "key=0" are also recognized
+ * to enable and disable the option respectively. Settings listed later can be used as overrides.
+ * Related: #$RAPICORN_DEBUG.
  */
 
 /** @def RAPICORN_FATAL(format,...)

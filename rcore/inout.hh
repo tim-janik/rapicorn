@@ -52,10 +52,10 @@ bool   debug_devel_check ();
 // == Rapicorn Internals Debugging ==
 void rapicorn_debug         (const char*, const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 4, 5)));
 bool rapicorn_debug_check   (const char *key = NULL);
-bool rapicorn_flipper_check (const char *key);
 
 // == Debugging Macros ==
-#define RAPICORN_DEBUG_OPTION(option, blurb)    Rapicorn::DebugOption (option)
+#define RAPICORN_DEBUG_OPTION(key, blurb)       Rapicorn::DebugOption (key)
+#define RAPICORN_FLIPPER(key, blurb)            Rapicorn::FlipperOption (key)
 #define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "code must not be reached"); } while (0)
 #define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
 #define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
@@ -110,6 +110,14 @@ struct DebugOption {
   const char *const key;
   constexpr DebugOption (const char *_key) : key (_key) {}
   operator  bool        () { return debug_config_bool (key); }
+};
+
+struct FlipperOption {
+  const char *const key;
+  constexpr FlipperOption (const char *_key) : key (_key) {}
+  operator  bool          () { return flipper_check (key); }
+private:
+  static bool flipper_check (const char *key);
 };
 
 #define RAPICORN_STARTUP_ASSERT_decl(e, _N)     namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
