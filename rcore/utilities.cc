@@ -147,55 +147,6 @@ timestamp_format (uint64 stamp)
   return r;
 }
 
-// == KeyConfig ==
-struct KeyConfig {
-  typedef std::map<String, String> StringMap;
-  Mutex         mutex_;
-  StringMap     map_;
-public:
-  void          assign    (const String &key, const String &val);
-  String        slookup   (const String &key, const String &dfl = "");
-  void          configure (const String &colon_options, bool &seen_debug_key);
-};
-void
-KeyConfig::assign (const String &key, const String &val)
-{
-  ScopedLock<Mutex> locker (mutex_);
-  map_[key] = val;
-}
-String
-KeyConfig::slookup (const String &ckey, const String &dfl)
-{
-  // alias: "verbose" -> "debug"
-  String key = ckey == "verbose" ? "debug" : ckey;
-  ScopedLock<Mutex> locker (mutex_);
-  StringMap::iterator it = map_.find (key);
-  return it == map_.end() ? dfl : it->second;
-}
-void
-KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
-{
-  ScopedLock<Mutex> locker (mutex_);
-  vector<String> onames, ovalues;
-  string_options_split (colon_options, onames, ovalues, "1");
-  for (size_t i = 0; i < onames.size(); i++)
-    {
-      String key = onames[i], val = ovalues[i];
-      std::transform (key.begin(), key.end(), key.begin(), ::tolower);
-      if (key.compare (0, 3, "no-") == 0)
-        {
-          key = key.substr (3);
-          val = string_from_int (!string_to_bool (val));
-        }
-      if (key.compare (0, 6, "debug-") == 0 && key.size() > 6)
-        seen_debug_key = seen_debug_key || string_to_bool (val);
-      // alias: "verbose" -> "debug", "V=1" -> "debug", "V=0" -> "no-debug"
-      if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
-        key = "debug";
-      map_[key] = val;
-    }
-}
-
 // === Logging ===
 /** Issue debugging message after checking RAPICORN_DEBUG.
  * Checks the environment variable #$RAPICORN_DEBUG for @a key, and issues a debugging
