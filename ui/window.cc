@@ -1105,7 +1105,7 @@ WindowImpl::snapshot (const String &pngname)
   cairo_status_t wstatus = cairo_surface_write_to_png (isurface, pngname.c_str());
   cairo_surface_destroy (isurface);
   String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-  RAPICORN_DEBUG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", name().c_str(), pngname.c_str(), err.c_str());
+  RAPICORN_DIAG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", name().c_str(), pngname.c_str(), err.c_str());
   return CAIRO_STATUS_SUCCESS == wstatus;
 }
 

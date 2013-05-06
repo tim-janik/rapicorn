@@ -3,6 +3,8 @@
 #include "factory.hh"
 #include <string.h>
 
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Selector", __VA_ARGS__)
+
 #define ISDIGIT(c)      (c >= '0' && c <= '9')
 #define ISHEXDIGIT(c)   (ISDIGIT (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
 #define ISALPHA(c)      ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
@@ -1007,7 +1009,7 @@ Matcher::match_pseudo_element (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector ("::" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          RAPICORN_DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          SDEBUG ("selector-match: %s", error.c_str());
           return NULL;
         }
       return selob_match;
@@ -1054,7 +1056,7 @@ Matcher::match_pseudo_class (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector (":" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          RAPICORN_DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          SDEBUG ("selector-match: %s", error.c_str());
           return false;
         }
       return Selector::Selob::is_true_match (selob_match);
@@ -1087,7 +1089,7 @@ Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  // RAPICORN_DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
+  // SDEBUG ("selector: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
   return result;
 }
 

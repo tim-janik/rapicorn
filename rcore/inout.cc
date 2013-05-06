@@ -460,52 +460,52 @@ debug_devel_check ()
  * @endcode
  */
 
-/**
- * @def RAPICORN_FATAL(format,...)
+/** @def RAPICORN_FATAL(format,...)
  * Abort the program with a fatal error message.
  * Issues an error message and call abort() to abort the program.
  * The error message @a format uses printf-like syntax.
  */
 
-/**
- * @def RAPICORN_ASSERT(cond)
+/** @def RAPICORN_ASSERT(cond)
  * Issue an error and abort the program if expression @a cond evaluates to false.
  * Before aborting, a bracktrace is printed to aid debugging of the failing assertion.
  */
 
-/**
- * @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
+/** @def RAPICORN_ASSERT_RETURN(condition [, rvalue])
  * Issue an assertion warning and return if @a condition is false.
  * Issue an error and return @a rvalue if expression @a condition evaluates to false. Returns void if @a rvalue was not specified.
  * This is normally used as function entry condition.
  */
 
-/**
- * @def RAPICORN_ASSERT_UNREACHED()
+/** @def RAPICORN_ASSERT_UNREACHED()
  * Assertion used to label unreachable code.
  * Issues an error message, and aborts the program if it is reached at runtime.
  * This is normally used to label code conditions intended to be unreachable.
  */
 
-/**
- * @def RAPICORN_CRITICAL(format,...)
+/** @def RAPICORN_CRITICAL(format,...)
  * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
  * The error message @a format uses printf-like syntax.
  */
 
-/**
- * @def RAPICORN_CRITICAL_UNLESS(cond)
+/** @def RAPICORN_CRITICAL_UNLESS(cond)
  * Issue a critical warning if @a condition is false, i.e. this macro behaves
  * like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
  * This is normally used as a non-fatal assertion.
  */
 
-/**
- * @def RAPICORN_STARTUP_ASSERT(condition)
+/** @def RAPICORN_STARTUP_ASSERT(condition)
  * Abort during program startup if @a condition is false.
  * This macro expands to executing an assertion via a static constructor during program
  * startup (before main()). In contrast to static_assert(), this macro can execute arbitrary
  * code, e.g. to assert floating point number properties.
+ */
+
+/** @def RAPICORN_DIAG(format,...)
+ * Issues a diagnostic message, usually indicaintg I/O errors, or invalid user input.
+ * Diagnostic message are enabled by default for dvelopment versions and can be enabled
+ * other wise with #$RAPICORN_DEBUG=devel.
+ * The message @a format uses printf-like syntax.
  */
 
 // == AnsiColors ==
