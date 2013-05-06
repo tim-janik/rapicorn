@@ -50,19 +50,21 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   String msg = message;
   const char kind = toupper (dkind);
   enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
-         DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXIT = 128, DO_BACKTRACE = 256, };
+         DO_STAMP = 32, DO_LOGFILE = 64, DO_DIAG = 128, DO_BACKTRACE = 256, };
   static int conftest_logfd = 0;
   const String conftest_logfile = conftest_logfd == 0 ? debug_config_get ("logfile") : "";
   const int FATAL_SYSLOG = dbe_fatal_syslog ? DO_SYSLOG : 0;
   const int MAY_SYSLOG = dbe_syslog ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = dbe_fatal_warnings ? DO_ABORT  : 0;
+  const int MAY_ABORT  = dbe_fatal_warnings ? DO_ABORT : 0;
+  const int MAY_DIAG   = debug_devel_check() ? DO_DIAG : 0;
   const char *what = "DEBUG";
   int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
   switch (kind)
     {
     case 'F': what = "FATAL";    f |= DO_STDERR | FATAL_SYSLOG | DO_ABORT;  break;      // fatal, assertions
     case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
-    case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
+    case 'G': what = "DIAG";     f |= MAY_DIAG  | DO_STAMP;                 break;      // diagnostics
+    case 'X': what = "FIX""ME";  f |= DO_DIAG   | DO_STAMP;                 break;      // fixing needed
     case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
     }
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
@@ -93,7 +95,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
         intro = string_printf ("[%s]", timestamp_format (delta).c_str());
       printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
     }
-  if (f & DO_FIXIT)
+  if (f & DO_DIAG)
     {
       printerr ("%s: %s%s%s", what, where.c_str(), msg.c_str(), emsg.c_str());
     }
@@ -347,6 +349,17 @@ debug_fixit (const char *file_path, const int line, const char *format, ...)
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
   debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
+}
+
+/// Issue diagnostics, unconditional output in development versions, see also #$RAPICORN_DEBUG.
+void
+debug_diag (const char *file_path, const int line, const char *format, ...)
+{
+  va_list vargs;
+  va_start (vargs, format);
+  String msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  debug_handler ('G', string_printf ("%s:%d", file_path, line), msg);
 }
 
 static Mutex              dbg_mutex;

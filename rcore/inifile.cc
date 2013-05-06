@@ -295,7 +295,7 @@ IniFile::load_ini (const String &inputname, const String &data)
           if (!locale.empty())
             k += "[" + locale + "]";
           if (strchr (section.c_str(), '=') || strchr (key.c_str(), '.'))
-            RAPICORN_DEBUG ("%s:%zd: invalid key name: %s.%s", inputname.c_str(), lineno, section.c_str(), k.c_str());
+            RAPICORN_DIAG ("%s:%zd: invalid key name: %s.%s", inputname.c_str(), lineno, section.c_str(), k.c_str());
           else
             sections_[section].push_back (k + "=" + text);
         }
@@ -316,7 +316,7 @@ IniFile::IniFile (const String &res_ini)
   if (blob)
     load_ini (blob.name(), blob.string());
   if (sections_.empty())
-    RAPICORN_DEBUG ("empty INI file %s: %s", CQUOTE (res_ini), strerror (errno));
+    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (res_ini), strerror (errno));
 }
 
 IniFile::IniFile (Blob blob)
@@ -324,7 +324,7 @@ IniFile::IniFile (Blob blob)
   if (blob)
     load_ini (blob.name(), blob.string());
   if (sections_.empty())
-    RAPICORN_DEBUG ("empty INI file %s: %s", CQUOTE (blob ? blob.name() : "<NULL>"), strerror (errno));
+    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (blob ? blob.name() : "<NULL>"), strerror (errno));
 }
 
 IniFile::IniFile (const IniFile &source)

@@ -25,6 +25,7 @@ void   debug_fassert     (const char*, int, const char*)      __attribute__ ((__
 void   debug_fatal       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4), __noreturn__));
 void   debug_critical    (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 void   debug_fixit       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+void   debug_diag        (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 void   debug_envvar      (const String &name);
 void   debug_config_add  (const String &option);
 void   debug_config_del  (const String &key);
@@ -41,6 +42,7 @@ bool   debug_devel_check ();
 #define RAPICORN_CRITICAL_UNLESS(cond)          do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
 #define RAPICORN_CRITICAL(...)                  do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 #define RAPICORN_STARTUP_ASSERT(expr)           RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
+#define RAPICORN_DIAG(...)                      do { Rapicorn::debug_diag (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
 
 // == AnsiColors ==
 /// The AnsiColors namespace contains utility functions for colored terminal output
