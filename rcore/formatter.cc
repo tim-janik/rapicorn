@@ -209,6 +209,8 @@ const char*
 StringFormatter::arg_as_chars (size_t nth)
 {
   return_unless (nth && nth <= nargs_, "");
+  if ((fargs_[nth-1].kind == 's' || fargs_[nth-1].kind == 'p') && fargs_[nth-1].p == NULL)
+    return "(null)";
   return fargs_[nth-1].kind != 's' ? "" : fargs_[nth-1].s;
 }
 
