@@ -30,7 +30,7 @@ QuickTimer::toggle_timers (bool onoff)
   return timer_settime (quick_timer_ptimer, 0, onoff ? &ptimer : &disarm, NULL) == 0;
 }
 
-#ifdef RAPICORN_DOXYGEN
+#ifdef DOXYGEN
 /**
  * Perform a very fast check of a global variable for timer expiration.
  * Usually, this function is inlined and does not consume more time than a regular volatile variable access,
@@ -38,7 +38,7 @@ QuickTimer::toggle_timers (bool onoff)
  * @returns Whether the time period that QuickTimer was setup for has expired.
  */
 bool QuickTimer::expired();
-#endif // RAPICORN_DOXYGEN
+#endif // DOXYGEN
 
 /** @class QuickTimer
  * The QuickTimer class allows fast timer expiration checks from inner loops.

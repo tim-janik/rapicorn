@@ -80,9 +80,9 @@
  * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
  * see e.g. critical_unless(), UNLIKELY().
  */
-#ifdef  RAPICORN_DOXYGEN
+#ifdef  DOXYGEN
 #  define RAPICORN_CONVENIENCE
-#endif // RAPICORN_DOXYGEN
+#endif // DOXYGEN
 
 // == Preprocessor Convenience ==
 #define RAPICORN_CPP_PASTE2_(a,b)               a ## b  // indirection required to expand macros like __LINE__
