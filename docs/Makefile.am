@@ -5,7 +5,3 @@ SUBDIRS = imports tutorial dev
 
 # == Extra Tarball Files ==
 EXTRA_DIST += ChangeLog-2009
-
-# == Clean Up ==
-clean-local:
-	[ ! -d dev/ ] || $(MAKE) clean -C dev/
