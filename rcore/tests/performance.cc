@@ -8,7 +8,7 @@ using namespace Rapicorn;
 static const char *arg = NULL;
 static uint        result;
 
-static RAPICORN_NEVER_INLINE void
+static RAPICORN_NOINLINE void
 count_whitespace_switch ()
 {
   const char *c = arg;
@@ -25,7 +25,7 @@ count_whitespace_switch ()
   result = n;
 }
 
-static RAPICORN_NEVER_INLINE void
+static RAPICORN_NOINLINE void
 count_whitespace_strchr ()
 {
   const char *c = arg;

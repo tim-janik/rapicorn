@@ -427,6 +427,18 @@ test_string_options (void)
 }
 REGISTER_TEST ("Strings/String Options", test_string_options);
 
+struct UncopyablePoint {
+  double x, y;
+  friend std::ostream&
+  operator<< (std::ostream& stream, const UncopyablePoint &self)
+  {
+    stream << "{" << self.x << ";" << self.y << "}";
+    return stream;
+  }
+  UncopyablePoint (double _x, double _y) : x (_x), y (_y) {}
+  RAPICORN_CLASS_NON_COPYABLE (UncopyablePoint);
+};
+
 static void
 test_string_functions (void)
 {
@@ -436,6 +448,27 @@ test_string_functions (void)
   TASSERT (string_endswith ("foo", "oo") == true);
   TASSERT (string_endswith ("foo", "foo") == true);
   TASSERT (string_endswith ("foo", "loo") == false);
+  // string_format
+  enum { TEST17 = 17 };
+  TCMP (string_format ("%d %s", -9223372036854775808uLL, "FOO"), ==, "-9223372036854775808 FOO");
+  TCMP (string_format ("%g %d", 0.5, int (TEST17)), ==, "0.5 17"); // gcc corrupts anonymous enums without the cast
+  TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
+  static_assert (TEST17 == 17, "!");
+  TCMP (string_format ("Only %c%%", '3'), ==, "Only 3%");
+  UncopyablePoint point { 1, 2 };
+  vector<String> foo;
+  TCMP (string_format ("%s", point), ==, "{1;2}");
+  // string_hexdump
+  String dump;
+  const uint8 mem[] = { 0x00, 0x01, 0x02, 0x03, 0x34, 0x35, 0x36, 0x37,
+                        0x63, 0x30, 0x66, 0x66, 0x65, 0x65, 0x2e, 0x20,
+                        0xff, };
+  const char *expect00 = "00000000  00 01 02 03 34 35 36 37  63 30 66 66 65 65 2e 20  |....4567c0ffee. |\n";
+  const char *expect10 = "00000010  ff                                                |.|\n";
+  dump = string_hexdump (mem, 16);      static_assert (sizeof (mem) >= 16, "!");
+  TCMP (dump, ==, expect00);
+  dump = string_hexdump (mem, sizeof (mem));
+  TCMP (dump, ==, String() + expect00 + expect10);
 }
 REGISTER_TEST ("Strings/String Functions", test_string_functions);
 
