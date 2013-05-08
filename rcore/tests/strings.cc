@@ -440,7 +440,7 @@ struct UncopyablePoint {
 };
 
 static void
-test_string_functions (void)
+test_string_functions()
 {
   TASSERT (string_startswith ("foo", "fo") == true);
   TASSERT (string_startswith ("foo", "o") == false);
@@ -448,16 +448,6 @@ test_string_functions (void)
   TASSERT (string_endswith ("foo", "oo") == true);
   TASSERT (string_endswith ("foo", "foo") == true);
   TASSERT (string_endswith ("foo", "loo") == false);
-  // string_format
-  enum { TEST17 = 17 };
-  TCMP (string_format ("%d %s", -9223372036854775808uLL, "FOO"), ==, "-9223372036854775808 FOO");
-  TCMP (string_format ("%g %d", 0.5, int (TEST17)), ==, "0.5 17"); // gcc corrupts anonymous enums without the cast
-  TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
-  static_assert (TEST17 == 17, "!");
-  TCMP (string_format ("Only %c%%", '3'), ==, "Only 3%");
-  UncopyablePoint point { 1, 2 };
-  vector<String> foo;
-  TCMP (string_format ("%s", point), ==, "{1;2}");
   // string_hexdump
   String dump;
   const uint8 mem[] = { 0x00, 0x01, 0x02, 0x03, 0x34, 0x35, 0x36, 0x37,
@@ -471,6 +461,22 @@ test_string_functions (void)
   TCMP (dump, ==, String() + expect00 + expect10);
 }
 REGISTER_TEST ("Strings/String Functions", test_string_functions);
+
+static void
+test_cxxprintf()
+{
+  // string_format
+  enum { TEST17 = 17 };
+  TCMP (string_format ("%d %s", -9223372036854775808uLL, "FOO"), ==, "-9223372036854775808 FOO");
+  TCMP (string_format ("%g %d", 0.5, int (TEST17)), ==, "0.5 17"); // gcc corrupts anonymous enums without the cast
+  TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
+  static_assert (TEST17 == 17, "!");
+  TCMP (string_format ("Only %c%%", '3'), ==, "Only 3%");
+  UncopyablePoint point { 1, 2 };
+  vector<String> foo;
+  TCMP (string_format ("%s", point), ==, "{1;2}");
+}
+REGISTER_TEST ("Strings/CxxPrintf", test_cxxprintf);
 
 struct AAData
 {
