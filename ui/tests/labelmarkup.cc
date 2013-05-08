@@ -43,7 +43,7 @@ struct TestRapicornMarkupParser : MarkupParser {
   }
   virtual void error        (const Error    &error)
   {
-    RAPICORN_DEBUG ("parsing error: %s", error.message.c_str());
+    RAPICORN_DIAG ("parsing error: %s", error.message.c_str());
   }
 };
 

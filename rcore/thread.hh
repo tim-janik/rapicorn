@@ -173,7 +173,7 @@ void    affinity        (int cpu);      ///< Set the current CPU affinity.
 int     thread_pid      ();             ///< Get the current threads's thread ID (TID). For further details, see gettid().
 int     process_pid     ();             ///< Get the process ID (PID). For further details, see getpid().
 
-#ifdef  RAPICORN_DOXYGEN // parts reused from std::this_thread
+#ifdef  DOXYGEN // parts reused from std::this_thread
 /// Relinquish the processor to allow execution of other threads. For further details, see std::this_thread::yield().
 void                                       yield       ();
 /// Returns the pthread_t id for the current thread. For further details, see std::this_thread::get_id().
@@ -182,9 +182,9 @@ std::thread::id                            get_id      ();
 template<class Rep, class Period>     void sleep_for   (std::chrono::duration<Rep,Period> sleep_duration);
 /// Sleep until @a sleep_time has been reached. For further details, see std::this_thread::sleep_until().
 template<class Clock, class Duration> void sleep_until (const std::chrono::time_point<Clock,Duration> &sleep_time);
-#else // !RAPICORN_DOXYGEN
+#else // !DOXYGEN
 using namespace std::this_thread;
-#endif // !RAPICORN_DOXYGEN
+#endif // !DOXYGEN
 
 } // ThisThread
 
@@ -256,6 +256,21 @@ public:
   V*       operator-= (ptrdiff_t d) volatile { return A::operator-= ((V*) d); }
   operator V* () const volatile { return load(); }
   void     push_link (V*volatile *nextp, V *newv) { do { *nextp = load(); } while (!cas (*nextp, newv)); }
+};
+
+/// Exclusive<> is a type wrapper that provides non-racy atomic access to a copyable @a Type.
+template<class Type>
+class Exclusive {
+  Mutex    mutex_;
+  Type    *data_;
+  uint64_t mem_[(sizeof (Type) + 7) / 8];
+  void      setup_L   (const Type &data)        { if (data_) return; data_ = new (mem_) Type (data); }
+  void      replace_L (const Type &data)        { if (!data_) setup_L (data); else *data_ = data; }
+public:
+  constexpr Exclusive () : mutex_(), data_ (0)  {}
+  void      operator= (const Type &data)        { ScopedLock<Mutex> locker (mutex_); replace_L (data); }
+  operator  Type      ()                        { ScopedLock<Mutex> locker (mutex_); if (!data_) setup_L (Type()); return *data_; }
+  /*dtor*/ ~Exclusive ()                        { ScopedLock<Mutex> locker (mutex_); if (data_) data_->~Type(); }
 };
 
 // == AsyncBlockingQueue ==

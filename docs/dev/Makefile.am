@@ -28,6 +28,12 @@ CLEANFILES += stamp-docu
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 
 all-docs:
+	$(Q) rm -rf doxygen-srctree/
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
+	$(QPRINT) "GEN" "docs/docextract.dox"
+	$(Q) cd doxygen-srctree && \
+	  find . -type f -name \*[hcHC] -exec cat {} \; | \
+	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html
 	$(QPRINT) "RSYNC" "HTML Documentation..."

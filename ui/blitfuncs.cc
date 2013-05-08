@@ -11,7 +11,7 @@ init_render_table (const StringVector &args)
   if (cpu.x86_mmx)
     {
       Blit::render_optimize_mmx();
-      RAPICORN_DEBUG ("Using MMX functions for blitting");
+      RAPICORN_STARTUP_DEBUG ("Using MMX functions for blitting");
     }
 }
 static InitHook _init_render_table ("ui-core/10 Optimize Render Table for SIMD Blitting", init_render_table);

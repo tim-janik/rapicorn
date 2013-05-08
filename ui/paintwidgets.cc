@@ -6,7 +6,7 @@
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
   if (___s != CAIRO_STATUS_SUCCESS)             \
-    RAPICORN_DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+    RAPICORN_DIAG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 namespace Rapicorn {

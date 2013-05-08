@@ -159,6 +159,22 @@ test_regex (void)
 REGISTER_TEST ("General/Regex Tests", test_regex);
 
 static void
+test_debug_config ()
+{
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags", "dflt"), ==, "dflt");
+  setenv ("RAPICORN_INTERN_TEST_DATA", "randomFOObarCOOBDPlnjdhsa51cU8RYB62ags=17", 1);
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "");
+  debug_envvar ("RAPICORN_INTERN_TEST_DATA");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "17");
+  debug_config_add ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags=hello");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "hello");
+  debug_config_del ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "17");
+}
+REGISTER_TEST ("General/Debug Configuration", test_debug_config);
+
+static void
 test_paths()
 {
   String p, s;

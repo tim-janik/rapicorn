@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "main.hh"
+#include "inout.hh"
 #include "strings.hh"
 #include "thread.hh"
 #include "testutils.hh"
@@ -75,7 +76,7 @@ InitHook::invoke_hooks (const String &kind, int *argcp, char **argv, const Strin
       String name = (*it)->name();
       if (name.size() > kind.size() && strncmp (name.data(), kind.data(), kind.size()) == 0)
         {
-          RAPICORN_DEBUG ("InitHook: %s", name.c_str());
+          RAPICORN_STARTUP_DEBUG ("InitHook: %s", name.c_str());
           (*it)->hook (args);
         }
     }
@@ -208,7 +209,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
       if (            arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
                       arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings")) // legacy option support
         {
-          debug_configure ("fatal-warnings");
+          debug_config_add ("fatal-warnings");
           const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
         }
@@ -414,9 +415,8 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
     ThreadInfo::self().name (string_printf ("%s-MainThread", Path::basename (program_argv0).c_str()));
 
   // ensure logging is fully initialized
-  debug_configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
-  RAPICORN_DEBUG ("Startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
+  RAPICORN_STARTUP_DEBUG ("$RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
   // full locale initialization is needed by X11, etc
   if (!setlocale (LC_ALL,""))
@@ -428,9 +428,9 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
       String lv = string_printf ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
                                  sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
                                  sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
-      RAPICORN_DEBUG ("environment: %s", lv.c_str());
+      RAPICORN_STARTUP_DEBUG ("environment: %s", lv.c_str());
       setlocale (LC_ALL, "C");
-      RAPICORN_DEBUG ("failed to initialize locale, falling back to \"C\"");
+      RAPICORN_STARTUP_DEBUG ("failed to initialize locale, falling back to \"C\"");
     }
 
   // setup init settings
@@ -447,7 +447,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   // initialize testing framework
   if (vinit_settings.test_codes() & Test::MODE_TESTING)
     {
-      debug_configure ("fatal-warnings");
+      debug_config_add ("fatal-warnings");
       const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
       CPUInfo ci = cpu_info(); // initialize cpu info

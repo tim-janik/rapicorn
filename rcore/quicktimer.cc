@@ -30,7 +30,7 @@ QuickTimer::toggle_timers (bool onoff)
   return timer_settime (quick_timer_ptimer, 0, onoff ? &ptimer : &disarm, NULL) == 0;
 }
 
-#ifdef RAPICORN_DOXYGEN
+#ifdef DOXYGEN
 /**
  * Perform a very fast check of a global variable for timer expiration.
  * Usually, this function is inlined and does not consume more time than a regular volatile variable access,
@@ -38,7 +38,7 @@ QuickTimer::toggle_timers (bool onoff)
  * @returns Whether the time period that QuickTimer was setup for has expired.
  */
 bool QuickTimer::expired();
-#endif // RAPICORN_DOXYGEN
+#endif // DOXYGEN
 
 /** @class QuickTimer
  * The QuickTimer class allows fast timer expiration checks from inner loops.
@@ -46,13 +46,7 @@ bool QuickTimer::expired();
  * a concurrent handler which updates a global volatile variable periodically.
  * This allows very fast expiration checks in worker threads, with negligible
  * overhead for most uses.
- * Upon initialization, the operational mode can be configured with the following:
- * @flipper quick-timer-threadfunc - Use a separate thread to update a timer variable.
- * @flipper quick-timer-cputime - Use CLOCK_PROCESS_CPUTIME_ID which measures consumed CPU time.
- * @flipper quick-timer-realtime - Use CLOCK_REALTIME, the system wide realtime clock.
- * @flipper quick-timer-rdtsc - Use the X86 architecture RDTSC assembler command as a timer.
  */
-
 void
 QuickTimer::init_timers ()
 {
@@ -61,11 +55,15 @@ QuickTimer::init_timers ()
   struct sigevent sevent = { { 0 } };
   sevent.sigev_notify = SIGEV_THREAD;                   // invoke sigev_notify_function
   sevent.sigev_notify_function = (void(*)(sigval_t)) inc_pcounter;
-  if (rapicorn_flipper_check ("quick-timer-threadfunc") &&
+  const bool flipper_threadfunc = RAPICORN_FLIPPER ("quick-timer-threadfunc", "Rapicorn::QuickTimer: Use a separate thread to update a timer variable.");
+  const bool flipper_cputime    = RAPICORN_FLIPPER ("quick-timer-cputime", "Rapicorn::QuickTimer: Use CLOCK_PROCESS_CPUTIME_ID which measures consumed CPU time.");
+  const bool flipper_realtime   = RAPICORN_FLIPPER ("quick-timer-realtime", "Rapicorn::QuickTimer: Use CLOCK_REALTIME, the system wide realtime clock.");
+  const bool flipper_rdtsc      = RAPICORN_FLIPPER ("quick-timer-rdtsc", "Rapicorn::QuickTimer: Use the X86 architecture RDTSC assembler command as a timer.");
+  if (flipper_threadfunc &&
 #ifdef    _POSIX_CPUTIME
-      ((rapicorn_flipper_check ("quick-timer-cputime") && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
+      ((flipper_cputime && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
 #endif
-       (rapicorn_flipper_check ("quick-timer-realtime") && timer_create (CLOCK_REALTIME, &sevent, &quick_timer_ptimer) == 0)))
+       (flipper_realtime && timer_create (CLOCK_REALTIME, &sevent, &quick_timer_ptimer) == 0)))
     {
       if (toggle_timers (true) && toggle_timers (false))
         {
@@ -76,7 +74,7 @@ QuickTimer::init_timers ()
       quick_timer_ptimer = 0;
     }
   // RDTSC is the next best choice
-  if (rapicorn_flipper_check ("quick-timer-rdtsc") && !rdtsc_mask && 0 != RAPICORN_X86_RDTSC() && timer_pcounter != RAPICORN_X86_RDTSC())
+  if (flipper_rdtsc && !rdtsc_mask && 0 != RAPICORN_X86_RDTSC() && timer_pcounter != RAPICORN_X86_RDTSC())
     {
       uint64 freq = 666 * 1000000; // fallback to assume 666MHz ticks for rdtsc
       int fd = open ("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", O_RDONLY);
@@ -99,8 +97,6 @@ QuickTimer::init_timers ()
     }
   // fallback to gettimeofday
   timer_type = QuickTimer::TIMEOFDAY;
-  return;
-  RAPICORN_ASSERT_UNREACHED();
 }
 
 void

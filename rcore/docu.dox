@@ -1,24 +1,20 @@
 // == docu.dox ==						-*-mode:c++-*-
 // This file contains various general documentation snippets for Rapicorn.
 
-// Extra text to add to the flippers.html collection
-/*! @page flippers Flippers - Feature Toggles
-Flippers are feature toggles that can be used to enable certain development features at runtime.
-Features are enabled by listing them separated with colons in the environment variable #$RAPICORN_FLIPPER.
-See Rapicorn::rapicorn_flipper_check() to check for flipper settings in #$RAPICORN_FLIPPER, and
-refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
-*/
-
-/** Environment variable for feature toggles.
- * The RAPICORN_FLIPPER environment variable may contain a colon separated list of features that
- * can enable additional runtime behaviour. This is especially useful to allow rolling releases
- * while some features are still under development, for further details, see @Wikipedia{Feature toggle}.
- * A summary about feature toggles used by Rapicorn is provided on the page @ref flippers.
+/** Environment variable for flippers.
+ * Flippers are feature toggles that are used to enable certain development behaviour at runtime.
+ * This is especially useful to allow early or rolling releases while some features are still
+ * under development. For further conceptual details see @Wikipedia{Feature toggle}.
+ * In Rapicorn, flippers are enabled by listing feature keywords separated with colons in the
+ * environment variable #$RAPICORN_FLIPPER.
+ * See RAPICORN_FLIPPER() to check for flipper settings in #$RAPICORN_FLIPPER, and
+ * refer to Rapicorn::envkey_flipper_check() to check for flipper settings generically.
+ * A list of supported flippers extracted from the Rapicorn sources follows:
  */
 $RAPICORN_FLIPPER = "";
 
 /** Environment variable for unit tests.
- * The RAPICORN_TEST environment variable may contain a colon separated list of flags that
+ * The #$RAPICORN_TEST environment variable may contain a colon separated list of flags that
  * are used during test runs. In particular:
  * - @c test-verbose - Execute test cases with verbose message generation.
  * - @c test-readout - Execute only data driven test cases to verify readouts.
@@ -27,6 +23,16 @@ $RAPICORN_FLIPPER = "";
  * See also Rapicorn::init_core() and Rapicorn::init_core_test().
  */
 $RAPICORN_TEST = "";
+
+/** Environment variable for debugging.
+ * The #$RAPICORN_DEBUG environment variable may contain a colon separated list of options and kyes that
+ * are used to configure debugging behaviour (see also RAPICORN_DEBUG_OPTION() and Rapicorn::debug_config_get()).
+ * A boolean debugging key enables (=1) or disables (=0) a specific set of debugging messages.
+ * The special key 'all' can be used to identify useful debugging messages, each generated message is prefixed
+ * by its debugging key. A key setting overrides 'all' if it appears later in the colon list.
+ * A list of supported options extracted from the Rapicorn sources follows:
+ */
+$RAPICORN_DEBUG = "";
 
 /** Build system macro definition of compiler CWD.
  * To improve source file location information in debugging and error messages,

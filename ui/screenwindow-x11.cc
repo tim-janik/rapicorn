@@ -7,7 +7,7 @@
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvents", __VA_ARGS__)
 #define VDEBUG(...)     RAPICORN_KEY_DEBUG ("XEvent2", __VA_ARGS__) // verbose event debugging
-static Rapicorn::DebugEntry dbe_x11sync ("x11sync", "Synchronize X11 operations for correct error attribution.");
+static auto dbe_x11sync = RAPICORN_DEBUG_OPTION ("x11sync", "Synchronize X11 operations for correct error attribution.");
 
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
@@ -476,7 +476,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ClientMessage: {
       const XClientMessageEvent &xev = xevent.xclient;
-      if (rapicorn_debug_enabled()) // avoid atom() round-trips
+      if (rapicorn_debug_check()) // avoid atom() round-trips
         {
           const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
           EDEBUG ("ClMsg: %c=%lu w=%lu t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
@@ -587,7 +587,7 @@ ScreenWindowX11::force_update (Window window)
   if (ignored < updates.size())
     {
       update_state (state_);
-      if (rapicorn_debug_enabled())
+      if (rapicorn_debug_check())
         {
           const unsigned long update_serial = XNextRequest (x11context.display) - 1;
           if (old_state.visible_title != state_.visible_title)
@@ -680,7 +680,7 @@ ScreenWindowX11::blit_expose_region()
   CHECK_CAIRO_STATUS (xcr);
   XFlush (x11context.display);
   // debugging info
-  if (rapicorn_debug_enabled())
+  if (rapicorn_debug_check())
     {
       const Rect extents = expose_region_.extents();
       VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, window_,
@@ -789,7 +789,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
                    XA_ATOM, 32, PropModeReplace, (uint8*) longs.data(), longs.size());
   // Background
   Color c1 = setup.bg_average, c2 = setup.bg_average;
-  if (devel_enabled())
+  if (debug_devel_check())
     {
       c1.tint (0, 0.96, 0.96);
       c2.tint (0, 1.03, 1.03);
@@ -936,7 +936,7 @@ X11Context::connect()
   XDEBUG ("XOpenDisplay(%s): %s", CQUOTE (edsp ? edsp : ""), display ? "success" : "failed to connect");
   if (!display)
     return false;
-  XSynchronize (display, dbe_x11sync.confbool());
+  XSynchronize (display, dbe_x11sync);
   screen = DefaultScreen (display);
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);

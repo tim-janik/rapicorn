@@ -10,6 +10,9 @@
 #include <stdint.h>			// uint64_t
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
+#include <string>
+#include <vector>
+#include <map>
 
 // == Standard Macros ==
 #ifndef FALSE
@@ -77,9 +80,9 @@
  * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
  * see e.g. critical_unless(), UNLIKELY().
  */
-#ifdef  RAPICORN_DOXYGEN
+#ifdef  DOXYGEN
 #  define RAPICORN_CONVENIENCE
-#endif // RAPICORN_DOXYGEN
+#endif // DOXYGEN
 
 // == Preprocessor Convenience ==
 #define RAPICORN_CPP_PASTE2_(a,b)               a ## b  // indirection required to expand macros like __LINE__
@@ -157,6 +160,12 @@ typedef uint32_t                unichar;        ///< A 32-bit unsigned integer u
 RAPICORN_STATIC_ASSERT (sizeof (uint8) == 1 && sizeof (uint16) == 2 && sizeof (uint32) == 4 && sizeof (uint64) == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (int32)  == 4 && sizeof (int64)  == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);
+
+// == Convenient stdc++ Types ==
+using   std::map;
+using   std::vector;
+typedef std::string String;             ///< Convenience alias for std::string.
+typedef vector<String> StringVector;    ///< Convenience alias for a std::vector<std::string>.
 
 // == File Path Handling ==
 #ifdef  _WIN32

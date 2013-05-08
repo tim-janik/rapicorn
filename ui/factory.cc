@@ -212,7 +212,7 @@ factory_context_source (FactoryContext *fc)
       assert_return (xnode != NULL, UserSource (""));
     }
   assert_return (xnode->name() == "tmpl:define", UserSource (""));
-  return UserSource (xnode->parsed_file(), xnode->parsed_line());
+  return UserSource ("WidgetFactory", xnode->parsed_file(), xnode->parsed_line());
 }
 
 static void
