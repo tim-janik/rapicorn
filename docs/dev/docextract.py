@@ -49,7 +49,7 @@ def process_end ():
     print '/** @var $RAPICORN_FLIPPER'
     print rapicorn_flippers, '*/'
 
-def process_specific (text):
+def process_specific (filename, text):
   def is_comment (t):
     return t.startswith ('//') or t.startswith ('/*')
   cxx_splitter = r"""(
@@ -61,7 +61,6 @@ def process_specific (text):
   parts = re.split (cxx_splitter, text, 0, re.MULTILINE | re.VERBOSE)
   # parts = filter (len, parts) # strip empty parts
   # concatenate code vs. comment bits
-  process_start()
   i = 0
   while i < len (parts):
     s = parts[i]
@@ -74,7 +73,10 @@ def process_specific (text):
       process_comment (s)
     else:
       process_code (s)
-  process_end()
 
+process_start()
 # print '/// @file'
-process_specific (sys.stdin.read())
+for iline in sys.stdin.readlines():
+  filename = iline.rstrip() # removes trailing '\n'
+  process_specific (filename, open (filename, 'r').read())
+process_end()
