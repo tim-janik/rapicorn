@@ -478,6 +478,132 @@ test_cxxprintf()
 }
 REGISTER_TEST ("Strings/CxxPrintf", test_cxxprintf);
 
+#define cxxoutput_printf(fmt,...)       fputs (string_format (fmt, __VA_ARGS__).c_str(), stdout)
+
+static void
+test_cxxprintf_output()
+{
+  // %c
+  cxxoutput_printf ("Char 'Y'                  right-adjusted: |%22c|\n", 'Y');
+  cxxoutput_printf ("Char 'Y'                   left-adjusted: |%-22c|\n", 'Y');
+  cxxoutput_printf ("Char 'Y'     positional 0      truncated: |%*c|\n", 0, 'Y');
+  // %u %i %o %x %X
+  cxxoutput_printf ("decimal unsigned negative right-adjusted: |%22u|\n", -987654321);
+  cxxoutput_printf ("decimal signed-i negative right-adjusted: |%22i|\n", -987654321);
+  cxxoutput_printf ("decimal signed-d negative right-adjusted: |%22d|\n", -987654321);
+  cxxoutput_printf ("octal   unsigned negative right-adjusted: |%22o|\n", -987654321);
+  cxxoutput_printf ("hexadec unsigned negative right-adjusted: |%22x|\n", -987654321);
+  cxxoutput_printf ("Hexadec unsigned negative right-adjusted: |%22X|\n", -987654321);
+  cxxoutput_printf ("decimal unsigned negative  left-adjusted: |%-22u|\n", -987654321);
+  cxxoutput_printf ("decimal signed-i negative  left-adjusted: |%-22i|\n", -987654321);
+  cxxoutput_printf ("decimal signed-d negative  left-adjusted: |%-22d|\n", -987654321);
+  cxxoutput_printf ("octal   unsigned negative  left-adjusted: |%-22o|\n", -987654321);
+  cxxoutput_printf ("hexadec unsigned negative  left-adjusted: |%-22x|\n", -987654321);
+  cxxoutput_printf ("Hexadec unsigned negative  left-adjusted: |%-22X|\n", -987654321);
+  cxxoutput_printf ("decimal signed-i negative   space-padded: |% 22i|\n", -987654321);
+  cxxoutput_printf ("decimal signed-d negative   space-padded: |% 22d|\n", -987654321);
+  cxxoutput_printf ("decimal unsigned negative    zero-padded: |%022u|\n", -987654321);
+  cxxoutput_printf ("decimal signed-i negative    zero-padded: |%022i|\n", -987654321);
+  cxxoutput_printf ("decimal signed-d negative    zero-padded: |%022d|\n", -987654321);
+  cxxoutput_printf ("octal   unsigned negative    zero-padded: |%022o|\n", -987654321);
+  cxxoutput_printf ("hexadec unsigned negative    zero-padded: |%022x|\n", -987654321);
+  cxxoutput_printf ("Hexadec unsigned negative    zero-padded: |%022X|\n", -987654321);
+  cxxoutput_printf ("decimal unsigned positive right-adjusted: |%22u|\n", +987654321);
+  cxxoutput_printf ("decimal signed-i positive right-adjusted: |%22i|\n", +987654321);
+  cxxoutput_printf ("decimal signed-d positive right-adjusted: |%22d|\n", +987654321);
+  cxxoutput_printf ("octal   unsigned positive right-adjusted: |%22o|\n", +987654321);
+  cxxoutput_printf ("hexadec unsigned positive right-adjusted: |%22x|\n", +987654321);
+  cxxoutput_printf ("Hexadec unsigned positive right-adjusted: |%22X|\n", +987654321);
+  cxxoutput_printf ("decimal unsigned positive  left-adjusted: |%-22u|\n", +987654321);
+  cxxoutput_printf ("decimal signed-i positive  left-adjusted: |%-22i|\n", +987654321);
+  cxxoutput_printf ("decimal signed-d positive  left-adjusted: |%-22d|\n", +987654321);
+  cxxoutput_printf ("octal   unsigned positive  left-adjusted: |%-22o|\n", +987654321);
+  cxxoutput_printf ("hexadec unsigned positive  left-adjusted: |%-22x|\n", +987654321);
+  cxxoutput_printf ("Hexadec unsigned positive  left-adjusted: |%-22X|\n", +987654321);
+  cxxoutput_printf ("decimal signed-i positive   space-padded: |% 22i|\n", +987654321);
+  cxxoutput_printf ("decimal signed-d positive   space-padded: |% 22d|\n", +987654321);
+  cxxoutput_printf ("decimal unsigned positive    zero-padded: |%022u|\n", +987654321);
+  cxxoutput_printf ("decimal signed-i positive    zero-padded: |%022i|\n", +987654321);
+  cxxoutput_printf ("decimal signed-d positive    zero-padded: |%022d|\n", +987654321);
+  cxxoutput_printf ("octal   unsigned positive    zero-padded: |%022o|\n", +987654321);
+  cxxoutput_printf ("hexadec unsigned positive    zero-padded: |%022x|\n", +987654321);
+  cxxoutput_printf ("Hexadec unsigned positive    zero-padded: |%022X|\n", +987654321);
+#define PI    3.1415926535897932384626433832795028841971693993751058209749445923
+  // %f
+  cxxoutput_printf ("float   %%f       positive right-adjusted: |%22f|\n", PI);
+  cxxoutput_printf ("float   %%-f      positive  left-adjusted: |%-22f|\n", PI);
+  cxxoutput_printf ("float   %% f      positive   space-padded: |% 22f|\n", PI);
+  cxxoutput_printf ("float   %%0f      positive    zero-padded: |%022f|\n", PI);
+  cxxoutput_printf ("float   %%.0f     positive      truncated: |%22.0f|\n", PI);
+  cxxoutput_printf ("float   %%#f      positive      alternate: |%#22.0f|\n", PI);
+  cxxoutput_printf ("float   %%+f      positive    always-sign: |%+22f|\n", PI);
+  cxxoutput_printf ("float   %%.5f     positive      precision: |%+22.5f|\n", PI);
+  // %F
+  cxxoutput_printf ("float   %%F       positive right-adjusted: |%22F|\n", PI);
+  cxxoutput_printf ("float   %%-F      positive  left-adjusted: |%-22F|\n", PI);
+  cxxoutput_printf ("float   %% F      positive   space-padded: |% 22F|\n", PI);
+  cxxoutput_printf ("float   %%0F      positive    zero-padded: |%022F|\n", PI);
+  cxxoutput_printf ("float   %%.0F     positive      truncated: |%22.0F|\n", PI);
+  cxxoutput_printf ("float   %%#F      positive      alternate: |%#22.0F|\n", PI);
+  cxxoutput_printf ("float   %%+F      positive    always-sign: |%+22F|\n", PI);
+  cxxoutput_printf ("float   %%.5F     positive      precision: |%+22.5F|\n", PI);
+  // %e
+  cxxoutput_printf ("float   %%e       positive right-adjusted: |%22e|\n", PI);
+  cxxoutput_printf ("float   %%-e      positive  left-adjusted: |%-22e|\n", PI);
+  cxxoutput_printf ("float   %% e      positive   space-padded: |% 22e|\n", PI);
+  cxxoutput_printf ("float   %%0e      positive    zero-padded: |%022e|\n", PI);
+  cxxoutput_printf ("float   %%.0e     positive      truncated: |%22.0e|\n", PI);
+  cxxoutput_printf ("float   %%#e      positive      alternate: |%#22.0e|\n", PI);
+  cxxoutput_printf ("float   %%+e      positive    always-sign: |%+22e|\n", PI);
+  cxxoutput_printf ("float   %%.5e     positive      precision: |%+22.5e|\n", PI);
+  // %E
+  cxxoutput_printf ("float   %%E       positive right-adjusted: |%22E|\n", PI);
+  cxxoutput_printf ("float   %%-E      positive  left-adjusted: |%-22E|\n", PI);
+  cxxoutput_printf ("float   %% E      positive   space-padded: |% 22E|\n", PI);
+  cxxoutput_printf ("float   %%0E      positive    zero-padded: |%022E|\n", PI);
+  cxxoutput_printf ("float   %%.0E     positive      truncated: |%22.0E|\n", PI);
+  cxxoutput_printf ("float   %%#E      positive      alternate: |%#22.0E|\n", PI);
+  cxxoutput_printf ("float   %%+E      positive    always-sign: |%+22E|\n", PI);
+  cxxoutput_printf ("float   %%.5E     positive      precision: |%+22.5E|\n", PI);
+#define GOOGOL  1e+100
+  // %g
+  cxxoutput_printf ("float   %%g       positive right-adjusted: |%22g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%-g      positive  left-adjusted: |%-22g|\n", GOOGOL);
+  cxxoutput_printf ("float   %% g      positive   space-padded: |% 22g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%0g      positive    zero-padded: |%022g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.0g     positive      truncated: |%22.0g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%#g      positive      alternate: |%#22.0g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%+g      positive    always-sign: |%+22g|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.5g     positive      precision: |%+22.5g|\n", GOOGOL);
+  // %G
+  cxxoutput_printf ("float   %%G       positive right-adjusted: |%22G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%-G      positive  left-adjusted: |%-22G|\n", GOOGOL);
+  cxxoutput_printf ("float   %% G      positive   space-padded: |% 22G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%0G      positive    zero-padded: |%022G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.0G     positive      truncated: |%22.0G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%#G      positive      alternate: |%#22.0G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%+G      positive    always-sign: |%+22G|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.5G     positive      precision: |%+22.5G|\n", GOOGOL);
+  // %s
+  constexpr const char *some_words = "char-string";
+  cxxoutput_printf ("String  'char-string'     right-adjusted: |%22s|\n", some_words);
+  cxxoutput_printf ("String  'char-string'      left-adjusted: |%-22s|\n", some_words);
+  cxxoutput_printf ("String   0x0                null pointer: |%22s|\n", (char*) NULL);
+  // widths
+  typedef long long LLong;
+  typedef unsigned long long ULLong;
+  cxxoutput_printf ("char     : %hhd %hhu %c %lc\n", char (-107), char (+107), wchar_t (+107), wint_t (+107));
+  cxxoutput_printf ("short    : %hd %hu\n", short (-107), short (+107));
+  cxxoutput_printf ("int      : %d %u\n", int (-107), int (+107));
+  cxxoutput_printf ("long     : %ld %lu\n", long (-107), long (+107));
+  cxxoutput_printf ("long long: %lld %llu\n", LLong (-107), LLong (+107));
+  constexpr LLong llmin = -9223372036854775807LL - 1;
+  constexpr ULLong ullmax = +18446744073709551615ULL;
+  cxxoutput_printf ("min long long: %llx %llo %llu %lli %lld\n", llmin, llmin, llmin, llmin, llmin);
+  cxxoutput_printf ("max long long: %llx %llo %llu %lli %lld\n", ullmax, ullmax, ullmax, ullmax, ullmax);
+}
+REGISTER_LOGTEST ("Strings/CxxPrintf Output", test_cxxprintf_output);
+
 struct AAData
 {
   static int destructor_calls;

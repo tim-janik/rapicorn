@@ -35,3 +35,106 @@
   simple-section.name[de]="DE localized key"
   simple-section.name["en_US.UTF-8"]="US localized key"
   TEST   IniFiles/Content Check:                                         OK
+# Test:  Strings/CxxPrintf Output ...
+Char 'Y'                  right-adjusted: |                     Y|
+Char 'Y'                   left-adjusted: |Y                     |
+Char 'Y'     positional 0      truncated: |Y|
+decimal unsigned negative right-adjusted: |            3307312975|
+decimal signed-i negative right-adjusted: |            -987654321|
+decimal signed-d negative right-adjusted: |            -987654321|
+octal   unsigned negative right-adjusted: |           30510313517|
+hexadec unsigned negative right-adjusted: |              c521974f|
+Hexadec unsigned negative right-adjusted: |              C521974F|
+decimal unsigned negative  left-adjusted: |3307312975            |
+decimal signed-i negative  left-adjusted: |-987654321            |
+decimal signed-d negative  left-adjusted: |-987654321            |
+octal   unsigned negative  left-adjusted: |30510313517           |
+hexadec unsigned negative  left-adjusted: |c521974f              |
+Hexadec unsigned negative  left-adjusted: |C521974F              |
+decimal signed-i negative   space-padded: |            -987654321|
+decimal signed-d negative   space-padded: |            -987654321|
+decimal unsigned negative    zero-padded: |0000000000003307312975|
+decimal signed-i negative    zero-padded: |-000000000000987654321|
+decimal signed-d negative    zero-padded: |-000000000000987654321|
+octal   unsigned negative    zero-padded: |0000000000030510313517|
+hexadec unsigned negative    zero-padded: |00000000000000c521974f|
+Hexadec unsigned negative    zero-padded: |00000000000000C521974F|
+decimal unsigned positive right-adjusted: |             987654321|
+decimal signed-i positive right-adjusted: |             987654321|
+decimal signed-d positive right-adjusted: |             987654321|
+octal   unsigned positive right-adjusted: |            7267464261|
+hexadec unsigned positive right-adjusted: |              3ade68b1|
+Hexadec unsigned positive right-adjusted: |              3ADE68B1|
+decimal unsigned positive  left-adjusted: |987654321             |
+decimal signed-i positive  left-adjusted: |987654321             |
+decimal signed-d positive  left-adjusted: |987654321             |
+octal   unsigned positive  left-adjusted: |7267464261            |
+hexadec unsigned positive  left-adjusted: |3ade68b1              |
+Hexadec unsigned positive  left-adjusted: |3ADE68B1              |
+decimal signed-i positive   space-padded: |             987654321|
+decimal signed-d positive   space-padded: |             987654321|
+decimal unsigned positive    zero-padded: |0000000000000987654321|
+decimal signed-i positive    zero-padded: |0000000000000987654321|
+decimal signed-d positive    zero-padded: |0000000000000987654321|
+octal   unsigned positive    zero-padded: |0000000000007267464261|
+hexadec unsigned positive    zero-padded: |000000000000003ade68b1|
+Hexadec unsigned positive    zero-padded: |000000000000003ADE68B1|
+float   %f       positive right-adjusted: |              3.141593|
+float   %-f      positive  left-adjusted: |3.141593              |
+float   % f      positive   space-padded: |              3.141593|
+float   %0f      positive    zero-padded: |000000000000003.141593|
+float   %.0f     positive      truncated: |                     3|
+float   %#f      positive      alternate: |                    3.|
+float   %+f      positive    always-sign: |             +3.141593|
+float   %.5f     positive      precision: |              +3.14159|
+float   %F       positive right-adjusted: |              3.141593|
+float   %-F      positive  left-adjusted: |3.141593              |
+float   % F      positive   space-padded: |              3.141593|
+float   %0F      positive    zero-padded: |000000000000003.141593|
+float   %.0F     positive      truncated: |                     3|
+float   %#F      positive      alternate: |                    3.|
+float   %+F      positive    always-sign: |             +3.141593|
+float   %.5F     positive      precision: |              +3.14159|
+float   %e       positive right-adjusted: |          3.141593e+00|
+float   %-e      positive  left-adjusted: |3.141593e+00          |
+float   % e      positive   space-padded: |          3.141593e+00|
+float   %0e      positive    zero-padded: |00000000003.141593e+00|
+float   %.0e     positive      truncated: |                 3e+00|
+float   %#e      positive      alternate: |                3.e+00|
+float   %+e      positive    always-sign: |         +3.141593e+00|
+float   %.5e     positive      precision: |          +3.14159e+00|
+float   %E       positive right-adjusted: |          3.141593E+00|
+float   %-E      positive  left-adjusted: |3.141593E+00          |
+float   % E      positive   space-padded: |          3.141593E+00|
+float   %0E      positive    zero-padded: |00000000003.141593E+00|
+float   %.0E     positive      truncated: |                 3E+00|
+float   %#E      positive      alternate: |                3.E+00|
+float   %+E      positive    always-sign: |         +3.141593E+00|
+float   %.5E     positive      precision: |          +3.14159E+00|
+float   %g       positive right-adjusted: |                1e+100|
+float   %-g      positive  left-adjusted: |1e+100                |
+float   % g      positive   space-padded: |                1e+100|
+float   %0g      positive    zero-padded: |00000000000000001e+100|
+float   %.0g     positive      truncated: |                1e+100|
+float   %#g      positive      alternate: |               1.e+100|
+float   %+g      positive    always-sign: |               +1e+100|
+float   %.5g     positive      precision: |               +1e+100|
+float   %G       positive right-adjusted: |                1E+100|
+float   %-G      positive  left-adjusted: |1E+100                |
+float   % G      positive   space-padded: |                1E+100|
+float   %0G      positive    zero-padded: |00000000000000001E+100|
+float   %.0G     positive      truncated: |                1E+100|
+float   %#G      positive      alternate: |               1.E+100|
+float   %+G      positive    always-sign: |               +1E+100|
+float   %.5G     positive      precision: |               +1E+100|
+String  'char-string'     right-adjusted: |           char-string|
+String  'char-string'      left-adjusted: |char-string           |
+String   0x0                null pointer: |                (null)|
+char     : -107 107 k k
+short    : -107 107
+int      : -107 107
+long     : -107 107
+long long: -107 107
+min long long: 8000000000000000 1000000000000000000000 9223372036854775808 -9223372036854775808 -9223372036854775808
+max long long: ffffffffffffffff 1777777777777777777777 18446744073709551615 -1 -1
+  TEST   Strings/CxxPrintf Output:                                       OK
