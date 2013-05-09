@@ -187,6 +187,7 @@ StringFormatter::arg_as_ldouble (size_t nth)
     case '4':   return farg.i4;
     case '6':   return farg.i6;
     case '8':   return farg.i8;
+    case 'f':   return farg.f;
     case 'd':   return farg.d;
     case 'p':   return ULLong (farg.p);
     case 's':   return ULLong (farg.s);
@@ -221,6 +222,7 @@ StringFormatter::arg_as_longlong (size_t nth)
     case '4':   return farg.i4;
     case '6':   return farg.i6;
     case '8':   return farg.i8;
+    case 'f':   return farg.f;
     case 'd':   return farg.d;
     case 'p':   return LLong (farg.p);
     case 's':   return LLong (farg.s);
@@ -303,7 +305,12 @@ StringFormatter::render_directive (const Directive &dir)
         default:        return render_arg (dir, "ll", arg_as_longlong (dir.value_index));
         }
     case 'f': case 'F': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A':
-      return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
+      switch (format_arg (dir.value_index).kind)
+        {
+        case 'f':       return render_arg (dir, "", format_arg (dir.value_index).f);
+        case 'd':
+        default:        return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
+        }
     case '%':
       return "%";
     }

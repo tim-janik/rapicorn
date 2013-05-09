@@ -23,8 +23,8 @@ class StringFormatter {
   typedef long long unsigned int ULLong;
   typedef long double LDouble;
   struct FormatArg {
-    union { LDouble d; signed char i1; short i2; int i4; long i6; LLong i8; void *p; const char *s; };
-    char kind; // d i u p s
+    union { LDouble d; double f; signed char i1; short i2; int i4; long i6; LLong i8; void *p; const char *s; };
+    char kind; // f d i u p s
   };
   inline void assign (FormatArg &farg, bool               arg) { farg.kind = '1'; farg.i1 = arg; }
   inline void assign (FormatArg &farg, char               arg) { farg.kind = '1'; farg.i1 = arg; }
@@ -47,8 +47,8 @@ class StringFormatter {
   inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = '6'; farg.i6 = arg; }
   inline void assign (FormatArg &farg, long long          arg) { farg.kind = '8'; farg.i8 = arg; }
   inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = '8'; farg.i8 = arg; }
-  inline void assign (FormatArg &farg, float              arg) { farg.kind = 'd'; farg.d = arg; }
-  inline void assign (FormatArg &farg, double             arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, float              arg) { farg.kind = 'f'; farg.f = arg; }
+  inline void assign (FormatArg &farg, double             arg) { farg.kind = 'f'; farg.f = arg; }
   inline void assign (FormatArg &farg, long double        arg) { farg.kind = 'd'; farg.d = arg; }
   inline void assign (FormatArg &farg, const char        *arg) { farg.kind = 's'; farg.s = arg; }
   inline void assign (FormatArg &farg, const std::string &arg) { assign (farg, arg.c_str()); }
