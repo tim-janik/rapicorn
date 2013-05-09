@@ -167,42 +167,31 @@ StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directiv
   return NULL; // OK
 }
 
-// FIXME: support more sophisticated argument conversions
-
-uint32_t
-StringFormatter::arg_as_width (size_t nth)
+const StringFormatter::FormatArg&
+StringFormatter::format_arg (size_t nth)
 {
-  int32_t w = arg_as_lluint (nth);
-  w = ABS (w);
-  return w < 0 ? ABS (w + 1) : w; // turn -2147483648 into +2147483647
-}
-
-uint32_t
-StringFormatter::arg_as_precision (size_t nth)
-{
-  const int32_t precision = arg_as_lluint (nth);
-  return MAX (0, precision);
-}
-
-StringFormatter::LLUInt
-StringFormatter::arg_as_lluint (size_t nth)
-{
-  return_unless (nth && nth <= nargs_, 0);
-  return fargs_[nth-1].i;
+  if (nth && nth <= nargs_)
+    return fargs_[nth-1];
+  static const FormatArg zero_arg = { { 0, }, 0 };
+  return zero_arg;
 }
 
 StringFormatter::LDouble
 StringFormatter::arg_as_ldouble (size_t nth)
 {
-  return_unless (nth && nth <= nargs_, 0);
-  return fargs_[nth-1].d;
-}
-
-void*
-StringFormatter::arg_as_ptr (size_t nth)
-{
-  return_unless (nth && nth <= nargs_, NULL);
-  return fargs_[nth-1].p;
+  const FormatArg &farg = format_arg (nth);
+  switch (farg.kind)
+    {
+    case '1':   return farg.i1;
+    case '2':   return farg.i2;
+    case '4':   return farg.i4;
+    case '6':   return farg.i6;
+    case '8':   return farg.i8;
+    case 'd':   return farg.d;
+    case 'p':   return ULLong (farg.p);
+    case 's':   return ULLong (farg.s);
+    default:    return 0;
+    }
 }
 
 const char*
@@ -212,6 +201,46 @@ StringFormatter::arg_as_chars (size_t nth)
   if ((fargs_[nth-1].kind == 's' || fargs_[nth-1].kind == 'p') && fargs_[nth-1].p == NULL)
     return "(null)";
   return fargs_[nth-1].kind != 's' ? "" : fargs_[nth-1].s;
+}
+
+void*
+StringFormatter::arg_as_ptr (size_t nth)
+{
+  return_unless (nth && nth <= nargs_, NULL);
+  return fargs_[nth-1].p;
+}
+
+StringFormatter::LLong
+StringFormatter::arg_as_longlong (size_t nth)
+{
+  const FormatArg &farg = format_arg (nth);
+  switch (farg.kind)
+    {
+    case '1':   return farg.i1;
+    case '2':   return farg.i2;
+    case '4':   return farg.i4;
+    case '6':   return farg.i6;
+    case '8':   return farg.i8;
+    case 'd':   return farg.d;
+    case 'p':   return LLong (farg.p);
+    case 's':   return LLong (farg.s);
+    default:    return 0;
+    }
+}
+
+uint32_t
+StringFormatter::arg_as_width (size_t nth)
+{
+  int32_t w = arg_as_longlong (nth);
+  w = ABS (w);
+  return w < 0 ? ABS (w + 1) : w; // turn -2147483648 into +2147483647
+}
+
+uint32_t
+StringFormatter::arg_as_precision (size_t nth)
+{
+  const int32_t precision = arg_as_longlong (nth);
+  return MAX (0, precision);
 }
 
 template<class Arg> std::string
@@ -259,14 +288,20 @@ StringFormatter::render_directive (const Directive &dir)
     {
     case 'm':
       return render_arg (dir, "", int (0)); // dummy arg to silence compiler
-    case 'c':
-      return render_arg (dir, "", int (arg_as_lluint (dir.value_index)));
     case 'p':
       return render_arg (dir, "", arg_as_ptr (dir.value_index));
     case 's': // precision
       return render_arg (dir, "", arg_as_chars (dir.value_index));
-    case 'd': case 'i': case 'o': case 'u': case 'X': case 'x':
-      return render_arg (dir, "ll", arg_as_lluint (dir.value_index));
+    case 'c': case 'd': case 'i': case 'o': case 'u': case 'X': case 'x':
+      switch (format_arg (dir.value_index).kind)
+        {
+        case '1':       return render_arg (dir, "hh", format_arg (dir.value_index).i1);
+        case '2':       return render_arg (dir, "h", format_arg (dir.value_index).i2);
+        case '4':       return render_arg (dir, "", format_arg (dir.value_index).i4);
+        case '6':       return render_arg (dir, "l", format_arg (dir.value_index).i6);
+        case '8':       return render_arg (dir, "ll", format_arg (dir.value_index).i8);
+        default:        return render_arg (dir, "ll", arg_as_longlong (dir.value_index));
+        }
     case 'f': case 'F': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A':
       return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
     case '%':

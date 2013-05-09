@@ -19,25 +19,34 @@ namespace Lib { // Namespace for implementation internals
  * egrep "\"([^\"]|\\\")*%[0-9$]*[-+#0 \'I]*[*0-9$]*[.*0-9$]*[hlLqjzt]+[nSspmCcdiouXxFfGgEeAa]"
  */
 class StringFormatter {
-  typedef long long unsigned int LLUInt;
+  typedef long long signed int LLong;
+  typedef long long unsigned int ULLong;
   typedef long double LDouble;
   struct FormatArg {
-    union { LDouble d; LLUInt i; void *p; const char *s; };
-    char kind; // i d s p
+    union { LDouble d; signed char i1; short i2; int i4; long i6; LLong i8; void *p; const char *s; };
+    char kind; // d i u p s
   };
-  inline void assign (FormatArg &farg, bool               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, char               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, signed char        arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned char      arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, short              arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned short     arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, int                arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned int       arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, long               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, long long          arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = 'i'; farg.i = arg; }
+  inline void assign (FormatArg &farg, bool               arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, char               arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, signed char        arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, unsigned char      arg) { farg.kind = '1'; farg.i1 = arg; }
+#if __SIZEOF_WCHAR_T__ == 1
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '1'; farg.i1 = arg; }
+#endif
+  inline void assign (FormatArg &farg, short              arg) { farg.kind = '2'; farg.i2 = arg; }
+  inline void assign (FormatArg &farg, unsigned short     arg) { farg.kind = '2'; farg.i2 = arg; }
+#if __SIZEOF_WCHAR_T__ == 2
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '2'; farg.i2 = arg; }
+#endif
+  inline void assign (FormatArg &farg, int                arg) { farg.kind = '4'; farg.i4 = arg; }
+  inline void assign (FormatArg &farg, unsigned int       arg) { farg.kind = '4'; farg.i4 = arg; }
+#if __SIZEOF_WCHAR_T__ == 4
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '4'; farg.i4 = arg; }
+#endif
+  inline void assign (FormatArg &farg, long               arg) { farg.kind = '6'; farg.i6 = arg; }
+  inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = '6'; farg.i6 = arg; }
+  inline void assign (FormatArg &farg, long long          arg) { farg.kind = '8'; farg.i8 = arg; }
+  inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = '8'; farg.i8 = arg; }
   inline void assign (FormatArg &farg, float              arg) { farg.kind = 'd'; farg.d = arg; }
   inline void assign (FormatArg &farg, double             arg) { farg.kind = 'd'; farg.d = arg; }
   inline void assign (FormatArg &farg, long double        arg) { farg.kind = 'd'; farg.d = arg; }
@@ -52,12 +61,13 @@ class StringFormatter {
     temporaries_.push_back (os.str());
     assign (farg, temporaries_[temporaries_.size()-1]);
   }
-  uint32_t    arg_as_width     (size_t nth);
-  uint32_t    arg_as_precision (size_t nth);
-  LLUInt      arg_as_lluint    (size_t nth);
-  LDouble     arg_as_ldouble   (size_t nth);
-  void*       arg_as_ptr       (size_t nth);
-  const char* arg_as_chars     (size_t nth);
+  const FormatArg& format_arg       (size_t nth);
+  uint32_t         arg_as_width     (size_t nth);
+  uint32_t         arg_as_precision (size_t nth);
+  LLong            arg_as_longlong  (size_t nth);
+  LDouble          arg_as_ldouble   (size_t nth);
+  const char*      arg_as_chars     (size_t nth);
+  void*            arg_as_ptr       (size_t nth);
   struct Directive {
     char     conversion;
     uint32_t adjust_left : 1, add_sign : 1, use_width : 1, use_precision : 1;
