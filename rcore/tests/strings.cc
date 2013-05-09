@@ -584,6 +584,24 @@ test_cxxprintf_output()
   cxxoutput_printf ("float   %%#G      positive      alternate: |%#22.0G|\n", GOOGOL);
   cxxoutput_printf ("float   %%+G      positive    always-sign: |%+22G|\n", GOOGOL);
   cxxoutput_printf ("float   %%.5G     positive      precision: |%+22.5G|\n", GOOGOL);
+  // %a
+  cxxoutput_printf ("float   %%a       positive right-adjusted: |%22a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%-a      positive  left-adjusted: |%-22a|\n", GOOGOL);
+  cxxoutput_printf ("float   %% a      positive   space-padded: |% 22a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%0a      positive    zero-padded: |%022a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.0a     positive      truncated: |%22.0a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%#a      positive      alternate: |%#22.0a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%+a      positive    always-sign: |%+22a|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.5a     positive      precision: |%+22.5a|\n", GOOGOL);
+  // %A
+  cxxoutput_printf ("float   %%A       positive right-adjusted: |%22A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%-A      positive  left-adjusted: |%-22A|\n", GOOGOL);
+  cxxoutput_printf ("float   %% A      positive   space-padded: |% 22A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%0A      positive    zero-padded: |%022A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.0A     positive      truncated: |%22.0A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%#A      positive      alternate: |%#22.0A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%+A      positive    always-sign: |%+22A|\n", GOOGOL);
+  cxxoutput_printf ("float   %%.5A     positive      precision: |%+22.5A|\n", GOOGOL);
   // %s
   constexpr const char *some_words = "char-string";
   cxxoutput_printf ("String  'char-string'     right-adjusted: |%22s|\n", some_words);
@@ -592,15 +610,23 @@ test_cxxprintf_output()
   // widths
   typedef long long LLong;
   typedef unsigned long long ULLong;
-  cxxoutput_printf ("char     : %hhd %hhu %c %lc\n", char (-107), char (+107), wchar_t (+107), wint_t (+107));
-  cxxoutput_printf ("short    : %hd %hu\n", short (-107), short (+107));
-  cxxoutput_printf ("int      : %d %u\n", int (-107), int (+107));
-  cxxoutput_printf ("long     : %ld %lu\n", long (-107), long (+107));
-  cxxoutput_printf ("long long: %lld %llu\n", LLong (-107), LLong (+107));
+  typedef long double LDouble;
+  cxxoutput_printf ("char       : %hhd %hhu %c %lc\n", char (-107), char (+107), wchar_t (+107), wint_t (+107));
+  cxxoutput_printf ("short      : %hd %hu\n", short (-107), short (+107));
+  cxxoutput_printf ("int        : %d %u\n", int (-107), int (+107));
+  cxxoutput_printf ("long       : %ld %lu\n", long (-107), long (+107));
+  cxxoutput_printf ("long long  : %lld %llu\n", LLong (-107), LLong (+107));
+  cxxoutput_printf ("float      : %f %g %e %a\n", float (PI), float (PI), float (PI), float (PI));
+  cxxoutput_printf ("double     : %f %g %e %a\n", double (PI), double (PI), double (PI), double (PI));
+  cxxoutput_printf ("long double: %Lf %Lg %Le %La\n", LDouble (PI), LDouble (PI), LDouble (PI), LDouble (PI));
   constexpr LLong llmin = -9223372036854775807LL - 1;
   constexpr ULLong ullmax = +18446744073709551615ULL;
   cxxoutput_printf ("min long long: %llx %llo %llu %lli %lld\n", llmin, llmin, llmin, llmin, llmin);
   cxxoutput_printf ("max long long: %llx %llo %llu %lli %lld\n", ullmax, ullmax, ullmax, ullmax, ullmax);
+  // positional args
+  cxxoutput_printf ("positionals-reorder: |%3$d %2$s %1$c|\n", '1', "2", 3);
+  cxxoutput_printf ("positionals-repeat:  |%2$f %1$s %2$f|\n", "==", PI);
+  cxxoutput_printf ("positionals-widths:  |%3$*1$.*2$s|\n", 5, 3, "abcdefg");
 }
 REGISTER_LOGTEST ("Strings/CxxPrintf Output", test_cxxprintf_output);
 

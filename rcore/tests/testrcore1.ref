@@ -127,14 +127,36 @@ float   %.0G     positive      truncated: |                1E+100|
 float   %#G      positive      alternate: |               1.E+100|
 float   %+G      positive    always-sign: |               +1E+100|
 float   %.5G     positive      precision: |               +1E+100|
+float   %a       positive right-adjusted: |0x1.249ad2594c37dp+332|
+float   %-a      positive  left-adjusted: |0x1.249ad2594c37dp+332|
+float   % a      positive   space-padded: | 0x1.249ad2594c37dp+332|
+float   %0a      positive    zero-padded: |0x1.249ad2594c37dp+332|
+float   %.0a     positive      truncated: |              0x1p+332|
+float   %#a      positive      alternate: |             0x1.p+332|
+float   %+a      positive    always-sign: |+0x1.249ad2594c37dp+332|
+float   %.5a     positive      precision: |       +0x1.249adp+332|
+float   %A       positive right-adjusted: |0X1.249AD2594C37DP+332|
+float   %-A      positive  left-adjusted: |0X1.249AD2594C37DP+332|
+float   % A      positive   space-padded: | 0X1.249AD2594C37DP+332|
+float   %0A      positive    zero-padded: |0X1.249AD2594C37DP+332|
+float   %.0A     positive      truncated: |              0X1P+332|
+float   %#A      positive      alternate: |             0X1.P+332|
+float   %+A      positive    always-sign: |+0X1.249AD2594C37DP+332|
+float   %.5A     positive      precision: |       +0X1.249ADP+332|
 String  'char-string'     right-adjusted: |           char-string|
 String  'char-string'      left-adjusted: |char-string           |
 String   0x0                null pointer: |                (null)|
-char     : -107 107 k k
-short    : -107 107
-int      : -107 107
-long     : -107 107
-long long: -107 107
+char       : -107 107 k k
+short      : -107 107
+int        : -107 107
+long       : -107 107
+long long  : -107 107
+float      : 3.141593 3.14159 3.141593e+00 0x1.921fb6p+1
+double     : 3.141593 3.14159 3.141593e+00 0x1.921fb54442d18p+1
+long double: 3.141593 3.14159 3.141593e+00 0xc.90fdaa22168cp-2
 min long long: 8000000000000000 1000000000000000000000 9223372036854775808 -9223372036854775808 -9223372036854775808
 max long long: ffffffffffffffff 1777777777777777777777 18446744073709551615 -1 -1
+positionals-reorder: |3 2 1|
+positionals-repeat:  |3.141593 == 3.141593|
+positionals-widths:  |  abc|
   TEST   Strings/CxxPrintf Output:                                       OK
