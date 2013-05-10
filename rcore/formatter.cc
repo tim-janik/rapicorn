@@ -5,7 +5,7 @@
 
 /** @TODO:
  * - StringFormatter: support directives: %%n %%S %%ls %%C %%lc
- * - StringFormatter: support directive flags: I
+ * - StringFormatter: support directive flags: I Z
  */
 
 namespace Rapicorn {
