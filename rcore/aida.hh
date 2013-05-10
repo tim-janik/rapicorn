@@ -277,10 +277,9 @@ struct TypeHash {
 typedef std::vector<TypeHash> TypeHashList;
 
 // == Utilities ==
-void    assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
-void    error_printf    (const char *format, ...) AIDA_PRINTF (1, 2) AIDA_NORETURN;
-void    error_vprintf   (const char *format, va_list args) AIDA_NORETURN;
-void    warning_printf  (const char *format, ...) AIDA_PRINTF (1, 2);
+void assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
+void fatal_error     (const String &msg) AIDA_NORETURN;
+void print_warning   (const String &msg);
 
 // == Type Utilities ==
 template<class Y> struct ValueType           { typedef Y T; };

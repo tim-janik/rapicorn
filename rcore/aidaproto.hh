@@ -14,7 +14,7 @@ field_buffer_emit_signal (const Aida::FieldBuffer &fb, const std::function<R (A1
   if (async)
     emit_result_id = fbr.pop_int64();
   if (AIDA_UNLIKELY (fbr.remaining() != NARGS))
-    Aida::error_printf ("invalid number of signal arguments");
+    Aida::fatal_error ("invalid number of signal arguments");
   typename ValueType<A1>::T a1; typename ValueType<A2>::T a2;
   fbr >>= a1; fbr >>= a2;
   return func (a1, a2);

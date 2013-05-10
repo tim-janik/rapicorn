@@ -65,13 +65,13 @@ static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer"
 void
 assertion_error (const char *file, uint line, const char *expr)
 {
-  error_printf ("%s:%u: assertion failed: %s", file, line, expr);
+  fatal_error (string_format ("%s:%u: assertion failed: %s", file, line, expr));
 }
 
 void
-error_vprintf (const char *format, va_list args)
+fatal_error (const String &msg)
 {
-  std::string s = string_vprintf (format, args);
+  String s = msg;
   if (s.empty() || s[s.size() - 1] != '\n')
     s += "\n";
   fprintf (stderr, "Aida: error: %s", s.c_str());
@@ -80,21 +80,9 @@ error_vprintf (const char *format, va_list args)
 }
 
 void
-error_printf (const char *format, ...)
+print_warning (const String &msg)
 {
-  va_list args;
-  va_start (args, format);
-  error_vprintf (format, args);
-  va_end (args);
-}
-
-void
-warning_printf (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  std::string s = string_vprintf (format, args);
-  va_end (args);
+  String s = msg;
   if (s.empty() || s[s.size() - 1] != '\n')
     s += "\n";
   fprintf (stderr, "Aida: warning: %s", s.c_str());
@@ -183,11 +171,11 @@ Any::rekind (TypeKind _kind)
     case RECORD:        name = "Aida::DynamicRecord";   break;
     case INSTANCE:
     default:
-      error_printf ("Aida::Any:rekind: incomplete type: %s", type_kind_name (_kind));
+      fatal_error (String() + "Aida::Any:rekind: incomplete type: " + type_kind_name (_kind));
     }
   TypeCode tc = TypeMap::lookup (name);
   if (tc.untyped())
-    error_printf ("Aida::Any:rekind: unknown type: %s", name);
+    fatal_error (String() + "Aida::Any:rekind: unknown type: " + name);
   retype (tc);
 }
 
@@ -254,7 +242,7 @@ Any::operator== (const Any &clone) const
     case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
     default:
-      error_printf ("Aida::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
+      fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
     }
   return true;
 }
@@ -775,18 +763,18 @@ void
 FieldBuffer::check_internal ()
 {
   if (size() > capacity())
-    error_printf ("FieldBuffer(this=%p): capacity=%u size=%u", this, capacity(), size());
+    fatal_error (string_format ("FieldBuffer(this=%p): capacity=%u size=%u", this, capacity(), size()));
 }
 
 void
 FieldReader::check_request (int type)
 {
   if (nth_ >= n_types())
-    error_printf ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_);
+    fatal_error (string_format ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
   if (get_type() != type)
-    error_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
-                  this, n_types(), nth_,
-                  FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
+    fatal_error (string_format ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+                                this, n_types(), nth_,
+                                FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str()));
 }
 
 std::string
@@ -953,7 +941,7 @@ public:
         while (err < 0 && (errno == EINTR || errno == EAGAIN));
       }
     if (efd < 0)
-      error_printf ("failed to open eventfd: %s", strerror (errno));
+      fatal_error (string_format ("failed to open eventfd: %s", strerror (errno)));
   }
   void
   wakeup()
@@ -1153,7 +1141,7 @@ register_connection (uint *indexp, BaseConnection *con)
         return;
     }
   *indexp = ~uint (0);
-  error_printf ("MAX_CONNECTIONS limit reached");
+  fatal_error ("Aida: MAX_CONNECTIONS limit reached");
 }
 
 static void
@@ -1340,15 +1328,15 @@ ClientConnectionImpl::dispatch ()
         const size_t handler_id = fbr.pop_int64();
         const bool deleted = true; // FIXME: currently broken
         if (!deleted)
-          warning_printf ("%s: invalid handler id (%016zx) in message: (%016lx, %016llx%016llx)",
-                          STRFUNC, handler_id, msgid, hashhigh, hashlow);
+          print_warning (string_format ("%s: invalid handler id (%016x) in message: (%016x, %016x%016x)",
+                                        STRFUNC, handler_id, msgid, hashhigh, hashlow));
       }
       break;
     case MSGID_HELLO_REPLY:     // handled in call_remote
     case MSGID_CALL_RESULT:     // handled in call_remote
     case MSGID_CONNECT_RESULT:  // handled in call_remote
     default:
-      warning_printf ("%s: invalid message: %016lx", STRFUNC, msgid);
+      print_warning (string_format ("%s: invalid message: %016x", STRFUNC, msgid));
       break;
     }
   if (AIDA_UNLIKELY (fb))
@@ -1399,7 +1387,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
         {
           FieldReader frr (*fb);
           const uint64_t retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
-          warning_printf ("%s: invalid reply: (%016llx, %016llx%016llx)", STRFUNC, retid, rethh, rethl);
+          print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
         }
     }
   blocking_for_sem_ = false;
@@ -1617,7 +1605,7 @@ ServerConnectionImpl::dispatch ()
     default:
       {
         const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        warning_printf ("%s: invalid message: (%016lx, %016llx%016llx)", STRFUNC, msgid, hashhigh, hashlow);
+        print_warning (string_format ("%s: invalid message: (%016x, %016x%016x)", STRFUNC, msgid, hashhigh, hashlow));
       }
       break;
     }
@@ -1780,11 +1768,11 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   const uint connection_id = ObjectBroker::sender_connection_id (msgid);
   BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
   if (!bcon)
-    error_printf ("Message ID without valid connection: %016lx (connection_id=%u)", msgid, connection_id);
+    fatal_error (string_format ("Message ID without valid connection: %016x (connection_id=%u)", msgid, connection_id));
   const bool needsresult = msgid_has_result (msgid);
   const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
-    error_printf ("mismatch of result flag and receiver_connection: %016lx", msgid);
+    fatal_error (string_format ("mismatch of result flag and receiver_connection: %016x", msgid));
   bcon->send_msg (fb);
 }
 

@@ -186,7 +186,7 @@ __AIDA_pyfactory__create_enum (const char *enum_name, uint64_t enum_value)
     }
   return result;
  unimplemented:
-  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", enum_name);
+  Rapicorn::Aida::fatal_error (std::string() + "UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: " + enum_name);
 }
 
 static inline PyObject*
