@@ -159,14 +159,14 @@ const char*     strerror ();    // simple wrapper for strerror (errno)
 template<class... Args> RAPICORN_NOINLINE String
 string_format (const char *format, const Args &...args)
 {
-  return Lib::StringFormatter::format (format, args...);
+  return Lib::StringFormatter::format (NULL, format, args...);
 }
 
 /// Formatted printing ala printf() into a String, using the current locale.
 template<class... Args> RAPICORN_NOINLINE String
 string_locale_format (const char *format, const Args &...args)
 {
-  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
+  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (NULL, format, args...);
 }
 
 } // Rapicorn

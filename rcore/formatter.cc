@@ -389,7 +389,12 @@ StringFormatter::render_format (const size_t last, const char *format)
       const Directive &fdir = fdirs[i];
       result += std::string (p, fdir.start - (p - format));
       if (fdir.conversion)
-        result += render_directive (fdir);
+        {
+          String rendered_arg = render_directive (fdir);
+          if (arg_transform_)
+            rendered_arg = arg_transform_ (rendered_arg);
+          result += rendered_arg;
+        }
       p = format + fdir.end;
     }
   return result;

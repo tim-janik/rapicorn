@@ -79,9 +79,11 @@ class StringFormatter {
       field_width (0), precision (0), start (0), end (0), value_index (0), width_index (0), precision_index (0)
     {}
   };
-  FormatArg    *const fargs_;
+  typedef std::function<String (const String&)> ArgTransform;
+  FormatArg          *const fargs_;
   const size_t        nargs_;
   const int           locale_context_;
+  const ArgTransform &arg_transform_;
   vector<std::string> temporaries_;
   static std::string            format_error     (const char *err, const char *format, size_t directive);
   static const char*            parse_directive  (const char **stringp, size_t *indexp, Directive *dirp);
@@ -101,19 +103,20 @@ class StringFormatter {
     return intern_format<N+1> (format, args...);
   }
   template<size_t N> inline constexpr
-  StringFormatter (size_t nargs, FormatArg (&mem)[N], int lc) : fargs_ (mem), nargs_ (nargs), locale_context_ (lc) {}
+  StringFormatter (const ArgTransform &arg_transform, size_t nargs, FormatArg (&mem)[N], int lc) :
+    fargs_ (mem), nargs_ (nargs), locale_context_ (lc), arg_transform_ (arg_transform) {}
 public:
   enum LocaleContext {
     POSIX_LOCALE,
     CURRENT_LOCALE,
   };
   template<LocaleContext LC = POSIX_LOCALE, class ...Args>
-  static __attribute__ ((__format__ (printf, 1, 0), noinline)) std::string
-  format (const char *format, const Args &...args)
+  static __attribute__ ((__format__ (printf, 2, 0), noinline)) std::string
+  format (const ArgTransform &arg_transform, const char *format, const Args &...args)
   {
     constexpr size_t N = sizeof... (Args);
     FormatArg mem[N ? N : 1];
-    StringFormatter formatter (N, mem, LC);
+    StringFormatter formatter (arg_transform, N, mem, LC);
     return formatter.intern_format<0> (format, args...);
   }
 };
