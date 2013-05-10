@@ -31,7 +31,7 @@ fill_store (ListStore &lstore, const String &dirname)
       row.append_back() <<= e->d_name;
 #endif
       Any row;
-      row <<= string_printf ("%zu) %s %s %d %lu", i, e->d_name,
+      row <<= string_format ("%zu) %s %s %d %lu", i, e->d_name,
                              i % 10 == 0 ? string_multiply ("<br/>", 1 + i / 10).c_str() : "",
                              e->d_type, e->d_ino);
       lstore.insert (lstore.count(), row);
@@ -114,9 +114,9 @@ fill_test_store (ListStore &lstore)
     {
       String s;
       if (i && (i % 10) == 0)
-        s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
+        s = string_format ("* %u SMALL ROW (watch scroll direction)", i);
       else
-        s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
+        s = string_format ("|<br/>| <br/>| %u<br/>|<br/>|", i);
       Any row;
       row <<= s;
       lstore.insert (lstore.count(), row);
