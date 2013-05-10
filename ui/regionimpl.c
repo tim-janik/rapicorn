@@ -135,7 +135,7 @@ struct _RapicornRegion {
 #define REGION_END(reg) REGION_BOX(reg, (reg)->data->numRects - 1)
 #define REGION_SZOF(n) (sizeof(RegDataRec) + ((n) * sizeof(BoxRec)))
 
-#define ErrorF    _rapicorn_region_debug
+#define ErrorF(...) fprintf (stderr, __VA_ARGS__)
 #define good(reg) do { if (!miValidRegion(reg)) { ErrorF ("InvalidRegion: %p:\n", reg); miPrintRegion (reg); } assert(miValidRegion(reg)); } while (0)
 
 /*
@@ -1934,14 +1934,4 @@ _rapicorn_region_get_rects (const RapicornRegion *region,
   for (i = 0; i < n; i++)
     rects[i] = REGION_RECTS (region)[i];
   return REGION_NUM_RECTS (region);
-}
-
-void
-_rapicorn_region_debug (const char *format,
-                        ...)
-{
-  va_list args;
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
 }
