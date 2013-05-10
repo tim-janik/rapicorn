@@ -30,7 +30,7 @@ namespace Test {
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
   Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
   Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
-    __tassert_as = Rapicorn::string_printf ("'%s %s %s': %s %s %s", \
+    __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
                                             sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
   Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
   } while (0)
@@ -101,19 +101,19 @@ template<typename D> void   add           (const String &testname, void (*test_f
 
 /// == Stringify Args ==
 inline String                   stringify_arg  (const char   *a, const char *str_a) { return a ? string_to_cquote (a) : "(__null)"; }
-template<class V> inline String stringify_arg  (const V      *a, const char *str_a) { return string_printf ("%p", a); }
+template<class V> inline String stringify_arg  (const V      *a, const char *str_a) { return string_format ("%p", a); }
 template<class A> inline String stringify_arg  (const A      &a, const char *str_a) { return str_a; }
-template<> inline String stringify_arg<float>  (const float  &a, const char *str_a) { return string_printf ("%.8g", a); }
-template<> inline String stringify_arg<double> (const double &a, const char *str_a) { return string_printf ("%.17g", a); }
-template<> inline String stringify_arg<bool>   (const bool   &a, const char *str_a) { return string_printf ("%u", a); }
-template<> inline String stringify_arg<int8>   (const int8   &a, const char *str_a) { return string_printf ("%d", a); }
-template<> inline String stringify_arg<int16>  (const int16  &a, const char *str_a) { return string_printf ("%d", a); }
-template<> inline String stringify_arg<int32>  (const int32  &a, const char *str_a) { return string_printf ("%d", a); }
-template<> inline String stringify_arg<int64>  (const int64  &a, const char *str_a) { return string_printf ("%lld", a); }
-template<> inline String stringify_arg<uint8>  (const uint8  &a, const char *str_a) { return string_printf ("0x%02x", a); }
-template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str_a) { return string_printf ("0x%04x", a); }
-template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_printf ("0x%08x", a); }
-template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_printf ("0x%08Lx", a); }
+template<> inline String stringify_arg<float>  (const float  &a, const char *str_a) { return string_format ("%.8g", a); }
+template<> inline String stringify_arg<double> (const double &a, const char *str_a) { return string_format ("%.17g", a); }
+template<> inline String stringify_arg<bool>   (const bool   &a, const char *str_a) { return string_format ("%u", a); }
+template<> inline String stringify_arg<int8>   (const int8   &a, const char *str_a) { return string_format ("%d", a); }
+template<> inline String stringify_arg<int16>  (const int16  &a, const char *str_a) { return string_format ("%d", a); }
+template<> inline String stringify_arg<int32>  (const int32  &a, const char *str_a) { return string_format ("%d", a); }
+template<> inline String stringify_arg<int64>  (const int64  &a, const char *str_a) { return string_format ("%lld", a); }
+template<> inline String stringify_arg<uint8>  (const uint8  &a, const char *str_a) { return string_format ("0x%02x", a); }
+template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str_a) { return string_format ("0x%04x", a); }
+template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_format ("0x%08x", a); }
+template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_format ("0x%08Lx", a); }
 template<> inline String stringify_arg<String> (const String &a, const char *str_a) { return string_to_cquote (a); }
 inline const char* _as_strptr (const char *s) { return s; } // implementation detail
 

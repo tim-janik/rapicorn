@@ -207,7 +207,7 @@ assertion_failed (const char *file, int line, const char *message)
     {
       m += String (file) + ":";
       if (line >= 0)
-        m += string_printf ("%u:", line);
+        m += string_format ("%u:", line);
     }
   else
     {

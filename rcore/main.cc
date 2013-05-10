@@ -412,7 +412,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   if (!g_get_application_name() || g_get_application_name() == g_get_prgname())
     g_set_application_name (program_app_ident.c_str());
   if (!program_argv0.empty())
-    ThreadInfo::self().name (string_printf ("%s-MainThread", Path::basename (program_argv0).c_str()));
+    ThreadInfo::self().name (string_format ("%s-MainThread", Path::basename (program_argv0).c_str()));
 
   // ensure logging is fully initialized
   const char *env_rapicorn = getenv ("RAPICORN");
@@ -425,7 +425,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
         const char *str = getenv (var);
         return str ? str : "";
       };
-      String lv = string_printf ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
+      String lv = string_format ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
                                  sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
                                  sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
       RAPICORN_STARTUP_DEBUG ("environment: %s", lv.c_str());

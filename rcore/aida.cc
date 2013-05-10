@@ -221,13 +221,13 @@ Any::to_string (const String &field_name) const
     case BOOL:
     case ENUM:
     case INT32:
-    case INT64:         s += string_printf (", value=%lld", u_.vint64);                          break;
-    case FLOAT64:       s += string_printf (", value=%.17g", u_.vdouble);                        break;
+    case INT64:         s += string_format (", value=%lld", u_.vint64);                          break;
+    case FLOAT64:       s += string_format (", value=%.17g", u_.vdouble);                        break;
     case ANY:           s += ", value=" + u_.vany->to_string();                                  break;
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());             break;
     case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);         break;
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);     break;
-    case INSTANCE:      s += string_printf (", value=#%08llx", u_.shandle->_orbid());            break;
+    case INSTANCE:      s += string_format (", value=#%08llx", u_.shandle->_orbid());            break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -333,8 +333,8 @@ Any::as_string() const
     {
     case BOOL: case ENUM:
     case INT32:
-    case INT64:         return string_printf ("%lli", u_.vint64);
-    case FLOAT64:       return string_printf ("%.17g", u_.vdouble);
+    case INT64:         return string_format ("%lli", u_.vint64);
+    case FLOAT64:       return string_format ("%.17g", u_.vdouble);
     case STRING:        return u_.vstring();
     default:            return "";
     }
@@ -793,7 +793,7 @@ std::string
 FieldBuffer::first_id_str() const
 {
   uint64_t fid = first_id();
-  return string_printf ("%016llx", fid);
+  return string_format ("%016llx", fid);
 }
 
 static std::string
@@ -804,7 +804,7 @@ strescape (const std::string &str)
     {
       uint8_t d = *it;
       if (d < 32 || d > 126 || d == '?')
-        buffer += string_printf ("\\%03o", d);
+        buffer += string_format ("\\%03o", d);
       else if (d == '\\')
         buffer += "\\\\";
       else if (d == '"')
@@ -821,14 +821,14 @@ FieldBuffer::type_name (int field_type)
   const char *tkn = type_kind_name (TypeKind (field_type));
   if (tkn)
     return tkn;
-  return string_printf ("<invalid:%d>", field_type);
+  return string_format ("<invalid:%d>", field_type);
 }
 
 std::string
 FieldBuffer::to_string() const
 {
-  String s = string_printf ("Aida::FieldBuffer(%p)={", this);
-  s += string_printf ("size=%u, capacity=%u", size(), capacity());
+  String s = string_format ("Aida::FieldBuffer(%p)={", this);
+  s += string_format ("size=%u, capacity=%u", size(), capacity());
   FieldReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
     {
@@ -839,18 +839,18 @@ FieldBuffer::to_string() const
         case UNTYPED:
         case FUNC:
         case TYPE_REFERENCE:
-        case VOID:      s += string_printf (", %s", tn); fbr.skip();                               break;
-        case BOOL:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_bool());                   break;
-        case ENUM:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_evalue());                 break;
-        case INT32:     s += string_printf (", %s: 0x%08llx", tn, fbr.pop_int64());                break;
-        case INT64:     s += string_printf (", %s: 0x%016llx", tn, fbr.pop_int64());               break;
-        case FLOAT64:   s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:    s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case SEQUENCE:  s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case RECORD:    s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        case ANY:       s += string_printf (", %s: %p", tn, &fbr.pop_any());                       break;
-        default:        s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
+        case BOOL:      s += string_format (", %s: 0x%llx", tn, fbr.pop_bool());                   break;
+        case ENUM:      s += string_format (", %s: 0x%llx", tn, fbr.pop_evalue());                 break;
+        case INT32:     s += string_format (", %s: 0x%08llx", tn, fbr.pop_int64());                break;
+        case INT64:     s += string_format (", %s: 0x%016llx", tn, fbr.pop_int64());               break;
+        case FLOAT64:   s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        case ANY:       s += string_format (", %s: %p", tn, &fbr.pop_any());                       break;
+        default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
   s += '}';
@@ -1718,7 +1718,7 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
   if (AIDA_UNLIKELY (size_before == size_after))
     {
       errno = EKEYREJECTED;
-      perror (string_printf ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
+      perror (string_format ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
                              "duplicate hash registration (%016llx%016llx)",
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();

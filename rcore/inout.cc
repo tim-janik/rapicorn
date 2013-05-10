@@ -50,7 +50,7 @@ user_message (const UserSource &source, const String &kind, const String &messag
   if (!source.filename.empty())
     fname = source.filename + ":";
   if (source.line)
-    fname = fname + string_printf ("%d:", source.line);
+    fname = fname + string_format ("%d:", source.line);
   // obey GNU warning style to allow automated location parsing
   printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
 }
@@ -145,7 +145,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
       if (prefix.size())
         prefix = prefix + ": ";
       if (f & DO_STAMP)
-        intro = string_printf ("[%s]", timestamp_format (delta).c_str());
+        intro = string_format ("[%s]", timestamp_format (delta).c_str());
       printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
     }
   if (f & DO_DIAG)
@@ -192,10 +192,10 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     {
       size_t addr;
       const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_printf ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
+      btmsg = string_format ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
                              addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
       for (size_t i = 0; i < syms.size(); i++)
-        btmsg += string_printf ("  %s\n", syms[i].c_str());
+        btmsg += string_format ("  %s\n", syms[i].c_str());
     }
   if (f & DO_LOGFILE)
     {
@@ -211,12 +211,12 @@ debug_handler (const char dkind, const String &file_line, const String &message,
               fd = dup (fd);
               close (0);
             }
-          out = string_printf ("[%s] %s[%u]: program started at: %s\n",
+          out = string_format ("[%s] %s[%u]: program started at: %s\n",
                                timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
                                timestamp_format (start).c_str());
           conftest_logfd = fd;
         }
-      out += string_printf ("[%s] %s[%u]:%s%s%s",
+      out += string_format ("[%s] %s[%u]:%s%s%s",
                             timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
                             wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
@@ -351,7 +351,7 @@ envkey_debug_message (const char *env_var, const char *key, const char *file_pat
   if (!envkey_debug_check (env_var, key, cachep))
     return;
   String msg = string_vprintf (format, va_args);
-  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
+  debug_handler ('D', string_format ("%s:%d", file_path, line), msg, key);
 }
 
 // == debug_* functions ==
@@ -359,14 +359,14 @@ envkey_debug_message (const char *env_var, const char *key, const char *file_pat
 void
 debug_assert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('C', string_format ("%s:%d", file_path, line), string_format ("assertion failed: %s", message));
 }
 
 /// Issue a message about a failed assertion and terminate the program, see also #$RAPICORN_DEBUG.
 void
 debug_fassert (const char *file_path, const int line, const char *message)
 {
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+  debug_handler ('F', string_format ("%s:%d", file_path, line), string_format ("assertion failed: %s", message));
   ::abort();
 }
 
@@ -378,7 +378,7 @@ debug_fatal (const char *file_path, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
+  debug_handler ('F', string_format ("%s:%d", file_path, line), msg);
   ::abort();
 }
 
@@ -390,7 +390,7 @@ debug_critical (const char *file_path, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
+  debug_handler ('C', string_format ("%s:%d", file_path, line), msg);
 }
 
 /// Issue a message about potential bugs in the program, see also #$RAPICORN_DEBUG.
@@ -401,7 +401,7 @@ debug_fixit (const char *file_path, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
+  debug_handler ('X', string_format ("%s:%d", file_path, line), msg);
 }
 
 /// Issue diagnostics, unconditional output in development versions, see also #$RAPICORN_DEBUG.
@@ -412,7 +412,7 @@ debug_diag (const char *file_path, const int line, const char *format, ...)
   va_start (vargs, format);
   String msg = string_vprintf (format, vargs);
   va_end (vargs);
-  debug_handler ('G', string_printf ("%s:%d", file_path, line), msg);
+  debug_handler ('G', string_format ("%s:%d", file_path, line), msg);
 }
 
 static Mutex              dbg_mutex;

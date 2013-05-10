@@ -177,7 +177,7 @@ ThreadInfo::collect_hazards()
 String
 ThreadInfo::ident ()
 {
-  return string_printf ("thread(%d/%d)", ThisThread::thread_pid(), ThisThread::process_pid());
+  return string_format ("thread(%d/%d)", ThisThread::thread_pid(), ThisThread::process_pid());
 }
 
 String
@@ -258,7 +258,7 @@ affinity ()
         break;
       }
   TDEBUG ("%s: pthread_getaffinity_np: %s", name().c_str(),
-          errno ? strerror() : string_printf ("%d", cpu).c_str());
+          errno ? strerror() : string_format ("%d", cpu).c_str());
   return cpu;
 }
 
@@ -275,7 +275,7 @@ affinity (int cpu)
       if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) == 0)
         errno = 0;
       TDEBUG ("%s: pthread_setaffinity_np: %s", name().c_str(),
-              errno ? strerror() : string_printf ("%d", cpu).c_str());
+              errno ? strerror() : string_format ("%d", cpu).c_str());
     }
 }
 
