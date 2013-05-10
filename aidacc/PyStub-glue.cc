@@ -116,7 +116,7 @@ __AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
   else if (PyFloat_Check (pyvalue))     any <<= PyFloat_AsDouble (pyvalue);
   else {
     std::string msg =
-      Rapicorn::string_printf ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
+      Rapicorn::string_format ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
     PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
   }
 }
@@ -141,7 +141,7 @@ __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
     default:            break;
     }
   std::string msg =
-    Rapicorn::string_printf ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
+    Rapicorn::string_format ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
   PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
   return NULL;
 }
