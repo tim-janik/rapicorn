@@ -2,7 +2,8 @@
 #ifndef __RAPICORN_FORMATTER_HH__
 #define __RAPICORN_FORMATTER_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/cxxaux.hh>
+#include <rcore/aida.hh>
 #include <sstream>
 
 namespace Rapicorn {

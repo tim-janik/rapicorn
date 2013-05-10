@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_STRINGS_HH__
 #define __RAPICORN_STRINGS_HH__
 
-#include <rcore/utilities.hh>
 #include <rcore/formatter.hh>
 #include <string>
 #include <cstring>
@@ -25,7 +24,7 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #endif // RAPICORN_CONVENIENCE
 
 // == C-String ==
-bool    			cstring_to_bool          (const char *string, bool fallback = false);
+bool    		       cstring_to_bool       (const char *string, bool fallback = false);
 
 // == String Formatting ==
 template<class... Args> String string_format         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);

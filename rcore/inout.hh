@@ -2,8 +2,7 @@
 #ifndef __RAPICORN_INOUT_HH__
 #define __RAPICORN_INOUT_HH__
 
-#include <rcore/cxxaux.hh>
-#include <rcore/aida.hh>
+#include <rcore/strings.hh>
 
 // For convenience, redefine assert() to get backtraces, logging, etc.
 #if !defined (assert) && defined (RAPICORN_CONVENIENCE) // dont redefine an existing custom macro
@@ -15,14 +14,13 @@
 namespace Rapicorn {
 
 // == Basic I/O ==
-void    printerr        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void    printerr        (const std::string &msg);
-void    printout        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+template<class... Args> void printout (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> void printerr (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 
 // === User Messages ==
 class UserSource;
-void    user_notice     (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
-void    user_warning    (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+template<class... Args> void user_notice  (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
+template<class... Args> void user_warning (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
 
 struct UserSource       ///< Helper structure to capture the origin of a user message.
 {
@@ -103,7 +101,7 @@ void            color_envkey    (const String &env_var, const String &key = "");
 #define STATIC_ASSERT    RAPICORN_STATIC_ASSERT     ///< Shorthand for RAPICORN_STATIC_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #endif // RAPICORN_CONVENIENCE
 
-// == Implementation Bits ==
+// == Implementation (Undocumented) ==
 /// @cond NOT_4_DOXYGEN
 
 struct DebugOption {
@@ -135,7 +133,42 @@ rapicorn_debug_check (const char *key)
           envkey_debug_check ("RAPICORN_DEBUG", key, &_rapicorn_debug_check_cache));
 }
 
+void printout_string     (const String &string);
+void printerr_string     (const String &string);
+void user_notice_string  (const UserSource &source, const String &string);
+void user_warning_string (const UserSource &source, const String &string);
+
 /// @endcond
+
+// == Implementation (Documented) ==
+
+/// Print a message on stdout (and flush stdout) ala printf(), using the POSIX/C locale.
+template<class... Args> void
+printout (const char *format, const Args &...args)
+{
+  printout_string (string_format (format, args...));
+}
+
+/// Print a message on stderr (and flush stderr) ala printf(), using the POSIX/C locale.
+template<class... Args> void
+printerr (const char *format, const Args &...args)
+{
+  printerr_string (string_format (format, args...));
+}
+
+/// Issue a notice about user resources, @p format uses printf-like syntax.
+template<class... Args> void
+user_notice (const UserSource &source, const char *format, const Args &...args)
+{
+  user_notice_string (source, string_format (format, args...));
+}
+
+/// Issue a notice about user resources, @p format uses printf-like syntax.
+template<class... Args> void
+user_warning (const UserSource &source, const char *format, const Args &...args)
+{
+  user_warning_string (source, string_format (format, args...));
+}
 
 } // Rapicorn
 

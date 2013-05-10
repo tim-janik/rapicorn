@@ -16,27 +16,19 @@ namespace Rapicorn {
 
 // == Basic I/O ==
 void
-printerr (const char *format, ...)
+printout_string (const String &string)
 {
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stdout);
-  fputs (ers.c_str(), stderr);
   fflush (stderr);
+  fputs (string.c_str(), stdout);
+  fflush (stdout);
 }
 
 void
-printout (const char *format, ...)
+printerr_string (const String &string)
 {
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stderr);
-  fputs (ers.c_str(), stdout);
   fflush (stdout);
+  fputs (string.c_str(), stderr);
+  fflush (stderr);
 }
 
 // === User Messages ==
@@ -63,26 +55,16 @@ user_message (const UserSource &source, const String &kind, const String &messag
   printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
 }
 
-/// Issue a notice about user resources.
 void
-user_notice (const UserSource &source, const char *format, ...)
+user_notice_string (const UserSource &source, const String &string)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "", msg);
+  user_message (source, "", string);
 }
 
-/// Issue a warning about user resources that likely need fixing.
 void
-user_warning (const UserSource &source, const char *format, ...)
+user_warning_string (const UserSource &source, const String &string)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "warning", msg);
+  user_message (source, "warning", string);
 }
 
 // == debug_handler ==
