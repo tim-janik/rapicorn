@@ -18,7 +18,7 @@ struct FactoryContext {
   String         type;
   FactoryContext (const XmlNode *xn) : xnode (xn), type_tags (NULL) {}
 };
-static std::map<const XmlNode*, FactoryContext*> factory_context_map; // FIXME: threads?
+static std::map<const XmlNode*, FactoryContext*> factory_context_map; /// @TODO: Make factory_context_map threadsafe
 
 static void initialize_factory_lazily (void);
 
@@ -559,7 +559,8 @@ Builder::call_widget (const XmlNode *anode,
   assert_return (dnode_ != NULL, NULL);
   String name;
   StringVector prop_names, prop_values;
-  parse_call_args (call_names, call_values, prop_names, prop_values, name, caller); // FIXME: catch:inherit+child-container
+  /// @TODO: Catch error condition: simultaneous use of inherit="..." and child-container="..."
+  parse_call_args (call_names, call_values, prop_names, prop_values, name, caller);
   // extract factory attributes and eval attributes
   StringVector parent_names, parent_values;
   String inherit;
@@ -673,10 +674,10 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
       } catch (std::exception &exc) {
         critical ("%s: adding %s to parent failed: %s", node_location (cnode).c_str(), cnode->name().c_str(), exc.what());
         unref (ref_sink (child));
-        throw; // FIXME: unref parent?
+        throw; /// @TODO: Eliminate exception use
       } catch (...) {
         unref (ref_sink (child));
-        throw; // FIXME: unref parent?
+        throw; // FIXME: eliminate exception use
       }
       // limit amount of children
       if (vchildren && max_children >= 0 && vchildren->size() >= size_t (max_children))
