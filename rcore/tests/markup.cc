@@ -85,4 +85,14 @@ rapicorn_markup_parser_test()
 }
 REGISTER_TEST ("Markup/RapicornMarkupParser", rapicorn_markup_parser_test);
 
+static void
+markup_string_escaping()
+{
+  TCMP ("<foo & bar>", ==, MarkupParser::printf_escaped ("<foo & bar>"));
+  TCMP ("foo &amp; bar", ==, MarkupParser::printf_escaped ("foo %s bar", "&"));
+  TCMP ("&lt;FROB/&gt;", ==, MarkupParser::printf_escaped ("%sFROB/%s", "<", ">"));
+  TCMP ("|&apos;sqstring&apos; &amp; &quot;dqstring&quot;|", ==, MarkupParser::printf_escaped ("|%s|", "'sqstring' & \"dqstring\""));
+}
+REGISTER_TEST ("Markup/String Escaping", markup_string_escaping);
+
 } // anon
