@@ -98,14 +98,11 @@ static __thread char *test_warning = NULL;
 static __thread char *test_start = NULL;
 
 void
-test_output (int kind, const char *format, ...)
+test_output (int kind, const String &output_msg)
 {
-  constexpr int VERBOSE_TAG = 1000000000;
-  va_list args;
-  va_start (args, format);
-  String msg = string_vprintf (format, args);
-  va_end (args);
+  String msg = output_msg;
   String sout, bar;
+  constexpr int VERBOSE_TAG = 1000000000;
   switch (verbose() ? VERBOSE_TAG + kind : kind)
     {
     default:
