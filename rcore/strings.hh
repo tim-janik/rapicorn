@@ -29,8 +29,6 @@ bool    		       cstring_to_bool       (const char *string, bool fallback = fals
 // == String Formatting ==
 template<class... Args> String string_format         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 template<class... Args> String string_locale_format  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
-template<class... Args> String string_printf         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
-template<class... Args> String string_locale_printf  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 String                         string_vprintf        (const char *format, va_list vargs);
 String                         string_locale_vprintf (const char *format, va_list vargs);
 
@@ -170,22 +168,6 @@ string_locale_format (const char *format, const Args &...args)
 {
   return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
 }
-
-/// Formatted printing ala printf() into a String, using the POSIX/C locale.
-template<class... Args> RAPICORN_NOINLINE String
-string_printf (const char *format, const Args &...args)
-{
-  return Lib::StringFormatter::format (format, args...);
-}
-
-/// Formatted printing ala printf() into a String, using the current locale.
-template<class... Args> RAPICORN_NOINLINE String
-string_locale_printf (const char *format, const Args &...args)
-{
-  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
-}
-
-
 
 } // Rapicorn
 
