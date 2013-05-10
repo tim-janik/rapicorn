@@ -3,6 +3,11 @@
 #include "main.hh"
 #include <cstring>
 
+/** @TODO:
+ * - StringFormatter: support directives: %%n %%S %%ls %%C %%lc
+ * - StringFormatter: support directive flags: I
+ */
+
 namespace Rapicorn {
 namespace Lib {
 
