@@ -25,10 +25,10 @@ x11_error (Display *error_display, XErrorEvent *error_event)
     }
   size_t addr;
   const vector<String> syms = pretty_backtrace (0, &addr);
-  String btmsg = string_printf ("%s:%d: Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", __FILE__, __LINE__,
+  String btmsg = string_format ("%s:%d: Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", __FILE__, __LINE__,
                                 addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
   for (size_t i = 0; i < syms.size(); i++)
-    btmsg += string_printf ("  %s\n", syms[i].c_str());
+    btmsg += string_format ("  %s\n", syms[i].c_str());
   printerr ("X11: received an XErrorEvent ($RAPICORN_DEBUG=%s), aborting...\n%s",
             CQUOTE (dbe_x11sync.key + String (dbe_x11sync ? "=1" : "=0")), btmsg.c_str());
   atexit (abort); // prevents other atexit() handlers from complaining about improper shutdown
@@ -446,7 +446,7 @@ x11_input_method (Display *display, XIM *ximp, XIMStyle *bestp, const char *loca
   *bestp = 0;
   if (!XSupportsLocale() ||                     // checks if locale is supported
       !XSetLocaleModifiers (locale_modifiers))  // set X11 locale for XIM
-    return string_printf ("locale not supported: %s", setlocale (LC_ALL, NULL));
+    return string_format ("locale not supported: %s", setlocale (LC_ALL, NULL));
   XIM xim = XOpenIM (display, NULL, NULL, NULL);
   if (!xim)
     return "failed to find input method";

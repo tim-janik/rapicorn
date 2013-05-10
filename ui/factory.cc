@@ -298,7 +298,7 @@ dump_args (const String &what, const StringVector &anames, const StringVector &a
 static String
 node_location (const XmlNode *xnode)
 {
-  return string_printf ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
+  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
 }
 
 class Builder {
@@ -797,7 +797,7 @@ register_ui_node (const String   &domain,
       String ident = domain.empty () ? nname : domain + ":" + nname; // FIXME
       GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
       if (it != gadget_definition_map.end())
-        return string_printf ("%s: redefinition of: %s (previously at %s)",
+        return string_format ("%s: redefinition of: %s (previously at %s)",
                               node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
       assign_xml_node_data_recursive (xnode, domain);
       gadget_definition_map[ident] = ref_sink (xnode);
@@ -806,7 +806,7 @@ register_ui_node (const String   &domain,
       FDEBUG ("register: %s", ident.c_str());
     }
   else
-    return string_printf ("%s: invalid element tag: %s", node_location (xnode).c_str(), xnode->name().c_str());
+    return string_format ("%s: invalid element tag: %s", node_location (xnode).c_str(), xnode->name().c_str());
   return ""; // success;
 }
 
@@ -821,7 +821,7 @@ register_ui_nodes (const String   &domain,
     return register_ui_node (domain, xnode, definitions);
   // enforce sane toplevel node
   if (xnode->name() != "rapicorn-definitions")
-    return string_printf ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
+    return string_format ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
   // register template children
   XmlNode::ConstNodes children = xnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
@@ -854,7 +854,7 @@ parse_ui_data_internal (const String   &domain,
     ref_sink (xnode);
   String errstr;
   if (perror.code)
-    errstr = string_printf ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
+    errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
     errstr = register_ui_nodes (domain, xnode, definitions);
   if (xnode)

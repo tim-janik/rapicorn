@@ -136,7 +136,7 @@ stringify_model (ListModelIface &model)
       Any row = model.row (i);
       s += "  (";
       for (uint j = 0; j < 1; j++) // FIXME: support sequences in Any
-        s += string_printf ("%s%s", j ? "," : "", row.as_string().c_str());
+        s += string_format ("%s%s", j ? "," : "", row.as_string().c_str());
       s += "),\n";
     }
   s += "]";
@@ -152,7 +152,7 @@ test_store_modifications ()
     {
       Any row;
       for (uint j = 0; j < 1; j++) // FIXME: "j < 4" - support sequences in Any
-        row <<= string_printf ("%02x", 16 * (i + 1) + j + 1);
+        row <<= string_format ("%02x", 16 * (i + 1) + j + 1);
       store.insert (-1, row);
     }
   Any row;

@@ -1171,7 +1171,7 @@ WidgetImpl::dump_test_data (TestStream &tstream)
 void
 WidgetImpl::dump_private_data (TestStream &tstream)
 {
-  tstream.dump ("requisition", string_printf ("(%.17g, %.17g)", requisition().width, requisition().height));
+  tstream.dump ("requisition", string_format ("(%.17g, %.17g)", requisition().width, requisition().height));
   tstream.dump ("allocation", allocation().string());
   const Allocation *carea = clip_area();
   tstream.dump ("clip_area", carea ? carea->string() : "");

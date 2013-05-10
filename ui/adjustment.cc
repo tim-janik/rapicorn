@@ -116,7 +116,7 @@ Adjustment::move (MoveType move)
 String
 Adjustment::string ()
 {
-  String s = string_printf ("Adjustment(%g,[%f,%f],istep=%+f,pstep=%+f,page=%f%s)",
+  String s = string_format ("Adjustment(%g,[%f,%f],istep=%+f,pstep=%+f,page=%f%s)",
                             value(), lower(), upper(),
                             step_increment(), page_increment(), page(),
                             frozen() ? ",frozen" : "");

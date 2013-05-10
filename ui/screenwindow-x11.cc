@@ -945,7 +945,7 @@ X11Context::connect()
   String imerr = x11_input_method (display, &input_method, &input_style);
   if (!imerr.empty() && x11_input_method (display, &input_method, &input_style, "@im=none") == "")
     imerr = ""; // @im=none gets us at least a working compose key
-  XDEBUG ("XIM: %s", !imerr.empty() ? imerr.c_str() : string_printf ("selected input method style 0x%04lx", input_style).c_str());
+  XDEBUG ("XIM: %s", !imerr.empty() ? imerr.c_str() : string_format ("selected input method style 0x%04lx", input_style).c_str());
   return true;
 }
 
