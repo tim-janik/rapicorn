@@ -226,7 +226,7 @@ REGISTER_TEST ("General/Path handling", test_paths);
 static void
 test_file_io()
 {
-  String fname = string_printf ("xtmp-infotest.%u", getpid());
+  String fname = string_format ("xtmp-infotest.%u", getpid());
   FILE *f = fopen (fname.c_str(), "w");
   assert (f != NULL);
   static const char *data = "1234567890\nasdfghjkl\n";
