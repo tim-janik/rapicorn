@@ -4,12 +4,29 @@ import sys, re
 rapicorn_debug_items, rapicorn_debug_items_set = '', set()
 rapicorn_debug_keys, rapicorn_debug_keys_set = '', set()
 rapicorn_flippers, rapicorn_flippers_set = '', set()
+rapicorn_todo_lists = {}
 
 def process_start ():
   pass
 
 def process_comment (txt):
-  pass # print 'C>>>', txt
+  if not txt.startswith (('///', '/**', '/*!')):
+    return      # filter non-doxygen comments
+  # @TODO @TODOS
+  global rapicorn_todo_lists
+  pattern = r'[@\\] TODO[Ss]? \s* ( : )'
+  match = re.search (pattern, txt, re.MULTILINE | re.VERBOSE)
+  if match:
+    text = txt[match.end (1):].strip()                  # take todo text, whitespace-stripped
+    text = text[:-2] if text.endswith ('*/') else text  # strip comment-closing
+    text = re.sub (r'( ^ | \n) \s* \*+',                # match comment prefix at line start
+                   r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
+    pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
+    if not re.match (pattern, text, re.X):              # not a list
+      text = ' - ' + text                               # insert list bullet
+    blurb = rapicorn_todo_lists.get (filename, '')
+    blurb += text.rstrip() + '\n'
+    rapicorn_todo_lists[filename] = blurb
 
 def process_code (txt):
   cstring = r' " ( (?: [^\\"] | \\ .) * ) " '
@@ -38,6 +55,9 @@ def process_code (txt):
       rapicorn_flippers += '  * - @c %s - %s\n' % (m[0], m[1])
       rapicorn_flippers_set.add (m[0])
 
+def sanitize_ident (txt):
+  return re.sub (r'[^0-9_a-zA-Z]+', '_', txt).strip ('_')
+
 def process_end ():
   if rapicorn_debug_items:
     print '/** @var $RAPICORN_DEBUG'
@@ -48,6 +68,15 @@ def process_end ():
   if rapicorn_flippers:
     print '/** @var $RAPICORN_FLIPPER'
     print rapicorn_flippers, '*/'
+  if rapicorn_todo_lists:
+    # ('/** @page todo_lists Todo Lists', ' * @section %s %s' % (sanitize_ident (filename), filename), '*/')
+    for filename, blurb in rapicorn_todo_lists.items():
+      ident = sanitize_ident (filename)
+      filename = filename[2:] if filename.startswith ('./') else filename
+      print '/** @file %s' % filename
+      print '@xrefitem todo "Todos" "Source Code Todo List"'
+      print blurb.rstrip()
+      print '*/'
 
 def process_specific (filename, text):
   def is_comment (t):
