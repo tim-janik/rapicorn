@@ -345,63 +345,45 @@ envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
  * @a format and @a va_args are formatting the message analogously to vprintf().
  */
 void
-envkey_debug_message (const char *env_var, const char *key, const char *file_path, const int line,
-                      const char *format, va_list va_args, volatile bool *cachep)
+envkey_debug_message (const char *env_var, const char *key, const char *file, const int line,
+                      const String &message, volatile bool *cachep)
 {
   if (!envkey_debug_check (env_var, key, cachep))
     return;
-  String msg = string_vprintf (format, va_args);
-  debug_handler ('D', string_format ("%s:%d", file_path, line), msg, key);
+  String prefix = file ? file : "";
+  if (!prefix.empty() && line >= 0)
+    prefix += ":" + string_from_int (line);
+  debug_handler ('D', prefix, message, key);
 }
 
 // == debug_* functions ==
-/// Issue a message about a failed assertion, see also #$RAPICORN_DEBUG.
 void
-debug_assert (const char *file_path, const int line, const char *message)
+debug_message (char kind, const char *file, int line, const String &message)
 {
-  debug_handler ('C', string_format ("%s:%d", file_path, line), string_format ("assertion failed: %s", message));
+  String prefix = file ? file : "";
+  if (!prefix.empty() && line >= 0)
+    prefix += ":" + string_from_int (line);
+  if (kind == 'F' || kind == 'C' || kind == 'G')
+    debug_handler (kind, prefix, message);
 }
 
-/// Issue a message about a failed assertion and terminate the program, see also #$RAPICORN_DEBUG.
 void
-debug_fassert (const char *file_path, const int line, const char *message)
+debug_fmessage (const char *file, int line, const String &message)
 {
-  debug_handler ('F', string_format ("%s:%d", file_path, line), string_format ("assertion failed: %s", message));
+  debug_message ('F', file, line, message);
   ::abort();
 }
 
-/// Issue a message about a fatal runtime condition and terminate the program, see also #$RAPICORN_DEBUG.
 void
-debug_fatal (const char *file_path, const int line, const char *format, ...)
+debug_assert (const char *file, const int line, const char *message)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('F', string_format ("%s:%d", file_path, line), msg);
-  ::abort();
+  debug_message ('C', file, line, String ("assertion failed: ") + (message ? message : "?"));
 }
 
-/// Issue a message about a critical runtime condition, see also #$RAPICORN_DEBUG.
 void
-debug_critical (const char *file_path, const int line, const char *format, ...)
+debug_fassert (const char *file, const int line, const char *message)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('C', string_format ("%s:%d", file_path, line), msg);
-}
-
-/// Issue diagnostics, unconditional output in development versions, see also #$RAPICORN_DEBUG.
-void
-debug_diag (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('G', string_format ("%s:%d", file_path, line), msg);
+  debug_fmessage (file, line, String ("assertion failed: ") + (message ? message : "?"));
 }
 
 static Mutex              dbg_mutex;
@@ -500,12 +482,9 @@ bool volatile _rapicorn_debug_check_cache = true; // initially enable debugging
  * The message @a format uses printf-like syntax.
  */
 void
-rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
+rapicorn_debug (const char *key, const char *file, const int line, const String &msg)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_rapicorn_debug_check_cache);
-  va_end (vargs);
+  envkey_debug_message ("RAPICORN_DEBUG", key, file, line, msg, &_rapicorn_debug_check_cache);
 }
 
 /** Check if debugging is enabled for @a key.
@@ -544,7 +523,7 @@ FlipperOption::flipper_check (const char *key)
 
 /** @def RAPICORN_FATAL(format,...)
  * Abort the program with a fatal error message.
- * Issues an error message and call abort() to abort the program.
+ * Issues an error message and call abort() to abort the program, see also #$RAPICORN_DEBUG.
  * The error message @a format uses printf-like syntax.
  */
 
@@ -566,7 +545,7 @@ FlipperOption::flipper_check (const char *key)
  */
 
 /** @def RAPICORN_CRITICAL(format,...)
- * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * Issues a critical message, see also #$RAPICORN_DEBUG=fatal-warnings.
  * The error message @a format uses printf-like syntax.
  */
 
@@ -584,9 +563,9 @@ FlipperOption::flipper_check (const char *key)
  */
 
 /** @def RAPICORN_DIAG(format,...)
- * Issues a diagnostic message, usually indicaintg I/O errors, or invalid user input.
+ * Issues a diagnostic message, e.g. indicaintg I/O errors or invalid user input.
  * Diagnostic message are enabled by default for dvelopment versions and can be enabled
- * other wise with #$RAPICORN_DEBUG=devel.
+ * otherwise with #$RAPICORN_DEBUG=devel.
  * The message @a format uses printf-like syntax.
  */
 
