@@ -314,7 +314,7 @@ run_tests (void)
   char ftype = logging() ? 'l' : (slow() ? 's' : 't');
   if (ui_test())
     ftype = toupper (ftype);
-  TDEBUG ("running %zu + %zu tests", entries.size(), testfuncs.size());
+  TDEBUG ("running %u + %u tests", entries.size(), testfuncs.size());
   size_t skipped = 0, passed = 0;
   for (size_t i = 0; i < entries.size(); i++)
     {
@@ -336,8 +336,8 @@ run_tests (void)
       TDONE();
       passed++;
     }
-  TDEBUG ("passed %zu tests", passed);
-  TDEBUG ("skipped deselected %zu tests", skipped);
+  TDEBUG ("passed %u tests", passed);
+  TDEBUG ("skipped deselected %u tests", skipped);
 }
 
 void

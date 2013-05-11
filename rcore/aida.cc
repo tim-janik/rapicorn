@@ -209,13 +209,13 @@ Any::to_string (const String &field_name) const
     case BOOL:
     case ENUM:
     case INT32:
-    case INT64:         s += string_format (", value=%lld", u_.vint64);                          break;
-    case FLOAT64:       s += string_format (", value=%.17g", u_.vdouble);                        break;
-    case ANY:           s += ", value=" + u_.vany->to_string();                                  break;
-    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());             break;
-    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);         break;
-    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);     break;
-    case INSTANCE:      s += string_format (", value=#%08llx", u_.shandle->_orbid());            break;
+    case INT64:         s += string_format (", value=%d", u_.vint64);                           break;
+    case FLOAT64:       s += string_format (", value=%.17g", u_.vdouble);                       break;
+    case ANY:           s += ", value=" + u_.vany->to_string();                                 break;
+    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
+    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
+    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
+    case INSTANCE:      s += string_format (", value=#%08x", u_.shandle->_orbid());             break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -321,7 +321,7 @@ Any::as_string() const
     {
     case BOOL: case ENUM:
     case INT32:
-    case INT64:         return string_format ("%lli", u_.vint64);
+    case INT64:         return string_format ("%i", u_.vint64);
     case FLOAT64:       return string_format ("%.17g", u_.vdouble);
     case STRING:        return u_.vstring();
     default:            return "";
@@ -774,7 +774,7 @@ std::string
 FieldBuffer::first_id_str() const
 {
   uint64 fid = first_id();
-  return string_format ("%016llx", fid);
+  return string_format ("%016x", fid);
 }
 
 static std::string
@@ -821,10 +821,10 @@ FieldBuffer::to_string() const
         case FUNC:
         case TYPE_REFERENCE:
         case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
-        case BOOL:      s += string_format (", %s: 0x%llx", tn, fbr.pop_bool());                   break;
-        case ENUM:      s += string_format (", %s: 0x%llx", tn, fbr.pop_evalue());                 break;
-        case INT32:     s += string_format (", %s: 0x%08llx", tn, fbr.pop_int64());                break;
-        case INT64:     s += string_format (", %s: 0x%016llx", tn, fbr.pop_int64());               break;
+        case BOOL:      s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
+        case ENUM:      s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
+        case INT32:     s += string_format (", %s: 0x%08x", tn, fbr.pop_int64());                  break;
+        case INT64:     s += string_format (", %s: 0x%016x", tn, fbr.pop_int64());                 break;
         case FLOAT64:   s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
         case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
@@ -1700,7 +1700,7 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
     {
       errno = EKEYREJECTED;
       perror (string_format ("%s:%u: Aida::ServerConnection::MethodRegistry::register_method: "
-                             "duplicate hash registration (%016llx%016llx)",
+                             "duplicate hash registration (%016x%016x)",
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }

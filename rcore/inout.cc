@@ -192,7 +192,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     {
       size_t addr;
       const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_format ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
+      btmsg = string_format ("%sBacktrace at 0x%08x (stackframe at 0x%08x):\n", where.c_str(),
                              addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
       for (size_t i = 0; i < syms.size(); i++)
         btmsg += string_format ("  %s\n", syms[i].c_str());

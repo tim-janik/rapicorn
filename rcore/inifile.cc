@@ -279,30 +279,30 @@ IniFile::load_ini (const String &inputname, const String &data)
       if (skip_commentline (&p, &nextno, debugp))
         {
           if (debugp)
-            printerr ("%s:%zd: #%s\n", inputname.c_str(), lineno, debugp->c_str());
+            printerr ("%s:%d: #%s\n", inputname.c_str(), lineno, debugp->c_str());
         }
       else if (parse_section (&p, &nextno, &text))
         {
           if (debugp)
-            printerr ("%s:%zd: %s\n", inputname.c_str(), lineno, text.c_str());
+            printerr ("%s:%d: %s\n", inputname.c_str(), lineno, text.c_str());
           section = text;
         }
       else if (parse_assignment (&p, &nextno, &key, &locale, &text))
         {
           if (debugp)
-            printerr ("%s:%zd:\t%s[%s] = %s\n", inputname.c_str(), lineno, key.c_str(), locale.c_str(), CQUOTE (text.c_str()));
+            printerr ("%s:%d:\t%s[%s] = %s\n", inputname.c_str(), lineno, key.c_str(), locale.c_str(), CQUOTE (text.c_str()));
           String k (key);
           if (!locale.empty())
             k += "[" + locale + "]";
           if (strchr (section.c_str(), '=') || strchr (key.c_str(), '.'))
-            RAPICORN_DIAG ("%s:%zd: invalid key name: %s.%s", inputname.c_str(), lineno, section.c_str(), k.c_str());
+            RAPICORN_DIAG ("%s:%d: invalid key name: %s.%s", inputname.c_str(), lineno, section.c_str(), k.c_str());
           else
             sections_[section].push_back (k + "=" + text);
         }
       else if (skip_line (&p, &nextno, debugp))
         {
           if (debugp)
-            printerr ("%s:%zd:~ %s\n", inputname.c_str(), lineno, debugp->c_str());
+            printerr ("%s:%d:~ %s\n", inputname.c_str(), lineno, debugp->c_str());
         }
       else
         break; // EOF if !skip_line

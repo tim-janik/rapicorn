@@ -140,7 +140,7 @@ ThreadInfo::reset_specific ()
     assert (pttid == pth_thread_id);
   while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
   data_list_.clear_like_destructor(); // should be empty
-  // TESTED: printout ("resetted: %zx (%p)\n", pttid, this);
+  // TESTED: printout ("resetted: %x (%p)\n", pttid, this);
 }
 
 void
