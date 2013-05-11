@@ -257,7 +257,7 @@ void
 Any::swap (Any &other)
 {
   constexpr size_t USIZE = sizeof (this->u_);
-  uint64_t buffer[(USIZE + 7) / 8];
+  uint64 buffer[(USIZE + 7) / 8];
   memcpy (buffer, &other.u_, USIZE);
   memcpy (&other.u_, &this->u_, USIZE);
   memcpy (&this->u_, buffer, USIZE);
@@ -265,7 +265,7 @@ Any::swap (Any &other)
 }
 
 bool
-Any::to_int (int64_t &v, char b) const
+Any::to_int (int64 &v, char b) const
 {
   if (kind() != BOOL && kind() != INT32 && kind() != INT64)
     return false;
@@ -275,9 +275,9 @@ Any::to_int (int64_t &v, char b) const
     case 1:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 1;        break;
     case 7:     s =  u_.vint64 >=      -128 &&  u_.vint64 <= 127;      break;
     case 8:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 256;      break;
-    case 47:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 47:    s = sizeof (LongIffy) == sizeof (int64); // chain
     case 31:    s |= u_.vint64 >=   INT_MIN &&  u_.vint64 <= INT_MAX;  break;
-    case 48:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 48:    s = sizeof (ULongIffy) == sizeof (int64); // chain
     case 32:    s |= u_.vint64 >=         0 &&  u_.vint64 <= UINT_MAX; break;
     case 63:    s = 1; break;
     case 64:    s = 1; break;
@@ -288,7 +288,7 @@ Any::to_int (int64_t &v, char b) const
   return s;
 }
 
-int64_t
+int64
 Any::as_int () const
 {
   switch (kind())
@@ -326,13 +326,6 @@ Any::as_string() const
     case STRING:        return u_.vstring();
     default:            return "";
     }
-}
-
-bool
-Any::operator>>= (int64_t &v) const
-{
-  const bool r = to_int (v, 63);
-  return r;
 }
 
 bool
@@ -406,24 +399,24 @@ Any::operator<<= (bool v)
 }
 
 void
-Any::operator<<= (int32_t v)
+Any::operator<<= (int32 v)
 {
   ensure (INT32);
   u_.vint64 = v;
 }
 
 void
-Any::operator<<= (int64_t v)
+Any::operator<<= (int64 v)
 {
   ensure (INT64);
   u_.vint64 = v;
 }
 
 void
-Any::operator<<= (uint64_t v)
+Any::operator<<= (uint64 v)
 {
   // ensure (UINT);
-  operator<<= (int64_t (v));
+  operator<<= (int64 (v));
 }
 
 void
@@ -606,7 +599,7 @@ Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
           for (size_t j = 0; fields && j < fields->size(); j++)
             if ((*fields)[j].name == ftc.name())
               pany = &(*fields)[j];
-          uint64_t amem[(sizeof (Any) + 7) / 8];
+          uint64 amem[(sizeof (Any) + 7) / 8];
           const Any &fany = *(pany ? pany : new (amem) Any (ftc));      // stack Any constructor
           fany.to_proto (ftc, rb);
           if (!pany)
@@ -637,7 +630,7 @@ Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
 }
 
 // == OrbObject ==
-OrbObject::OrbObject (uint64_t orbid) :
+OrbObject::OrbObject (uint64 orbid) :
   orbid_ (orbid)
 {}
 
@@ -703,7 +696,7 @@ static OrboMap orbo_map;
 static Mutex   orbo_mutex;
 
 void
-ObjectBroker::tie_handle (SmartHandle &sh, const uint64_t orbid)
+ObjectBroker::tie_handle (SmartHandle &sh, const uint64 orbid)
 {
   AIDA_ASSERT (NULL == sh);
   ScopedLock<Mutex> locker (orbo_mutex);
@@ -740,12 +733,12 @@ FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem[0].index = 0;
 }
 
-FieldBuffer::FieldBuffer (uint32_t    _ntypes,
+FieldBuffer::FieldBuffer (uint32    _ntypes,
                           FieldUnion *_bmem,
-                          uint32_t    _bmemlen) :
+                          uint32    _bmemlen) :
   buffermem (_bmem)
 {
-  const uint32_t _offs = 1 + (_ntypes + 7) / 8;
+  const uint32 _offs = 1 + (_ntypes + 7) / 8;
   assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
   wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
@@ -780,7 +773,7 @@ FieldReader::check_request (int type)
 std::string
 FieldBuffer::first_id_str() const
 {
-  uint64_t fid = first_id();
+  uint64 fid = first_id();
   return string_format ("%016llx", fid);
 }
 
@@ -859,7 +852,7 @@ FieldBuffer::new_error (const String &msg,
 #endif
 
 FieldBuffer*
-FieldBuffer::new_result (MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+FieldBuffer::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   FieldBuffer *fr = FieldBuffer::_new (3 + n);
@@ -868,7 +861,7 @@ FieldBuffer::new_result (MessageId m, uint rconnection, uint64_t h, uint64_t l, 
 }
 
 FieldBuffer*
-ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
@@ -880,7 +873,7 @@ ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection,
 }
 
 FieldBuffer*
-ObjectBroker::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64_t h, uint64_t l, uint32_t n)
+ObjectBroker::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   FieldBuffer *fb = const_cast<FieldBuffer*> (fbr.field_buffer());
   fbr.reset();
@@ -889,18 +882,18 @@ ObjectBroker::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection
 
 class OneChunkFieldBuffer : public FieldBuffer {
   virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
-  explicit OneChunkFieldBuffer (uint32_t    _ntypes,
+  explicit OneChunkFieldBuffer (uint32    _ntypes,
                                 FieldUnion *_bmem,
-                                uint32_t    _bmemlen) :
+                                uint32    _bmemlen) :
     FieldBuffer (_ntypes, _bmem, _bmemlen)
   {}
 public:
   static OneChunkFieldBuffer*
-  _new (uint32_t _ntypes)
+  _new (uint32 _ntypes)
   {
-    const uint32_t _offs = 1 + (_ntypes + 7) / 8;
+    const uint32 _offs = 1 + (_ntypes + 7) / 8;
     size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64_t);
+    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
     FieldUnion *bmem = (FieldUnion*) (omem + objlen);
     return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
@@ -908,7 +901,7 @@ public:
 };
 
 FieldBuffer*
-FieldBuffer::_new (uint32_t _ntypes)
+FieldBuffer::_new (uint32 _ntypes)
 {
   return OneChunkFieldBuffer::_new (_ntypes);
 }
@@ -1219,8 +1212,8 @@ ClientConnection::~ClientConnection ()
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
-  struct SignalHandler { uint64_t hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
-  typedef std::set<uint64_t> UIntSet;
+  struct SignalHandler { uint64 hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
+  typedef std::set<uint64> UIntSet;
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages sent to client
   sem_t                         transport_sem_;         // signal incomming results
@@ -1259,9 +1252,9 @@ public:
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
   virtual SmartHandle   remote_origin     (const vector<std::string> &feature_key_list);
-  virtual size_t        signal_connect    (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data);
+  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
-  virtual std::string   type_name_from_orbid (uint64_t orbid);
+  virtual std::string   type_name_from_orbid (uint64 orbid);
 };
 
 FieldBuffer*
@@ -1299,7 +1292,7 @@ ClientConnectionImpl::dispatch ()
   return_if (fb == NULL);
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t  idmask = msgid_mask (msgid);
+  const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
     {
     case MSGID_EMIT_TWOWAY:
@@ -1324,7 +1317,7 @@ ClientConnectionImpl::dispatch ()
       break;
     case MSGID_DISCONNECT:
       {
-        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const size_t handler_id = fbr.pop_int64();
         const bool deleted = true; // FIXME: currently broken
         if (!deleted)
@@ -1367,7 +1360,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
           block_for_result ();
           fr = transport_channel_.fetch_msg();
         }
-      const uint64_t retmask = msgid_mask (fr->first_id());
+      const uint64 retmask = msgid_mask (fr->first_id());
       if (retmask == resultid)
         break;
 #if 0
@@ -1386,7 +1379,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
       else
         {
           FieldReader frr (*fb);
-          const uint64_t retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
+          const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
           print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
         }
     }
@@ -1395,7 +1388,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 }
 
 size_t
-ClientConnectionImpl::signal_connect (uint64_t hhi, uint64_t hlo, uint64_t orbid, SignalEmitHandler seh, void *data)
+ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data)
 {
   assert_return (orbid > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
@@ -1452,7 +1445,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   assert_return (connection_result != NULL, false);
   FieldReader frr (*connection_result);
   frr.skip_header();
-  uint64_t disconnection_success;
+  uint64 disconnection_success;
   frr >>= disconnection_success;
   delete connection_result;
   critical_unless (disconnection_success == true); // should always succeed due to the above guard; FIXME: possible race w/ ~Signal
@@ -1474,7 +1467,7 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 }
 
 std::string
-ClientConnectionImpl::type_name_from_orbid (uint64_t orbid)
+ClientConnectionImpl::type_name_from_orbid (uint64 orbid)
 {
   const uint type_index = IdentifierParts (orbid).orbid_type_index;
   return type_name_db.type_name (type_index);
@@ -1485,7 +1478,7 @@ ClientConnectionImpl::type_name_from_orbid (uint64_t orbid)
 class ServerConnectionImpl : public ServerConnection {
   TransportChannel         transport_channel_;       // messages sent to server
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  std::unordered_map<ptrdiff_t,uint64_t> addr_map;
+  std::unordered_map<ptrdiff_t,uint64> addr_map;
   std::vector<ptrdiff_t>                 addr_vector;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map;
   ImplicitBase *remote_origin_;
@@ -1497,8 +1490,8 @@ public:
   virtual void          dispatch   ();
   virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
   virtual void          remote_origin  (ImplicitBase *rorigin);
-  virtual uint64_t      instance2orbid (ImplicitBase*);
-  virtual ImplicitBase* orbid2instance (uint64_t);
+  virtual uint64        instance2orbid (ImplicitBase*);
+  virtual ImplicitBase* orbid2instance (uint64);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
@@ -1507,8 +1500,8 @@ public:
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
   ServerConnection (feature_keys), remote_origin_ (NULL)
 {
-  addr_map[0] = 0;                                      // lookiing up NULL yields uint64_t (0)
-  addr_vector.push_back (0);                            // orbid uint64_t (0) yields NULL
+  addr_map[0] = 0;                                      // lookiing up NULL yields uint64 (0)
+  addr_vector.push_back (0);                            // orbid uint64 (0) yields NULL
   register_connection();
 }
 
@@ -1522,22 +1515,22 @@ ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
   remote_origin_ = rorigin;
 }
 
-uint64_t
+uint64
 ServerConnectionImpl::instance2orbid (ImplicitBase *instance)
 {
   const ptrdiff_t addr = reinterpret_cast<ptrdiff_t> (instance);
   const auto it = addr_map.find (addr);
   if (AIDA_LIKELY (it != addr_map.end()))
     return (*it).second;
-  const uint64_t orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), // see connection_id_from_orbid
-                                          addr_vector.size(), type_name_db.index (instance->__aida_type_name__())).vuint64;
+  const uint64 orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), // see connection_id_from_orbid
+                                        addr_vector.size(), type_name_db.index (instance->__aida_type_name__())).vuint64;
   addr_vector.push_back (addr);
   addr_map[addr] = orbid;
   return orbid;
 }
 
 ImplicitBase*
-ServerConnectionImpl::orbid2instance (uint64_t orbid)
+ServerConnectionImpl::orbid2instance (uint64 orbid)
 {
   const uint32 index = IdentifierParts (orbid).orbid32; // see connection_id_from_orbid
   const ptrdiff_t addr = AIDA_LIKELY (index < addr_vector.size()) ? addr_vector[index] : 0;
@@ -1552,12 +1545,12 @@ ServerConnectionImpl::dispatch ()
     return;
   FieldReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
-  const uint64_t  idmask = msgid_mask (msgid);
+  const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
     {
     case MSGID_HELLO_REQUEST:
       {
-        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
@@ -1566,7 +1559,7 @@ ServerConnectionImpl::dispatch ()
         fr->add_object (this->instance2orbid (rorigin));
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
-        const uint64_t resultmask = msgid_as_result (MessageId (idmask));
+        const uint64 resultmask = msgid_as_result (MessageId (idmask));
         AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
         ObjectBroker::post_msg (fr);
       }
@@ -1575,7 +1568,7 @@ ServerConnectionImpl::dispatch ()
     case MSGID_TWOWAY_CALL:
     case MSGID_ONEWAY_CALL:
       {
-        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
         AIDA_ASSERT (server_method_implementation != NULL);
         fbr.reset (*fb);
@@ -1586,7 +1579,7 @@ ServerConnectionImpl::dispatch ()
           AIDA_ASSERT (fr == NULL);
         else // MSGID_TWOWAY_CALL
           {
-            const uint64_t resultmask = msgid_as_result (MessageId (idmask));
+            const uint64 resultmask = msgid_as_result (MessageId (idmask));
             AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
             ObjectBroker::post_msg (fr);
           }
@@ -1596,7 +1589,7 @@ ServerConnectionImpl::dispatch ()
       {
         fbr.skip(); // hashhigh
         fbr.skip(); // hashlow
-        const uint64_t emit_result_id = fbr.pop_int64();
+        const uint64 emit_result_id = fbr.pop_int64();
         EmitResultHandler emit_result_handler = emit_result_handler_pop (emit_result_id);
         AIDA_ASSERT (emit_result_handler != NULL);
         emit_result_handler (fbr);
@@ -1604,7 +1597,7 @@ ServerConnectionImpl::dispatch ()
       break;
     default:
       {
-        const uint64_t hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         print_warning (string_format ("%s: invalid message: (%016x, %016x%016x)", STRFUNC, msgid, hashhigh, hashlow));
       }
       break;
@@ -1672,7 +1665,7 @@ ensure_dispatcher_map()
 }
 
 DispatchFunc
-ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
+ServerConnection::find_method (uint64 hashhi, uint64 hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking

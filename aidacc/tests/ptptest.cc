@@ -11,9 +11,9 @@
 namespace { // Anon
 
 using namespace Rapicorn::Aida;
-using Rapicorn::Aida::int64_t;
-using Rapicorn::Aida::uint64_t;
-typedef uint32_t uint;
+using Rapicorn::Aida::int64;
+using Rapicorn::Aida::uint64;
+typedef Rapicorn::uint32 uint;
 typedef std::string String;
 using std::vector;
 

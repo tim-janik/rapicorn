@@ -147,16 +147,15 @@ RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
 namespace Rapicorn {
 
 // == Provide Canonical Integer Types ==
-typedef uint8_t                 uint8;          ///< An 8-bit unsigned integer.
-typedef uint16_t                uint16;         ///< A 16-bit unsigned integer.
-typedef uint32_t                uint32;         ///< A 32-bit unsigned integer.
-typedef unsigned long long int  uint64;         ///< A 64-bit unsigned integer, use "%llu" in format strings.
-// typedef uint64_t             uint64;         // int64_t / uint64_t are longs on AMD64 which breaks printf
-typedef int8_t                  int8;           ///< An 8-bit signed integer.
-typedef int16_t                 int16;          ///< A 16-bit signed integer.
-typedef int32_t                 int32;          ///< A 32-bit signed integer.
-typedef signed long long int    int64;          ///< A 64-bit unsigned integer, use "%lld" in format strings.
-typedef uint32_t                unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
+typedef uint8_t         uint8;          ///< An 8-bit unsigned integer.
+typedef uint16_t        uint16;         ///< A 16-bit unsigned integer.
+typedef uint32_t        uint32;         ///< A 32-bit unsigned integer.
+typedef uint64_t        uint64;         ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef int8_t          int8;           ///< An 8-bit signed integer.
+typedef int16_t         int16;          ///< A 16-bit signed integer.
+typedef int32_t         int32;          ///< A 32-bit signed integer.
+typedef int64_t         int64;          ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef uint32_t        unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
 RAPICORN_STATIC_ASSERT (sizeof (uint8) == 1 && sizeof (uint16) == 2 && sizeof (uint32) == 4 && sizeof (uint64) == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (int32)  == 4 && sizeof (int64)  == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);

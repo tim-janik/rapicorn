@@ -11,7 +11,7 @@
 #endif
 
 namespace { // Anon
-using Rapicorn::Aida::uint64_t;
+using Rapicorn::Aida::uint64;
 
 namespace __AIDA_Local__ {
 using namespace Rapicorn::Aida;
@@ -37,13 +37,13 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 }
 
 // objects
-template<class Target> static inline Target* id2obj (uint64_t oid)
+template<class Target> static inline Target* id2obj (uint64 oid)
 {
   Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
   return dynamic_cast<Target*> (instance);
 }
 
-static inline uint64_t obj2id  (Rapicorn::Aida::ImplicitBase *obj)
+static inline uint64 obj2id  (Rapicorn::Aida::ImplicitBase *obj)
 {
   return server_connection->instance2orbid (obj);
 }
@@ -57,7 +57,7 @@ smh2obj (const SmartHandle &sh)
 template<class SMH> static inline SMH
 obj2smh (Rapicorn::Aida::ImplicitBase *self)
 {
-  const uint64_t orbid = obj2id (self);
+  const uint64 orbid = obj2id (self);
   SMH target;
   struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
   Broker::tie_handle (target, orbid);
@@ -72,32 +72,32 @@ post_msg (FieldBuffer *fb)
 }
 
 static inline void
-add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
 }
 
 static inline void
-add_header1_emit (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+add_header1_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
 }
 
 static inline void
-add_header2_emit (FieldBuffer &fb, size_t signal_handler_id, uint64_t h, uint64_t l)
+add_header2_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id),
                   server_connection->connection_id(), h, l);
 }
 
 static inline FieldBuffer*
-new_call_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
   return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 static inline FieldBuffer*
-new_connect_result (FieldReader &fbr, uint64_t h, uint64_t l, uint32_t n = 1)
+new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
   return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
@@ -143,7 +143,7 @@ typedef bool AliasBool;
 
 typedef int AliasInt32;
 
-typedef Rapicorn::Aida::int64_t AliasInt64;
+typedef Rapicorn::Aida::int64 AliasInt64;
 
 typedef double AliasFloat;
 
@@ -162,7 +162,7 @@ typedef bool AuxBool;
 
 typedef int Aux32;
 
-typedef Rapicorn::Aida::int64_t Aux64;
+typedef Rapicorn::Aida::int64 Aux64;
 
 typedef double AuxF64;
 
@@ -201,7 +201,7 @@ public:
   virtual double                        two_args2           (int n = 6,
                                                              double r = 7.7);
   virtual double                        multi_args          (bool b,
-                                                             Rapicorn::Aida::int64_t n,
+                                                             Rapicorn::Aida::int64 n,
                                                              double r,
                                                              int i,
                                                              const std::string &s = "String ding",
@@ -331,8 +331,8 @@ public:
                                                                     bool optval = 0);
   virtual int                           method_with_ints32         (int input,
                                                                     int optval = -2);
-  virtual Rapicorn::Aida::int64_t       method_with_ints64         (Rapicorn::Aida::int64_t input,
-                                                                    Rapicorn::Aida::int64_t optval = 576460752303423488);
+  virtual Rapicorn::Aida::int64         method_with_ints64         (Rapicorn::Aida::int64 input,
+                                                                    Rapicorn::Aida::int64 optval = 576460752303423488);
   virtual double                        method_with_floats         (double input,
                                                                     double optval = 309.9);
   virtual std::string                   method_with_string         (const std::string &input,
@@ -372,7 +372,7 @@ public:
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
   typedef Rapicorn::Aida::AsyncSignal<int ()> Signal_int32_result;
-  typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::int64_t ()> Signal_int64_result;
+  typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::int64 ()> Signal_int64_result;
   typedef Rapicorn::Aida::AsyncSignal<double ()> Signal_float64_result;
   typedef Rapicorn::Aida::AsyncSignal<std::string ()> Signal_string_result;
   typedef Rapicorn::Aida::AsyncSignal<QuickEnum ()> Signal_enum_result;
@@ -384,7 +384,7 @@ public:
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_arg;
   typedef Rapicorn::Aida::Signal<void (bool b)> Signal_bool_arg;
   typedef Rapicorn::Aida::Signal<void (int i)> Signal_int32_arg;
-  typedef Rapicorn::Aida::Signal<void (Rapicorn::Aida::int64_t i)> Signal_int64_arg;
+  typedef Rapicorn::Aida::Signal<void (Rapicorn::Aida::int64 i)> Signal_int64_arg;
   typedef Rapicorn::Aida::Signal<void (double f)> Signal_float64_arg;
   typedef Rapicorn::Aida::Signal<void (const std::string &s)> Signal_string_arg;
   typedef Rapicorn::Aida::Signal<void (QuickEnum e)> Signal_enum_arg;
@@ -479,8 +479,8 @@ public:
   virtual void                          bool_prop      (bool) = 0;
   virtual int                           int32_prop     () const = 0;
   virtual void                          int32_prop     (int) = 0;
-  virtual Rapicorn::Aida::int64_t       int64_prop     () const = 0;
-  virtual void                          int64_prop     (Rapicorn::Aida::int64_t) = 0;
+  virtual Rapicorn::Aida::int64         int64_prop     () const = 0;
+  virtual void                          int64_prop     (Rapicorn::Aida::int64) = 0;
   virtual double                        float64_prop   () const = 0;
   virtual void                          float64_prop   (double) = 0;
   virtual std::string                   string_prop    () const = 0;
@@ -1399,7 +1399,7 @@ __aida_call__FirstInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1436,7 +1436,7 @@ __aida_call__UIWidgetArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1580,7 +1580,7 @@ __aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
   AIDA_CHECK (self, "self must be non-NULL");
   bool  arg_b;
   fbr >>= arg_b;
-  Rapicorn::Aida::int64_t  arg_n;
+  Rapicorn::Aida::int64  arg_n;
   fbr >>= arg_n;
   double  arg_r;
   fbr >>= arg_r;
@@ -1679,7 +1679,7 @@ __aida_connect__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -1737,7 +1737,7 @@ __aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -1762,7 +1762,7 @@ __aida_call__Parent____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1779,7 +1779,7 @@ __aida_call__Child____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1796,7 +1796,7 @@ __aida_call__Descendant____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1813,7 +1813,7 @@ __aida_call__GrandChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1830,7 +1830,7 @@ __aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1860,7 +1860,7 @@ __aida_call__MethodTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -1918,11 +1918,11 @@ __aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReade
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::int64_t  arg_input;
+  Rapicorn::Aida::int64  arg_input;
   fbr >>= arg_input;
-  Rapicorn::Aida::int64_t  arg_optval;
+  Rapicorn::Aida::int64  arg_optval;
   fbr >>= arg_optval;
-  Rapicorn::Aida::int64_t  rval = self->method_with_ints64 (arg_input, arg_optval);
+  Rapicorn::Aida::int64  rval = self->method_with_ints64 (arg_input, arg_optval);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
   rb <<= rval;
   return &rb;
@@ -2075,7 +2075,7 @@ __aida_call__SignalTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -2110,7 +2110,7 @@ __aida_connect__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &f
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2164,7 +2164,7 @@ __aida_connect__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &f
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2218,7 +2218,7 @@ __aida_connect__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2243,17 +2243,17 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static std::future<Rapicorn::Aida::int64_t>
+  static std::future<Rapicorn::Aida::int64>
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
     __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
     fb <<= sp->handler_id_;
-    auto promise = std::make_shared<std::promise<Rapicorn::Aida::int64_t>> ();
+    auto promise = std::make_shared<std::promise<Rapicorn::Aida::int64>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
     auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
-      Rapicorn::Aida::int64_t  retval;
+      Rapicorn::Aida::int64  retval;
       frr >>= retval;
       promise->set_value (retval);
     };
@@ -2272,7 +2272,7 @@ __aida_connect__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2326,7 +2326,7 @@ __aida_connect__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2380,7 +2380,7 @@ __aida_connect__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader 
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2434,7 +2434,7 @@ __aida_connect__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &f
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2488,7 +2488,7 @@ __aida_connect__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader 
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2542,7 +2542,7 @@ __aida_connect__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReade
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2596,7 +2596,7 @@ __aida_connect__SignalTestInterface__interface_result (Rapicorn::Aida::FieldRead
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2650,7 +2650,7 @@ __aida_connect__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fb
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2704,7 +2704,7 @@ __aida_connect__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &f
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2747,7 +2747,7 @@ __aida_connect__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2792,7 +2792,7 @@ __aida_connect__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2837,7 +2837,7 @@ __aida_connect__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2864,7 +2864,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-           Rapicorn::Aida::int64_t arg_i)
+           Rapicorn::Aida::int64 arg_i)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
     __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
@@ -2882,7 +2882,7 @@ __aida_connect__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2927,7 +2927,7 @@ __aida_connect__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &f
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -2972,7 +2972,7 @@ __aida_connect__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fb
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3017,7 +3017,7 @@ __aida_connect__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3062,7 +3062,7 @@ __aida_connect__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fb
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3107,7 +3107,7 @@ __aida_connect__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3152,7 +3152,7 @@ __aida_connect__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader 
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3197,7 +3197,7 @@ __aida_connect__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3242,7 +3242,7 @@ __aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3267,7 +3267,7 @@ __aida_call__ChildInheritingSignals____aida_typelist__ (Rapicorn::Aida::FieldRea
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3314,7 +3314,7 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReade
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3339,7 +3339,7 @@ __aida_call__AnotherChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3356,7 +3356,7 @@ __aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3421,7 +3421,7 @@ __aida_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::int64_t  rval = self->int64_prop ();
+  Rapicorn::Aida::int64  rval = self->int64_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
   rb <<= rval;
   return &rb;
@@ -3434,7 +3434,7 @@ __aida_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::int64_t  arg_int64_prop;
+  Rapicorn::Aida::int64  arg_int64_prop;
   fbr >>= arg_int64_prop;
   self->int64_prop (arg_int64_prop);
   return NULL;
@@ -3662,7 +3662,7 @@ __aida_call__ButtonArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3812,7 +3812,7 @@ __aida_connect__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3855,7 +3855,7 @@ __aida_connect__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
   fbr >>= self;
   AIDA_CHECK (self, "self must be non-NULL");
   size_t handler_id;
-  Rapicorn::Aida::uint64_t signal_connection, result = 0;
+  Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
   fbr >>= signal_connection;
   if (signal_connection)
@@ -3880,7 +3880,7 @@ __aida_call__PureMethods____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3915,7 +3915,7 @@ __aida_call__NameTests____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -3952,7 +3952,7 @@ __aida_call__Compressor____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
@@ -4021,7 +4021,7 @@ __aida_call__SoundModule____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   Rapicorn::Aida::TypeHashList thl;
   self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL, 1 + 2 * thl.size());
-  rb <<= Rapicorn::Aida::int64_t (thl.size());
+  rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb <<= thl[i];
   return &rb;
