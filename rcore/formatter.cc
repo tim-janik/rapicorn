@@ -2,6 +2,7 @@
 #include "formatter.hh"
 #include "main.hh"
 #include <cstring>
+#include <unistd.h>     // isatty
 
 /** @TODO:
  * - StringFormatter: support directives: %%n %%S %%ls %%C %%lc
@@ -415,10 +416,22 @@ StringFormatter::locale_format (const size_t last, const char *format)
 std::string
 StringFormatter::format_error (const char *err, const char *format, size_t directive)
 {
+  const char *cyan = "", *cred = "", *cyel = "", *crst = "";
+  if (isatty (fileno (stderr)))
+    {
+      const char *term = getenv ("TERM");
+      if (term && strcmp (term, "dumb") != 0)
+        {
+          cyan = "\033[36m";
+          cred = "\033[31m\033[1m";
+          cyel = "\033[33m";
+          crst = "\033[39m\033[22m";
+        }
+    }
   if (directive)
-    fprintf (stderr, "error: %s in directive %zu: %s\n", err, directive, format);
+    fprintf (stderr, "%sStringFormatter: %sWARNING:%s%s %s in directive %zu:%s %s\n", cyan, cred, crst, cyel, err, directive, crst, format);
   else
-    fprintf (stderr, "error: %s: %s\n", err, format);
+    fprintf (stderr, "%sStringFormatter: %sWARNING:%s%s %s:%s %s\n", cyan, cred, crst, cyel, err, crst, format);
   return format;
 }
 
