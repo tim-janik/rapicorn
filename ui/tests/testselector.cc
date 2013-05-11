@@ -66,7 +66,7 @@ test_css_nthset (const char *formula, const vector<int64> &matchset, const vecto
       const bool matched = parse_match_css_nth (formula, matchset[i]);
       if (!matched)
         {
-          printerr ("FAILURE:%s: failed to match %lld against: %s\n", __func__, matchset[i], formula);
+          printerr ("FAILURE:%s: failed to match %d against: %s\n", __func__, matchset[i], formula);
           return false;
         }
     }
@@ -75,7 +75,7 @@ test_css_nthset (const char *formula, const vector<int64> &matchset, const vecto
       const bool matched = parse_match_css_nth (formula, unmatchset[i]);
       if (matched)
         {
-          printerr ("FAILURE:%s: erroneously matched %lld against: %s\n", __func__, unmatchset[i], formula);
+          printerr ("FAILURE:%s: erroneously matched %d against: %s\n", __func__, unmatchset[i], formula);
           return false;
         }
     }
@@ -399,10 +399,10 @@ test_query (int line, WidgetIface *iroot, const String &selector, ssize_t expect
   if (Test::verbose())
     {
       if (query_all.empty())
-        printerr ("%s:%d:%s(expect=%zd): %s: %s\n", __FILE__, line, __func__, expect, string_to_cquote (selector).c_str(), "...none...");
+        printerr ("%s:%d:%s(expect=%d): %s: %s\n", __FILE__, line, __func__, expect, string_to_cquote (selector).c_str(), "...none...");
       else
         for (size_t i = 0; i < query_all.size(); i++)
-          printerr ("%s:%d:%s(expect=%zd): %s: %s (%p)\n", __FILE__, line, i ? string_canonify (__func__, "", " ").c_str() : __func__,
+          printerr ("%s:%d:%s(expect=%d): %s: %s (%p)\n", __FILE__, line, i ? string_canonify (__func__, "", " ").c_str() : __func__,
                     expect, string_to_cquote (selector).c_str(), query_all[i]->name().c_str(), query_all[i]);
     }
 
