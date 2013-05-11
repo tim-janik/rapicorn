@@ -671,7 +671,7 @@ colorize_tty (int fd)
   // sense stdin/stdout/stderr
   if (isatty (1) && isatty (2))
     {
-      char *term = getenv ("TERM");
+      const char *term = getenv ("TERM");
       if (term && strcmp (term, "dumb") != 0)
         return true;
     }
