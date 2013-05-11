@@ -38,7 +38,6 @@ void   debug_assert      (const char*, int, const char*);
 void   debug_fassert     (const char*, int, const char*)      __attribute__ ((__noreturn__));
 void   debug_fatal       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4), __noreturn__));
 void   debug_critical    (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
-void   debug_fixit       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 void   debug_diag        (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 void   debug_envvar      (const String &name);
 void   debug_config_add  (const String &option);

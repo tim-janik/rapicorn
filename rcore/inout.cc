@@ -393,17 +393,6 @@ debug_critical (const char *file_path, const int line, const char *format, ...)
   debug_handler ('C', string_format ("%s:%d", file_path, line), msg);
 }
 
-/// Issue a message about potential bugs in the program, see also #$RAPICORN_DEBUG.
-void
-debug_fixit (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('X', string_format ("%s:%d", file_path, line), msg);
-}
-
 /// Issue diagnostics, unconditional output in development versions, see also #$RAPICORN_DEBUG.
 void
 debug_diag (const char *file_path, const int line, const char *format, ...)
