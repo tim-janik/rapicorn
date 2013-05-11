@@ -1215,7 +1215,7 @@ protected:
   {
     uint vdot_size = 0;
     Rect larea = layout_area (&vdot_size);
-    RDEBUG ("rendering label 0x%016zx at %3.f%% coverage: %s", size_t (this),
+    RDEBUG ("rendering label 0x%016x at %3.f%% coverage: %s", size_t (this),
             larea.area() > 0 ? Rect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
     if (larea.width < 1) // allowed: larea.height < 1
       return;

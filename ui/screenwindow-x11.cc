@@ -119,7 +119,7 @@ ScreenWindowX11::~ScreenWindowX11()
 {
   if (expose_surface_ || wm_icon_ || input_context_ || window_)
     {
-      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%lx im=%p w=0x%lx", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
+      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
 }
@@ -204,7 +204,7 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   String imerr = x11_input_context (x11context.display, window_, attributes.event_mask,
                                     x11context.input_method, x11context.input_style, &input_context_);
   if (!imerr.empty())
-    XDEBUG ("XIM: window=%lu: %s", window_, imerr.c_str());
+    XDEBUG ("XIM: window=%u: %s", window_, imerr.c_str());
   // configure initial state for this window
   XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, window_, window_,
                           0, 0, request_width, request_height, border, /*above*/ 0, override_redirect_, };
@@ -252,7 +252,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     {
     case CreateNotify: {
       const XCreateWindowEvent &xev = xevent.xcreatewindow;
-      EDEBUG ("Creat: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
+      EDEBUG ("Creat: %c=%u w=%u a=%+d%+d%+dx%d b=%d", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.border_width);
       consumed = true;
       break; }
     case ConfigureNotify: {
@@ -290,20 +290,20 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           queued_updates_.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
           x11context.queue_update (window_);
         }
-      EDEBUG ("Confg: %c=%lu w=%lu a=%+d%+d%+dx%d b=%d c=%d", ss, xev.serial, xev.window, state_.root_x, state_.root_y,
+      EDEBUG ("Confg: %c=%u w=%u a=%+d%+d%+dx%d b=%d c=%d", ss, xev.serial, xev.window, state_.root_x, state_.root_y,
               state_.width, state_.height, xev.border_width, pending_configures_);
       consumed = true;
       break; }
     case GravityNotify: {
       const XGravityEvent &xev = xevent.xgravity;
-      VDEBUG ("Gravt: %c=%lu w=%lu p=%+d%+d", ss, xev.serial, xev.window, xev.x, xev.y);
+      VDEBUG ("Gravt: %c=%u w=%u p=%+d%+d", ss, xev.serial, xev.window, xev.x, xev.y);
       consumed = true;
       break; }
     case MapNotify: {
       const XMapEvent &xev = xevent.xmap;
       if (xev.window != window_)
         break;
-      EDEBUG ("Map  : %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
+      EDEBUG ("Map  : %c=%u w=%u e=%u", ss, xev.serial, xev.window, xev.event);
       state_.visible = true;
       queued_updates_.push_back (x11context.atom ("_NET_FRAME_EXTENTS")); // determine real origin
       force_update (xev.window); // immediately figure deco and root position
@@ -313,7 +313,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XUnmapEvent &xev = xevent.xunmap;
       if (xev.window != window_)
         break;
-      EDEBUG ("Unmap: %c=%lu w=%lu e=%lu", ss, xev.serial, xev.window, xev.event);
+      EDEBUG ("Unmap: %c=%u w=%u e=%u", ss, xev.serial, xev.window, xev.event);
       state_.visible = false;
       update_state (state_);
       enqueue_event (create_event_cancellation (event_context_));
@@ -321,18 +321,18 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break; }
     case ReparentNotify:  {
       const XReparentEvent &xev = xevent.xreparent;
-      EDEBUG ("Rprnt: %c=%lu w=%lu p=%lu @=%+d%+d ovr=%d", ss, xev.serial, xev.window, xev.parent, xev.x, xev.y, xev.override_redirect);
+      EDEBUG ("Rprnt: %c=%u w=%u p=%u @=%+d%+d ovr=%d", ss, xev.serial, xev.window, xev.parent, xev.x, xev.y, xev.override_redirect);
       consumed = true;
       break; }
     case VisibilityNotify: {
       const XVisibilityEvent &xev = xevent.xvisibility;
-      EDEBUG ("Visbl: %c=%lu w=%lu notify=%s", ss, xev.serial, xev.window, visibility_state (xev.state));
+      EDEBUG ("Visbl: %c=%u w=%u notify=%s", ss, xev.serial, xev.window, visibility_state (xev.state));
       consumed = true;
       break; }
     case PropertyNotify: {
       const XPropertyEvent &xev = xevent.xproperty;
       const bool deleted = xev.state == PropertyDelete;
-      VDEBUG ("Prop%c: %c=%lu w=%lu prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
+      VDEBUG ("Prop%c: %c=%u w=%u prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       event_context_.time = xev.time;
       queued_updates_.push_back (xev.atom);
       x11context.queue_update (window_);
@@ -347,7 +347,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (!pending_exposes_ && xev.count == 0)
         check_pending (x11context.display, window_, &pending_configures_, &pending_exposes_);
       String hint = pending_exposes_ ? " (E+)" : expose_surface_ ? "" : " (nodata)";
-      VDEBUG ("Expos: %c=%lu w=%lu a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
+      VDEBUG ("Expos: %c=%u w=%u a=%+d%+d%+dx%d c=%d%s", ss, xev.serial, xev.window, xev.x, xev.y, xev.width, xev.height, xev.count, hint.c_str());
       if (!pending_exposes_ && xev.count == 0)
         blit_expose_region();
       consumed = true;
@@ -369,7 +369,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
       char str[8];
       utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("Key%s: %c=%lu w=%lu c=%lu p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       if (!consumed && // might have been processed by input context already
           (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
@@ -381,7 +381,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const char  *kind = xevent.type == ButtonPress ? "DN" : "UP";
       if (xev.window != window_)
         break;
-      EDEBUG ("But%s: %c=%lu w=%lu c=%lu p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
+      EDEBUG ("But%s: %c=%u w=%u c=%u p=%+d%+d b=%d", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.button);
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       if (xevent.type == ButtonPress)
         switch (xev.button)
@@ -416,18 +416,18 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                     /* xserver-xorg-1:7.6+7ubuntu7 + libx11-6:amd64-2:1.4.4-2ubuntu1 may generate buggy motion
                      * history events with x=0 for X220t trackpoints.
                      */
-                    VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d (discarding)", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
+                    VDEBUG ("  ...: S=%u w=%u c=%u p=%+d%+d (discarding)", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
                 else
                   {
                     event_context_.time = xcoords[i].time; event_context_.x = xcoords[i].x; event_context_.y = xcoords[i].y;
                     enqueue_event (create_event_mouse (MOUSE_MOVE, event_context_));
-                    VDEBUG ("  ...: S=%lu w=%lu c=%lu p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
+                    VDEBUG ("  ...: S=%u w=%u c=%u p=%+d%+d", xev.serial, xev.window, xev.subwindow, xcoords[i].x, xcoords[i].y);
                   }
               XFree (xcoords);
             }
         }
-      VDEBUG ("Mtion: %c=%lu w=%lu c=%lu p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
+      VDEBUG ("Mtion: %c=%u w=%u c=%u p=%+d%+d%s", ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.is_hint ? " (hint)" : "");
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       enqueue_event (create_event_mouse (MOUSE_MOVE, event_context_));
       last_motion_time_ = xev.time;
@@ -437,7 +437,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XCrossingEvent &xev = xevent.xcrossing;
       const EventType etype = xevent.type == EnterNotify ? MOUSE_ENTER : MOUSE_LEAVE;
       const char *kind = xevent.type == EnterNotify ? "Enter" : "Leave";
-      EDEBUG ("%s: %c=%lu w=%lu c=%lu p=%+d%+d notify=%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
+      EDEBUG ("%s: %c=%u w=%u c=%u p=%+d%+d notify=%s+%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y,
               notify_mode (xev.mode), notify_detail (xev.detail));
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       enqueue_event (create_event_mouse (xev.detail == NotifyInferior ? MOUSE_MOVE : etype, event_context_));
@@ -451,7 +451,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
     case FocusIn: case FocusOut: {
       const XFocusChangeEvent &xev = xevent.xfocus;
       const char *kind = xevent.type == FocusIn ? "FocIn" : "FcOut";
-      EDEBUG ("%s: %c=%lu w=%lu notify=%s+%s", kind, ss, xev.serial, xev.window, notify_mode (xev.mode), notify_detail (xev.detail));
+      EDEBUG ("%s: %c=%u w=%u notify=%s+%s", kind, ss, xev.serial, xev.window, notify_mode (xev.mode), notify_detail (xev.detail));
       if (!(xev.detail == NotifyInferior ||     // subwindow focus changed
             xev.detail == NotifyPointer ||      // pointer focus changed
             xev.detail == NotifyPointerRoot ||  // root focus changed
@@ -479,7 +479,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (rapicorn_debug_check()) // avoid atom() round-trips
         {
           const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
-          EDEBUG ("ClMsg: %c=%lu w=%lu t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
+          EDEBUG ("ClMsg: %c=%u w=%u t=%s f=%u", ss, xev.serial, xev.window, x11context.atom (mtype).c_str(), xev.format);
         }
       client_message (xev);
       consumed = true;
@@ -491,7 +491,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       x11context.x11id_set (window_, NULL);
       window_ = 0;
       enqueue_event (create_event_win_destroy (event_context_));
-      EDEBUG ("Destr: %c=%lu w=%lu", ss, xev.serial, xev.window);
+      EDEBUG ("Destr: %c=%u w=%u", ss, xev.serial, xev.window);
       consumed = true;
       break; }
     default: ;
@@ -591,10 +591,10 @@ ScreenWindowX11::force_update (Window window)
         {
           const unsigned long update_serial = XNextRequest (x11context.display) - 1;
           if (old_state.visible_title != state_.visible_title)
-            EDEBUG ("State: S=%lu w=%lu title=%s", update_serial, window_, CQUOTE (state_.visible_title));
+            EDEBUG ("State: S=%u w=%u title=%s", update_serial, window_, CQUOTE (state_.visible_title));
           if (old_state.visible_alias != state_.visible_alias)
-            EDEBUG ("State: S=%lu w=%lu alias=%s", update_serial, window_, CQUOTE (state_.visible_alias));
-          EDEBUG ("State: S=%lu w=%lu r=%+d%+d o=%+d%+d flags=%s", update_serial, window_, state_.root_x, state_.root_y,
+            EDEBUG ("State: S=%u w=%u alias=%s", update_serial, window_, CQUOTE (state_.visible_alias));
+          EDEBUG ("State: S=%u w=%u r=%+d%+d o=%+d%+d flags=%s", update_serial, window_, state_.root_x, state_.root_y,
                   state_.deco_x, state_.deco_y, flags_name (state_.window_flags).c_str());
         }
     }
@@ -683,7 +683,7 @@ ScreenWindowX11::blit_expose_region()
   if (rapicorn_debug_check())
     {
       const Rect extents = expose_region_.extents();
-      VDEBUG ("BlitS: S=%lu w=%lu e=%+d%+d%+dx%d nrects=%zu coverage=%.1f%%", blit_serial, window_,
+      VDEBUG ("BlitS: S=%u w=%u e=%+d%+d%+dx%d nrects=%u coverage=%.1f%%", blit_serial, window_,
               int (extents.x), int (extents.y), int (extents.width), int (extents.height),
               rects.size(), coverage * 100.0 / (state_.width * state_.height));
     }
@@ -945,7 +945,7 @@ X11Context::connect()
   String imerr = x11_input_method (display, &input_method, &input_style);
   if (!imerr.empty() && x11_input_method (display, &input_method, &input_style, "@im=none") == "")
     imerr = ""; // @im=none gets us at least a working compose key
-  XDEBUG ("XIM: %s", !imerr.empty() ? imerr.c_str() : string_format ("selected input method style 0x%04lx", input_style).c_str());
+  XDEBUG ("XIM: %s", !imerr.empty() ? imerr.c_str() : string_format ("selected input method style 0x%04x", input_style).c_str());
   return true;
 }
 
@@ -1009,7 +1009,7 @@ X11Context::run()
   command_queue_.notifier (NULL);
   // close down
   if (!x11ids_.empty()) // ScreenWindowX11s unconditionally reference X11Context
-    fatal ("%s: stopped handling X11Context with %zd active windows", STRFUNC, x11ids_.size());
+    fatal ("%s: stopped handling X11Context with %d active windows", STRFUNC, x11ids_.size());
   if (input_method)
     {
       XCloseIM (input_method);
@@ -1065,7 +1065,7 @@ X11Context::process_x11()
       if (!consumed)
         {
           const char ss = xevent.xany.send_event ? 'S' : 's';
-          XDEBUG ("Ev: %c=%lu w=%lu event_type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.type);
+          XDEBUG ("Ev: %c=%u w=%u event_type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.type);
         }
     }
 }
@@ -1111,7 +1111,7 @@ X11Context::x11id_set (size_t xid, X11Widget *x11widget)
       return;
     }
   if (x11ids_.end() != it)
-    fatal ("%s: x11id=%ld already in use for %p while setting to %p", STRFUNC, xid, it->second, x11widget);
+    fatal ("%s: x11id=%d already in use for %p while setting to %p", STRFUNC, xid, it->second, x11widget);
   x11ids_[xid] = x11widget;
 }
 

@@ -575,7 +575,7 @@ Builder::call_widget (const XmlNode *anode,
   if (!name.empty())
     widget->name (name);
   apply_args (*widget, prop_names, prop_values, anode, false);
-  FDEBUG ("new-widget: %s (%zd children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
+  FDEBUG ("new-widget: %s (%d children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
   // apply properties and create children
   if (!anode->children().empty())
     {
@@ -603,7 +603,7 @@ Builder::call_child (const XmlNode *anode,
   // apply widget arguments
   if (!name.empty())
     widget->name (name);
-  FDEBUG ("new-widget: %s (%zd children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
+  FDEBUG ("new-widget: %s (%d children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
   // apply properties and create children
   if (!anode->children().empty())
     {

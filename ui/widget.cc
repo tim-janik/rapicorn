@@ -1061,7 +1061,7 @@ WidgetImpl::inner_size_request()
             inner.width = ovr.width;
           if (ovr.height >= 0)
             inner.height = ovr.height;
-          SZDEBUG ("size requesting: 0x%016zx:%s: %s => %.17gx%.17g", size_t (this),
+          SZDEBUG ("size requesting: 0x%016x:%s: %s => %.17gx%.17g", size_t (this),
                    Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
                    inner.width, inner.height);
         }
@@ -1504,7 +1504,7 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   /* expose new area */
   if (need_expose)
     expose();
-  SZDEBUG ("size allocation: 0x%016zx:%s: %s => %s", size_t (this),
+  SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
            Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
            a.string().c_str());
 }
@@ -1601,7 +1601,7 @@ WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
   assert_return (rect.width > 0 && rect.height > 0, NULL);
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
   if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-    critical ("%s: failed to create ARGB32 cairo surface with %lldx%lld pixels: %s\n", __func__, iceil (rect.width), iceil (rect.height),
+    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, iceil (rect.width), iceil (rect.height),
               cairo_status_to_string (cairo_surface_status (surface)));
   cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
   cairo_t *cr = cairo_create (surface);

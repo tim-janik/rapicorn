@@ -25,7 +25,7 @@ x11_error (Display *error_display, XErrorEvent *error_event)
     }
   size_t addr;
   const vector<String> syms = pretty_backtrace (0, &addr);
-  String btmsg = string_format ("%s:%d: Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", __FILE__, __LINE__,
+  String btmsg = string_format ("%s:%d: Backtrace at 0x%08x (stackframe at 0x%08x):\n", __FILE__, __LINE__,
                                 addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
   for (size_t i = 0; i < syms.size(); i++)
     btmsg += string_format ("  %s\n", syms[i].c_str());
@@ -207,12 +207,12 @@ x11_get_property_data (Display *display, Window window, Atom property_atom, Atom
     abort++;
   if (!abort && bytes_after_return)
     {
-      XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %lu bytes", CQUOTE (x11_atom_name (display, property_atom)), bytes_after_return);
+      XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %u bytes", CQUOTE (x11_atom_name (display, property_atom)), bytes_after_return);
       abort++;
     }
   if (!abort && sizeof (Data) * 8 != format_returned)
     {
-      XDEBUG ("XGetWindowProperty(%s): property format mismatch: expected=%zu returned=%u", CQUOTE (x11_atom_name (display, property_atom)), sizeof (Data) * 8, format_returned);
+      XDEBUG ("XGetWindowProperty(%s): property format mismatch: expected=%u returned=%u", CQUOTE (x11_atom_name (display, property_atom)), sizeof (Data) * 8, format_returned);
       abort++;
     }
   vector<Data> datav;
@@ -293,7 +293,7 @@ set_text_property (Display *display, Window window, Atom property_atom, XICCEnco
       XTextProperty xtp = { 0, };
       const int result = Xutf8TextListToTextProperty (display, &text, 1, ecstyle, &xtp);
       if (0)
-        printerr ("XUTF8CONVERT: target=%s len=%zd result=%d: %s -> %s\n", x11_atom_name (display, xtp.encoding).c_str(), value.size(), result, text, xtp.value);
+        printerr ("XUTF8CONVERT: target=%s len=%d result=%d: %s -> %s\n", x11_atom_name (display, xtp.encoding).c_str(), value.size(), result, text, xtp.value);
       if (result >= 0 && xtp.nitems && xtp.value)
         XChangeProperty (display, window, property_atom, xtp.encoding, xtp.format,
                          PropModeReplace, xtp.value, xtp.nitems);
