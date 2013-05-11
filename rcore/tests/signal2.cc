@@ -178,7 +178,7 @@ async_signal_tests()
   auto lambda1 =
     [] (const String &a, String &b, String c, double d, long l) -> String
     {
-      return "1" + a + b + c + string_format ("%.0f%ld", d, l);
+      return "1" + a + b + c + string_format ("%.0f%d", d, l);
     };
   sig_string_test() += (lambda1);
   // emission with handler
@@ -313,7 +313,7 @@ bench_aida_signal()
   const uint64 end_counter = TestCounter::get();
   TASSERT (end_counter - start_counter == i);
   if (Test::verbose())
-    printout ("SignalBench: Aida::Signal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+    printout ("SignalBench: Aida::Signal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
               sizeof (sig_increment));
 }
 REGISTER_TEST ("Signal/SignalBench: Aida::Signal", bench_aida_signal);
@@ -346,7 +346,7 @@ bench_async_signal()
   const uint64 end_counter = TestCounter::get();
   TASSERT (end_counter - start_counter == i);
   if (Test::verbose())
-    printout ("SignalBench: AsyncSignal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+    printout ("SignalBench: AsyncSignal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
               sizeof (sig_increment));
 }
 REGISTER_TEST ("Signal/SignalBench: AsyncSignal", bench_async_signal);
@@ -379,7 +379,7 @@ struct DummyObject {
     const uint64 end_counter = TestCounter::get();
     TASSERT (end_counter - start_counter == i);
     if (Test::verbose())
-      printout ("SignalBench: Rapicorn::Signal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+      printout ("SignalBench: Rapicorn::Signal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
                 sizeof (sig_increment));
   }
 };
