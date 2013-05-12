@@ -473,8 +473,11 @@ test_cxxprintf()
   static_assert (TEST17 == 17, "!");
   TCMP (string_format ("Only %c%%", '3'), ==, "Only 3%");
   UncopyablePoint point { 1, 2 };
-  vector<String> foo;
   TCMP (string_format ("%s", point), ==, "{1;2}");
+  String sfoo ("foo");
+  typedef char MutableChar;
+  MutableChar *foo = &sfoo[0];
+  TCMP (string_format ("%s", foo), ==, "foo");
 }
 REGISTER_TEST ("Strings/CxxPrintf", test_cxxprintf);
 

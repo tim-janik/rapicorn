@@ -50,6 +50,7 @@ class StringFormatter {
   inline void assign (FormatArg &farg, float              arg) { farg.kind = 'f'; farg.f = arg; }
   inline void assign (FormatArg &farg, double             arg) { farg.kind = 'f'; farg.f = arg; }
   inline void assign (FormatArg &farg, long double        arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, char              *arg) { farg.kind = 's'; farg.s = arg; }
   inline void assign (FormatArg &farg, const char        *arg) { farg.kind = 's'; farg.s = arg; }
   inline void assign (FormatArg &farg, const std::string &arg) { assign (farg, arg.c_str()); }
   inline void assign (FormatArg &farg, void              *arg) { farg.kind = 'p'; farg.p = arg; }
