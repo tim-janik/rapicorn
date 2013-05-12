@@ -468,7 +468,7 @@ test_cxxprintf()
   // string_format
   enum { TEST17 = 17 };
   TCMP (string_format ("%d %s", -9223372036854775808uLL, "FOO"), ==, "-9223372036854775808 FOO");
-  TCMP (string_format ("%g %d", 0.5, int (TEST17)), ==, "0.5 17"); // gcc corrupts anonymous enums without the cast
+  TCMP (string_format ("%g %d", 0.5, TEST17), ==, "0.5 17");
   TCMP (string_format ("0x%08x", 0xc0ffee), ==, "0x00c0ffee");
   static_assert (TEST17 == 17, "!");
   TCMP (string_format ("Only %c%%", '3'), ==, "Only 3%");
