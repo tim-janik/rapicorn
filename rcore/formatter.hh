@@ -57,7 +57,7 @@ class StringFormatter {
   template<class T> inline void assign (FormatArg &farg, T *const &arg) { assign (farg, (void*) arg); }
   template<class T> typename std::enable_if<std::is_enum<T>::value, void>  // eliminated via SFINAE
   ::type      assign (FormatArg &farg, const T           &arg) { farg.kind = '8'; farg.i8 = arg; }
-  template<class T> typename std::enable_if<!std::is_enum<T>::value, void> // eliminated via SFINAE
+  template<class T> typename std::enable_if<std::is_class<T>::value, void> // eliminated via SFINAE
   ::type      assign (FormatArg &farg, const T           &arg)
   {
     std::ostringstream os;
