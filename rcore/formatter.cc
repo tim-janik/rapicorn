@@ -5,8 +5,8 @@
 #include <unistd.h>     // isatty
 
 /** @TODO:
- * - StringFormatter: support directives: %%n %%S %%ls %%C %%lc
- * - StringFormatter: support directive flags: I Z
+ * - StringFormatter: support directives: %%n %%S %%ls
+ * - StringFormatter: support directive flags: I
  */
 
 namespace Rapicorn {
@@ -73,7 +73,7 @@ parse_positional (const char **stringp, uint64_t *ap)
 
 const char*
 StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directive *dirp)
-{ // '%' positional? [-+#0 '']* ([0-9]*|[*]positional?) ([.]([0-9]*|[*]positional?))? [hlLjztq]* [spmcdiouXxFfGgEeAa]
+{ // '%' positional? [-+#0 '']* ([0-9]*|[*]positional?) ([.]([0-9]*|[*]positional?))? [hlLjztqZ]* [spmcCdiouXxFfGgEeAa]
   const char *p = *stringp;
   size_t index = *indexp;
   Directive fdir;
@@ -156,16 +156,18 @@ StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directiv
         return "invalid precision specification";
     }
   // modifiers
-  const char *modifiers = "hlLjztq";
+  const char *modifiers = "hlLjztqZ";
   while (strchr (modifiers, *p))
     p++;
   // conversion
-  const char *conversion = "dioucspmXxEeFfGgAa%";
+  const char *conversion = "dioucCspmXxEeFfGgAa%";
   if (!strchr (conversion, *p))
     return "missing conversion specifier";
   if (fdir.value_index == 0 && !strchr ("m%", *p))
     fdir.value_index = index++;
   fdir.conversion = *p++;
+  if (fdir.conversion == 'C')   // %lc in SUSv2
+    fdir.conversion = 'c';
   // success
   *dirp = fdir;
   *indexp = index;

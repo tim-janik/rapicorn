@@ -478,6 +478,10 @@ test_cxxprintf()
   typedef char MutableChar;
   MutableChar *foo = &sfoo[0];
   TCMP (string_format ("%s", foo), ==, "foo");
+  // test robustness for arcane/rarely-used width modifiers
+  TCMP (string_format ("| %qd %Zd %LF |", (long long) 1234, size_t (4321), (long double) 1234.), ==, "| 1234 4321 1234.000000 |");
+  TCMP (string_format ("- %C - %lc -", long ('X'), long ('x')), ==, "- X - x -");
+  // TCMP (string_format ("+ %S +", (wchar_t*) "\1\1\1\1\0\0\0\0"), ==, "+ \1\1\1\1 +");
 }
 REGISTER_TEST ("Strings/CxxPrintf", test_cxxprintf);
 
