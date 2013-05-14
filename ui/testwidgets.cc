@@ -126,7 +126,7 @@ protected:
       }
     else
       {
-        String msg = string_printf ("%s == %f", assertion_name, value);
+        String msg = string_format ("%s == %f", assertion_name, value);
         sig_assertion_ok.emit (msg);
       }
   }

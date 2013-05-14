@@ -14,7 +14,7 @@ add_button_row (ContainerH area, uint row)
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
       child = brow.create_child ("RapicornExamples:test-button", args);
       ButtonAreaH button = child.component<ButtonAreaH> (".Button");
-      button.on_click (string_printf ("Widget::print('Button-Click: (%d,%d)')", row, i));
+      button.on_click (string_format ("Widget::print('Button-Click: (%d,%d)')", row, i));
     }
 }
 

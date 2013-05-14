@@ -147,19 +147,49 @@ RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
 namespace Rapicorn {
 
 // == Provide Canonical Integer Types ==
-typedef uint8_t                 uint8;          ///< An 8-bit unsigned integer.
-typedef uint16_t                uint16;         ///< A 16-bit unsigned integer.
-typedef uint32_t                uint32;         ///< A 32-bit unsigned integer.
-typedef unsigned long long int  uint64;         ///< A 64-bit unsigned integer, use "%llu" in format strings.
-// typedef uint64_t             uint64;         // int64_t / uint64_t are longs on AMD64 which breaks printf
-typedef int8_t                  int8;           ///< An 8-bit signed integer.
-typedef int16_t                 int16;          ///< A 16-bit signed integer.
-typedef int32_t                 int32;          ///< A 32-bit signed integer.
-typedef signed long long int    int64;          ///< A 64-bit unsigned integer, use "%lld" in format strings.
-typedef uint32_t                unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
+typedef uint8_t         uint8;          ///< An 8-bit unsigned integer.
+typedef uint16_t        uint16;         ///< A 16-bit unsigned integer.
+typedef uint32_t        uint32;         ///< A 32-bit unsigned integer.
+typedef uint64_t        uint64;         ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef int8_t          int8;           ///< An 8-bit signed integer.
+typedef int16_t         int16;          ///< A 16-bit signed integer.
+typedef int32_t         int32;          ///< A 32-bit signed integer.
+typedef int64_t         int64;          ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef uint32_t        unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
 RAPICORN_STATIC_ASSERT (sizeof (uint8) == 1 && sizeof (uint16) == 2 && sizeof (uint32) == 4 && sizeof (uint64) == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (int32)  == 4 && sizeof (int64)  == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);
+
+///@{
+/** LongIffy, ULongIffy, CastIffy, UCastIffy - types for 32bit/64bit overloading.
+ * On 64bit, int64_t is aliased to "long int" which is 64 bit wide.
+ * On 32bit, int64_t is aliased to "long long int", which is 64 bit wide (and long is 32bit wide).
+ * For int-type function overloading, this means that int32, int64 and either "long" or "long long"
+ * need to be overloaded, depending on platform. To aid this case, LongIffy and ULongIffy are defined
+ * to signed and unsigned "long" (for 32bit) and "long long" (for 64bit). Correspondingly, CastIffy
+ * and UCastIffy are defined to signed and unsigned int32 (for 32bit) or int64 (for 64bit), so
+ * LongIffy can be cast losslessly into a known type.
+ */
+#if     __SIZEOF_LONG__ == 8    // 64bit
+typedef long long signed int    LongIffy;
+typedef long long unsigned int  ULongIffy;
+typedef int64_t                 CastIffy;
+typedef uint64_t                UCastIffy;
+static_assert (__SIZEOF_LONG_LONG__ == 8, "__SIZEOF_LONG_LONG__");
+static_assert (__SIZEOF_INT__ == 4, "__SIZEOF_INT__");
+#elif   __SIZEOF_LONG__ == 4    // 32bit
+typedef long signed int         LongIffy;
+typedef long unsigned int       ULongIffy;
+typedef int32_t                 CastIffy;
+typedef uint32_t                UCastIffy;
+static_assert (__SIZEOF_LONG_LONG__ == 8, "__SIZEOF_LONG_LONG__");
+static_assert (__SIZEOF_INT__ == 4, "__SIZEOF_INT__");
+#else
+#error  "Unknown long size:" __SIZEOF_LONG__
+#endif
+static_assert (sizeof (CastIffy) == sizeof (LongIffy), "CastIffy == LongIffy");
+static_assert (sizeof (UCastIffy) == sizeof (ULongIffy), "UCastIffy == ULongIffy");
+///@}
 
 // == Convenient stdc++ Types ==
 using   std::map;

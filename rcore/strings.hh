@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_STRINGS_HH__
 #define __RAPICORN_STRINGS_HH__
 
-#include <rcore/utilities.hh>
 #include <rcore/formatter.hh>
 #include <string>
 #include <cstring>
@@ -25,13 +24,11 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #endif // RAPICORN_CONVENIENCE
 
 // == C-String ==
-bool    			cstring_to_bool          (const char *string, bool fallback = false);
+bool    		       cstring_to_bool       (const char *string, bool fallback = false);
 
 // == String Formatting ==
 template<class... Args> String string_format         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 template<class... Args> String string_locale_format  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
-template<class... Args> String string_printf         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
-template<class... Args> String string_locale_printf  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 String                         string_vprintf        (const char *format, va_list vargs);
 String                         string_locale_vprintf (const char *format, va_list vargs);
 
@@ -162,31 +159,15 @@ const char*     strerror ();    // simple wrapper for strerror (errno)
 template<class... Args> RAPICORN_NOINLINE String
 string_format (const char *format, const Args &...args)
 {
-  return Lib::StringFormatter::format (format, args...);
+  return Lib::StringFormatter::format (NULL, format, args...);
 }
 
 /// Formatted printing ala printf() into a String, using the current locale.
 template<class... Args> RAPICORN_NOINLINE String
 string_locale_format (const char *format, const Args &...args)
 {
-  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
+  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (NULL, format, args...);
 }
-
-/// Formatted printing ala printf() into a String, using the POSIX/C locale.
-template<class... Args> RAPICORN_NOINLINE String
-string_printf (const char *format, const Args &...args)
-{
-  return Lib::StringFormatter::format (format, args...);
-}
-
-/// Formatted printing ala printf() into a String, using the current locale.
-template<class... Args> RAPICORN_NOINLINE String
-string_locale_printf (const char *format, const Args &...args)
-{
-  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (format, args...);
-}
-
-
 
 } // Rapicorn
 

@@ -666,7 +666,7 @@ TypeCode::pretty (const std::string &indent) const
       for (uint32_t i = 0; i < enum_count(); i++)
         {
           EnumValue ev = enum_value (i);
-          s += std::string ("\n") + indent + indent + string_printf ("0x%08llx", ev.value);
+          s += std::string ("\n") + indent + indent + string_format ("0x%08llx", ev.value);
           s += String() + ", " + ev.ident + ", " + ev.label + ", " + ev.blurb;
         }
       break;

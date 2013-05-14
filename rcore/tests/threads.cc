@@ -543,7 +543,7 @@ struct RingBufferWriter : public IntSequence {
           TOK();
         l += n;
       }
-    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
+    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -590,7 +590,7 @@ struct RingBufferReader : public IntSequence {
           TOK();
         l += k;
       }
-    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
+    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 

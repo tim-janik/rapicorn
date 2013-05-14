@@ -54,7 +54,7 @@ class Generator:
     if tstorage == Decls.VOID:          return 'void'
     if tstorage == Decls.BOOL:          return 'bool'
     if tstorage == Decls.INT32:         return 'int'
-    if tstorage == Decls.INT64:         return 'Rapicorn::Aida::int64_t'
+    if tstorage == Decls.INT64:         return 'Rapicorn::Aida::int64'
     if tstorage == Decls.FLOAT64:       return 'double'
     if tstorage == Decls.STRING:        return 'std::string'
     if tstorage == Decls.ANY:           return 'Rapicorn::Aida::Any'
@@ -778,7 +778,7 @@ class Generator:
     s += '  self->__aida_typelist__ (thl);\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
-    s += '  rb <<= Rapicorn::Aida::int64_t (thl.size());\n'
+    s += '  rb <<= Rapicorn::Aida::int64 (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb <<= thl[i];\n'
     s += '  return &rb;\n'
@@ -823,7 +823,7 @@ class Generator:
     s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
     s += '  auto fptr = (const std::function<%s %s>*) data;\n' % (sigret, sigargs)
     s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
-    s += '  Rapicorn::Aida::uint64_t emit_result_id;\n'
+    s += '  Rapicorn::Aida::uint64 emit_result_id;\n'
     if async:
       s += '  ' + self.V ('', stype.rtype) + 'rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, %s, 2);\n' % digest # invalidates fbr
@@ -912,7 +912,7 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     s += '  size_t handler_id;\n'
-    s += '  Rapicorn::Aida::uint64_t signal_connection, result = 0;\n'
+    s += '  Rapicorn::Aida::uint64 signal_connection, result = 0;\n'
     s += '  fbr >>= handler_id;\n'
     s += '  fbr >>= signal_connection;\n'
     s += '  if (signal_connection)\n'
@@ -1010,9 +1010,9 @@ class Generator:
     s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % nm
     s += '{ e = %s (frr.pop_evalue()); }\n' % nm
     if type_info.combinable: # enum as flags
-      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
-      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64_t (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
     s += '/// @endcond\n'
     return s

@@ -222,8 +222,8 @@ PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (C
   setter (csetter),
   getter (cgetter)
 {
-  RAPICORN_ASSERT (minimum_value <= maximum_value);
-  RAPICORN_ASSERT (minimum_value + stepping <= maximum_value);
+  AIDA_ASSERT (minimum_value <= maximum_value);
+  AIDA_ASSERT (minimum_value + stepping <= maximum_value);
 }
 
 template<class Class, typename Type> void
@@ -291,8 +291,8 @@ PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &s
   uint64 value = enum_type.enum_parse (svalue.c_str(), &error_string);
   // if (0 && error_string.size() && !value && string_has_int (svalue))
   //   value = enum_type.constrain (string_to_int (svalue));
-  if (error_string.size())
-    critical ("%s: invalid enum value name '%s': %s", RAPICORN_SIMPLE_FUNCTION, enum_type.name().c_str(), error_string.c_str());
+  if (!error_string.empty())
+    print_warning (String() + __PRETTY_FUNCTION__ + ": invalid enum value name '" + enum_type.name() + "': " + error_string);
   Type v = Type (value);
   Class *instance = dynamic_cast<Class*> (&obj);
   (instance->*setter) (v);

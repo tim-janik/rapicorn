@@ -16,27 +16,19 @@ namespace Rapicorn {
 
 // == Basic I/O ==
 void
-printerr (const char *format, ...)
+printout_string (const String &string)
 {
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stdout);
-  fputs (ers.c_str(), stderr);
   fflush (stderr);
+  fputs (string.c_str(), stdout);
+  fflush (stdout);
 }
 
 void
-printout (const char *format, ...)
+printerr_string (const String &string)
 {
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stderr);
-  fputs (ers.c_str(), stdout);
   fflush (stdout);
+  fputs (string.c_str(), stderr);
+  fflush (stderr);
 }
 
 // === User Messages ==
@@ -58,31 +50,21 @@ user_message (const UserSource &source, const String &kind, const String &messag
   if (!source.filename.empty())
     fname = source.filename + ":";
   if (source.line)
-    fname = fname + string_printf ("%d:", source.line);
+    fname = fname + string_format ("%d:", source.line);
   // obey GNU warning style to allow automated location parsing
   printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
 }
 
-/// Issue a notice about user resources.
 void
-user_notice (const UserSource &source, const char *format, ...)
+user_notice_string (const UserSource &source, const String &string)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "", msg);
+  user_message (source, "", string);
 }
 
-/// Issue a warning about user resources that likely need fixing.
 void
-user_warning (const UserSource &source, const char *format, ...)
+user_warning_string (const UserSource &source, const String &string)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "warning", msg);
+  user_message (source, "warning", string);
 }
 
 // == debug_handler ==
@@ -163,7 +145,7 @@ debug_handler (const char dkind, const String &file_line, const String &message,
       if (prefix.size())
         prefix = prefix + ": ";
       if (f & DO_STAMP)
-        intro = string_printf ("[%s]", timestamp_format (delta).c_str());
+        intro = string_format ("[%s]", timestamp_format (delta).c_str());
       printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
     }
   if (f & DO_DIAG)
@@ -210,10 +192,10 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     {
       size_t addr;
       const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_printf ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
+      btmsg = string_format ("%sBacktrace at 0x%08x (stackframe at 0x%08x):\n", where.c_str(),
                              addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
       for (size_t i = 0; i < syms.size(); i++)
-        btmsg += string_printf ("  %s\n", syms[i].c_str());
+        btmsg += string_format ("  %s\n", syms[i].c_str());
     }
   if (f & DO_LOGFILE)
     {
@@ -229,12 +211,12 @@ debug_handler (const char dkind, const String &file_line, const String &message,
               fd = dup (fd);
               close (0);
             }
-          out = string_printf ("[%s] %s[%u]: program started at: %s\n",
+          out = string_format ("[%s] %s[%u]: program started at: %s\n",
                                timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
                                timestamp_format (start).c_str());
           conftest_logfd = fd;
         }
-      out += string_printf ("[%s] %s[%u]:%s%s%s",
+      out += string_format ("[%s] %s[%u]:%s%s%s",
                             timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
                             wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
@@ -363,74 +345,45 @@ envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
  * @a format and @a va_args are formatting the message analogously to vprintf().
  */
 void
-envkey_debug_message (const char *env_var, const char *key, const char *file_path, const int line,
-                      const char *format, va_list va_args, volatile bool *cachep)
+envkey_debug_message (const char *env_var, const char *key, const char *file, const int line,
+                      const String &message, volatile bool *cachep)
 {
   if (!envkey_debug_check (env_var, key, cachep))
     return;
-  String msg = string_vprintf (format, va_args);
-  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg, key);
+  String prefix = file ? file : "";
+  if (!prefix.empty() && line >= 0)
+    prefix += ":" + string_from_int (line);
+  debug_handler ('D', prefix, message, key);
 }
 
 // == debug_* functions ==
-/// Issue a message about a failed assertion, see also #$RAPICORN_DEBUG.
 void
-debug_assert (const char *file_path, const int line, const char *message)
+debug_message (char kind, const char *file, int line, const String &message)
 {
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+  String prefix = file ? file : "";
+  if (!prefix.empty() && line >= 0)
+    prefix += ":" + string_from_int (line);
+  if (kind == 'F' || kind == 'C' || kind == 'G')
+    debug_handler (kind, prefix, message);
 }
 
-/// Issue a message about a failed assertion and terminate the program, see also #$RAPICORN_DEBUG.
 void
-debug_fassert (const char *file_path, const int line, const char *message)
+debug_fmessage (const char *file, int line, const String &message)
 {
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
+  debug_message ('F', file, line, message);
   ::abort();
 }
 
-/// Issue a message about a fatal runtime condition and terminate the program, see also #$RAPICORN_DEBUG.
 void
-debug_fatal (const char *file_path, const int line, const char *format, ...)
+debug_assert (const char *file, const int line, const char *message)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
-  ::abort();
+  debug_message ('C', file, line, String ("assertion failed: ") + (message ? message : "?"));
 }
 
-/// Issue a message about a critical runtime condition, see also #$RAPICORN_DEBUG.
 void
-debug_critical (const char *file_path, const int line, const char *format, ...)
+debug_fassert (const char *file, const int line, const char *message)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
-}
-
-/// Issue a message about potential bugs in the program, see also #$RAPICORN_DEBUG.
-void
-debug_fixit (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
-}
-
-/// Issue diagnostics, unconditional output in development versions, see also #$RAPICORN_DEBUG.
-void
-debug_diag (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('G', string_printf ("%s:%d", file_path, line), msg);
+  debug_fmessage (file, line, String ("assertion failed: ") + (message ? message : "?"));
 }
 
 static Mutex              dbg_mutex;
@@ -529,12 +482,9 @@ bool volatile _rapicorn_debug_check_cache = true; // initially enable debugging
  * The message @a format uses printf-like syntax.
  */
 void
-rapicorn_debug (const char *key, const char *file_path, const int line, const char *format, ...)
+rapicorn_debug (const char *key, const char *file, const int line, const String &msg)
 {
-  va_list vargs;
-  va_start (vargs, format);
-  envkey_debug_message ("RAPICORN_DEBUG", key, file_path, line, format, vargs, &_rapicorn_debug_check_cache);
-  va_end (vargs);
+  envkey_debug_message ("RAPICORN_DEBUG", key, file, line, msg, &_rapicorn_debug_check_cache);
 }
 
 /** Check if debugging is enabled for @a key.
@@ -573,7 +523,7 @@ FlipperOption::flipper_check (const char *key)
 
 /** @def RAPICORN_FATAL(format,...)
  * Abort the program with a fatal error message.
- * Issues an error message and call abort() to abort the program.
+ * Issues an error message and call abort() to abort the program, see also #$RAPICORN_DEBUG.
  * The error message @a format uses printf-like syntax.
  */
 
@@ -595,7 +545,7 @@ FlipperOption::flipper_check (const char *key)
  */
 
 /** @def RAPICORN_CRITICAL(format,...)
- * Issues a critical message, and aborts the program if it was started with RAPICORN=fatal-criticals.
+ * Issues a critical message, see also #$RAPICORN_DEBUG=fatal-warnings.
  * The error message @a format uses printf-like syntax.
  */
 
@@ -613,9 +563,9 @@ FlipperOption::flipper_check (const char *key)
  */
 
 /** @def RAPICORN_DIAG(format,...)
- * Issues a diagnostic message, usually indicaintg I/O errors, or invalid user input.
+ * Issues a diagnostic message, e.g. indicaintg I/O errors or invalid user input.
  * Diagnostic message are enabled by default for dvelopment versions and can be enabled
- * other wise with #$RAPICORN_DEBUG=devel.
+ * otherwise with #$RAPICORN_DEBUG=devel.
  * The message @a format uses printf-like syntax.
  */
 
@@ -721,7 +671,7 @@ colorize_tty (int fd)
   // sense stdin/stdout/stderr
   if (isatty (1) && isatty (2))
     {
-      char *term = getenv ("TERM");
+      const char *term = getenv ("TERM");
       if (term && strcmp (term, "dumb") != 0)
         return true;
     }

@@ -261,9 +261,9 @@ public:
 /// Exclusive<> is a type wrapper that provides non-racy atomic access to a copyable @a Type.
 template<class Type>
 class Exclusive {
-  Mutex    mutex_;
-  Type    *data_;
-  uint64_t mem_[(sizeof (Type) + 7) / 8];
+  Mutex     mutex_;
+  Type     *data_;
+  uint64    mem_[(sizeof (Type) + 7) / 8];
   void      setup_L   (const Type &data)        { if (data_) return; data_ = new (mem_) Type (data); }
   void      replace_L (const Type &data)        { if (!data_) setup_L (data); else *data_ = data; }
 public:

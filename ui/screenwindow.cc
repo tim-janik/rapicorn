@@ -364,7 +364,7 @@ ScreenDriver::retrieve_screen_driver (const String &backend_name)
   vector<ScreenDriver*> screen_driver_array;
   for (ScreenDriver *it = screen_driver_chain; it; it = it->sibling_)
     screen_driver_array.push_back (it);
-  SDEBUG ("trying to open 1/%zd screen drivers...", screen_driver_array.size());
+  SDEBUG ("trying to open 1/%d screen drivers...", screen_driver_array.size());
   sort (screen_driver_array.begin(), screen_driver_array.end(), driver_priority_lesser);
   for (auto it : screen_driver_array)
     {

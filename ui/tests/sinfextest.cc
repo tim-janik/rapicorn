@@ -256,7 +256,7 @@ sinfex_shell (void)
           Sinfex::Value v = sinfex->eval (scope);
           String s = v.string();
           if (v.isreal())
-            s = string_printf ("%.15g", v.real());
+            s = string_format ("%.15g", v.real());
           printf ("= %s\n", s.c_str());
           unref (sinfex);
         }

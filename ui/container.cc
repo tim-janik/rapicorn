@@ -828,7 +828,7 @@ ResizeContainerImpl::idle_sizing ()
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), "pass upwards...");
+        DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), "pass upwards...");
       else
         {
           Allocation area = allocation();
@@ -850,7 +850,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
     }
   const bool need_debugging = rapicorn_debug_check() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (need_debugging)
-    DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this),
+    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this),
                   !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
   /* this is the core of the resizing loop. via Widget.tune_requisition(), we
    * allow widgets to adjust the requisition from within size_allocate().
@@ -877,7 +877,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
     }
   tunable_requisition_counter_ = 0;
   if (need_debugging && !carea)
-    DEBUG_RESIZE ("%12s 0x%016zx, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
+    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
 }
 
 void

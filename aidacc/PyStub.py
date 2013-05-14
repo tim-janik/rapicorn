@@ -459,7 +459,7 @@ class Generator:
     mdefs += [ '{ "__AIDA_pyconnect__%s__", __AIDA_pyconnect__%s__, METH_VARARGS, "pyRapicorn signal call" }' % (digeststring, digeststring) ]
     cbtname, classN = 'Callback' + '_' + stype.name, class_info.name
     async = stype.rtype.storage != Decls.VOID
-    u64 = 'Rapicorn::Aida::uint64_t'
+    u64 = 'Rapicorn::Aida::uint64'
     emitfunc = '__AIDA_pyemit%d__%s__%s' % (2 if async else 1, classN, stype.name)
     s += 'static Rapicorn::Aida::FieldBuffer*\n%s ' % emitfunc
     s += '(const Rapicorn::Aida::FieldBuffer *sfb, void *data)\n{\n'
@@ -473,7 +473,7 @@ class Generator:
       s += '  fbr.skip_header();\n'
       s += '  fbr.skip();  // skip handler_id\n'
       if async:
-        s += '  Rapicorn::Aida::uint64_t emit_result_id = fbr.pop_int64();\n'
+        s += '  Rapicorn::Aida::uint64 emit_result_id = fbr.pop_int64();\n'
       arg_counter = 0
       for a in stype.args:
         s += self.generate_pop_field_cxximpl ('fbr', a[1], 'item')
@@ -502,7 +502,7 @@ class Generator:
     s += '  while (0) { error: return NULL; }\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += '  Rapicorn::Aida::uint64_t oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
+    s += '  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
     s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
     s += '  %s result = 0;\n' % u64
     s += '  if (callable == Py_None) {\n'
@@ -525,7 +525,7 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pycall__%s__ (PyObject *pyself, PyObject *pyargs)\n' % digeststring
     s += '{\n'
-    s += '  uint64_t object_orbid;\n'
+    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self + args
@@ -572,7 +572,7 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pygetter__%s__ (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
     s += '{\n'
-    s += '  uint64_t object_orbid;\n'
+    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;\n' # header + self
     s += '  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");\n'
@@ -605,7 +605,7 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pysetter__%s__ (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
     s += '{\n'
-    s += '  uint64_t object_orbid;\n'
+    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;\n' # header + self + arg
     s += '  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");\n' # self + arg

@@ -137,8 +137,8 @@ String
 timestamp_format (uint64 stamp)
 {
   const size_t fieldwidth = 8;
-  const String fsecs = string_printf ("%zu", size_t (stamp) / 1000000);
-  const String usecs = string_printf ("%06zu", size_t (stamp) % 1000000);
+  const String fsecs = string_format ("%u", size_t (stamp) / 1000000);
+  const String usecs = string_format ("%06u", size_t (stamp) % 1000000);
   String r = fsecs;
   if (r.size() < fieldwidth)
     r += '.';
@@ -240,9 +240,9 @@ debug_backtrace_showshot (size_t key)
   const vector<String> syms = pretty_backtrace_symbols (bbuffer.ptrbuffer, bbuffer.nptrs, 0);
   String btmsg;
   size_t addr = bbuffer.nptrs >= 1 ? size_t (bbuffer.ptrbuffer[1]) : 0;
-  btmsg = string_printf ("Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", addr, size_t (__builtin_frame_address (0)));
+  btmsg = string_format ("Backtrace at 0x%08x (stackframe at 0x%08x):\n", addr, size_t (__builtin_frame_address (0)));
   for (size_t i = 0; i < syms.size(); i++)
-    btmsg += string_printf ("  %s\n", syms[i].c_str());
+    btmsg += string_format ("  %s\n", syms[i].c_str());
   return btmsg;
 }
 
@@ -367,7 +367,7 @@ static InitHook _process_handle_and_seed_init ("core/01 Init Process Handle and 
 String
 process_handle ()
 {
-  return string_printf ("%s/%08x", process_info.uts.nodename, process_hash);
+  return string_format ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
 /// The Path namespace provides functions for file path manipulation and testing.

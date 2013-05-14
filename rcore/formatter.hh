@@ -2,7 +2,8 @@
 #ifndef __RAPICORN_FORMATTER_HH__
 #define __RAPICORN_FORMATTER_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/cxxaux.hh>
+#include <rcore/aida.hh>
 #include <sstream>
 
 namespace Rapicorn {
@@ -14,50 +15,63 @@ namespace Lib { // Namespace for implementation internals
 /** StringFormatter - printf-like string formatting for C++.
  *
  * See parse_directive() for supported flags, modifiers and conversions.
- * Currently missing are: n I S ls C lc
  * Finding strings with size modifiers for possible cleanups:
  * egrep "\"([^\"]|\\\")*%[0-9$]*[-+#0 \'I]*[*0-9$]*[.*0-9$]*[hlLqjzt]+[nSspmCcdiouXxFfGgEeAa]"
  */
 class StringFormatter {
-  typedef long long unsigned int LLUInt;
+  typedef long long signed int LLong;
+  typedef long long unsigned int ULLong;
   typedef long double LDouble;
   struct FormatArg {
-    union { LDouble d; LLUInt i; void *p; const char *s; };
-    char kind; // i d s p
+    union { LDouble d; double f; signed char i1; short i2; int i4; long i6; LLong i8; void *p; const char *s; };
+    char kind; // f d i u p s
   };
-  inline void assign (FormatArg &farg, bool               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, char               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, signed char        arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned char      arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, short              arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned short     arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, int                arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned int       arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, long               arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, long long          arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = 'i'; farg.i = arg; }
-  inline void assign (FormatArg &farg, float              arg) { farg.kind = 'd'; farg.d = arg; }
-  inline void assign (FormatArg &farg, double             arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, bool               arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, char               arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, signed char        arg) { farg.kind = '1'; farg.i1 = arg; }
+  inline void assign (FormatArg &farg, unsigned char      arg) { farg.kind = '1'; farg.i1 = arg; }
+#if __SIZEOF_WCHAR_T__ == 1
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '1'; farg.i1 = arg; }
+#endif
+  inline void assign (FormatArg &farg, short              arg) { farg.kind = '2'; farg.i2 = arg; }
+  inline void assign (FormatArg &farg, unsigned short     arg) { farg.kind = '2'; farg.i2 = arg; }
+#if __SIZEOF_WCHAR_T__ == 2
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '2'; farg.i2 = arg; }
+#endif
+  inline void assign (FormatArg &farg, int                arg) { farg.kind = '4'; farg.i4 = arg; }
+  inline void assign (FormatArg &farg, unsigned int       arg) { farg.kind = '4'; farg.i4 = arg; }
+#if __SIZEOF_WCHAR_T__ == 4
+  inline void assign (FormatArg &farg, wchar_t            arg) { farg.kind = '4'; farg.i4 = arg; }
+#endif
+  inline void assign (FormatArg &farg, long               arg) { farg.kind = '6'; farg.i6 = arg; }
+  inline void assign (FormatArg &farg, unsigned long      arg) { farg.kind = '6'; farg.i6 = arg; }
+  inline void assign (FormatArg &farg, long long          arg) { farg.kind = '8'; farg.i8 = arg; }
+  inline void assign (FormatArg &farg, unsigned long long arg) { farg.kind = '8'; farg.i8 = arg; }
+  inline void assign (FormatArg &farg, float              arg) { farg.kind = 'f'; farg.f = arg; }
+  inline void assign (FormatArg &farg, double             arg) { farg.kind = 'f'; farg.f = arg; }
   inline void assign (FormatArg &farg, long double        arg) { farg.kind = 'd'; farg.d = arg; }
+  inline void assign (FormatArg &farg, char              *arg) { farg.kind = 's'; farg.s = arg; }
   inline void assign (FormatArg &farg, const char        *arg) { farg.kind = 's'; farg.s = arg; }
   inline void assign (FormatArg &farg, const std::string &arg) { assign (farg, arg.c_str()); }
   inline void assign (FormatArg &farg, void              *arg) { farg.kind = 'p'; farg.p = arg; }
   template<class T> inline void assign (FormatArg &farg, T *const &arg) { assign (farg, (void*) arg); }
-  template<class T> inline void assign (FormatArg &farg, const T &arg)
+  template<class T> typename std::enable_if<std::is_enum<T>::value, void>  // eliminated via SFINAE
+  ::type      assign (FormatArg &farg, const T           &arg) { farg.kind = '8'; farg.i8 = arg; }
+  template<class T> typename std::enable_if<std::is_class<T>::value, void> // eliminated via SFINAE
+  ::type      assign (FormatArg &farg, const T           &arg)
   {
     std::ostringstream os;
     os << arg;
     temporaries_.push_back (os.str());
     assign (farg, temporaries_[temporaries_.size()-1]);
   }
-  uint32_t    arg_as_width     (size_t nth);
-  uint32_t    arg_as_precision (size_t nth);
-  LLUInt      arg_as_lluint    (size_t nth);
-  LDouble     arg_as_ldouble   (size_t nth);
-  void*       arg_as_ptr       (size_t nth);
-  const char* arg_as_chars     (size_t nth);
+  const FormatArg& format_arg       (size_t nth);
+  uint32_t         arg_as_width     (size_t nth);
+  uint32_t         arg_as_precision (size_t nth);
+  LLong            arg_as_longlong  (size_t nth);
+  LDouble          arg_as_ldouble   (size_t nth);
+  const char*      arg_as_chars     (size_t nth);
+  void*            arg_as_ptr       (size_t nth);
   struct Directive {
     char     conversion;
     uint32_t adjust_left : 1, add_sign : 1, use_width : 1, use_precision : 1;
@@ -69,9 +83,11 @@ class StringFormatter {
       field_width (0), precision (0), start (0), end (0), value_index (0), width_index (0), precision_index (0)
     {}
   };
-  FormatArg    *const fargs_;
+  typedef std::function<String (const String&)> ArgTransform;
+  FormatArg          *const fargs_;
   const size_t        nargs_;
   const int           locale_context_;
+  const ArgTransform &arg_transform_;
   vector<std::string> temporaries_;
   static std::string            format_error     (const char *err, const char *format, size_t directive);
   static const char*            parse_directive  (const char **stringp, size_t *indexp, Directive *dirp);
@@ -91,19 +107,20 @@ class StringFormatter {
     return intern_format<N+1> (format, args...);
   }
   template<size_t N> inline constexpr
-  StringFormatter (size_t nargs, FormatArg (&mem)[N], int lc) : fargs_ (mem), nargs_ (nargs), locale_context_ (lc) {}
+  StringFormatter (const ArgTransform &arg_transform, size_t nargs, FormatArg (&mem)[N], int lc) :
+    fargs_ (mem), nargs_ (nargs), locale_context_ (lc), arg_transform_ (arg_transform) {}
 public:
   enum LocaleContext {
     POSIX_LOCALE,
     CURRENT_LOCALE,
   };
   template<LocaleContext LC = POSIX_LOCALE, class ...Args>
-  static __attribute__ ((__format__ (printf, 1, 0), noinline)) std::string
-  format (const char *format, const Args &...args)
+  static __attribute__ ((__format__ (printf, 2, 0), noinline)) std::string
+  format (const ArgTransform &arg_transform, const char *format, const Args &...args)
   {
     constexpr size_t N = sizeof... (Args);
     FormatArg mem[N ? N : 1];
-    StringFormatter formatter (N, mem, LC);
+    StringFormatter formatter (arg_transform, N, mem, LC);
     return formatter.intern_format<0> (format, args...);
   }
 };

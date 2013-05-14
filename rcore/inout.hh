@@ -2,8 +2,7 @@
 #ifndef __RAPICORN_INOUT_HH__
 #define __RAPICORN_INOUT_HH__
 
-#include <rcore/cxxaux.hh>
-#include <rcore/aida.hh>
+#include <rcore/strings.hh>
 
 // For convenience, redefine assert() to get backtraces, logging, etc.
 #if !defined (assert) && defined (RAPICORN_CONVENIENCE) // dont redefine an existing custom macro
@@ -15,14 +14,13 @@
 namespace Rapicorn {
 
 // == Basic I/O ==
-void    printerr        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void    printerr        (const std::string &msg);
-void    printout        (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+template<class... Args> void printout (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> void printerr (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 
 // === User Messages ==
 class UserSource;
-void    user_notice     (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
-void    user_warning    (const UserSource &source, const char *format, ...) RAPICORN_PRINTF (2, 3);
+template<class... Args> void user_notice  (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
+template<class... Args> void user_warning (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
 
 struct UserSource       ///< Helper structure to capture the origin of a user message.
 {
@@ -33,15 +31,9 @@ struct UserSource       ///< Helper structure to capture the origin of a user me
 // == Environment variable key functions ==
 bool envkey_flipper_check (const char*, const char*, bool with_all_toggle = true, volatile bool* = NULL);
 bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
-void envkey_debug_message (const char*, const char*, const char*, int, const char*, va_list, volatile bool* = NULL);
+void envkey_debug_message (const char*, const char*, const char*, int, const String&, volatile bool* = NULL);
 
 // == Debugging Input/Output ==
-void   debug_assert      (const char*, int, const char*);
-void   debug_fassert     (const char*, int, const char*)      __attribute__ ((__noreturn__));
-void   debug_fatal       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4), __noreturn__));
-void   debug_critical    (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
-void   debug_fixit       (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
-void   debug_diag        (const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 void   debug_envvar      (const String &name);
 void   debug_config_add  (const String &option);
 void   debug_config_del  (const String &key);
@@ -49,22 +41,22 @@ String debug_config_get  (const String &key, const String &default_value = "");
 bool   debug_config_bool (const String &key, bool default_value = 0);
 bool   debug_devel_check ();
 
-// == Rapicorn Internals Debugging ==
-void rapicorn_debug         (const char*, const char*, int, const char*, ...) __attribute__ ((__format__ (__printf__, 4, 5)));
-bool rapicorn_debug_check   (const char *key = NULL);
-
 // == Debugging Macros ==
-#define RAPICORN_DEBUG_OPTION(key, blurb)       Rapicorn::DebugOption (key)
-#define RAPICORN_FLIPPER(key, blurb)            Rapicorn::FlipperOption (key)
-#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "code must not be reached"); } while (0)
-#define RAPICORN_ASSERT_RETURN(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
-#define RAPICORN_ASSERT(cond)                   do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
-#define RAPICORN_FATAL(...)                     do { Rapicorn::debug_fatal (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_CRITICAL_UNLESS(cond)          do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
-#define RAPICORN_CRITICAL(...)                  do { Rapicorn::debug_critical (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_STARTUP_ASSERT(expr)           RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
-#define RAPICORN_DIAG(...)                      do { Rapicorn::debug_diag (RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
-#define RAPICORN_KEY_DEBUG(key,...)             do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, __VA_ARGS__); } while (0)
+#define RAPICORN_FLIPPER(key, blurb)      Rapicorn::FlipperOption (key)
+#define RAPICORN_DEBUG_OPTION(key, blurb) Rapicorn::DebugOption (key)
+#define RAPICORN_KEY_DEBUG(key,...)       do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
+#define RAPICORN_FATAL(...)               do { Rapicorn::debug_fmessage (RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
+#define RAPICORN_ASSERT(cond)             do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
+#define RAPICORN_ASSERT_RETURN(cond, ...) do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
+#define RAPICORN_ASSERT_UNREACHED()       do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "line must not be reached"); } while (0)
+#define RAPICORN_CRITICAL(...)            do { Rapicorn::debug_message ('C', RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
+#define RAPICORN_CRITICAL_UNLESS(cond)    do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
+#define RAPICORN_DIAG(...)                do { Rapicorn::debug_message ('G', RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
+#define RAPICORN_STARTUP_ASSERT(expr)     RAPICORN_STARTUP_ASSERT_decl (expr, RAPICORN_CPP_PASTE2 (StartupAssertion, __LINE__))
+
+// == Rapicorn Internals Debugging ==
+void rapicorn_debug         (const char *key, const char *file, int line, const String &msg);
+bool rapicorn_debug_check   (const char *key = NULL);
 
 // == AnsiColors ==
 /// The AnsiColors namespace contains utility functions for colored terminal output
@@ -103,7 +95,7 @@ void            color_envkey    (const String &env_var, const String &key = "");
 #define STATIC_ASSERT    RAPICORN_STATIC_ASSERT     ///< Shorthand for RAPICORN_STATIC_ASSERT() if RAPICORN_CONVENIENCE is defined.
 #endif // RAPICORN_CONVENIENCE
 
-// == Implementation Bits ==
+// == Implementation (Undocumented) ==
 /// @cond NOT_4_DOXYGEN
 
 struct DebugOption {
@@ -135,7 +127,46 @@ rapicorn_debug_check (const char *key)
           envkey_debug_check ("RAPICORN_DEBUG", key, &_rapicorn_debug_check_cache));
 }
 
+void printout_string     (const String &string);
+void printerr_string     (const String &string);
+void user_notice_string  (const UserSource &source, const String &string);
+void user_warning_string (const UserSource &source, const String &string);
+void debug_fmessage      (const char *file, int line, const String &message) RAPICORN_NORETURN;
+void debug_message       (char kind, const char *file, int line, const String &message);
+void debug_fassert       (const char*, int, const char*) RAPICORN_NORETURN;
+void debug_assert        (const char*, int, const char*);
+
 /// @endcond
+
+// == Implementation (Documented) ==
+
+/// Print a message on stdout (and flush stdout) ala printf(), using the POSIX/C locale.
+template<class... Args> void
+printout (const char *format, const Args &...args)
+{
+  printout_string (string_format (format, args...));
+}
+
+/// Print a message on stderr (and flush stderr) ala printf(), using the POSIX/C locale.
+template<class... Args> void
+printerr (const char *format, const Args &...args)
+{
+  printerr_string (string_format (format, args...));
+}
+
+/// Issue a notice about user resources, @p format uses printf-like syntax.
+template<class... Args> void
+user_notice (const UserSource &source, const char *format, const Args &...args)
+{
+  user_notice_string (source, string_format (format, args...));
+}
+
+/// Issue a notice about user resources, @p format uses printf-like syntax.
+template<class... Args> void
+user_warning (const UserSource &source, const char *format, const Args &...args)
+{
+  user_warning_string (source, string_format (format, args...));
+}
 
 } // Rapicorn
 

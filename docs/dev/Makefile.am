@@ -32,7 +32,7 @@ all-docs:
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
-	  find . -type f -name \*[hcHC] -exec cat {} \; | \
+	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html

@@ -2,6 +2,12 @@
 #include "formatter.hh"
 #include "main.hh"
 #include <cstring>
+#include <unistd.h>     // isatty
+
+/** @TODO:
+ * - StringFormatter: support directives: %%n %%S %%ls
+ * - StringFormatter: support directive flags: I
+ */
 
 namespace Rapicorn {
 namespace Lib {
@@ -67,7 +73,7 @@ parse_positional (const char **stringp, uint64_t *ap)
 
 const char*
 StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directive *dirp)
-{ // '%' positional? [-+#0 '']* ([0-9]*|[*]positional?) ([.]([0-9]*|[*]positional?))? [hlLjztq]* [spmcdiouXxFfGgEeAa]
+{ // '%' positional? [-+#0 '']* ([0-9]*|[*]positional?) ([.]([0-9]*|[*]positional?))? [hlLjztqZ]* [spmcCdiouXxFfGgEeAa]
   const char *p = *stringp;
   size_t index = *indexp;
   Directive fdir;
@@ -150,16 +156,18 @@ StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directiv
         return "invalid precision specification";
     }
   // modifiers
-  const char *modifiers = "hlLjztq";
+  const char *modifiers = "hlLjztqZ";
   while (strchr (modifiers, *p))
     p++;
   // conversion
-  const char *conversion = "dioucspmXxEeFfGgAa%";
+  const char *conversion = "dioucCspmXxEeFfGgAa%";
   if (!strchr (conversion, *p))
     return "missing conversion specifier";
   if (fdir.value_index == 0 && !strchr ("m%", *p))
     fdir.value_index = index++;
   fdir.conversion = *p++;
+  if (fdir.conversion == 'C')   // %lc in SUSv2
+    fdir.conversion = 'c';
   // success
   *dirp = fdir;
   *indexp = index;
@@ -167,35 +175,41 @@ StringFormatter::parse_directive (const char **stringp, size_t *indexp, Directiv
   return NULL; // OK
 }
 
-// FIXME: support more sophisticated argument conversions
-
-uint32_t
-StringFormatter::arg_as_width (size_t nth)
+const StringFormatter::FormatArg&
+StringFormatter::format_arg (size_t nth)
 {
-  int32_t w = arg_as_lluint (nth);
-  w = ABS (w);
-  return w < 0 ? ABS (w + 1) : w; // turn -2147483648 into +2147483647
-}
-
-uint32_t
-StringFormatter::arg_as_precision (size_t nth)
-{
-  const int32_t precision = arg_as_lluint (nth);
-  return MAX (0, precision);
-}
-
-StringFormatter::LLUInt
-StringFormatter::arg_as_lluint (size_t nth)
-{
-  return_unless (nth && nth <= nargs_, 0);
-  return fargs_[nth-1].i;
+  if (nth && nth <= nargs_)
+    return fargs_[nth-1];
+  static const FormatArg zero_arg = { { 0, }, 0 };
+  return zero_arg;
 }
 
 StringFormatter::LDouble
 StringFormatter::arg_as_ldouble (size_t nth)
 {
-  return_unless (nth && nth <= nargs_, 0);
-  return fargs_[nth-1].d;
+  const FormatArg &farg = format_arg (nth);
+  switch (farg.kind)
+    {
+    case '1':   return farg.i1;
+    case '2':   return farg.i2;
+    case '4':   return farg.i4;
+    case '6':   return farg.i6;
+    case '8':   return farg.i8;
+    case 'f':   return farg.f;
+    case 'd':   return farg.d;
+    case 'p':   return ULLong (farg.p);
+    case 's':   return ULLong (farg.s);
+    default:    return 0;
+    }
+}
+
+const char*
+StringFormatter::arg_as_chars (size_t nth)
+{
+  return_unless (nth && nth <= nargs_, "");
+  if ((fargs_[nth-1].kind == 's' || fargs_[nth-1].kind == 'p') && fargs_[nth-1].p == NULL)
+    return "(null)";
+  return fargs_[nth-1].kind != 's' ? "" : fargs_[nth-1].s;
 }
 
 void*
@@ -205,11 +219,38 @@ StringFormatter::arg_as_ptr (size_t nth)
   return fargs_[nth-1].p;
 }
 
-const char*
-StringFormatter::arg_as_chars (size_t nth)
+StringFormatter::LLong
+StringFormatter::arg_as_longlong (size_t nth)
 {
-  return_unless (nth && nth <= nargs_, "");
-  return fargs_[nth-1].kind != 's' ? "" : fargs_[nth-1].s;
+  const FormatArg &farg = format_arg (nth);
+  switch (farg.kind)
+    {
+    case '1':   return farg.i1;
+    case '2':   return farg.i2;
+    case '4':   return farg.i4;
+    case '6':   return farg.i6;
+    case '8':   return farg.i8;
+    case 'f':   return farg.f;
+    case 'd':   return farg.d;
+    case 'p':   return LLong (farg.p);
+    case 's':   return LLong (farg.s);
+    default:    return 0;
+    }
+}
+
+uint32_t
+StringFormatter::arg_as_width (size_t nth)
+{
+  int32_t w = arg_as_longlong (nth);
+  w = ABS (w);
+  return w < 0 ? ABS (w + 1) : w; // turn -2147483648 into +2147483647
+}
+
+uint32_t
+StringFormatter::arg_as_precision (size_t nth)
+{
+  const int32_t precision = arg_as_longlong (nth);
+  return MAX (0, precision);
 }
 
 template<class Arg> std::string
@@ -257,16 +298,27 @@ StringFormatter::render_directive (const Directive &dir)
     {
     case 'm':
       return render_arg (dir, "", int (0)); // dummy arg to silence compiler
-    case 'c':
-      return render_arg (dir, "", int (arg_as_lluint (dir.value_index)));
     case 'p':
       return render_arg (dir, "", arg_as_ptr (dir.value_index));
     case 's': // precision
       return render_arg (dir, "", arg_as_chars (dir.value_index));
-    case 'd': case 'i': case 'o': case 'u': case 'X': case 'x':
-      return render_arg (dir, "ll", arg_as_lluint (dir.value_index));
+    case 'c': case 'd': case 'i': case 'o': case 'u': case 'X': case 'x':
+      switch (format_arg (dir.value_index).kind)
+        {
+        case '1':       return render_arg (dir, "hh", format_arg (dir.value_index).i1);
+        case '2':       return render_arg (dir, "h", format_arg (dir.value_index).i2);
+        case '4':       return render_arg (dir, "", format_arg (dir.value_index).i4);
+        case '6':       return render_arg (dir, "l", format_arg (dir.value_index).i6);
+        case '8':       return render_arg (dir, "ll", format_arg (dir.value_index).i8);
+        default:        return render_arg (dir, "ll", arg_as_longlong (dir.value_index));
+        }
     case 'f': case 'F': case 'e': case 'E': case 'g': case 'G': case 'a': case 'A':
-      return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
+      switch (format_arg (dir.value_index).kind)
+        {
+        case 'f':       return render_arg (dir, "", format_arg (dir.value_index).f);
+        case 'd':
+        default:        return render_arg (dir, "L", arg_as_ldouble (dir.value_index));
+        }
     case '%':
       return "%";
     }
@@ -340,7 +392,12 @@ StringFormatter::render_format (const size_t last, const char *format)
       const Directive &fdir = fdirs[i];
       result += std::string (p, fdir.start - (p - format));
       if (fdir.conversion)
-        result += render_directive (fdir);
+        {
+          String rendered_arg = render_directive (fdir);
+          if (arg_transform_)
+            rendered_arg = arg_transform_ (rendered_arg);
+          result += rendered_arg;
+        }
       p = format + fdir.end;
     }
   return result;
@@ -361,10 +418,22 @@ StringFormatter::locale_format (const size_t last, const char *format)
 std::string
 StringFormatter::format_error (const char *err, const char *format, size_t directive)
 {
+  const char *cyan = "", *cred = "", *cyel = "", *crst = "";
+  if (isatty (fileno (stderr)))
+    {
+      const char *term = getenv ("TERM");
+      if (term && strcmp (term, "dumb") != 0)
+        {
+          cyan = "\033[36m";
+          cred = "\033[31m\033[1m";
+          cyel = "\033[33m";
+          crst = "\033[39m\033[22m";
+        }
+    }
   if (directive)
-    fprintf (stderr, "error: %s in directive %zu: %s\n", err, directive, format);
+    fprintf (stderr, "%sStringFormatter: %sWARNING:%s%s %s in directive %zu:%s %s\n", cyan, cred, crst, cyel, err, directive, crst, format);
   else
-    fprintf (stderr, "error: %s: %s\n", err, format);
+    fprintf (stderr, "%sStringFormatter: %sWARNING:%s%s %s:%s %s\n", cyan, cred, crst, cyel, err, crst, format);
   return format;
 }
 

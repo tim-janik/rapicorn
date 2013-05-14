@@ -339,7 +339,7 @@ update_task_status (TaskStatus &self)
   unsigned long wchan = 0, nswap = 0, cnswap = 0, rt_priority = 0, policy = 0;
   unsigned long long starttime = 0;
   char state = 0, command[8192 + 1] = { 0 };
-  String filename = string_printf ("/proc/%u/task/%u/stat", self.process_id, self.task_id);
+  String filename = string_format ("/proc/%u/task/%u/stat", self.process_id, self.task_id);
   FILE *file = fopen (filename.c_str(), "r");
   if (!file)
     return false;
@@ -408,7 +408,7 @@ String
 TaskStatus::string ()
 {
   return
-    string_printf ("pid=%d task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
+    string_format ("pid=%d task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
                    process_id, task_id, state, processor, priority, (utime + stime) * 0.0001,
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
