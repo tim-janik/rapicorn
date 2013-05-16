@@ -5,7 +5,7 @@
 #include <rcore/cxxaux.hh>
 
 // == RDTSC ==
-#if defined __i386__ || defined __x86_64__
+#if defined __i386__ || defined __x86_64__ || defined __amd64__
 #define RAPICORN_HAVE_X86_RDTSC  1
 #define RAPICORN_X86_RDTSC()     ({ Rapicorn::uint32 __l_, __h_, __s_; \
                                     __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_));  \
