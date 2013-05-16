@@ -7,6 +7,8 @@
 #include <rcore/aidacxx.hh>
 #include <rcore/aidaprops.hh>
 #include <rcore/blobres.hh>
+#include <rcore/cpuasm.hh>
+#include <rcore/cxxaux.hh>
 #include <rcore/formatter.hh>
 #include <rcore/inout.hh>
 #include <rcore/inifile.hh>

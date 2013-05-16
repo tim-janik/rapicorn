@@ -2,6 +2,7 @@
 #ifndef __RAPICORN_QUICKTIMER_HH__
 #define __RAPICORN_QUICKTIMER_HH__
 
+#include <rcore/cpuasm.hh>
 #include <rcore/utilities.hh>
 
 namespace Rapicorn {
