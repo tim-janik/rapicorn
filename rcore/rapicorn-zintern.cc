@@ -204,7 +204,7 @@ gen_zfile (const char *name,
       printf ("RAPICORN_STATIC_RESOURCE_DATA (%s) =\n  \"", ident.c_str());
       for (i = 0; i < rlen; i++)
         print_uchar (&config, rdata[i]);
-      printf ("\"; // %lu + 1\n", rlen);
+      printf ("\"; // %zu + 1\n", rlen);
 
       config = config_init;
       printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident.c_str());
