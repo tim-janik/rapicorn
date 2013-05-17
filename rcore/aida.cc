@@ -99,8 +99,8 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
-RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*));
-RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + sizeof (void*));
+RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*)); // assert slim TypeCode impl
+RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + MAX (sizeof (uint64), sizeof (void*))); // assert slim Any impl
 
 Any&
 Any::operator= (const Any &clone)
