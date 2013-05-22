@@ -183,6 +183,8 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     RAPICORN_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
     AC_MSG_RESULT([done])
 
+    AC_CHECK_HEADERS( [sys/eventfd.h] )
+
     # --- OS/Win32 detection ---
     dnl # needs AC_CANONICAL_HOST
     test -z "$host" && {

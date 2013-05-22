@@ -201,10 +201,12 @@ get_x86_cpu_features (CPUInfo *ci,
       sigaction (SIGILL, &action, &old_action);
       if (setjmp (cpu_info_jmp_buf) == 0)
         {
+#if     defined __i386__ || defined __x86_64__ || defined __amd64__
           unsigned int mxcsr;
           __asm__ __volatile__ ("stmxcsr %0 ; sfence ; emms" : "=m" (mxcsr));
           /* executed SIMD instructions without exception */
           ci->x86_ssesys = true;
+#endif // x86
         }
       else
         {

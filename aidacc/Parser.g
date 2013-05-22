@@ -65,6 +65,9 @@ class YYGlobals (object):
     if as_flags:
       enum.set_combinable (True)
     for ev in enum_values:
+      ident, label, blurb, number = ev
+      if number < -9223372036854775807 or number > +9223372036854775807:
+        raise Exception ("Invalid enum value: %d" % number)
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields):

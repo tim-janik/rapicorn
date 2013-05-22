@@ -3,6 +3,7 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include "regex.hh"
+#include "../configure.h"       // HAVE_SYS_EVENTFD_H
 
 #include <string.h>
 #include <stdio.h>
@@ -15,8 +16,10 @@
 #include <limits.h>
 #include <semaphore.h>
 #include <poll.h>
-#include <sys/eventfd.h>        // defines EFD_SEMAPHORE
 #include <stddef.h>             // ptrdiff_t
+#ifdef  HAVE_SYS_EVENTFD_H
+#include <sys/eventfd.h>
+#endif // HAVE_SYS_EVENTFD_H
 #include <stdexcept>
 #include <deque>
 #include <unordered_map>
@@ -96,8 +99,8 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
-RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*));
-RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + sizeof (void*));
+RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*)); // assert slim TypeCode impl
+RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + MAX (sizeof (uint64), sizeof (void*))); // assert slim Any impl
 
 Any&
 Any::operator= (const Any &clone)
@@ -907,65 +910,113 @@ FieldBuffer::_new (uint32 _ntypes)
 }
 
 // == EventFd ==
-class EventFd {
-  void     operator= (const EventFd&); // no assignments
-  explicit EventFd   (const EventFd&); // no copying
-  int      efd;
-public:
-  int inputfd() const { return efd; }
-  ~EventFd()
-  {
-    close (efd);
-    efd = -1;
-  }
-  EventFd() :
-    efd (-1)
-  {
-    do
-      efd = eventfd (0 /*initval*/, 0 /*flags*/);
-    while (efd < 0 && (errno == EAGAIN || errno == EINTR));
-    if (efd >= 0)
-      {
-        int err;
-        long nflags = fcntl (efd, F_GETFL, 0);
-        nflags |= O_NONBLOCK;
-        do
-          err = fcntl (efd, F_SETFL, nflags);
-        while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      }
-    if (efd < 0)
-      fatal_error (string_format ("failed to open eventfd: %s", strerror (errno)));
-  }
-  void
-  wakeup()
-  {
-    int err;
-    do
-      err = eventfd_write (efd, 1);
-    while (err < 0 && errno == EINTR);
-    // EAGAIN occours if too many wakeups are pending
-  }
-  bool
-  pollin ()
-  {
-    struct pollfd pfd = { efd, POLLIN, 0 };
-    int presult;
-    do
-      presult = poll (&pfd, 1, -1);
-    while (presult < 0 && (errno == EAGAIN || errno == EINTR));
-    return pfd.revents != 0;
-  }
-  void
-  flush () // clear pending wakeups
-  {
-    eventfd_t bytes8;
-    int err;
-    do
-      err = eventfd_read (efd, &bytes8);
-    while (err < 0 && errno == EINTR);
-    // EAGAIN occours if no wakeups are pending
-  }
-};
+EventFd::EventFd () :
+  fds { -1, -1 }
+{}
+
+int
+EventFd::open ()
+{
+  if (opened())
+    return 0;
+  long nflags;
+#ifdef HAVE_SYS_EVENTFD_H
+  do
+    fds[0] = eventfd (0 /*initval*/, EFD_CLOEXEC | EFD_NONBLOCK);
+  while (fds[0] < 0 && (errno == EAGAIN || errno == EINTR));
+#else
+  int err;
+  do
+    err = pipe2 (fds, O_CLOEXEC | O_NONBLOCK);
+  while (err < 0 && (errno == EAGAIN || errno == EINTR));
+  if (fds[1] >= 0)
+    {
+      nflags = fcntl (fds[1], F_GETFL, 0);
+      assert (nflags & O_NONBLOCK);
+      nflags = fcntl (fds[1], F_GETFD, 0);
+      assert (nflags & FD_CLOEXEC);
+    }
+#endif
+  if (fds[0] >= 0)
+    {
+      nflags = fcntl (fds[0], F_GETFL, 0);
+      assert (nflags & O_NONBLOCK);
+      nflags = fcntl (fds[0], F_GETFD, 0);
+      assert (nflags & FD_CLOEXEC);
+      return 0;
+    }
+  return -errno;
+}
+
+int
+EventFd::inputfd () // fd for POLLIN
+{
+  return fds[0];
+}
+
+bool
+EventFd::opened ()
+{
+  return inputfd() >= 0;
+}
+
+bool
+EventFd::pollin ()
+{
+  struct pollfd pfd = { inputfd(), POLLIN, 0 };
+  int presult;
+  do
+    presult = poll (&pfd, 1, -1);
+  while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+  return pfd.revents != 0;
+}
+
+void
+EventFd::wakeup()
+{
+  int err;
+#ifdef HAVE_SYS_EVENTFD_H
+  do
+    err = eventfd_write (fds[0], 1);
+  while (err < 0 && errno == EINTR);
+#else
+  char w = 'w';
+  do
+    err = write (fds[1], &w, 1);
+  while (err < 0 && errno == EINTR);
+#endif
+  // EAGAIN occours if too many wakeups are pending
+}
+
+void
+EventFd::flush()
+{
+  int err;
+#ifdef HAVE_SYS_EVENTFD_H
+  eventfd_t bytes8;
+  do
+    err = eventfd_read (fds[0], &bytes8);
+  while (err < 0 && errno == EINTR);
+#else
+  char buffer[512]; // 512 is POSIX pipe atomic read/write size
+  do
+    err = read (fds[0], buffer, sizeof (buffer));
+  while (err == 512 || (err < 0 && errno == EINTR));
+#endif
+  // EAGAIN occours if no wakeups are pending
+}
+
+EventFd::~EventFd ()
+{
+#ifdef HAVE_SYS_EVENTFD_H
+  close (fds[0]);
+#else
+  close (fds[0]);
+  close (fds[1]);
+#endif
+  fds[0] = -1;
+  fds[1] = -1;
+}
 
 // == lock-free, single-consumer queue ==
 template<class Data> struct MpScQueueF {
@@ -1077,7 +1128,11 @@ public:
   {}
   TransportChannel () :
     last_fb (NULL)
-  {}
+  {
+    const int err = open();
+    if (err != 0)
+      fatal_error (string_format ("failed to create wakeup pipe: %s", strerror (-err)));
+  }
 };
 
 // == TypeNameDB ==

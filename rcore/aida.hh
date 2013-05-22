@@ -269,6 +269,23 @@ public:
   void operator<<= (const SmartHandle &v);
 };
 
+// === EventFd ===
+class EventFd            /// Wakeup facility for IPC.
+{
+  int      fds[2];
+  void     operator= (const EventFd&) = delete; // no assignments
+  explicit EventFd   (const EventFd&) = delete; // no copying
+public:
+  explicit EventFd   ();
+  int      open      (); ///< Opens the eventfd and returns -errno.
+  bool     opened    (); ///< Indicates whether eventfd has been opened.
+  void     wakeup    (); ///< Wakeup polling end.
+  int      inputfd   (); ///< Returns the file descriptor for POLLIN.
+  bool     pollin    (); ///< Checks whether events are pending.
+  void     flush     (); ///< Clear pending wakeups.
+  /*Des*/ ~EventFd   ();
+};
+
 // == Type Hash ==
 struct TypeHash {
   uint64 typehi, typelo;

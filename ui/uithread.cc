@@ -4,7 +4,6 @@
 #include "internal.hh"
 #include <semaphore.h>
 #include <stdlib.h>
-#include <sys/eventfd.h>
 #include <deque>
 #include <set>
 

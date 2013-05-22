@@ -223,17 +223,6 @@ struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
 
-// == X86 Architecture ==
-#if defined __i386__ || defined __x86_64__
-#define RAPICORN_HAVE_X86_RDTSC  1
-#define RAPICORN_X86_RDTSC()     ({ Rapicorn::uint32 __l_, __h_, __s_; \
-                                    __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_));  \
-                                    __s_ = __l_ + (Rapicorn::uint64 (__h_) << 32); __s_; })
-#else
-#define RAPICORN_HAVE_X86_RDTSC  0
-#define RAPICORN_X86_RDTSC()    (0)
-#endif
-
 } // Rapicorn
 
 #endif // __RAPICORN_CXXAUX_HH__
