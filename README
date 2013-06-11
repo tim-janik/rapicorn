@@ -8,7 +8,7 @@ Everybody is free to participate with ideas, code or wiki contributions,
 and artwork (we still need a logo, and always need icons and SVG themes).
 
 Rapicorn brings UI-design, UI-notation and UI-programming as close together
-as possible. To accomplish this, it provides conscise ways for UI notation,
+as possible. To accomplish this, it provides concise ways for UI notation,
 usable also throughout design phases.
 Simple but powerful programming mechanisms are provided to automate binding
 of programming and GUI logic and to minimize manual work.
