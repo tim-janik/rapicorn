@@ -497,7 +497,7 @@ RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
-builtin(include, docs/dev/acdoxygen.m4) dnl # import MC_DOXYGEN which defines DOXYGEN and DOT
+builtin(include, docs/acdoxygen.m4) dnl # import MC_DOXYGEN which defines DOXYGEN and DOT
 MC_DOXYGEN
 
 # automake @VARIABLE@ exports.
@@ -526,7 +526,6 @@ tests/Makefile
 pytests/Makefile
 examples/Makefile
 docs/Makefile
-docs/dev/Makefile
 docs/imports/Makefile
 docs/tutorial/Makefile
 ])
