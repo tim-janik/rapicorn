@@ -18,7 +18,7 @@ htmldocsbase  = ${docdir}
 htmldocsdir   = ${htmldocsbase}/html
 htmldocs_DATA = html/doc-version	# build dependency for doxygen docs
 install-data-hook: html/doc-version
-	cp -RP html/ "$(DESTDIR)$(htmldocsbase)/"
+	umask 022 && cp -RP html/ "$(DESTDIR)$(htmldocsbase)/"
 uninstall-local:
 	rm -Rf "$(DESTDIR)$(htmldocsbase)/html/"
 
