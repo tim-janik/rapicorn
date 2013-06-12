@@ -3,12 +3,21 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = imports tutorial
 
+# Describe source tree version (release tag relative, e.g. yy.mm.z-nnn-gHEXHEX)
+DSC_VERSION	= $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
+# Release version, shows last tag reachable
+REL_VERSION	= $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
+# Project version as configured
+PRJ_VERSION	= $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
+# Detailed documentation version
+DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
+
 # == Doxygen Build Rules ==
 include Makefile.doxygen
 htmldocsbase  = ${docdir}
 htmldocsdir   = ${htmldocsbase}/html
-htmldocs_DATA = html/stamp-id		# build dependency for doxygen docs
-install-data-hook:
+htmldocs_DATA = html/doc-version	# build dependency for doxygen docs
+install-data-hook: html/doc-version
 	cp -RP html/ "$(DESTDIR)$(htmldocsbase)/"
 uninstall-local:
 	rm -Rf "$(DESTDIR)$(htmldocsbase)/html/"
@@ -20,14 +29,13 @@ DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 QPRINT		        = @printf '  %-7s%s\n'
 
 # fetch HEAD commit hash to figure if docs need to be rebuild
-git_head_commit = $(shell test ! -x $(top_srcdir)/.git/ || git rev-parse HEAD)
 git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
 
-html/stamp-id: $(git_index_file)	# conditionally rebuild, depending on HEAD changes
+html/doc-version: $(git_index_file)	# conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
-	$(Q) test -e html/ && test -e $@ && test "`cat $@`" = "$(git_head_commit)" \
+	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
 	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory all-docs
-	$(Q) rm -f $@ && echo "$(git_head_commit)" > $@
+	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
 clean-local:
 	rm -rf html/
 
@@ -55,11 +63,7 @@ all-docs:
 	$(Q) rm -rf doxygen-html/
 .PHONY: all-docs
 
-# upload release versions directly, otherwise upload as latest/
-REL_VERSION	= $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-DSC_VERSION	= $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
-PRJ_VERSION	= $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
-DOC_VERSION	= $(or $(DSC_VERSION), $(PRJ_VERSION))
+# Upload release versions directly, otherwise upload as latest/
 upload: all
 	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "html"  "testbit:/srv/dev/html/rapicorn/${DOC_VERSION}" ; }
