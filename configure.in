@@ -497,9 +497,6 @@ RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
-builtin(include, docs/acdoxygen.m4) dnl # import MC_DOXYGEN which defines DOXYGEN and DOT
-MC_DOXYGEN
-
 # automake @VARIABLE@ exports.
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
@@ -551,7 +548,6 @@ Autoconfiguration complete.
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
 	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
-	Documentation tool:		${DOXYGEN:-none}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS

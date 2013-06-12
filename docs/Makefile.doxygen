@@ -4,10 +4,9 @@ DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh
 DOXYGEN_CONTENT_GLOBS	= *.c *.C *.cc
 DOXYGEN_SRCTREE		= doxygen-srctree
+DOXYGEN			= doxygen
 DOXYGEN_V		= @printf '  %-7s%s\n'
 DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
-
-EXTRA_DIST	       += acdoxygen.m4
 
 # sed: escape @ < & >, add sections, handle * bullets
 DOXYGEN_CHANGELOG_SED = \
