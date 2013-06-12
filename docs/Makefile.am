@@ -16,28 +16,27 @@ DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
 include Makefile.doxygen
 htmldocsbase  = ${docdir}
 htmldocsdir   = ${htmldocsbase}/html
-htmldocs_DATA = html/doc-version	# build dependency for doxygen docs
-install-data-hook: html/doc-version
+htmldocs_DATA = html/doc-version		# build dependency for doxygen docs
+install-data-hook: @INGIT@ html/doc-version
 	umask 022 && cp -RP html/ "$(DESTDIR)$(htmldocsbase)/"
 uninstall-local:
 	rm -Rf "$(DESTDIR)$(htmldocsbase)/html/"
+git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
+html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
+	$(AM_V_GEN)
+	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
+	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory all-docs
+	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
+clean-html:
+	rm -rf html/
+clean-local: @INGIT@ clean-html
+EXTRA_DIST += html
 
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 QPRINT		        = @printf '  %-7s%s\n'
-
-# fetch HEAD commit hash to figure if docs need to be rebuild
-git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
-
-html/doc-version: $(git_index_file)	# conditionally rebuild, depending on HEAD changes
-	$(AM_V_GEN)
-	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
-	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory all-docs
-	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
-clean-local:
-	rm -rf html/
 
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 
