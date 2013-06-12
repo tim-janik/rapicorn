@@ -45,6 +45,13 @@ else
 fi
 AC_SUBST(DEFINE__FILE_DIR__)
 
+# Build tree checks
+AC_MSG_CHECKING([for git repository])
+test -f "${srcdir}/.git/index" && INGIT= || INGIT='#'
+AC_SUBST(INGIT)
+result=$(test -z "$INGIT" && echo yes || echo no)
+AC_MSG_RESULT($result)
+
 # Rapicorn namespace
 AC_MSG_CHECKING([for Rapicorn namespace])
 test -z "$RAPICORN_NAMESPACE_NAME" && RAPICORN_NAMESPACE_NAME="Rapicorn$RAPICORN_RELEASE"
