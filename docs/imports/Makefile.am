@@ -1,19 +1,29 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
+MANMANS    = Rapidrun.1
 HTMLMANS    = Rapidrun.1.html
-EXTRA_DIST += $(HTMLMANS)
+EXTRA_DIST += $(HTMLMANS) $(MANMANS)
 
 import: check-tools
 	$(AM_V_GEN)
-	$(Q) rm -f $(HTMLMANS)
-	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(HTMLMANS)
+	$(Q) rm -f $(HTMLMANS) $(MANMANS)
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(HTMLMANS) $(MANMANS)
 .PHONY: import
 
 # = Check Tools =
 CHECK_WGET = { command -v wget >/dev/null && { echo "1.10.0" ; wget --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+CHECK_WH2M = { command -v wikihtml2man >/dev/null && { echo "11.09.1" ; wikihtml2man --version 2>&1 | sed 's/\([^0-9]\|l2m\)*// ; 1q' ; } | sort -VC ; }
 check-tools:
 	$(Q) ${CHECK_WGET} || { echo "$@: failed to detect recent version: wget"; exit 1; }
+	$(Q) ${CHECK_WH2M} || { echo "$@: failed to detect recent version: wikihtml2man"; exit 1; }
+
+# = MANMANS =
+%.1:
+	$(AM_V_GEN)
+	$(Q) wikihtml2man "http://testbit.eu/$(@F)?action=render" > xtmp-$(@F)
+	$(Q) mv xtmp-$(@F) $@
+	$(Q) rm -rf xtmp-$(@F)
 
 # = HTMLMANS =
 HEADER= $$'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n' \

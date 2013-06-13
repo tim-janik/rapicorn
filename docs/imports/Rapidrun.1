@@ -1,0 +1,62 @@
+.TH "RAPIDRUN" "1" "2013\-06\-11" "Revision 947" "Testbit Wiki Pages"
+
+.SH NAME
+
+rapidrun - Utility to run and test Rapicorn dialogs.
+
+.SH SYNOPSIS
+
+\fBrapidrun\fR [\fIOPTIONS\fR] [\fIuifile.xml\fR]
+
+.SH DESCRIPTION
+
+\fBRapidrun\fR is a utility to test Rapicorn UI dialog definitions.
+This tool will read the GUI description file listed on the command line, look for a dialog named 'test-dialog' and show it.
+
+.SH OPTIONS
+
+\fBRapidrun\fR follows the usual GNU command line syntax, with long options starting with two dashes ('-').
+.TP
+\fB--parse-test\fR
+Parse GuiFile.xml and exit.
+.PP
+.TP
+\fB-x\fR
+Enable auto-exit after first expose.
+.PP
+.TP
+\fB--list\fR
+List parsed definitions.
+.PP
+.TP
+\fB--fatal-warnings\fR
+Turn criticals/warnings into fatal conditions.
+.PP
+.TP
+\fB--snapshot\fR \fIpngname\fR
+Dump a snapshot to \fIpngname\fR.
+.PP
+.TP
+\fB--test-dump\fR
+Dump test stream after first expose.
+.PP
+.TP
+\fB--test-matched-node\fR \fIPATTERN\fR
+Filter nodes in test dumps.
+.PP
+.TP
+\fB-h\fR, \fB--help\fR
+Display this help and exit.
+.PP
+.TP
+\fB-v\fR, \fB--version\fR
+Display version and exit.
+.PP
+
+
+.br
+
+.SH SEE ALSO
+
+Rapicorn Website <http://rapicorn.org>
+
