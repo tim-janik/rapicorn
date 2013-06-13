@@ -33,8 +33,9 @@ HEADER= $$'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<htm
 	$$'body { font-family: "DejaVu Sans", "Bitstream Vera Sans", Corbel, Verdana, "Verdana Ref", sans-serif; }\n' \
 	$$'.tocnumber { display: none; }\n' \
 	$$'body > p, body > dl, body > ul, body > ol { margin-left: 8em; }\n' \
-	$$'</style></head>\n<body>'
-FOOTER= $$'</body>\n</html>'
+	$$'</style></head>\n<body>\n' \
+	$$'<a href="index.html">Return to Index</a><hr>'
+FOOTER= $$'<hr>\n</body>\n</html>'
 STEMTMP = xtmp-$(*F)
 %.1.html:
 	$(AM_V_GEN)
