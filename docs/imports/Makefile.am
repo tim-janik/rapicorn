@@ -3,7 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 MANMANS    = Rapidrun.1
 HTMLMANS    = Rapidrun.1.html
-EXTRA_DIST += $(HTMLMANS) $(MANMANS)
+EXTRA_DIST += $(MANMANS)
+# HTMLMANS are packaged as part of the doxygen docs
 
 import: check-tools
 	$(AM_V_GEN)
