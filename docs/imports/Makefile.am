@@ -1,24 +1,30 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-docdir = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+HTMLMANS    = Rapidrun.1.html
+EXTRA_DIST += $(HTMLMANS)
 
-#tutorialdir   = $(docdir)/tutorial
-#tutorial_DATA = doxer.css Hello-World.html Rapicorn-Tutorial.html
-#EXTRA_DIST   += $(tutorial_DATA)
+import: $(HTMLMANS)
+.PHONY: import
 
-CHROME_CONF = --no-cache --header "X-Script-Chrome: chrome=off style=doxer.css"
-WGET_MIRROR = wget -E -k -r -np -nd -nc
-TMPDIR=tmphtml
-import-docs:
-	mkdir -p $(TMPDIR)
-	rm -rf $(TMPDIR)/*
-	cd $(TMPDIR) && $(WGET_MIRROR) $(CHROME_CONF) 'http://testbit.eu/book/Rapicorn-Tutorial'
-	mv $(TMPDIR)/*.html $(TMPDIR)/*.css .
-	rm -rf $(TMPDIR)/
-	touch stamp-import-docs
-.PHONY: import-docs
-
-dist-hook:
-	! test -e stamp-import-docs || find stamp-import-docs -mtime -4 | fgrep -q stamp \
-	|| { echo "docs/imports/: Last import is outdated, please run: make import-docs -C docs/imports" >&2 ; exit 1 ; }
+# = HTMLMANS =
+HEADER= $$'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n' \
+	$$'<head>\n' \
+	$$'<title>'"$$TITLE"$$'</title>\n' \
+	$$'<style type="text/css">\n' \
+	$$'body { font-family: "DejaVu Sans", "Bitstream Vera Sans", Corbel, Verdana, "Verdana Ref", sans-serif; }\n' \
+	$$'.tocnumber { display: none; }\n' \
+	$$'body > p, body > dl, body > ul, body > ol { margin-left: 8em; }\n' \
+	$$'</style></head>\n<body>'
+FOOTER= $$'</body>\n</html>'
+STEMTMP = xtmp-$(*F)
+%.1.html:
+	rm -rf $(STEMTMP)
+	mkdir $(STEMTMP)
+	: # wget -k needs the final target name
+	cd $(STEMTMP) &&	wget -k --no-cache "http://testbit.eu/$(@F:.html=)?action=render" -O $(@F)
+	TITLE="$(@F:.html=)" && echo ${HEADER} > $(STEMTMP)/header
+	echo ${FOOTER} > $(STEMTMP)/footer
+	cat $(STEMTMP)/header $(STEMTMP)/$(@F) $(STEMTMP)/footer > $(STEMTMP)/combined
+	mv $(STEMTMP)/combined $@
+	rm -rf $(STEMTMP)
