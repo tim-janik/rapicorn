@@ -1,0 +1,12 @@
+// Licensed GNU LGPL v3 or later, see: www.gnu.org              -*-mode:c++-*-
+
+/*! @mainpage
+ *
+ * Documentation organization:
+ * - <a href="classes.html"><b>Class Index</b></a> - Browse documentation by class names.
+ * - <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> - Hellow World tutorial.
+ * - <a href="pages.html"><b>Related Pages</b></a> - Pages about important components.
+ *
+ * Manual Pages:
+ * - <a href="Rapidrun.1.html"><b>Rapidrun.1</b></a>
+ */

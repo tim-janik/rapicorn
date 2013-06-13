@@ -39,11 +39,12 @@ clean-html:
 clean-local: @INGIT@ clean-html
 EXTRA_DIST += html
 #
-DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh
+DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
+HTMLMAN_FILES     = imports/Rapidrun.1.html
 #
 CHECK_DOXYGEN = { command -v doxygen >/dev/null && { echo "1.7.6.1" ; doxygen --version ; } | sort -VC ; }
 CHECK_DOT     = { command -v dot >/dev/null && { echo "2.26.0" ; dot -V 2>&1 | sed 's/[^0-9]*//' ; } | sort -VC ; }
@@ -60,6 +61,8 @@ all-docs:
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html
+	$(QPRINT) "COPY" "Manual pages..."
+	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/
 	$(QPRINT) "CLEAN" "Temporaries..."
