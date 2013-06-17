@@ -32,11 +32,11 @@ git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.g
 html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
-	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory all-docs
+	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory html-docs
 	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
 clean-html:
 	rm -rf html/
-clean-local: @INGIT@ clean-html
+clean-local: @INGIT@ clean-html doxygen-clean
 EXTRA_DIST += html
 #
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
@@ -46,13 +46,7 @@ DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 LINK_PROJECT_NAME = -e 's|<div id="projectname">Rapicorn|<div id="projectname"><a href="http://rapicorn.org">Rapicorn</a>|'
 HTMLMAN_FILES     = imports/Rapidrun.1.html
 #
-CHECK_DOXYGEN = { command -v doxygen >/dev/null && { echo "1.7.6.1" ; doxygen --version ; } | sort -VC ; }
-CHECK_DOT     = { command -v dot >/dev/null && { echo "2.26.0" ; dot -V 2>&1 | sed 's/[^0-9]*//' ; } | sort -VC ; }
-CHECK_RSYNC   = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
-all-docs:
-	$(Q) ${CHECK_DOXYGEN} || { echo "$@: failed to detect recent version: doxygen"; exit 1; }
-	$(Q) ${CHECK_DOT}     || { echo "$@: failed to detect recent version: dot"; exit 1; }
-	$(Q) ${CHECK_RSYNC}   || { echo "$@: failed to detect recent version: rsync"; exit 1; }
+html-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(QPRINT) "GEN" "docs/docextract.dox"
@@ -66,7 +60,7 @@ all-docs:
 	$(QPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-.PHONY: all-docs
+.PHONY: html-docs
 
 # == Doxygen Upload ==
 # Upload release versions directly, otherwise upload as latest/
