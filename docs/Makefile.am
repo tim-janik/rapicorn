@@ -61,6 +61,7 @@ html-docs: doxygen-check
 	$(QPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
+	$(Q) echo "$(DOC_VERSION)" > html/doc-version
 .PHONY: html-docs
 
 # == Doxygen Upload ==
