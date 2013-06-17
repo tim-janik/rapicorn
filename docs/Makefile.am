@@ -54,7 +54,7 @@ html-docs: doxygen-check
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
-	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html DOXYGEN_GRAPHICS=NO
 	$(Q) sed $(LINK_PROJECT_NAME) -i doxygen-html/*.html
 	$(QPRINT) "COPY" "Manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/

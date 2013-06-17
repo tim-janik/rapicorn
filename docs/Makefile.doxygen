@@ -10,6 +10,8 @@ DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
 # ChangeLog to add to the generated documentation
 DOXYGEN_CHANGELOG       ?=
 DOXYGEN_CHANGELOG_TITLE ?= Development ChangeLog
+# Build with dot files by default
+DOXYGEN_GRAPHICS	?= YES
 
 # == doxygen-full ==
 # build doxygen-html/ from scratch ==
@@ -75,6 +77,8 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	$(DOXYGEN_Q) test -z "$(DOXYGEN)" || (cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/doxygen-srctree" \
 	&& echo "INPUT		  = doxygen-srctree/" \
+	&& echo "HAVE_DOT	  = $(DOXYGEN_GRAPHICS)" \
+	&& echo "CLASS_DIAGRAMS   = $(DOXYGEN_GRAPHICS)" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
