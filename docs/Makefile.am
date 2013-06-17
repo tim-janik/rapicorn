@@ -68,10 +68,20 @@ build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 .PHONY: build-docs
 
-# == Doxygen Upload ==
-# Upload release versions directly, otherwise upload as latest/
-upload: all
+# == Upload build rules ==
+upload-docs: doxygen-check
+	$(Q) rm -rf upload-docs/
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=upload-docs
+	$(Q) echo "$(DOC_VERSION)" > upload-docs/doc-version
+clean-upload-docs:
+	rm -rf upload-docs/
+clean-local: clean-upload-docs
+# Upload release versions as $DOC_VERSION, otherwise upload as latest/
+upload: upload-docs
+	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html"  "testbit:/srv/dev/html/rapicorn/${DOC_VERSION}" ; }
+	  rsync -zaHP --del "upload-docs"   "testbit:/srv/dev/html/rapicorn/${DOC_VERSION}" ; }
 	$(Q) test "${REL_VERSION}" = "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html/"  "testbit:/srv/dev/html/rapicorn/latest/" ; }
+	  rsync -zaHP --del "upload-docs/"  "testbit:/srv/dev/html/rapicorn/latest/" ; }
+.PHONY: upload upload-docs
+CHECK_RSYNC   = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
