@@ -1,4 +1,5 @@
-# Rules to build documentation via Doxygen		-*-mode:makefile;-*-
+# Makefile.doxygen - Common rules to build Doxygen docs	    -*-mode:makefile;-*-
+# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh
@@ -7,20 +8,26 @@ DOXYGEN			= doxygen
 DOXYGEN_V		= @printf '  %-7s%s\n'
 DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
 
+# == doxygen-full ==
+# build doxygen-html/ from scratch ==
 doxygen-full:
 	$(DOXYGEN_Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(DOXYGEN_Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 .PHONY: doxygen-full
 
-# sed: escape @ < & >, add sections, handle * bullets
-DOXYGEN_CHANGELOG_SED = \
-		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
-		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
-		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
-		-e 's/^/ * /'
+# == doxygen-check =
+# Check for doxygen, tools and versions
+CHECK_DOXYGEN = { command -v doxygen >/dev/null && { echo "1.7.6.1" ; doxygen --version ; } | sort -VC ; }
+CHECK_DOT     = { command -v dot >/dev/null && { echo "2.26.0" ; dot -V 2>&1 | sed 's/[^0-9]*//' ; } | sort -VC ; }
+CHECK_RSYNC   = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+doxygen-check:
+	$(Q) ${CHECK_DOXYGEN} || { echo "$@: failed to detect recent version: doxygen"; exit 1; }
+	$(Q) ${CHECK_DOT}     || { echo "$@: failed to detect recent version: dot"; exit 1; }
+	$(Q) ${CHECK_RSYNC}   || { echo "$@: failed to detect recent version: rsync"; exit 1; }
+.PHONY: doxygen-check
 
-# gather sources to generate docs from
+# == doxygen-srctree ==
+# Collect source files to generate docs from
 doxygen-srctree:
 	$(DOXYGEN_V) "GEN" doxygen-srctree/
 	$(DOXYGEN_Q) rm -rf doxygen-srctree/ && mkdir -p doxygen-srctree/
@@ -46,8 +53,15 @@ doxygen-srctree:
 	$(DOXYGEN_V) "PRUNE" "Exclude files..." \
 	&& rm -f $(patsubst %, doxygen-srctree/%, $(DOXYGEN_EXCLUDES))
 
-DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
+# sed: escape @ < & >, add sections, handle * bullets
+DOXYGEN_CHANGELOG_SED = \
+		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
+		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
+		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
+		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
+		-e 's/^/ * /'
 
+# == doxygen-html ==
 # configure and run doxygen, handle DOXYGEN="" by creating a dummy docu target
 doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	$(DOXYGEN_V) "CLEAN" "Html temporaries..."
@@ -73,6 +87,10 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	$(DOXYGEN_V) "CLEAN" "Html temporaries..."
 	$(DOXYGEN_Q) rm -rf doxygen-tmp/
 
+DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
+
+# == doxygen-html ==
+# Clean doxgen files and temporaries
 doxygen-clean:
 	$(DOXYGEN_V) "CLEAN" "Doxygen files..."
 	$(DOXYGEN_Q) rm -rf doxygen-srctree/ doxygen-tmp/ doxygen-html/
