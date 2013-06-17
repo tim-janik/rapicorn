@@ -78,4 +78,3 @@ doxygen-clean:
 	$(DOXYGEN_Q) rm -rf doxygen-srctree/ doxygen-tmp/ doxygen-html/
 	$(DOXYGEN_Q) rm -rf error.log
 .PHONY: doxygen-clean
-clean-local: doxygen-clean
