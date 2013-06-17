@@ -80,7 +80,8 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "TAGFILES         = tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/" \
 	&& echo -n "PROJECT_NUMBER = $(DOXYGEN_PROJECT_NUMBER)" \
-	) | nice $(DOXYGEN) - > error.log 2>&1
+	) > doxygen-tmp/Doxyfile.tmp \
+	&& nice $(DOXYGEN) doxygen-tmp/Doxyfile.tmp > error.log 2>&1
 	$(DOXYGEN_Q) test ! -s error.log && rm -f error.log \
 	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(DOXYGEN_Q:@=1>/dev/null) ; }
 	$(DOXYGEN_V) "POLISH" "HTML Files..."
