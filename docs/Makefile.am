@@ -39,6 +39,7 @@ clean-html-docs:
 clean-local: @INGIT@ clean-html-docs doxygen-clean
 EXTRA_DIST += html
 html-docs: doxygen-check
+	$(Q) rm -rf html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=NO DOC_TARGET=html
 	$(Q) echo "$(DOC_VERSION)" > html/doc-version
 .PHONY: html-docs
@@ -59,10 +60,11 @@ build-docs: doxygen-check
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
-	$(QPRINT) "COPY" "Manual pages..."
+	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
-	$(QPRINT) "RSYNC" "HTML Documentation..."
-	$(Q) mkdir -p $(DOC_TARGET)/ && rsync -aH --del doxygen-html/ $(DOC_TARGET)/
+	$(QPRINT) "MOVE" "HTML Documentation..."
+	$(Q) ! test -e $(DOC_TARGET) || { echo "$@: target directory exists already: $(DOC_TARGET)"; exit 1; }
+	$(Q) mv doxygen-html $(DOC_TARGET)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 .PHONY: build-docs
 
