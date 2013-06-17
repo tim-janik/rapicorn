@@ -26,7 +26,7 @@ install-data-hook: @INGIT@ html/doc-version
 uninstall-local:
 	rm -Rf "$(DESTDIR)$(htmldocsbase)/html/"
 
-# == Doxygen Build Rules ==
+# == html/ build rules ==
 include Makefile.doxygen
 git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
 html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
@@ -34,34 +34,37 @@ html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending o
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
 	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory html-docs
 	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
-clean-html:
+clean-html-docs:
 	rm -rf html/
-clean-local: @INGIT@ clean-html doxygen-clean
+clean-local: @INGIT@ clean-html-docs doxygen-clean
 EXTRA_DIST += html
-#
-HTMLMAN_FILES     = imports/Rapidrun.1.html
-#
+html-docs: doxygen-check
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=NO DOC_TARGET=html
+	$(Q) echo "$(DOC_VERSION)" > html/doc-version
+.PHONY: html-docs
+
+# == Doxygen Build Rules ==
+HTMLMAN_FILES     	= imports/Rapidrun.1.html
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
-html-docs: doxygen-check
+build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
-	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html DOXYGEN_GRAPHICS=NO
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(QPRINT) "COPY" "Manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "RSYNC" "HTML Documentation..."
-	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/
+	$(Q) mkdir -p $(DOC_TARGET)/ && rsync -aH --del doxygen-html/ $(DOC_TARGET)/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-	$(Q) echo "$(DOC_VERSION)" > html/doc-version
-.PHONY: html-docs
+.PHONY: build-docs
 
 # == Doxygen Upload ==
 # Upload release versions directly, otherwise upload as latest/
