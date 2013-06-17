@@ -53,7 +53,7 @@ all-docs:
 	$(Q) ${CHECK_DOXYGEN} || { echo "$@: failed to detect recent version: doxygen"; exit 1; }
 	$(Q) ${CHECK_DOT}     || { echo "$@: failed to detect recent version: dot"; exit 1; }
 	$(Q) ${CHECK_RSYNC}   || { echo "$@: failed to detect recent version: rsync"; exit 1; }
-	$(Q) rm -rf doxygen-srctree/
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
@@ -65,8 +65,7 @@ all-docs:
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "RSYNC" "HTML Documentation..."
 	$(Q) mkdir -p html/ && rsync -aH --del doxygen-html/ html/
-	$(QPRINT) "CLEAN" "Temporaries..."
-	$(Q) rm -rf doxygen-html/
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 .PHONY: all-docs
 
 # == Doxygen Upload ==
