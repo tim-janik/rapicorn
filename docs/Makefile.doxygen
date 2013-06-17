@@ -12,6 +12,8 @@ DOXYGEN_CHANGELOG       ?=
 DOXYGEN_CHANGELOG_TITLE ?= Development ChangeLog
 # Build with dot files by default
 DOXYGEN_GRAPHICS	?= YES
+# Link markup for the project name
+DOXYGEN_PROJECT_LINK    ?=
 
 # == doxygen-full ==
 # build doxygen-html/ from scratch ==
@@ -90,12 +92,14 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(DOXYGEN_Q:@=1>/dev/null) ; }
 	$(DOXYGEN_V) "POLISH" "HTML Files..."
 	$(DOXYGEN_Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html
+	$(DOXYGEN_Q) test -z "$(DOXYGEN_PROJECT_LINK)" || sed -r $(DOXYGEN_SED_PROJECT_LINK) -i doxygen-tmp/html/*.html
 	$(DOXYGEN_V) "GEN" "doxygen-html/..."
 	$(DOXYGEN_Q) rm -rf doxygen-html/ && mv doxygen-tmp/html/ doxygen-html/
 	$(DOXYGEN_V) "CLEAN" "Html temporaries..."
 	$(DOXYGEN_Q) rm -rf doxygen-tmp/
 
 DOXYGEN_SED_ACCESSKEY_AS_F = -e 's/(<input [^>]*id="MSearchField"[^>]*accesskey=")S"/\1F"/'
+DOXYGEN_SED_PROJECT_LINK   = -e 's|<div id="projectname">(\w+)|<div id="projectname"><a href="$(DOXYGEN_PROJECT_LINK)">\1</a>|'
 
 # == doxygen-html ==
 # Clean doxgen files and temporaries
