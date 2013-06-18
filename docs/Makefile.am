@@ -49,12 +49,15 @@ HTMLMAN_FILES     	= imports/Rapidrun.1.html
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
-DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
+DOXYGEN_CHANGELOG       = ChangeLog.tmp
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
 build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
+	$(QPRINT) "GEN" "Git ChangeLog"
+	$(Q) $(GIT_CHANGELOG) > $(DOXYGEN_CHANGELOG)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
+	$(Q) rm -f $(DOXYGEN_CHANGELOG)
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
@@ -67,6 +70,10 @@ build-docs: doxygen-check
 	$(Q) mv doxygen-html $(DOC_TARGET)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 .PHONY: build-docs
+CLEANFILES = $(DOXYGEN_CHANGELOG)
+GIT_CHANGELOG = ( git log --first-parent --date=short --pretty='%ad  %an 	\# %h%n%n%s%n%n%b' --abbrev=11 \
+		  bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD \
+		| sed 's/^/	/; s/^	//; /^[ 	]*<unknown>$$/d' )
 
 # == Upload build rules ==
 upload-docs: doxygen-check $(git_index_file)
