@@ -79,6 +79,7 @@ doxygen-html: doxygen.cfg tagfile-susv4.xml doxygen-srctree
 	&& echo "INPUT		  = doxygen-srctree/" \
 	&& echo "HAVE_DOT	  = $(DOXYGEN_GRAPHICS)" \
 	&& echo "CLASS_DIAGRAMS   = $(DOXYGEN_GRAPHICS)" \
+	&& echo "DOT_MULTI_TARGETS = YES" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
