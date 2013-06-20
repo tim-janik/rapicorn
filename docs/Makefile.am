@@ -6,11 +6,11 @@ SUBDIRS = imports tutorial
 QPRINT = @printf '  %-7s%s\n'
 
 # Describe source tree version (release tag relative, e.g. yy.mm.z-nnn-gHEXHEX)
-DSC_VERSION	= $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
+DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
 # Release version, shows last tag reachable
-REL_VERSION	= $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
+REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
 # Project version as configured
-PRJ_VERSION	= $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
+PRJ_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
 # Detailed documentation version
 DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
 
@@ -28,7 +28,7 @@ uninstall-local:
 
 # == html/ build rules ==
 include Makefile.doxygen
-git_index_file  = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
+git_index_file = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
 html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
