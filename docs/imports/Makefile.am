@@ -1,8 +1,8 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-MANMANS     = Rapidrun.1
-HTMLMANS    = Rapidrun.1.html
+MANMANS     = rapidrun.1
+HTMLMANS    = rapidrun.1.html
 EXTRA_DIST += $(MANMANS)
 # HTMLMANS are packaged as part of the doxygen docs
 

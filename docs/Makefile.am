@@ -45,7 +45,7 @@ html-docs: doxygen-check
 .PHONY: html-docs
 
 # == Doxygen Build Rules ==
-HTMLMAN_FILES     	= imports/Rapidrun.1.html
+HTMLMAN_FILES     	= imports/rapidrun.1.html
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
