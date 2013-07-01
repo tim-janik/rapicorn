@@ -1,12 +1,19 @@
-// Licensed GNU LGPL v3 or later, see: www.gnu.org              -*-mode:c++-*-
-
+// Licensed GNU LGPL v3 or later, see: www.gnu.org
 /*! @mainpage
- *
- * Documentation organization:
- * - <a href="classes.html"><b>Class Index</b></a> - Browse documentation by class names.
- * - <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> - Hello World tutorial.
- * - <a href="pages.html"><b>Related Pages</b></a> - Pages about important components.
- *
- * Manual Pages:
- * - <a href="rapidrun.1.html"><b>rapidrun.1</b></a>
- */
+
+@section documents Documents
+- <a href="rapicorn-NEWS.html"><b>Release News</b></a> - List of updates per release version
+- <a href="rapicorn-ChangeLog.html"><b>ChangeLog</b></a> - Rapicorn Development ChangeLog
+- <a href="classes.html"><b>Class Index</b></a> - Browse documentation by class names.
+- <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> - Hello World tutorial.
+- <a href="pages.html"><b>Related Pages</b></a> - Pages about important components.
+
+@section manpages Manual Pages
+- <a href="rapidrun.1.html"><b>rapidrun.1</b></a>
+
+@section weblinks Online Resources
+- <a href="http://rapicorn.org/">Rapicorn Website</a>
+- <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a>
+- <a href="http://dev.testbit.eu/rapicorn/latest/">Latest Online Documentation</a>
+
+*/
