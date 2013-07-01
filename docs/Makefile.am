@@ -51,6 +51,7 @@ DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
 DOXYGEN_CHANGELOG       = ChangeLog.tmp
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
+DOXYGEN_NEWS            = $(top_srcdir)/NEWS
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
 DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
 build-docs: doxygen-check
