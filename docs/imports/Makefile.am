@@ -1,11 +1,15 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-MANMANS    = Rapidrun.1
+MANMANS     = Rapidrun.1
 HTMLMANS    = Rapidrun.1.html
 EXTRA_DIST += $(MANMANS)
 # HTMLMANS are packaged as part of the doxygen docs
 
+# Install manual pages
+man_MANS    = ${MANMANS} # automake-1.11 needs this expandable w/o patsubst
+
+# = Import Rule =
 import: check-tools
 	$(AM_V_GEN)
 	$(Q) rm -f $(HTMLMANS) $(MANMANS)
