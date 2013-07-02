@@ -632,8 +632,13 @@ class Generator:
     return typename
   def idl_path (self):
     apath = os.path.abspath (self.idl_file)
-    if self.strip_path and apath.startswith (self.strip_path):
-      apath = apath[len (self.strip_path):]
+    if self.strip_path:
+      for prefix in (self.strip_path, os.path.abspath (self.strip_path)):
+        if apath.startswith (prefix):
+          apath = apath[len (prefix):]
+          if apath[0] == '/':
+            apath = apath[1:]
+          break
     return apath
   def pyclient_feature_keys (self):
     ak = ':' + self.apikey if self.apikey else ''
