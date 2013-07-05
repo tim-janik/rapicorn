@@ -1,6 +1,6 @@
 # [HelloRapicorn-EXAMPLE]
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-import Rapicorn1303 as Rapicorn
+import Rapicorn1307 as Rapicorn
 
 # Setup the application object, unsing a unique application name.
 app = Rapicorn.app_init ("Hello Rapicorn")
