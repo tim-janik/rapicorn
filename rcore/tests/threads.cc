@@ -86,6 +86,12 @@ test_atomic_counter (const int nthreads, int niters, V a, V b)
   TCMP (atomic_result, ==, result);
 }
 
+struct ComplexStruct {
+  String string;
+  int    x;
+  ComplexStruct (const String &s = "seven", int _x = 7) : string (s), x (_x) {}
+};
+
 static void
 test_atomic ()
 {
@@ -99,6 +105,12 @@ test_atomic ()
 #if     __SIZEOF_POINTER__ == 8
   test_atomic_counter<__int128> (68, 12500, +4200, +77000);
 #endif
+  Exclusive<ComplexStruct> excs;
+  ComplexStruct copy = excs;    // atomic access
+  assert (copy.string == "seven" && copy.x == 7);
+  excs = { "three", 3 };        // atomic access
+  copy = excs;                  // atomic access
+  assert (copy.string == "three" && copy.x == 3);
 }
 REGISTER_TEST ("Threads/Atomic Operations", test_atomic);
 
@@ -531,7 +543,7 @@ struct RingBufferWriter : public IntSequence {
           TOK();
         l += n;
       }
-    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
+    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -578,7 +590,7 @@ struct RingBufferReader : public IntSequence {
           TOK();
         l += k;
       }
-    TINFO ("%s done (%lld).", ThisThread::name().c_str(), total);
+    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 

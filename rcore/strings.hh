@@ -2,8 +2,9 @@
 #ifndef __RAPICORN_STRINGS_HH__
 #define __RAPICORN_STRINGS_HH__
 
-#include <rcore/utilities.hh>
+#include <rcore/formatter.hh>
 #include <string>
+#include <cstring>
 
 namespace Rapicorn {
 
@@ -22,6 +23,15 @@ const char*                     rapicorn_gettext        (const char *text) RAPIC
 #define STRING_VECTOR_FROM_ARRAY(ConstCharArray)        RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)
 #endif // RAPICORN_CONVENIENCE
 
+// == C-String ==
+bool    		       cstring_to_bool       (const char *string, bool fallback = false);
+
+// == String Formatting ==
+template<class... Args> String string_format         (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+template<class... Args> String string_locale_format  (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
+String                         string_vprintf        (const char *format, va_list vargs);
+String                         string_locale_vprintf (const char *format, va_list vargs);
+
 // == String ==
 String                          string_multiply          (const String &s, uint64 count);
 String                          string_canonify          (const String &s, const String &valid_chars, const String &substitute);
@@ -31,10 +41,6 @@ String                          string_set_ascii_alnum   ();
 String  			string_tolower           (const String &str);
 String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
-String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
-String  			string_vprintf           (const char *format, va_list vargs);
-String  			string_locale_printf     (const char *format, ...) RAPICORN_PRINTF (1, 2);
-String  			string_locale_vprintf    (const char *format, va_list vargs);
 StringVector 			string_split             (const String &string, const String &splitter = "");
 String  			string_join              (const String &junctor, const StringVector &strvec);
 bool    			string_to_bool           (const String &string, bool fallback = false);
@@ -81,10 +87,13 @@ int                             string_cmp_uuid          (const String &uuid_str
                                                           const String &uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 bool                            string_startswith        (const String &string, const String &fragment);
 bool                            string_endswith          (const String &string, const String &fragment);
+bool    string_match_identifier                          (const String &ident1, const String &ident2);
+bool    string_match_identifier_tail                     (const String &ident, const String &tail);
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cescape                                (const String &str);
 String  string_to_cquote                                 (const String &str);
 String  string_from_cquote                               (const String &input);
+String  string_hexdump                                   (const void *addr, size_t length, size_t initial_offset = 0);
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);
@@ -133,6 +142,10 @@ bool    text_convert    (const String &to_charset,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
 
+// == C strings ==
+using         ::strerror;       // introduce (const char* strerror (int))
+const char*     strerror ();    // simple wrapper for strerror (errno)
+
 // == Implementations ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \
   Rapicorn::StringVector __a;                                           \
@@ -141,6 +154,20 @@ bool    text_convert    (const String &to_charset,
     __a.push_back (ConstCharArray[__ai]);                               \
   __a; })
 #define RAPICORN_CQUOTE(str)    (Rapicorn::string_to_cquote (str).c_str())
+
+/// Formatted printing ala printf() into a String, using the POSIX/C locale.
+template<class... Args> RAPICORN_NOINLINE String
+string_format (const char *format, const Args &...args)
+{
+  return Lib::StringFormatter::format (NULL, format, args...);
+}
+
+/// Formatted printing ala printf() into a String, using the current locale.
+template<class... Args> RAPICORN_NOINLINE String
+string_locale_format (const char *format, const Args &...args)
+{
+  return Lib::StringFormatter::format<Lib::StringFormatter::CURRENT_LOCALE> (NULL, format, args...);
+}
 
 } // Rapicorn
 

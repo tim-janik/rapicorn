@@ -243,7 +243,7 @@ ReferenceCountable::ReferenceCountable (uint allow_stack_magic) :
        * perfect, but should catch the most common cases for growing and shrinking stacks
        */
       if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
-        fatal ("ReferenceCountable object allocated on stack instead of heap: %zu > %zu (%p - %p)",
+        fatal ("ReferenceCountable object allocated on stack instead of heap: %u > %u (%p - %p)",
                stack_proximity_threshold, stack_ptrdiff (&stackvariable, data), data, &stackvariable);
     }
 }

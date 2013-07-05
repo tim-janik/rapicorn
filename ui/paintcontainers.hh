@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class Ambience : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList&   _property_list         ();
+  virtual const PropertyList&   __aida_properties__         ();
 public:
   virtual void                  insensitive_background  (const String &color) = 0;
   virtual String                insensitive_background  () const = 0;
@@ -47,7 +47,7 @@ private:
 class Frame : public virtual ContainerImpl {
   FrameType                     frame_type      () const        { RAPICORN_ASSERT_UNREACHED(); }
 protected:
-  virtual const PropertyList&   _property_list ();
+  virtual const PropertyList&   __aida_properties__ ();
 public:
   void                          frame_type      (FrameType ft);
   virtual FrameType             normal_frame    () const = 0;
@@ -62,7 +62,7 @@ public:
 
 class FocusFrame : public virtual Frame {
 protected:
-  virtual const PropertyList&   _property_list         ();
+  virtual const PropertyList&   __aida_properties__         ();
 public:
   virtual void                  focus_frame             (FrameType ft) = 0;
   virtual FrameType             focus_frame             () const = 0;

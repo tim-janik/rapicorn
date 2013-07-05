@@ -22,7 +22,7 @@ propcanonify (String s)
 
 // == PropertyHostInterface ==
 const PropertyList&
-ImplicitBase::_property_list ()
+ImplicitBase::__aida_properties__ ()
 {
   static const PropertyList empty_property_list;
   return empty_property_list;
@@ -32,7 +32,7 @@ ImplicitBase::_property_list ()
 static Mutex plist_map_mutex;
 
 Property*
-ImplicitBase::_property_lookup (const String &property_name)
+ImplicitBase::__aida_lookup__ (const String &property_name)
 {
   // provide PropertyMaps globally
   typedef std::unordered_map<String, Property*> PropertyMap;
@@ -42,7 +42,7 @@ ImplicitBase::_property_lookup (const String &property_name)
     plist_map = new (space) std::map<const PropertyList*,PropertyMap*>();
   }
   // find or construct property map
-  const PropertyList &plist = _property_list();
+  const PropertyList &plist = __aida_properties__();
   ScopedLock<Mutex> plist_map_locker (plist_map_mutex);
   PropertyMap *pmap = (*plist_map)[&plist];
   if (!pmap)
@@ -69,9 +69,9 @@ ImplicitBase::_property_lookup (const String &property_name)
 }
 
 bool
-ImplicitBase::_property_set (const String &property_name, const String &value)
+ImplicitBase::__aida_setter__ (const String &property_name, const String &value)
 {
-  Property *prop = _property_lookup (property_name);
+  Property *prop = __aida_lookup__ (property_name);
   if (!prop)
     return false;
   prop->set_value (*this, value);
@@ -79,9 +79,9 @@ ImplicitBase::_property_set (const String &property_name, const String &value)
 }
 
 String
-ImplicitBase::_property_get (const String &property_name)
+ImplicitBase::__aida_getter__ (const String &property_name)
 {
-  Property *prop = _property_lookup (property_name);
+  Property *prop = __aida_lookup__ (property_name);
   if (!prop)
     return ""; // be more verbose here?
   return prop->get_value (*this);

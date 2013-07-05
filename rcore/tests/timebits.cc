@@ -46,7 +46,7 @@ quick_timer_test()
     TASSERT (accu > 0);
     TASSERT (i != big);
     if (Test::verbose())
-      printout ("QuickTimer: loop performed %zu runs in %zuµs and accumulated: accu=%zu average=%zu\n",
+      printout ("QuickTimer: loop performed %u runs in %uµs and accumulated: accu=%u average=%u\n",
                 size_t (i), size_t (benchdone - benchstart), size_t (accu), size_t (accu / i));
   }
 }

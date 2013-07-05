@@ -2,18 +2,27 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
+DEFS     += -DRAPICORN_CONVENIENCE
 
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
+TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
+# == ptptest ==
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 ptptest_LDFLAGS = -pthread -lpthread
 ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
-$(srcdir)/ptptest.cc: typecodetests.typ
+ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
 EXTRA_DIST += typecodetests.idl
-CLEANFILES += typecodetests.typ
+typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC) $(CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) ${AIDACC} -x CxxStub -G clienthh $< -o xgen-$(@F).hh
+	$(Q) ${AIDACC} -x CxxStub -G clientcc $< -o xgen-$(@F).cc
+	$(Q) cat xgen-$(@F).hh xgen-$(@F).cc >$@
+	$(Q) rm -f xgen-$(@F).hh xgen-$(@F).cc
+CLEANFILES += typecodetests.typ typecodetests-api.cc
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
 EXTRA_DIST += testfail.ref
@@ -24,7 +33,7 @@ TESTPASS_AUXTESTS = --aux-test label=AuxF64 --aux-test AuxStr --aux-test Aux32 \
 		    --aux-test default=10007 --aux-test hints=rw
 
 ### Aida build rule for binary type maps
-%.typ: %.idl
+%.typ: %.idl $(TYPEMAP_PY)
 	$(AM_V_GEN)
 	$(Q) ${AIDACC} $< -x TypeMap -o xtmp-$(@F)
 	$(Q) rm -f $@ && mv xtmp-$(@F) $@
@@ -60,23 +69,23 @@ check-aida-standard-types: ptptest
 check-local: check-aida-standard-types
 
 # == Test TypeMap ==
-check-aida-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${AIDACC} $(srcdir)/testpass.idl -x TypeMap  ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
+check-aida-format-TypeMap: $(srcdir)/testpass.idl $(TYPEMAP_PY) ptptest
+	$(Q) ${AIDACC} $< -x TypeMap ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
 	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f idltypes.map
 check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen

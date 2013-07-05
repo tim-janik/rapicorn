@@ -15,13 +15,16 @@ void    init_core               (const String       &app_ident,
                                  int                *argcp,
                                  char              **argv,
                                  const StringVector &args = StringVector());
-struct InitSettings {
-  static bool  autonomous()    { return sis->autonomous_; } ///< self-contained runtime, no rcfiles, boot scripts, etc
-  static uint  test_codes()    { return sis->test_codes_; } // internal test flags
+bool    init_core_initialized   ();
+
+class InitSettings {
+  static const InitSettings &is;
 protected:
-  static const InitSettings *sis;
-  bool autonomous_;
-  uint test_codes_;
+  uint64 test_codes_;
+  bool   autonomous_;
+public:
+  static bool   autonomous()    { return is.autonomous_; } ///< Indicates self-contained runtime, no rcfiles, boot scripts, etc.
+  static uint64 test_codes()    { return is.test_codes_; } ///< Internal test flags.
 };
 
 bool    arg_parse_option        (uint         argc,

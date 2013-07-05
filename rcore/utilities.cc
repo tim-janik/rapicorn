@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "utilities.hh"
+#include "inout.hh"
 #include "main.hh"
 #include "strings.hh"
 #include "unicode.hh"
@@ -18,7 +19,6 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
-#include <syslog.h>
 #include <execinfo.h>
 #include <stdexcept>
 
@@ -137,8 +137,8 @@ String
 timestamp_format (uint64 stamp)
 {
   const size_t fieldwidth = 8;
-  const String fsecs = string_printf ("%zu", size_t (stamp) / 1000000);
-  const String usecs = string_printf ("%06zu", size_t (stamp) % 1000000);
+  const String fsecs = string_format ("%u", size_t (stamp) / 1000000);
+  const String usecs = string_format ("%06u", size_t (stamp) % 1000000);
   String r = fsecs;
   if (r.size() < fieldwidth)
     r += '.';
@@ -147,529 +147,7 @@ timestamp_format (uint64 stamp)
   return r;
 }
 
-// == KeyConfig ==
-struct KeyConfig {
-  typedef std::map<String, String> StringMap;
-  Mutex         mutex_;
-  StringMap     map_;
-public:
-  void          assign    (const String &key, const String &val);
-  String        slookup   (const String &key, const String &dfl = "");
-  void          configure (const String &colon_options, bool &seen_debug_key);
-};
-void
-KeyConfig::assign (const String &key, const String &val)
-{
-  ScopedLock<Mutex> locker (mutex_);
-  map_[key] = val;
-}
-String
-KeyConfig::slookup (const String &ckey, const String &dfl)
-{
-  // alias: "verbose" -> "debug"
-  String key = ckey == "verbose" ? "debug" : ckey;
-  ScopedLock<Mutex> locker (mutex_);
-  StringMap::iterator it = map_.find (key);
-  return it == map_.end() ? dfl : it->second;
-}
-void
-KeyConfig::configure (const String &colon_options, bool &seen_debug_key)
-{
-  ScopedLock<Mutex> locker (mutex_);
-  vector<String> onames, ovalues;
-  string_options_split (colon_options, onames, ovalues, "1");
-  for (size_t i = 0; i < onames.size(); i++)
-    {
-      String key = onames[i], val = ovalues[i];
-      std::transform (key.begin(), key.end(), key.begin(), ::tolower);
-      if (key.compare (0, 3, "no-") == 0)
-        {
-          key = key.substr (3);
-          val = string_from_int (!string_to_bool (val));
-        }
-      if (key.compare (0, 6, "debug-") == 0 && key.size() > 6)
-        seen_debug_key = seen_debug_key || string_to_bool (val);
-      // alias: "verbose" -> "debug", "V=1" -> "debug", "V=0" -> "no-debug"
-      if (key == "verbose" || (key == "v" && isdigit (string_lstrip (val).c_str()[0])))
-        key = "debug";
-      map_[key] = val;
-    }
-}
-
 // === Logging ===
-bool                        _debug_flag = true; // bootup default before _init()
-bool                        _devel_flag = RAPICORN_DEVEL_VERSION; // bootup default before _init()
-static Atomic<char>         conftest_general_debugging = false;
-static Atomic<char>         conftest_key_debugging = false;
-static Atomic<KeyConfig*>   conftest_map = NULL;
-static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0:color=auto";
-
-static inline KeyConfig&
-conftest_procure ()
-{
-  KeyConfig *kconfig = conftest_map.load();
-  if (UNLIKELY (kconfig == NULL))
-    {
-      kconfig = new KeyConfig();
-      bool dummy = 0;
-      kconfig->configure (conftest_defaults, dummy);
-      if (conftest_map.cas (NULL, kconfig))
-        {
-          const char *env_rapicorn = getenv ("RAPICORN");
-          // configure with support for aliases, caches, etc
-          debug_configure (env_rapicorn ? env_rapicorn : "");
-        }
-      else
-        {
-          delete kconfig; // some other thread was faster
-          kconfig = conftest_map.load();
-        }
-    }
-  return *kconfig;
-}
-
-void
-debug_configure (const String &options)
-{
-  bool seen_debug_key = false;
-  conftest_procure().configure (options, seen_debug_key);
-  if (seen_debug_key)
-    conftest_key_debugging.store (true);
-  conftest_general_debugging.store (debug_confbool ("verbose") || debug_confbool ("debug-all"));
-  Lib::atomic_store (&_debug_flag, bool (conftest_key_debugging.load() | conftest_general_debugging.load())); // update "cached" configuration
-  Lib::atomic_store (&_devel_flag, debug_confbool ("devel", RAPICORN_DEVEL_VERSION)); // update "cached" configuration
-  if (debug_confbool ("help"))
-    do_once { printerr ("%s", debug_help().c_str()); }
-}
-
-static std::list<DebugEntry*> *debug_entries;
-
-void
-DebugEntry::dbe_list (DebugEntry *e, int what)
-{
-  do_once {
-    static uint64 space[sizeof (*debug_entries) / sizeof (uint64)];
-    debug_entries = new (space) std::list<DebugEntry*>();
-  }
-  if (what > 0)
-    debug_entries->push_back (e);
-  else if (what < 0)
-    debug_entries->remove (e);
-}
-
-String
-debug_help ()
-{
-  String s;
-  s += "$RAPICORN - Environment variable for debugging and configuration.\n";
-  s += "Colon seperated options can be listed here, listing an option enables it,\n";
-  s += "prefixing it with 'no-' disables it. Option assignments are supported with\n";
-  s += "the syntax 'option=VALUE'. The supported options are:\n";
-  s += "  :help:            Provide a brief description for this environment variable.\n";
-  s += "  :debug:           Enable general debugging messages, similar to :verbose:.\n";
-  s += "  :debug-KEY:       Enable special purpose debugging, denoted by 'KEY'.\n";
-  s += "  :debug-all:       Enable general and all special purpose debugging messages.\n";
-  s += "  :devel:           Enable development version behavior.\n";
-  s += "  :color:           Colorize error messages, can be 'never', 'always', 'auto'.\n";
-  s += "  :verbose:         Enable general information and diagnostic messages.\n";
-  s += "  :no-fatal-syslog: Disable logging of fatal conditions through syslog(3).\n";
-  s += "  :syslog:          Enable logging of general messages through syslog(3).\n";
-  s += "  :fatal-warnings:  Cast all warning messages into fatal conditions.\n";
-  for (auto it : *debug_entries)
-    {
-      String k = string_printf ("  :%s:", it->key);
-      if (!it->blurb)
-        s += k + "\n";
-      else if (k.size() >= 20)
-        s += k + "\n" + string_multiply (" ", 20) + it->blurb + "\n";
-      else
-        s += k + string_multiply (" ", 20 - k.size()) + it->blurb + "\n";
-    }
-  return s;
-}
-
-String
-debug_confstring (const String &option, const String &vdefault)
-{
-  String key = option;
-  std::transform (key.begin(), key.end(), key.begin(), ::tolower);
-  return conftest_procure().slookup (key, vdefault);
-}
-
-bool
-debug_confbool (const String &option, bool vdefault)
-{
-  return string_to_bool (debug_confstring (option, string_from_int (vdefault)));
-}
-
-int64
-debug_confnum (const String &option, int64 vdefault)
-{
-  return string_to_int (debug_confstring (option, string_from_int (vdefault)));
-}
-
-bool
-debug_key_enabled (const char *key)
-{
-  String dkey = key ? key : "";
-  std::transform (dkey.begin(), dkey.end(), dkey.begin(), ::tolower);
-  const bool keycheck = !key || debug_confbool ("debug-" + dkey) || // key selected
-                        (debug_confbool ("debug-all") &&            // all keys enabled by default
-                         debug_confbool ("debug-" + dkey, true));   // ensure key was not deselected
-  return keycheck;
-}
-
-static int
-thread_pid()
-{
-  int tid = -1;
-#if     defined (__linux__) && defined (__NR_gettid)    /* present on linux >= 2.4.20 */
-  tid = syscall (__NR_gettid);
-#endif
-  if (tid < 0)
-    tid = getpid();
-  return tid;
-}
-
-static void
-ensure_openlog()
-{
-  do_once { openlog (NULL, LOG_PID, LOG_USER); } // force pid logging
-}
-
-static inline int
-logtest (const char **kindp, const char *mode, int advance, int flags)
-{
-  if (strcmp (*kindp, mode) == 0)
-    {
-      *kindp += advance;
-      return flags;
-    }
-  return 0;
-}
-
-static String
-dbg_prefix (const String &fileline)
-{
-  // reduce "foo/bar.c:77" to "bar"
-  String cxxstring = fileline;
-  char *string = &cxxstring[0];
-  char *d = strrchr (string, '.');
-  if (d)
-    {
-      char *s = strrchr (string, DIR_SEPARATOR);
-      if (d > s) // strip ".c:77"
-        {
-          *d = 0;
-          return s ? s + 1 : string;
-        }
-    }
-  return fileline;
-}
-
-// export debug_handler() symbol for debugging stacktraces and gdb
-extern void debug_handler (const char, const String&, const String&, const char *key = NULL) __attribute__ ((noinline));
-
-// check for colorization only once
-static inline bool
-colorize_stderr()
-{
-  Atomic<char> conftest_colorize = -1; // initially unknown
-  char vbool = conftest_colorize.load();
-  if (UNLIKELY (vbool == -1))
-    {
-      String value = debug_confstring ("color");
-      if (value == "always")
-        vbool = true;
-      else if (value == "never")
-        vbool = false;
-      else if (value == "auto")
-        {
-          vbool = false;
-          if (isatty (1) && isatty (2))
-            {
-              char *term = getenv ("TERM");
-              if (term && strcmp (term, "dumb") != 0)
-                vbool = true;
-            }
-        }
-      else
-        vbool = string_to_bool (value, 0);
-      conftest_colorize.cas (-1, vbool); // prevent overiding of existing values
-      vbool = conftest_colorize.load();
-    }
-  return vbool;
-}
-
-enum AnsiColors {
-  ANSI_NONE,
-  ANSI_RESET,
-  ANSI_BOLD, ANSI_BOLD_OFF,
-  ANSI_ITALICS, ANSI_ITALICS_OFF,
-  ANSI_UNDERLINE, ANSI_UNDERLINE_OFF,
-  ANSI_INVERSE, ANSI_INVERSE_OFF,
-  ANSI_STRIKETHROUGH, ANSI_STRIKETHROUGH_OFF,
-  ANSI_FG_BLACK, ANSI_FG_RED, ANSI_FG_GREEN, ANSI_FG_YELLOW, ANSI_FG_BLUE, ANSI_FG_MAGENTA, ANSI_FG_CYAN, ANSI_FG_WHITE,
-  ANSI_FG_DEFAULT,
-  ANSI_BG_BLACK, ANSI_BG_RED, ANSI_BG_GREEN, ANSI_BG_YELLOW, ANSI_BG_BLUE, ANSI_BG_MAGENTA, ANSI_BG_CYAN, ANSI_BG_WHITE,
-  ANSI_BG_DEFAULT,
-};
-
-static const char*
-ansi_color (AnsiColors acolor)
-{
-  switch (acolor)
-    {
-    default: ;
-    case ANSI_NONE:             return "";
-    case ANSI_RESET:            return "\033[0m";
-    case ANSI_BOLD:             return "\033[1m";
-    case ANSI_BOLD_OFF:         return "\033[22m";
-    case ANSI_ITALICS:          return "\033[3m";
-    case ANSI_ITALICS_OFF:      return "\033[23m";
-    case ANSI_UNDERLINE:        return "\033[4m";
-    case ANSI_UNDERLINE_OFF:    return "\033[24m";
-    case ANSI_INVERSE:          return "\033[7m";
-    case ANSI_INVERSE_OFF:      return "\033[27m";
-    case ANSI_STRIKETHROUGH:    return "\033[9m";
-    case ANSI_STRIKETHROUGH_OFF:return "\033[29m";
-    case ANSI_FG_BLACK:         return "\033[30m";
-    case ANSI_FG_RED:           return "\033[31m";
-    case ANSI_FG_GREEN:         return "\033[32m";
-    case ANSI_FG_YELLOW:        return "\033[33m";
-    case ANSI_FG_BLUE:          return "\033[34m";
-    case ANSI_FG_MAGENTA:       return "\033[35m";
-    case ANSI_FG_CYAN:          return "\033[36m";
-    case ANSI_FG_WHITE:         return "\033[37m";
-    case ANSI_FG_DEFAULT:       return "\033[39m";
-    case ANSI_BG_BLACK:         return "\033[40m";
-    case ANSI_BG_RED:           return "\033[41m";
-    case ANSI_BG_GREEN:         return "\033[42m";
-    case ANSI_BG_YELLOW:        return "\033[43m";
-    case ANSI_BG_BLUE:          return "\033[44m";
-    case ANSI_BG_MAGENTA:       return "\033[45m";
-    case ANSI_BG_CYAN:          return "\033[46m";
-    case ANSI_BG_WHITE:         return "\033[47m";
-    case ANSI_BG_DEFAULT:       return "\033[49m";
-    }
-}
-
-static const char*
-color (AnsiColors acolor)
-{
-  return colorize_stderr() ? ansi_color (acolor) : "";
-}
-
-void // internal function, this + caller are skipped in backtraces
-debug_handler (const char dkind, const String &file_line, const String &message, const char *key)
-{
-  /* The logging system must work before Rapicorn is initialized, and possibly even during
-   * global_ctor phase. So any initialization needed here needs to be handled on demand.
-   */
-  String msg = message;
-  const char kind = toupper (dkind);
-  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
-         DO_STAMP = 32, DO_LOGFILE = 64, DO_FIXIT = 128, DO_BACKTRACE = 256, };
-  static int conftest_logfd = 0;
-  const String conftest_logfile = conftest_logfd == 0 ? conftest_procure().slookup ("logfile") : "";
-  const int FATAL_SYSLOG = debug_confbool ("fatal-syslog") ? DO_SYSLOG : 0;
-  const int MAY_SYSLOG = debug_confbool ("syslog") ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = debug_confbool ("fatal-warnings") ? DO_ABORT  : 0;
-  const char *what = "DEBUG";
-  int f = islower (dkind) ? DO_ERRNO : 0;                       // errno checks for lower-letter kinds
-  switch (kind)
-    {
-    case 'F': what = "FATAL";    f |= DO_STDERR | FATAL_SYSLOG | DO_ABORT;  break;      // fatal, assertions
-    case 'C': what = "CRITICAL"; f |= DO_STDERR | MAY_SYSLOG   | MAY_ABORT; break;      // critical
-    case 'X': what = "FIX""ME";  f |= DO_FIXIT  | DO_STAMP;                 break;      // fixing needed
-    case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
-    case 'K': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug with key
-    }
-  f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
-  f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
-  const String where = file_line + (file_line.empty() ? "" : ": ");
-  const String wherewhat = where + what + ": ";
-  String emsg = "\n"; // (f & DO_ERRNO ? ": " + string_from_errno (saved_errno) : "")
-  if (kind == 'A')
-    msg = "assertion failed: " + msg;
-  else if (kind == 'U')
-    msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
-  else if (kind == 'I')
-    msg = "condition failed: " + msg;
-  const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
-  if (f & DO_STAMP)
-    do_once {
-      printerr ("[%s] %s[%u]: program started at: %.6f\n",
-                timestamp_format (delta).c_str(),
-                program_alias().c_str(), thread_pid(),
-                start / 1000000.0);
-    }
-  if (f & DO_DEBUG)
-    {
-      String intro, prefix = key ? key : dbg_prefix (file_line);
-      if (prefix.size())
-        prefix = prefix + ": ";
-      if (f & DO_STAMP)
-        intro = string_printf ("[%s]", timestamp_format (delta).c_str());
-      printerr ("%s %s%s%s", intro.c_str(), prefix.c_str(), msg.c_str(), emsg.c_str());
-    }
-  if (f & DO_FIXIT)
-    {
-      printerr ("%s: %s%s%s", what, where.c_str(), msg.c_str(), emsg.c_str());
-    }
-  if (f & DO_STDERR)
-    {
-      const char *cy1 = color (ANSI_FG_CYAN), *cy0 = color (ANSI_FG_DEFAULT);
-      const char *bo1 = color (ANSI_BOLD), *bo0 = color (ANSI_BOLD_OFF);
-      const char *fgw = color (ANSI_FG_WHITE), *fgc1 = fgw, *fgc0 = color (ANSI_FG_DEFAULT), *fbo1 = "", *fbo0 = "";
-      switch (kind)
-        {
-        case 'F':
-          fgc1 = color (ANSI_FG_RED);
-          fbo1 = bo1;                           fbo0 = bo0;
-          break;
-        case 'C':
-          fgc1 = color (ANSI_FG_YELLOW);
-          break;
-        }
-      printerr ("%s%s%s%s%s%s%s%s[%u] %s%s%s:%s%s %s%s",
-                cy1, where.c_str(), cy0,
-                bo1, fgw, program_alias().c_str(), fgc0, bo0, thread_pid(),
-                fbo1, fgc1, what,
-                fgc0, fbo0,
-                msg.c_str(), emsg.c_str());
-      if (f & DO_ABORT)
-        printerr ("Aborting...\n");
-    }
-  if (f & DO_SYSLOG)
-    {
-      ensure_openlog();
-      String end = emsg;
-      if (!end.empty() && end[end.size()-1] == '\n')
-        end.resize (end.size()-1);
-      const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
-      const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
-      syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
-    }
-  String btmsg;
-  if (f & DO_BACKTRACE)
-    {
-      size_t addr;
-      const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_printf ("%sBacktrace at 0x%08zx (stackframe at 0x%08zx):\n", where.c_str(),
-                             addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
-      for (size_t i = 0; i < syms.size(); i++)
-        btmsg += string_printf ("  %s\n", syms[i].c_str());
-    }
-  if (f & DO_LOGFILE)
-    {
-      String out;
-      do_once
-        {
-          int fd;
-          do
-            fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
-          while (conftest_logfd < 0 && errno == EINTR);
-          if (fd == 0) // invalid initialization value
-            {
-              fd = dup (fd);
-              close (0);
-            }
-          out = string_printf ("[%s] %s[%u]: program started at: %s\n",
-                               timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
-                               timestamp_format (start).c_str());
-          conftest_logfd = fd;
-        }
-      out += string_printf ("[%s] %s[%u]:%s%s%s",
-                            timestamp_format (delta).c_str(), program_alias().c_str(), thread_pid(),
-                            wherewhat.c_str(), msg.c_str(), emsg.c_str());
-      if (f & DO_ABORT)
-        out += "aborting...\n";
-      int err;
-      do
-        err = write (conftest_logfd, out.data(), out.size());
-      while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      if (f & DO_BACKTRACE)
-        do
-          err = write (conftest_logfd, btmsg.data(), btmsg.size());
-        while (err < 0 && (errno == EINTR || errno == EAGAIN));
-    }
-  if (f & DO_BACKTRACE)
-    printerr ("%s", btmsg.c_str());
-  if (f & DO_ABORT)
-    {
-      ::abort();
-    }
-}
-
-void
-debug_assert (const char *file_path, const int line, const char *message)
-{
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
-}
-
-void
-debug_fassert (const char *file_path, const int line, const char *message)
-{
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), string_printf ("assertion failed: %s", message));
-  ::abort();
-}
-
-void
-debug_fatal (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('F', string_printf ("%s:%d", file_path, line), msg);
-  ::abort();
-}
-
-void
-debug_critical (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('C', string_printf ("%s:%d", file_path, line), msg);
-}
-
-void
-debug_fixit (const char *file_path, const int line, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('X', string_printf ("%s:%d", file_path, line), msg);
-}
-
-void
-debug_general (const char *file_path, const int line, const char *format, ...)
-{
-  if (!conftest_general_debugging)
-    return;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('D', string_printf ("%s:%d", file_path, line), msg);
-}
-
-void
-debug_keymsg (const char *file_path, const int line, const char *key, const char *format, ...)
-{
-  if (!debug_enabled (key))
-    return;
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  debug_handler ('K', string_printf ("%s:%d", file_path, line), msg, key);
-}
-
 String
 pretty_file (const char *file_dir, const char *file)
 {
@@ -678,18 +156,6 @@ pretty_file (const char *file_dir, const char *file)
   if (RAPICORN_IS_ABSPATH (file) || !file_dir || !file_dir[0])
     return file;
   return String (file_dir) + "/" + file;
-}
-
-const char*
-strerror (void)
-{
-  return strerror (errno);
-}
-
-const char*
-strerror (int errnum)
-{
-  return ::strerror (errnum);
 }
 
 #define BACKTRACE_DEPTH         1024
@@ -774,231 +240,30 @@ debug_backtrace_showshot (size_t key)
   const vector<String> syms = pretty_backtrace_symbols (bbuffer.ptrbuffer, bbuffer.nptrs, 0);
   String btmsg;
   size_t addr = bbuffer.nptrs >= 1 ? size_t (bbuffer.ptrbuffer[1]) : 0;
-  btmsg = string_printf ("Backtrace at 0x%08zx (stackframe at 0x%08zx):\n", addr, size_t (__builtin_frame_address (0)));
+  btmsg = string_format ("Backtrace at 0x%08x (stackframe at 0x%08x):\n", addr, size_t (__builtin_frame_address (0)));
   for (size_t i = 0; i < syms.size(); i++)
-    btmsg += string_printf ("  %s\n", syms[i].c_str());
+    btmsg += string_format ("  %s\n", syms[i].c_str());
   return btmsg;
-}
-
-// === User Messages ==
-/// Capture the filename and line number of a user provided resource file.
-UserSource::UserSource (String _filename, int _lineno) :
-  filename (_filename), lineno (_lineno)
-{}
-
-static void
-user_message (const UserSource &source, const String &kind, const String &message)
-{
-  String fname, mkind, pname = program_alias();
-  if (!pname.empty())
-    pname += ":";
-  if (!kind.empty())
-    mkind = " " + kind + ":";
-  if (!source.filename.empty())
-    fname = source.filename + ":";
-  if (source.lineno)
-    fname = fname + string_printf ("%d:", source.lineno);
-  // obey GNU warning style to allow automated location parsing
-  printerr ("%s%s%s %s\n", pname.c_str(), fname.c_str(), mkind.c_str(), message.c_str());
-}
-
-/// Issue a notice about user resources.
-void
-user_notice (const UserSource &source, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "", msg);
-}
-
-/// Issue a warning about user resources that likely need fixing.
-void
-user_warning (const UserSource &source, const char *format, ...)
-{
-  va_list vargs;
-  va_start (vargs, format);
-  String msg = string_vprintf (format, vargs);
-  va_end (vargs);
-  user_message (source, "warning", msg);
-}
-
-// == AssertionError ==
-static String
-construct_error_msg (const String &file, size_t line, const char *error, const String &expr)
-{
-  String s;
-  if (!file.empty())
-    {
-      s += file;
-      if (line > 0)
-        s += ":" + string_from_int (line);
-      s += ": ";
-    }
-  s += error;
-  if (!expr.empty())
-    {
-      s += ": ";
-      s += expr;
-    }
-  return s;
-}
-
-AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
-  msg_ (construct_error_msg (file, line, "assertion failed", expr))
-{}
-
-AssertionError::~AssertionError () throw()
-{}
-
-const char*
-AssertionError::what () const throw()
-{
-  return msg_.c_str();
 }
 
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
+ * Expand to a string literal, describing the current code location.
  * Returns a string describing the current source code location, such as FILE and LINE number.
- */
-/**
- * @def STRLOC()
- * Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_IF(expr [, rvalue])
+ * Return if @a expr evaluates to true.
  * Silently return @a rvalue if expression @a expr evaluates to true. Returns void if @a rvalue was not specified.
- */
-/**
- * @def return_if(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
  */
 
 /**
  * @def RAPICORN_RETURN_UNLESS(expr [, rvalue])
+ * Return if @a expr is false.
  * Silently return @a rvalue if expression @a expr evaluates to false. Returns void if @a rvalue was not specified.
  */
-/**
- * @def return_unless(expr [, rvalue])
- * Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_FATAL(format,...)
- * Issues an error message, and aborts the program. The error message @a format uses printf-like syntax.
- */
-/**
- * @def fatal(format,...)
- * Shorthand for RAPICORN_FATAL() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_ASSERT(cond)
- * Issue an error and abort the program if expression @a cond evaluates to false.
- */
-/**
- * @def assert(cond)
- * Shorthand for RAPICORN_ASSERT() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_ASSERT_RETURN(cond [, rvalue])
- * Issue an error and return @a rvalue if expression @a cond evaluates to false. Returns void if @a rvalue was not specified.
- * This is normally used as function entry condition.
- */
-/**
- * @def assert_return(cond [, rvalue])
- * Shorthand for RAPICORN_ASSERT_RETURN() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_ASSERT_UNREACHED()
- * Issues an error message, and aborts the program if it is reached at runtime.
- * This is normally used to label code conditions intended to be unreachable.
- */
-/**
- * @def assert_unreached
- * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_CRITICAL(format,...)
- * Issues an error message, and aborts the program if it was started with RAPICORN=fatal-criticals.
- * The error message @a format uses printf-like syntax.
- */
-/**
- * @def critical(format,...)
- * Shorthand for RAPICORN_CRITICAL() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_CRITICAL_UNLESS(cond)
- * Behaves like RAPICORN_CRITICAL() if expression @a cond evaluates to false.
- * This is normally used as a non-fatal assertion.
- */
-/**
- * @def critical_unless(cond)
- * Shorthand for RAPICORN_CRITICAL_UNLESS() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_DEBUG(format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug.
- * The message @a format uses printf-like syntax.
- */
-/**
- * @def DEBUG(format,...)
- * Shorthand for RAPICORN_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_KEY_DEBUG(key, format,...)
- * Issues an debugging message if the program was started with RAPICORN=debug-<KEY>, where <KEY> is given as @a key.
- * The message @a format uses printf-like syntax.
- */
-/**
- * @def KEY_DEBUG(format,...)
- * Shorthand for RAPICORN_KEY_DEBUG() if RAPICORN_CONVENIENCE is defined.
- */
-
-/**
- * @def RAPICORN_THROW_IF_FAIL(expr)
- * Throws an AssertionError exception with error message if expression @a expr evaluates to false.
- * This is normally used as function entry condition.
- */
-/**
- * @def throw_if_fail
- * Shorthand for RAPICORN_THROW_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
- */
-
-
-// == utilities ==
-void
-printerr (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stdout);
-  fputs (ers.c_str(), stderr);
-  fflush (stderr);
-}
-
-void
-printout (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  fflush (stderr);
-  fputs (ers.c_str(), stdout);
-  fflush (stdout);
-}
 
 /* --- process handle --- */
 static struct {
@@ -1102,7 +367,7 @@ static InitHook _process_handle_and_seed_init ("core/01 Init Process Handle and 
 String
 process_handle ()
 {
-  return string_printf ("%s/%08x", process_info.uts.nodename, process_hash);
+  return string_format ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
 /// The Path namespace provides functions for file path manipulation and testing.
@@ -1480,87 +745,6 @@ memfree (char *memread_mem)
 
 } // Path
 
-/* --- Id Allocator --- */
-IdAllocator::IdAllocator ()
-{}
-
-IdAllocator::~IdAllocator ()
-{}
-
-class IdAllocatorImpl : public IdAllocator {
-  Spinlock     mutex;
-  const uint   counterstart, wbuffer_capacity;
-  uint         counter, wbuffer_pos, wbuffer_size;
-  uint        *wbuffer;
-  vector<uint> free_ids;
-public:
-  explicit     IdAllocatorImpl (uint startval, uint wbuffercap);
-  virtual     ~IdAllocatorImpl () { delete[] wbuffer; }
-  virtual uint alloc_id        ();
-  virtual void release_id      (uint unique_id);
-  virtual bool seen_id         (uint unique_id);
-};
-
-IdAllocator*
-IdAllocator::_new (uint startval)
-{
-  return new IdAllocatorImpl (startval, 97);
-}
-
-IdAllocatorImpl::IdAllocatorImpl (uint startval, uint wbuffercap) :
-  counterstart (startval), wbuffer_capacity (wbuffercap),
-  counter (counterstart), wbuffer_pos (0), wbuffer_size (0)
-{
-  wbuffer = new uint[wbuffer_capacity];
-}
-
-void
-IdAllocatorImpl::release_id (uint unique_id)
-{
-  assert_return (unique_id >= counterstart && unique_id < counter);
-  /* protect */
-  mutex.lock();
-  /* release oldest withheld id */
-  if (wbuffer_size >= wbuffer_capacity)
-    free_ids.push_back (wbuffer[wbuffer_pos]);
-  /* withhold released id */
-  wbuffer[wbuffer_pos++] = unique_id;
-  wbuffer_size = MAX (wbuffer_size, wbuffer_pos);
-  if (wbuffer_pos >= wbuffer_capacity)
-    wbuffer_pos = 0;
-  /* cleanup */
-  mutex.unlock();
-}
-
-uint
-IdAllocatorImpl::alloc_id ()
-{
-  uint64 unique_id;
-  mutex.lock();
-  if (free_ids.empty())
-    unique_id = counter++;
-  else
-    {
-      uint64 randomize = uint64 (this) + (uint64 (&randomize) >> 3); // cheap random data
-      randomize += wbuffer[wbuffer_pos] + wbuffer_pos + counter; // add entropy
-      uint random_pos = randomize % free_ids.size();
-      unique_id = free_ids[random_pos];
-      free_ids[random_pos] = free_ids.back();
-      free_ids.pop_back();
-    }
-  mutex.unlock();
-  return unique_id;
-}
-
-bool
-IdAllocatorImpl::seen_id (uint unique_id)
-{
-  mutex.lock();
-  bool inrange = unique_id >= counterstart && unique_id < counter;
-  mutex.unlock();
-  return inrange;
-}
-
 /* --- DataList --- */
 DataList::NodeBase::~NodeBase ()
 {}
@@ -1698,7 +882,7 @@ url_test_show (const char *url)
                                    NULL, /* child_pid */
                                    &error);
         g_free (string);
-        DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
+        RAPICORN_KEY_DEBUG ("URL", "show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
         g_clear_error (&error);
         if (success)
           return true;
@@ -1714,7 +898,7 @@ static void
 browser_launch_warning (const char *url)
 {
   // FIXME: turn browser_launch_warning into a dialog
-  user_warning (UserSource (__FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
+  user_warning (UserSource ("URL", __FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
 }
 
 void
@@ -1877,45 +1061,6 @@ cleanup_add (guint          timeout_ms,
   cleanup_list = g_slist_prepend (cleanup_list, cleanup);
   cleanup_mutex.unlock();
   return cleanup->id;
-}
-
-/* --- memory utils --- */
-void*
-malloc_aligned (gsize	  total_size,
-                gsize	  alignment,
-                guint8	**free_pointer)
-{
-  uint8 *aligned_mem = (uint8*) g_malloc (total_size);
-  *free_pointer = aligned_mem;
-  if (!alignment || !size_t (aligned_mem) % alignment)
-    return aligned_mem;
-  g_free (aligned_mem);
-  aligned_mem = (uint8*) g_malloc (total_size + alignment - 1);
-  *free_pointer = aligned_mem;
-  if (size_t (aligned_mem) % alignment)
-    aligned_mem += alignment - size_t (aligned_mem) % alignment;
-  return aligned_mem;
-}
-
-/**
- * The fmsb() function returns the position of the most significant bit set in the word @a val.
- * The least significant bit is position 1 and the most significant position is, for example, 32 or 64.
- * @returns The position of the most significant bit set is returned, or 0 if no bits were set.
- */
-int // 0 or 1..64
-fmsb (uint64 val)
-{
-  if (val >> 32)
-    return 32 + fmsb (val >> 32);
-  int nb = 32;
-  do
-    {
-      nb--;
-      if (val & (1U << nb))
-        return nb + 1;  /* 1..32 */
-    }
-  while (nb > 0);
-  return 0; /* none found */
 }
 
 /* --- zintern support --- */

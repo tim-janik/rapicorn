@@ -40,28 +40,28 @@ noinst_DATA  = resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting
-check-assertion-handlers: testrcore2
+check-assertion-handler: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \
-	       for arg in --test-assert --test-unreached --test-fatal --test-TCMP ; do \
+	       for arg in --test-assert --test-unreached --test-fatal --test-TASSERT --test-TCMP --test-assertion-hook ; do \
 	         ! ./testrcore2 $$arg 2>>$(TSTOUT) || exit $? ; done ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) failing assert'"
-	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) failing unreached'"
+	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) assert'"
+	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) unreached'"
 	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) fatal error'"
-	$(Q) grep -q 'FATAL:.*".*fail.*TCMP"' $(TSTOUT)	        ; eval "$$TSTDIAGNOSE" "'$(@F) failing TCMP()'"
+	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) TASSERT()'"
+	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) TCMP()'"
+	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) Test::set_assertion_hook()'"
 	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) aborting'"
 	$(Q) rm -f $(TSTOUT)
-check: check-assertion-handlers
+check: check-assertion-handler
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
-	$(Q) rm -f $(TSTOUT) ; RAPICORN=debug:no-syslog:no-fatal-syslog \
+	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
 	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
+	$(Q) grep -q 'debugging messages' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
 	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
-	$(Q) grep -q 'exception.*"throw-if-fail"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) throw-if-fail'"
 	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return'"
 	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return+value'"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test critical()'"
-	$(Q) grep -q 'FIX''ME:.*FIX''ME() test' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test FIX''ME()'"
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output
 # process handle

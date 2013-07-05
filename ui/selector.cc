@@ -3,6 +3,8 @@
 #include "factory.hh"
 #include <string.h>
 
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Selector", __VA_ARGS__)
+
 #define ISDIGIT(c)      (c >= '0' && c <= '9')
 #define ISHEXDIGIT(c)   (ISDIGIT (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
 #define ISALPHA(c)      ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
@@ -509,7 +511,7 @@ maybe_quote_identifier (const String &src)
           if (c == '\'')
             d += "\\'";
           else if (c < 32)
-            d += string_printf ("\\0%x ", c);
+            d += string_format ("\\0%x ", c);
           else
             d += c;
         }
@@ -1007,7 +1009,7 @@ Matcher::match_pseudo_element (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector ("::" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          SDEBUG ("selector-match: %s", error.c_str());
           return NULL;
         }
       return selob_match;
@@ -1054,7 +1056,7 @@ Matcher::match_pseudo_class (Selob &selob, const SelectorNode &snode)
       Selob *selob_match = selob.pseudo_selector (":" + string_tolower (snode.ident), snode.arg, error);
       if (!error.empty())
         {
-          DEBUG ("SELECTOR-MATCH: %s", error.c_str());
+          SDEBUG ("selector-match: %s", error.c_str());
           return false;
         }
       return Selector::Selob::is_true_match (selob_match);
@@ -1087,7 +1089,7 @@ Matcher::match_element_selector (Selob &selob, const SelectorNode &snode)
            tag.data()[i - 1] == ':'))                 // match at namespace boundary
         result = true;
     }
-  // DEBUG ("SELECTOR: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
+  // SDEBUG ("selector: %s in (%s): %u", snode.ident.c_str(), string_join (" ", ctags).c_str(), result);
   return result;
 }
 
@@ -1239,9 +1241,9 @@ Matcher::parse_selector (const String &selector,
   String error;
   // parse selector string
   if (!chain.parse (&s, with_combinators) || chain.empty())
-    error = string_printf ("invalid selector syntax: %s\n", string_to_cquote (selector).c_str());
+    error = string_format ("invalid selector syntax: %s\n", string_to_cquote (selector).c_str());
   else if (*s)
-    error = string_printf ("unexpected junk in selector (%s): %s\n",
+    error = string_format ("unexpected junk in selector (%s): %s\n",
                            string_to_cquote (string_lstrip (s)).c_str(), string_to_cquote (selector).c_str());
   if (!error.empty())
     goto error;
@@ -1250,7 +1252,7 @@ Matcher::parse_selector (const String &selector,
     if (chain[i].kind == SUBJECT)
       {
         if (subject_index != UINT_MAX)
-          error = string_printf ("selector contains multiple subjects: %s", string_to_cquote (selector).c_str());
+          error = string_format ("selector contains multiple subjects: %s", string_to_cquote (selector).c_str());
         subject_index = i;
       }
     else if (chain[i].kind == PSEUDO_ELEMENT)
@@ -1258,9 +1260,9 @@ Matcher::parse_selector (const String &selector,
     else if (is_combinator (chain[i].kind))
       last_combinator = i;
   if (first_pseudo_element < last_combinator && last_combinator != UINT_MAX)
-    error = string_printf ("selector uses combinator after pseudo element: %s", string_to_cquote (selector).c_str());
+    error = string_format ("selector uses combinator after pseudo element: %s", string_to_cquote (selector).c_str());
   if (subject_index < first_pseudo_element && first_pseudo_element != UINT_MAX)
-    error = string_printf ("selector uses pseudo element for non-subject: %s", string_to_cquote (selector).c_str());
+    error = string_format ("selector uses pseudo element for non-subject: %s", string_to_cquote (selector).c_str());
   if (subject_index == UINT_MAX)
     subject_index = last_combinator == UINT_MAX ? 0 : last_combinator + 1;
   if (error.empty())

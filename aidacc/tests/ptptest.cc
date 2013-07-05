@@ -4,15 +4,16 @@
 #include <rapicorn-core.hh>
 #include <cstring>
 #include <cassert>
+#include "typecodetests-api.cc"
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
 namespace { // Anon
 
 using namespace Rapicorn::Aida;
-using Rapicorn::Aida::int64_t;
-using Rapicorn::Aida::uint64_t;
-typedef uint32_t uint;
+using Rapicorn::Aida::int64;
+using Rapicorn::Aida::uint64;
+typedef Rapicorn::uint32 uint;
 typedef std::string String;
 using std::vector;
 
@@ -149,6 +150,14 @@ standard_tests ()
   assert (tcany.kind() == ANY);
   assert (tcany.name() == "Any");
   assert (tcany.kind_name () == "ANY");
+  TypeCode tcseq = TypeMap::lookup ("Aida::DynamicSequence");
+  assert (tcseq.kind_name() == "SEQUENCE");
+  assert (tcseq.kind() == SEQUENCE);
+  assert (tcseq.name() == "Aida::DynamicSequence");
+  TypeCode tcrec = TypeMap::lookup ("Aida::DynamicRecord");
+  assert (tcrec.kind_name() == "RECORD");
+  assert (tcrec.kind() == RECORD);
+  assert (tcrec.name() == "Aida::DynamicRecord");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
   // SmartHandle
@@ -238,9 +247,25 @@ type_code_tests ()
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
-    assert (t.enum_count() == 2);
-    assert (t.enum_value (0)[0] == "ENUM_VALUE0");
-    assert (t.enum_value (1)[0] == "ENUM_VALUE1");
+    assert (t.enum_count() == 8);
+    EnumValue ev;
+    ev = t.enum_value (0); assert (ev.ident && ev.ident == String ("ENUM_VALUE_0") && ev.value == 0);
+    ev = t.enum_value (1); assert (ev.ident && ev.ident == String ("ENUM_VALUE_1") && ev.value == 1);
+    ev = t.enum_value (2); assert (ev.ident && ev.ident == String ("ENUM_VALUE__2") && ev.value == -2);
+    ev = t.enum_value (3); assert (ev.ident && ev.ident == String ("ENUM_VALUE_4294967295") && ev.value == 4294967295);
+    ev = t.enum_value (4); assert (ev.ident && ev.ident == String ("ENUM_VALUE_4294967296") && ev.value == 4294967296);
+    ev = t.enum_value (5); assert (ev.ident && ev.ident == String ("ENUM_VALUE__4294967296") && ev.value == -4294967296);
+    ev = t.enum_value (6); assert (ev.ident && ev.ident == String ("ENUM_VALUE_9223372036854775807") && ev.value == 9223372036854775807);
+    ev = t.enum_value (7); assert (ev.ident && ev.ident == String ("ENUM_VALUE__9223372036854775807") && ev.value == -9223372036854775807);
+    ev = t.enum_find (-4294967296); assert (ev.ident && ev.ident == String ("ENUM_VALUE__4294967296"));
+    ev = t.enum_find (-9223372036854775807); assert (ev.ident && ev.ident == String ("ENUM_VALUE__9223372036854775807"));
+    ev = t.enum_find ("ENUM_VALUE_1"); assert (ev.value == 1);
+    ev = t.enum_find ("ENUM_VALUE__2"); assert (ev.value == -2);
+    ev = t.enum_find ("ENUM_VALUE_9223372036854775807"); assert (ev.value == 9223372036854775807);
+    ev = t.enum_find ("ENUM_VALUE__9223372036854775807"); assert (ev.value == -9223372036854775807);
+    ev = t.enum_find ("__2"); assert (ev.value == -2);
+    ev = t.enum_find ("VALUE--2"); assert (ev.value == -2);
+    ev = t.enum_find ("-VALUE--2"); assert (ev.value == -2);
   }
   { // SEQUENCE
     TypeCode t = tp.lookup_local ("AidaTests::SimpleSequence");
@@ -276,22 +301,35 @@ type_code_tests ()
     assert (t.aux_value ("blurb") == "");
     assert (t.aux_value ("default") == "");
     assert (t.hints() == ":");
-    assert (t.field_count() == 4);
-    TypeCode f = t.field (0);
+    uint i = 0;
+    TypeCode f = t.field (i++);
+    assert (f.kind() == BOOL);
+    assert (f.name() == "b1");
+    f = t.field (i++);
+    assert (f.kind() == BOOL);
+    assert (f.name() == "b2");
+    f = t.field (i++);
     assert (f.kind() == INT32);
-    assert (f.name() == "intfield");
-    f = t.field (1);
+    assert (f.name() == "int3");
+    f = t.field (i++);
+    assert (f.kind() == INT64);
+    assert (f.name() == "int6");
+    f = t.field (i++);
     assert (f.kind() == FLOAT64);
     assert (f.name() == "floatfield");
-    f = t.field (2);
+    f = t.field (i++);
     assert (f.kind() == STRING);
     assert (f.name() == "stringfield");
-    f = t.field (3);
-    assert (f.kind() == ANY);
-    assert (f.name() == "anyfield");
+    f = t.field (i++);
+    assert (f.name() == "enumfield");
+    assert (f.kind() == TYPE_REFERENCE);
+    assert (t.field_count() == i);
+    TypeCode e = TypeMap::lookup (f.origin());
+    assert (e.kind() == ENUM);
+    assert (e.name() == "AidaTests::EnumType");
   }
   // done
-  printf ("  TEST   Aida type code IDL tests                                        OK\n");
+  printf ("  TEST   Aida IDL type codes                                             OK\n");
 }
 
 static const double test_double_value = 7.76576e-306;
@@ -315,6 +353,8 @@ any_test_set (Any &a, int what)
     case 10: a <<= "Test4test";         break;
     case 11: a <<= test_double_value;   break;
     case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
+    case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
+#define ANY_TEST_COUNT    14
     }
 }
 
@@ -322,33 +362,91 @@ static bool
 any_test_get (const Any &a, int what)
 {
   std::string s;
+  EnumValue e;
   switch (what)
     {
       typedef unsigned char uchar;
       bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d; const Any *p;
-    case 0:  if (!(a >>= b))  return false;     assert (b == 0); break;
-    case 1:  if (!(a >>= b))  return false;     assert (b == true); break;
-    case 2:  if (!(a >>= c))  return false;     assert (c == -117); break;
-    case 3:  if (!(a >>= uc)) return false;     assert (uc == 250); break;
-    case 4:  if (!(a >>= i))  return false;     assert (i == -134217728); break;
-    case 5:  if (!(a >>= ui)) return false;     assert (ui == 4294967295U); break;
-    case 6:  if (!(a >>= l))  return false;     assert (l == -2147483648); break;
-    case 7:  if (!(a >>= ul)) return false;     assert (ul == 4294967295U); break;
-    case 8:  if (!(a >>= i6)) return false;     assert (i6 == -0xc0ffeec0ffeeLL); break;
-    case 9:  if (!(a >>= u6)) return false;     assert (u6 == 0xffffffffffffffffULL); break;
-    case 10: if (!(a >>= s))  return false;     assert (s == "Test4test"); break;
-    case 11: if (!(a >>= d))  return false;     assert (d = test_double_value); break;
-    case 12: if (!(a >>= p) ||
-                 !(*p >>= s)) return false;     assert (s == "SecondAny"); break;
+    case 0:  assert (a >>= b);	assert (b == 0); break;
+    case 1:  assert (a >>= b);	assert (b == true); break;
+    case 2:  assert (a >>= c);	assert (c == -117); break;
+    case 3:  assert (a >>= uc);	assert (uc == 250); break;
+    case 4:  assert (a >>= i);	assert (i == -134217728); break;
+    case 5:  assert (a >>= ui);	assert (ui == 4294967295U); break;
+    case 6:  assert (a >>= l);	assert (l == -2147483648); break;
+    case 7:  assert (a >>= ul);	assert (ul == 4294967295U); break;
+    case 8:  assert (a >>= i6);	assert (i6 == -0xc0ffeec0ffeeLL); break;
+    case 9:  assert (a >>= u6);	assert (u6 == 0xffffffffffffffffULL); break;
+    case 10: assert (a >>= s);	assert (s == "Test4test"); break;
+    case 11: assert (a >>= d);	assert (d = test_double_value); break;
+    case 12: assert (a >>= p);  assert (*p >>= s);       assert (s == "SecondAny"); break;
+    case 13: assert (a >>= e);	assert (e.value == -0xc0ffeec0ffeeLL); break;
     }
   return true;
+}
+
+static SmartHandle
+generate_broken_smart_handle (uint64_t orbid)
+{
+  FieldBuffer8 fb (1);
+  fb.add_object (orbid);
+  FieldReader fbr (fb);
+  SmartMember<SmartHandle> sh;
+  assert (sh._orbid() == 0);
+  ObjectBroker::pop_handle (fbr, sh);
+  assert (sh._orbid() == orbid);
+  return sh;
+}
+
+static void
+test_records ()
+{
+  AidaTests::SimpleRecord sr;
+  sr.b1 = 1;
+  sr.b2 = 0;
+  sr.int3 = 3;
+  sr.int6 = -6;
+  sr.floatfield = 3.3;
+  sr.stringfield = "two";
+  sr.enumfield = AidaTests::ENUM_VALUE_1;
+  FieldBuffer8 fb8;
+  fb8 <<= sr;
+  AidaTests::SimpleRecord sq;
+  assert (sq != sr);
+  FieldReader fbr (fb8);
+  fbr >>= sq;
+  assert (sq == sr);
+  printf ("  TEST   Aida Record tests                                               OK\n");
+
+  // SimpleRecord to Any
+  Any any1;
+  any1 <<= sr;
+  AidaTests::SimpleRecord s2;
+  s2 <<= any1;
+  assert (s2 == sr);
+  // ComboRecord to Any
+  AidaTests::ComboRecord cr;
+  cr.simple_rec = sr;
+  cr.any_field <<= "STRING";
+  SmartHandle sh = generate_broken_smart_handle (777); // handle doesn't work, but has an _orbid to test Any
+  cr.empty_object = *(AidaTests::EmptyH*) (void*) &sh;
+  assert (cr.simple_rec.stringfield == "two");
+  assert (cr.simple_rec.int6 == -6);
+  assert (cr.any_field.as_string() == "STRING");
+  assert (cr.empty_object._orbid() == 777);
+  any1 <<= cr;
+  AidaTests::ComboRecord c2;
+  assert (c2 != cr && c2.simple_rec != cr.simple_rec && c2.any_field != cr.any_field);
+  c2 <<= any1;
+  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field && c2.empty_object._orbid() == 777);
+  printf ("  TEST   Aida Record to Any                                              OK\n");
 }
 
 static void
 test_any()
 {
   String s;
-  const size_t cases = 13;
+  const size_t cases = ANY_TEST_COUNT;
   Any a;
   for (size_t j = 0; j <= cases; j++)
     for (size_t k = 0; k <= cases; k++)
@@ -369,13 +467,17 @@ test_any()
           }
       }
   printf ("  TEST   Aida Any storage                                                OK\n");
+  a <<= bool (0);       assert (a.kind() == BOOL && a.as_int() == 0);
+  a <<= bool (1);       assert (a.kind() == BOOL && a.as_int() == 1);
   a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
   a <<= -1.;            assert (a.kind() == FLOAT64 && a.as_float() == -1.0);
   a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
-  a <<= 1;              assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= -1;             assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= 0;              assert (a.kind() == INT64 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
-  a <<= 32767199;       assert (a.kind() == INT64 && a.as_int() == 32767199);
+  a <<= 1;              assert (a.kind() == INT32 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= -1;             assert (a.kind() == INT32 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= int64_t (1);    assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= int64_t (-1);   assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= 0;              assert (a.kind() == INT32 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
+  a <<= 32767199;       assert (a.kind() == INT32 && a.as_int() == 32767199);
   a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
   a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
   a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);
@@ -395,6 +497,53 @@ test_any()
   printf ("  TEST   Aida Any equality                                               OK\n");
 }
 
+static void
+test_dynamics()
+{
+  // -- FieldVector --
+  Any::FieldVector fv;
+  fv.push_back (Any::Field ("otto", 7.7));
+  fv.push_back (Any::Field ("anna", 3));
+  fv.push_back (Any::Field ("ida", "ida"));
+  assert (fv[0].name == "otto" && fv[0].as_float() == 7.7);
+  assert (fv[1].name == "anna" && fv[1].as_int() == 3);
+  assert (fv[2].name == "ida" && fv[2].as_string() == "ida");
+  Any::FieldVector gv = fv;
+  assert (fv == gv);
+  gv[1] <<= 5;
+  assert (fv != gv);
+  gv[1] <<= 3;
+  assert (fv == gv);
+  // -- AnyVector --
+  Any::AnyVector av;
+  av.push_back (Any (7.7));
+  av.push_back (Any (3));
+  av.push_back (Any ("ida"));
+  assert (av[0].as_float() == 7.7);
+  assert (av[1].as_int() == 3);
+  assert (av[2].as_string() == "ida");
+  Any::AnyVector bv;
+  assert (av != bv);
+  for (auto const &f : fv)
+    bv.push_back (f);
+  assert (av == bv);
+  // -- FieldVector & AnyVector --
+  if (0)        // compare av (DynamicSequence) with fv (DynamicRecord)
+    Rapicorn::printerr ("test-compare: %s == %s\n", Any (av).to_string().c_str(), Any (fv).to_string().c_str());
+  Any::AnyVector cv (fv.begin(), fv.end());     // initialize AnyVector with { 7.7, 3, "ida" } from FieldVector (Field is-a Any)
+  assert (av == cv);                            // as AnyVector (FieldVector) copy, both vectors contain { 7.7, 3, "ida" }
+  // -- Any::DynamicSequence & Any::DynamicRecord --
+  Any arec (fv), aseq (av);
+  assert (arec != aseq);
+  const Any::FieldVector *arv;
+  arec >>= arv;
+  assert (*arv == fv);
+  const Any::AnyVector *asv;
+  aseq >>= asv;
+  assert (*asv == av);
+  printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
+}
+
 } // Anon
 
 int
@@ -411,6 +560,8 @@ main (int   argc,
           standard_tests();
           type_code_tests();
           test_any();
+          test_dynamics();
+          test_records();
           return 0;
         }
       else if (strcmp (argv[i], "--") == 0)

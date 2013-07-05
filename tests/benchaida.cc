@@ -16,7 +16,7 @@ main (int   argc,
   ThisThread::affinity (mycpu);
   // request CPU for server thread
   StringVector iargs;
-  iargs.push_back (string_printf ("cpu-affinity=%d", mycpu));
+  iargs.push_back (string_format ("cpu-affinity=%d", mycpu));
   // init test application
   init_core_test (argv[0], &argc, argv, iargs);
   ApplicationH app = init_app (argv[0], &argc, argv, iargs);

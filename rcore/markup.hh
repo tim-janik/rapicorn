@@ -3,6 +3,7 @@
 #define __RAPICORN_MARKUP_HH__
 
 #include <rcore/utilities.hh>
+#include <rcore/strings.hh>
 
 namespace Rapicorn {
 
@@ -48,10 +49,12 @@ public:
   static String         escape_text     (const String   &text);
   static String         escape_text     (const char     *text,
                                          ssize_t         length);
-  static String         printf_escaped  (const char     *format,
-                                         ...) RAPICORN_PRINTF (1, 2);
-  static String         vprintf_escaped (const char     *format,
-                                         va_list         args);
+  template<class... Args> RAPICORN_PRINTF (1, 0) static String
+  escape_format_args (const char *format, const Args &...args)
+  {
+    auto arg_transform = [] (const String &s) { return escape_text (s); };
+    return Lib::StringFormatter::format (arg_transform, format, args...);
+  }
   struct Context;
 protected:
   explicit              MarkupParser    (const String   &input_name);

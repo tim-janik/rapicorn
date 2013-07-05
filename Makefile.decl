@@ -19,6 +19,13 @@ QGEN    = $(Q:@=@echo '  GEN   ' $@; )
 QSTDERR = $(Q:@=2>/dev/null)
 QSTDOUT = $(Q:@=1>/dev/null)
 
+# == download ==
+# recursive rule supported by all Makefiles to download files hosted online
+.PHONY: download download-recursive download-local
+download: download-local download-recursive
+download-recursive:
+	$(Q) for subdir in $(SUBDIRS) ; do test "$$subdir" = '.' || $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) download || exit $$? ; done
+
 # == X11 for Unit Tests ==
 x11test_log   = $(abs_top_builddir)/.x11test.log
 DISPLAYHASH   = x11test-$(shell echo "$(PACKAGE) $(abs_top_builddir)" | md5sum | sed 's/\(.\{7\}\).*/\1/')
@@ -105,7 +112,7 @@ define slowcheck_parallel_TEMPLATE
 .PHONY: slowcheck_parallel--$(1)
 slowcheck_parallel--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
-	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
+	&& RAPICORN_TEST="$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 slowcheck: slowcheck_parallel--$(1)
 check: @NOTDVLBUILD@ slowcheck_parallel--$(1)
@@ -118,7 +125,7 @@ define check_parallel_TEMPLATE
 .PHONY: check_parallel--$(1)
 check_parallel--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
-	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
+	&& RAPICORN_TEST="$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 check: check_parallel--$(1)
 endef
@@ -126,18 +133,18 @@ $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
 # === LOGTEST_PROGS ===
 LOGTEST_PROGS =
-define check_logtest_TEMPLATE
-.PHONY: check_logtest--$(1)
-check_logtest--$(1): $(1)
+define check_readout_TEMPLATE
+.PHONY: check_readout--$(1)
+check_readout--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
-	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) 2>&1 \
+	&& RAPICORN_TEST="$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
 	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
-check: check_logtest--$(1)
+check: check_readout--$(1)
 endef
-$(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_logtest_TEMPLATE,$(PRG))))
+$(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_readout_TEMPLATE,$(PRG))))
 ### Auto-Create refs: 	; $${FORCECHECKUPDATE} || { test -e "$$(srcdir)/$(1).ref" || touch "$$(srcdir)/$(1).ref" ; }
 
 # === ALLTESTS ===

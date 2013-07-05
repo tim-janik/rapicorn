@@ -26,23 +26,26 @@
 #define __AIDA_PYMODULE__OBJECT ((PyObject*) NULL)
 #endif
 
-// using Rapicorn::Aida::uint64_t;
-using ::uint64_t;
+using Rapicorn::Aida::uint64;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
 
+// connection
 static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
+
+// connection initialization
 static Rapicorn::Init __AIDA_init__client_connection ([]() {
-  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection();
+  __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection ($AIDA_pyclient_feature_keys$);
 });
 
+// helpers
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "Aida: missing return value");
   FieldReader frr (*fr);
-  const uint64_t msgid AIDA_UNUSED = frr.pop_int64();
+  const uint64 msgid AIDA_UNUSED = frr.pop_int64();
   frr.skip(); frr.skip(); // hashhigh hashlow
 #if 0
   if (Rapicorn::Aida::msgid_is_error (Rapicorn::Aida::MessageId (msgid)))
@@ -74,11 +77,11 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline Rapicorn::Aida::uint64_t
+static inline Rapicorn::Aida::uint64
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *pyo = PyObject_GetAttrString (pyobj, attr_name);
-  Rapicorn::Aida::uint64_t uval = pyo ? PyLong_AsUnsignedLongLong (pyo) : 0;
+  Rapicorn::Aida::uint64 uval = pyo ? PyLong_AsUnsignedLongLong (pyo) : 0;
   Py_XDECREF (pyo);
   return uval;
 }
@@ -112,7 +115,7 @@ __AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
   else if (PyFloat_Check (pyvalue))     any <<= PyFloat_AsDouble (pyvalue);
   else {
     std::string msg =
-      Rapicorn::string_printf ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
+      Rapicorn::string_format ("no known conversion to Aida::Any for Python object: %s", PyObject_REPR (pyvalue));
     PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
   }
 }
@@ -137,7 +140,7 @@ __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
     default:            break;
     }
   std::string msg =
-    Rapicorn::string_printf ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
+    Rapicorn::string_format ("no known conversion for Aida::%s to Python", Rapicorn::Aida::type_kind_name (any.kind()));
   PyErr_SetString (PyExc_NotImplementedError, msg.c_str());
   return NULL;
 }
@@ -160,7 +163,7 @@ __AIDA_pyfactory__register_callback (PyObject *pyself, PyObject *pyargs)
 }
 
 static inline PyObject*
-__AIDA_pyfactory__create_enum (const char *enum_name, uint64_t enum_value)
+__AIDA_pyfactory__create_enum (const char *enum_name, uint64 enum_value)
 {
   PyObject *result = NULL, *pyid;
   if (strchr (enum_name, ':'))
@@ -182,11 +185,11 @@ __AIDA_pyfactory__create_enum (const char *enum_name, uint64_t enum_value)
     }
   return result;
  unimplemented:
-  Rapicorn::Aida::error_printf ("UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: %s", enum_name);
+  Rapicorn::Aida::fatal_error (std::string() + "UNIMPLEMENTED: FIXME: missing handling of typenames outside the Rapicorn namespace: " + enum_name);
 }
 
 static inline PyObject*
-__AIDA_pyfactory__create_from_orbid (uint64_t orbid)
+__AIDA_pyfactory__create_from_orbid (uint64 orbid)
 {
   PyObject *result = NULL, *pyid;
   const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);

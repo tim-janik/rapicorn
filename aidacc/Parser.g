@@ -56,17 +56,26 @@ class YYGlobals (object):
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values, as_flags):
-    if len (enum_values) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (enum_values) == 1 and enum_values[0][0] == '__builtin__deleteme__'):
+      enum_values = []
+    elif len (enum_values) < 1:
       raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     if as_flags:
       enum.set_combinable (True)
     for ev in enum_values:
+      ident, label, blurb, number = ev
+      if number < -9223372036854775807 or number > +9223372036854775807:
+        raise Exception ("Invalid enum value: %d" % number)
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
-    if len (rfields) < 1:
+    if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
+        len (rfields) == 1 and rfields[0][0] == '__builtin__deleteme__'):
+      rfields = []
+    elif len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
     rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
     self.parse_assign_auxdata (rfields)
@@ -138,7 +147,7 @@ class YYGlobals (object):
     if adef == None:
       pass # no default arg
     elif atype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64):
-      if not isinstance (adef, (bool, int, float)):
+      if not isinstance (adef, (bool, int, long, float)):
         raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
       if adef != 0:
@@ -213,25 +222,11 @@ class YYGlobals (object):
     type_info = self.resolve_type (typename, flags.get ('void', 0))
     return type_info.clone (type_info.name, yy.impl_includes)
   def resolve_type (self, typename, void = False):
-    def mkstream (ioj):
-      ti = Decls.TypeInfo (ioj + 'Stream', Decls.STREAM, false)
-      ti.set_stream_type (ioj)
-      return ti
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
-      type_info = {
-        'bool'    : Decls.TypeInfo ('bool',     Decls.BOOL, false),
-        'int32'   : Decls.TypeInfo ('int32',    Decls.INT32, false),
-        'int64'   : Decls.TypeInfo ('int64',    Decls.INT64, false),
-        'float64' : Decls.TypeInfo ('float64',  Decls.FLOAT64, false),
-        'String'  : Decls.TypeInfo ('String',   Decls.STRING, false),
-        'IStream' : mkstream ('I'),
-        'OStream' : mkstream ('O'),
-        'JStream' : mkstream ('J'),
-        'Any'     : Decls.TypeInfo ('Any',      Decls.ANY, false),
-      }.get (typename, None);
-    if not type_info and void and typename == 'void':   # builtin void
-      type_info = Decls.TypeInfo ('void', Decls.VOID, false)
+      type_info = Decls.TypeInfo.builtin_type (typename)
+    if type_info and type_info.storage == Decls.VOID and not void:
+      type_info = None
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
@@ -291,7 +286,7 @@ def unquote (qstring):
   import rfc822
   return rfc822.unquote (qstring)
 def TN (number_candidate):  # test number
-  return isinstance (number_candidate, int) or isinstance (number_candidate, float)
+  return isinstance (number_candidate, (int, long)) or isinstance (number_candidate, float)
 def TS (string_candidate):  # test string
   return isinstance (string_candidate, str) and len (string_candidate) >= 2
 def TSp (string_candidate): # test plain string

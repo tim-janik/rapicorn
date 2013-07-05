@@ -126,7 +126,7 @@ ViewportImpl::collapse_expose_region ()
        * rectangle which is good enough to avoid worst case explosion.
        */
       expose_region_.add (expose_region_.extents());
-      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, expose_region_.count_rects());
+      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u", n_erects, expose_region_.count_rects());
     }
 }
 

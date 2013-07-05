@@ -15,7 +15,7 @@ help_usage (bool usage_error)
     {
       printerr ("%s\n", usage);
       printerr ("Try 'rapidrun --help' for more information.\n");
-      Rapicorn::exit (1);
+      exit_app (1);
     }
   printout ("%s\n", usage);
   /*         12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -104,7 +104,7 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
         {
           help_usage (false);
-          Rapicorn::exit (0);
+          exit_app (0);
         }
       else if (strcmp (argv[i], "--version") == 0 || strcmp (argv[i], "-v") == 0)
         {
@@ -113,7 +113,7 @@ parse_args (int    *argc_p,
           printout ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printout ("the source for copying conditions. Sources, examples and contact\n");
           printout ("information are available at http://rapicorn.org/.\n");
-          Rapicorn::exit (0);
+          exit_app (0);
         }
     }
 
@@ -177,7 +177,7 @@ main (int   argc,
         dialog = definitions[i];
     }
   if (list_definitions)
-    Rapicorn::exit (0);
+    exit_app (0);
 
   /* bail out without any dialogs */
   if (dialog == "")

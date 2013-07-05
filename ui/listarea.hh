@@ -43,7 +43,7 @@ class WidgetListImpl : public virtual WidgetListIface,
   void                  selection_changed       (int first, int length);
   virtual void          invalidate_parent ();
 protected:
-  virtual const PropertyList& _property_list    ();
+  virtual const PropertyList& __aida_properties__    ();
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   virtual bool          key_press_event         (const EventKey &event);
   virtual bool          button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);

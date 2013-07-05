@@ -6,7 +6,7 @@
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
   if (___s != CAIRO_STATUS_SUCCESS)             \
-    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+    RAPICORN_DIAG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 namespace Rapicorn {
@@ -14,13 +14,13 @@ namespace Rapicorn {
 static DataKey<SizePolicyType> size_policy_key;
 
 const PropertyList&
-Arrow::_property_list()
+Arrow::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
     MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
   };
-  static const PropertyList property_list (properties, WidgetImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
   return property_list;
 }
 
@@ -87,7 +87,7 @@ DotGrid::dot_type (FrameType ft)
 }
 
 const PropertyList&
-DotGrid::_property_list()
+DotGrid::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (DotGrid, normal_dot, _("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw"),
@@ -100,7 +100,7 @@ DotGrid::_property_list()
     MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
     MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
   };
-  static const PropertyList property_list (properties, WidgetImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
   return property_list;
 }
 
@@ -204,9 +204,9 @@ DrawableImpl::DrawableImpl() :
 {}
 
 const PropertyList&
-DrawableImpl::_property_list ()
+DrawableImpl::__aida_properties__ ()
 {
-  return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::_property_list(), DrawableIface::_property_list());
+  return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::__aida_properties__(), DrawableIface::__aida_properties__());
 }
 
 void

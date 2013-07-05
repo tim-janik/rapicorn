@@ -113,6 +113,25 @@ class TypeInfo (BaseDecl):
     self.auxdata = {}
     if self.storage == STREAM:
       self.ioj_stream = ''      # one of: 'I', 'O', 'J'
+  @classmethod
+  def builtin_type (cls, ident):
+    def mkstream (ioj):
+      ti = TypeInfo (ioj + 'Stream', STREAM, False)
+      ti.set_stream_type (ioj)
+      return ti
+    builtins = {
+      'void'    : TypeInfo ('void',     VOID,    False),
+      'bool'    : TypeInfo ('bool',     BOOL,    False),
+      'int32'   : TypeInfo ('int32',    INT32,   False),
+      'int64'   : TypeInfo ('int64',    INT64,   False),
+      'float64' : TypeInfo ('float64',  FLOAT64, False),
+      'String'  : TypeInfo ('String',   STRING,  False),
+      'Any'     : TypeInfo ('Any',      ANY,     False),
+      'IStream' : mkstream ('I'),
+      'OStream' : mkstream ('O'),
+      'JStream' : mkstream ('J'),
+    }
+    return builtins.get (ident, None)
   def string_digest (self):
     typelist, arglist = [], [] # owner, self, rtype, arg*type, ...
     if self.__dict__.get ('ownertype', None): typelist += [self.ownertype]
@@ -203,12 +222,13 @@ class TypeInfo (BaseDecl):
   def set_combinable (self, as_flags):
     assert self.storage == ENUM
     self.combinable = as_flags
+    self.update_auxdata ({ 'enum_combinable' : int (bool (self.combinable)) })
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)
     assert isinstance (label, str)
     assert isinstance (blurb, str)
-    assert isinstance (number, int)
+    assert isinstance (number, (int, long))
     self.options += [ (ident, label, blurb, number) ]
   def has_option (self, ident = None, label = None, blurb = None, number = None):
     assert self.storage == ENUM

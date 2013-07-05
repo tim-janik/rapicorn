@@ -9,24 +9,24 @@ AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	aida.hh		blobres.hh	inifile.hh	\
+	aida.hh		blobres.hh	formatter.hh	inout.hh	inifile.hh \
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
-	objects.hh	aidaenums.hh	aidaprops.hh	\
+	objects.hh	aidaprops.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
-			regex.hh  strings.hh	loop.hh		main.hh	quicktimer.hh \
-	thread.hh	\
+			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
+	quicktimer.hh	thread.hh	\
 	$(rapicorn_impl_headers) \
-	cxxaux.hh	rcore.hh	aidasignal.hh	\
+	cpuasm.hh	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
-	aida.cc		blobres.cc	inifile.cc	\
+	aida.cc		blobres.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
-	objects.cc	aidaenums.cc	aidaprops.cc	\
+	objects.cc	aidaprops.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
-			regex.cc  strings.cc	loop.cc		main.cc	quicktimer.cc \
-	thread.cc	\
+			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
+	quicktimer.cc	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	aidacxx.hh			\
@@ -43,6 +43,7 @@ rapicorn_private_files = $(strip	\
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
 )
+EXTRA_DIST += docu.dox
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === CPU flags ===
@@ -81,10 +82,27 @@ api-content:
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
-# rapicorn-zintern
-noinst_PROGRAMS       += rapicorn-zintern
+
+# == Utilities (for installation) ==
+bin_PROGRAMS      	 = rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
+rapicorn_zintern_LDADD   = $(LIBZ) # $(progs_ldadd)
+
+zintern-installcheck:
+	$(Q) cd . \
+	&& echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > xtmp-empty.dat \
+	; eval "$$TSTDIAGNOSE" "'Create zintern sample data'"
+	$(Q) $(bindir)/rapicorn-zintern -z -b xtmp-empty.dat xtmp-empty.dat > xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Run    rapicorn-zintern'"
+	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output file name'"
+	$(Q) test `grep _SIZE xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output length'"
+	$(Q) test $$[`grep _DATA xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
+	; eval "$$TSTDIAGNOSE" "'Verify zintern output compression'"
+	$(Q) rm -f xtmp-empty.dat xtmp-empty.out
+installcheck-local: zintern-installcheck
+CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
@@ -118,14 +136,15 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
 	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
+	&& echo '#define RAPICORN_NAMESPACE_NAME	"@RAPICORN_NAMESPACE_NAME@"'		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
 	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
 	&& echo '#define RAPICORN_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()		}"					>> xgen-$(@F) \
+	&& echo "#define RAPICORN_EXTERN_C_END()		}"				>> xgen-$(@F) \
 	&& echo "#else"										>> xgen-$(@F) \
 	&& echo "#define RAPICORN_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()"							>> xgen-$(@F) \
+	&& echo "#define RAPICORN_EXTERN_C_END()"						>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
@@ -135,7 +154,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (year) || \\"					>> xgen-$(@F) \
 	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (year) && \\"					>> xgen-$(@F) \
 	&& echo "      (13@RAPICORN_RELEASE_MONTH@%13 > (month) || \\"				>> xgen-$(@F) \
-	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"				>> xgen-$(@F) \
+	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"			>> xgen-$(@F) \
 	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
@@ -164,7 +183,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define RAPICORN_SIZEOF_POINTER		(@RAPICORN_SIZEOF_POINTER@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SIZEOF_LONG		(@RAPICORN_SIZEOF_LONG@)"			>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SIZEOF_SYS_TYPESH_UINT	(@RAPICORN_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTHREADH_SPINLOCK	(@RAPICORN_SIZEOF_PTHREADH_SPINLOCK@)" 		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SIZEOF_PTHREADH_SPINLOCK	(@RAPICORN_SIZEOF_PTHREADH_SPINLOCK@)" 	>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SIZEOF_PTH_MUTEX_T	(@RAPICORN_SIZEOF_PTH_MUTEX_T@)" 		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SIZEOF_PTH_COND_T	(@RAPICORN_SIZEOF_PTH_COND_T@)" 		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SPINLOCK_INITIALIZER	@RAPICORN_SPINLOCK_INITIALIZER@" 		>> xgen-$(@F) \
@@ -172,16 +191,16 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "                                        RAPICORN_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
 	&& echo "                                        RAPICORN_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLOUT		(@RAPICORN_SYSVAL_POLLOUT@)"		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)"	>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)"	>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLOUT		(@RAPICORN_SYSVAL_POLLOUT@)"	>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLRDNORM	(@RAPICORN_SYSVAL_POLLRDNORM@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLRDBAND 	(@RAPICORN_SYSVAL_POLLRDBAND@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLWRNORM   	(@RAPICORN_SYSVAL_POLLWRNORM@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLWRBAND	(@RAPICORN_SYSVAL_POLLWRBAND@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLERR		(@RAPICORN_SYSVAL_POLLERR@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLHUP		(@RAPICORN_SYSVAL_POLLHUP@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLNVAL		(@RAPICORN_SYSVAL_POLLNVAL@)"		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLERR		(@RAPICORN_SYSVAL_POLLERR@)"	>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLHUP		(@RAPICORN_SYSVAL_POLLHUP@)"	>> xgen-$(@F) \
+	&& echo "#define RAPICORN_SYSVAL_POLLNVAL	(@RAPICORN_SYSVAL_POLLNVAL@)"		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \

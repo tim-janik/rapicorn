@@ -33,7 +33,7 @@ test_failing ()
       TASSERT (0 == "TASSERT is working...");
       _exit (0);
     }
-  if (Test::trap_aborted() == false)
+  if (!Test::trap_aborted() && !Test::trap_sigtrap())
     {
       errno = ENOSYS;
       perror ("Rapicorn: Failed to verify working TASSERT()");
@@ -142,6 +142,10 @@ test_poll_consts()
   TCMP (RAPICORN_SYSVAL_POLLERR,    ==, POLLERR);
   TCMP (RAPICORN_SYSVAL_POLLHUP,    ==, POLLHUP);
   TCMP (RAPICORN_SYSVAL_POLLNVAL,   ==, POLLNVAL);
+  RAPICORN_STATIC_ASSERT (RAPICORN_ABS (0) == 0);
+  RAPICORN_STATIC_ASSERT (RAPICORN_ABS (8) == 8);
+  RAPICORN_STATIC_ASSERT (RAPICORN_ABS (-8) == 8);
+  RAPICORN_STATIC_ASSERT (RAPICORN_ABS (-2147483647) == +2147483647);
 }
 REGISTER_TEST ("General/Poll constants", test_poll_consts);
 
@@ -153,6 +157,22 @@ test_regex (void)
   TCMP (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL), ==, true);
 }
 REGISTER_TEST ("General/Regex Tests", test_regex);
+
+static void
+test_debug_config ()
+{
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags", "dflt"), ==, "dflt");
+  setenv ("RAPICORN_INTERN_TEST_DATA", "randomFOObarCOOBDPlnjdhsa51cU8RYB62ags=17", 1);
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "");
+  debug_envvar ("RAPICORN_INTERN_TEST_DATA");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "17");
+  debug_config_add ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags=hello");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "hello");
+  debug_config_del ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags");
+  TCMP (debug_config_get ("randomFOObarCOOBDPlnjdhsa51cU8RYB62ags"), ==, "17");
+}
+REGISTER_TEST ("General/Debug Configuration", test_debug_config);
 
 static void
 test_paths()
@@ -206,7 +226,7 @@ REGISTER_TEST ("General/Path handling", test_paths);
 static void
 test_file_io()
 {
-  String fname = string_printf ("xtmp-infotest.%u", getpid());
+  String fname = string_format ("xtmp-infotest.%u", getpid());
   FILE *f = fopen (fname.c_str(), "w");
   assert (f != NULL);
   static const char *data = "1234567890\nasdfghjkl\n";

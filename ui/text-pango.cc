@@ -672,9 +672,9 @@ class XmlToPango : Rapicorn::MarkupParser {
     if (error_.size())
       {
         if (error_node_)
-          return string_printf ("%s:%d:%d: %s", input_name().c_str(), error_node_->parsed_line(), error_node_->parsed_char(), error_.c_str());
+          return string_format ("%s:%d:%d: %s", input_name().c_str(), error_node_->parsed_line(), error_node_->parsed_char(), error_.c_str());
         else
-          return string_printf ("%s: %s", input_name().c_str(), error_.c_str());
+          return string_format ("%s: %s", input_name().c_str(), error_.c_str());
       }
     /* strip trailing whitespaces */
     if (!preserve_last_whitespace_ && plain_text_.size() &&
@@ -894,7 +894,7 @@ protected:
     const char *input_file = "TextPango::markup_text";
     XmlNode *xnode = XmlNode::parse_xml (input_file, markup.c_str(), markup.size(), &perror, "text");
     if (perror.code)
-      err = string_printf ("%s:%d:%d: %s", input_file, perror.line_number, perror.char_number, perror.message.c_str());
+      err = string_format ("%s:%d:%d: %s", input_file, perror.line_number, perror.char_number, perror.message.c_str());
     if (xnode)
       {
         ref_sink (xnode);
@@ -1215,7 +1215,7 @@ protected:
   {
     uint vdot_size = 0;
     Rect larea = layout_area (&vdot_size);
-    RDEBUG ("rendering label 0x%016zx at %3.f%% coverage: %s", size_t (this),
+    RDEBUG ("rendering label 0x%016x at %3.f%% coverage: %s", size_t (this),
             larea.area() > 0 ? Rect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
     if (larea.width < 1) // allowed: larea.height < 1
       return;
@@ -1241,10 +1241,10 @@ protected:
     rapicorn_pango_mutex.unlock();
   }
   virtual const PropertyList&
-  _property_list() // escape check-_property_list ';'
+  __aida_properties__() // escape check-__aida_properties__ ';'
   {
     static Property *properties[] = {};
-    static const PropertyList property_list (properties, WidgetImpl::_property_list(), Client::client__property_list());
+    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), Client::client_property_list());
     return property_list;
   }
 };

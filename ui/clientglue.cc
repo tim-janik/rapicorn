@@ -8,6 +8,13 @@ namespace Rapicorn {
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static ApplicationH app_cached;
 
+/// Check and return if init_app() or init_test_app() has already been called.
+bool
+init_app_initialized ()
+{
+  return ApplicationH::the() != NULL;
+}
+
 /**
  * Initialize Rapicorn core via init_core(), and then starts a seperately
  * running UI thread. This UI thread initializes all UI related components
@@ -21,17 +28,14 @@ static ApplicationH app_cached;
  * @param args          Internal initialization arguments, see init_core() for details.
  */
 ApplicationH
-init_app (const String       &app_ident,
-          int                *argcp,
-          char              **argv,
-          const StringVector &args)
+init_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
-  assert_return (ApplicationH::the() == NULL, app_cached);
+  assert_return (init_app_initialized() == false, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
   // initialize core
-  if (program_ident().empty())
+  if (!init_core_initialized())
     init_core (app_ident, argcp, argv, args);
   else if (app_ident != program_ident())
     fatal ("librapicornui: application identifier changed during ui initialization");
@@ -56,7 +60,7 @@ ApplicationH::the ()
  * @param status        The exit status returned to the parent process.
  */
 void
-exit (int status)
+exit_app (int status)
 {
   uithread_shutdown();
   ::exit (status);
@@ -155,10 +159,7 @@ ApplicationH::main_loop()
  * Normally, Test::run() should be called next to execute all unit tests.
  */
 ApplicationH
-init_test_app (const String       &app_ident,
-               int                *argcp,
-               char              **argv,
-               const StringVector &args)
+init_test_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
   init_core_test (app_ident, argcp, argv, args);
   return init_app (app_ident, argcp, argv, args);

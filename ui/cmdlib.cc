@@ -4,7 +4,6 @@
 
 namespace Rapicorn {
 
-
 static void
 widget_print (WidgetImpl           &widget,
             const StringSeq    &args)
@@ -139,27 +138,27 @@ parse_arg (const String &input,
     }
   if (sq)
     {
-      DEBUG ("unclosed single-quotes in command arg: %s", input.c_str());
+      RAPICORN_DIAG ("unclosed single-quotes in command arg: %s", input.c_str());
       return false;
     }
   if (dq)
     {
-      DEBUG ("unclosed double-quotes in command arg: %s", input.c_str());
+      RAPICORN_DIAG ("unclosed double-quotes in command arg: %s", input.c_str());
       return false;
     }
   if (level)
     {
-      DEBUG ("unmatched parenthesis in command arg: %s", input.c_str());
+      RAPICORN_DIAG ("unmatched parenthesis in command arg: %s", input.c_str());
       return false;
     }
   if (be)
     {
-      DEBUG ("invalid command arg: %s", input.c_str());
+      RAPICORN_DIAG ("invalid command arg: %s", input.c_str());
       return false;
     }
   if (!done)
     {
-      DEBUG ("unclosed command arg list: %s", input.c_str());
+      RAPICORN_DIAG ("unclosed command arg list: %s", input.c_str());
       return false;
     }
   *arg = input.substr (a0, *pos - a0);
@@ -194,7 +193,7 @@ command_scan (const String &input,
   /* check command name */
   if (cl <= c0)
     {
-      DEBUG ("invalid command name: %s", input.c_str());
+      RAPICORN_DIAG ("invalid command name: %s", input.c_str());
       return false;
     }
   *cmd_name = input.substr (c0, cl - c0);
@@ -215,7 +214,7 @@ command_scan (const String &input,
         }
       if (i >= input.size() || input[i] != ')')
         {
-          DEBUG ("missing closing parenthesis in command: %s", input.c_str());
+          RAPICORN_DIAG ("missing closing parenthesis in command: %s", input.c_str());
           return false;
         }
       i++; // skip ')'
@@ -225,7 +224,7 @@ command_scan (const String &input,
     i++;
   if (i < input.size() && input[i] != 0)
     {
-      DEBUG ("encountered junk after command: %s", input.c_str());
+      RAPICORN_DIAG ("encountered junk after command: %s", input.c_str());
       return false;
     }
   return true;
@@ -262,15 +261,15 @@ command_string_unquote (const String &input)
           if (i >= input.size())
             return out;
           else
-            DEBUG ("extraneous characters after string: %s", input.c_str());
+            RAPICORN_DIAG ("extraneous characters after string: %s", input.c_str());
         }
       else
-        DEBUG ("unclosed string: %s", input.c_str());
+        RAPICORN_DIAG ("unclosed string: %s", input.c_str());
     }
   else if (i == input.size())
     ; // empty string arg: ""
   else
-    DEBUG ("invalid string argument: %s", input.c_str());
+    RAPICORN_DIAG ("invalid string argument: %s", input.c_str());
   return "";
 }
 

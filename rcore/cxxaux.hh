@@ -10,6 +10,9 @@
 #include <stdint.h>			// uint64_t
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
+#include <string>
+#include <vector>
+#include <map>
 
 // == Standard Macros ==
 #ifndef FALSE
@@ -18,10 +21,10 @@
 #ifndef TRUE
 #  define TRUE					true
 #endif
-#define RAPICORN_ABS(a)                       	((a) > -(a) ? (a) : -(a))
-#define RAPICORN_MIN(a,b)                         ((a) <= (b) ? (a) : (b))
-#define RAPICORN_MAX(a,b)                         ((a) >= (b) ? (a) : (b))
-#define RAPICORN_CLAMP(v,mi,ma)                   ((v) < (mi) ? (mi) : ((v) > (ma) ? (ma) : (v)))
+#define RAPICORN_ABS(a)                         ((a) < 0 ? -(a) : (a))
+#define RAPICORN_MIN(a,b)                       ((a) <= (b) ? (a) : (b))
+#define RAPICORN_MAX(a,b)                       ((a) >= (b) ? (a) : (b))
+#define RAPICORN_CLAMP(v,mi,ma)                 ((v) < (mi) ? (mi) : ((v) > (ma) ? (ma) : (v)))
 #define RAPICORN_ARRAY_SIZE(array)		(sizeof (array) / sizeof ((array)[0]))
 #undef ABS
 #define ABS                                     RAPICORN_ABS
@@ -77,16 +80,16 @@
  * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
  * see e.g. critical_unless(), UNLIKELY().
  */
-#ifdef  RAPICORN_DOXYGEN
+#ifdef  DOXYGEN
 #  define RAPICORN_CONVENIENCE
-#endif // RAPICORN_DOXYGEN
+#endif // DOXYGEN
 
 // == Preprocessor Convenience ==
 #define RAPICORN_CPP_PASTE2_(a,b)               a ## b  // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_PASTE2(a,b)                RAPICORN_CPP_PASTE2_ (a,b)
 #define RAPICORN_CPP_STRINGIFY_(s)              #s      // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_STRINGIFY(s)               RAPICORN_CPP_STRINGIFY_ (s)
-#define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr)
+#define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr) ///< Shorthand for static_assert (condition, "condition")
 
 // == GCC Attributes ==
 #if     __GNUC__ >= 4
@@ -102,7 +105,7 @@
 #define RAPICORN_NO_INSTRUMENT                  __attribute__ ((__no_instrument_function__))
 #define RAPICORN_DEPRECATED                     __attribute__ ((__deprecated__))
 #define RAPICORN_ALWAYS_INLINE			__attribute__ ((always_inline))
-#define RAPICORN_NEVER_INLINE			__attribute__ ((noinline))
+#define RAPICORN_NOINLINE			__attribute__ ((noinline))
 #define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used))      // gcc-3.3 also needs "used" to emit code
 #define RAPICORN_MAY_ALIAS                      __attribute__ ((may_alias))
 #define	RAPICORN_SIMPLE_FUNCTION	       (::Rapicorn::string_from_pretty_function_name (__PRETTY_FUNCTION__).c_str())
@@ -119,7 +122,7 @@
 #define RAPICORN_NO_INSTRUMENT
 #define RAPICORN_DEPRECATED
 #define RAPICORN_ALWAYS_INLINE
-#define RAPICORN_NEVER_INLINE
+#define RAPICORN_NOINLINE
 #define RAPICORN_CONSTRUCTOR
 #define RAPICORN_MAY_ALIAS
 #define	RAPICORN_SIMPLE_FUNCTION	       (__func__)
@@ -144,19 +147,55 @@ RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
 namespace Rapicorn {
 
 // == Provide Canonical Integer Types ==
-typedef uint8_t                 uint8;          ///< An 8-bit unsigned integer.
-typedef uint16_t                uint16;         ///< A 16-bit unsigned integer.
-typedef uint32_t                uint32;         ///< A 32-bit unsigned integer.
-typedef unsigned long long int  uint64;         ///< A 64-bit unsigned integer, use "%llu" in format strings.
-// typedef uint64_t             uint64;         // int64_t / uint64_t are longs on AMD64 which breaks printf
-typedef int8_t                  int8;           ///< An 8-bit signed integer.
-typedef int16_t                 int16;          ///< A 16-bit signed integer.
-typedef int32_t                 int32;          ///< A 32-bit signed integer.
-typedef signed long long int    int64;          ///< A 64-bit unsigned integer, use "%lld" in format strings.
-typedef uint32_t                unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
+typedef uint8_t         uint8;          ///< An 8-bit unsigned integer.
+typedef uint16_t        uint16;         ///< A 16-bit unsigned integer.
+typedef uint32_t        uint32;         ///< A 32-bit unsigned integer.
+typedef uint64_t        uint64;         ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef int8_t          int8;           ///< An 8-bit signed integer.
+typedef int16_t         int16;          ///< A 16-bit signed integer.
+typedef int32_t         int32;          ///< A 32-bit signed integer.
+typedef int64_t         int64;          ///< A 64-bit unsigned integer, use PRI*64 in format strings.
+typedef uint32_t        unichar;        ///< A 32-bit unsigned integer used for Unicode characters.
 RAPICORN_STATIC_ASSERT (sizeof (uint8) == 1 && sizeof (uint16) == 2 && sizeof (uint32) == 4 && sizeof (uint64) == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int8)  == 1 && sizeof (int16)  == 2 && sizeof (int32)  == 4 && sizeof (int64)  == 8);
 RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unichar) == 4);
+
+///@{
+/** LongIffy, ULongIffy, CastIffy, UCastIffy - types for 32bit/64bit overloading.
+ * On 64bit, int64_t is aliased to "long int" which is 64 bit wide.
+ * On 32bit, int64_t is aliased to "long long int", which is 64 bit wide (and long is 32bit wide).
+ * For int-type function overloading, this means that int32, int64 and either "long" or "long long"
+ * need to be overloaded, depending on platform. To aid this case, LongIffy and ULongIffy are defined
+ * to signed and unsigned "long" (for 32bit) and "long long" (for 64bit). Correspondingly, CastIffy
+ * and UCastIffy are defined to signed and unsigned int32 (for 32bit) or int64 (for 64bit), so
+ * LongIffy can be cast losslessly into a known type.
+ */
+#if     __SIZEOF_LONG__ == 8    // 64bit
+typedef long long signed int    LongIffy;
+typedef long long unsigned int  ULongIffy;
+typedef int64_t                 CastIffy;
+typedef uint64_t                UCastIffy;
+static_assert (__SIZEOF_LONG_LONG__ == 8, "__SIZEOF_LONG_LONG__");
+static_assert (__SIZEOF_INT__ == 4, "__SIZEOF_INT__");
+#elif   __SIZEOF_LONG__ == 4    // 32bit
+typedef long signed int         LongIffy;
+typedef long unsigned int       ULongIffy;
+typedef int32_t                 CastIffy;
+typedef uint32_t                UCastIffy;
+static_assert (__SIZEOF_LONG_LONG__ == 8, "__SIZEOF_LONG_LONG__");
+static_assert (__SIZEOF_INT__ == 4, "__SIZEOF_INT__");
+#else
+#error  "Unknown long size:" __SIZEOF_LONG__
+#endif
+static_assert (sizeof (CastIffy) == sizeof (LongIffy), "CastIffy == LongIffy");
+static_assert (sizeof (UCastIffy) == sizeof (ULongIffy), "UCastIffy == ULongIffy");
+///@}
+
+// == Convenient stdc++ Types ==
+using   std::map;
+using   std::vector;
+typedef std::string String;             ///< Convenience alias for std::string.
+typedef vector<String> StringVector;    ///< Convenience alias for a std::vector<std::string>.
 
 // == File Path Handling ==
 #ifdef  _WIN32
@@ -183,17 +222,6 @@ RAPICORN_STATIC_ASSERT (sizeof (int) == 4 && sizeof (uint) == 4 && sizeof (unich
 struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
-
-// == X86 Architecture ==
-#if defined __i386__ || defined __x86_64__
-#define RAPICORN_HAVE_X86_RDTSC  1
-#define RAPICORN_X86_RDTSC()     ({ Rapicorn::uint32 __l_, __h_, __s_; \
-                                    __asm__ __volatile__ ("rdtsc" : "=a" (__l_), "=d" (__h_));  \
-                                    __s_ = __l_ + (Rapicorn::uint64 (__h_) << 32); __s_; })
-#else
-#define RAPICORN_HAVE_X86_RDTSC  0
-#define RAPICORN_X86_RDTSC()    (0)
-#endif
 
 } // Rapicorn
 

@@ -105,3 +105,6 @@ interface I { signal JStream stream_signal1(); }; // stream type used in wrong c
 interface I { signal void stream_signal2 (float64 f, OStream os); }; // stream type used in wrong context
 record I { OStream istream; }; // stream type used in wrong context
 sequence S { IStream istream; }; // stream type used in wrong context
+
+enum TooBig { VALUE = -9223372036854775808 }; // number too large
+enum TooBig { VALUE = +9223372036854775808 }; // number too large

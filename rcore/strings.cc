@@ -135,8 +135,8 @@ string_totitle (const String &str)
 #define STACK_BUFFER_SIZE       3072
 
 /// Formatted printing ala printf() into a String, using the POSIX/C locale.
-String
-string_printf (const char *format, ...)
+RAPICORN_PRINTF (1, 2) String
+string_cprintf (const char *format, ...) // FIXME: unused
 {
   ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
   va_list args;
@@ -160,9 +160,9 @@ string_printf (const char *format, ...)
   return string;
 }
 
-/// Formatted printing like string_printf using the current locale.
-String
-string_locale_printf (const char *format, ...)
+/// Formatted printing like string_cprintf using the current locale.
+RAPICORN_PRINTF (1, 2) String
+string_locale_cprintf (const char *format, ...) // FIXME: unused
 {
   va_list args;
   int l;
@@ -291,7 +291,15 @@ string_join (const String &junctor, const StringVector &strvec)
 bool
 string_to_bool (const String &string, bool fallback)
 {
-  const char *p = string.c_str();
+  return cstring_to_bool (string.c_str(), fallback);
+}
+
+bool
+cstring_to_bool (const char *string, bool fallback)
+{
+  if (!string)
+    return fallback;
+  const char *p = string;
   // skip spaces
   while (*p && isspace (*p))
     p++;
@@ -340,7 +348,7 @@ string_to_uint (const String &string, uint base)
 String
 string_from_uint (uint64 value)
 {
-  return string_printf ("%llu", value);
+  return string_format ("%u", value);
 }
 
 /// Checks if a string contains a digit, optionally preceeded by whitespaces.
@@ -368,7 +376,7 @@ string_to_int (const String &string, uint base)
 String
 string_from_int (int64 value)
 {
-  return string_printf ("%lld", value);
+  return string_format ("%d", value);
 }
 
 /// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
@@ -423,14 +431,14 @@ string_to_double (const char *dblstring, const char **endptr)
 String
 string_from_float (float value)
 {
-  return string_printf ("%.7g", value);
+  return string_format ("%.7g", value);
 }
 
 /// Convert a double into a string, using the POSIX/C locale.
 String
 string_from_double (double value)
 {
-  return string_printf ("%.17g", value);
+  return string_format ("%.17g", value);
 }
 
 /// Parse a string into a list of doubles, expects ';' as delimiter.
@@ -467,7 +475,7 @@ string_to_double_vector (const String &string)
       if (*d && strchr (delims, *d))
         d++;                                    /* eat delimiter */
     }
-  // printf ("vector: %d: %s\n", dvec.size(), string_from_double_vector (dvec).c_str());
+  // printerr ("vector: %d: %s\n", dvec.size(), string_from_double_vector (dvec).c_str());
   return dvec;
 }
 
@@ -545,6 +553,65 @@ string_endswith (const String &string, const String &fragment)
   return fragment.size() <= string.size() && 0 == string.compare (string.size() - fragment.size(), fragment.size(), fragment);
 }
 
+static inline bool
+c_isalnum (uint8 c)
+{
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+}
+
+static inline char
+identifier_char_canon (char c)
+{
+  if (c >= '0' && c <= '9')
+    return c;
+  else if (c >= 'A' && c <= 'Z')
+    return c - 'A' + 'a';
+  else if (c >= 'a' && c <= 'z')
+    return c;
+  else
+    return '-';
+}
+
+static inline bool
+identifier_match (const char *str1, const char *str2)
+{
+  while (*str1 && *str2)
+    {
+      const uint8 s1 = identifier_char_canon (*str1++);
+      const uint8 s2 = identifier_char_canon (*str2++);
+      if (s1 != s2)
+        return false;
+    }
+  return *str1 == 0 && *str2 == 0;
+}
+
+static bool
+match_identifier_detailed (const String &ident, const String &tail)
+{
+  assert_return (ident.size() >= tail.size(), false);
+  const char *word = ident.c_str() + ident.size() - tail.size();
+  if (word > ident.c_str()) // allow partial matches on word boundary only
+    {
+      if (c_isalnum (word[-1]) && c_isalnum (word[0])) // no word boundary
+        return false;
+    }
+  return identifier_match (word, tail.c_str());
+}
+
+/// Variant of string_match_identifier() that matches @a tail against @a ident at word boundary.
+bool
+string_match_identifier_tail (const String &ident, const String &tail)
+{
+  return ident.size() >= tail.size() && match_identifier_detailed (ident, tail);
+}
+
+/// Check equality of strings canonicalized to "[0-9a-z_]+".
+bool
+string_match_identifier (const String &ident1, const String &ident2)
+{
+  return ident1.size() == ident2.size() && match_identifier_detailed (ident1, ident2);
+}
+
 /// Extract the full function name from __PRETTY_FUNCTION__.
 /// See also RAPICORN_SIMPLE_FUNCTION.
 String
@@ -591,7 +658,7 @@ string_to_cescape (const String &str)
       else if (d == '"')        buffer += "\\\"";
       else if (d == '\\')       buffer += "\\\\";
       else if (d < 32 || d > 126)
-        buffer += string_printf ("\\%03o", d);
+        buffer += string_format ("\\%03o", d);
       else
         buffer += d;
     }
@@ -716,6 +783,45 @@ string_substitute_char (const String &input, const char match, const char subst)
       if (output.data()[i] == match)
         output[i] = subst; // unshares string
   return output;
+}
+
+/** Produce hexdump of a memory region.
+ * Each output line consists of its hexadecimal offset, 16 hexadecimal bytes and the ASCII representation of the same 16 bytes.
+ */
+String
+string_hexdump (const void *addr, size_t length, size_t initial_offset)
+{
+  // 000000d0  00 34 00 00 08 00 00 00  40 00 00 00 61 00 00 00  |.4......@...a...|
+  const unsigned char *data = (const unsigned char*) addr;
+  size_t i;
+  String out, cx, cc = "|";
+  for (i = 0; i < length;)
+    {
+      if (i % 8 == 0)
+        cx += " ";
+      cx += string_format (" %02x", data[i]);
+      cc += string_format ("%c", data[i] < ' ' || data[i] > '~' ? '.' : data[i]);
+      i++;
+      if (i && i % 16 == 0)
+        {
+          cc += "|";
+          out += string_format ("%08x%s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+          cx = "";
+          cc = "|";
+        }
+    }
+  if (i % 16)
+    {
+      for (; i % 16; i++)
+        {
+          if (i % 8 == 0)
+            cx += " ";
+          cx += "   ";
+        }
+      cc += "|";
+      out += string_format ("%08x%s  %s\n", initial_offset + i - 16, cx.c_str(), cc.c_str());
+    }
+  return out;
 }
 
 /// Fill a memory area with a 32-bit quantitiy.
@@ -1072,6 +1178,12 @@ text_convert (const String &to_charset,
     iconv_close (alt_cd);
   return true;
 
+}
+
+const char*
+strerror()
+{
+  return strerror (errno);
 }
 
 } // Rapicorn

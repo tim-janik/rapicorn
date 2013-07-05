@@ -7,13 +7,13 @@
 namespace Rapicorn {
 
 const PropertyList&
-Image::_property_list()
+Image::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "w"),
     MakeProperty (Image, stock_pixmap, _("Stock Image"), _("Load an image from stock, providing a stock name."), "w"),
   };
-  static const PropertyList property_list (properties, WidgetImpl::_property_list());
+  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
   return property_list;
 }
 

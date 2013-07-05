@@ -8,6 +8,8 @@
 
 namespace Rapicorn {
 
+using Aida::EventFd;
+
 // === PollFD ===
 struct PollFD   /// Mirrors struct pollfd for poll(3posix)
 {
@@ -28,21 +30,6 @@ struct PollFD   /// Mirrors struct pollfd for poll(3posix)
     HUP         = RAPICORN_SYSVAL_POLLHUP,      ///< file descriptor closed
     NVAL        = RAPICORN_SYSVAL_POLLNVAL,     ///< invalid PollFD
   };
-};
-
-// === EventFd ===
-class EventFd   /// Wakeup facility for IPC.
-{
-  int      fds[2];
-public:
-  explicit EventFd   ();
-  int      open      (); ///< Opens the eventfd and returns -errno.
-  bool     opened    (); ///< Indicates whether eventfd has been opened.
-  void     wakeup    (); ///< Wakeup polling end.
-  int      inputfd   (); ///< Returns the file descriptor for POLLIN.
-  bool     pollin    (); ///< Checks whether events are pending.
-  void     flush     (); ///< Clear pending wakeups.
-  /*Des*/ ~EventFd   ();
 };
 
 // === EventLoop ===

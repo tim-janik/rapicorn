@@ -1,3 +1,22 @@
+Rapicorn 13.07.0:
+
+* Aida: Optimizations and cleanups in the IPC implementation.
+* Aida: Protocol extension to retrieve initial remote handle.
+* Aida: Added support for dynamic records and sequences inside Aida::Any.
+* Added StringFormatter/cxxprintf: A type safe C++11 printf implementation.
+* Migrated all printf uses to use StringFormatter instead.
+* Big refactoring of the low level input/output routines.
+* Improved testing code, added feature toggles.
+* Improved efficiency of debugging code.
+* Many documentation improvements and fixes.
+* Automatization of documentation builds documentation uploads.
+* Rapicorn now ships complete documentation builds in tarballs.
+* Added AlignedArray<> implementation, courtesy of Stefan Westerfeld.
+* Install rapicorn-zintern tool to generate C code from binary files.
+* Added API for external initialization checks to avoid double initialization.
+* Added many portability fixes for 32bit platforms and some BSD support.
+
+
 Rapicorn 13.03.0:	(2013-03-24)
 
 * Added proper UTF-8 locale initialization and POSIX locale support.

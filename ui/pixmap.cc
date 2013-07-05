@@ -47,7 +47,7 @@ PixmapT<Pixbuf>::PixmapT (Blob &blob) :
   if (blob.size() && load_png (blob.size(), blob.data()))
     errno = 0;
   if (errno)
-    DEBUG ("PixmapT: failed to load %s: %s", CQUOTE (blob.name()), strerror (errno));
+    RAPICORN_DIAG ("PixmapT: failed to load %s: %s", CQUOTE (blob.name()), strerror (errno));
 }
 
 template<class Pixbuf>
@@ -59,7 +59,7 @@ PixmapT<Pixbuf>::PixmapT (const String &res_png) :
   if (blob.size() && load_png (blob.size(), blob.data()))
     errno = 0;
   if (errno)
-    DEBUG ("PixmapT: failed to load %s: %s", CQUOTE (res_png), strerror (errno));
+    RAPICORN_DIAG ("PixmapT: failed to load %s: %s", CQUOTE (res_png), strerror (errno));
 }
 
 template<class Pixbuf>

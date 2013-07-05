@@ -36,13 +36,13 @@ SliderArea::list_commands ()
 }
 
 const PropertyList&
-SliderArea::_property_list()
+SliderArea::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
     MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
@@ -63,7 +63,7 @@ class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
     adjustment_->unref();
     adjustment_ = NULL;
   }
-  virtual const PropertyList& _property_list() { return SliderArea::_property_list(); }
+  virtual const PropertyList& __aida_properties__() { return SliderArea::__aida_properties__(); }
 protected:
   virtual AdjustmentSourceType
   adjustment_source () const
@@ -85,9 +85,9 @@ protected:
         find_adjustments (adjustment_source_, &adj);
         if (!adj)
           {
-            Aida::EnumInfo ast = Aida::enum_info<AdjustmentSourceType>();
+            Aida::TypeCode etype = Aida::TypeCode::from_enum<AdjustmentSourceType>();
             throw Exception ("SliderArea failed to get Adjustment (",
-                             ast.string (adjustment_source_),
+                             etype.enum_string (adjustment_source_),
                              ") from ancestors: ", name());
           }
         adjustment (*adj);
@@ -426,12 +426,12 @@ protected:
   }
 private:
   virtual const PropertyList&
-  _property_list() // escape check-_property_list ';'
+  __aida_properties__() // escape check-__aida_properties__ ';'
   {
     static Property *properties[] = {
       MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw"),
     };
-    static const PropertyList property_list (properties, SingleContainerImpl::_property_list());
+    static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__());
     return property_list;
   }
 };

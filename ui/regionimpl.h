@@ -8,12 +8,6 @@
 
 RAPICORN_EXTERN_C_BEGIN();
 
-#if     __GNUC__ >= 4
-#define RAPICORN_PRINTF(format_idx, arg_idx)    __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
-#else
-#define RAPICORN_PRINTF(format_idx, arg_idx)
-#endif
-
 /* --- types & macros --- */
 typedef signed long long int llint64_t;
 typedef char llint64_size_assertion_t[-!(sizeof (llint64_t) == 8)];
@@ -68,8 +62,6 @@ void			_rapicorn_region_intersect 	(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
 void			_rapicorn_region_xor 		(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
-void			_rapicorn_region_debug 		(const char 		   *format,
-							 ...) RAPICORN_PRINTF (1, 2);
 
 RAPICORN_EXTERN_C_END();
 

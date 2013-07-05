@@ -194,7 +194,9 @@ sequence BoolSeq { bool bools; };
 /// A sequence of strings (in C++ of std::string).
 sequence StringSeq { String strings; };
 
-/// A sequence of @a Any objects, useful when the sequence element types need to be determined at runtime.
+/** A sequence of @a Any objects.
+ * An AnySeq is useful when the sequence element types need to be determined at runtime.
+ */
 sequence AnySeq { Any vany; };
 
 /// A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
@@ -203,7 +205,9 @@ sequence AnySeqSeq { AnySeq seq; };
 /// A sequence of ARGB pixel values.
 sequence PixelSeq { int32 argb; };
 
-/// Pixbuf - A simple pixel buffer, see Pixmap and PixmapT<> for convenient pixel based image manipulation.
+/** Pixbuf is a simple pixel buffer.
+ * See Pixmap and PixmapT<> for convenient pixel based image manipulation.
+ */
 record Pixbuf {
   int32     row_length;         ///< Length of a Pixbuf row in pixels.
   PixelSeq  pixels;             ///< Pixel values in 32Bit ARGB format.
@@ -218,13 +222,18 @@ enum UpdateKind {
   UPDATE_DELETION               ///< Indicates deletion of a range of elements.
 };
 
-/// Specification of a span with start position and extent length. The upper bound is retrieved as start + length;
+/** Structure identifying an index span.
+ * Specification of a span with start position and extent length.
+ * The upper bound is retrieved by start + length.
+ */
 record UpdateSpan {
   int32 start;                  ///< Start of the span.
   int32 length;                 ///< Length of the span.
 };
 
-/// An update request specifies the kind of update, the element ranges affected and optional context variables.
+/** Structure describing an update for a list or table.
+ * An update request specifies the kind of update, the element ranges affected and optional context variables.
+ */
 record UpdateRequest {
   UpdateKind kind;              ///< Classifies the update request type.
   UpdateSpan rowspan;           ///< List of rows affected.
@@ -233,7 +242,7 @@ record UpdateRequest {
   Any        value;             ///< Row or cell value newly inserted, possibly sequences thereof.
 };
 
-/**
+/** A row-oriented data provider.
  * The ListModel interface serves as a row-oriented data provider for list views.
  * For many model implementations, in-order read outs should be of complexity O(1),
  * while random order read outs may be of O(log n) or even O(n).
@@ -244,7 +253,7 @@ interface ListModel {
   signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
 };
 
-/**
+/** Adapter for ListModel classes.
  * A ListModelRelay is an adapter that provides a push-API for ListModel classes.
  * This allows use of a ListModel in for example a list view, while the data to
  * be displayed is provided sparsely on demand through explicit API calls.
@@ -308,9 +317,8 @@ interface Container : Widget {
   Widget create_child (String widget_identifier, StringSeq args = 0) = 0;
 };
 
-/**
- * The ButtonArea interface provides button click handling. Certain actions can be
- * associated with button1, button2 and button3 clicks to be caried out when the
+/** The ButtonArea interface provides button click handling.
+ * Certain actions can be associated with button1, button2 and button3 clicks to be caried out when the
  * respective mouse button is clicked.
  */
 interface ButtonArea : Container {
@@ -319,13 +327,16 @@ interface ButtonArea : Container {
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
 };
 
-/// The Drawable interface allows display of custom images, created by client-side rendering.
+/** The Drawable interface allows display of custom images.
+ * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
+ * The draw_rect() method is used to draw into the remote widget.
+ */
 interface Drawable : Widget {
-  signal void redraw    (int32 x, int32 y, int32 w, int32 h);	        ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;      ///< Draws pixels on the drawable display.
+  signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
-/**
+/** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
  */
 interface WidgetList : Container {
@@ -341,7 +352,7 @@ interface WidgetList : Container {
   void          unselect_range (int32 first, int32 length) = 0;
 };
 
-/**
+/** Window represents the toplevel onscreen widget.
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
@@ -369,7 +380,7 @@ interface Window : Container {
 /// A sequence of Window objects.
 sequence WindowList { Window windows; };
 
-/**
+/** Application singleton.
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
  * such as the facility to create Window objects on the screen.

@@ -1,24 +1,55 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-docdir = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+MANMANS     = rapidrun.1
+HTMLMANS    = rapidrun.1.html
+EXTRA_DIST += $(MANMANS)
+# HTMLMANS are packaged as part of the doxygen docs
 
-#tutorialdir   = $(docdir)/tutorial
-#tutorial_DATA = doxer.css Hello-World.html Rapicorn-Tutorial.html
-#EXTRA_DIST   += $(tutorial_DATA)
+# Install manual pages
+man_MANS    = ${MANMANS} # automake-1.11 needs this expandable w/o patsubst
 
-CHROME_CONF = --no-cache --header "X-Script-Chrome: chrome=off style=doxer.css"
-WGET_MIRROR = wget -E -k -r -np -nd -nc
-TMPDIR=tmphtml
-import-docs:
-	mkdir -p $(TMPDIR)
-	rm -rf $(TMPDIR)/*
-	cd $(TMPDIR) && $(WGET_MIRROR) $(CHROME_CONF) 'http://testbit.eu/book/Rapicorn-Tutorial'
-	mv $(TMPDIR)/*.html $(TMPDIR)/*.css .
-	rm -rf $(TMPDIR)/
-	touch stamp-import-docs
-.PHONY: import-docs
+# = Import Rule =
+import: check-tools
+	$(AM_V_GEN)
+	$(Q) rm -f $(HTMLMANS) $(MANMANS)
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(HTMLMANS) $(MANMANS)
+.PHONY: import
 
-dist-hook:
-	! test -e stamp-import-docs || find stamp-import-docs -mtime -4 | fgrep -q stamp \
-	|| { echo "docs/imports/: Last import is outdated, please run: make import-docs -C docs/imports" >&2 ; exit 1 ; }
+# = Check Tools =
+CHECK_WGET = { command -v wget >/dev/null && { echo "1.10.0" ; wget --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+CHECK_WH2M = { command -v wikihtml2man >/dev/null && { echo "11.09.1" ; wikihtml2man --version 2>&1 | sed 's/\([^0-9]\|l2m\)*// ; 1q' ; } | sort -VC ; }
+check-tools:
+	$(Q) ${CHECK_WGET} || { echo "$@: failed to detect recent version: wget"; exit 1; }
+	$(Q) ${CHECK_WH2M} || { echo "$@: failed to detect recent version: wikihtml2man"; exit 1; }
+
+# = MANMANS =
+%.1:
+	$(AM_V_GEN)
+	$(Q) wikihtml2man "http://testbit.eu/$(@F)?action=render" > xtmp-$(@F)
+	$(Q) mv xtmp-$(@F) $@
+	$(Q) rm -rf xtmp-$(@F)
+
+# = HTMLMANS =
+HEADER= $$'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n' \
+	$$'<head>\n' \
+	$$'<title>'"$$TITLE"$$'</title>\n' \
+	$$'<style type="text/css">\n' \
+	$$'body { font-family: "DejaVu Sans", "Bitstream Vera Sans", Corbel, Verdana, "Verdana Ref", sans-serif; }\n' \
+	$$'.tocnumber { display: none; }\n' \
+	$$'body > p, body > dl, body > ul, body > ol { margin-left: 8em; }\n' \
+	$$'</style></head>\n<body>\n' \
+	$$'<a href="index.html">Return to Index</a><hr>'
+FOOTER= $$'<hr>\n</body>\n</html>'
+STEMTMP = xtmp-$(*F)
+%.1.html:
+	$(AM_V_GEN)
+	$(Q) rm -rf $(STEMTMP)
+	$(Q) mkdir $(STEMTMP)
+	$(Q) : # wget -k needs the final target name
+	$(Q) cd $(STEMTMP) && wget -nv -k --no-cache "http://testbit.eu/$(@F:.html=)?action=render" -O $(@F)
+	$(Q) TITLE="$(@F:.html=)" && echo ${HEADER} > $(STEMTMP)/header
+	$(Q) echo ${FOOTER} > $(STEMTMP)/footer
+	$(Q) cat $(STEMTMP)/header $(STEMTMP)/$(@F) $(STEMTMP)/footer > $(STEMTMP)/combined
+	$(Q) mv $(STEMTMP)/combined $@
+	$(Q) rm -rf $(STEMTMP)

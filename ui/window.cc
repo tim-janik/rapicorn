@@ -316,8 +316,8 @@ WindowImpl::resize_window (const Allocation *new_area)
   const uint64 stop = timestamp_realtime();
   Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
   EDEBUG ("RESIZE: request=%s allocate=%s elapsed=%.3fms",
-          new_area ? "-" : string_printf ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
-          string_printf ("%.0fx%.0f", area.width, area.height).c_str(),
+          new_area ? "-" : string_format ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
+          string_format ("%.0fx%.0f", area.width, area.height).c_str(),
           (stop - start) / 1000.0);
 }
 
@@ -1105,7 +1105,7 @@ WindowImpl::snapshot (const String &pngname)
   cairo_status_t wstatus = cairo_surface_write_to_png (isurface, pngname.c_str());
   cairo_surface_destroy (isurface);
   String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-  DEBUG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", name().c_str(), pngname.c_str(), err.c_str());
+  RAPICORN_DIAG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", name().c_str(), pngname.c_str(), err.c_str());
   return CAIRO_STATUS_SUCCESS == wstatus;
 }
 

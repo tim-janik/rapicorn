@@ -44,14 +44,14 @@ class BasicSignalTests {
     char
     foo_bool (float f, int i, std::string s)
     {
-      accu += string_printf ("Foo: %.2f\n", f + i + s.size());
+      accu += string_format ("Foo: %.2f\n", f + i + s.size());
       return true;
     }
   };
   static char
   float_callback (float f, int, std::string)
   {
-    accu += string_printf ("float: %.2f\n", f);
+    accu += string_format ("float: %.2f\n", f);
     return 0;
   }
 public:
@@ -61,8 +61,8 @@ public:
     accu = "";
     Aida::Signal<char (float, int, std::string)> sig1;
     size_t id1 = sig1() += float_callback;
-    size_t id2 = sig1() += [] (float, int i, std::string) { accu += string_printf ("int: %d\n", i); return 0; };
-    size_t id3 = sig1() += [] (float, int, const std::string &s) { accu += string_printf ("string: %s\n", s.c_str()); return 0; };
+    size_t id2 = sig1() += [] (float, int i, std::string) { accu += string_format ("int: %d\n", i); return 0; };
+    size_t id3 = sig1() += [] (float, int, const std::string &s) { accu += string_format ("string: %s\n", s.c_str()); return 0; };
     sig1.emit (.3, 4, "huhu");
     bool success;
     success = sig1() -= id1; assert (success == true);  success = sig1() -= id1; assert (success == false);
@@ -74,8 +74,8 @@ public:
     sig1.emit (.5, 1, "12");
 
     Aida::Signal<void (std::string, int)> sig2;
-    sig2() += [] (std::string msg, int) { accu += string_printf ("msg: %s", msg.c_str()); };
-    sig2() += [] (std::string, int d)   { accu += string_printf (" *%d*\n", d); };
+    sig2() += [] (std::string msg, int) { accu += string_format ("msg: %s", msg.c_str()); };
+    sig2() += [] (std::string, int d)   { accu += string_format (" *%d*\n", d); };
     sig2.emit ("in sig2", 17);
 
     accu += "DONE";
@@ -178,7 +178,7 @@ async_signal_tests()
   auto lambda1 =
     [] (const String &a, String &b, String c, double d, long l) -> String
     {
-      return "1" + a + b + c + string_printf ("%.0f%ld", d, l);
+      return "1" + a + b + c + string_format ("%.0f%d", d, l);
     };
   sig_string_test() += (lambda1);
   // emission with handler
@@ -205,7 +205,7 @@ async_signal_tests()
         {
           std::this_thread::sleep_for (std::chrono::milliseconds (1)); // help race detection
           handler2_lock.lock(); handler2_lock.unlock();                // force proper synchronization
-          return "2" + a + b + c + string_printf ("%.0f%d", d, i);
+          return "2" + a + b + c + string_format ("%.0f%d", d, i);
         };
       return std::async (std::launch::async, lambda, a, b, c, d, i); // execute in seperate thread
     };
@@ -313,7 +313,7 @@ bench_aida_signal()
   const uint64 end_counter = TestCounter::get();
   TASSERT (end_counter - start_counter == i);
   if (Test::verbose())
-    printout ("SignalBench: Aida::Signal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+    printout ("SignalBench: Aida::Signal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
               sizeof (sig_increment));
 }
 REGISTER_TEST ("Signal/SignalBench: Aida::Signal", bench_aida_signal);
@@ -346,7 +346,7 @@ bench_async_signal()
   const uint64 end_counter = TestCounter::get();
   TASSERT (end_counter - start_counter == i);
   if (Test::verbose())
-    printout ("SignalBench: AsyncSignal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+    printout ("SignalBench: AsyncSignal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
               sizeof (sig_increment));
 }
 REGISTER_TEST ("Signal/SignalBench: AsyncSignal", bench_async_signal);
@@ -379,7 +379,7 @@ struct DummyObject {
     const uint64 end_counter = TestCounter::get();
     TASSERT (end_counter - start_counter == i);
     if (Test::verbose())
-      printout ("SignalBench: Rapicorn::Signal: %fns per emission (sz=%zu)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
+      printout ("SignalBench: Rapicorn::Signal: %fns per emission (sz=%u)\n", size_t (benchdone - benchstart) * 1.0 / size_t (i),
                 sizeof (sig_increment));
   }
 };

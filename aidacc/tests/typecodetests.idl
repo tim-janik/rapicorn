@@ -1,33 +1,57 @@
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
 
 namespace AidaTests {
 
-  typedef String SimpleString;
+typedef String SimpleString;
 
-  typedef int32 IntWithFooAsLabel = Num ("Foo");
+typedef int32 IntWithFooAsLabel = Num ("Foo");
 
-  typedef float64 FloatWithBlurbBlurb = Num ("Float Label", "Float Blurb", "rw", 97.97);
+typedef float64 FloatWithBlurbBlurb = Num ("Float Label", "Float Blurb", "rw", 97.97);
 
-  typedef int32 Int32AuxRange = Range ("Int32 Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
-  typedef int64 Int64AuxRange = Range ("Int64 Range", "This int demonstrates range data use", "rw:extra-option", -1000, +1000, -50);
-  typedef float64 FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
-  typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
+typedef int32 Int32AuxRange = Range ("Int32 Range", "This int demonstrates range data use", "rw:extra-option", -100, +100, -5);
+typedef int64 Int64AuxRange = Range ("Int64 Range", "This int demonstrates range data use", "rw:extra-option", -1000, +1000, -50);
+typedef float64 FloatAuxRange = Range ("Float Range", "This float demonstrates range data use", "rw:extra-option", -100, +100, -5);
+typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification", "ro", "Default-String-Value");
 
-  enum EnumType { ENUM_VALUE0, ENUM_VALUE1 };
+enum EnumType {
+  ENUM_VALUE_0 = 0,
+  ENUM_VALUE_1 = 1,
+  ENUM_VALUE__2 = -2,
+  ENUM_VALUE_4294967295 = 4294967295,
+  ENUM_VALUE_4294967296 = 4294967296,
+  ENUM_VALUE__4294967296 = -4294967296,
+  ENUM_VALUE_9223372036854775807 = 9223372036854775807,
+  ENUM_VALUE__9223372036854775807 = -9223372036854775807,
+  // too large: ENUM_VALUE__9223372036854775808 = -9223372036854775808,
+  // too large: ENUM_VALUE_18446744073709551615 = 18446744073709551615000,
+};
 
-  typedef EnumType Enum1;
+typedef EnumType Enum1;
 
-  sequence SimpleSequence {
-    int32 sample_integer;
-  };
-  sequence Int64Sequence {
-    int64 v64;
-  };
+sequence SimpleSequence {
+  int32 sample_integer;
+};
+sequence Int64Sequence {
+  int64 v64;
+};
 
-  record SimpleRecord {
-    int32    intfield;
-    float64  floatfield;
-    String stringfield;
-    Any    anyfield;
-  };
+record SimpleRecord {
+  bool     b1;
+  bool     b2;
+  int32    int3;
+  int64    int6;
+  float64  floatfield;
+  String   stringfield;
+  EnumType enumfield;
+};
 
-}
+interface Empty {};
+
+record ComboRecord {
+  SimpleRecord   simple_rec;
+  Any            any_field;
+  SimpleSequence simple_seq;
+  Empty          empty_object;
+};
+
+} // AidaTests

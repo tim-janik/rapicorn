@@ -3,60 +3,80 @@
 // --- ClientHH Boilerplate ---
 #include <rapicorn-core.hh>
 
-// --- ClientCC/ServerCC Boilerplate ---
-#include <string>
-#include <vector>
-#include <stdexcept>
-#ifndef __AIDA_GENERIC_CC_BOILERPLATE__
-#define __AIDA_GENERIC_CC_BOILERPLATE__
 
+#ifndef AIDA_CHECK
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
+#endif
 
 namespace { // Anon
-using Rapicorn::Aida::uint64_t;
+using Rapicorn::Aida::uint64;
 
 namespace __AIDA_Local__ {
 using namespace Rapicorn::Aida;
-static __attribute__ ((__format__ (__printf__, 1, 2), unused)) FieldBuffer*
-error (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-  error_vprintf (format, args);
-  va_end (args);
-  return NULL;
-}
-} } // Anon::__AIDA_Local__
-#endif // __AIDA_GENERIC_CC_BOILERPLATE__
 
-
-namespace { // Anon
-namespace __AIDA_Local__ {
 // connection
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 static Rapicorn::Init init_client_connection ([]() {
-  client_connection = ObjectBroker::new_client_connection();
+  client_connection = ObjectBroker::new_client_connection (":AidaClientConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
 });
+
 // helper
-static FieldBuffer*  invoke (FieldBuffer *fb) { return client_connection->call_remote (fb); } // async remote call, transfers memory
-static bool          signal_disconnect (size_t signal_handler_id) { return client_connection->signal_disconnect (signal_handler_id); }
-static size_t        signal_connect    (uint64_t hhi, uint64_t hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
-                                       { return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data); }
-static inline uint64_t smh2id (const SmartHandle &sh) { return sh._orbid(); }
-template<class SMH> SMH smh2cast (const SmartHandle &handle) {
-  const uint64_t orbid = __AIDA_Local__::smh2id (handle);
+
+static AIDA_UNUSED FieldBuffer*
+invoke (FieldBuffer *fb)                // async remote call, transfers memory
+{
+  return client_connection->call_remote (fb);
+}
+
+static AIDA_UNUSED bool
+signal_disconnect (size_t signal_handler_id)
+{
+  return client_connection->signal_disconnect (signal_handler_id);
+}
+
+static AIDA_UNUSED size_t
+signal_connect (uint64 hhi, uint64 hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
+{
+  return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data);
+}
+
+static inline uint64
+smh2id (const SmartHandle &sh)
+{
+  return sh._orbid();
+}
+
+template<class SMH> SMH
+smh2cast (const SmartHandle &handle)
+{
+  const uint64 orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
-  const uint64_t input[2] = { orbid, target._orbid() };
-  Rapicorn::Aida::ObjectBroker::dup_handle (input, target);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (target, orbid);
   return target;
 }
-static inline void add_header2_call (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l) {
+
+static inline void
+add_header2_call (FieldBuffer &fb, const SmartHandle &sh, uint64 h, uint64 l)
+{
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, ObjectBroker::connection_id_from_handle (sh),
-                  client_connection->connection_id(), h, l); }
-static inline void add_header1_call (FieldBuffer &fb, const SmartHandle &sh, uint64_t h, uint64_t l)
-{ fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, ObjectBroker::connection_id_from_handle (sh), h, l); }
-static inline FieldBuffer* new_emit_result (const FieldBuffer *fb, uint64_t h, uint64_t l, uint32_t n)
-{ return ObjectBroker::renew_into_result (const_cast<FieldBuffer*> (fb), Rapicorn::Aida::MSGID_EMIT_RESULT, ObjectBroker::receiver_connection_id (fb->first_id()), h, l, n); }
+                  client_connection->connection_id(), h, l);
+}
+
+static inline void
+add_header1_call (FieldBuffer &fb, const SmartHandle &sh, uint64 h, uint64 l)
+{
+  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, ObjectBroker::connection_id_from_handle (sh), h, l);
+}
+
+static inline FieldBuffer*
+new_emit_result (const FieldBuffer *fb, uint64 h, uint64 l, uint32 n)
+{
+  return ObjectBroker::renew_into_result (const_cast<FieldBuffer*> (fb),
+                                          Rapicorn::Aida::MSGID_EMIT_RESULT,
+                                          ObjectBroker::receiver_connection_id (fb->first_id()),
+                                          h, l, n);
+}
 
 } } // Anon::__AIDA_Local__
 
@@ -65,32 +85,41 @@ static inline FieldBuffer* new_emit_result (const FieldBuffer *fb, uint64_t h, u
 
 namespace MandatoryNamespace {
 
+/// @cond GeneratedEnums
 enum Enum1 {
   E1_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum1c {
   E1C_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
@@ -98,7 +127,9 @@ enum Enum3 {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
@@ -106,7 +137,9 @@ enum Enum3c {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4a {
   E4A_A = 1,
   E4A_B = 2,
@@ -115,7 +148,9 @@ enum Enum4a {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4b {
   E4B_A = 1,
   E4B_B = 2,
@@ -124,7 +159,9 @@ enum Enum4b {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4c {
   E4C_A = 1,
   E4C_B = 2,
@@ -133,7 +170,9 @@ enum Enum4c {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum Enum4d {
   E4D_A = 1,
   E4D_B = 2,
@@ -142,7 +181,9 @@ enum Enum4d {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+/// @endcond
 
+/// @cond GeneratedEnums
 enum ExtensiveEnum {
   V1a = 1,
   V1b = 1,
@@ -182,6 +223,7 @@ enum ExtensiveEnum {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+/// @endcond
 
 /** @interface FirstInterface
  * See also the corresponding C++ stub class FirstInterfaceHandle. */
@@ -189,7 +231,7 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e
 class FirstInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static FirstInterfaceHandle            __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -203,14 +245,12 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const FirstInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
 
-/** @interface XFooRecord
- * See also the corresponding C++ stub class XFooRecord. */
-/// See also the corresponding IDL class XFooRecord.
 struct XFooRecord
 {
+  /// @cond GeneratedFields
   bool                          single_bool;
   int                           single_num;
-  Rapicorn::Aida::int64_t       num64;
+  Rapicorn::Aida::int64         num64;
   double                        single_float;
   std::string                   single_string;
   int                           sibling1;
@@ -226,129 +266,131 @@ struct XFooRecord
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
+  /// @endcond
   inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const XFooRecord &other) const;
+  bool                          operator!=  (const XFooRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
 
-/** @interface XFooSequence
- * See also the corresponding C++ stub class XFooSequence. */
-/// See also the corresponding IDL class XFooSequence.
 struct XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
 
-/** @interface IntSequence
- * See also the corresponding C++ stub class IntSequence. */
-/// See also the corresponding IDL class IntSequence.
 struct IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
 
-/** @interface FloatSequence
- * See also the corresponding C++ stub class FloatSequence. */
-/// See also the corresponding IDL class FloatSequence.
 struct FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
 
-/** @interface StringSequence
- * See also the corresponding C++ stub class StringSequence. */
-/// See also the corresponding IDL class StringSequence.
 struct StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
 
-/** @interface ExtensiveEnumSequence
- * See also the corresponding C++ stub class ExtensiveEnumSequence. */
-/// See also the corresponding IDL class ExtensiveEnumSequence.
 struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
 
-/** @interface RecordSequence
- * See also the corresponding C++ stub class RecordSequence. */
-/// See also the corresponding IDL class RecordSequence.
 struct RecordSequence : public std::vector<XFooRecord>
 {
   typedef std::vector<XFooRecord> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
 
-/** @interface SequenceSequence
- * See also the corresponding C++ stub class SequenceSequence. */
-/// See also the corresponding IDL class SequenceSequence.
 struct SequenceSequence : public std::vector<IntSequence>
 {
   typedef std::vector<IntSequence> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
 
-/** @interface InterfaceSequence
- * See also the corresponding C++ stub class InterfaceSequence. */
-/// See also the corresponding IDL class InterfaceSequence.
 struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
 {
   typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
 
-/** @interface AnySequence
- * See also the corresponding C++ stub class AnySequence. */
-/// See also the corresponding IDL class AnySequence.
 struct AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
 
-/** @interface NestedTypesRec
- * See also the corresponding C++ stub class NestedTypesRec. */
-/// See also the corresponding IDL class NestedTypesRec.
 struct NestedTypesRec
 {
+  /// @cond GeneratedFields
   XFooRecord                    rec;
   XFooSequence                  seq;
+  /// @endcond
   inline                        NestedTypesRec () { }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const NestedTypesRec &other) const;
+  bool                          operator!=  (const NestedTypesRec &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
 
-/** @interface NestedTypesSeq
- * See also the corresponding C++ stub class NestedTypesSeq. */
-/// See also the corresponding IDL class NestedTypesSeq.
 struct NestedTypesSeq : public std::vector<NestedTypesRec>
 {
   typedef std::vector<NestedTypesRec> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
@@ -359,7 +401,7 @@ typedef bool AliasBool;
 
 typedef int AliasInt32;
 
-typedef Rapicorn::Aida::int64_t AliasInt64;
+typedef Rapicorn::Aida::int64 AliasInt64;
 
 typedef double AliasFloat;
 
@@ -371,43 +413,58 @@ typedef XFooSequence AliasSequence;
 
 typedef ExtensiveEnum AliasEnum;
 
-/** @interface NewRecord
- * See also the corresponding C++ stub class NewRecord. */
-/// See also the corresponding IDL class NewRecord.
 struct NewRecord
 {
+  /// @cond GeneratedFields
   int                           i;
   Enum1                         enum1;
   XFooSequence                  xfs;
   NestedTypesRec                ntr;
+  /// @endcond
   inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const NewRecord &other) const;
+  bool                          operator!=  (const NewRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
 
 namespace Inner {
 
-/** @interface InnerRecord
- * See also the corresponding C++ stub class InnerRecord. */
-/// See also the corresponding IDL class InnerRecord.
 struct InnerRecord
 {
+  /// @cond GeneratedFields
   int                           x;
   int                           y;
   NewRecord                     rec;
+  /// @endcond
   inline                        InnerRecord () { x = 0; y = 0; }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const InnerRecord &other) const;
+  bool                          operator!=  (const InnerRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
 } // Inner
 
-/** @interface Refer2Inner
- * See also the corresponding C++ stub class Refer2Inner. */
-/// See also the corresponding IDL class Refer2Inner.
 struct Refer2Inner
 {
+  /// @cond GeneratedFields
   Inner::InnerRecord            r;
+  /// @endcond
   inline                        Refer2Inner () { }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const Refer2Inner &other) const;
+  bool                          operator!=  (const Refer2Inner &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
 void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
@@ -415,16 +472,21 @@ void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
 
 namespace OtherNamespace {
 
-/** @interface SomeRecord
- * See also the corresponding C++ stub class SomeRecord. */
-/// See also the corresponding IDL class SomeRecord.
 struct SomeRecord
 {
+  /// @cond GeneratedFields
   MandatoryNamespace::NewRecord r1;
   MandatoryNamespace::NewRecord r2;
   MandatoryNamespace::Inner::InnerRecord r3;
   MandatoryNamespace::Inner::InnerRecord r4;
+  /// @endcond
   inline                        SomeRecord () { }
+  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const SomeRecord &other) const;
+  bool                          operator!=  (const SomeRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
@@ -436,7 +498,7 @@ typedef bool AuxBool;
 
 typedef int Aux32;
 
-typedef Rapicorn::Aida::int64_t Aux64;
+typedef Rapicorn::Aida::int64 Aux64;
 
 typedef double AuxF64;
 
@@ -455,7 +517,7 @@ class UIWidgetAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<UIWidgetAreaHandle, double (UIWidgetAreaHandle &ba1, int someint)> __Aida_Signal__sample_signal;
   size_t __aida_connect__sample_signal (size_t, const std::function<double (UIWidgetAreaHandle &ba1, int someint)>&);
   static UIWidgetAreaHandle              __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -477,7 +539,7 @@ public:
   double                        two_args2          (int n = 6,
                                                     double r = 7.7);
   double                        multi_args         (bool b,
-                                                    Rapicorn::Aida::int64_t n,
+                                                    Rapicorn::Aida::int64 n,
                                                     double r,
                                                     int i,
                                                     const std::string &s = "String ding",
@@ -498,7 +560,7 @@ typedef UIWidgetAreaHandle UIWidgetAreaH; ///< Convenience alias for the IDL typ
 class ParentHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static ParentHandle                    __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -517,7 +579,7 @@ typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
 class ChildHandle : public ParentHandle
 {
   static ChildHandle                     __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -535,7 +597,7 @@ typedef ChildHandle ChildH; ///< Convenience alias for the IDL type Child.
 class DescendantHandle : public ChildHandle
 {
   static DescendantHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -553,7 +615,7 @@ typedef DescendantHandle DescendantH; ///< Convenience alias for the IDL type De
 class GrandChildHandle : public DescendantHandle
 {
   static GrandChildHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -565,31 +627,37 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const GrandChildHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, GrandChildHandle&);
 typedef GrandChildHandle GrandChildH; ///< Convenience alias for the IDL type GrandChild.
 
+/// @cond GeneratedEnums
 enum QuickEnum {
   ZERO = 0,
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+/// @endcond
 
-/** @interface QuickRecord
- * See also the corresponding C++ stub class QuickRecord. */
-/// See also the corresponding IDL class QuickRecord.
 struct QuickRecord
 {
+  /// @cond GeneratedFields
   int                           int1;
   int                           int2;
+  /// @endcond
   inline                        QuickRecord () { int1 = 0; int2 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const QuickRecord &other) const;
+  bool                          operator!=  (const QuickRecord &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
 
-/** @interface QuickSequence
- * See also the corresponding C++ stub class QuickSequence. */
-/// See also the corresponding IDL class QuickSequence.
 struct QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
@@ -600,7 +668,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
 class QuickIfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static QuickIfaceHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -620,7 +688,7 @@ typedef QuickIfaceHandle QuickIfaceH; ///< Convenience alias for the IDL type Qu
 class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static MethodTestInterfaceHandle       __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -633,8 +701,8 @@ public:
                                                            bool optval = 0);
   int                           method_with_ints32        (int input,
                                                            int optval = -2);
-  Rapicorn::Aida::int64_t       method_with_ints64        (Rapicorn::Aida::int64_t input,
-                                                           Rapicorn::Aida::int64_t optval = 576460752303423488);
+  Rapicorn::Aida::int64         method_with_ints64        (Rapicorn::Aida::int64 input,
+                                                           Rapicorn::Aida::int64 optval = 576460752303423488);
   double                        method_with_floats        (double input,
                                                            double optval = 309.9);
   std::string                   method_with_string        (const std::string &input,
@@ -667,8 +735,8 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   size_t __aida_connect__bool_result (size_t, const std::function<bool ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, int ()> __Aida_Signal__int32_result;
   size_t __aida_connect__int32_result (size_t, const std::function<int ()>&);
-  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, Rapicorn::Aida::int64_t ()> __Aida_Signal__int64_result;
-  size_t __aida_connect__int64_result (size_t, const std::function<Rapicorn::Aida::int64_t ()>&);
+  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, Rapicorn::Aida::int64 ()> __Aida_Signal__int64_result;
+  size_t __aida_connect__int64_result (size_t, const std::function<Rapicorn::Aida::int64 ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, double ()> __Aida_Signal__float64_result;
   size_t __aida_connect__float64_result (size_t, const std::function<double ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, std::string ()> __Aida_Signal__string_result;
@@ -691,8 +759,8 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   size_t __aida_connect__bool_arg (size_t, const std::function<void (bool b)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (int i)> __Aida_Signal__int32_arg;
   size_t __aida_connect__int32_arg (size_t, const std::function<void (int i)>&);
-  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64_t i)> __Aida_Signal__int64_arg;
-  size_t __aida_connect__int64_arg (size_t, const std::function<void (Rapicorn::Aida::int64_t i)>&);
+  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64 i)> __Aida_Signal__int64_arg;
+  size_t __aida_connect__int64_arg (size_t, const std::function<void (Rapicorn::Aida::int64 i)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (double f)> __Aida_Signal__float64_arg;
   size_t __aida_connect__float64_arg (size_t, const std::function<void (double f)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (const std::string &s)> __Aida_Signal__string_arg;
@@ -710,7 +778,7 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (SignalTestInterfaceHandle &self_)> __Aida_Signal__self_args;
   size_t __aida_connect__self_args (size_t, const std::function<void (SignalTestInterfaceHandle &self_)>&);
   static SignalTestInterfaceHandle       __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -755,7 +823,7 @@ class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
   typedef Rapicorn::Aida::Connector<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> __Aida_Signal__child_signal;
   size_t __aida_connect__child_signal (size_t, const std::function<void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)>&);
   static ChildInheritingSignalsHandle    __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -774,7 +842,7 @@ typedef ChildInheritingSignalsHandle ChildInheritingSignalsH; ///< Convenience a
 class AnotherChildHandle : public SignalTestInterfaceHandle
 {
   static AnotherChildHandle              __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
@@ -792,7 +860,7 @@ typedef AnotherChildHandle AnotherChildH; ///< Convenience alias for the IDL typ
 class PropertyTesterHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static PropertyTesterHandle            __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -804,8 +872,8 @@ public:
   void                          bool_prop      (bool);
   int                           int32_prop     () const;
   void                          int32_prop     (int);
-  Rapicorn::Aida::int64_t       int64_prop     () const;
-  void                          int64_prop     (Rapicorn::Aida::int64_t);
+  Rapicorn::Aida::int64         int64_prop     () const;
+  void                          int64_prop     (Rapicorn::Aida::int64);
   double                        float64_prop   () const;
   void                          float64_prop   (double);
   std::string                   string_prop    () const;
@@ -830,6 +898,7 @@ typedef PropertyTesterHandle PropertyTesterH; ///< Convenience alias for the IDL
 
 namespace RapicornAidaTest {
 
+/// @cond GeneratedEnums
 enum ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
@@ -839,6 +908,7 @@ enum ClickType {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+/// @endcond
 
 /** @interface ButtonArea
  * See also the corresponding C++ stub class ButtonAreaHandle. */
@@ -850,7 +920,7 @@ class ButtonAreaHandle : public virtual Rapicorn::Aida::SmartHandle
   typedef Rapicorn::Aida::Connector<ButtonAreaHandle, void ()> __Aida_Signal__activate;
   size_t __aida_connect__activate (size_t, const std::function<void ()>&);
   static ButtonAreaHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -881,7 +951,7 @@ class PureMethodsHandle;
 class PureMethodsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static PureMethodsHandle               __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -895,6 +965,7 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
 typedef PureMethodsHandle PureMethodsH; ///< Convenience alias for the IDL type PureMethods.
 
+/// @cond GeneratedEnums
 enum MathExpressions {
   RESULT_2 = 2,
   RESULT_5 = 5,
@@ -911,6 +982,7 @@ enum MathExpressions {
 };
 inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+/// @endcond
 } // RapicornAidaTest
 
 namespace Other {
@@ -921,7 +993,7 @@ namespace Other {
 class NameTestsHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static NameTestsHandle                 __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -946,7 +1018,7 @@ namespace BseTest {
 class CompressorHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static CompressorHandle                __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -963,17 +1035,22 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
 typedef CompressorHandle CompressorH; ///< Convenience alias for the IDL type Compressor.
 
-/** @interface RecordForGroups
- * See also the corresponding C++ stub class RecordForGroups. */
-/// See also the corresponding IDL class RecordForGroups.
 struct RecordForGroups
 {
+  /// @cond GeneratedFields
   int                           i;
   double                        ratio;
   bool                          ordinary_bool;
   double                        threshold1;
   double                        threshold2;
+  /// @endcond
   inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
+  bool                          operator==  (const RecordForGroups &other) const;
+  bool                          operator!=  (const RecordForGroups &other) const { return !operator== (other); }
+  void                          operator<<= (Rapicorn::Aida::Any &any);
+  friend void                   operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
@@ -984,7 +1061,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
 class SoundModuleHandle : public virtual Rapicorn::Aida::SmartHandle
 {
   static SoundModuleHandle               __aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);
-  static const Rapicorn::Aida::TypeHash& __aida_type__ ();
+  static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
@@ -1002,168 +1079,39 @@ namespace Rapicorn {
 
 namespace Aida {
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1>() { return TypeMap::lookup ("MandatoryNamespace::Enum1"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum1c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum1c"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1c>() { return TypeMap::lookup ("MandatoryNamespace::Enum1c"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2>() { return TypeMap::lookup ("MandatoryNamespace::Enum2"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum2c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum2c"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2c>() { return TypeMap::lookup ("MandatoryNamespace::Enum2c"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3>() { return TypeMap::lookup ("MandatoryNamespace::Enum3"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum3c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum3c"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3c>() { return TypeMap::lookup ("MandatoryNamespace::Enum3c"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4a>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4a"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4a>() { return TypeMap::lookup ("MandatoryNamespace::Enum4a"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4b>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4b"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4b>() { return TypeMap::lookup ("MandatoryNamespace::Enum4b"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4c>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4c"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4c>() { return TypeMap::lookup ("MandatoryNamespace::Enum4c"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::Enum4d>() { return EnumInfo::from_nsid ("MandatoryNamespace", "Enum4d"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4d>() { return TypeMap::lookup ("MandatoryNamespace::Enum4d"); }
 
-template<> inline EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum>() { return EnumInfo::from_nsid ("MandatoryNamespace", "ExtensiveEnum"); }
+template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::ExtensiveEnum>() { return TypeMap::lookup ("MandatoryNamespace::ExtensiveEnum"); }
 
-template<> inline EnumInfo enum_info<InterfaceTests::QuickEnum>() { return EnumInfo::from_nsid ("InterfaceTests", "QuickEnum"); }
+template<> inline TypeCode TypeCode::from_enum<InterfaceTests::QuickEnum>() { return TypeMap::lookup ("InterfaceTests::QuickEnum"); }
 
-template<> inline EnumInfo enum_info<RapicornAidaTest::ClickType>() { return EnumInfo::from_nsid ("RapicornAidaTest", "ClickType"); }
+template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::ClickType>() { return TypeMap::lookup ("RapicornAidaTest::ClickType"); }
 
-template<> inline EnumInfo enum_info<RapicornAidaTest::MathExpressions>() { return EnumInfo::from_nsid ("RapicornAidaTest", "MathExpressions"); }
+template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::MathExpressions>() { return TypeMap::lookup ("RapicornAidaTest::MathExpressions"); }
 } // Aida
 } // Rapicorn
 
 // --- Implementations ---
 
 namespace MandatoryNamespace {
-
-static Rapicorn::Init __aida_autoinit__Enum1 ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E1_A),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum1c ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E1C_A),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum1c", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum2 ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E2_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E2_B),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum2c ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E2C_B),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum2c", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum3 ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3_C),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum3c ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E3C_C),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum3c", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum4a ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_C),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4A_D),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4a", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum4b ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_C),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4B_D),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4b", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum4c ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_C),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4C_D),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4c", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__Enum4d ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_A),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_B),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_C),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (E4D_D),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "Enum4d", enum_values);
-});
-
-static Rapicorn::Init __aida_autoinit__ExtensiveEnum ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V1a),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V1b),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V2),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V3),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V4),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V5),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V6),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V7),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V8),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V9),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V10),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V11),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V12),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V13),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V14),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V15),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V16),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V17),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V18),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V20),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V21),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V22),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V23),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V24),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V25),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V26),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V27),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V28),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V30),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V31),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V32),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V33),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V34),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V35),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (V36),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("MandatoryNamespace", "ExtensiveEnum", enum_values);
-});
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 void
@@ -1177,7 +1125,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, FirstInterfaceHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-FirstInterfaceHandle::__aida_type__()
+FirstInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x22113f623903ac14ULL, 0x3fe8e50c1a9a78d2ULL);
   return type_hash;
@@ -1185,7 +1133,7 @@ FirstInterfaceHandle::__aida_type__()
 FirstInterfaceHandle
 FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<FirstInterfaceHandle> (other);
@@ -1200,7 +1148,7 @@ const Rapicorn::Aida::TypeHashList
 FirstInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x06733e42687c02b3ULL, 0x831dd99e74128fb9ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1226,6 +1174,41 @@ FirstInterfaceHandle::void_func ()
   fb <<= *this;
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
+}
+bool
+XFooRecord::operator== (const XFooRecord &other) const
+{
+  if (this->single_bool != other.single_bool) return false;
+  if (this->single_num != other.single_num) return false;
+  if (this->num64 != other.num64) return false;
+  if (this->single_float != other.single_float) return false;
+  if (this->single_string != other.single_string) return false;
+  if (this->sibling1 != other.sibling1) return false;
+  if (this->sibling2 != other.sibling2) return false;
+  if (this->multi1 != other.multi1) return false;
+  if (this->multi2 != other.multi2) return false;
+  if (this->multi3 != other.multi3) return false;
+  if (this->multi4 != other.multi4) return false;
+  if (this->enum_field != other.enum_field) return false;
+  if (this->iface1 != other.iface1) return false;
+  if (this->iface2 != other.iface2) return false;
+  if (this->iface3 != other.iface3) return false;
+  if (this->any1 != other.any1) return false;
+  if (this->any2 != other.any2) return false;
+  if (this->any3 != other.any3) return false;
+  return true;
+}
+void
+XFooRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecord &self)
@@ -1499,6 +1482,25 @@ AnySequence::append_back()
   resize (size() + 1);
   return back();
 }
+bool
+NestedTypesRec::operator== (const NestedTypesRec &other) const
+{
+  if (this->rec != other.rec) return false;
+  if (this->seq != other.seq) return false;
+  return true;
+}
+void
+NestedTypesRec::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRec &self)
 {
@@ -1539,6 +1541,27 @@ NestedTypesSeq::append_back()
   resize (size() + 1);
   return back();
 }
+bool
+NewRecord::operator== (const NewRecord &other) const
+{
+  if (this->i != other.i) return false;
+  if (this->enum1 != other.enum1) return false;
+  if (this->xfs != other.xfs) return false;
+  if (this->ntr != other.ntr) return false;
+  return true;
+}
+void
+NewRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecord &self)
 {
@@ -1560,6 +1583,26 @@ operator>>= (Rapicorn::Aida::FieldReader &src, NewRecord &self)
 }
 
 namespace Inner {
+bool
+InnerRecord::operator== (const InnerRecord &other) const
+{
+  if (this->x != other.x) return false;
+  if (this->y != other.y) return false;
+  if (this->rec != other.rec) return false;
+  return true;
+}
+void
+InnerRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecord &self)
 {
@@ -1578,6 +1621,24 @@ operator>>= (Rapicorn::Aida::FieldReader &src, InnerRecord &self)
   fbr >>= self.rec;
 }
 } // Inner
+bool
+Refer2Inner::operator== (const Refer2Inner &other) const
+{
+  if (this->r != other.r) return false;
+  return true;
+}
+void
+Refer2Inner::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2Inner &self)
 {
@@ -1594,6 +1655,27 @@ operator>>= (Rapicorn::Aida::FieldReader &src, Refer2Inner &self)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
+bool
+SomeRecord::operator== (const SomeRecord &other) const
+{
+  if (this->r1 != other.r1) return false;
+  if (this->r2 != other.r2) return false;
+  if (this->r3 != other.r3) return false;
+  if (this->r4 != other.r4) return false;
+  return true;
+}
+void
+SomeRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecord &self)
 {
@@ -1621,7 +1703,7 @@ __aida_emit1__UIWidgetAreaHandle__void_signal (const Rapicorn::Aida::FieldBuffer
 {
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -1638,7 +1720,7 @@ __aida_emit2__UIWidgetAreaHandle__sample_signal (const Rapicorn::Aida::FieldBuff
 {
   auto fptr = (const std::function<double (UIWidgetAreaHandle &ba1, int someint)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   double  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, 2);
   rb <<= emit_result_id;
@@ -1666,7 +1748,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, UIWidgetAreaHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-UIWidgetAreaHandle::__aida_type__()
+UIWidgetAreaHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x11db82aaba1ee248ULL, 0xd2359653ff87e972ULL);
   return type_hash;
@@ -1674,7 +1756,7 @@ UIWidgetAreaHandle::__aida_type__()
 UIWidgetAreaHandle
 UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<UIWidgetAreaHandle> (other);
@@ -1689,7 +1771,7 @@ const Rapicorn::Aida::TypeHashList
 UIWidgetAreaHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x8f38c8e0b9611227ULL, 0xa088a34311deab39ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1835,7 +1917,7 @@ UIWidgetAreaHandle::two_args2 (int arg_n,
 }
 double
 UIWidgetAreaHandle::multi_args (bool arg_b,
-                                Rapicorn::Aida::int64_t arg_n,
+                                Rapicorn::Aida::int64 arg_n,
                                 double arg_r,
                                 int arg_i,
                                 const std::string &arg_s,
@@ -1921,7 +2003,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ParentHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ParentHandle::__aida_type__()
+ParentHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL);
   return type_hash;
@@ -1929,7 +2011,7 @@ ParentHandle::__aida_type__()
 ParentHandle
 ParentHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ParentHandle> (other);
@@ -1944,7 +2026,7 @@ const Rapicorn::Aida::TypeHashList
 ParentHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf963900935f64ed6ULL, 0x68f38589f5e75b82ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -1975,7 +2057,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ChildHandle::__aida_type__()
+ChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL);
   return type_hash;
@@ -1983,7 +2065,7 @@ ChildHandle::__aida_type__()
 ChildHandle
 ChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ChildHandle> (other);
@@ -1993,7 +2075,7 @@ const Rapicorn::Aida::TypeHashList
 ChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x19344291fb3e24f8ULL, 0x03c09ce7d044cddaULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2024,7 +2106,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, DescendantHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-DescendantHandle::__aida_type__()
+DescendantHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL);
   return type_hash;
@@ -2032,7 +2114,7 @@ DescendantHandle::__aida_type__()
 DescendantHandle
 DescendantHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<DescendantHandle> (other);
@@ -2042,7 +2124,7 @@ const Rapicorn::Aida::TypeHashList
 DescendantHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x0c7e17cb99e7e1f5ULL, 0xf983d237de11fd86ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2073,7 +2155,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, GrandChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-GrandChildHandle::__aida_type__()
+GrandChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf6975e5e92250718ULL, 0x53730d44919c46f9ULL);
   return type_hash;
@@ -2081,7 +2163,7 @@ GrandChildHandle::__aida_type__()
 GrandChildHandle
 GrandChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<GrandChildHandle> (other);
@@ -2091,7 +2173,7 @@ const Rapicorn::Aida::TypeHashList
 GrandChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xcc7a1f29efc75d7dULL, 0x8caec1b61b3388a8ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2109,13 +2191,25 @@ GrandChildHandle::__aida_typelist__()
   delete fr;
   return thl;
 }
-
-static Rapicorn::Init __aida_autoinit__QuickEnum ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (ZERO),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("InterfaceTests", "QuickEnum", enum_values);
-});
+bool
+QuickRecord::operator== (const QuickRecord &other) const
+{
+  if (this->int1 != other.int1) return false;
+  if (this->int2 != other.int2) return false;
+  return true;
+}
+void
+QuickRecord::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecord &self)
 {
@@ -2169,7 +2263,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, QuickIfaceHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-QuickIfaceHandle::__aida_type__()
+QuickIfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x4524ee119d4e454cULL, 0xbeb61f7c3cc04f7dULL);
   return type_hash;
@@ -2177,7 +2271,7 @@ QuickIfaceHandle::__aida_type__()
 QuickIfaceHandle
 QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<QuickIfaceHandle> (other);
@@ -2192,7 +2286,7 @@ const Rapicorn::Aida::TypeHashList
 QuickIfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x0040fbcf1af9959aULL, 0x5a1fc9c92b94af9fULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2233,7 +2327,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, MethodTestInterfaceHandle &handle
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-MethodTestInterfaceHandle::__aida_type__()
+MethodTestInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x6bf684458ac5f01aULL, 0xf64c02611b807180ULL);
   return type_hash;
@@ -2241,7 +2335,7 @@ MethodTestInterfaceHandle::__aida_type__()
 MethodTestInterfaceHandle
 MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<MethodTestInterfaceHandle> (other);
@@ -2256,7 +2350,7 @@ const Rapicorn::Aida::TypeHashList
 MethodTestInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x61574837fdd015afULL, 0x893c7eca775ea115ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2317,9 +2411,9 @@ MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
   delete fr;
   return retval;
 }
-Rapicorn::Aida::int64_t
-MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64_t arg_input,
-                                               Rapicorn::Aida::int64_t arg_optval)
+Rapicorn::Aida::int64
+MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64 arg_input,
+                                               Rapicorn::Aida::int64 arg_optval)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
@@ -2329,7 +2423,7 @@ MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64_t arg_input
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_header();
-  Rapicorn::Aida::int64_t  retval;
+  Rapicorn::Aida::int64  retval;
   frr >>= retval;
   delete fr;
   return retval;
@@ -2475,7 +2569,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_result (const Rapicorn::Aida::Fiel
 {
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2492,7 +2586,7 @@ __aida_emit2__SignalTestInterfaceHandle__bool_result (const Rapicorn::Aida::Fiel
 {
   auto fptr = (const std::function<bool ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   bool  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, 2);
   rb <<= emit_result_id;
@@ -2512,7 +2606,7 @@ __aida_emit2__SignalTestInterfaceHandle__int32_result (const Rapicorn::Aida::Fie
 {
   auto fptr = (const std::function<int ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   int  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, 2);
   rb <<= emit_result_id;
@@ -2530,21 +2624,21 @@ SignalTestInterfaceHandle::__aida_connect__int32_result (size_t signal_handler_i
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit2__SignalTestInterfaceHandle__int64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
-  auto fptr = (const std::function<Rapicorn::Aida::int64_t ()>*) data;
+  auto fptr = (const std::function<Rapicorn::Aida::int64 ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
-  Rapicorn::Aida::int64_t  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::uint64 emit_result_id;
+  Rapicorn::Aida::int64  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
   return &rb;
 }
 size_t
-SignalTestInterfaceHandle::__aida_connect__int64_result (size_t signal_handler_id, const std::function<Rapicorn::Aida::int64_t ()> &func)
+SignalTestInterfaceHandle::__aida_connect__int64_result (size_t signal_handler_id, const std::function<Rapicorn::Aida::int64 ()> &func)
 {
   if (signal_handler_id)
     return __AIDA_Local__::signal_disconnect (signal_handler_id);
-  void *fptr = new std::function<Rapicorn::Aida::int64_t ()> (func);
+  void *fptr = new std::function<Rapicorn::Aida::int64 ()> (func);
   return __AIDA_Local__::signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, *this, __aida_emit2__SignalTestInterfaceHandle__int64_result, fptr);
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2552,7 +2646,7 @@ __aida_emit2__SignalTestInterfaceHandle__float64_result (const Rapicorn::Aida::F
 {
   auto fptr = (const std::function<double ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   double  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, 2);
   rb <<= emit_result_id;
@@ -2572,7 +2666,7 @@ __aida_emit2__SignalTestInterfaceHandle__string_result (const Rapicorn::Aida::Fi
 {
   auto fptr = (const std::function<std::string ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   std::string  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, 2);
   rb <<= emit_result_id;
@@ -2592,7 +2686,7 @@ __aida_emit2__SignalTestInterfaceHandle__enum_result (const Rapicorn::Aida::Fiel
 {
   auto fptr = (const std::function<QuickEnum ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   QuickEnum  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, 2);
   rb <<= emit_result_id;
@@ -2612,7 +2706,7 @@ __aida_emit2__SignalTestInterfaceHandle__record_result (const Rapicorn::Aida::Fi
 {
   auto fptr = (const std::function<QuickRecord ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   QuickRecord  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, 2);
   rb <<= emit_result_id;
@@ -2632,7 +2726,7 @@ __aida_emit2__SignalTestInterfaceHandle__sequence_result (const Rapicorn::Aida::
 {
   auto fptr = (const std::function<QuickSequence ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   QuickSequence  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, 2);
   rb <<= emit_result_id;
@@ -2652,7 +2746,7 @@ __aida_emit2__SignalTestInterfaceHandle__interface_result (const Rapicorn::Aida:
 {
   auto fptr = (const std::function<GrandChildHandle ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   GrandChildHandle  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   rb <<= emit_result_id;
@@ -2672,7 +2766,7 @@ __aida_emit2__SignalTestInterfaceHandle__any_result (const Rapicorn::Aida::Field
 {
   auto fptr = (const std::function<Rapicorn::Aida::Any ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::Any  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
   rb <<= emit_result_id;
@@ -2692,7 +2786,7 @@ __aida_emit2__SignalTestInterfaceHandle__self_result (const Rapicorn::Aida::Fiel
 {
   auto fptr = (const std::function<SignalTestInterfaceHandle ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   SignalTestInterfaceHandle  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   rb <<= emit_result_id;
@@ -2712,7 +2806,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_arg (const Rapicorn::Aida::FieldBu
 {
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2729,7 +2823,7 @@ __aida_emit1__SignalTestInterfaceHandle__bool_arg (const Rapicorn::Aida::FieldBu
 {
   auto fptr = (const std::function<void (bool b)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2746,7 +2840,7 @@ __aida_emit1__SignalTestInterfaceHandle__int32_arg (const Rapicorn::Aida::FieldB
 {
   auto fptr = (const std::function<void (int i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2761,18 +2855,18 @@ SignalTestInterfaceHandle::__aida_connect__int32_arg (size_t signal_handler_id, 
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit1__SignalTestInterfaceHandle__int64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
-  auto fptr = (const std::function<void (Rapicorn::Aida::int64_t i)>*) data;
+  auto fptr = (const std::function<void (Rapicorn::Aida::int64 i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
-SignalTestInterfaceHandle::__aida_connect__int64_arg (size_t signal_handler_id, const std::function<void (Rapicorn::Aida::int64_t i)> &func)
+SignalTestInterfaceHandle::__aida_connect__int64_arg (size_t signal_handler_id, const std::function<void (Rapicorn::Aida::int64 i)> &func)
 {
   if (signal_handler_id)
     return __AIDA_Local__::signal_disconnect (signal_handler_id);
-  void *fptr = new std::function<void (Rapicorn::Aida::int64_t i)> (func);
+  void *fptr = new std::function<void (Rapicorn::Aida::int64 i)> (func);
   return __AIDA_Local__::signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, *this, __aida_emit1__SignalTestInterfaceHandle__int64_arg, fptr);
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2780,7 +2874,7 @@ __aida_emit1__SignalTestInterfaceHandle__float64_arg (const Rapicorn::Aida::Fiel
 {
   auto fptr = (const std::function<void (double f)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2797,7 +2891,7 @@ __aida_emit1__SignalTestInterfaceHandle__string_arg (const Rapicorn::Aida::Field
 {
   auto fptr = (const std::function<void (const std::string &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2814,7 +2908,7 @@ __aida_emit1__SignalTestInterfaceHandle__enum_arg (const Rapicorn::Aida::FieldBu
 {
   auto fptr = (const std::function<void (QuickEnum e)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2831,7 +2925,7 @@ __aida_emit1__SignalTestInterfaceHandle__record_arg (const Rapicorn::Aida::Field
 {
   auto fptr = (const std::function<void (const QuickRecord &r)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2848,7 +2942,7 @@ __aida_emit1__SignalTestInterfaceHandle__sequence_arg (const Rapicorn::Aida::Fie
 {
   auto fptr = (const std::function<void (const QuickSequence &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2865,7 +2959,7 @@ __aida_emit1__SignalTestInterfaceHandle__interface_arg (const Rapicorn::Aida::Fi
 {
   auto fptr = (const std::function<void (GrandChildHandle &i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2882,7 +2976,7 @@ __aida_emit1__SignalTestInterfaceHandle__any_arg (const Rapicorn::Aida::FieldBuf
 {
   auto fptr = (const std::function<void (const Rapicorn::Aida::Any &a)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2899,7 +2993,7 @@ __aida_emit1__SignalTestInterfaceHandle__self_args (const Rapicorn::Aida::FieldB
 {
   auto fptr = (const std::function<void (SignalTestInterfaceHandle &self_)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2924,7 +3018,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, SignalTestInterfaceHandle &handle
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-SignalTestInterfaceHandle::__aida_type__()
+SignalTestInterfaceHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL);
   return type_hash;
@@ -2932,7 +3026,7 @@ SignalTestInterfaceHandle::__aida_type__()
 SignalTestInterfaceHandle
 SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<SignalTestInterfaceHandle> (other);
@@ -2947,7 +3041,7 @@ const Rapicorn::Aida::TypeHashList
 SignalTestInterfaceHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x008959b54c5d1a16ULL, 0xe2db72887f695404ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2970,7 +3064,7 @@ __aida_emit1__ChildInheritingSignalsHandle__child_signal (const Rapicorn::Aida::
 {
   auto fptr = (const std::function<void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2995,7 +3089,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildInheritingSignalsHandle &han
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ChildInheritingSignalsHandle::__aida_type__()
+ChildInheritingSignalsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xf20ff30241b5b694ULL, 0x9f544b2626e183f0ULL);
   return type_hash;
@@ -3003,7 +3097,7 @@ ChildInheritingSignalsHandle::__aida_type__()
 ChildInheritingSignalsHandle
 ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ChildInheritingSignalsHandle> (other);
@@ -3013,7 +3107,7 @@ const Rapicorn::Aida::TypeHashList
 ChildInheritingSignalsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x1e3629455056e2c5ULL, 0xb0a26fd3fa379e71ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3044,7 +3138,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, AnotherChildHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-AnotherChildHandle::__aida_type__()
+AnotherChildHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x9a33af1b27f7e36dULL, 0xdf625f7bd18934faULL);
   return type_hash;
@@ -3052,7 +3146,7 @@ AnotherChildHandle::__aida_type__()
 AnotherChildHandle
 AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<AnotherChildHandle> (other);
@@ -3062,7 +3156,7 @@ const Rapicorn::Aida::TypeHashList
 AnotherChildHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x3401a3c0d40fe0e6ULL, 0x3c6d94a03419b7caULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3093,7 +3187,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, PropertyTesterHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-PropertyTesterHandle::__aida_type__()
+PropertyTesterHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xa37ab462c55a3b3cULL, 0x4f3fd1c9ad9689fbULL);
   return type_hash;
@@ -3101,7 +3195,7 @@ PropertyTesterHandle::__aida_type__()
 PropertyTesterHandle
 PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<PropertyTesterHandle> (other);
@@ -3116,7 +3210,7 @@ const Rapicorn::Aida::TypeHashList
 PropertyTesterHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc5c990e90dfb53e9ULL, 0x121587ef2dc3a59bULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3182,7 +3276,7 @@ PropertyTesterHandle::int32_prop (int value)
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
-Rapicorn::Aida::int64_t
+Rapicorn::Aida::int64
 PropertyTesterHandle::int64_prop () const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
@@ -3191,13 +3285,13 @@ PropertyTesterHandle::int64_prop () const
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_header();
-  Rapicorn::Aida::int64_t  retval;
+  Rapicorn::Aida::int64  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64_t value)
+PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64 value)
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
@@ -3401,23 +3495,12 @@ PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value)
 } // InterfaceTests
 
 namespace RapicornAidaTest {
-
-static Rapicorn::Init __aida_autoinit__ClickType ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_PRESS),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_ON_RELEASE),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_SLOW_REPEAT),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_FAST_REPEAT),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (CLICK_KEY_REPEAT),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "ClickType", enum_values);
-});
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit2__ButtonAreaHandle__check_activate (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
   auto fptr = (const std::function<bool ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   bool  rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, 2);
   rb <<= emit_result_id;
@@ -3437,7 +3520,7 @@ __aida_emit1__ButtonAreaHandle__activate (const Rapicorn::Aida::FieldBuffer *sfb
 {
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
-  Rapicorn::Aida::uint64_t emit_result_id;
+  Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3462,7 +3545,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, ButtonAreaHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-ButtonAreaHandle::__aida_type__()
+ButtonAreaHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xec371b296fa57436ULL, 0x92e4310e386fc92eULL);
   return type_hash;
@@ -3470,7 +3553,7 @@ ButtonAreaHandle::__aida_type__()
 ButtonAreaHandle
 ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<ButtonAreaHandle> (other);
@@ -3485,7 +3568,7 @@ const Rapicorn::Aida::TypeHashList
 ButtonAreaHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf9fd022398187c1eULL, 0x971768152fbb4b77ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3612,7 +3695,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, PureMethodsHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-PureMethodsHandle::__aida_type__()
+PureMethodsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0xddc2a514d04d3af5ULL, 0xc0046740434c0486ULL);
   return type_hash;
@@ -3620,7 +3703,7 @@ PureMethodsHandle::__aida_type__()
 PureMethodsHandle
 PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<PureMethodsHandle> (other);
@@ -3635,7 +3718,7 @@ const Rapicorn::Aida::TypeHashList
 PureMethodsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf1b1618a8feeeadeULL, 0x37141973b72fb806ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3668,24 +3751,6 @@ PureMethodsHandle::pure_method (double arg_f)
   delete fr;
   return retval;
 }
-
-static Rapicorn::Init __aida_autoinit__MathExpressions ([]() {
-  static const Rapicorn::Aida::EnumInfo::Value enum_values[] = {
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_2),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_5),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_8),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_6),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_7),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_16),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_3),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_24),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_13),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_m2),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_77),
-    RAPICORN_AIDA_ENUM_INFO_VALUE (RESULT_511),
-  };
-  Rapicorn::Aida::EnumInfo::enlist ("RapicornAidaTest", "MathExpressions", enum_values);
-});
 } // RapicornAidaTest
 
 namespace Other {
@@ -3702,7 +3767,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, NameTestsHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-NameTestsHandle::__aida_type__()
+NameTestsHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x542d40cd7d8fcd40ULL, 0x8c1782df29c9b936ULL);
   return type_hash;
@@ -3710,7 +3775,7 @@ NameTestsHandle::__aida_type__()
 NameTestsHandle
 NameTestsHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<NameTestsHandle> (other);
@@ -3725,7 +3790,7 @@ const Rapicorn::Aida::TypeHashList
 NameTestsHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x501084fe2e8e5788ULL, 0x3fb86363d037fe27ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3773,7 +3838,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, CompressorHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-CompressorHandle::__aida_type__()
+CompressorHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x42057a05d51182dfULL, 0x6a0d69cda274433eULL);
   return type_hash;
@@ -3781,7 +3846,7 @@ CompressorHandle::__aida_type__()
 CompressorHandle
 CompressorHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<CompressorHandle> (other);
@@ -3796,7 +3861,7 @@ const Rapicorn::Aida::TypeHashList
 CompressorHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xee0a72a933a11affULL, 0x4de21e78a41cb272ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3862,6 +3927,28 @@ CompressorHandle::ratio (double value)
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
+bool
+RecordForGroups::operator== (const RecordForGroups &other) const
+{
+  if (this->i != other.i) return false;
+  if (this->ratio != other.ratio) return false;
+  if (this->ordinary_bool != other.ordinary_bool) return false;
+  if (this->threshold1 != other.threshold1) return false;
+  if (this->threshold2 != other.threshold2) return false;
+  return true;
+}
+void
+RecordForGroups::operator<<= (Rapicorn::Aida::Any &any)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
+  Any::any_to_record (any, *this);
+}
+void
+operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec)
+{
+  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
+  Any::any_from_record (any, rec);
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroups &self)
 {
@@ -3896,7 +3983,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, SoundModuleHandle &handle)
   Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);
 }
 const Rapicorn::Aida::TypeHash&
-SoundModuleHandle::__aida_type__()
+SoundModuleHandle::__aida_typeid__()
 {
   static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (0x06447b38b51e0198ULL, 0x848669199cc311deULL);
   return type_hash;
@@ -3904,7 +3991,7 @@ SoundModuleHandle::__aida_type__()
 SoundModuleHandle
 SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
-  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_type__();
+  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
   for (i = 0; i < types.size(); i++)
     if (mine == types[i])
       return __AIDA_Local__::smh2cast<SoundModuleHandle> (other);
@@ -3919,7 +4006,7 @@ const Rapicorn::Aida::TypeHashList
 SoundModuleHandle::__aida_typelist__()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x008de59c242661d3ULL, 0xb91bcb9bc3832039ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3938,4 +4025,236 @@ SoundModuleHandle::__aida_typelist__()
   return thl;
 }
 } // BseTest
+
+namespace { // Anon
+static const char __aida_type_map__[] =
+  "AidaTypeMap\0\0\0\0\0x!\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\0\0\0 \7\0\0\30\20"
+  "\0\0\0\0\0\0\20\17\0\0\0\0\0\0\0\0\0\0\0\0\0\0Y\0\0\0\30\20\0\0 \7"
+  "\0\0\0\0\0\0b\0\0\0<\20\0\0 \7\0\0\0\0\0\0E\0\0\0`\20\0\0 \7\0\0$\7"
+  "\0\0d\0\0\0\340\22\0\0 \7\0\0\0\0\0\0i\0\0\0\4\23\0\0 \7\0\0\0\0\0"
+  "\0l\0\0\0(\23\0\0 \7\0\0\0\0\0\0b\0\0\0p\23\0\0 \7\0\0\0\0\0\0i\0\0"
+  "\0\200\23\0\0 \7\0\0\0\0\0\0l\0\0\0\220\23\0\0 \7\0\0\0\0\0\0d\0\0\0"
+  "\234\23\0\0 \7\0\0\0\0\0\0s\0\0\0\260\23\0\0 \7\0\0\0\0\0\0i\0\0\0"
+  "\304\23\0\0 \7\0\0\0\0\0\0i\0\0\0\324\23\0\0 \7\0\0\0\0\0\0i\0\0\0\344"
+  "\23\0\0 \7\0\0\0\0\0\0i\0\0\0\360\23\0\0 \7\0\0\0\0\0\0i\0\0\0\374"
+  "\23\0\0 \7\0\0\0\0\0\0i\0\0\0\10\24\0\0 \7\0\0\0\0\0\0T\0\0\0\24\24"
+  "\0\0 \7\0\0$\24\0\0T\0\0\0L\24\0\0 \7\0\0X\24\0\0T\0\0\0\200\24\0"
+  "\0 \7\0\0X\24\0\0T\0\0\0\214\24\0\0 \7\0\0X\24\0\0Y\0\0\0\230\24\0\0"
+  " \7\0\0\0\0\0\0Y\0\0\0\244\24\0\0 \7\0\0\0\0\0\0Y\0\0\0\260\24\0\0"
+  " \7\0\0\0\0\0\0R\0\0\0L\23\0\0 \7\0\0\344\11\0\0Q\0\0\0\274\24\0\0 "
+  "\7\0\0\240\0\0\0s\0\0\0\344\24\0\0 \7\0\0\0\0\0\0C\0\0\0\10\25\0\0 "
+  "\7\0\0""0\12\0\0Y\0\0\0x\25\0\0 \7\0\0\0\0\0\0Q\0\0\0T\25\0\0 \7\0\0"
+  "\0\2\0\0i\0\0\0\210\25\0\0""8\12\0\0\0\0\0\0l\0\0\0\354\25\0\0L\12"
+  "\0\0\0\0\0\0b\0\0\0T\26\0\0`\12\0\0\0\0\0\0d\0\0\0\244\26\0\0t\12\0"
+  "\0\0\0\0\0s\0\0\0\10\27\0\0\210\12\0\0\0\0\0\0C\0\0\0d\27\0\0 \7\0\0"
+  " \7\0\0C\0\0\0\210\27\0\0 \7\0\0\234\12\0\0C\0\0\0\300\27\0\0 \7\0"
+  "\0""0\12\0\0E\0\0\0\354\27\0\0 \7\0\0\244\12\0\0C\0\0\0\200\30\0\0 "
+  "\7\0\0 \7\0\0C\0\0\0\230\30\0\0 \7\0\0\14\13\0\0E\0\0\0\270\30\0\0 "
+  "\7\0\0\30\13\0\0E\0\0\0\344\30\0\0 \7\0\0""0\13\0\0E\0\0\0\20\31\0\0"
+  " \7\0\0H\13\0\0E\0\0\0H\31\0\0 \7\0\0t\13\0\0E\0\0\0\200\31\0\0 \7"
+  "\0\0\240\13\0\0E\0\0\0\304\31\0\0 \7\0\0\340\13\0\0E\0\0\0\10\32\0\0"
+  " \7\0\0 \14\0\0E\0\0\0X\32\0\0 \7\0\0t\14\0\0E\0\0\0\250\32\0\0 \7"
+  "\0\0\310\14\0\0E\0\0\0\370\32\0\0 \7\0\0\34\15\0\0E\0\0\0$\24\0\0 \7"
+  "\0\0$\7\0\0T\0\0\0x\33\0\0 \7\0\0$\24\0\0Q\0\0\0H\33\0\0 \7\0\0\200"
+  "\3\0\0C\0\0\0X\24\0\0 \7\0\0 \7\0\0d\0\0\0\264\33\0\0 \7\0\0\0\0\0"
+  "\0Q\0\0\0\214\33\0\0 \7\0\0\260\3\0\0C\0\0\0\310\33\0\0 \7\0\0p\15\0"
+  "\0i\0\0\0\24\34\0\0 \7\0\0\0\0\0\0i\0\0\0\34\34\0\0 \7\0\0\0\0\0\0"
+  "T\0\0\0$\34\0\0 \7\0\0,\34\0\0R\0\0\0\350\33\0\0 \7\0\0\200\15\0\0i"
+  "\0\0\0t\34\0\0 \7\0\0\0\0\0\0Q\0\0\0P\34\0\0 \7\0\0 \4\0\0Q\0\0\0\200"
+  "\34\0\0 \7\0\0`\1\0\0E\0\0\0\254\34\0\0 \7\0\0\220\15\0\0C\0\0\0\224"
+  "\35\0\0 \7\0\0 \7\0\0C\0\0\0\274\35\0\0 \7\0\0 \7\0\0T\0\0\0$\34"
+  "\0\0 \7\0\0\374\35\0\0T\0\0\0 \36\0\0 \7\0\0(\36\0\0R\0\0\0\324\35\0"
+  "\0 \7\0\0\204\16\0\0T\0\0\0x\36\0\0 \7\0\0\324\35\0\0Q\0\0\0P\36\0"
+  "\0 \7\0\0\260\4\0\0i\0\0\0\200\36\0\0 \7\0\0\0\0\0\0T\0\0\0\210\36\0"
+  "\0 \7\0\0\270\30\0\0T\0\0\0\224\36\0\0 \7\0\0(\36\0\0R\0\0\0,\34\0"
+  "\0 \7\0\0\220\16\0\0C\0\0\0\244\27\0\0 \7\0\0 \7\0\0C\0\0\0\234\36\0"
+  "\0 \7\0\0 \7\0\0C\0\0\0\300\36\0\0 \7\0\0 \7\0\0E\0\0\0\344\36\0\0"
+  " \7\0\0\244\16\0\0C\0\0\0\20\37\0\0 \7\0\0 \7\0\0i\0\0\0P\37\0\0 \7"
+  "\0\0\0\0\0\0i\0\0\0\\\37\0\0 \7\0\0\0\0\0\0R\0\0\0""0\37\0\0 \7\0\0"
+  "\274\16\0\0d\0\0\0\214\37\0\0 \7\0\0\0\0\0\0Q\0\0\0h\37\0\0 \7\0\0\220"
+  "\5\0\0d\0\0\0\274\37\0\0\310\16\0\0\0\0\0\0b\0\0\0\354\37\0\0 \7"
+  "\0\0\0\0\0\0d\0\0\0\0 \0\0 \7\0\0\0\0\0\0d\0\0\0\20 \0\0 \7\0\0\0\0"
+  "\0\0R\0\0\0\234\37\0\0 \7\0\0\334\16\0\0T\0\0\0H \0\0 \7\0\0\374\35"
+  "\0\0Q\0\0\0  \0\0 \7\0\0\0\6\0\0T\0\0\0\200 \0\0 \7\0\0\350\33\0\0R"
+  "\0\0\0\\ \0\0 \7\0\0\364\16\0\0T\0\0\0\264 \0\0 \7\0\0P\34\0\0Q\0\0"
+  "\0\210 \0\0 \7\0\0@\6\0\0C\0\0\0,\25\0\0 \7\0\0 \7\0\0T\0\0\0\344 \0"
+  "\0 \7\0\0,\34\0\0T\0\0\0\354 \0\0 \7\0\0,\34\0\0T\0\0\0\364 \0\0 \7"
+  "\0\0\350\33\0\0T\0\0\0\374 \0\0 \7\0\0\350\33\0\0R\0\0\0\304 \0\0 "
+  "\7\0\0\374\16\0\0C\0\0\0\4!\0\0 \7\0\0 \7\0\0s\0\0\0H!\0\0 \7\0\0\0"
+  "\0\0\0Q\0\0\0 !\0\0 \7\0\0\320\6\0\0C\0\0\0T!\0\0 \7\0\0 \7\0\0R\0\0"
+  "\0\374\35\0\0 \7\0\0\344\11\0\0Q\0\0\0(\36\0\0 \7\0\0\240\0\0\0\0\0"
+  "\0\0\257\0\0\0\1\0\0\0\0\0\0\0\204\20\0\0\214\20\0\0\214\20\0\0\1\0"
+  "\0\0\0\0\0\0\224\20\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\234\20"
+  "\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\244\20\0\0\254\20\0\0\214"
+  "\20\0\0\4\0\0\0\0\0\0\0\270\20\0\0\300\20\0\0\214\20\0\0\5\0\0\0"
+  "\0\0\0\0\314\20\0\0\324\20\0\0\340\20\0\0\6\0\0\0\0\0\0\0\354\20\0\0"
+  "\364\20\0\0\0\21\0\0\7\0\0\0\0\0\0\0\14\21\0\0\24\21\0\0 \21\0\0\10"
+  "\0\0\0\0\0\0\0,\21\0\0""4\21\0\0@\21\0\0\11\0\0\0\0\0\0\0L\21\0\0\214"
+  "\20\0\0\214\20\0\0\12\0\0\0\0\0\0\0T\21\0\0\\\21\0\0\214\20\0\0\13"
+  "\0\0\0\0\0\0\0h\21\0\0p\21\0\0\214\20\0\0\14\0\0\0\0\0\0\0\200\21"
+  "\0\0\210\21\0\0\214\20\0\0\15\0\0\0\0\0\0\0\224\21\0\0\214\20\0\0\214"
+  "\20\0\0\16\0\0\0\0\0\0\0\234\21\0\0\244\21\0\0\214\20\0\0\17\0\0\0"
+  "\0\0\0\0\264\21\0\0\274\21\0\0\310\21\0\0\20\0\0\0\0\0\0\0\324\21\0"
+  "\0\334\21\0\0\354\21\0\0\21\0\0\0\0\0\0\0\370\21\0\0\0\22\0\0\14\22"
+  "\0\0\22\0\0\0\0\0\0\0\34\22\0\0$\22\0\0""4\22\0\0\24\0\0\0\0\0\0\0"
+  "D\22\0\0\214\20\0\0\214\20\0\0\25\0\0\0\0\0\0\0L\22\0\0\214\20\0\0\214"
+  "\20\0\0\26\0\0\0\0\0\0\0T\22\0\0\214\20\0\0\214\20\0\0\27\0\0\0\0"
+  "\0\0\0\\\22\0\0\214\20\0\0\214\20\0\0\30\0\0\0\0\0\0\0d\22\0\0\214"
+  "\20\0\0\214\20\0\0\360\377\377\377\377\377\377\377l\22\0\0\214\20\0"
+  "\0\214\20\0\0\20\0\0\0\0\0\0\0t\22\0\0\214\20\0\0\214\20\0\0\360\377"
+  "\377\377\377\377\377\377|\22\0\0\214\20\0\0\214\20\0\0\344\377\377"
+  "\377\377\377\377\377\204\22\0\0\214\20\0\0\214\20\0\0*\0\0\0\0\0\0\0"
+  "\214\22\0\0\214\20\0\0\214\20\0\0+\0\0\0\0\0\0\0\224\22\0\0\234\22"
+  "\0\0\214\20\0\0*\0\0\0\0\0\0\0\250\22\0\0\214\20\0\0\214\20\0\0+\0\0"
+  "\0\0\0\0\0\260\22\0\0\234\22\0\0\214\20\0\0,\0\0\0\0\0\0\0\270\22\0"
+  "\0\234\22\0\0\234\22\0\0*\0\0\0\0\0\0\0\300\22\0\0\234\22\0\0\214\20"
+  "\0\0*\0\0\0\0\0\0\0\310\22\0\0\234\22\0\0\320\22\0\0\22\0\0\0\240"
+  "\0\0\0\260\0\0\0\300\0\0\0\320\0\0\0\340\0\0\0\360\0\0\0\0\1\0\0\20"
+  "\1\0\0 \1\0\0""0\1\0\0@\1\0\0P\1\0\0`\1\0\0p\1\0\0\200\1\0\0\220\1\0"
+  "\0\240\1\0\0\260\1\0\0\1\0\0\0,\25\0\0\4\0\0\0\234\25\0\0\260\25\0"
+  "\0\300\25\0\0\334\25\0\0\4\0\0\0\0\26\0\0 \26\0\0""0\26\0\0\334\25\0"
+  "\0\4\0\0\0l\26\0\0|\26\0\0\220\26\0\0\334\25\0\0\4\0\0\0\270\26\0\0"
+  "\314\26\0\0\340\26\0\0\370\26\0\0\4\0\0\0\34\27\0\0""4\27\0\0H\27\0"
+  "\0\334\25\0\0\1\0\0\0\244\27\0\0\31\0\0\0\1\0\0\0\0\0\0\0\14\30\0\0"
+  "\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0 \30\0\0\214\20\0\0\214\20\0"
+  "\0\3\0\0\0\0\0\0\0""8\30\0\0\214\20\0\0\214\20\0\0\4\0\0\0\0\0\0\0P"
+  "\30\0\0\214\20\0\0\214\20\0\0\5\0\0\0\0\0\0\0h\30\0\0\214\20\0\0\214"
+  "\20\0\0\2\0\0\0\244\27\0\0\210\27\0\0\5\0\0\0\1\0\0\0\0\0\0\0\330\30"
+  "\0\0\214\20\0\0\214\20\0\0\5\0\0\0\1\0\0\0\0\0\0\0\4\31\0\0\214\20"
+  "\0\0\214\20\0\0\12\0\0\0\1\0\0\0\0\0\0\0""0\31\0\0\214\20\0\0\214\20"
+  "\0\0\2\0\0\0\0\0\0\0<\31\0\0\214\20\0\0\214\20\0\0\12\0\0\0\1\0\0"
+  "\0\0\0\0\0h\31\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0t\31\0\0\214"
+  "\20\0\0\214\20\0\0\17\0\0\0\1\0\0\0\0\0\0\0\240\31\0\0\214\20\0\0\214"
+  "\20\0\0\2\0\0\0\0\0\0\0\254\31\0\0\214\20\0\0\214\20\0\0\3\0\0\0"
+  "\0\0\0\0\270\31\0\0\214\20\0\0\214\20\0\0\17\0\0\0\1\0\0\0\0\0\0\0\344"
+  "\31\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\360\31\0\0\214\20\0"
+  "\0\214\20\0\0\3\0\0\0\0\0\0\0\374\31\0\0\214\20\0\0\214\20\0\0\24\0"
+  "\0\0\1\0\0\0\0\0\0\0(\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0"
+  "4\32\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0@\32\0\0\214\20\0\0\214"
+  "\20\0\0\4\0\0\0\0\0\0\0L\32\0\0\214\20\0\0\214\20\0\0\24\0\0\0\1\0"
+  "\0\0\0\0\0\0x\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\204\32\0"
+  "\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\220\32\0\0\214\20\0\0\214"
+  "\20\0\0\4\0\0\0\0\0\0\0\234\32\0\0\214\20\0\0\214\20\0\0\24\0\0\0\1"
+  "\0\0\0\0\0\0\0\310\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\324"
+  "\32\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\340\32\0\0\214\20\0\0"
+  "\214\20\0\0\4\0\0\0\0\0\0\0\354\32\0\0\214\20\0\0\214\20\0\0\24\0\0"
+  "\0\1\0\0\0\0\0\0\0\30\33\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0$"
+  "\33\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0""0\33\0\0\214\20\0\0\214"
+  "\20\0\0\4\0\0\0\0\0\0\0<\33\0\0\214\20\0\0\214\20\0\0\3\0\0\0\244"
+  "\27\0\0\210\27\0\0\230\30\0\0\3\0\0\0\340\3\0\0\360\3\0\0\0\4\0\0<"
+  "\0\0\0\2\0\0\0\0\0\0\0\324\34\0\0\214\20\0\0\214\20\0\0\5\0\0\0\0\0"
+  "\0\0\344\34\0\0\214\20\0\0\214\20\0\0\10\0\0\0\0\0\0\0\364\34\0\0\214"
+  "\20\0\0\214\20\0\0\6\0\0\0\0\0\0\0\4\35\0\0\214\20\0\0\214\20\0\0"
+  "\7\0\0\0\0\0\0\0\24\35\0\0\214\20\0\0\214\20\0\0\20\0\0\0\0\0\0\0$\35"
+  "\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0""4\35\0\0\214\20\0\0\214"
+  "\20\0\0\30\0\0\0\0\0\0\0D\35\0\0\214\20\0\0\214\20\0\0\15\0\0\0\0"
+  "\0\0\0T\35\0\0\214\20\0\0\214\20\0\0\376\377\377\377\377\377\377\377"
+  "d\35\0\0\214\20\0\0\214\20\0\0M\0\0\0\0\0\0\0t\35\0\0\214\20\0\0\214"
+  "\20\0\0\377\1\0\0\0\0\0\0\204\35\0\0\214\20\0\0\214\20\0\0\2\0\0\0"
+  "\200\4\0\0\220\4\0\0\4\0\0\0\320\4\0\0\340\4\0\0\360\4\0\0\260\4\0"
+  "\0\5\0\0\0\0\0\0\0\0\0\0\0\4\37\0\0\214\20\0\0\214\20\0\0\2\0\0\0`\5"
+  "\0\0p\5\0\0\4\0\0\0l\26\0\0\310\37\0\0\324\37\0\0\340\37\0\0\5\0\0"
+  "\0\320\4\0\0\260\5\0\0\300\5\0\0\320\5\0\0\340\5\0\0\1\0\0\0 \6\0\0"
+  "\4\0\0\0p\6\0\0\200\6\0\0\220\6\0\0\240\6\0\0A\0\0\0@\0\0\0P\0\0\0`"
+  "\0\0\0p\0\0\0\200\0\0\0\220\0\0\0\300\1\0\0\320\1\0\0\340\1\0\0\360"
+  "\1\0\0\20\2\0\0 \2\0\0""0\2\0\0@\2\0\0P\2\0\0`\2\0\0p\2\0\0\200\2\0"
+  "\0\220\2\0\0\240\2\0\0\260\2\0\0\300\2\0\0\320\2\0\0\340\2\0\0\360\2"
+  "\0\0\0\3\0\0\20\3\0\0 \3\0\0""0\3\0\0@\3\0\0P\3\0\0`\3\0\0p\3\0\0\220"
+  "\3\0\0\240\3\0\0\300\3\0\0\320\3\0\0\20\4\0\0""0\4\0\0@\4\0\0P\4"
+  "\0\0`\4\0\0p\4\0\0\240\4\0\0\300\4\0\0\0\5\0\0\20\5\0\0 \5\0\0""0\5"
+  "\0\0""0\5\0\0@\5\0\0P\5\0\0\200\5\0\0\240\5\0\0\360\5\0\0\20\6\0\0""0"
+  "\6\0\0P\6\0\0`\6\0\0\260\6\0\0\300\6\0\0\340\6\0\0\360\6\0\0\0\7\0"
+  "\0\20\7\0\0\34\0\0\0MandatoryNamespace::AliasAny\0   \35\0\0\0Mand"
+  "atoryNamespace::AliasBool\0  \35\0\0\0MandatoryNamespace::AliasEnum"
+  "\0  \3\0\0\0V1a\0\0\0\0\0\0   \3\0\0\0V1b\0\2\0\0\0V2\0 \2\0\0\0V3\0"
+  " \4\0\0\0\"v3\"\0   \2\0\0\0V4\0 \7\0\0\0_(\"v4\")\0\2\0\0\0V5\0 \4"
+  "\0\0\0\"v5\"\0   \4\0\0\0\"V5\"\0   \2\0\0\0V6\0 \7\0\0\0_(\"v6\")"
+  "\0\4\0\0\0\"V6\"\0   \2\0\0\0V7\0 \4\0\0\0\"v7\"\0   \7\0\0\0_(\"V7"
+  "\")\0\2\0\0\0V8\0 \7\0\0\0_(\"v8\")\0\7\0\0\0_(\"V8\")\0\2\0\0\0V9\0"
+  " \3\0\0\0V10\0\5\0\0\0\"v10\"\0  \3\0\0\0V11\0\10\0\0\0_(\"v11\")\0"
+  "   \3\0\0\0V12\0\5\0\0\0\"v12\"\0  \3\0\0\0V13\0\3\0\0\0V14\0\10\0"
+  "\0\0_(\"v14\")\0   \3\0\0\0V15\0\5\0\0\0\"v15\"\0  \5\0\0\0\"V15\"\0"
+  "  \3\0\0\0V16\0\10\0\0\0_(\"v16\")\0   \5\0\0\0\"V16\"\0  \3\0\0\0"
+  "V17\0\5\0\0\0\"v17\"\0  \10\0\0\0_(\"V17\")\0   \3\0\0\0V18\0\10\0\0"
+  "\0_(\"v18\")\0   \10\0\0\0_(\"V18\")\0   \3\0\0\0V20\0\3\0\0\0V21\0"
+  "\3\0\0\0V22\0\3\0\0\0V23\0\3\0\0\0V24\0\3\0\0\0V25\0\3\0\0\0V26\0\3"
+  "\0\0\0V27\0\3\0\0\0V28\0\3\0\0\0V30\0\3\0\0\0V31\0\5\0\0\0\"foo\"\0"
+  "  \3\0\0\0V32\0\3\0\0\0V33\0\3\0\0\0V34\0\3\0\0\0V35\0\3\0\0\0V36\0"
+  "\10\0\0\0\"foo\"\"4\"\0   \36\0\0\0MandatoryNamespace::AliasFloat\0"
+  " \36\0\0\0MandatoryNamespace::AliasInt32\0 \36\0\0\0MandatoryNames"
+  "pace::AliasInt64\0 \37\0\0\0MandatoryNamespace::AliasRecord\0\13\0\0"
+  "\0single_bool\0\12\0\0\0single_num\0 \5\0\0\0num64\0  \14\0\0\0sin"
+  "gle_float\0   \15\0\0\0single_string\0  \10\0\0\0sibling1\0   \10\0"
+  "\0\0sibling2\0   \6\0\0\0multi1\0 \6\0\0\0multi2\0 \6\0\0\0multi3\0"
+  " \6\0\0\0multi4\0 \12\0\0\0enum_field\0 !\0\0\0MandatoryNamespace::"
+  "ExtensiveEnum\0  \6\0\0\0iface1\0 \"\0\0\0MandatoryNamespace::First"
+  "Interface\0 \6\0\0\0iface2\0 \6\0\0\0iface3\0 \4\0\0\0any1\0   \4\0"
+  "\0\0any2\0   \4\0\0\0any3\0   !\0\0\0MandatoryNamespace::AliasSeque"
+  "nce\0  \37\0\0\0MandatoryNamespace::AliasString\0\34\0\0\0Interface"
+  "Tests::AnotherChild\0   #\0\0\0InterfaceTests::SignalTestInterface\0"
+  "\37\0\0\0MandatoryNamespace::AnySequence\0\11\0\0\0any_value\0  \16"
+  "\0\0\0Auxdata::Aux32\0 \17\0\0\0default=10007.0\0\13\0\0\0label=Au"
+  "x32\0\24\0\0\0blurb=The Bar number\0   \10\0\0\0hints=rw\0   \16\0\0"
+  "\0Auxdata::Aux64\0 \33\0\0\0default=1152921504606846976\0\13\0\0\0"
+  "label=Aux64\0\34\0\0\0blurb=64bit auxillary number\0   \20\0\0\0Aux"
+  "data::AuxBool\0   \11\0\0\0default=0\0  \15\0\0\0label=AuxBool\0  \17"
+  "\0\0\0blurb=A Boolean\0\17\0\0\0Auxdata::AuxF64\0\15\0\0\0default"
+  "=0.019\0  \14\0\0\0label=AuxF64\0   \22\0\0\0blurb=X coordinate\0 \10"
+  "\0\0\0hints=ro\0   \17\0\0\0Auxdata::AuxStr\0\20\0\0\0default=aux"
+  "test3\0   \14\0\0\0label=AuxStr\0   \27\0\0\0blurb=Specify text her"
+  "e\0\34\0\0\0RapicornAidaTest::ButtonArea\0   \25\0\0\0InterfaceTest"
+  "s::Child\0  \26\0\0\0InterfaceTests::Parent\0 &\0\0\0InterfaceTests"
+  "::ChildInheritingSignals\0 \33\0\0\0RapicornAidaTest::ClickType\0\16"
+  "\0\0\0CLICK_ON_PRESS\0 \20\0\0\0CLICK_ON_RELEASE\0   \21\0\0\0CLIC"
+  "K_SLOW_REPEAT\0  \21\0\0\0CLICK_FAST_REPEAT\0  \20\0\0\0CLICK_KEY_R"
+  "EPEAT\0   \23\0\0\0BseTest::Compressor\0\32\0\0\0InterfaceTests::De"
+  "scendant\0 \31\0\0\0MandatoryNamespace::Enum1\0  \4\0\0\0E1_A\0   \32"
+  "\0\0\0MandatoryNamespace::Enum1c\0 \5\0\0\0E1C_A\0  \31\0\0\0Mand"
+  "atoryNamespace::Enum2\0  \4\0\0\0E2_A\0   \4\0\0\0E2_B\0   \32\0\0\0"
+  "MandatoryNamespace::Enum2c\0 \5\0\0\0E2C_A\0  \5\0\0\0E2C_B\0  \31"
+  "\0\0\0MandatoryNamespace::Enum3\0  \4\0\0\0E3_A\0   \4\0\0\0E3_B\0 "
+  "  \4\0\0\0E3_C\0   \32\0\0\0MandatoryNamespace::Enum3c\0 \5\0\0\0E3"
+  "C_A\0  \5\0\0\0E3C_B\0  \5\0\0\0E3C_C\0  \32\0\0\0MandatoryNamespac"
+  "e::Enum4a\0 \5\0\0\0E4A_A\0  \5\0\0\0E4A_B\0  \5\0\0\0E4A_C\0  \5\0"
+  "\0\0E4A_D\0  \32\0\0\0MandatoryNamespace::Enum4b\0 \5\0\0\0E4B_A\0 "
+  " \5\0\0\0E4B_B\0  \5\0\0\0E4B_C\0  \5\0\0\0E4B_D\0  \32\0\0\0Mandat"
+  "oryNamespace::Enum4c\0 \5\0\0\0E4C_A\0  \5\0\0\0E4C_B\0  \5\0\0\0E4"
+  "C_C\0  \5\0\0\0E4C_D\0  \32\0\0\0MandatoryNamespace::Enum4d\0 \5\0\0"
+  "\0E4D_A\0  \5\0\0\0E4D_B\0  \5\0\0\0E4D_C\0  \5\0\0\0E4D_D\0  )\0\0"
+  "\0MandatoryNamespace::ExtensiveEnumSequence\0  \15\0\0\0enum_eleme"
+  "nts\0  !\0\0\0MandatoryNamespace::FloatSequence\0  \14\0\0\0fractal"
+  "value\0   \32\0\0\0InterfaceTests::GrandChild\0 &\0\0\0MandatoryNam"
+  "espace::Inner::InnerRecord\0 \1\0\0\0x\0  \1\0\0\0y\0  \3\0\0\0rec\0"
+  "\35\0\0\0MandatoryNamespace::NewRecord\0  \37\0\0\0MandatoryNamesp"
+  "ace::IntSequence\0\4\0\0\0numx\0   %\0\0\0MandatoryNamespace::Inter"
+  "faceSequence\0  !\0\0\0RapicornAidaTest::MathExpressions\0  \10\0\0"
+  "\0RESULT_2\0   \10\0\0\0RESULT_5\0   \10\0\0\0RESULT_8\0   \10\0\0\0"
+  "RESULT_6\0   \10\0\0\0RESULT_7\0   \11\0\0\0RESULT_16\0  \10\0\0\0"
+  "RESULT_3\0   \11\0\0\0RESULT_24\0  \11\0\0\0RESULT_13\0  \11\0\0\0R"
+  "ESULT_m2\0  \11\0\0\0RESULT_77\0  \12\0\0\0RESULT_511\0 #\0\0\0Inte"
+  "rfaceTests::MethodTestInterface\0\20\0\0\0Other::NameTests\0   \"\0"
+  "\0\0MandatoryNamespace::NestedTypesRec\0 \36\0\0\0MandatoryNamespac"
+  "e::XFooRecord\0 \3\0\0\0seq\0 \0\0\0MandatoryNamespace::XFooSequenc"
+  "e\0   \"\0\0\0MandatoryNamespace::NestedTypesSeq\0 \3\0\0\0ntr\0\1\0"
+  "\0\0i\0  \5\0\0\0enum1\0  \3\0\0\0xfs\0\36\0\0\0InterfaceTests::Pr"
+  "opertyTester\0 \35\0\0\0RapicornAidaTest::PureMethods\0  \31\0\0\0I"
+  "nterfaceTests::QuickEnum\0  \4\0\0\0ZERO\0   \32\0\0\0InterfaceTest"
+  "s::QuickIface\0 \33\0\0\0InterfaceTests::QuickRecord\0\4\0\0\0int1\0"
+  "   \4\0\0\0int2\0   \35\0\0\0InterfaceTests::QuickSequence\0  \11\0"
+  "\0\0somefloat\0  \30\0\0\0BseTest::RecordForGroups\0   \5\0\0\0rat"
+  "io\0  \6\0\0\0label=\0 \6\0\0\0blurb=\0 \7\0\0\0hints=w\0\15\0\0\0o"
+  "rdinary_bool\0  \12\0\0\0threshold1\0 \12\0\0\0threshold2\0 \"\0\0\0"
+  "MandatoryNamespace::RecordSequence\0 \15\0\0\0repeatedfield\0  \37"
+  "\0\0\0MandatoryNamespace::Refer2Inner\0\1\0\0\0r\0  $\0\0\0Mandator"
+  "yNamespace::SequenceSequence\0   \10\0\0\0moreints\0   \32\0\0\0Oth"
+  "erNamespace::SomeRecord\0 \2\0\0\0r1\0 \2\0\0\0r2\0 \2\0\0\0r3\0 \2"
+  "\0\0\0r4\0 \24\0\0\0BseTest::SoundModule\0   \"\0\0\0MandatoryNames"
+  "pace::StringSequence\0 \5\0\0\0blurb\0  \34\0\0\0InterfaceTests::UI"
+  "WidgetArea\0   \0\0\0\0";
+
+static Rapicorn::Init __aida_autoinit_type_map__ ([]() {
+  Rapicorn::Aida::TypeMap::enlist_map (__aida_type_map__);
+});
+} // Anon
+
 

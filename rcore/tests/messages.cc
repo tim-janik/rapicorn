@@ -21,8 +21,6 @@
 #include <errno.h>
 using namespace Rapicorn;
 
-#define throw_if_fail(expr)     do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
-
 static void
 bogus_func ()
 {
@@ -46,22 +44,22 @@ test_logging (const char *logarg)
     RAPICORN_ASSERT_UNREACHED();
   if (String ("--test-fatal") == logarg)
     fatal ("execution has reached a fatal condition (\"test-fatal\")");
+  if (String ("--test-TASSERT") == logarg)
+    TASSERT (0 == "test-TASSERT");
+  if (String ("--test-assertion-hook") == logarg)
+    {
+      Test::set_assertion_hook ([] () { printerr ("assertion-hook triggered: magic=0x%x\n", 0xdecaff); });
+      TASSERT (0 == "test-assertion-hook");
+    }
   if (String ("--test-TCMP") == logarg)
     TCMP (0, ==, "validate failing TCMP");
   if (String ("--test-logging") == logarg)
     {
-#define FIXIT FIX##ME
-      FIXIT ("nothing to fix here, FIX""ME() test");
-      debug_configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
-      RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
+      debug_config_add ("fatal-warnings=0"); // cancel fatal-warnings, usually enforced for tests
+      RAPICORN_KEY_DEBUG ("Test", "logging test selected, enabling various debugging messages");
       RAPICORN_CRITICAL_UNLESS (0 > 1);
       errno = EINVAL;
       RAPICORN_CRITICAL_UNLESS (errno == 0);
-      try {
-        throw_if_fail (0 == "throw-if-fail");
-      } catch (Rapicorn::AssertionError ar) {
-        printerr ("Caught exception: %s\n", ar.what());
-      }
       critical ("execution has reached a critical condition (\"test-critical\")");
       bogus_func();
       value_func (0);
@@ -78,7 +76,7 @@ main (int   argc,
   if (argc >= 2 || Test::logging())
     {
       // set testing switch 'testpid0' to enforce deterministic ouput
-      debug_configure ("testpid0");
+      // debug_config_add ("testpid0");
     }
 
   if (argc >= 2)

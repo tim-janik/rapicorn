@@ -271,7 +271,7 @@ consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
 Blob
 Blob::from (const String &blob_string)
 {
-  String res_url = string_printf ("res:/.tmp/%016llx", consthash_fnv64a (blob_string.c_str()));
+  String res_url = string_format ("res:/.tmp/%016x", consthash_fnv64a (blob_string.c_str()));
   return Blob (std::make_shared<StringBlob> (res_url, blob_string));
 }
 

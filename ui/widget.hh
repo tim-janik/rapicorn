@@ -212,7 +212,7 @@ public:
   Aida::Signal<void ()>                 sig_finalize;
   Aida::Signal<void ()>                 sig_changed;
   Aida::Signal<void ()>                 sig_invalidate;
-  Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
+  Aida::Signal<void (WidgetImpl *old)>  sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // widget coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
