@@ -304,8 +304,8 @@ done
     || fail "note: NEWS appears to be newer; make distcheck"
   # final upstream & upload checks
   msg "Checking master to be the current branch..."
-  CBRANCH=`git name-rev --always --name-only HEAD`
-  test "$CBRANCH" = master && ok \
+  CBRANCH=`{ git symbolic-ref -q HEAD || git rev-parse HEAD ; }`
+  test "$CBRANCH" = refs/heads/master && ok \
     || fail "note: expecting releases to be made from 'master' branch"
   msg "Checking HEAD to match upstream repository..."
   HBRANCH=`git symbolic-ref HEAD | sed s,^refs/heads/,,`
