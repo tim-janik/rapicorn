@@ -30,7 +30,7 @@ public:
   virtual void
   size_request (Requisition &requisition)
   {
-    // FIXME: account for child's PackInfo like SingleContainerImpl::size_request
+    /// @BUG: account for child's PackInfo like SingleContainerImpl::size_request
     bool chspread = false, cvspread = false;
     if (has_children())
       {
@@ -50,7 +50,7 @@ public:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
+    /// @BUG: account for child's PackInfo like SingleContainerImpl::size_allocate
     if (!has_visible_child())
       return;
     WidgetImpl &child = get_child();
