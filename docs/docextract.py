@@ -10,7 +10,7 @@ rapicorn_bug_lists = {}
 def process_start ():
   pass
 
-def process_comment (txt):
+def process_comment (txt, lines):
   if not txt.startswith (('///', '/**', '/*!')):
     return      # filter non-doxygen comments
   # @TODO @TODOS
@@ -24,7 +24,10 @@ def process_comment (txt):
                    r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
     pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
     if not re.match (pattern, text, re.X):              # not a list
-      text = ' - ' + text                               # insert list bullet
+      l = lines + txt[0:match.start (1)].count ('\n')
+      text = ' - %d: @b TODO: ' % l + text              # insert list bullet
+    else:
+      text = '%d: @b TODOS:\n' % lines + text
     blurb = rapicorn_todo_lists.get (filename, '')
     blurb += text.rstrip() + '\n'
     rapicorn_todo_lists[filename] = blurb
@@ -39,12 +42,15 @@ def process_comment (txt):
                    r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
     pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
     if not re.match (pattern, text, re.X):              # not a list
-      text = ' - ' + text                               # insert list bullet
+      l = lines + txt[0:match.start (1)].count ('\n')
+      text = ' - %d: @b BUG: ' % l + text               # insert list bullet
+    else:
+      text = '%d: @b BUGS:\n' % lines + text
     blurb = rapicorn_bug_lists.get (filename, '')
     blurb += text.rstrip() + '\n'
     rapicorn_bug_lists[filename] = blurb
 
-def process_code (txt):
+def process_code (txt, lines):
   cstring = r' " ( (?: [^\\"] | \\ .) * ) " '
   # RAPICORN_DEBUG_OPTION (option, blurb)
   global rapicorn_debug_items, rapicorn_debug_items_set
@@ -90,7 +96,7 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem todo "Todos" "Source Code Todo List"'
+      print '@xrefitem todo "Todos" "Source Code TODO List"'
       print blurb.rstrip()
       print '*/'
   if rapicorn_bug_lists:
@@ -99,7 +105,7 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem bug "Bugs" "Source Code Bug List"'
+      print '@xrefitem bug "Bugs" "Source Code BUG List"'
       print blurb.rstrip()
       print '*/'
 
@@ -115,7 +121,7 @@ def process_specific (filename, text):
   parts = re.split (cxx_splitter, text, 0, re.MULTILINE | re.VERBOSE)
   # parts = filter (len, parts) # strip empty parts
   # concatenate code vs. comment bits
-  i = 0
+  i, l = 0, 1
   while i < len (parts):
     s = parts[i]
     isc = is_comment (s)
@@ -124,9 +130,10 @@ def process_specific (filename, text):
       s += parts[i]
       i += 1
     if isc:
-      process_comment (s)
+      process_comment (s, l)
     else:
-      process_code (s)
+      process_code (s, l)
+    l += s.count ('\n')
 
 process_start()
 # print '/// @file'
