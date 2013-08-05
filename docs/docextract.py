@@ -5,6 +5,7 @@ rapicorn_debug_items, rapicorn_debug_items_set = '', set()
 rapicorn_debug_keys, rapicorn_debug_keys_set = '', set()
 rapicorn_flippers, rapicorn_flippers_set = '', set()
 rapicorn_todo_lists = {}
+rapicorn_bug_lists = {}
 
 def process_start ():
   pass
@@ -27,6 +28,21 @@ def process_comment (txt):
     blurb = rapicorn_todo_lists.get (filename, '')
     blurb += text.rstrip() + '\n'
     rapicorn_todo_lists[filename] = blurb
+  # @BUG @BUGS
+  global rapicorn_bug_lists
+  pattern = r'[@\\] BUG[Ss]? \s* ( : )'
+  match = re.search (pattern, txt, re.MULTILINE | re.VERBOSE)
+  if match:
+    text = txt[match.end (1):].strip()                  # take bug text, whitespace-stripped
+    text = text[:-2] if text.endswith ('*/') else text  # strip comment-closing
+    text = re.sub (r'( ^ | \n) \s* \*+',                # match comment prefix at line start
+                   r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
+    pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
+    if not re.match (pattern, text, re.X):              # not a list
+      text = ' - ' + text                               # insert list bullet
+    blurb = rapicorn_bug_lists.get (filename, '')
+    blurb += text.rstrip() + '\n'
+    rapicorn_bug_lists[filename] = blurb
 
 def process_code (txt):
   cstring = r' " ( (?: [^\\"] | \\ .) * ) " '
@@ -75,6 +91,15 @@ def process_end ():
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
       print '@xrefitem todo "Todos" "Source Code Todo List"'
+      print blurb.rstrip()
+      print '*/'
+  if rapicorn_bug_lists:
+    # ('/** @page bug_lists Bug Lists', ' * @section %s %s' % (sanitize_ident (filename), filename), '*/')
+    for filename, blurb in rapicorn_bug_lists.items():
+      ident = sanitize_ident (filename)
+      filename = filename[2:] if filename.startswith ('./') else filename
+      print '/** @file %s' % filename
+      print '@xrefitem bug "Bugs" "Source Code Bug List"'
       print blurb.rstrip()
       print '*/'
 
