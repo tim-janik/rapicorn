@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class Image : public virtual WidgetImpl {
 protected:
-  const PropertyList&   __aida_properties__ ();
+  virtual const PropertyList&   __aida_properties__ ();
 public:
   virtual void          pixbuf  (const Pixbuf &pixbuf) = 0;
   virtual Pixbuf        pixbuf  () = 0;
