@@ -75,7 +75,7 @@
 #endif
 /**
  * @def RAPICORN_CONVENIENCE
- * Configuration macro to enable convenience macros.
+ * Compile time configuration macro to enable convenience macros.
  * Defining this before inclusion of rapicorn.hh or rapicorn-core.hh enables several convenience
  * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
  * see e.g. critical_unless(), UNLIKELY().

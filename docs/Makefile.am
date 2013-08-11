@@ -43,7 +43,7 @@ clean-local: @INGIT@ clean-html-docs doxygen-clean
 EXTRA_DIST += html
 html-docs: doxygen-check
 	$(Q) rm -rf html/
-	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=NO DOC_TARGET=html
+	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=html
 	$(Q) echo "$(DOC_VERSION)" > html/doc-version
 .PHONY: html-docs
 
