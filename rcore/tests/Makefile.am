@@ -18,8 +18,8 @@ EXTRA_DIST        += data.cc testrcore1.ref
 
 LOGTEST_PROGS     += testrcore2
 TEST_PROGS        += testrcore2
-testrcore2_SOURCES = messages.cc xmltest.cc threads.cc signal2.cc performance.cc
-testrcore2_LDADD   = $(LDADDS) \
+testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
+testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 EXTRA_DIST        += testrcore2.ref
@@ -28,6 +28,7 @@ export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
 ZINTERN     = $(abs_builddir)/../rapicorn-zintern
+RES_FILES   = sample1.svg
 RES_PAIRS   = $(foreach file, $(RES_FILES), test-files/$(notdir $(file)) $(file))
 EXTRA_DIST += $(RES_FILES)
 resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
@@ -37,6 +38,7 @@ resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
 EXTRA_DIST  += resources.cc
 CLEANFILES  += resources.cc
 noinst_DATA  = resources.cc
+svgtool.cc: resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting

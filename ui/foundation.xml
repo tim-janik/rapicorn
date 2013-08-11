@@ -44,6 +44,9 @@
     </Alignment>
   </tmpl:define>
 
+  <!-- Coffer -->
+  <tmpl:define id="Coffer" inherit="Rapicorn::Factory::Coffer" />
+
   <!-- DotGrid -->
   <tmpl:define id="DotGrid" inherit="Rapicorn::Factory::DotGrid"/>
 
