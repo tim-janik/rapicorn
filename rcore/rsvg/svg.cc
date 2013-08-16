@@ -36,6 +36,8 @@ namespace Rapicorn {
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
+static DebugOption dbe_svg_tweaks = RAPICORN_DEBUG_OPTION ("svg-tweaks", "Print debugging information to aid SVG development");
+
 BBox::BBox () :
   x (-1), y (-1), width (0), height (0)
 {}
@@ -167,11 +169,11 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
         const double ty = (target.height - m_height) / 2.0;
         const double by = (target.height - m_height) - ty;
         Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by, rsize);
+        svg_tweak_debugging = dbe_svg_tweaks;
         if (svg_tweak_debugging)
           printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
                     m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
                     m_x, m_y, m_width, m_height);
-        svg_tweak_debugging = debug_enabled();
         tw.thread_set (&tw);
         rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
         tw.thread_set (NULL);
