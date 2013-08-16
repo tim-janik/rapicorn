@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class ImageFrame : public virtual ContainerImpl {
 protected:
-  virtual const PropertyList& _property_list ();
+  virtual const PropertyList& __aida_properties__ ();
 public:
   virtual String element        () const = 0;
   virtual void   element        (const String &id) = 0;

@@ -52,9 +52,9 @@ library_lookup (const String &elementid)
 }
 
 class ImageFrameImpl : public virtual SingleContainerImpl, public virtual ImageFrame {
-  String        m_element;
-  Svg::ElementP m_sel;
-  bool          m_overlap_child;
+  String        element_;
+  Svg::ElementP sel_;
+  bool          overlap_child_;
 protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
@@ -63,25 +63,25 @@ protected:
 public:
   explicit              ImageFrameImpl      ();
   virtual              ~ImageFrameImpl      ();
-  virtual String        element         () const                { return m_element; }
-  virtual void          element         (const String &id)      { m_element = id; invalidate(); }
-  virtual bool          overlap_child   () const                { return m_overlap_child; }
-  virtual void          overlap_child   (bool overlap)          { m_overlap_child = overlap; invalidate(); }
+  virtual String        element         () const                { return element_; }
+  virtual void          element         (const String &id)      { element_ = id; invalidate(); }
+  virtual bool          overlap_child   () const                { return overlap_child_; }
+  virtual void          overlap_child   (bool overlap)          { overlap_child_ = overlap; invalidate(); }
 };
 
 const PropertyList&
-ImageFrame::list_properties()
+ImageFrame::__aida_properties__()
 {
   static Property *properties[] = {
     MakeProperty (ImageFrame, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
     MakeProperty (ImageFrame, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
   };
-  static const PropertyList property_list (properties, ContainerImpl::_property_list());
+  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
 ImageFrameImpl::ImageFrameImpl() :
-  m_overlap_child (false)
+  overlap_child_ (false)
 {}
 
 ImageFrameImpl::~ImageFrameImpl()
@@ -92,13 +92,13 @@ ImageFrameImpl::do_invalidate()
 {
   if (element_.empty())
     {
-      m_sel = m_sel->none();
+      sel_ = sel_->none();
       return;
     }
-  Svg::ElementP ep = library_lookup (m_element);
+  Svg::ElementP ep = library_lookup (element_);
   if (!ep)
     return;
-  m_sel = ep;
+  sel_ = ep;
 }
 
 void
@@ -107,10 +107,10 @@ ImageFrameImpl::size_request (Requisition &requisition)
   SingleContainerImpl::size_request (requisition);
   if (sel_)
     {
-      requisition.width = m_sel->bbox().width;
-      requisition.height = m_sel->bbox().height;
+      requisition.width = sel_->bbox().width;
+      requisition.height = sel_->bbox().height;
       int thickness = 2; // FIXME: use real border marks
-      if (!m_overlap_child && has_children())
+      if (!overlap_child_ && has_children())
         {
           requisition.width += 2 * thickness;
           requisition.height += 2 * thickness;
@@ -144,7 +144,7 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
   const Allocation &area = allocation();
   Rect rect = area;
   rect.intersect (render_rect);
-  if (m_sel && rect.width > 0 && rect.height > 0)
+  if (sel_ && rect.width > 0 && rect.height > 0)
     {
       const uint npixels = rect.width * rect.height;
       uint8 *pixels = new uint8[int (npixels * 4)];
@@ -153,8 +153,8 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
                                                                       rect.width, rect.height, 4 * rect.width);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
       cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
-      Svg::BBox bbox = m_sel->bbox();
-      const bool rendered = m_sel->render (surface, Svg::RenderSize::STRETCH, area.width / bbox.width, area.height / bbox.height);
+      Svg::BBox bbox = sel_->bbox();
+      const bool rendered = sel_->render (surface, Svg::RenderSize::STRETCH, area.width / bbox.width, area.height / bbox.height);
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);
@@ -169,6 +169,6 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
     }
 }
 
-static const ItemFactory<ImageFrameImpl> image_frame_factory ("Rapicorn::Factory::ImageFrame");
+static const WidgetFactory<ImageFrameImpl> image_frame_factory ("Rapicorn::Factory::ImageFrame");
 
 } // Rapicorn
