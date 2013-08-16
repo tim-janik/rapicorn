@@ -44,10 +44,10 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 }
 
 class ImageImpl : public virtual WidgetImpl, public virtual Image {
-  String        m_image_url, m_stock_id;
-  Pixmap        m_pixmap;
-  Svg::FileP    m_svgf;
-  Svg::ElementP m_svge;
+  String        image_url_, stock_id_;
+  Pixmap        pixmap_;
+  Svg::FileP    svgf_;
+  Svg::ElementP svge_;
 public:
   explicit ImageImpl()
   {}
@@ -74,66 +74,66 @@ public:
   load_pixmap()
   {
     Blob blob = Blob::load ("");
-    if (!m_image_url.empty())
-      blob = Blob::load (m_image_url);
-    if (!blob && !m_stock_id.empty())
-      blob = Stock::stock_image (m_stock_id);
+    if (!image_url_.empty())
+      blob = Blob::load (image_url_);
+    if (!blob && !stock_id_.empty())
+      blob = Stock::stock_image (stock_id_);
     if (string_endswith (blob.name(), ".svg"))
       {
-        m_svgf = Svg::File::load (blob);
-        m_svge = m_svgf ? m_svgf->lookup ("") : Svg::Element::none();
-        if (m_svgf && !m_svge)
-          m_svgf = Svg::File::load (Blob());
-        m_pixmap = Pixmap();
+        svgf_ = Svg::File::load (blob);
+        svge_ = svgf_ ? svgf_->lookup ("") : Svg::Element::none();
+        if (svgf_ && !svge_)
+          svgf_ = Svg::File::load (Blob());
+        pixmap_ = Pixmap();
       }
     else
       {
-        m_svgf = Svg::File::load (Blob());
-        m_svge = Svg::Element::none();
-        m_pixmap = Pixmap (blob);
+        svgf_ = Svg::File::load (Blob());
+        svge_ = Svg::Element::none();
+        pixmap_ = Pixmap (blob);
       }
-    if (!m_svge && m_pixmap.width() * m_pixmap.height() == 0)
+    if (!svge_ && pixmap_.width() * pixmap_.height() == 0)
       {
         // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
-        m_pixmap = Pixmap();
-        m_pixmap.load_pixstream (get_broken16_pixdata());
+        pixmap_ = Pixmap();
+        pixmap_.load_pixstream (get_broken16_pixdata());
       }
   }
   virtual void
   source (const String &image_url)
   {
-    m_image_url = image_url;
+    image_url_ = image_url;
     load_pixmap();
   }
   virtual String
   source() const
   {
-    return m_image_url;
+    return image_url_;
   }
   virtual void
   stock (const String &stock_id)
   {
-    m_stock_id = stock_id;
+    stock_id_ = stock_id;
     load_pixmap();
   }
   virtual String
   stock() const
   {
-    return m_stock_id;
+    return stock_id_;
   }
 protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    if (m_svge)
+    if (svge_)
       {
-        requisition.width += m_svge->bbox().width;
-        requisition.height += m_svge->bbox().height;
+        requisition.width += svge_->bbox().width;
+        requisition.height += svge_->bbox().height;
       }
     else
       {
-        requisition.width += m_pixmap.width();
-        requisition.height += m_pixmap.height();
+        requisition.width += pixmap_.width();
+        requisition.height += pixmap_.height();
       }
   }
   virtual void
@@ -180,8 +180,8 @@ protected:
                                                                         rect.width, rect.height, 4 * rect.width);
         CHECK_CAIRO_STATUS (cairo_surface_status (surface));
         cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
-        Svg::BBox bbox = m_svge->bbox();
-        const bool rendered = m_svge->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
+        Svg::BBox bbox = svge_->bbox();
+        const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
         if (rendered)
           {
             cairo_t *cr = cairo_context (rcontext, rect);
@@ -198,9 +198,9 @@ public:
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
-    if (m_svge)
+    if (svge_)
       render_svg (rcontext, rect);
-    else if (m_pixmap.width() > 0 && m_pixmap.height() > 0)
+    else if (pixmap_.width() > 0 && pixmap_.height() > 0)
       {
         const Allocation &area = allocation();
         PixView view = adjust_view();
