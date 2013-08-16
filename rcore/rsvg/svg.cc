@@ -47,26 +47,26 @@ BBox::BBox (double _x, double _y, double w, double h) :
 {}
 
 struct Tweaker {
-  double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
-  RenderSize m_rsize;
-  cairo_matrix_t *m_matrix;
+  double cx_, cy_, lx_, rx_, by_, ty_;
+  RenderSize rsize_;
+  cairo_matrix_t *matrix_;
   explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty,
                                  RenderSize rsize, cairo_matrix_t *cmatrix = NULL) :
-    m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty),
-    m_rsize (rsize), m_matrix (cmatrix) {}
+    cx_ (cx), cy_ (cy), lx_ (lx), rx_ (rx), by_ (by), ty_ (ty),
+    rsize_ (rsize), matrix_ (cmatrix) {}
   bool          point_tweak     (double vx, double vy, double *px, double *py);
   static void   thread_set      (Tweaker *tweaker);
 };
 
 struct ElementImpl : public Element {
-  String        m_id;
-  int           m_x, m_y, m_width, m_height, m_rw, m_rh; // relative to bottom_left
-  double        m_em, m_ex;
-  RsvgHandle   *m_handle;
-  explicit      ElementImpl     () : m_x (0), m_y (0), m_width (0), m_height (0), m_em (0), m_ex (0), m_handle (NULL) {}
+  String        id_;
+  int           x_, y_, width_, height_, rw_, rh_; // relative to bottom_left
+  double        em_, ex_;
+  RsvgHandle   *handle_;
+  explicit      ElementImpl     () : x_ (0), y_ (0), width_ (0), height_ (0), em_ (0), ex_ (0), handle_ (NULL) {}
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
-  virtual BBox  bbox            ()                      { return BBox (m_x, m_y, m_width, m_height); }
+  virtual BBox  bbox            ()                      { return BBox (x_, y_, width_, height_); }
   virtual BBox  enfolding_bbox  (BBox &inner);
   virtual BBox  containee_bbox  ();
   virtual BBox  containee_bbox  (BBox &_resized);
@@ -81,9 +81,9 @@ Element::none ()
 
 ElementImpl::~ElementImpl ()
 {
-  m_id = "";
-  RsvgHandle *ohandle = m_handle;
-  m_handle = NULL;
+  id_ = "";
+  RsvgHandle *ohandle = handle_;
+  handle_ = NULL;
   if (ohandle)
     g_object_unref (ohandle);
 }
@@ -92,9 +92,9 @@ Info
 ElementImpl::info ()
 {
   Info i;
-  i.id = m_id;
-  i.em = m_em;
-  i.ex = m_ex;
+  i.id = id_;
+  i.em = em_;
+  i.ex = ex_;
   return i;
 }
 
@@ -104,24 +104,24 @@ ElementImpl::enfolding_bbox (BBox &containee)
   if (containee.width <= 0 || containee.height <= 0)
     return bbox();
   // FIXME: resize for _containee width/height
-  BBox a = BBox (m_x, m_y, containee.width + 4, containee.height + 4);
+  BBox a = BBox (x_, y_, containee.width + 4, containee.height + 4);
   return a;
 }
 
 BBox
 ElementImpl::containee_bbox ()
 {
-  if (m_width <= 4 || m_height <= 4)
+  if (width_ <= 4 || height_ <= 4)
     return BBox();
   // FIXME: calculate _containee size
-  BBox a = BBox (m_x + 2, m_y + 2, m_width - 4, m_height - 4);
+  BBox a = BBox (x_ + 2, y_ + 2, width_ - 4, height_ - 4);
   return a;
 }
 
 BBox
 ElementImpl::containee_bbox (BBox &resized)
 {
-  if (resized.width == m_width && resized.height == m_height)
+  if (resized.width == width_ && resized.height == height_)
     return bbox();
   // FIXME: calculate _containee size when resized
   return bbox();
@@ -132,50 +132,50 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
 {
   assert_return (surface != NULL, false);
   cairo_t *cr = cairo_create (surface);
-  const char *cid = m_id.empty() ? NULL : m_id.c_str();
+  const char *cid = id_.empty() ? NULL : id_.c_str();
   bool rendered = false;
   switch (rsize)
     {
     case RenderSize::STATIC:
       cairo_translate (cr, // shift sub into top_left and center extra space
-                       -m_x + (m_width * xscale - m_width) / 2.0,
-                       -m_y + (m_height * yscale - m_height) / 2.0);
-      rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+                       -x_ + (width_ * xscale - width_) / 2.0,
+                       -y_ + (height_ * yscale - height_) / 2.0);
+      rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     case RenderSize::ZOOM:
       cairo_scale (cr, xscale, yscale); // scale as requested
-      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
-      rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
+      rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     case RenderSize::STRETCH:
-      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
       {
         cairo_matrix_t cmatrix;
         cairo_matrix_init_identity (&cmatrix);
         cairo_matrix_scale (&cmatrix, xscale, yscale); // scale matrix as requested
-        cairo_matrix_translate (&cmatrix, -m_x, -m_y); // shift matrix by top_left surface offset
+        cairo_matrix_translate (&cmatrix, -x_, -y_); // shift matrix by top_left surface offset
         Tweaker tw (0, 0, 0, 0, 0, 0, rsize, &cmatrix);
         tw.thread_set (&tw);
-        rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+        rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
         tw.thread_set (NULL);
       }
       break;
     case RenderSize::WARP:
-      cairo_translate (cr, -m_x, -m_y); // shift sub into top_left of surface
+      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
       {
-        const BBox target (0, 0, m_width * xscale, m_height * yscale);
-        const double rx = (target.width - m_width) / 2.0;
-        const double lx = (target.width - m_width) - rx;
-        const double ty = (target.height - m_height) / 2.0;
-        const double by = (target.height - m_height) - ty;
-        Tweaker tw (m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by, rsize);
+        const BBox target (0, 0, width_ * xscale, height_ * yscale);
+        const double rx = (target.width - width_) / 2.0;
+        const double lx = (target.width - width_) - rx;
+        const double ty = (target.height - height_) / 2.0;
+        const double by = (target.height - height_) - ty;
+        Tweaker tw (x_ + width_ / 2.0, y_ + height_ / 2.0, lx, rx, ty, by, rsize);
         svg_tweak_debugging = dbe_svg_tweaks;
         if (svg_tweak_debugging)
           printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
-                    m_x + m_width / 2.0, m_y + m_height / 2.0, lx, rx, ty, by,
-                    m_x, m_y, m_width, m_height);
+                    x_ + width_ / 2.0, y_ + height_ / 2.0, lx, rx, ty, by,
+                    x_, y_, width_, height_);
         tw.thread_set (&tw);
-        rendered = rsvg_handle_render_cairo_sub (m_handle, cr, cid);
+        rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
         tw.thread_set (NULL);
       }
       break;
@@ -188,10 +188,10 @@ bool
 Tweaker::point_tweak (double vx, double vy, double *px, double *py)
 {
   bool mod = 0;
-  switch (m_rsize)
+  switch (rsize_)
     {
     case RenderSize::STRETCH:   // linear path & pattern stretching
-      cairo_matrix_transform_point (m_matrix, px, py);
+      cairo_matrix_transform_point (matrix_, px, py);
       mod = true;
       break;
     case RenderSize::WARP:      // nonlinear shifting away from center
@@ -199,14 +199,14 @@ Tweaker::point_tweak (double vx, double vy, double *px, double *py)
         const double eps = 0.0001;
         // FIXME: for filters to work, the document page must grow so that it contains the tweaked
         // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
-        if (vx > m_cx + eps)
-          *px += m_lx + m_rx, mod = 1;
-        else if (vx >= m_cx - eps)
-          *px += m_lx, mod = 1;
-        if (vy > m_cy + eps)
-          *py += m_ty + m_by, mod = 1;
-        else if (vy >= m_cy - eps)
-          *py += m_ty, mod = 1;
+        if (vx > cx_ + eps)
+          *px += lx_ + rx_, mod = 1;
+        else if (vx >= cx_ - eps)
+          *px += lx_, mod = 1;
+        if (vy > cy_ + eps)
+          *py += ty_ + by_, mod = 1;
+        else if (vy >= cy_ - eps)
+          *py += ty_, mod = 1;
       }
       break;
     default: ; // silence gcc
@@ -215,9 +215,9 @@ Tweaker::point_tweak (double vx, double vy, double *px, double *py)
 }
 
 struct FileImpl : public File {
-  RsvgHandle           *m_handle;
-  explicit              FileImpl        (RsvgHandle *hh) : m_handle (hh) {}
-  /*dtor*/             ~FileImpl        () { if (m_handle) g_object_unref (m_handle); }
+  RsvgHandle           *handle_;
+  explicit              FileImpl        (RsvgHandle *hh) : handle_ (hh) {}
+  /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
   virtual void          dump_tree       ();
   virtual ElementP      lookup          (const String &elementid);
 };
@@ -297,9 +297,9 @@ dump_node (RsvgNode *self, int64 depth, int64 maxdepth)
 void
 FileImpl::dump_tree ()
 {
-  if (m_handle)
+  if (handle_)
     {
-      RsvgHandlePrivate *p = m_handle->priv;
+      RsvgHandlePrivate *p = handle_->priv;
       RsvgNode *node = p->treebase;
       printerr ("\n%s:\n", p->title ? p->title->str : "???");
       dump_node (node, 0, INT64_MAX);
@@ -313,9 +313,9 @@ FileImpl::dump_tree ()
 ElementP
 FileImpl::lookup (const String &elementid)
 {
-  if (m_handle)
+  if (handle_)
     {
-      RsvgHandle *handle = m_handle;
+      RsvgHandle *handle = handle_;
       RsvgDimensionData rd = { 0, 0, 0, 0 };
       RsvgDimensionData dd = { 0, 0, 0, 0 };
       RsvgPositionData dp = { 0, 0 };
@@ -326,21 +326,21 @@ FileImpl::lookup (const String &elementid)
           rsvg_handle_get_position_sub (handle, &dp, cid))
         {
           ElementImpl *ei = new ElementImpl();
-          ei->m_handle = handle;
-          g_object_ref (ei->m_handle);
-          ei->m_x = dp.x;
-          ei->m_y = dp.y;
-          ei->m_width = dd.width;
-          ei->m_height = dd.height;
-          ei->m_rw = rd.width;
-          ei->m_rh = rd.height;
-          ei->m_em = dd.em;
-          ei->m_ex = dd.ex;
-          ei->m_id = elementid;
+          ei->handle_ = handle;
+          g_object_ref (ei->handle_);
+          ei->x_ = dp.x;
+          ei->y_ = dp.y;
+          ei->width_ = dd.width;
+          ei->height_ = dd.height;
+          ei->rw_ = rd.width;
+          ei->rh_ = rd.height;
+          ei->em_ = dd.em;
+          ei->ex_ = dd.ex;
+          ei->id_ = elementid;
           if (0)
             printerr ("SUB: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
-                      ei->m_id.c_str(), ei->m_x, ei->m_y, ei->m_width, ei->m_height,
-                      ei->m_rw, ei->m_rh, ei->m_em, ei->m_ex);
+                      ei->id_.c_str(), ei->x_, ei->y_, ei->width_, ei->height_,
+                      ei->rw_, ei->rh_, ei->em_, ei->ex_);
           return ElementP (ei);
         }
     }
@@ -403,7 +403,7 @@ svg_tweak_matrix ()
   cairo_matrix_t *tmatrix = NULL;
   if (Rapicorn::Svg::thread_tweaker)
     {
-      tmatrix = Rapicorn::Svg::thread_tweaker->m_matrix;
+      tmatrix = Rapicorn::Svg::thread_tweaker->matrix_;
     }
   return tmatrix;
 }
