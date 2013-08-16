@@ -26,10 +26,11 @@
 
 namespace Rapicorn { namespace Cairo {
 
+/// @TODO: unify CHECK_CAIRO_STATUS() macro implementations
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
   if (___s != CAIRO_STATUS_SUCCESS)             \
-    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+    RAPICORN_CRITICAL ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 bool
