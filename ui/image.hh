@@ -3,19 +3,34 @@
 #define __RAPICORN_IMAGE_HH__
 
 #include <ui/widget.hh>
+#include "../rcore/rsvg/svg.hh"
 
 namespace Rapicorn {
 
-class Image : public virtual WidgetImpl {
+class ImageImpl : public virtual WidgetImpl, public virtual ImageIface {
+  String        image_url_, stock_id_;
+  Pixmap        pixmap_;
+  Svg::FileP    svgf_;
+  Svg::ElementP svge_;
+  struct PixView {
+    int xoffset, yoffset, pwidth, pheight;
+    double xscale, yscale, scale;
+  };
 protected:
-  virtual const PropertyList&   __aida_properties__ ();
+  void                  reset           ();
+  void                  load_pixmap     ();
+  void                  stock           (const String &stock_id);
+  String                stock           () const;
+  PixView               adjust_view     ();
+  void                  render_svg      (RenderContext &rcontext, const Rect &render_rect);
+  virtual void          size_request    (Requisition &requisition);
+  virtual void          size_allocate   (Allocation area, bool changed);
+  virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
-  virtual void          pixbuf  (const Pixbuf &pixbuf) = 0;
-  virtual Pixbuf        pixbuf  () = 0;
-  virtual void          source  (const String &uri) = 0;
-  virtual String        source  () const = 0;
-  virtual void          stock   (const String &stock_id) = 0;
-  virtual String        stock   () const = 0;
+  virtual void          pixbuf  (const Pixbuf &pixbuf);
+  virtual Pixbuf        pixbuf  () const;
+  virtual void          source  (const String &uri);
+  virtual String        source  () const;
 };
 
 } // Rapicorn

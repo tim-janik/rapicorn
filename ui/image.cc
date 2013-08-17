@@ -3,7 +3,6 @@
 #include "stock.hh"
 #include "painter.hh"
 #include "factory.hh"
-#include "../rcore/rsvg/svg.hh"
 #include <errno.h>
 
 /// @TODO: unify CHECK_CAIRO_STATUS() macro implementations
@@ -14,17 +13,6 @@
   } while (0)
 
 namespace Rapicorn {
-
-const PropertyList&
-Image::__aida_properties__()
-{
-  static Property *properties[] = {
-    MakeProperty (Image, stock,  _("Stock Image"), _("Stock id to load a stock image from."), "rw"),
-    MakeProperty (Image, source, _("Image URL"), _("Load an image from a resource or file URL."), "rw"),
-  };
-  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
-  return property_list;
-}
 
 static const uint8* get_broken16_pixdata (void);
 
@@ -43,185 +31,181 @@ cairo_surface_from_pixmap (Pixmap pixmap)
   return isurface;
 }
 
-class ImageImpl : public virtual WidgetImpl, public virtual Image {
-  String        image_url_, stock_id_;
-  Pixmap        pixmap_;
-  Svg::FileP    svgf_;
-  Svg::ElementP svge_;
-public:
-  explicit ImageImpl()
-  {}
-  void
-  reset ()
-  {
-    pixmap_ = Pixmap();
-    invalidate();
-  }
-  ~ImageImpl()
-  {}
-  virtual void
-  pixbuf (const Pixbuf &pixbuf)
-  {
-    reset();
-    pixmap_ = pixbuf;
-  }
-  virtual Pixbuf
-  pixbuf()
-  {
-    return pixmap_;
-  }
-  void
-  load_pixmap()
-  {
-    Blob blob = Blob::load ("");
-    if (!image_url_.empty())
-      blob = Blob::load (image_url_);
-    if (!blob && !stock_id_.empty())
-      blob = Stock::stock_image (stock_id_);
-    if (string_endswith (blob.name(), ".svg"))
-      {
-        svgf_ = Svg::File::load (blob);
-        svge_ = svgf_ ? svgf_->lookup ("") : Svg::Element::none();
-        if (svgf_ && !svge_)
-          svgf_ = Svg::File::load (Blob());
-        pixmap_ = Pixmap();
-      }
-    else
-      {
+void
+ImageImpl::reset ()
+{
+  pixmap_ = Pixmap();
+  invalidate();
+}
+
+void
+ImageImpl::pixbuf (const Pixbuf &pixbuf)
+{
+  reset();
+  pixmap_ = pixbuf;
+}
+
+Pixbuf
+ImageImpl::pixbuf() const
+{
+  return pixmap_;
+}
+
+void
+ImageImpl::load_pixmap()
+{
+  Blob blob = Blob::load ("");
+  if (!image_url_.empty())
+    blob = Blob::load (image_url_);
+  if (!blob && !stock_id_.empty())
+    blob = Stock::stock_image (stock_id_);
+  if (string_endswith (blob.name(), ".svg"))
+    {
+      svgf_ = Svg::File::load (blob);
+      svge_ = svgf_ ? svgf_->lookup ("") : Svg::Element::none();
+      if (svgf_ && !svge_)
         svgf_ = Svg::File::load (Blob());
-        svge_ = Svg::Element::none();
-        pixmap_ = Pixmap (blob);
-      }
-    if (!svge_ && pixmap_.width() * pixmap_.height() == 0)
-      {
-        // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
-        pixmap_ = Pixmap();
-        pixmap_.load_pixstream (get_broken16_pixdata());
-      }
-  }
-  virtual void
-  source (const String &image_url)
-  {
-    image_url_ = image_url;
-    load_pixmap();
-  }
-  virtual String
-  source() const
-  {
-    return image_url_;
-  }
-  virtual void
-  stock (const String &stock_id)
-  {
-    stock_id_ = stock_id;
-    load_pixmap();
-  }
-  virtual String
-  stock() const
-  {
-    return stock_id_;
-  }
-protected:
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    if (svge_)
-      {
-        requisition.width += svge_->bbox().width;
-        requisition.height += svge_->bbox().height;
-      }
-    else
-      {
-        requisition.width += pixmap_.width();
-        requisition.height += pixmap_.height();
-      }
-  }
-  virtual void
-  size_allocate (Allocation area, bool changed)
-  {
-    // nothing special...
-  }
-  struct PixView {
-    int xoffset, yoffset, pwidth, pheight;
-    double xscale, yscale, scale;
-  };
-  PixView
-  adjust_view()
-  {
-    const bool grow = true;
-    PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
-    const Allocation &area = allocation();
-    if (area.width < 1 || area.height < 1 || pixmap_.width() < 1 || pixmap_.height() < 1)
-      return view;
-    view.xscale = pixmap_.width() / area.width;
-    view.yscale = pixmap_.height() / area.height;
-    view.scale = max (view.xscale, view.yscale);
-    if (!grow)
-      view.scale = max (view.scale, 1.0);
-    view.pwidth = pixmap_.width() / view.scale + 0.5;
-    view.pheight = pixmap_.height() / view.scale + 0.5;
-    const PackInfo &pi = pack_info();
-    view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
-    view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
+      pixmap_ = Pixmap();
+    }
+  else
+    {
+      svgf_ = Svg::File::load (Blob());
+      svge_ = Svg::Element::none();
+      pixmap_ = Pixmap (blob);
+    }
+  if (!svge_ && pixmap_.width() * pixmap_.height() == 0)
+    {
+      // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
+      pixmap_ = Pixmap();
+      pixmap_.load_pixstream (get_broken16_pixdata());
+    }
+}
+
+void
+ImageImpl::source (const String &image_url)
+{
+  image_url_ = image_url;
+  load_pixmap();
+}
+
+String
+ImageImpl::source() const
+{
+  return image_url_;
+}
+
+void
+ImageImpl::stock (const String &stock_id)
+{
+  stock_id_ = stock_id;
+  load_pixmap();
+}
+
+String
+ImageImpl::stock() const
+{
+  return stock_id_;
+}
+
+void
+ImageImpl::size_request (Requisition &requisition)
+{
+  if (svge_)
+    {
+      requisition.width += svge_->bbox().width;
+      requisition.height += svge_->bbox().height;
+    }
+  else
+    {
+      requisition.width += pixmap_.width();
+      requisition.height += pixmap_.height();
+    }
+}
+
+void
+ImageImpl::size_allocate (Allocation area, bool changed)
+{
+  // nothing special...
+}
+
+ImageImpl::PixView
+ImageImpl::adjust_view()
+{
+  const bool grow = true;
+  PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
+  const Allocation &area = allocation();
+  if (area.width < 1 || area.height < 1 || pixmap_.width() < 1 || pixmap_.height() < 1)
     return view;
-  }
-  void
-  render_svg (RenderContext &rcontext, const Rect &render_rect)
-  {
-    const Allocation &area = allocation();
-    Rect rect = area;
-    rect.intersect (render_rect);
-    if (rect.width > 0 && rect.height > 0)
-      {
-        const uint npixels = rect.width * rect.height;
-        uint8 *pixels = new uint8[int (npixels * 4)];
-        std::fill (pixels, pixels + npixels * 4, 0);
-        cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
-                                                                        rect.width, rect.height, 4 * rect.width);
-        CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-        cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
-        Svg::BBox bbox = svge_->bbox();
-        const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
-        if (rendered)
-          {
-            cairo_t *cr = cairo_context (rcontext, rect);
-            cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
-            cairo_paint (cr);
-          }
-        else
-          critical ("failed to render SVG file");
-        cairo_surface_destroy (surface);
-        delete[] pixels;
-      }
-  }
-public:
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    if (svge_)
-      render_svg (rcontext, rect);
-    else if (pixmap_.width() > 0 && pixmap_.height() > 0)
-      {
-        const Allocation &area = allocation();
-        PixView view = adjust_view();
-        int ix = area.x + view.xoffset, iy = area.y + view.yoffset;
-        Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
-        erect.intersect (rect);
-        cairo_t *cr = cairo_context (rcontext, erect);
-        cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
-        cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
-        cairo_matrix_t matrix;
-        cairo_matrix_init_identity (&matrix);
-        cairo_matrix_scale (&matrix, view.scale, view.scale);
-        cairo_matrix_translate (&matrix, -ix, -iy);
-        cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
-        if (view.scale != 1.0)
-          cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-        cairo_paint (cr);
-        cairo_surface_destroy (isurface);
-      }
-  }
-};
+  view.xscale = pixmap_.width() / area.width;
+  view.yscale = pixmap_.height() / area.height;
+  view.scale = max (view.xscale, view.yscale);
+  if (!grow)
+    view.scale = max (view.scale, 1.0);
+  view.pwidth = pixmap_.width() / view.scale + 0.5;
+  view.pheight = pixmap_.height() / view.scale + 0.5;
+  const PackInfo &pi = pack_info();
+  view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
+  view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
+  return view;
+}
+
+void
+ImageImpl::render_svg (RenderContext &rcontext, const Rect &render_rect)
+{
+  const Allocation &area = allocation();
+  Rect rect = area;
+  rect.intersect (render_rect);
+  if (rect.width > 0 && rect.height > 0)
+    {
+      const uint npixels = rect.width * rect.height;
+      uint8 *pixels = new uint8[int (npixels * 4)];
+      std::fill (pixels, pixels + npixels * 4, 0);
+      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
+                                                                      rect.width, rect.height, 4 * rect.width);
+      CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+      cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
+      Svg::BBox bbox = svge_->bbox();
+      const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
+      if (rendered)
+        {
+          cairo_t *cr = cairo_context (rcontext, rect);
+          cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
+          cairo_paint (cr);
+        }
+      else
+        critical ("failed to render SVG file");
+      cairo_surface_destroy (surface);
+      delete[] pixels;
+    }
+}
+
+void
+ImageImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  if (svge_)
+    render_svg (rcontext, rect);
+  else if (pixmap_.width() > 0 && pixmap_.height() > 0)
+    {
+      const Allocation &area = allocation();
+      PixView view = adjust_view();
+      int ix = area.x + view.xoffset, iy = area.y + view.yoffset;
+      Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
+      erect.intersect (rect);
+      cairo_t *cr = cairo_context (rcontext, erect);
+      cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
+      cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
+      cairo_matrix_t matrix;
+      cairo_matrix_init_identity (&matrix);
+      cairo_matrix_scale (&matrix, view.scale, view.scale);
+      cairo_matrix_translate (&matrix, -ix, -iy);
+      cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+      if (view.scale != 1.0)
+        cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+      cairo_paint (cr);
+      cairo_surface_destroy (isurface);
+    }
+}
+
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
 
 static const uint8*
