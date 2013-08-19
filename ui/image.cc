@@ -3,6 +3,7 @@
 #include "stock.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include "../rcore/rsvg/svg.hh"
 #include <errno.h>
 
 /// @TODO: unify CHECK_CAIRO_STATUS() macro implementations
@@ -15,6 +16,54 @@
 namespace Rapicorn {
 
 static const uint8* get_broken16_pixdata (void);
+
+struct ImageImpl::ImageBackend {
+  virtual            ~ImageBackend    () {}
+  virtual Requisition image_size      () = 0;
+  virtual void        render_image    (const std::function<cairo_t* (const Rect&)> &mkcontext,
+                                       const Rect &render_rect, const Rect &image_rect) = 0;
+};
+
+struct SvgImage : public virtual ImageImpl::ImageBackend {
+  Svg::FileP    svgf_;
+  Svg::ElementP svge_;
+public:
+  SvgImage (Svg::FileP svgf, Svg::ElementP svge) :
+    svgf_ (svgf), svge_ (svge)
+  {}
+  virtual Requisition
+  image_size ()
+  {
+    const auto bbox = svge_->bbox();
+    return Requisition (bbox.width, bbox.height);
+  }
+  virtual void
+  render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
+  {
+    Rect rect = image_rect;
+    rect.intersect (render_rect);
+    return_unless (rect.width > 0 && rect.height > 0);
+    const uint npixels = rect.width * rect.height;
+    uint8 *pixels = new uint8[int (npixels * 4)]; // FIXME: cast?
+    std::fill (pixels, pixels + npixels * 4, 0);
+    cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
+                                                                    rect.width, rect.height, 4 * rect.width);
+    CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+    cairo_surface_set_device_offset (surface, -(rect.x - image_rect.x), -(rect.y - image_rect.y)); // offset into image
+    const auto bbox = svge_->bbox();
+    const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, image_rect.width / bbox.width, image_rect.height / bbox.height);
+    if (rendered)
+      { // FIXME: optimize by creating surface from rcontext directly?
+        cairo_t *cr = mkcontext (rect);
+        cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
+        cairo_paint (cr);
+      }
+    else
+      critical ("failed to render SVG file");
+    cairo_surface_destroy (surface);
+    delete[] pixels;
+  }
+};
 
 static cairo_surface_t*
 cairo_surface_from_pixmap (Pixmap pixmap)
@@ -29,6 +78,18 @@ cairo_surface_from_pixmap (Pixmap pixmap)
                                          stride);
   assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
   return isurface;
+}
+
+ImageImpl::ImageImpl () :
+  image_backend_ (NULL)
+{}
+
+ImageImpl::~ImageImpl ()
+{
+  ImageBackend *old = image_backend_;
+  image_backend_ = NULL;
+  if (old)
+    delete old;
 }
 
 void
@@ -54,6 +115,11 @@ ImageImpl::pixbuf() const
 void
 ImageImpl::load_pixmap()
 {
+  if (image_backend_)
+    {
+      delete image_backend_;
+      image_backend_ = NULL;
+    }
   Blob blob = Blob::load ("");
   if (!image_url_.empty())
     blob = Blob::load (image_url_);
@@ -61,19 +127,19 @@ ImageImpl::load_pixmap()
     blob = Stock::stock_image (stock_id_);
   if (string_endswith (blob.name(), ".svg"))
     {
-      svgf_ = Svg::File::load (blob);
-      svge_ = svgf_ ? svgf_->lookup ("") : Svg::Element::none();
-      if (svgf_ && !svge_)
-        svgf_ = Svg::File::load (Blob());
+      auto svgf = Svg::File::load (blob);
+      auto svge = svgf ? svgf->lookup ("") : Svg::Element::none();
+      if (svge)
+        {
+          image_backend_ = new SvgImage (svgf, svge);
+        }
       pixmap_ = Pixmap();
     }
   else
     {
-      svgf_ = Svg::File::load (Blob());
-      svge_ = Svg::Element::none();
       pixmap_ = Pixmap (blob);
     }
-  if (!svge_ && pixmap_.width() * pixmap_.height() == 0)
+  if (!image_backend_ && pixmap_.width() * pixmap_.height() == 0)
     {
       // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
       pixmap_ = Pixmap();
@@ -110,10 +176,11 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  if (svge_)
+  if (image_backend_)
     {
-      requisition.width += svge_->bbox().width;
-      requisition.height += svge_->bbox().height;
+      const Requisition irq = image_backend_->image_size();
+      requisition.width += irq.width;
+      requisition.height += irq.height;
     }
   else
     {
@@ -150,40 +217,21 @@ ImageImpl::adjust_view()
 }
 
 void
-ImageImpl::render_svg (RenderContext &rcontext, const Rect &render_rect)
-{
-  const Allocation &area = allocation();
-  Rect rect = area;
-  rect.intersect (render_rect);
-  if (rect.width > 0 && rect.height > 0)
-    {
-      const uint npixels = rect.width * rect.height;
-      uint8 *pixels = new uint8[int (npixels * 4)];
-      std::fill (pixels, pixels + npixels * 4, 0);
-      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
-                                                                      rect.width, rect.height, 4 * rect.width);
-      CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
-      Svg::BBox bbox = svge_->bbox();
-      const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, area.width / bbox.width, area.height / bbox.height);
-      if (rendered)
-        {
-          cairo_t *cr = cairo_context (rcontext, rect);
-          cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
-          cairo_paint (cr);
-        }
-      else
-        critical ("failed to render SVG file");
-      cairo_surface_destroy (surface);
-      delete[] pixels;
-    }
-}
-
-void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  if (svge_)
-    render_svg (rcontext, rect);
+  if (image_backend_)
+    {
+      // figure image size
+      const Rect &area = allocation();
+      Rect view = area;
+      // position image
+      const PackInfo &pi = pack_info();
+      view.x = area.x + iround (pi.halign * (area.width - view.width));
+      view.y = area.y + iround (pi.valign * (area.height - view.height));
+      // render image into cairo_context
+      const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
+      image_backend_->render_image (mkcontext, rect, view);
+    }
   else if (pixmap_.width() > 0 && pixmap_.height() > 0)
     {
       const Allocation &area = allocation();
