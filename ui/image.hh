@@ -11,17 +11,11 @@ public: struct  ImageBackend;
 private:
   ImageBackend *image_backend_;
   String        image_url_, stock_id_;
-  Pixmap        pixmap_;
-  struct PixView {
-    int xoffset, yoffset, pwidth, pheight;
-    double xscale, yscale, scale;
-  };
 protected:
   void                  reset           ();
   void                  load_pixmap     ();
   void                  stock           (const String &stock_id);
   String                stock           () const;
-  PixView               adjust_view     ();
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          render          (RenderContext &rcontext, const Rect &rect);

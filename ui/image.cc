@@ -80,11 +80,51 @@ cairo_surface_from_pixmap (Pixmap pixmap)
   return isurface;
 }
 
+struct PixImage : public virtual ImageImpl::ImageBackend {
+  Pixmap        pixmap_;
+public:
+  PixImage (const Pixmap &pixmap) :
+    pixmap_ (pixmap)
+  {}
+  virtual Requisition
+  image_size ()
+  {
+    return Requisition (pixmap_.width(), pixmap_.height());
+  }
+  virtual void
+  render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
+  {
+    Rect rect = image_rect;
+    rect.intersect (render_rect);
+    return_unless (rect.width > 0 && rect.height > 0);
+    cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
+    cairo_t *cr = mkcontext (rect);
+    cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
+    cairo_matrix_t matrix;
+    cairo_matrix_init_identity (&matrix);
+    const double xscale = pixmap_.width() / image_rect.width, yscale = pixmap_.height() / image_rect.height;
+    cairo_matrix_translate (&matrix, -image_rect.x * xscale, -image_rect.y * yscale); // adjust image origin
+    cairo_matrix_scale (&matrix, xscale, yscale);
+    cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+    if (xscale != 1.0 || yscale != 1.0)
+      cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+    cairo_paint (cr);
+    cairo_surface_destroy (isurface);
+  }
+};
+
 ImageImpl::ImageImpl () :
   image_backend_ (NULL)
 {}
 
 ImageImpl::~ImageImpl ()
+{
+  reset();
+  assert_return (image_backend_ == NULL);
+}
+
+void
+ImageImpl::reset ()
 {
   ImageBackend *old = image_backend_;
   image_backend_ = NULL;
@@ -93,33 +133,25 @@ ImageImpl::~ImageImpl ()
 }
 
 void
-ImageImpl::reset ()
-{
-  pixmap_ = Pixmap();
-  invalidate();
-}
-
-void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
   reset();
-  pixmap_ = pixbuf;
+  assert_return (image_backend_ == NULL);
+  image_backend_ = new PixImage (Pixmap (pixbuf));
+  invalidate();
 }
 
 Pixbuf
 ImageImpl::pixbuf() const
 {
-  return pixmap_;
+  return Pixbuf(); // FIXME
 }
 
 void
 ImageImpl::load_pixmap()
 {
-  if (image_backend_)
-    {
-      delete image_backend_;
-      image_backend_ = NULL;
-    }
+  reset();
+  assert_return (image_backend_ == NULL);
   Blob blob = Blob::load ("");
   if (!image_url_.empty())
     blob = Blob::load (image_url_);
@@ -130,21 +162,22 @@ ImageImpl::load_pixmap()
       auto svgf = Svg::File::load (blob);
       auto svge = svgf ? svgf->lookup ("") : Svg::Element::none();
       if (svge)
-        {
-          image_backend_ = new SvgImage (svgf, svge);
-        }
-      pixmap_ = Pixmap();
+        image_backend_ = new SvgImage (svgf, svge);
     }
   else
     {
-      pixmap_ = Pixmap (blob);
+      auto pixmap = Pixmap (blob);
+      if (pixmap.width() && pixmap.height())
+        image_backend_ = new PixImage (pixmap);
     }
-  if (!image_backend_ && pixmap_.width() * pixmap_.height() == 0)
+  if (!image_backend_)
     {
-      // FIXME: missing SVG support: blob = Stock::stock_image ("broken-image");
-      pixmap_ = Pixmap();
-      pixmap_.load_pixstream (get_broken16_pixdata());
+      auto pixmap = Pixmap();
+      pixmap.load_pixstream (get_broken16_pixdata());
+      assert_return (pixmap.width() > 0 && pixmap.height() > 0);
+      image_backend_ = new PixImage (pixmap);
     }
+  invalidate();
 }
 
 void
@@ -176,17 +209,10 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  if (image_backend_)
-    {
-      const Requisition irq = image_backend_->image_size();
-      requisition.width += irq.width;
-      requisition.height += irq.height;
-    }
-  else
-    {
-      requisition.width += pixmap_.width();
-      requisition.height += pixmap_.height();
-    }
+  return_unless (image_backend_ != NULL);
+  const Requisition irq = image_backend_->image_size();
+  requisition.width += irq.width;
+  requisition.height += irq.height;
 }
 
 void
@@ -195,63 +221,23 @@ ImageImpl::size_allocate (Allocation area, bool changed)
   // nothing special...
 }
 
-ImageImpl::PixView
-ImageImpl::adjust_view()
-{
-  const bool grow = true;
-  PixView view = { 0, 0, 0, 0, 0.0, 0.0, 0.0 };
-  const Allocation &area = allocation();
-  if (area.width < 1 || area.height < 1 || pixmap_.width() < 1 || pixmap_.height() < 1)
-    return view;
-  view.xscale = pixmap_.width() / area.width;
-  view.yscale = pixmap_.height() / area.height;
-  view.scale = max (view.xscale, view.yscale);
-  if (!grow)
-    view.scale = max (view.scale, 1.0);
-  view.pwidth = pixmap_.width() / view.scale + 0.5;
-  view.pheight = pixmap_.height() / view.scale + 0.5;
-  const PackInfo &pi = pack_info();
-  view.xoffset = area.width > view.pwidth ? iround (pi.halign * (area.width - view.pwidth)) : 0;
-  view.yoffset = area.height > view.pheight ? iround (pi.valign * (area.height - view.pheight)) : 0;
-  return view;
-}
-
 void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  if (image_backend_)
-    {
-      // figure image size
-      const Rect &area = allocation();
-      Rect view = area;
-      // position image
-      const PackInfo &pi = pack_info();
-      view.x = area.x + iround (pi.halign * (area.width - view.width));
-      view.y = area.y + iround (pi.valign * (area.height - view.height));
-      // render image into cairo_context
-      const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
-      image_backend_->render_image (mkcontext, rect, view);
-    }
-  else if (pixmap_.width() > 0 && pixmap_.height() > 0)
-    {
-      const Allocation &area = allocation();
-      PixView view = adjust_view();
-      int ix = area.x + view.xoffset, iy = area.y + view.yoffset;
-      Rect erect = Rect (ix, iy, view.pwidth, view.pheight);
-      erect.intersect (rect);
-      cairo_t *cr = cairo_context (rcontext, erect);
-      cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
-      cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
-      cairo_matrix_t matrix;
-      cairo_matrix_init_identity (&matrix);
-      cairo_matrix_scale (&matrix, view.scale, view.scale);
-      cairo_matrix_translate (&matrix, -ix, -iy);
-      cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
-      if (view.scale != 1.0)
-        cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-      cairo_paint (cr);
-      cairo_surface_destroy (isurface);
-    }
+  return_unless (image_backend_ != NULL);
+  // figure image size
+  const Rect &area = allocation();
+  const Requisition irq = image_backend_->image_size();
+  Rect view;
+  view.width = MIN (irq.width, area.width);
+  view.height = MIN (irq.height, area.height);
+  // position image
+  const PackInfo &pi = pack_info();
+  view.x = area.x + iround (pi.halign * (area.width - view.width));
+  view.y = area.y + iround (pi.valign * (area.height - view.height));
+  // render image into cairo_context
+  const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
+  image_backend_->render_image (mkcontext, rect, view);
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
