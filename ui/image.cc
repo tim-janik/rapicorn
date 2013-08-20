@@ -113,31 +113,10 @@ public:
   }
 };
 
-ImageImpl::ImageImpl () :
-  image_backend_ (NULL)
-{}
-
-ImageImpl::~ImageImpl ()
-{
-  reset();
-  assert_return (image_backend_ == NULL);
-}
-
-void
-ImageImpl::reset ()
-{
-  ImageBackend *old = image_backend_;
-  image_backend_ = NULL;
-  if (old)
-    delete old;
-}
-
 void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
-  reset();
-  assert_return (image_backend_ == NULL);
-  image_backend_ = new PixImage (Pixmap (pixbuf));
+  image_backend_ = std::make_shared<PixImage> (Pixmap (pixbuf));
   invalidate();
 }
 
@@ -150,8 +129,7 @@ ImageImpl::pixbuf() const
 void
 ImageImpl::load_pixmap()
 {
-  reset();
-  assert_return (image_backend_ == NULL);
+  image_backend_ = NULL;
   Blob blob = Blob::load ("");
   if (!image_url_.empty())
     blob = Blob::load (image_url_);
@@ -162,20 +140,20 @@ ImageImpl::load_pixmap()
       auto svgf = Svg::File::load (blob);
       auto svge = svgf ? svgf->lookup ("") : Svg::Element::none();
       if (svge)
-        image_backend_ = new SvgImage (svgf, svge);
+        image_backend_ = std::make_shared<SvgImage> (svgf, svge);
     }
   else
     {
       auto pixmap = Pixmap (blob);
       if (pixmap.width() && pixmap.height())
-        image_backend_ = new PixImage (pixmap);
+        image_backend_ = std::make_shared<PixImage> (pixmap);
     }
   if (!image_backend_)
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
       assert_return (pixmap.width() > 0 && pixmap.height() > 0);
-      image_backend_ = new PixImage (pixmap);
+      image_backend_ = std::make_shared<PixImage> (pixmap);
     }
   invalidate();
 }

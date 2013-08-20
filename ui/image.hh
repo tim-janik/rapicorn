@@ -9,10 +9,9 @@ namespace Rapicorn {
 class ImageImpl : public virtual WidgetImpl, public virtual ImageIface {
 public: struct  ImageBackend;
 private:
-  ImageBackend *image_backend_;
-  String        image_url_, stock_id_;
+  String                image_url_, stock_id_;
+  std::shared_ptr<ImageBackend> image_backend_;
 protected:
-  void                  reset           ();
   void                  load_pixmap     ();
   void                  stock           (const String &stock_id);
   String                stock           () const;
@@ -20,8 +19,6 @@ protected:
   virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
-  explicit              ImageImpl       ();
-  virtual              ~ImageImpl       ();
   virtual void          pixbuf          (const Pixbuf &pixbuf);
   virtual Pixbuf        pixbuf          () const;
   virtual void          source          (const String &uri);
