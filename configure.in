@@ -121,7 +121,7 @@ fi
 # == Compiler Flags ==
 MC_EVAR_ADD(CFLAGS, -Werror=format-security, -Werror=format-security)
 MC_EVAR_ADD(CXXFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread)
+MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread -lrt)
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
