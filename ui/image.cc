@@ -103,8 +103,8 @@ public:
     cairo_matrix_t matrix;
     cairo_matrix_init_identity (&matrix);
     const double xscale = pixmap_.width() / image_rect.width, yscale = pixmap_.height() / image_rect.height;
-    cairo_matrix_translate (&matrix, -image_rect.x * xscale, -image_rect.y * yscale); // adjust image origin
     cairo_matrix_scale (&matrix, xscale, yscale);
+    cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
     cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
     if (xscale != 1.0 || yscale != 1.0)
       cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
