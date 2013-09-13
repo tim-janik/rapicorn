@@ -96,6 +96,8 @@ random_utf8_and_unichar_test (ptrdiff_t count)
 REGISTER_TEST ("Strings/random UTF8", random_utf8_and_unichar_test, 30000);
 REGISTER_SLOWTEST ("Strings/random UTF8 (slow)", random_utf8_and_unichar_test, 1000000);
 
+#define UC_CMP(uc,a,eq,b)       do { if (a != b) printerr ("unichar(0x%08x): ", uc); TCMP (a, eq, b); } while (0)
+
 static void
 random_unichar_test (ptrdiff_t count)
 {
@@ -113,80 +115,80 @@ random_unichar_test (ptrdiff_t count)
 
       bb = Unicode::isvalid (uc);
       gb = g_unichar_validate (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::isalnum (uc);
       gb = g_unichar_isalnum (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::isalpha (uc);
       gb = g_unichar_isalpha (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::iscntrl (uc);
       gb = g_unichar_iscntrl (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::isdigit (uc);
       gb = g_unichar_isdigit (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bv = Unicode::digit_value (uc);
       gv = g_unichar_digit_value (uc);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bv = Unicode::digit_value ('0' + uc % 10);
       gv = g_unichar_digit_value ('0' + uc % 10);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bb = Unicode::isgraph (uc);
       gb = g_unichar_isgraph (uc);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bb = Unicode::islower (uc);
       gb = g_unichar_islower (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bc = Unicode::tolower (uc);
       gc = g_unichar_tolower (uc);
-      TCMP (bc, ==, gc);
+      UC_CMP (uc, bc, ==, gc);
       bb = Unicode::isprint (uc);
       gb = g_unichar_isprint (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::ispunct (uc);
       gb = g_unichar_ispunct (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::isspace (uc);
       gb = g_unichar_isspace (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::isupper (uc);
       gb = g_unichar_isupper (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bc = Unicode::toupper (uc);
       gc = g_unichar_toupper (uc);
-      TCMP (bc, ==, gc);
+      UC_CMP (uc, bc, ==, gc);
       bb = Unicode::isxdigit (uc);
       gb = g_unichar_isxdigit (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bv = Unicode::xdigit_value (uc);
       gv = g_unichar_xdigit_value (uc);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bv = Unicode::xdigit_value ('0' + uc % 10);
       gv = g_unichar_xdigit_value ('0' + uc % 10);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bv = Unicode::xdigit_value ('a' + uc % 6);
       gv = g_unichar_xdigit_value ('a' + uc % 6);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bv = Unicode::xdigit_value ('A' + uc % 6);
       gv = g_unichar_xdigit_value ('A' + uc % 6);
-      TCMP (bv, ==, gv);
+      UC_CMP (uc, bv, ==, gv);
       bb = Unicode::istitle (uc);
       gb = g_unichar_istitle (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bc = Unicode::totitle (uc);
       gc = g_unichar_totitle (uc);
-      TCMP (bc, ==, gc);
+      UC_CMP (uc, bc, ==, gc);
       bb = Unicode::isdefined (uc);
       gb = g_unichar_isdefined (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
       bb = Unicode::iswide (uc);
       gb = g_unichar_iswide (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
 #if GLIB_CHECK_VERSION (2, 12, 0)
       bb = Unicode::iswide_cjk (uc);
       gb = g_unichar_iswide_cjk (uc);
-      TCMP (bb, ==, gb);
+      UC_CMP (uc, bb, ==, gb);
 #endif
       TCMP (Unicode::get_type (uc), ==, (int) g_unichar_type (uc));
       TCMP (Unicode::get_break (uc), ==, (int) g_unichar_break_type (uc));
@@ -194,6 +196,37 @@ random_unichar_test (ptrdiff_t count)
 }
 REGISTER_TEST ("Strings/random unichar", random_unichar_test, 30000);
 REGISTER_SLOWTEST ("Strings/random unichar (slow)", random_unichar_test, 1000000);
+
+static void
+unichar_noncharacter_tests ()
+{
+  unichar uc;
+  bool tt;
+  // U+FDD0..U+FDEF
+  uc = 0xfdcf;  tt = Unicode::isnoncharacter (uc);  UC_CMP (uc, tt, ==, false);
+  for (uc = 0xfdd0; uc <= 0xfdef; uc++)
+    {
+      tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, true);
+    }
+  uc = 0xfdf0;  tt = Unicode::isnoncharacter (uc);  UC_CMP (uc, tt, ==, false);
+  // U+nFFFE and U+nFFFF
+  const unichar ncs[] = { 0x00fffe, 0x01fffe, 0x02fffe, 0x03fffe, 0x04fffe, 0x05fffe, 0x06fffe, 0x07fffe, 0x08fffe,
+                          0x09fffe, 0x0afffe, 0x0bfffe, 0x0cfffe, 0x0dfffe, 0x0efffe, 0x0ffffe, 0x10fffe };
+  for (int i = 0; i < ARRAY_SIZE (ncs); i++)
+    {
+      uc = ncs[i] - 1;  // U+nFFFD
+      tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, false);
+      uc = ncs[i];      // U+nFFFE
+      tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, true);
+      uc = ncs[i] + 1;  // U+nFFFF
+      tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, true);
+      uc = ncs[i] + 2;  // U+nFFFF + 1
+      tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, false);
+    }
+  uc = 0x11fffe; tt = Unicode::isnoncharacter (uc);  UC_CMP (uc, tt, ==, false);
+  uc = 0x20ffff; tt = Unicode::isnoncharacter (uc);  UC_CMP (uc, tt, ==, false);
+}
+REGISTER_TEST ("Strings/noncharacter unichar", unichar_noncharacter_tests);
 
 static void
 uuid_tests (void)
