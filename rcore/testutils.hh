@@ -82,11 +82,12 @@ Timer::benchmark (Callee callee)
 }
 
 // === test maintenance ===
-int     run             (void);         ///< Run all registered tests.
-bool    verbose         (void);         ///< Indicates whether tests should run verbosely.
-bool    logging         (void);         ///< Indicates whether only logging tests should be run.
-bool    slow            (void);         ///< Indicates whether only slow tests should be run.
-bool    ui_test         (void);         ///< Indicates execution of ui-thread tests.
+int     run                ();  ///< Run all registered tests.
+bool    verbose            ();  ///< Indicates whether tests should run verbosely.
+bool    normal             ();  ///< Indicates whether normal tests should be run.
+bool    logging            ();  ///< Indicates whether logging tests should be run.
+bool    slow               ();  ///< Indicates whether slow tests should be run.
+bool    ui_test            ();  ///< Indicates execution of ui-thread tests.
 
 void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook tobe called when assertions fail.
 void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.

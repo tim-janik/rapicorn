@@ -290,6 +290,12 @@ slow()
 }
 
 bool
+normal ()
+{
+  return 0 == (InitSettings::test_codes() & (MODE_READOUT | MODE_SLOW));
+}
+
+bool
 ui_test()
 {
   return flag_test_ui;
