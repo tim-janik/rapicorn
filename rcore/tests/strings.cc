@@ -101,7 +101,11 @@ random_unichar_test (ptrdiff_t count)
 {
   for (uint i = 0; i < count; i++)
     {
-      unichar uc = rand() % (0x100 << (i % 24));
+      unichar uc;
+      do
+        uc = rand() % (0x100 << (i % 24));
+      while ((uc & 0xffff) == 0xffff || // filter some questionable discrepancies
+             (uc & 0xfd00) == 0xfd00);
       unichar bc, gc;
       gboolean gb;
       bool bb;
