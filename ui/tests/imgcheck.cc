@@ -42,13 +42,13 @@ compare_image_files (const String &image1_file,
     return DBL_MAX;
 
   /* check equality */
-  double avgerror = 0, npixels = 0;
-  image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, NULL, NULL, &npixels);
+  double avgerror = 0, maxerr = 0, npixels = 0, nerrors = 0;
+  image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, &maxerr, &nerrors, &npixels);
 
-  return avgerror * npixels;
+  return avgerror * nerrors;
 }
 
-static double similarity_threshold = 1.0;
+static double similarity_threshold_perc = 0.5;
 
 static void
 help_usage (bool usage_error)
@@ -65,7 +65,7 @@ help_usage (bool usage_error)
   printout ("Compare image1.png and image2.png according to a similarity threshold.\n");
   printout ("\n");
   printout ("Options:\n");
-  printout ("  -t <similarity-threshold>     Threshold to consider images equal.\n");
+  printout ("  -t <threshold_percent>        Threshold to consider images equal.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
   printout ("  -v, --version                 Display version and exit.\n");
 }
@@ -81,7 +81,7 @@ parse_args (int    *argc_p,
     {
       if (strcmp (argv[i], "-t") == 0 && i + 1 < argc)
         {
-          similarity_threshold = string_to_double (argv[i + 1]);
+          similarity_threshold_perc = string_to_double (argv[i + 1]);
           argv[i++] = NULL;
           argv[i] = NULL;
         }
@@ -129,9 +129,9 @@ main (int   argc,
 
   double imgerror = compare_image_files (argv[1], argv[2]);
 
-  if (fabs (imgerror) > similarity_threshold)
-    fatal ("excessive image difference for \"%s\" - \"%s\": %f > %f",
-           argv[1], argv[2], fabs (imgerror), similarity_threshold);
+  if (fabs (imgerror) > similarity_threshold_perc / 100.0)
+    fatal ("excessive image difference for \"%s\" - \"%s\": %f%% > %f%%",
+           argv[1], argv[2], fabs (imgerror) * 100.0, similarity_threshold_perc);
 
   return 0;
 }
