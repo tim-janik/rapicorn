@@ -86,9 +86,12 @@ enable_static=no ; enable_shared=yes
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
 
 # check for base package requirements early on
-PKG_CHECK_MODULES(BASE_DEPENDENCIES,[
+PKG_CHECK_MODULES(CAIRO, [
 	cairo		>= 1.10.0
-	glib-2.0	>= 2.30.0
+])
+PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
+	cairo		>= 1.10.0
+	glib-2.0	>= 2.32.0
 	gio-2.0		>= 2.30.0
 	gthread-2.0	>= 2.30.0
 	pango		>= 1.29.0
@@ -121,7 +124,7 @@ fi
 # == Compiler Flags ==
 MC_EVAR_ADD(CFLAGS, -Werror=format-security, -Werror=format-security)
 MC_EVAR_ADD(CXXFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread)
+MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread -lrt)
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 

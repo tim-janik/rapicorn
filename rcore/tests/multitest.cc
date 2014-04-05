@@ -698,10 +698,10 @@ more_blob_tests ()
 }
 REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
 
-static void // Test Mutextes before g_thread_init()
+static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()
 {
-  /* check C++ mutex init + destruct before g_thread_init() */
+  /* check C++ mutex init + destruct before GLib starts up */
   Mutex *mutex = new Mutex;
   Cond *cond = new Cond;
   delete mutex;
