@@ -100,6 +100,21 @@ PixmapT<Pixbuf>::try_resize (uint width, uint height)
 
 #define SQR(x)  ((x) * (x))
 
+/**
+ * @param source          Source pixmap to compare with
+ * @param sx, sy          Origin of the source rectangle to compare
+ * @param swidth, sheight Size of the source rectangle to compare
+ * @param tx, ty          Origin of the target rectangle to compare
+ * @param averrp          Average distance encountered in all pixel differences (0..1)
+ * @param maxerrp         Maximum distance encountered in all pixel differences (0..1)
+ * @param nerrp           Number of pixel differences counted
+ * @param npixp           Number of total pixels compared (swidth * sheight)
+ * @returns               False if no pixel differences where found, else True
+ *
+ * Compare a rectangle of the @a source pixmap with a rectangle of @a this pixmap.
+ * A simple sum difference is calculated per pixel (differences can vary between 0.0 and 1.0)
+ * and accumulated for all pixels in the rectangle.
+ */
 template<class Pixbuf> bool
 PixmapT<Pixbuf>::compare (const Pixbuf &source,
                           uint sx, uint sy, int swidth, int sheight,
