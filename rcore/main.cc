@@ -398,10 +398,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
     return;
   program_app_ident = app_ident;
 
-  // mandatory threading initialization
-  if (!g_threads_got_initialized)
-    g_thread_init (NULL);
-
   // setup program and application name
   if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
     program_argv0 = argv[0];
