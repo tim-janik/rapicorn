@@ -136,16 +136,19 @@ surface_to_ascii (cairo_surface_t *surface,
         vc.at ((row * *vwidth) / vshrink + col / hshrink) = c;
       }
   // DEK Hash (FIXME: should use crypto hash here)
-  *pixhash = swidth * sheight;
-  for (uint row = 0; row < sheight; row++)
-    for (uint col = 0; col < swidth; col++)
-      {
-        const uint argb = pixels[row * sstride/4 + col]; // premultiplied
-        *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >> 24) & 0xff);
-        *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >> 16) & 0xff);
-        *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >>  8) & 0xff);
-        *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >>  0) & 0xff);
-      }
+  if (pixhash)
+    {
+      *pixhash = swidth * sheight;
+      for (uint row = 0; row < sheight; row++)
+        for (uint col = 0; col < swidth; col++)
+          {
+            const uint argb = pixels[row * sstride/4 + col]; // premultiplied
+            *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >> 24) & 0xff);
+            *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >> 16) & 0xff);
+            *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >>  8) & 0xff);
+            *pixhash = ((*pixhash << 5) ^ (*pixhash >> 27)) ^ ((argb >>  0) & 0xff);
+          }
+    }
   return true;
 }
 
@@ -155,12 +158,11 @@ surface_printout (cairo_surface_t *surface,
 {
   vector<char> ascii;
   uint         awidth;
-  uint64       pixhash;
-  if (Cairo::surface_to_ascii (surface, ascii, &awidth, &pixhash, cwidth))
+  if (Cairo::surface_to_ascii (surface, ascii, &awidth, NULL, cwidth))
     {
       const uint swidth = cairo_image_surface_get_width (surface);
       const uint sheight = cairo_image_surface_get_height (surface);
-      printout ("  ARGB:%ux%u:%08llx\n  ", swidth, sheight, pixhash);
+      printout ("  ARGB:%ux%u\n  ", swidth, sheight);
       for (uint j = 0; j < awidth; j++)
         printout ("-");
       printout ("\n");
