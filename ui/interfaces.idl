@@ -336,6 +336,13 @@ interface Drawable : Widget {
   void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
+/** Image widgets are used to display pixel or vector images.
+ */
+interface Image : Widget {
+  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
+  Pixbuf        pixbuf;
+};
+
 /** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
  */

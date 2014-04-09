@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
 	cmdlib.hh			commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	widget.hh		keysymbols.hh	\
+	image.hh	widget.hh	imageframe.hh	keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
@@ -29,7 +29,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
 	cmdlib.cc			commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
-	image.cc	widget.cc		\
+	image.cc	widget.cc	imageframe.cc	\
 	layoutcontainers.cc	listarea.cc	models.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\
@@ -74,7 +74,8 @@ lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICO
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
 librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o ldscript.map
+librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o ldscript.map \
+						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
@@ -82,6 +83,7 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
+	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig

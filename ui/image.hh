@@ -6,18 +6,25 @@
 
 namespace Rapicorn {
 
-class Image : public virtual WidgetImpl {
-  virtual String        image_file      () const { RAPICORN_ASSERT_UNREACHED(); }
-  virtual String        stock_pixmap    () const { RAPICORN_ASSERT_UNREACHED(); }
+class ImageImpl : public virtual WidgetImpl, public virtual ImageIface {
+public: struct  ImageBackend;
+private:
+  String                image_url_, stock_id_;
+  std::shared_ptr<ImageBackend> image_backend_;
 protected:
-  const PropertyList&   __aida_properties__ ();
+  void                  load_pixmap     ();
+  void                  stock           (const String &stock_id);
+  String                stock           () const;
+  virtual void          size_request    (Requisition &requisition);
+  virtual void          size_allocate   (Allocation area, bool changed);
+  virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
-  virtual void             pixbuf       (const Pixbuf &pixbuf) = 0;
-  virtual Pixbuf           pixbuf       (void) = 0;
-  virtual void /*errno*/   stock_pixmap (const String &stock_name) = 0;
-  virtual void /*errno*/   image_file   (const String &filename) = 0;
+  virtual void          pixbuf          (const Pixbuf &pixbuf);
+  virtual Pixbuf        pixbuf          () const;
+  virtual void          source          (const String &uri);
+  virtual String        source          () const;
 };
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_IMAGE_HH__ */
+#endif  // __RAPICORN_IMAGE_HH__

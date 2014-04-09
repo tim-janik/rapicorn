@@ -14,6 +14,7 @@
 #include <ui/heritage.hh>
 #include <ui/image.hh>
 #include <ui/widget.hh>
+#include <ui/imageframe.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/listarea.hh>
 #include <ui/models.hh>
