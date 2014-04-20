@@ -63,27 +63,27 @@ protected:
   /* flag handling */
   bool                        change_flags_silently (uint64 mask, bool on);
   enum {
-    ANCHORED                  = 1 <<  0,
-    VISIBLE                   = 1 <<  1,
-    SENSITIVE                 = 1 <<  2,
-    UNVIEWABLE                = 1 <<  3,
-    PARENT_SENSITIVE          = 1 <<  4,
-    PARENT_UNVIEWABLE         = 1 <<  5,
-    PRELIGHT                  = 1 <<  6,
-    IMPRESSED                 = 1 <<  7,
-    HAS_DEFAULT               = 1 <<  8,
-    FOCUS_CHAIN               = 1 <<  9,
-    HSHRINK                   = 1 << 10,
-    VSHRINK                   = 1 << 11,
-    HEXPAND                   = 1 << 12,
-    VEXPAND                   = 1 << 13,
-    HSPREAD                   = 1 << 14,
-    VSPREAD                   = 1 << 15,
-    HSPREAD_CONTAINER         = 1 << 16,
-    VSPREAD_CONTAINER         = 1 << 17,
-    INVALID_REQUISITION       = 1 << 18,
-    INVALID_ALLOCATION        = 1 << 19,
-    INVALID_CONTENT           = 1 << 20,
+    ANCHORED                  = 1 <<  0, ///< Flag set on widgets while its ancestry contains a Window, see hierarchy_changed()
+    VISIBLE                   = 1 <<  1, ///< Flag set on widgets to be visible on screen, see visible()
+    SENSITIVE                 = 1 <<  2, ///< Flag set on widgets to receive ancd process input events, see pointer_sensitive()
+    UNVIEWABLE                = 1 <<  3, ///< Flag set for container children for offscreen handling, see viewable()
+    PARENT_SENSITIVE          = 1 <<  4, ///< Cached state used to propagate sensitivity on branches, see key_sensitive()
+    PARENT_UNVIEWABLE         = 1 <<  5, ///< Cached state used to propagate viewability on branches, see also drawable()
+    PRELIGHT                  = 1 <<  6, ///< Flag indicating "hover" state of a widget, see prelight()
+    IMPRESSED                 = 1 <<  7, ///< Flag indicating state of a pressed button, see impressed()
+    HAS_DEFAULT               = 1 <<  8, ///< Flag indicating widget to receive default activation, see has_default()
+    FOCUS_CHAIN               = 1 <<  9, ///< Flag indicating wether widget is (in ancestry of) the focus widget, see grab_focus()
+    HSHRINK                   = 1 << 10, ///< Flag set on widgets that handle horizontal shrinking well, see hshrink()
+    VSHRINK                   = 1 << 11, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
+    HEXPAND                   = 1 << 12, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
+    VEXPAND                   = 1 << 13, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
+    HSPREAD                   = 1 << 14, ///< Flag set on widgets that should expand horizontally with window growth, see hspread()
+    VSPREAD                   = 1 << 15, ///< Flag set on widgets that should expand vertically with window growth, see vspread()
+    HSPREAD_CONTAINER         = 1 << 16, ///< Flag set on containers that contain horizontally spreading widgets
+    VSPREAD_CONTAINER         = 1 << 17, ///< Flag set on containers that contain vertically spreading widgets
+    INVALID_REQUISITION       = 1 << 18, ///< Flag indicates the need update widget's size requisition, see requisition()
+    INVALID_ALLOCATION        = 1 << 19, ///< Flag indicates the need update widget's allocation, see set_allocation()
+    INVALID_CONTENT           = 1 << 20, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
