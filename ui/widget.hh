@@ -89,7 +89,7 @@ protected:
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
-  virtual void                size_request      (Requisition &requisition) = 0;
+  virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation   area, bool changed) = 0;
   virtual void                invalidate_parent ();
   void                        clip_area         (const Allocation *clip);

@@ -607,6 +607,7 @@ static class OvrKey : public DataKey<Requisition> {
   }
 } override_requisition;
 
+/// Get overriding widget size requisition width (-1 if unset).
 double
 WidgetImpl::width () const
 {
@@ -614,6 +615,7 @@ WidgetImpl::width () const
   return ovr.width >= 0 ? ovr.width : -1;
 }
 
+/// Override widget size requisition width (use -1 to unset).
 void
 WidgetImpl::width (double w)
 {
@@ -623,6 +625,7 @@ WidgetImpl::width (double w)
   invalidate_size();
 }
 
+/// Get overriding widget size requisition height (-1 if unset).
 double
 WidgetImpl::height () const
 {
@@ -630,6 +633,7 @@ WidgetImpl::height () const
   return ovr.height >= 0 ? ovr.height : -1;
 }
 
+/// Override widget size requisition height (use -1 to unset).
 void
 WidgetImpl::height (double h)
 {
@@ -1040,6 +1044,7 @@ WidgetImpl::invalidate (uint64 mask)
     }
 }
 
+/// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
 Requisition
 WidgetImpl::inner_size_request()
 {
@@ -1070,6 +1075,19 @@ WidgetImpl::inner_size_request()
   return visible() ? requisition_ : Requisition();
 }
 
+/** Get the size requisition of a widget.
+ *
+ * Determines the size requisition of a widget if its not already calculated.
+ * Changing widget properties like fonts or children of a container may cause
+ * size requisition to be recalculated.
+ * The widget size requisition is determined by the actual widget type or
+ * possibly the container type which takes children into account, see size_request().
+ * Overridden width() and height() are taken into account if specified.
+ * The resulting size can also be affected by size group settings if this widget
+ * has been included into any.
+ * The INVALID_REQUISITION flag is unset after this method has been called.
+ * @returns The size requested by this widget for layouting.
+ */
 Requisition
 WidgetImpl::requisition ()
 {
