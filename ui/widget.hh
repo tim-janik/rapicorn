@@ -56,7 +56,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   ContainerImpl**             _parent_loc        () { return &parent_; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
-  void                        expose_internal    (const Region &region);
+  void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
@@ -79,8 +79,8 @@ protected:
     VEXPAND                   = 1 << 13, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
     HSPREAD                   = 1 << 14, ///< Flag set on widgets that should expand horizontally with window growth, see hspread()
     VSPREAD                   = 1 << 15, ///< Flag set on widgets that should expand vertically with window growth, see vspread()
-    HSPREAD_CONTAINER         = 1 << 16, ///< Flag set on containers that contain horizontally spreading widgets
-    VSPREAD_CONTAINER         = 1 << 17, ///< Flag set on containers that contain vertically spreading widgets
+    HSPREAD_CONTAINER         = 1 << 16, ///< Flag set on containers that contain hspread() widgets
+    VSPREAD_CONTAINER         = 1 << 17, ///< Flag set on containers that contain vspread() widgets
     INVALID_REQUISITION       = 1 << 18, ///< Flag indicates the need update widget's size requisition, see requisition()
     INVALID_ALLOCATION        = 1 << 19, ///< Flag indicates the need update widget's allocation, see set_allocation()
     INVALID_CONTENT           = 1 << 20, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
@@ -90,7 +90,7 @@ protected:
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
-  virtual void                size_allocate     (Allocation   area, bool changed) = 0;
+  virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
   virtual void                invalidate_parent ();
   void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
@@ -122,23 +122,23 @@ public:
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
   bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
-  bool                        anchored          () const { return test_all_flags (ANCHORED); }
-  virtual bool                visible           () const { return test_all_flags (VISIBLE); }
-  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }
+  bool                        anchored          () const { return test_all_flags (ANCHORED); } ///< Get widget anchored state, see #ANCHORED
+  virtual bool                visible           () const { return test_all_flags (VISIBLE); }  ///< Get widget visibility, see #VISIBLE
+  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }            ///< Toggle widget visibility
   bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
   virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
   bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
-  virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); }
-  bool                        insensitive       () const { return !sensitive(); }
-  void                        insensitive       (bool b) { sensitive (!b); }
+  virtual bool                sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); } ///< Negation of insensitive()
+  virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); } ///< Toggle widget ability to process input events
+  bool                        insensitive       () const { return !sensitive(); } ///< Indicates if widget cannot process input events
+  void                        insensitive       (bool b) { sensitive (!b); } ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        prelight          () const { return test_any_flag (PRELIGHT); }
-  virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); }
+  bool                        prelight          () const { return test_any_flag (PRELIGHT); } ///< Get widget "hover" state, see #PRELIGHT
+  virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); } ///< Toggled with "hover" state of a widget
   bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
-  bool                        impressed         () const { return test_any_flag (IMPRESSED); }
-  virtual void                impressed         (bool b) { set_flag (IMPRESSED, b); }
+  bool                        impressed         () const { return test_any_flag (IMPRESSED); } ///< Get widget #IMPRESSED state
+  virtual void                impressed         (bool b) { set_flag (IMPRESSED, b); } ///< Toggled for impressed widgets (e.g. buttons)
   bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
@@ -148,20 +148,20 @@ public:
   void                        unset_focus       ();
   virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                activate          ();
-  virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
-  virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); }
-  virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
-  virtual void                vexpand           (bool b) { set_flag (VEXPAND, b); }
-  virtual bool                hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); }
-  virtual void                hspread           (bool b) { set_flag (HSPREAD, b); }
-  virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); }
-  virtual void                vspread           (bool b) { set_flag (VSPREAD, b); }
-  virtual bool                hshrink           () const { return test_any_flag (HSHRINK); }
-  virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); }
-  virtual bool                vshrink           () const { return test_any_flag (VSHRINK); }
-  virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); }
-  virtual String              name              () const;
-  virtual void                name              (const String &str);
+  virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
+  virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); } ///< Allow horizontal expansion, see #VEXPAND
+  virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical expansion
+  virtual void                vexpand           (bool b) { set_flag (VEXPAND, b); } ///< Allow vertical expansion, see #VEXPAND
+  virtual bool                hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal spreading
+  virtual void                hspread           (bool b) { set_flag (HSPREAD, b); } ///< Allow horizontal spreading, see #HSPREAD
+  virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical spreading
+  virtual void                vspread           (bool b) { set_flag (VSPREAD, b); } ///< Allow vertical spreading, see #VSPREAD
+  virtual bool                hshrink           () const { return test_any_flag (HSHRINK); } ///< Get horizontal shrinking flag
+  virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); } ///< Allow horizontal shrinking, see #HSHRINK
+  virtual bool                vshrink           () const { return test_any_flag (VSHRINK); } ///< Get vertical shrinking flag
+  virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); } ///< Allow vertical shrinking, see #VSHRINK
+  virtual String              name              () const;            ///< Get Widget name or "id"
+  virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext*             factory_context   () const;
   void                        factory_context   (FactoryContext *fc);
   UserSource                  user_source       () const;
@@ -203,8 +203,8 @@ public:
   void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        changed           ();
-  void                        expose            ()                      { expose (allocation()); }
-  void                        expose            (const Rect &rect)      { expose (Region (rect)); }
+  void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
+  void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
@@ -250,9 +250,9 @@ public:
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area,
                                                  const Allocation *clip = NULL); // assign new allocation
-  const Allocation&          allocation         () const { return allocation_; } // current allocation
-  Allocation                 clipped_allocation () const;                        // clipped allocation
-  const Allocation*          clip_area          () const;                        // widget clipping
+  const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
+  Allocation                 clipped_allocation () const;
+  const Allocation*          clip_area          () const;
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return heritage_; }

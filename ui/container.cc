@@ -566,6 +566,7 @@ ContainerImpl::expose_enclosure ()
   expose (region);
 }
 
+/// Method toggled when a container child switches on- or off-screen, e.g. in a scrolling context
 void
 ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
 {
