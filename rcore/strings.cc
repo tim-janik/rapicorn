@@ -500,12 +500,10 @@ string_from_errno (int errno_val)
   if (errno_val < 0)
     errno_val = -errno_val;     // fixup library return values
   char buffer[1024] = { 0, };
-  if (strerror_r (errno_val, buffer, sizeof (buffer)) < 0 || !buffer[0])
-    {
-      /* strerror_r() may be broken on GNU systems, especially if _GNU_SOURCE is defined, so fall back to strerror() */
-      return strerror (errno_val);
-    }
-  return buffer;
+  const char *errstr = strerror_r (errno_val, buffer, sizeof (buffer));
+  if (!errstr || !errstr[0]) // fallback for possible strerror_r breakage encountered on _GNU_SOURCE systems
+    return strerror (errno_val);
+  return errstr;
 }
 
 /// Returns whether @a uuid_string contains a properly formatted UUID string.
