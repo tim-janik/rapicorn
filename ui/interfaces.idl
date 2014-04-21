@@ -12,7 +12,7 @@ Const MAXINT32 = +4294967295;
 Const MAXINT31 = +2147483647;
 Const MININT31 = -2147483648;
 
-/// Enum used to specify how adjustments are picked from widget ancestry.
+/// Enum used to specify how adjustments are picked from Widget ancestry.
 enum AdjustmentSourceType {
   ADJUSTMENT_SOURCE_NONE = 0,
   ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL,
@@ -74,7 +74,7 @@ enum ColorType {
   COLOR_MAGENTA,
 };
 
-/// Enum used to specify the color schemes of widgets.
+/// Enum used to specify the color schemes of a Widget.
 enum ColorSchemeType {
   COLOR_INHERIT = 0,    ///< Inherit color from parent component
   COLOR_NORMAL,         ///< Normal color specification
@@ -153,7 +153,7 @@ enum SizePolicyType {
   SIZE_POLICY_HEIGHT_FROM_WIDTH,
 };
 
-///< Enum type for widget states.
+///< Enum type for Widget states.
 flags enum StateType {
   STATE_NORMAL          = 0,
   STATE_INSENSITIVE     = 1 << 0,
@@ -276,7 +276,9 @@ interface Widget;
 /// A sequence of Widget objects.
 sequence WidgetSeq { Widget  widgets; };
 
-/// Widget is the base type for all UI elements.
+/** Widget is the base type for all UI elements.
+ * See also the corresponding implementation class WidgetImpl.
+ */
 interface Widget {
   bool          match_selector          (String selector) = 0; //< Check if selector matches this widget.
   Widget          query_selector          (String selector) = 0; //< Returns first selector match.
@@ -312,6 +314,7 @@ interface Widget {
 };
 
 /// Container is a special type of Widget that can contain other widgets.
+/// See also the corresponding implementation class ContainerImpl.
 interface Container : Widget {
   /// Create a child widget from the @a widget_identifier template and add it to the container.
   Widget create_child (String widget_identifier, StringSeq args = 0) = 0;
