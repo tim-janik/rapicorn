@@ -109,7 +109,7 @@ uint64  timestamp_benchmark  ();        // nseconds
 uint64  timestamp_resolution ();        // nseconds
 String  timestamp_format     (uint64 stamp);
 
-/* --- file/path functionality --- */
+/// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 String  dirname         (const String &path);
 String  basename        (const String &path);
