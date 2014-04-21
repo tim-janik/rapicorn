@@ -4,7 +4,7 @@
  * @brief User interface keyboard symbols.
  */
 
-/* based on /usr/include/X11/keysymdef.h, with:
+/* based on http://cgit.freedesktop.org/xorg/proto/x11proto/plain/keysymdef.h, with:
  * sed -e '/define/s/\b\(0[xX][0-9a-fA-F]\+\)\b/\1,/' -e 's/#define *\bXK_/KEY_/g' \
  *     -e 's/\b\(KEY_[A-Za-z0-9_]\+\) /\1 = /'        -e 's,\(\s\)/\*\(.*\)\s\+[*]/,\1///<\2,'
  */
