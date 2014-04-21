@@ -212,7 +212,7 @@ unichar_noncharacter_tests ()
   // U+nFFFE and U+nFFFF
   const unichar ncs[] = { 0x00fffe, 0x01fffe, 0x02fffe, 0x03fffe, 0x04fffe, 0x05fffe, 0x06fffe, 0x07fffe, 0x08fffe,
                           0x09fffe, 0x0afffe, 0x0bfffe, 0x0cfffe, 0x0dfffe, 0x0efffe, 0x0ffffe, 0x10fffe };
-  for (int i = 0; i < ARRAY_SIZE (ncs); i++)
+  for (uint i = 0; i < ARRAY_SIZE (ncs); i++)
     {
       uc = ncs[i] - 1;  // U+nFFFD
       tt = Unicode::isnoncharacter (uc); UC_CMP (uc, tt, ==, false);
