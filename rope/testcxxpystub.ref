@@ -2334,7 +2334,7 @@ __AIDA_pyemit2__SignalTestInterface__interface_result (const Rapicorn::Aida::Fie
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   *rb <<= emit_result_id;
   if (PyErr_Occurred()) {
-    (*rb).add_object (NULL);
+    (*rb).add_object (0);
     goto error;
   } else {
     (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);
@@ -2432,7 +2432,7 @@ __AIDA_pyemit2__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuf
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   *rb <<= emit_result_id;
   if (PyErr_Occurred()) {
-    (*rb).add_object (NULL);
+    (*rb).add_object (0);
     goto error;
   } else {
     (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);

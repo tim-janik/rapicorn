@@ -318,7 +318,7 @@ class Generator:
     elif type.storage == Decls.SEQUENCE:
       s += '  %s.add_seq (0);\n' % fb
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (NULL);\n' % fb
+      s += '  %s.add_object (0);\n' % fb
     elif type.storage == Decls.ANY:
       s += '  %s.add_any (Rapicorn::Aida::Any());\n' % fb
     else: # FUNC VOID

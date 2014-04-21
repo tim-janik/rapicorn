@@ -50,7 +50,7 @@ ByteBlob<Deleter>::~ByteBlob ()
 template<class Deleter> String
 ByteBlob<Deleter>::string ()
 {
-  if (string_.empty())
+  if (string_.empty() && size_)
     {
       static Mutex mutex;
       ScopedLock<Mutex> g (mutex);

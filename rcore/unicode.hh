@@ -8,6 +8,7 @@ namespace Rapicorn {
 
 namespace Unicode {
 inline bool isvalid      (unichar uc) RAPICORN_CONST;
+inline bool isnoncharacter (unichar uc) RAPICORN_CONST;
 bool        isalnum      (unichar uc) RAPICORN_CONST;
 bool        isalpha      (unichar uc) RAPICORN_CONST;
 bool        iscntrl      (unichar uc) RAPICORN_CONST;
@@ -87,16 +88,21 @@ bool                  utf8_validate     (const String   &string,
 namespace Unicode {
 inline bool
 isvalid (unichar uc)
-{
-  if (RAPICORN_UNLIKELY (uc > 0xfdcf && uc < 0xfdf0))
-    return false;
-  if (RAPICORN_UNLIKELY ((uc & 0xfffe) == 0xfffe))
-    return false;
+{ // Unicode definition D90, Section 3.9 Unicode Encoding Forms
   if (RAPICORN_UNLIKELY (uc > 0x10ffff))
     return false;
   if (RAPICORN_UNLIKELY ((uc & 0xfffff800) == 0xd800))
     return false;
   return true;
+}
+inline bool
+isnoncharacter (unichar uc)
+{ // Unicode definition D14, Section 3.4 Characters and Encoding
+  if (RAPICORN_UNLIKELY (uc >= 0xfdd0 && uc <= 0xfdef))
+    return true;
+  if (RAPICORN_UNLIKELY ((uc & 0xfffe) == 0xfffe && (uc >> 16) <= 0x10))
+    return true;
+  return false;
 }
 } // Unicode
 
