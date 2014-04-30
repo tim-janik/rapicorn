@@ -8,6 +8,7 @@
 #include "factory.hh"
 #include "selector.hh"
 #include "selob.hh"
+#include <algorithm>
 
 #define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
 
@@ -1006,6 +1007,33 @@ WidgetImpl::force_anchor_info () const
   if (anchored())
     assert (get_window() != NULL); // FIXME
   return ainfo;
+}
+
+static DataKey<vector<String> > widget_groups_key;
+
+void
+WidgetImpl::enter_widget_group (const String &group_name)
+{
+  assert_return (false == anchored());
+  assert_return (false == group_name.empty());
+  auto groups = get_data (&widget_groups_key);
+  auto it = std::find (groups.begin(), groups.end(), group_name);
+  const bool group_name_exists = it != groups.end();
+  assert_return (false == group_name_exists);
+  groups.push_back (group_name);
+  set_data (&widget_groups_key, groups);
+}
+
+void
+WidgetImpl::leave_widget_group (const String &group_name)
+{
+  assert_return (false == anchored());
+  auto groups = get_data (&widget_groups_key);
+  auto it = find (groups.begin(), groups.end(), group_name);
+  const bool group_name_exists = it != groups.end();
+  assert_return (true == group_name_exists);
+  groups.erase (it);
+  set_data (&widget_groups_key, groups);
 }
 
 void

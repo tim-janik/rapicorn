@@ -115,6 +115,8 @@ protected:
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
+  void                        enter_widget_group (const String &group_name);
+  void                        leave_widget_group (const String &group_name);
   void                        notify_key_error  ();
 public:
   explicit                    WidgetImpl        ();
