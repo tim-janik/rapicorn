@@ -57,6 +57,7 @@ DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
 DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
+DOXYGEN_STYLESHEET	= extrastyles.css
 build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Git ChangeLog"

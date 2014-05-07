@@ -1,0 +1,23 @@
+/* Fixup Doxygen font settings */
+body				{ font: inherit; /* unset Doxygen line spacing, etc */
+				  font-family: Verdana, "DejaVu Sans", "Bitstream Vera Sans", sans-serif;
+				  font-size: 12pt; }
+table, div, p, dl, ol, ul	{ font: inherit; }
+
+/* Header font sizes */
+h1                      		{ margin: 0.6em 0; font-size: 1.25em; }
+h2                      		{ margin: 0.6em 0; font-size: 1.2em; }
+h3                      		{ margin: 0.6em 0; font-size: 1.15em; }
+h4                      		{ margin: 0.6em 0; font-size: 1.1em; }
+h5                      		{ margin: 0.6em 0; font-size: 1.05em; }
+h6                      		{ margin: .05em 0; font-size: 1.0em; }
+h1, h2, h3, h4, h5, h6			{ page-break-after: avoid; }
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a	{ font-weight: 600; page-break-after: avoid; }
+
+/* Doxygen project name and Tabs */
+#projectname				{ font: inherit; font-size: 200%; font-weight: bold; }
+#projectname a, #projectnumber		{ font: inherit; font-size: 100%; }
+#projectname #projectnumber		{ font-weight: normal; }
+.tabs, .tabs2, .tabs3			{ font-size: 106%; font-family: inherit; }
+.tabs2					{ font-size: 104%; }
+.tabs3					{ font-size: 102%; }

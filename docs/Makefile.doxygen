@@ -19,6 +19,8 @@ DOXYGEN_GRAPHICS	?= YES
 DOXYGEN_PROJECT_LINK    ?=
 # Tagfile references for Doxygen
 DOXYGEN_TAGFILES        ?=
+# Extra CSS style sheet for Doxygen output
+DOXYGEN_STYLESHEET	?=
 
 # == doxygen-full ==
 # build doxygen-html/ from scratch ==
@@ -103,6 +105,9 @@ doxygen-html: doxygen.cfg doxygen-srctree
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "PROJECT_NUMBER   = $(DOXYGEN_PROJECT_NUMBER)" \
 	&& echo "DOT_MULTI_TARGETS = YES" \
+	&& (test -z "$(DOXYGEN_STYLESHEET)" || \
+	     echo "HTML_EXTRA_STYLESHEET = $(DOXYGEN_STYLESHEET)" && \
+	     cp $(DOXYGEN_STYLESHEET) doxygen-tmp/ ) \
 	&& for tagfile in $(DOXYGEN_TAGFILES) ; do \
 	     echo "TAGFILES += $$tagfile" ; done \
 	) > doxygen-tmp/Doxyfile.tmp \
