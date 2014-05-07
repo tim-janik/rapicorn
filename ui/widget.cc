@@ -1036,6 +1036,27 @@ WidgetImpl::leave_widget_group (const String &group_name)
   set_data (&widget_groups_key, groups);
 }
 
+WidgetGroup*
+WidgetImpl::find_widget_group (const String &group_name, bool force_create)
+{
+  assert_return (force_create == false || anchored(), NULL);
+  return_if (group_name.empty(), NULL);
+  ContainerImpl *container = as_container_impl();
+  for (auto c = container ? container : parent(); c; c = c->parent())
+    {
+      WidgetGroup *widget_group = c->retrieve_widget_group (group_name, false);
+      if (widget_group)
+        return widget_group;
+    }
+  if (!force_create)
+    return NULL;
+  // fallback to create on root
+  user_warning (this->user_source(), "creating undefined widget group \"%s\"", group_name);
+  ContainerImpl *r = root();
+  assert (r); // we asserted anchored() earlier
+  return r->retrieve_widget_group (group_name, true);
+}
+
 void
 WidgetImpl::changed()
 {

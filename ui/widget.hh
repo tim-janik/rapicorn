@@ -17,6 +17,7 @@ typedef Rect Allocation;
 class WidgetImpl;
 class AnchorInfo;
 class SizeGroup;
+class WidgetGroup;
 class Adjustment;
 class ContainerImpl;
 class ResizeContainerImpl;
@@ -44,6 +45,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
+  friend                      class WidgetGroup;
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
@@ -117,6 +119,7 @@ protected:
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        enter_widget_group (const String &group_name);
   void                        leave_widget_group (const String &group_name);
+  WidgetGroup*                find_widget_group  (const String &group_name, bool force_create = false);
   void                        notify_key_error  ();
 public:
   explicit                    WidgetImpl        ();
