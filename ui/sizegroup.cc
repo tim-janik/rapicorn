@@ -3,10 +3,85 @@
 
 namespace Rapicorn {
 
-struct ClassDoctor {
-  static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
-};
+// == WidgetGroup ==
+WidgetGroup*
+WidgetGroup::create (const String &name)
+{
+  assert_return (name.empty() == false, NULL);
+  return new WidgetGroup (name);
+}
 
+WidgetGroup::WidgetGroup (const String &name) :
+  name_ (name)
+{}
+
+WidgetGroup::~WidgetGroup()
+{
+  assert (widgets_.size() == 0);
+}
+
+static DataKey<WidgetGroup::GroupVector> widget_group_key;
+
+vector<WidgetGroup*>
+WidgetGroup::list_groups (WidgetImpl &widget)
+{
+  return widget.get_data (&widget_group_key);
+}
+
+void
+WidgetGroup::add_widget (WidgetImpl &widget)
+{
+  ref (this);
+  // add widget to group's list
+  widgets_.push_back (&widget);
+  // add group to widget's list
+  GroupVector wgv = widget.get_data (&widget_group_key);
+  wgv.push_back (this);
+  widget.set_data (&widget_group_key, wgv);
+  // FIXME: invalidate size_group
+}
+
+void
+WidgetGroup::remove_widget (WidgetImpl &widget)
+{
+  ref (this);
+  // FIXME: invalidate size_group
+  // remove widget from group's list
+  bool found_one = false;
+  for (uint i = 0; i < widgets_.size(); i++)
+    if (widgets_[i] == &widget)
+      {
+        widgets_.erase (widgets_.begin() + i);
+        found_one = true;
+        unref (this);
+        break;
+      }
+  if (!found_one)
+    {
+      critical ("attempt to remove unknown widget (%s) from group: %p", widget.name().c_str(), this);
+      unref (this);
+      return;
+    }
+  // remove group from widget's list */
+  found_one = false;
+  GroupVector wgv = widget.get_data (&widget_group_key);
+  for (uint i = 0; i < wgv.size(); i++)
+    if (wgv[i] == this)
+      {
+        wgv.erase (wgv.begin() + i);
+        found_one = true;
+        break;
+      }
+  if (!found_one)
+    fatal ("failed to remove size group (%p) from widget: %s", this, widget.name().c_str());
+  if (wgv.size() == 0)
+    widget.delete_data (&widget_group_key);
+  else
+    widget.set_data (&widget_group_key, wgv);
+  unref (this);
+}
+
+// == SizeGroupImpl ==
 class SizeGroupImpl : public SizeGroup {
   Requisition           req_;
   vector<WidgetImpl*>     widgets_;

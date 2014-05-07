@@ -6,6 +6,20 @@
 
 namespace Rapicorn {
 
+class WidgetGroup : public virtual ReferenceCountable {
+  const String name_;
+  vector<WidgetImpl*> widgets_;
+  explicit            WidgetGroup       (const String &name);
+public:
+  typedef vector<WidgetGroup*> GroupVector;
+  virtual            ~WidgetGroup       ();
+  String              name              () const { return name_; }      ///< Get WidgetGroup name
+  void                add_widget        (WidgetImpl &widget);
+  void                remove_widget     (WidgetImpl &widget);
+  static GroupVector  list_groups       (WidgetImpl &widget);
+  static WidgetGroup* create            (const String &name);           ///< Create WidgetGroup with name
+};
+
 /* --- SizeGroup --- */
 class SizeGroup : public virtual ReferenceCountable {
   friend            class ClassDoctor;
