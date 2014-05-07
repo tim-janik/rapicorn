@@ -12,15 +12,16 @@ class ResizeContainerImpl;
 struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface {
   friend              class WidgetImpl;
   friend              class WindowImpl;
-  void                uncross_descendant(WidgetImpl          &descendant);
-  size_t              widget_cross_link   (WidgetImpl           &owner,
-                                         WidgetImpl           &link,
-                                         const WidgetSlot &uncross);
-  void                widget_cross_unlink (WidgetImpl           &owner,
-                                         WidgetImpl           &link,
-                                         size_t              link_id);
-  void                widget_uncross_links(WidgetImpl           &owner,
-                                         WidgetImpl           &link);
+  void                uncross_descendant    (WidgetImpl          &descendant);
+  size_t              widget_cross_link     (WidgetImpl           &owner,
+                                             WidgetImpl           &link,
+                                             const WidgetSlot &uncross);
+  void                widget_cross_unlink   (WidgetImpl           &owner,
+                                             WidgetImpl           &link,
+                                             size_t              link_id);
+  void                widget_uncross_links  (WidgetImpl           &owner,
+                                             WidgetImpl           &link);
+  WidgetGroup*        retrieve_widget_group (const String &group_name, bool force_create);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        add_child         (WidgetImpl           &widget) = 0;
@@ -29,7 +30,7 @@ protected:
                                          const PackInfo &pnew);
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
   virtual void        unparent_child    (WidgetImpl           &widget);
-  virtual void        dispose_widget      (WidgetImpl           &widget);
+  virtual void        dispose_widget    (WidgetImpl           &widget);
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
