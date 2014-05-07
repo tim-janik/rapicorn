@@ -396,6 +396,7 @@ extern void* flex_yyget_extra (void *yyscanner); // flex forward declaration, ne
 #include "sinfex.ygen"
 #undef  yylval
 #undef  yylloc
+#undef  YY_NULL // work around bison & flex disagreeing on nullptr vs 0
 
 /* flex generated lexer */
 #include "sinfex.lgen"
