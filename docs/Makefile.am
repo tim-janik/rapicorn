@@ -67,6 +67,9 @@ build-docs: doxygen-check
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
+	$(QPRINT) "HIDE" "internal enum definitions"
+	$(Q) cd doxygen-srctree && \
+	  find . -type f -name \*[cC] -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
 	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) rm -f imports/tagfile-susv4.xml
