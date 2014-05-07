@@ -1,7 +1,7 @@
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
 /**
  * @file
- * @brief User interface keyboard symbols.
+ * @brief User interface keyboard symbols, see also Rapicorn::KeyValue.
  */
 
 /* based on http://cgit.freedesktop.org/xorg/proto/x11proto/plain/keysymdef.h, with:
