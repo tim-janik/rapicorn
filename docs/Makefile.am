@@ -67,7 +67,9 @@ build-docs: doxygen-check
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
+	$(Q) bunzip2 -k imports/tagfile-susv4.xml.bz2
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
+	$(Q) rm -f imports/tagfile-susv4.xml
 	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "MOVE" "HTML Documentation..."
