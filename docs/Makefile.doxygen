@@ -79,7 +79,7 @@ DOXYGEN_CHANGELOG_SED = \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 DOXYGEN_NEWS_SED = \
 		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^\w+.*\b[0-9]/s/^/@section release /' \
+		-e '/^\w+.*\b[0-9]+\./{ h; s/:.*//; s/[^a-zA-Z0-9]/_/g; G; s/\n/ /; s/^/@section /  }' \
 		-e 's/^([ \t]*)([+*-])[ \t]+(\w+)/\1- \3/' \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 
