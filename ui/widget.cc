@@ -1009,31 +1009,40 @@ WidgetImpl::force_anchor_info () const
   return ainfo;
 }
 
-static DataKey<vector<String> > widget_groups_key;
+class WidgetGroupNamesKey : public DataKey<vector<String>*> {
+  virtual void destroy (vector<String> *widget_group_names) override
+  {
+    delete widget_group_names;
+  }
+};
+static WidgetGroupNamesKey widget_group_names_key;
 
 void
 WidgetImpl::enter_widget_group (const String &group_name)
 {
   assert_return (false == anchored());
   assert_return (false == group_name.empty());
-  auto groups = get_data (&widget_groups_key);
-  auto it = std::find (groups.begin(), groups.end(), group_name);
-  const bool group_name_exists = it != groups.end();
+  auto *names = get_data (&widget_group_names_key);
+  if (!names)
+    {
+      names = new vector<String>;
+      set_data (&widget_group_names_key, names);
+    }
+  auto it = std::find (names->begin(), names->end(), group_name);
+  const bool group_name_exists = it != names->end();
   assert_return (false == group_name_exists);
-  groups.push_back (group_name);
-  set_data (&widget_groups_key, groups);
+  names->push_back (group_name);
 }
 
 void
 WidgetImpl::leave_widget_group (const String &group_name)
 {
   assert_return (false == anchored());
-  auto groups = get_data (&widget_groups_key);
-  auto it = find (groups.begin(), groups.end(), group_name);
-  const bool group_name_exists = it != groups.end();
+  auto *names = get_data (&widget_group_names_key);
+  auto it = find (names->begin(), names->end(), group_name);
+  const bool group_name_exists = it != names->end();
   assert_return (true == group_name_exists);
-  groups.erase (it);
-  set_data (&widget_groups_key, groups);
+  names->erase (it);
 }
 
 WidgetGroup*
