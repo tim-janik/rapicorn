@@ -134,7 +134,7 @@ private:
   {
     assert_return (idata_ != NULL);
     // idata_core() already called
-    ThisThread::affinity (string_to_int (string_vector_find (*idata_->args, "cpu-affinity=", "-1")));
+    ThisThread::affinity (string_to_int (string_vector_find_value (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
     ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_));
     (void) server_source;

@@ -838,7 +838,7 @@ memset4 (uint32 *mem, uint32 filler, uint length)
  * @returns @a fallback if no match was found.
  */
 String
-string_vector_find (const StringVector &svector, const String &key, const String &fallback)
+string_vector_find_value (const StringVector &svector, const String &key, const String &fallback)
 {
   for (size_t i = svector.size(); i > 0; i--)
     {
