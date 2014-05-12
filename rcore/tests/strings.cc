@@ -339,6 +339,14 @@ split_string_tests (void)
   TCMP (string_multiply ("x", 99991).size(), ==, 99991);
   TCMP (string_multiply ("x", 99990).size(), ==, 99990);
   TCMP (string_multiply ("x", 9999999).size(), ==, 9999999); // needs 10MB, should finish within 1 second
+  sv = string_split_any ("a, b, c", ", ");
+  TCMP (string_join (";", sv), ==, "a;;b;;c");
+  string_vector_strip_empty (sv);
+  TCMP (string_join (";", sv), ==, "a;b;c");
+  sv = string_split_any ("abcdef", "");
+  TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
+  string_vector_strip_empty (sv);
+  TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
 }
 REGISTER_TEST ("Strings/split strings", split_string_tests);
 
