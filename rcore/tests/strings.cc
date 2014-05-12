@@ -347,6 +347,15 @@ split_string_tests (void)
   TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
   string_vector_strip_empty (sv);
   TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
+  sv = string_split_any ("  foo  , bar     , \t\t baz \n", ",");
+  string_vector_lstrip (sv);
+  TCMP (string_join (";", sv), ==, "foo  ;bar     ;baz \n");
+  sv = string_split_any ("  foo  , bar     , \t\t baz \n", ",");
+  string_vector_rstrip (sv);
+  TCMP (string_join (";", sv), ==, "  foo; bar; \t\t baz");
+  sv = string_split_any ("  foo  , bar     , \t\t baz \n", ",");
+  string_vector_strip (sv);
+  TCMP (string_join (" ", sv), ==, "foo bar baz");
 }
 REGISTER_TEST ("Strings/split strings", split_string_tests);
 

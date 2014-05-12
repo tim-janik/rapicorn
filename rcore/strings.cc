@@ -310,6 +310,30 @@ string_vector_strip_empty (StringVector &svector)
     }
 }
 
+/// Left-strip all elements of a string vector, see string_lstrip().
+void
+string_vector_lstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_lstrip (s);
+}
+
+/// Right-strip all elements of a string vector, see string_rstrip().
+void
+string_vector_rstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_rstrip (s);
+}
+
+/// Strip all elements of a string vector, see string_strip().
+void
+string_vector_strip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_strip (s);
+}
+
 /** Join a number of strings.
  * Join a string vector into a single string, using @a junctor inbetween each pair of strings.
  */
