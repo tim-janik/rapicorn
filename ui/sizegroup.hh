@@ -7,17 +7,19 @@
 namespace Rapicorn {
 
 class WidgetGroup : public virtual ReferenceCountable {
-  const String name_;
+  virtual            ~WidgetGroup       ();
+  explicit            WidgetGroup       (const String &name, WidgetGroupType type);
+  const String        name_;
+  const WidgetGroupType type_;
   vector<WidgetImpl*> widgets_;
-  explicit            WidgetGroup       (const String &name);
 public:
   typedef vector<WidgetGroup*> GroupVector;
-  virtual            ~WidgetGroup       ();
-  String              name              () const { return name_; }      ///< Get WidgetGroup name
-  void                add_widget        (WidgetImpl &widget);
-  void                remove_widget     (WidgetImpl &widget);
-  static GroupVector  list_groups       (WidgetImpl &widget);
-  static WidgetGroup* create            (const String &name);           ///< Create WidgetGroup with name
+  String              name          () const { return name_; }                  ///< Get WidgetGroup name
+  WidgetGroupType     type          () const { return type_; }                  ///< Get WidgetGroup  type
+  void                add_widget    (WidgetImpl &widget);                       ///< Add a widget to group
+  void                remove_widget (WidgetImpl &widget);                       ///< Remove a widget from group
+  static GroupVector  list_groups   (WidgetImpl &widget);                       ///< List all groups a widget has been added to
+  static WidgetGroup* create        (const String &name, WidgetGroupType type); ///< Create WidgetGroup from @a name and @a type
 };
 
 /* --- SizeGroup --- */

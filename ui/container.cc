@@ -247,7 +247,7 @@ class WidgetGroupsKey : public DataKey<WidgetGroups*> {
 static WidgetGroupsKey widget_groups_key;
 
 WidgetGroup*
-ContainerImpl::retrieve_widget_group (const String &group_name, bool force_create)
+ContainerImpl::retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create)
 {
   WidgetGroups *widget_groups = get_data (&widget_groups_key);
   if (!widget_groups)
@@ -258,12 +258,12 @@ ContainerImpl::retrieve_widget_group (const String &group_name, bool force_creat
       set_data (&widget_groups_key, widget_groups);
     }
   else
-    for (auto it = widget_groups->begin(); it != widget_groups->end(); it++)
-      if ((*it)->name() == group_name)
-        return *it;
+    for (auto it : *widget_groups)
+      if (it->name() == group_name && it->type() == group_type)
+        return it;
   if (force_create)
     {
-      WidgetGroup *widget_group = WidgetGroup::create (group_name);
+      WidgetGroup *widget_group = WidgetGroup::create (group_name, group_type);
       widget_group->ref_sink();
       widget_groups->push_back (widget_group);
       return widget_group;

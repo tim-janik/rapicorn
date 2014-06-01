@@ -21,7 +21,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
                                              size_t              link_id);
   void                widget_uncross_links  (WidgetImpl           &owner,
                                              WidgetImpl           &link);
-  WidgetGroup*        retrieve_widget_group (const String &group_name, bool force_create);
+  WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        add_child         (WidgetImpl           &widget) = 0;

@@ -16,7 +16,7 @@
 	</Label>
       </Button>
       <HBox hexpand="1" spacing="3">
-	<Button on-click="Widget::print('Normal Button')">
+	<Button on-click="Widget::print('Normal Button')" hsize-group="hsizing">
 	  <Label vexpand="0" markup-text="Normal Button" />
 	</Button>
 	<DefaultButton on-click="Widget::print('Default Button')">
@@ -25,7 +25,7 @@
 	<Button hspread="1" on-click="Widget::print('HSpread-Button')">
 	  <Label markup-text="HSpread Button" />
 	</Button>
-	<Button on-click="test_handler1" >
+	<Button on-click="test_handler1" hsize-group="hsizing">
 	  <Label markup-text="Button for test_handler1"/>
 	</Button>
       </HBox>

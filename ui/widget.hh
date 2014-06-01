@@ -24,6 +24,7 @@ class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
 namespace Selector { class Selob; }
+enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
 
 /* --- event handler --- */
 class EventHandler : public virtual ReferenceCountable {
@@ -59,6 +60,8 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
+  WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
+  void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
@@ -117,9 +120,9 @@ protected:
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
-  void                        enter_widget_group (const String &group_name);
-  void                        leave_widget_group (const String &group_name);
-  WidgetGroup*                find_widget_group  (const String &group_name, bool force_create = false);
+  void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
+  void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
+  StringVector                list_widget_groups (WidgetGroupType group_type) const;
   void                        notify_key_error  ();
 public:
   explicit                    WidgetImpl        ();
@@ -165,6 +168,10 @@ public:
   virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); } ///< Allow horizontal shrinking, see #HSHRINK
   virtual bool                vshrink           () const { return test_any_flag (VSHRINK); } ///< Get vertical shrinking flag
   virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); } ///< Allow vertical shrinking, see #VSHRINK
+  virtual String              hsize_group       () const;
+  virtual void                hsize_group       (const String &group_list);
+  virtual String              vsize_group       () const;
+  virtual void                vsize_group       (const String &group_list);
   virtual String              name              () const;            ///< Get Widget name or "id"
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext*             factory_context   () const;
@@ -325,6 +332,8 @@ public: /* packing */
 private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
+  void               enter_anchored  ();
+  void               leave_anchored  ();
 public:
   virtual bool       match_selector        (const String &selector);
   virtual WidgetIface* query_selector        (const String &selector);

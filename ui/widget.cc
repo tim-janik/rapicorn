@@ -859,13 +859,6 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
-/// Signal emitted when a widget ancestry is added to or removed from a Window
-void
-WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
-{
-  anchored (old_toplevel == NULL);
-}
-
 void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
@@ -1009,51 +1002,91 @@ WidgetImpl::force_anchor_info () const
   return ainfo;
 }
 
-class WidgetGroupNamesKey : public DataKey<vector<String>*> {
-  virtual void destroy (vector<String> *widget_group_names) override
+/// WidgetGroup sprouts are turned into widget group objects for ANCHORED widgets
+struct WidgetGroupSprout {
+  String          group_name;
+  WidgetGroupType group_type;
+  WidgetGroupSprout() : group_type (WidgetGroupType (0)) {}
+  WidgetGroupSprout (const String &name, WidgetGroupType gt) : group_name (name), group_type (gt) {}
+  bool operator== (const WidgetGroupSprout &other) const { return other.group_name == group_name && other.group_type == group_type; }
+};
+class WidgetGroupSproutsKey : public DataKey<vector<WidgetGroupSprout>*> {
+  virtual void destroy (vector<WidgetGroupSprout> *widget_group_sprouts) override
   {
-    delete widget_group_names;
+    delete widget_group_sprouts;
   }
 };
-static WidgetGroupNamesKey widget_group_names_key;
+static WidgetGroupSproutsKey widget_group_sprouts_key;
 
 void
-WidgetImpl::enter_widget_group (const String &group_name)
+WidgetImpl::enter_widget_group (const String &group_name, WidgetGroupType group_type)
 {
   assert_return (false == anchored());
   assert_return (false == group_name.empty());
-  auto *names = get_data (&widget_group_names_key);
-  if (!names)
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  if (!sprouts)
     {
-      names = new vector<String>;
-      set_data (&widget_group_names_key, names);
+      sprouts = new vector<WidgetGroupSprout>;
+      set_data (&widget_group_sprouts_key, sprouts);
     }
-  auto it = std::find (names->begin(), names->end(), group_name);
-  const bool group_name_exists = it != names->end();
-  assert_return (false == group_name_exists);
-  names->push_back (group_name);
+  const WidgetGroupSprout sprout (group_name, group_type);
+  auto it = std::find (sprouts->begin(), sprouts->end(), sprout);
+  const bool widget_group_exists = it != sprouts->end();
+  assert_return (false == widget_group_exists);
+  sprouts->push_back (sprout);
 }
 
 void
-WidgetImpl::leave_widget_group (const String &group_name)
+WidgetImpl::leave_widget_group (const String &group_name, WidgetGroupType group_type)
 {
   assert_return (false == anchored());
-  auto *names = get_data (&widget_group_names_key);
-  auto it = find (names->begin(), names->end(), group_name);
-  const bool group_name_exists = it != names->end();
-  assert_return (true == group_name_exists);
-  names->erase (it);
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  const WidgetGroupSprout sprout (group_name, group_type);
+  auto it = find (sprouts->begin(), sprouts->end(), sprout);
+  const bool widget_group_exists = it != sprouts->end();
+  assert_return (true == widget_group_exists);
+  sprouts->erase (it);
+}
+
+void
+WidgetImpl::sync_widget_groups (const String &group_list, WidgetGroupType group_type)
+{
+  StringVector add = string_split_any (group_list, ",");
+  string_vector_strip (add);
+  string_vector_strip_empty (add);
+  std::stable_sort (add.begin(), add.end());
+  StringVector del = list_widget_groups (group_type);
+  std::stable_sort (del.begin(), del.end());
+  for (size_t a = 0, d = 0; a < add.size() || d < del.size();)
+    if (d >= del.size() || (a < add.size() && add[a] < del[d]))
+      enter_widget_group (add[a++], group_type);
+    else if (a >= add.size() || add[a] > del[d]) // (d < del.size())
+      leave_widget_group (del[d++], group_type);
+    else // (a < add.size() && d < del.size() && add[a] == del[d])
+      a++, d++;
+}
+
+StringVector
+WidgetImpl::list_widget_groups (WidgetGroupType group_type) const
+{
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  StringVector strings;
+  if (sprouts)
+    for (auto it : *sprouts)
+      if (it.group_type == group_type)
+        strings.push_back (it.group_name);
+  return strings;
 }
 
 WidgetGroup*
-WidgetImpl::find_widget_group (const String &group_name, bool force_create)
+WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, bool force_create)
 {
   assert_return (force_create == false || anchored(), NULL);
   return_if (group_name.empty(), NULL);
   ContainerImpl *container = as_container_impl();
   for (auto c = container ? container : parent(); c; c = c->parent())
     {
-      WidgetGroup *widget_group = c->retrieve_widget_group (group_name, false);
+      WidgetGroup *widget_group = c->retrieve_widget_group (group_name, group, false);
       if (widget_group)
         return widget_group;
     }
@@ -1063,7 +1096,7 @@ WidgetImpl::find_widget_group (const String &group_name, bool force_create)
   user_warning (this->user_source(), "creating undefined widget group \"%s\"", group_name);
   ContainerImpl *r = root();
   assert (r); // we asserted anchored() earlier
-  return r->retrieve_widget_group (group_name, true);
+  return r->retrieve_widget_group (group_name, group, true);
 }
 
 void
@@ -1191,6 +1224,42 @@ WidgetImpl::expose (const Region &region) // widget relative
       Region r (clipped_allocation());
       r.intersect (region);
       expose_internal (r);
+    }
+}
+
+/// Signal emitted when a widget ancestry is added to or removed from a Window
+void
+WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  if (anchored())
+    leave_anchored();
+  anchored (old_toplevel == NULL);
+  if (anchored())
+    enter_anchored();
+}
+
+void
+WidgetImpl::enter_anchored ()
+{
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  if (sprouts)
+    for (const auto sprout : *sprouts)
+      {
+        WidgetGroup *wgroup = find_widget_group (sprout.group_name, sprout.group_type, true);
+        if (wgroup)
+          wgroup->add_widget (*this);
+        printerr ("ENTER: %s: %s\n", sprout.group_name, this->name());
+      }
+}
+
+void
+WidgetImpl::leave_anchored ()
+{
+  const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
+  for (auto *group : widget_groups)
+    {
+      group->remove_widget (*this);
+      printerr ("LEAVE: %s: %s\n", group->name(), name());
     }
 }
 
@@ -1433,6 +1502,30 @@ bool
 WidgetImpl::do_event (const Event &event)
 {
   return false;
+}
+
+String
+WidgetImpl::hsize_group () const
+{
+  return string_join (",", list_widget_groups (WIDGET_GROUP_HSIZE));
+}
+
+void
+WidgetImpl::hsize_group (const String &group_list)
+{
+  sync_widget_groups (group_list, WIDGET_GROUP_HSIZE);
+}
+
+String
+WidgetImpl::vsize_group () const
+{
+  return string_join (",", list_widget_groups (WIDGET_GROUP_VSIZE));
+}
+
+void
+WidgetImpl::vsize_group (const String &group_list)
+{
+  sync_widget_groups (group_list, WIDGET_GROUP_VSIZE);
 }
 
 static DataKey<String> widget_name_key;

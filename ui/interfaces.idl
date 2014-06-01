@@ -294,6 +294,8 @@ interface Widget {
   bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this widget and all its parents vertically"), "rw");
   bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the widget may be shrunken horizontally"), "rw");
   bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the widget may be shrunken vertically"), "rw");
+  String hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
+  String vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
   bool  visible   = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool  sensitive = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
   float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the widget"), "Prw", 0, 99999, 5);

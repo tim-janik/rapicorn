@@ -5,14 +5,14 @@ namespace Rapicorn {
 
 // == WidgetGroup ==
 WidgetGroup*
-WidgetGroup::create (const String &name)
+WidgetGroup::create (const String &name, WidgetGroupType type)
 {
   assert_return (name.empty() == false, NULL);
-  return new WidgetGroup (name);
+  return new WidgetGroup (name, type);
 }
 
-WidgetGroup::WidgetGroup (const String &name) :
-  name_ (name)
+WidgetGroup::WidgetGroup (const String &name, WidgetGroupType type) :
+  name_ (name), type_ (type)
 {}
 
 WidgetGroup::~WidgetGroup()
