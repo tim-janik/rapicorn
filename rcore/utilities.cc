@@ -370,7 +370,6 @@ process_handle ()
   return string_format ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
-/// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 
 /**

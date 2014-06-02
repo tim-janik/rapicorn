@@ -24,8 +24,11 @@ enum ModifierState {
   MOD_MASK      = 0x07ff,
 };
 
+/// Common key values, all starting with KEY_, see ui/keysymbols.hh.
 enum KeyValue {
+#ifndef  DOXYGEN
 #include <ui/keysymbols.hh>
+#endif // !DOXYGEN
 };
 
 enum ActivateKeyType {

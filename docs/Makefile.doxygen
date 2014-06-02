@@ -19,6 +19,8 @@ DOXYGEN_GRAPHICS	?= YES
 DOXYGEN_PROJECT_LINK    ?=
 # Tagfile references for Doxygen
 DOXYGEN_TAGFILES        ?=
+# Extra CSS style sheet for Doxygen output
+DOXYGEN_STYLESHEET	?=
 
 # == doxygen-full ==
 # build doxygen-html/ from scratch ==
@@ -79,7 +81,7 @@ DOXYGEN_CHANGELOG_SED = \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 DOXYGEN_NEWS_SED = \
 		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^\w+.*\b[0-9]/s/^/@section release /' \
+		-e '/^\w+.*\b[0-9]+\./{ h; s/:.*//; s/[^a-zA-Z0-9]/_/g; G; s/\n/ /; s/^/@section /  }' \
 		-e 's/^([ \t]*)([+*-])[ \t]+(\w+)/\1- \3/' \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 
@@ -103,6 +105,9 @@ doxygen-html: doxygen.cfg doxygen-srctree
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "PROJECT_NUMBER   = $(DOXYGEN_PROJECT_NUMBER)" \
 	&& echo "DOT_MULTI_TARGETS = YES" \
+	&& (test -z "$(DOXYGEN_STYLESHEET)" || \
+	     echo "HTML_EXTRA_STYLESHEET = $(DOXYGEN_STYLESHEET)" && \
+	     cp $(DOXYGEN_STYLESHEET) doxygen-tmp/ ) \
 	&& for tagfile in $(DOXYGEN_TAGFILES) ; do \
 	     echo "TAGFILES += $$tagfile" ; done \
 	) > doxygen-tmp/Doxyfile.tmp \

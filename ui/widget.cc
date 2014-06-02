@@ -99,20 +99,21 @@ WidgetImpl::ancestry_impressed () const
   return false;
 }
 
+/// Return wether a widget is visible() and not offscreen, see ContainerImpl::change_unviewable()
 bool
 WidgetImpl::viewable() const
 {
   return visible() && !test_any_flag (UNVIEWABLE | PARENT_UNVIEWABLE);
 }
 
-/// Return wether a widget can process key events.
+/// Return wether a widget is sensitive() and can process key events.
 bool
 WidgetImpl::key_sensitive () const
 {
   return sensitive() && ancestry_visible();
 }
 
-/// Return wether a widget can process pointer events.
+/// Return wether a widget is sensitive() and can process pointer events.
 bool
 WidgetImpl::pointer_sensitive () const
 {
@@ -607,6 +608,7 @@ static class OvrKey : public DataKey<Requisition> {
   }
 } override_requisition;
 
+/// Get overriding widget size requisition width (-1 if unset).
 double
 WidgetImpl::width () const
 {
@@ -614,6 +616,7 @@ WidgetImpl::width () const
   return ovr.width >= 0 ? ovr.width : -1;
 }
 
+/// Override widget size requisition width (use -1 to unset).
 void
 WidgetImpl::width (double w)
 {
@@ -623,6 +626,7 @@ WidgetImpl::width (double w)
   invalidate_size();
 }
 
+/// Get overriding widget size requisition height (-1 if unset).
 double
 WidgetImpl::height () const
 {
@@ -630,6 +634,7 @@ WidgetImpl::height () const
   return ovr.height >= 0 ? ovr.height : -1;
 }
 
+/// Override widget size requisition height (use -1 to unset).
 void
 WidgetImpl::height (double h)
 {
@@ -1040,6 +1045,7 @@ WidgetImpl::invalidate (uint64 mask)
     }
 }
 
+/// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
 Requisition
 WidgetImpl::inner_size_request()
 {
@@ -1070,6 +1076,19 @@ WidgetImpl::inner_size_request()
   return visible() ? requisition_ : Requisition();
 }
 
+/** Get the size requisition of a widget.
+ *
+ * Determines the size requisition of a widget if its not already calculated.
+ * Changing widget properties like fonts or children of a container may cause
+ * size requisition to be recalculated.
+ * The widget size requisition is determined by the actual widget type or
+ * possibly the container type which takes children into account, see size_request().
+ * Overridden width() and height() are taken into account if specified.
+ * The resulting size can also be affected by size group settings if this widget
+ * has been included into any.
+ * The #INVALID_REQUISITION flag is unset after this method has been called.
+ * @returns The size requested by this widget for layouting.
+ */
 Requisition
 WidgetImpl::requisition ()
 {
@@ -1100,6 +1119,12 @@ WidgetImpl::expose_internal (const Region &region)
     }
 }
 
+/** Invalidate drawing contents of a widget
+ *
+ * Cause the given @a region of @a this widget to be rerendered.
+ * The region is constrained to the clipped_allocation().
+ * This method sets the #INVALID_CONTENT flag.
+ */
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
@@ -1422,12 +1447,14 @@ class ClipAreaDataKey : public DataKey<Allocation*> {
 };
 static ClipAreaDataKey clip_area_key;
 
+/// Return clipping area for rendering and event processing if one is set.
 const Allocation*
 WidgetImpl::clip_area () const
 {
   return get_data (&clip_area_key);
 }
 
+/// Assign clipping area for rendering and event processing.
 void
 WidgetImpl::clip_area (const Allocation *clip)
 {
@@ -1437,6 +1464,11 @@ WidgetImpl::clip_area (const Allocation *clip)
     set_data (&clip_area_key, new Rect (*clip));
 }
 
+/** Return widget allocation area accounting for clip_area().
+ *
+ * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
+ * The unclipped size allocation is just used by @a this widget internally for layouting pusposes, see also set_allocation().
+ */
 Allocation
 WidgetImpl::clipped_allocation () const
 {
@@ -1470,6 +1502,15 @@ WidgetImpl::tune_requisition (Requisition requisition)
   return false;
 }
 
+/** Set size allocation of a widget.
+ *
+ * Allocate the given @a area to @a this widget.
+ * The size allocation is used by the widget for layouting of its contents.
+ * That is, its rendering contents and children of a container will be constrained to the allocation() area.
+ * The optional @a clip area provided constrains which part of the allocation will be rendered
+ * and is sensitive for input event processing, see clipped_allocation().
+ * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
+ */
 void
 WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
@@ -1547,6 +1588,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     }
 }
 
+/// Render widget's clipped allication area contents into the rendering context provided.
 void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
@@ -1628,6 +1670,7 @@ WidgetImpl::RenderContext::~RenderContext()
     }
 }
 
+/// Return wether a widget is viewable() and has a non-0 clipped allocation
 bool
 WidgetImpl::drawable () const
 {
