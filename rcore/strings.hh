@@ -102,7 +102,7 @@ String  string_substitute_char                           (const String &input, c
 void    string_vector_lstrip       (StringVector &svector);
 void    string_vector_rstrip       (StringVector &svector);
 void    string_vector_strip        (StringVector &svector);
-void    string_vector_strip_empty  (StringVector &svector);
+void    string_vector_erase_empty  (StringVector &svector);
 String  string_vector_find_value   (const StringVector &svector, const String &key, const String &fallback);
 StringVector cstrings_to_vector    (const char*, ...) RAPICORN_SENTINEL;
 void         memset4		   (uint32 *mem, uint32 filler, uint length);

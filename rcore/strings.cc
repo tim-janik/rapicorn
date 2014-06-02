@@ -300,7 +300,7 @@ string_split_any (const String &string, const String &splitchars)
 
 /// Remove empty elements from a string vector.
 void
-string_vector_strip_empty (StringVector &svector)
+string_vector_erase_empty (StringVector &svector)
 {
   for (size_t i = svector.size(); i; i--)
     {

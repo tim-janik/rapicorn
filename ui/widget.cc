@@ -1053,7 +1053,7 @@ WidgetImpl::sync_widget_groups (const String &group_list, WidgetGroupType group_
 {
   StringVector add = string_split_any (group_list, ",");
   string_vector_strip (add);
-  string_vector_strip_empty (add);
+  string_vector_erase_empty (add);
   std::stable_sort (add.begin(), add.end());
   StringVector del = list_widget_groups (group_type);
   std::stable_sort (del.begin(), del.end());
