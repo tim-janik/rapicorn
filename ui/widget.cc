@@ -479,7 +479,7 @@ WidgetImpl::finalize()
 
 WidgetImpl::~WidgetImpl()
 {
-  SizeGroup::delete_widget (*this);
+  WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
   if (heritage_)
@@ -1132,7 +1132,7 @@ WidgetImpl::invalidate (uint64 mask)
       (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
       invalidate_parent(); // need new size-request from parent
-      SizeGroup::invalidate_widget (*this);
+      WidgetGroup::invalidate_widget (*this);
     }
 }
 
