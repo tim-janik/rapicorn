@@ -259,7 +259,7 @@ public:
                                                      const WidgetImpl   &target_widget) const;
   bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
-  Requisition                requisition        ();                             // effective size requisition
+  virtual Requisition        requisition        ();                              // effective size requisition
   void                       set_allocation     (const Allocation &area,
                                                  const Allocation *clip = NULL); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
@@ -335,7 +335,7 @@ private:
   void               enter_anchored  ();
   void               leave_anchored  ();
 public:
-  virtual bool       match_selector        (const String &selector);
+  virtual bool         match_selector        (const String &selector);
   virtual WidgetIface* query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
   virtual WidgetIface* query_selector_unique (const String &selector);

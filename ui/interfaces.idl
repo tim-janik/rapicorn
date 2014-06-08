@@ -280,7 +280,8 @@ sequence WidgetSeq { Widget  widgets; };
  * See also the corresponding implementation class WidgetImpl.
  */
 interface Widget {
-  bool          match_selector          (String selector) = 0; //< Check if selector matches this widget.
+  Requisition     requisition             () = 0;                //< Get the current effective size requisition
+  bool            match_selector          (String selector) = 0; //< Check if selector matches this widget.
   Widget          query_selector          (String selector) = 0; //< Returns first selector match.
   WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
   Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
