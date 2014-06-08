@@ -34,16 +34,13 @@ class SizeGroup : public virtual WidgetGroup {
   Requisition         req_;
   uint                active_ : 1;
   uint                all_dirty_ : 1;        // need resize
-  void                update            ();
-  void                invalidate_sizes  ();
+  const Requisition&  group_requisition         ();
+  void                invalidate_sizes          ();
   explicit            SizeGroup                 (const String &name, WidgetGroupType type);
+  static Requisition  widget_requisition        (WidgetImpl &widget);   // called by WidgetImpl
 protected:
-  void                size_request_widgets      (const vector<WidgetImpl*> widgets,
-                                                 Requisition        &max_requisition);
-  virtual Requisition group_requisition         ()                      { update(); return req_; }
   virtual void        widget_transit            (WidgetImpl &widget);
   virtual void        widget_invalidated        (WidgetImpl &widget);
-  static Requisition  widget_requisition        (WidgetImpl &widget);
 public:
   virtual bool        active                    () const        { return active_; }
   virtual void        active                    (bool isactive) { active_ = isactive; all_dirty_ = false; invalidate_sizes(); }

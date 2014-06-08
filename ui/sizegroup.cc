@@ -34,21 +34,21 @@ WidgetGroup::list_groups (WidgetImpl &widget)
 void
 WidgetGroup::add_widget (WidgetImpl &widget)
 {
-  ref (this);
+  ref (this); // ref_pair_1
   // add widget to group's list
   widgets_.push_back (&widget);
   // add group to widget's list
   GroupVector wgv = widget.get_data (&widget_group_key);
   wgv.push_back (this);
   widget.set_data (&widget_group_key, wgv);
-  // FIXME: invalidate size_group
+  widget_transit (widget);
 }
 
 void
 WidgetGroup::remove_widget (WidgetImpl &widget)
 {
-  ref (this);
-  // FIXME: invalidate size_group
+  ref (this); // ref_pair_2
+  widget_transit (widget);
   // remove widget from group's list
   bool found_one = false;
   for (uint i = 0; i < widgets_.size(); i++)
@@ -56,13 +56,13 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
       {
         widgets_.erase (widgets_.begin() + i);
         found_one = true;
-        unref (this);
+        unref (this); // ref_pair_1
         break;
       }
   if (!found_one)
     {
       critical ("attempt to remove unknown widget (%s) from group: %p", widget.name().c_str(), this);
-      unref (this);
+      unref (this); // ref_pair_2
       return;
     }
   // remove group from widget's list */
@@ -81,7 +81,7 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
     widget.delete_data (&widget_group_key);
   else
     widget.set_data (&widget_group_key, wgv);
-  unref (this);
+  unref (this); // ref_pair_2
 }
 
 void
@@ -109,53 +109,49 @@ SizeGroup::SizeGroup (const String &name, WidgetGroupType type) :
 {}
 
 void
-SizeGroup::widget_transit (WidgetImpl &widget)
-{
-  if (active())
-    {
-      invalidate_sizes();
-      widget.invalidate_size();
-    }
-}
-
-void
 SizeGroup::widget_invalidated (WidgetImpl &widget)
 {
-  if (active())
-    invalidate_sizes();
+  invalidate_sizes();
 }
 
 void
-SizeGroup::update()
+SizeGroup::widget_transit (WidgetImpl &widget)
 {
-  while (all_dirty_)
-    {
-      all_dirty_ = false;
-      req_ = Requisition();
-      size_request_widgets (widgets_, req_);
-    }
+  invalidate_sizes();
+  if (active())
+    widget.invalidate_size();
 }
 
 void
 SizeGroup::invalidate_sizes()
 {
-  if (all_dirty_)
-    return;
-  all_dirty_ = true;
-  for (size_t i = 0; i < widgets_.size(); i++)
-    widgets_[i]->invalidate_size();
+  if (active())
+    {
+      if (all_dirty_)
+        return;
+      all_dirty_ = true;
+      for (size_t i = 0; i < widgets_.size(); i++)
+        widgets_[i]->invalidate_size();
+    }
 }
 
-void
-SizeGroup::size_request_widgets (const vector<WidgetImpl*> widgets, Requisition &max_requisition)
+const Requisition&
+SizeGroup::group_requisition ()
 {
-  for (size_t i = 0; i < widgets.size(); i++)
+  while (all_dirty_)
     {
-      WidgetImpl &widget = *widgets[i];
-      const Requisition ireq = widget.inner_size_request();
-      max_requisition.width = MAX (max_requisition.width, ireq.width);
-      max_requisition.height = MAX (max_requisition.height, ireq.height);
+      all_dirty_ = false;
+      req_ = Requisition();
+      // beware, widgets_ vector _could_ change during loop
+      for (size_t i = 0; i < widgets_.size(); i++)
+        {
+          WidgetImpl &widget = *widgets_[i];
+          const Requisition ireq = widget.inner_size_request();
+          req_.width = MAX (req_.width, ireq.width);
+          req_.height = MAX (req_.height, ireq.height);
+        }
     }
+  return req_;
 }
 
 Requisition
@@ -170,9 +166,9 @@ SizeGroup::widget_requisition (WidgetImpl &widget)
         if (wgl[i]->type() == WIDGET_GROUP_HSIZE || wgl[i]->type() == WIDGET_GROUP_VSIZE)
           {
             SizeGroup *sg = dynamic_cast<SizeGroup*> (wgl[i]);
-            Requisition gr = sg->group_requisition();
             if (!sg->active())
               continue;
+            Requisition gr = sg->group_requisition();
             if (sg->type() == WIDGET_GROUP_HSIZE)
               zreq.width = MAX (zreq.width, gr.width);
             if (sg->type() == WIDGET_GROUP_VSIZE)
