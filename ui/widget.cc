@@ -1248,7 +1248,6 @@ WidgetImpl::enter_anchored ()
         WidgetGroup *wgroup = find_widget_group (sprout.group_name, sprout.group_type, true);
         if (wgroup)
           wgroup->add_widget (*this);
-        printerr ("ENTER: %s: %s\n", sprout.group_name, this->name());
       }
 }
 
@@ -1256,11 +1255,8 @@ void
 WidgetImpl::leave_anchored ()
 {
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
-  for (auto *group : widget_groups)
-    {
-      group->remove_widget (*this);
-      printerr ("LEAVE: %s: %s\n", group->name(), name());
-    }
+  for (auto *wgroup : widget_groups)
+    wgroup->remove_widget (*this);
 }
 
 void
