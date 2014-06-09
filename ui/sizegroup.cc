@@ -146,9 +146,12 @@ SizeGroup::group_requisition ()
       for (size_t i = 0; i < widgets_.size(); i++)
         {
           WidgetImpl &widget = *widgets_[i];
-          const Requisition ireq = widget.inner_size_request();
-          req_.width = MAX (req_.width, ireq.width);
-          req_.height = MAX (req_.height, ireq.height);
+          if (widget.visible())
+            {
+              const Requisition ireq = widget.inner_size_request();
+              req_.width = MAX (req_.width, ireq.width);
+              req_.height = MAX (req_.height, ireq.height);
+            }
         }
     }
   return req_;
