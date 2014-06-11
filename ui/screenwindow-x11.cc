@@ -65,7 +65,7 @@ public:
   XIM                   input_method;
   XIMStyle              input_style;
   int8                  shared_mem_;
-  X11Widget*              x11id_get   (size_t xid);
+  X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
   Atom                  atom         (const String &text, bool force_create = true);
   String                atom         (Atom atom) const;
@@ -245,9 +245,8 @@ bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
   event_context_.synthesized = xevent.xany.send_event;
-  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), window_);
   const char ss = event_context_.synthesized ? 'S' : 's';
-  const char sf = !consumed ? ss : event_context_.synthesized ? 'F' : 'f';
+  bool consumed = false;
   switch (xevent.type)
     {
     case CreateNotify: {
@@ -369,7 +368,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
       char str[8];
       utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
       if (!consumed && // might have been processed by input context already
           (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
@@ -494,7 +493,9 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("Destr: %c=%u w=%u", ss, xev.serial, xev.window);
       consumed = true;
       break; }
-    default: ;
+    default:
+      EDEBUG ("What?: %c=%u w=%u type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.xany.type);
+      break;
     }
   return consumed;
 }
@@ -1053,8 +1054,11 @@ X11Context::process_x11()
   if (XPending (display))
     {
       XEvent xevent = { 0, };
-      XNextEvent (display, &xevent); // blocks if !XPending
-      bool consumed = filter_event (xevent);
+      XNextEvent (display, &xevent);    // blocks if !XPending
+      if (XFilterEvent (&xevent, None) ||
+          filter_event (xevent))
+        return;                         // lower level event handling
+      bool consumed = false;
       X11Widget *xwidget = x11id_get (xevent.xany.window);
       if (xwidget)
         {
