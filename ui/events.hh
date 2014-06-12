@@ -62,6 +62,7 @@ typedef enum {
   KEY_PRESS,
   KEY_CANCELED,
   KEY_RELEASE,
+  CONTENT_DATA,
   SCROLL_UP,          /* button4 */
   SCROLL_DOWN,        /* button5 */
   SCROLL_LEFT,        /* button6 */
@@ -108,6 +109,14 @@ public:
   uint32          key;  /* of type KeyValue */
   String          utf8input;
 };
+class EventData : public Event {
+protected:
+  explicit        EventData (EventType, const EventContext&, const String &, const String &);
+public:
+  virtual        ~EventData();
+  String          data_type;
+  String          data;
+};
 struct EventWinSize : public Event {
 protected:
   explicit        EventWinSize (EventType, const EventContext&, double, double, bool);
@@ -144,6 +153,10 @@ EventKey*       create_event_key          (EventType           type,
                                            const EventContext &econtext,
                                            uint32              key,
                                            const String       &utf8input);
+EventData*      create_event_data         (EventType           type,
+                                           const EventContext &econtext,
+                                           const String       &data_type,
+                                           const String       &data);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

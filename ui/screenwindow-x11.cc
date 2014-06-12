@@ -383,6 +383,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);     
       if (keysym || !utf8data.empty())
         enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
+      // enqueue_event (create_event_data (CONTENT_DATA, event_context_, "text/plain;charset=utf-8", utf8data));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
