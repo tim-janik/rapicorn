@@ -377,12 +377,21 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         {
           char buffer[512];
           n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
-          buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
-          for (int i = 0; buffer[i]; i++) // add latin-1 characters
+          if (n > 0)
             {
-              char utf[8];
-              const int l = utf8_from_unichar (buffer[i], utf);
-              utf8data.append (utf, l);
+              /* XLookupString(3) is documented to return Latin-1 characters, but modern implementations
+               * seem to work locale specific. So we may or may not need to convert to UTF-8. Yay!
+               */
+              if (!utf8_is_locale_charset() || !utf8_validate (String (buffer, n)))
+                for (int i = 0; i < n; i++)
+                  {
+                    const uint8 l1char = buffer[i];                   // Latin-1 character
+                    char utf[8];
+                    const int l = utf8_from_unichar (l1char, utf);    // convert to UTF-8
+                    utf8data.append (utf, l);
+                  }
+              else
+                utf8data.append (buffer, n);
             }
         }
       EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
