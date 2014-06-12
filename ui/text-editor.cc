@@ -143,7 +143,7 @@ private:
   virtual bool
   handle_event (const Event &event)
   {
-    bool handled = false;
+    bool handled = false, ignore = false;
     switch (event.type)
       {
         const EventKey *kevent;
@@ -153,19 +153,22 @@ private:
           {
           case KEY_Home:    case KEY_KP_Home:           handled = move_cursor (WARP_HOME);      break;
           case KEY_End:     case KEY_KP_End:            handled = move_cursor (WARP_END);       break;
-          case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR);      break;
-          case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR);      break;
+          case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR);      break; // FIXME: CTRL moves words
+          case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR);      break; // FIXME: CTRL moves words
           case KEY_BackSpace:                           handled = delete_backward();            break;
           case KEY_Delete:  case KEY_KP_Delete:         handled = delete_foreward();            break;
           default:
-            if (!key_value_is_modifier (kevent->key))
-              handled = insert_literally (key_value_to_unichar (kevent->key));
+            if (kevent->key_state & MOD_CONTROL &&      // preserve Ctrl + FocusKey for navigation
+                key_value_is_focus_dir (kevent->key))
+              {
+                handled = false;
+                ignore = true;
+              }
+            else
+              handled = insert_literally (kevent->utf8input);
             break;
           }
-        if (!handled && kevent->key_state & MOD_CONTROL && key_value_is_focus_dir (kevent->key) &&
-            kevent->key != KEY_Left && kevent->key != KEY_Right) // keep Ctrl+Left & Ctrl+Right reserved
-          handled = false; /* pass on Ctrl+FocusKey for focus handling */
-        else if (!handled && !key_value_is_modifier (kevent->key))
+        if (!handled && !ignore && !key_value_is_modifier (kevent->key))
           {
             notify_key_error();
             handled = true;
@@ -230,16 +233,22 @@ private:
     return false;
   }
   bool
-  insert_literally (unichar uc)
+  insert_literally (const String &utf8text)
   {
+    if (utf8text.size() == 1 &&
+        (utf8text[0] == '\b' || // Backspace
+         utf8text[0] == '\n' || // Newline
+         utf8text[0] == '\r' || // Carriage Return
+         utf8text[0] == 0x7f || // Delete
+         0))
+      return false;     // ignore literal inputs from "control" keys
     Client *client = get_client();
-    if (client && uc)
+    if (client && !utf8text.empty())
       {
         client->mark (cursor_);
-        char str[8];
-        utf8_from_unichar (uc, str);
-        client->mark_insert (str);
-        move_cursor (NEXT_CHAR);
+        client->mark_insert (utf8text);
+        cursor_ = client->mark();
+        client->mark2cursor();
         changed();
         return true;
       }

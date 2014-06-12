@@ -106,7 +106,7 @@ public:
   virtual        ~EventKey();
   /* key press/release */
   uint32          key;  /* of type KeyValue */
-  String          key_name;
+  String          utf8input;
 };
 struct EventWinSize : public Event {
 protected:
@@ -143,7 +143,7 @@ EventFocus*     create_event_focus        (EventType           type,
 EventKey*       create_event_key          (EventType           type,
                                            const EventContext &econtext,
                                            uint32              key,
-                                           const char         *name);
+                                           const String       &utf8input);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

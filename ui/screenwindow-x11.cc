@@ -355,24 +355,34 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "DN" : "UP";
       KeySym keysym = 0;
-      char buffer[512]; // dummy
       int n = 0;
-      Status ximstatus = XBufferOverflow;
+      String utf8data;
       if (input_context_ && xevent.type == KeyPress)
-        n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
-      if (ximstatus != XLookupKeySym && ximstatus != XLookupBoth)
         {
-          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
-          ximstatus = XLookupKeySym;
+          Status ximstatus = XBufferOverflow;
+          char buffer[512];
+          n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+          if (n > 0 && (ximstatus == XLookupChars || ximstatus == XLookupBoth))
+            utf8data.assign (buffer, n);
+          if (not (ximstatus == XLookupBoth || ximstatus == XLookupKeySym))
+            keysym = 0;
         }
-      buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
-      char str[8];
-      utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
-      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
-      if (!consumed && // might have been processed by input context already
-          (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
-        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), str));
+      else if (xevent.type == KeyPress) // !input_context_
+        {
+          char buffer[512];
+          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
+          buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
+          for (int i = 0; buffer[i]; i++) // add latin-1 characters
+            {
+              char utf[8];
+              const int l = utf8_from_unichar (buffer[i], utf);
+              utf8data.append (utf, l);
+            }
+        }
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), key_value_to_unichar (keysym), utf8data);
+      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);     
+      if (keysym || !utf8data.empty())
+        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
