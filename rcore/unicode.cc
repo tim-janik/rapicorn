@@ -310,3 +310,42 @@ utf8_validate (const String   &strng,
 }
 
 } // Rapicorn
+
+#include <langinfo.h> // avoid conflicts with the use of CURRENCY_SYMBOL above
+
+namespace Rapicorn {
+
+/**
+ * Check wether the current locale uses an UTF-8 charset.
+ * On most systems nl_langinfo(3) provides the needed codeset information.
+ * Otherwise, the charset is extracted from LC_ALL, LC_CTYPE, or LANG.
+ * Note that in the latter case per-thread locales may be misidentified.
+ */
+bool
+utf8_is_locale_charset ()
+{
+  bool isutf8;
+  const char *codeset = nl_langinfo (CODESET);
+  if (codeset)
+    isutf8 = strcasecmp ("UTF-8", codeset) == 0;
+  else
+    {
+      // locale identifiers have this format: [language[_territory][.codeset][@modifier]]
+      const char *lid = getenv ("LC_ALL");
+      if (!lid || !lid[0])
+        lid = getenv ("LC_CTYPE");
+      if (!lid || !lid[0])
+        lid = getenv ("LANG");
+      if (!lid)
+        lid = "";
+      size_t start = 0, end = strlen (lid);
+      const char *sep = strchr (lid + start, '.');
+      start = sep ? sep - lid + 1 : start;
+      sep = strchr (lid + start, '@');
+      end = sep ? sep - lid : end;
+      isutf8 = end - start == 5 && strncasecmp ("UTF-8", lid + start, 5) == 0;
+    }
+  return isutf8;
+}
+
+} // Rapicorn
