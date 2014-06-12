@@ -362,6 +362,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           Status ximstatus = XBufferOverflow;
           char buffer[512];
           n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+          if (ximstatus == XBufferOverflow)
+            {
+              Xutf8ResetIC (input_context_);
+              n = 0;
+              keysym = 0;
+            }
           if (n > 0 && (ximstatus == XLookupChars || ximstatus == XLookupBoth))
             utf8data.assign (buffer, n);
           if (not (ximstatus == XLookupBoth || ximstatus == XLookupKeySym))
