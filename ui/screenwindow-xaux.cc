@@ -198,10 +198,10 @@ x11_get_property_data (Display *display, Window window, Atom property_atom, Atom
   x11_trap_errors (&dummy);
   int format_returned = 0;
   Atom type_returned = 0;
-  unsigned long nwidgets_return = 0, bytes_after_return = 0;
+  unsigned long nitems_return = 0, bytes_after_return = 0;
   uint8 *prop_data = NULL;
   int abort = XGetWindowProperty (display, window, property_atom, 0, 8 * 1024, False,
-                                  AnyPropertyType, &type_returned, &format_returned, &nwidgets_return,
+                                  AnyPropertyType, &type_returned, &format_returned, &nitems_return,
                                   &bytes_after_return, &prop_data) != Success;
   if (x11_untrap_errors() || type_returned == None)
     abort++;
@@ -216,24 +216,24 @@ x11_get_property_data (Display *display, Window window, Atom property_atom, Atom
       abort++;
     }
   vector<Data> datav;
-  if (!abort && prop_data && nwidgets_return && format_returned)
+  if (!abort && prop_data && nitems_return && format_returned)
     {
       if (format_returned == 32)
         {
           const unsigned long *pulong = (const unsigned long*) prop_data;
-          for (uint i = 0; i < nwidgets_return; i++)
+          for (uint i = 0; i < nitems_return; i++)
             datav.push_back (pulong[i]);
         }
       else if (format_returned == 16)
         {
           const uint16 *puint16 = (const uint16*) prop_data;
-          for (uint i = 0; i < nwidgets_return; i++)
+          for (uint i = 0; i < nitems_return; i++)
             datav.push_back (puint16[i]);
         }
       else if (format_returned == 8)
         {
           const uint8 *puint8 = (const uint8*) prop_data;
-          for (uint i = 0; i < nwidgets_return; i++)
+          for (uint i = 0; i < nitems_return; i++)
             datav.push_back (puint8[i]);
         }
       else
