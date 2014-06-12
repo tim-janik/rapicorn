@@ -385,8 +385,13 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               utf8data.append (utf, l);
             }
         }
-      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), key_value_to_unichar (keysym), utf8data);
-      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);     
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
+      if (xev.keycode == 0 || xev.serial == 0)
+        ; // avid busting event_context_ from synthesized event
+      else
+        {
+          event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
+        }
       if (keysym || !utf8data.empty())
         enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
       // enqueue_event (create_event_data (CONTENT_DATA, event_context_, "text/plain;charset=utf-8", utf8data));
