@@ -44,9 +44,11 @@ public:
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
   virtual void          remove_grab                             (WidgetImpl &child);
   void                  remove_grab                             (WidgetImpl *child);
-  virtual WidgetImpl*     get_grab                                (bool                   *unconfined = NULL);
+  virtual WidgetImpl*   get_grab                                (bool                   *unconfined = NULL);
   // main loop
   virtual EventLoop*    get_loop                                ();
+  // content handling
+  bool                  request_selection                       (uint64 nonce, const String &data_type);
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */

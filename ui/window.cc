@@ -1092,6 +1092,19 @@ WindowImpl::destroy_screen_window ()
   unref (this);
 }
 
+bool
+WindowImpl::request_selection (uint64 nonce, const String &data_type)
+{
+  // FIXME: this should be per-widget API
+  if (screen_window_)
+    {
+      screen_window_->request_selection (nonce, data_type);
+      return true;
+    }
+  else
+    return false;
+}
+
 void
 WindowImpl::show ()
 {
