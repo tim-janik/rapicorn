@@ -924,6 +924,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
+    case ScreenCommand::CONTENT:   break;  // FIXME
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
     case ScreenCommand::URESIZE:   break;  // FIXME

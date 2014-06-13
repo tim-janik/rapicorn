@@ -154,6 +154,12 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
+ScreenWindow::request_selection (uint64 nonce, const String &data_type)
+{
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 1, nonce, data_type));
+}
+
+void
 ScreenWindow::destroy ()
 {
   queue_command (new ScreenCommand (ScreenCommand::DESTROY, this));
@@ -248,6 +254,13 @@ ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int
   croot_y = root_y;
 }
 
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, uint64 _source, uint64 _nonce, String _data_type) :
+  type (ctype), screen_window (window), source (_source), nonce (_nonce), data_type (NULL)
+{
+  assert (type == CONTENT);
+  data_type = new String (_data_type);
+}
+
 ScreenCommand::ScreenCommand (Type type, ScreenWindow *window, const String &result) :
   type (type), screen_window (window), config (NULL), setup (NULL)
 {
@@ -274,6 +287,11 @@ ScreenCommand::~ScreenCommand()
     case UMOVE: case URESIZE:
       button = root_x = root_y = 0;
       break;
+    case CONTENT:
+      nonce = 0;
+      source = 0;
+      delete data_type;
+      break;
     case BEEP: case SHOW: case PRESENT: case DESTROY: case SHUTDOWN:
       assert (!config && !setup);
       break;
@@ -295,6 +313,7 @@ ScreenCommand::reply_type (Type type)
     case CREATE: case SHUTDOWN: return true; // has reply
     case CONFIGURE: case BLIT:  return false;
     case UMOVE: case URESIZE:   return false;
+    case CONTENT:               return false;
     case BEEP: case SHOW:       return false;
     case PRESENT: case DESTROY: return false;
     case OK: case ERROR:        return true; // is reply
