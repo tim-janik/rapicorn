@@ -111,11 +111,12 @@ public:
 };
 class EventData : public Event {
 protected:
-  explicit        EventData (EventType, const EventContext&, const String &, const String &);
+  explicit        EventData (EventType, const EventContext&, const String &, const String &, uint64);
 public:
   virtual        ~EventData();
   String          data_type;
   String          data;
+  uint64          nonce;
 };
 struct EventWinSize : public Event {
 protected:
@@ -156,7 +157,8 @@ EventKey*       create_event_key          (EventType           type,
 EventData*      create_event_data         (EventType           type,
                                            const EventContext &econtext,
                                            const String       &data_type,
-                                           const String       &data);
+                                           const String       &data,
+                                           uint64              nonce);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

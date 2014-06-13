@@ -119,7 +119,7 @@ create_event_transformed (const Event  &source_event,
     case CONTENT_DATA:
       {
         const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
-        return create_event_data (source_event.type, dcontext, data_event->data_type, data_event->data);
+        return create_event_data (source_event.type, dcontext, data_event->data_type, data_event->data, data_event->nonce);
       }
     case SCROLL_UP:
     case SCROLL_DOWN:
@@ -238,27 +238,30 @@ EventData::~EventData()
 EventData::EventData (EventType           etype,
                       const EventContext &econtext,
                       const String       &_data_type,
-                      const String       &_data) :
+                      const String       &_data,
+                      uint64              _nonce) :
   Event (etype, econtext),
-  data_type (_data_type), data (_data)
+  data_type (_data_type), data (_data), nonce (_nonce)
 {}
 
 EventData*
 create_event_data (EventType           type,
                    const EventContext &econtext,
                    const String       &data_type,
-                   const String       &data)
+                   const String       &data,
+                   uint64              nonce)
 {
   struct EventDataImpl : public EventData {
     EventDataImpl (EventType           etype,
                    const EventContext &econtext,
                    const String       &_data_type,
-                   const String       &_data) :
-      EventData (etype, econtext, _data_type, _data)
+                   const String       &_data,
+                   uint64              _nonce) :
+      EventData (etype, econtext, _data_type, _data, _nonce)
     {}
   };
   assert (type == CONTENT_DATA);
-  EventData *devent = new EventDataImpl (type, econtext, data_type, data);
+  EventData *devent = new EventDataImpl (type, econtext, data_type, data, nonce);
   Event &test = *devent;
   assert (dynamic_cast<const EventData*> (&test) != NULL);
   return devent;
