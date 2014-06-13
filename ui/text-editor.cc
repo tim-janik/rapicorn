@@ -2,6 +2,7 @@
 #include "text-editor.hh"
 #include "factory.hh"
 #include "container.hh"
+#include "window.hh" // FIXME: unneeded
 
 namespace Rapicorn {
 namespace Text {
@@ -146,8 +147,10 @@ private:
     bool handled = false, ignore = false;
     switch (event.type)
       {
+        Client *client;
         const EventKey *kevent;
         const EventData *devent;
+        const EventButton *bevent;
       case KEY_PRESS:
         kevent = dynamic_cast<const EventKey*> (&event);
         switch (kevent->key)
@@ -184,24 +187,26 @@ private:
           handled = insert_literally (devent->data);
         break;
       case BUTTON_PRESS:
+        bevent = dynamic_cast<const EventButton*> (&event);
+        client = get_client();
         grab_focus();
-        {
-          Client *client = get_client();
-          if (client)
-            {
-              const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
-              int o = client->mark();
-              bool moved = client->mark_to_coord (bevent->x, bevent->y);
-              int m = client->mark();
-              if (o != m)
-                {
-                  cursor_ = m;
-                  client->mark2cursor();
-                  changed();
-                }
-              (void) moved;
-            }
-        }
+        if (client && bevent->button == 1)
+          {
+            int o = client->mark();
+            bool moved = client->mark_to_coord (bevent->x, bevent->y);
+            int m = client->mark();
+            if (o != m)
+              {
+                cursor_ = m;
+                client->mark2cursor();
+                changed();
+              }
+            (void) moved;
+          }
+        else if (bevent->button == 2)
+          {
+            get_window()->request_selection (77, "text/plain;charset=utf-8"); // FIXME: should operate on viewport
+          }
         handled = true;
         break;
       default: ;
