@@ -357,7 +357,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       KeySym keysym = 0;
       int n = 0;
       String utf8data;
-      if (input_context_ && xevent.type == KeyPress)
+      if (input_context_ && xevent.type == KeyPress) // Xutf8LookupString is undefined for KeyRelease
         {
           Status ximstatus = XBufferOverflow;
           char buffer[512];
@@ -373,11 +373,11 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           if (not (ximstatus == XLookupBoth || ximstatus == XLookupKeySym))
             keysym = 0;
         }
-      else if (xevent.type == KeyPress) // !input_context_
+      else // !input_context_
         {
           char buffer[512];
           n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
-          if (n > 0)
+          if (n > 0 && xevent.type == KeyPress)
             {
               /* XLookupString(3) is documented to return Latin-1 characters, but modern implementations
                * seem to work locale specific. So we may or may not need to convert to UTF-8. Yay!
@@ -393,6 +393,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               else
                 utf8data.append (buffer, n);
             }
+          // utf8data is empty for KeyRelease, but we try to fill at least keysym
         }
       EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
       if (xev.keycode == 0 || xev.serial == 0)
