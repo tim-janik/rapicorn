@@ -580,13 +580,13 @@ ScreenWindowX11::force_update (Window window)
       state_.visible_alias = x11_get_string_property (x11context.display, window_, x11context.atom (aname));
     else if (aname == "WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data32 (x11context.display, window_, x11context.atom (aname));
         if (datav.size())
           state_.window_flags = Flags ((state_.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
       }
     else if (aname == "_NET_WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data32 (x11context.display, window_, x11context.atom (aname));
         uint32 f = 0;
         for (size_t i = 0; i < datav.size(); i++)
           if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
