@@ -183,8 +183,10 @@ private:
         break;
       case CONTENT_DATA:
         devent = dynamic_cast<const EventData*> (&event);
-        if (devent->data_type == "text/plain;charset=utf-8")
-          handled = insert_literally (devent->data);
+        if (devent->nonce == 77 && devent->data_type == "UTF8_STRING") // "text/plain;charset=utf-8"
+          {
+            handled = insert_literally (devent->data);
+          }
         break;
       case BUTTON_PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
