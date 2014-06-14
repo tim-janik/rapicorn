@@ -201,7 +201,8 @@ struct RawData {
 };
 
 static bool
-x11_get_property_data (Display *display, Window window, Atom property_atom, RawData &raw, int format_required = 0)
+x11_get_property_data (Display *display, Window window, Atom property_atom,
+                       RawData &raw, int format_required, bool get_and_delete = False)
 {
   XErrorEvent dummy = { 0, };
   x11_trap_errors (&dummy);
@@ -209,9 +210,9 @@ x11_get_property_data (Display *display, Window window, Atom property_atom, RawD
   unsigned long nitems_return = 0, bytes_after_return = 0;
   uint8 *prop_data = NULL;
   raw.format_returned = 0;
-  int abort = XGetWindowProperty (display, window, property_atom, 0, 8 * 1024, False,
-                                  AnyPropertyType, &type_returned, &raw.format_returned, &nitems_return,
-                                  &bytes_after_return, &prop_data) != Success;
+  int abort = XGetWindowProperty (display, window, property_atom, 0, 1073741823 /* fit into 2^32/4 */,
+                                  get_and_delete, AnyPropertyType, &type_returned, &raw.format_returned,
+                                  &nitems_return, &bytes_after_return, &prop_data) != Success;
   if (x11_untrap_errors() || type_returned == None)
     abort++;
   if (!abort && bytes_after_return)
@@ -249,7 +250,8 @@ x11_get_property_data (Display *display, Window window, Atom property_atom, RawD
     }
   if (prop_data)
     XFree (prop_data);
-  raw.property_type = type_returned;
+  if (!abort)
+    raw.property_type = type_returned;
   return !abort;
 }
 
@@ -262,18 +264,16 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
 }
 
 static String
-x11_get_string_property (Display *display, Window window, Atom property_atom, Atom *property_type = NULL)
+x11_convert_string_property (Display *display, Atom property, Atom property_type, vector<uint8> &datav)
 {
-  RawData raw;
-  x11_get_property_data (display, window, property_atom, raw, 8);
   String rstring;
-  if (raw.data8.size() && (raw.property_type == XA_STRING || raw.property_type == x11_atom (display, "COMPOUND_TEXT")))
+  if (datav.size() && (property_type == XA_STRING || property_type == x11_atom (display, "COMPOUND_TEXT")))
     {
       XTextProperty xtp;
       xtp.format = 8;
-      xtp.nitems = raw.data8.size();
-      xtp.value = raw.data8.data();
-      xtp.encoding = raw.property_type;
+      xtp.nitems = datav.size();
+      xtp.value = datav.data();
+      xtp.encoding = property_type;
       char **tlist = NULL;
       int count = 0, res = Xutf8TextPropertyToTextList (display, &xtp, &tlist, &count);
       if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist && tlist[0])
@@ -281,13 +281,19 @@ x11_get_string_property (Display *display, Window window, Atom property_atom, At
       if (tlist)
         XFreeStringList (tlist);
     }
-  else if (raw.data8.size() && raw.property_type == x11_atom (display, "UTF8_STRING"))
-    rstring = String ((const char*) raw.data8.data(), raw.data8.size()); // FIXME: validate
+  else if (datav.size() && property_type == x11_atom (display, "UTF8_STRING"))
+    rstring = String ((const char*) datav.data(), datav.size()); // FIXME: validate
   else
-    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (x11_atom_name (display, property_atom)), x11_atom_name (display, raw.property_type).c_str());
-  if (property_type)
-    *property_type = raw.property_type;
+    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (x11_atom_name (display, property)), x11_atom_name (display, property_type).c_str());
   return rstring;
+}
+
+static String
+x11_get_string_property (Display *display, Window window, Atom property_atom, Atom *property_type = NULL)
+{
+  RawData raw;
+  x11_get_property_data (display, window, property_atom, raw, 8);
+  return x11_convert_string_property (display, property_atom, raw.property_type, raw.data8);
 }
 
 enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
