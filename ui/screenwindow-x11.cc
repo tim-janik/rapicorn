@@ -79,6 +79,27 @@ public:
 
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
+// == SelectionTransfer ==
+enum SelectionState {
+  WAIT_INVALID,
+  WAIT_FOR_NOTIFY,
+  WAIT_FOR_PROPERTY,
+  WAIT_FOR_RESULT,
+};
+struct SelectionTransfer {
+  SelectionState        state;
+  Atom                  slot;           // receiving property (usually RAPICORN_SELECTION)
+  vector<uint8>         data;
+  uint64                nonce;
+  Atom                  source;         // requested selection
+  Window                owner;
+  Atom                  target;         // requested type
+  Time                  time;
+  int                   size_est;       // lower bound provided by INCR response
+  RawData               raw;
+  SelectionTransfer() : state (WAIT_INVALID), slot (0), nonce (0), source (0), owner (0), target (0), time (0), size_est (0) {}
+};
+
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   X11Context           &x11context;
@@ -93,6 +114,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   int                   last_motion_time_, pending_configures_, pending_exposes_;
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
+  SelectionTransfer    *sel_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   void                  destroy_x11_resources   ();
@@ -102,6 +124,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   bool                  process_event           (const XEvent &xevent);
+  void                  receive_selection       (const XEvent &xev);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
@@ -112,7 +135,7 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
-  override_redirect_ (false), crossing_focus_ (false)
+  override_redirect_ (false), crossing_focus_ (false), sel_ (NULL)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -122,6 +145,8 @@ ScreenWindowX11::~ScreenWindowX11()
       critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
+  if (sel_)
+    delete sel_;
 }
 
 void
@@ -333,8 +358,22 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const bool deleted = xev.state == PropertyDelete;
       VDEBUG ("Prop%c: %c=%u w=%u prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       event_context_.time = xev.time;
-      queued_updates_.push_back (xev.atom);
-      x11context.queue_update (window_);
+      if (sel_ && sel_->slot == xev.atom)
+        receive_selection (xevent);
+      else
+        {
+          queued_updates_.push_back (xev.atom);
+          x11context.queue_update (window_);
+        }
+      consumed = true;
+      break; }
+    case SelectionNotify: {
+      const XSelectionEvent &xev = xevent.xselection;
+      EDEBUG ("SelNy: %c=%u [%lx] %s(%s) -> %ld(%s)", ss, xev.serial,
+              xev.time, x11context.atom (xev.selection), x11context.atom (xev.target),
+              xev.requestor, x11context.atom (xev.property));
+      if (sel_)
+        receive_selection (xevent);
       consumed = true;
       break; }
     case Expose: {
@@ -530,6 +569,66 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       break;
     }
   return consumed;
+}
+
+void
+ScreenWindowX11::receive_selection (const XEvent &xevent)
+{
+  return_unless (sel_ != NULL);
+  // SelectionNotify (after XConvertSelection)
+  if (xevent.type == SelectionNotify && sel_->state == WAIT_FOR_NOTIFY)
+    {
+      const XSelectionEvent &xev = xevent.xselection;
+      if (window_ == xev.requestor && sel_->source == xev.selection && sel_->slot == xev.property && sel_->time == xev.time)
+        {
+          x11_get_property_data (x11context.display, xev.requestor, sel_->slot, sel_->raw, 0, True);
+          if (sel_->raw.property_type == x11context.atom ("INCR"))
+            {
+              sel_->size_est = sel_->raw.data32.size() > 0 ? sel_->raw.data32[0] : 0;
+              sel_->raw.data32.clear();
+              sel_->raw.property_type = None;
+              sel_->raw.format_returned = 0;
+              sel_->state = WAIT_FOR_PROPERTY;
+            }
+          else
+            {
+              // full property received
+              sel_->state = WAIT_FOR_RESULT;
+            }
+        }
+    }
+  // Property NewValue (after SelectionNotify + INCR)
+  if (xevent.type == PropertyNotify && sel_->state == WAIT_FOR_PROPERTY)
+    {
+      const XPropertyEvent &xev = xevent.xproperty;
+      if (xev.state == PropertyNewValue && sel_->slot == xev.atom)
+        {
+          RawData raw;
+          const bool success = x11_get_property_data (x11context.display, window_, sel_->slot, raw, 0, True);
+          sel_->raw.property_type = raw.property_type;
+          sel_->raw.format_returned = raw.format_returned;
+          sel_->raw.data32.insert (sel_->raw.data32.end(), raw.data32.begin(), raw.data32.end());
+          sel_->raw.data16.insert (sel_->raw.data16.end(), raw.data16.begin(), raw.data16.end());
+          sel_->raw.data8.insert (sel_->raw.data8.end(), raw.data8.begin(), raw.data8.end());
+          if (!success || (raw.data32.size() == 0 && raw.data16.size() == 0 && raw.data8.size() == 0))
+            sel_->state = WAIT_FOR_RESULT; // last property received
+        }
+    }
+  // IPC completed
+  if (sel_->state == WAIT_FOR_RESULT)
+    {
+      sel_->state = WAIT_INVALID;
+      if (sel_->raw.property_type == sel_->target && (sel_->target == XA_STRING || sel_->target == x11_atom (x11context.display, "UTF8_STRING") ||
+                                                      sel_->target == x11_atom (x11context.display, "UTF8_STRING") || sel_->target == x11_atom (x11context.display, "C_STRING")))
+        {
+          String pstring = x11_convert_string_property (x11context.display, sel_->slot, sel_->raw.property_type, sel_->raw.data8);
+          enqueue_event (create_event_data (CONTENT_DATA, event_context_, x11context.atom (sel_->raw.property_type), pstring, sel_->nonce));
+        }
+      else
+        enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", sel_->nonce));
+      delete sel_;
+      sel_ = NULL;
+    }
 }
 
 void
@@ -924,7 +1023,33 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::CONTENT:   break;  // FIXME
+    case ScreenCommand::CONTENT:
+      if (!sel_)
+        {
+          SelectionTransfer *tsel = new SelectionTransfer();
+          tsel->source = command->source == 1 ? XA_PRIMARY : x11context.atom ("CLIPBOARD");
+          tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
+          if (tsel->owner != None)
+            {
+              tsel->nonce = command->nonce;
+              tsel->target = x11context.atom ("UTF8_STRING"); // FIXME: use command->data_type
+              tsel->time = event_context_.time;
+              tsel->slot = x11context.atom ("RAPICORN_SELECTION");
+              XDeleteProperty (x11context.display, window_, tsel->slot);
+              XConvertSelection (x11context.display, tsel->source, tsel->target, tsel->slot, window_, tsel->time);
+              XDEBUG ("XConvertSelection: [%lx] %s(%s) -> %ld(%s); owner=%ld", tsel->time,
+                      x11context.atom (tsel->source), x11context.atom (tsel->target),
+                      window_, x11context.atom (tsel->slot),
+                      tsel->owner);
+              tsel->state = WAIT_FOR_NOTIFY;
+              sel_ = tsel;
+              break; // successfully initiated transfer
+            }
+          delete tsel;
+        }
+      // request failed
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", command->nonce));
+      break;
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
     case ScreenCommand::URESIZE:   break;  // FIXME
