@@ -742,6 +742,20 @@ memfree (char *memread_mem)
     free (memread_mem);
 }
 
+bool
+memwrite (const String &filename, size_t len, const uint8 *bytes)
+{
+  FILE *file = fopen (filename.c_str(), "w");
+  if (!file)
+    return false;
+  const size_t nbytes = fwrite (bytes, 1, len, file);
+  bool success = ferror (file) == 0 && nbytes == len;
+  success = fclose (file) == 0 && success;
+  if (!success)
+    unlink (filename.c_str());
+  return success;
+}
+
 } // Path
 
 /* --- DataList --- */
