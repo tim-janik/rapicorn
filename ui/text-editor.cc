@@ -155,13 +155,21 @@ private:
         kevent = dynamic_cast<const EventKey*> (&event);
         switch (kevent->key)
           {
+          case 'v':
+            if (kevent->key_state & MOD_CONTROL)
+              {
+                get_window()->request_clipboard (77, "text/plain"); // FIXME: should operate on viewport
+                handled = true;
+                break;
+              }
+            goto _default;
           case KEY_Home:    case KEY_KP_Home:           handled = move_cursor (WARP_HOME);      break;
           case KEY_End:     case KEY_KP_End:            handled = move_cursor (WARP_END);       break;
           case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR);      break; // FIXME: CTRL moves words
           case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR);      break; // FIXME: CTRL moves words
           case KEY_BackSpace:                           handled = delete_backward();            break;
           case KEY_Delete:  case KEY_KP_Delete:         handled = delete_foreward();            break;
-          default:
+          default: _default:
             if (kevent->key_state & MOD_CONTROL &&      // preserve Ctrl + FocusKey for navigation
                 key_value_is_focus_dir (kevent->key))
               {

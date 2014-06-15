@@ -1105,6 +1105,19 @@ WindowImpl::request_selection (uint64 nonce, const String &data_type)
     return false;
 }
 
+bool
+WindowImpl::request_clipboard (uint64 nonce, const String &data_type)
+{
+  // FIXME: this should be per-widget API
+  if (screen_window_)
+    {
+      screen_window_->request_clipboard (nonce, data_type);
+      return true;
+    }
+  else
+    return false;
+}
+
 void
 WindowImpl::show ()
 {

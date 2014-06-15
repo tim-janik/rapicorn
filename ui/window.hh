@@ -49,6 +49,7 @@ public:
   virtual EventLoop*    get_loop                                ();
   // content handling
   bool                  request_selection                       (uint64 nonce, const String &data_type);
+  bool                  request_clipboard                       (uint64 nonce, const String &data_type);
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */

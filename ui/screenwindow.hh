@@ -84,6 +84,8 @@ public:
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
   void          request_selection       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 PRIMARY selection.
+  void          request_clipboard       (uint64        nonce,
+                                         const String &data_type); ///< Request a CONTENT_DATA event for the X11 CLIPBOARD selection.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.
   void          push_event              (Event *event);         ///< Push back an event, so it's the next event returned by pop().
   bool          has_event               ();                     ///< Indicates if pop_event() will return non-NULL.

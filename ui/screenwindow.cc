@@ -160,6 +160,12 @@ ScreenWindow::request_selection (uint64 nonce, const String &data_type)
 }
 
 void
+ScreenWindow::request_clipboard (uint64 nonce, const String &data_type)
+{
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, nonce, data_type));
+}
+
+void
 ScreenWindow::destroy ()
 {
   queue_command (new ScreenCommand (ScreenCommand::DESTROY, this));
