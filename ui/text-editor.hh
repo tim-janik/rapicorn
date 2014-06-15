@@ -34,40 +34,39 @@ class Editor : public virtual ContainerImpl {
 protected:
   virtual const PropertyList& __aida_properties__();
 public:
-  /* Text::Editor::Client */
+  // Text::Editor::Client
   class Client {
   protected:
     const PropertyList& client_property_list();
     virtual String      save_markup  () const = 0;
-    virtual void        load_markup  (const String    &markup) = 0;
+    virtual void        load_markup  (const String &markup) = 0;
   public:
     virtual            ~Client ();
-    virtual const char* peek_text    (int *byte_length) = 0;
-    virtual ParaState   para_state   () const = 0;
-    virtual void        para_state   (const ParaState &pstate) = 0;
+    virtual const char* peek_text    (int *byte_length) = 0;                    ///< Peek at the memory containng plain text.
+    virtual ParaState   para_state   () const = 0;                              ///< Retrieve paragraph settings for the text.
+    virtual void        para_state   (const ParaState &pstate) = 0;             ///< Assign paragraph settings for the text.
     virtual AttrState   attr_state   () const = 0;
     virtual void        attr_state   (const AttrState &astate) = 0;
-    /* properties */
-    virtual String      markup_text  () const;
-    virtual void        markup_text  (const String &markup);
-    virtual String      plain_text   () const;
-    virtual void        plain_text   (const String &ptext);
-    virtual TextMode    text_mode    () const = 0;
-    virtual void        text_mode    (TextMode      text_mode) = 0;
-    /* size negotiation */
-    virtual double      text_requisition (uint          n_chars,
-                                          uint          n_digits) = 0;
-    /* mark handling */
-    virtual int         mark            () const = 0; /* byte_index */
-    virtual void        mark            (int              byte_index) = 0;
-    virtual bool        mark_at_end     () const = 0;
-    virtual bool        mark_to_coord   (double x, double y) = 0;
-    virtual void        step_mark       (int              visual_direction) = 0;
-    virtual void        mark2cursor     () = 0;
-    virtual void        hide_cursor     () = 0;
-    virtual void        mark_delete     (uint             n_utf8_chars) = 0;
-    virtual void        mark_insert     (String           utf8string,
-                                         const AttrState *astate = NULL) = 0;
+    // properties
+    virtual String      markup_text  () const;                                  ///< Serialize text to markup.
+    virtual void        markup_text  (const String &markup);                    ///< Clear and assign new text from markup.
+    virtual String      plain_text   () const;                                  ///< Retrieve text without markup.
+    virtual void        plain_text   (const String &ptext);                     ///< Clear text and assign new plain text.
+    virtual TextMode    text_mode    () const = 0;                              ///< Get text layout mode.
+    virtual void        text_mode    (TextMode text_mode) = 0;                  ///< Set wrapped/ellipsized/single-line mode.
+    // size negotiation
+    virtual double      text_requisition (uint n_chars, uint n_digits) = 0;     ///< Estimate size for a number of characters and digits.
+    // mark handling
+    virtual int         mark            () const = 0;                           ///< Get byte index of text editing mark.
+    virtual void        mark            (int byte_index) = 0;                   ///< Set the byte index of the text editing mark.
+    virtual bool        mark_at_end     () const = 0;                           ///< Test wether mark is at text buffer bound.
+    virtual bool        mark_to_coord   (double x, double y) = 0;               ///< Jump mark to x/y coordinates, returns if moved.
+    virtual void        step_mark       (int visual_direction) = 0;             ///< Move mark forward (+1) or backward (-1).
+    virtual void        mark2cursor     () = 0;                                 ///< Jump the cursor position to the current mark.
+    virtual void        hide_cursor     () = 0;                                 ///< Disable cursor in text area.
+    virtual void        mark_delete     (uint n_utf8_chars) = 0;                ///< Forward delete characters following mark.
+    virtual void        mark_insert     (String utf8string,
+                                         const AttrState *astate = NULL) = 0;   ///< Insert characters before mark.
   };
 public:
   /* Text::Editor */
