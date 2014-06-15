@@ -267,8 +267,12 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
 static bool
 x11_convert_string_property (Display *display, Atom property_type, vector<uint8> &datav, String *rstring)
 {
+  bool success = true;
   rstring->clear();
-  if (datav.size() && (property_type == XA_STRING || property_type == x11_atom (display, "COMPOUND_TEXT")))
+  if (datav.size() && (property_type == XA_STRING ||
+                       property_type == x11_atom (display, "C_STRING") ||       // specified by ICCCM
+                       property_type == x11_atom (display, "TEXT") ||           // returned by Qt (against ICCCM spec)
+                       property_type == x11_atom (display, "COMPOUND_TEXT")))
     {
       XTextProperty xtp;
       xtp.format = 8;
@@ -277,16 +281,25 @@ x11_convert_string_property (Display *display, Atom property_type, vector<uint8>
       xtp.encoding = property_type;
       char **tlist = NULL;
       int count = 0, res = Xutf8TextPropertyToTextList (display, &xtp, &tlist, &count);
-      if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist && tlist[0])
-        *rstring = String (tlist[0]);
+      if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist)
+        for (int i = 0; i < count; i++)
+          rstring->append (tlist[i]);
+      else
+        success = false;
       if (tlist)
         XFreeStringList (tlist);
     }
   else if (datav.size() && property_type == x11_atom (display, "UTF8_STRING"))
-    *rstring = String ((const char*) datav.data(), datav.size()); // FIXME: validate
+    {
+      String result ((const char*) datav.data(), datav.size());
+      if (utf8_validate (result))
+        *rstring = result;
+      else
+        success = false;
+    }
   else
-    return false;
-  return true;
+    success = false;
+  return success;
 }
 
 static String
