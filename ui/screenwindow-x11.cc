@@ -579,6 +579,14 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
   if (xevent.type == SelectionNotify && sel_->state == WAIT_FOR_NOTIFY)
     {
       const XSelectionEvent &xev = xevent.xselection;
+      if (window_ == xev.requestor && sel_->source == xev.selection && xev.property == None && sel_->time == xev.time)
+        {
+          // Conversion failed/rejected
+          enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", sel_->nonce));
+          delete sel_;
+          sel_ = NULL;
+          return;
+        }
       if (window_ == xev.requestor && sel_->source == xev.selection && sel_->slot == xev.property && sel_->time == xev.time)
         {
           x11_get_property_data (x11context.display, xev.requestor, sel_->slot, sel_->raw, 0, True);
