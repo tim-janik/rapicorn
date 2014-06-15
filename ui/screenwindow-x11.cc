@@ -125,6 +125,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   bool                  process_event           (const XEvent &xevent);
+  void                  request_selection       (Atom source, uint64 nonce, String data_type, Atom last_failed = None);
   void                  receive_selection       (const XEvent &xev);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
@@ -1011,6 +1012,45 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
 }
 
 void
+ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type, Atom last_failed)
+{
+  if (!sel_)
+    {
+      SelectionTransfer *tsel = new SelectionTransfer();
+      tsel->source = source;
+      tsel->content_type = data_type;
+      static const char *const target_atoms[] = {
+        "text/plain", "UTF8_STRING",        // determine X11 property types from request type
+      };
+      for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
+        if (tsel->content_type == target_atoms[i])
+          {
+            tsel->target = x11context.atom (target_atoms[i+1]);
+            break;
+          }
+      tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
+      if (tsel->owner != None && tsel->target != None)
+        {
+          tsel->nonce = nonce;
+          tsel->time = event_context_.time;
+          tsel->slot = x11context.atom ("RAPICORN_SELECTION");
+          XDeleteProperty (x11context.display, window_, tsel->slot);
+          XConvertSelection (x11context.display, tsel->source, tsel->target, tsel->slot, window_, tsel->time);
+          XDEBUG ("XConvertSelection: [%lx] %s(%s) -> %ld(%s); owner=%ld", tsel->time,
+                  x11context.atom (tsel->source), x11context.atom (tsel->target),
+                  window_, x11context.atom (tsel->slot),
+                  tsel->owner);
+          tsel->state = WAIT_FOR_NOTIFY;
+          sel_ = tsel;
+          return; // successfully initiated transfer
+        }
+      delete tsel;
+    }
+  // request rejected
+  enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", nonce));
+}
+
+void
 ScreenWindowX11::handle_command (ScreenCommand *command)
 {
   switch (command->type)
@@ -1030,40 +1070,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       blit (command->surface, *command->region);
       break;
     case ScreenCommand::CONTENT:
-      if (!sel_)
-        {
-          SelectionTransfer *tsel = new SelectionTransfer();
-          tsel->source = command->source == 1 ? XA_PRIMARY : x11context.atom ("CLIPBOARD");
-          tsel->content_type = *command->data_type;
-          static const char *const target_atoms[] = {
-            "text/plain", "UTF8_STRING",        // determine X11 property types from request type
-          };
-          for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
-            if (tsel->content_type == target_atoms[i])
-              {
-                tsel->target = x11context.atom (target_atoms[i+1]);
-                break;
-              }
-          tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
-          if (tsel->owner != None && tsel->target != None)
-            {
-              tsel->nonce = command->nonce;
-              tsel->time = event_context_.time;
-              tsel->slot = x11context.atom ("RAPICORN_SELECTION");
-              XDeleteProperty (x11context.display, window_, tsel->slot);
-              XConvertSelection (x11context.display, tsel->source, tsel->target, tsel->slot, window_, tsel->time);
-              XDEBUG ("XConvertSelection: [%lx] %s(%s) -> %ld(%s); owner=%ld", tsel->time,
-                      x11context.atom (tsel->source), x11context.atom (tsel->target),
-                      window_, x11context.atom (tsel->slot),
-                      tsel->owner);
-              tsel->state = WAIT_FOR_NOTIFY;
-              sel_ = tsel;
-              break; // successfully initiated transfer
-            }
-          delete tsel;
-        }
-      // request failed
-      enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", command->nonce));
+      request_selection (command->source == 1 ? XA_PRIMARY : x11context.atom ("CLIPBOARD"),
+                         command->nonce, *command->data_type);
       break;
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
