@@ -581,29 +581,37 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
   if (xevent.type == SelectionNotify && sel_->state == WAIT_FOR_NOTIFY)
     {
       const XSelectionEvent &xev = xevent.xselection;
-      if (window_ == xev.requestor && sel_->source == xev.selection && xev.property == None && sel_->time == xev.time)
+      if (window_ == xev.requestor && sel_->source == xev.selection && sel_->time == xev.time)
         {
-          // Conversion failed/rejected
-          enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", sel_->nonce));
-          delete sel_;
-          sel_ = NULL;
-          return;
-        }
-      if (window_ == xev.requestor && sel_->source == xev.selection && sel_->slot == xev.property && sel_->time == xev.time)
-        {
-          x11_get_property_data (x11context.display, xev.requestor, sel_->slot, sel_->raw, 0, True);
-          if (sel_->raw.property_type == x11context.atom ("INCR"))
+          bool retry = false;
+          if (sel_->slot == xev.property)       // Conversion succeeded (except for Qt, see below)
             {
-              sel_->size_est = sel_->raw.data32.size() > 0 ? sel_->raw.data32[0] : 0;
-              sel_->raw.data32.clear();
-              sel_->raw.property_type = None;
-              sel_->raw.format_returned = 0;
-              sel_->state = WAIT_FOR_PROPERTY;
+              const bool success = x11_get_property_data (x11context.display, xev.requestor, sel_->slot, sel_->raw, 0, True);
+              if (sel_->raw.property_type == x11context.atom ("INCR"))
+                {
+                  sel_->size_est = sel_->raw.data32.size() > 0 ? sel_->raw.data32[0] : 0;
+                  sel_->raw.data32.clear();
+                  sel_->raw.property_type = None;
+                  sel_->raw.format_returned = 0;
+                  sel_->state = WAIT_FOR_PROPERTY;
+                }
+              else if (!success || sel_->raw.property_type == None)
+                retry = true;                   // Conversion failed (Qt style), might retry other result types
+              else if (success && sel_->raw.property_type == x11context.atom ("TEXT"))
+                retry = true;                   // Work around a Qt bug, might retry other result types
+              else
+                sel_->state = WAIT_FOR_RESULT;  // Property fully received
             }
-          else
+          else // xev.property == None
+            retry = true;                       // Conversion failed, might retry other result types
+          if (retry)
             {
-              // full property received
-              sel_->state = WAIT_FOR_RESULT;
+              // Conversion failed, try re-requesting using fallbacks
+              SelectionTransfer *tsel = sel_;
+              sel_ = NULL;
+              request_selection (tsel->source, tsel->nonce, tsel->content_type, tsel->target);
+              delete tsel;
+              return;
             }
         }
     }
