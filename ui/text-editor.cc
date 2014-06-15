@@ -183,7 +183,7 @@ private:
         break;
       case CONTENT_DATA:
         devent = dynamic_cast<const EventData*> (&event);
-        if (devent->nonce == 77 && devent->data_type == "UTF8_STRING") // "text/plain;charset=utf-8"
+        if (devent->nonce == 77 && devent->data_type == "text/plain")
           {
             handled = insert_literally (devent->data);
           }
@@ -207,7 +207,7 @@ private:
           }
         else if (bevent->button == 2)
           {
-            get_window()->request_selection (77, "text/plain;charset=utf-8"); // FIXME: should operate on viewport
+            get_window()->request_selection (77, "text/plain"); // FIXME: should operate on viewport
           }
         handled = true;
         break;

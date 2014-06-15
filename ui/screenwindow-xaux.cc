@@ -263,10 +263,11 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
   return raw.data32;
 }
 
-static String
-x11_convert_string_property (Display *display, Atom property, Atom property_type, vector<uint8> &datav)
+/// Convert any text-alike property types to UTF-8
+static bool
+x11_convert_string_property (Display *display, Atom property_type, vector<uint8> &datav, String *rstring)
 {
-  String rstring;
+  rstring->clear();
   if (datav.size() && (property_type == XA_STRING || property_type == x11_atom (display, "COMPOUND_TEXT")))
     {
       XTextProperty xtp;
@@ -277,23 +278,26 @@ x11_convert_string_property (Display *display, Atom property, Atom property_type
       char **tlist = NULL;
       int count = 0, res = Xutf8TextPropertyToTextList (display, &xtp, &tlist, &count);
       if (res != XNoMemory && res != XLocaleNotSupported && res != XConverterNotFound && count && tlist && tlist[0])
-        rstring = String (tlist[0]);
+        *rstring = String (tlist[0]);
       if (tlist)
         XFreeStringList (tlist);
     }
   else if (datav.size() && property_type == x11_atom (display, "UTF8_STRING"))
-    rstring = String ((const char*) datav.data(), datav.size()); // FIXME: validate
+    *rstring = String ((const char*) datav.data(), datav.size()); // FIXME: validate
   else
-    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (x11_atom_name (display, property)), x11_atom_name (display, property_type).c_str());
-  return rstring;
+    return false;
+  return true;
 }
 
 static String
-x11_get_string_property (Display *display, Window window, Atom property_atom, Atom *property_type = NULL)
+x11_get_string_property (Display *display, Window window, Atom property_atom)
 {
   RawData raw;
   x11_get_property_data (display, window, property_atom, raw, 8);
-  return x11_convert_string_property (display, property_atom, raw.property_type, raw.data8);
+  String rstring;
+  if (!x11_convert_string_property (display, raw.property_type, raw.data8, &rstring))
+    XDEBUG ("XGetWindowProperty(%s): unknown string property format: %s", CQUOTE (x11_atom_name (display, property_atom)), x11_atom_name (display, raw.property_type).c_str());
+  return rstring;
 }
 
 enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };

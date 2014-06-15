@@ -92,12 +92,13 @@ struct SelectionTransfer {
   vector<uint8>         data;
   uint64                nonce;
   Atom                  source;         // requested selection
+  String                content_type;   // requested type
+  Atom                  target;         // X11 Atom for requested type
   Window                owner;
-  Atom                  target;         // requested type
   Time                  time;
   int                   size_est;       // lower bound provided by INCR response
   RawData               raw;
-  SelectionTransfer() : state (WAIT_INVALID), slot (0), nonce (0), source (0), owner (0), target (0), time (0), size_est (0) {}
+  SelectionTransfer() : state (WAIT_INVALID), slot (0), nonce (0), source (0), target (0), owner (0), time (0), size_est (0) {}
 };
 
 // == ScreenWindowX11 ==
@@ -626,14 +627,11 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
   if (sel_->state == WAIT_FOR_RESULT)
     {
       sel_->state = WAIT_INVALID;
-      if (sel_->raw.property_type == sel_->target && (sel_->target == XA_STRING || sel_->target == x11_atom (x11context.display, "UTF8_STRING") ||
-                                                      sel_->target == x11_atom (x11context.display, "UTF8_STRING") || sel_->target == x11_atom (x11context.display, "C_STRING")))
-        {
-          String pstring = x11_convert_string_property (x11context.display, sel_->slot, sel_->raw.property_type, sel_->raw.data8);
-          enqueue_event (create_event_data (CONTENT_DATA, event_context_, x11context.atom (sel_->raw.property_type), pstring, sel_->nonce));
-        }
-      else
-        enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", sel_->nonce));
+      String content_type, content_data;
+      if (sel_->content_type == "text/plain" &&
+          x11_convert_string_property (x11context.display, sel_->raw.property_type, sel_->raw.data8, &content_data))
+        content_type = sel_->content_type;
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_type, content_data, sel_->nonce));
       delete sel_;
       sel_ = NULL;
     }
@@ -1036,11 +1034,20 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         {
           SelectionTransfer *tsel = new SelectionTransfer();
           tsel->source = command->source == 1 ? XA_PRIMARY : x11context.atom ("CLIPBOARD");
+          tsel->content_type = *command->data_type;
+          static const char *const target_atoms[] = {
+            "text/plain", "UTF8_STRING",        // determine X11 property types from request type
+          };
+          for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
+            if (tsel->content_type == target_atoms[i])
+              {
+                tsel->target = x11context.atom (target_atoms[i+1]);
+                break;
+              }
           tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
-          if (tsel->owner != None)
+          if (tsel->owner != None && tsel->target != None)
             {
               tsel->nonce = command->nonce;
-              tsel->target = x11context.atom ("UTF8_STRING"); // FIXME: use command->data_type
               tsel->time = event_context_.time;
               tsel->slot = x11context.atom ("RAPICORN_SELECTION");
               XDeleteProperty (x11context.display, window_, tsel->slot);
