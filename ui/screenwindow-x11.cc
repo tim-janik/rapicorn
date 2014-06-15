@@ -1303,6 +1303,8 @@ X11Context::atom (const String &text, bool force_create)
 String
 X11Context::atom (Atom atom) const
 {
+  if (atom == None)
+    return "<!--None-->";
   // XLib caches atoms well
   char *res = XGetAtomName (display, atom);
   String result (res ? res : "");
