@@ -82,8 +82,12 @@ public:
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
+  void          claim_selection         (uint64        nonce,
+                                         const String &data_type); ///< Allow CONTENT_REQUEST events for the X11 PRIMARY selection.
   void          request_selection       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 PRIMARY selection.
+  void          claim_clipboard         (uint64        nonce,
+                                         const String &data_type); ///< Allow CONTENT_REQUEST events for the X11 CLIPBOARD selection.
   void          request_clipboard       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 CLIPBOARD selection.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.

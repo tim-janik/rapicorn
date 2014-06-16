@@ -1042,6 +1042,27 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
     enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
 }
 
+static Atom
+mime_to_target_atom (X11Context &x11context, const String &mime, Atom last_failed = None)
+{
+  static const char *const target_atoms[] = {           // determine X11 selection property types from mime
+    "text/plain", "UTF8_STRING",
+    "text/plain", "COMPOUND_TEXT",
+    "text/plain", "TEXT",
+    "text/plain", "STRING",
+  };
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
+    if (last_failed)                                    // first find last failing request type
+      {
+        if (last_failed == x11context.atom (target_atoms[i+1]))
+          last_failed = None;                           // skipped all types until last request
+        continue;
+      }
+    else if (mime == target_atoms[i])
+      return x11context.atom (target_atoms[i+1]);
+  return None;
+}
+
 void
 ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type, Atom last_failed)
 {
@@ -1050,24 +1071,7 @@ ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type,
       SelectionTransfer *tsel = new SelectionTransfer();
       tsel->source = source;
       tsel->content_type = data_type;
-      static const char *const target_atoms[] = {       // determine X11 property types from request type
-        "text/plain", "UTF8_STRING",
-        "text/plain", "COMPOUND_TEXT",
-        "text/plain", "TEXT",
-        "text/plain", "STRING",
-      };
-      for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
-        if (last_failed)                                // first find last failing request type
-          {
-            if (last_failed == x11context.atom (target_atoms[i+1]))
-              last_failed = None;                       // skipped all types until last request
-            continue;
-          }
-        else if (tsel->content_type == target_atoms[i])
-          {
-            tsel->target = x11context.atom (target_atoms[i+1]);
-            break;
-          }
+      tsel->target = mime_to_target_atom (x11context, tsel->content_type, last_failed);
       tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
       if (tsel->owner != None && tsel->target != None)
         {
@@ -1110,8 +1114,24 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       blit (command->surface, *command->region);
       break;
     case ScreenCommand::CONTENT:
-      request_selection (command->source == 1 ? XA_PRIMARY : x11context.atom ("CLIPBOARD"),
-                         command->nonce, *command->data_type);
+      switch (command->source)
+        {
+          Atom atom;
+        case 2:
+          atom = mime_to_target_atom (x11context, *command->data_type);
+          XSetSelectionOwner (x11context.display, XA_PRIMARY, atom ? window_ : None, event_context_.time);
+          break;
+        case 3:
+          request_selection (XA_PRIMARY, command->nonce, *command->data_type);
+          break;
+        case 4:
+          atom = mime_to_target_atom (x11context, *command->data_type);
+          XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), atom ? window_ : None, event_context_.time);
+          break;
+        case 5:
+          request_selection (x11context.atom ("CLIPBOARD"), command->nonce, *command->data_type);
+          break;
+        }
       break;
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME

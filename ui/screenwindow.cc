@@ -154,15 +154,27 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
+ScreenWindow::claim_selection (uint64 nonce, const String &data_type)
+{
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, nonce, data_type));
+}
+
+void
 ScreenWindow::request_selection (uint64 nonce, const String &data_type)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 1, nonce, data_type));
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 3, nonce, data_type));
+}
+
+void
+ScreenWindow::claim_clipboard (uint64 nonce, const String &data_type)
+{
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 4, nonce, data_type));
 }
 
 void
 ScreenWindow::request_clipboard (uint64 nonce, const String &data_type)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, nonce, data_type));
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 5, nonce, data_type));
 }
 
 void
