@@ -148,13 +148,23 @@ private:
     switch (event.type)
       {
         Client *client;
+        bool rs;
         const EventKey *kevent;
         const EventData *devent;
         const EventButton *bevent;
       case KEY_PRESS:
         kevent = dynamic_cast<const EventKey*> (&event);
+        rs = (kevent->key_state & MOD_SHIFT) == 0; // reset selection
         switch (kevent->key)
           {
+          case 'a':
+            if (kevent->key_state & MOD_CONTROL)
+              {
+                select_all();
+                handled = true;
+                break;
+              }
+            goto _default;
           case 'v':
             if (kevent->key_state & MOD_CONTROL)
               {
@@ -163,10 +173,10 @@ private:
                 break;
               }
             goto _default;
-          case KEY_Home:    case KEY_KP_Home:           handled = move_cursor (WARP_HOME);      break;
-          case KEY_End:     case KEY_KP_End:            handled = move_cursor (WARP_END);       break;
-          case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR);      break; // FIXME: CTRL moves words
-          case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR);      break; // FIXME: CTRL moves words
+          case KEY_Home:    case KEY_KP_Home:           handled = move_cursor (WARP_HOME, rs);  break;
+          case KEY_End:     case KEY_KP_End:            handled = move_cursor (WARP_END, rs);   break;
+          case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR, rs);  break; // FIXME: CTRL moves words
+          case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR, rs);  break; // FIXME: CTRL moves words
           case KEY_BackSpace:                           handled = delete_backward();            break;
           case KEY_Delete:  case KEY_KP_Delete:         handled = delete_foreward();            break;
           default: _default:
@@ -229,12 +239,15 @@ private:
     return cursor_;
   }
   bool
-  move_cursor (CursorMovement cm)
+  move_cursor (CursorMovement cm, bool reset_selection)
   {
     Client *client = get_client();
     if (client)
       {
+        const bool has_selection = client->get_selection();
         client->mark (cursor_);
+        if (!has_selection && !reset_selection)
+          client->mark2selector();                      // old cursor starts selection
         int o = client->mark();
         switch (cm)
           {
@@ -246,6 +259,8 @@ private:
         int m = client->mark();
         if (o == m)
           return false;
+        if (reset_selection && has_selection)
+          client->hide_selector();
         cursor_ = m;
         client->mark2cursor();
         changed();
@@ -266,6 +281,7 @@ private:
     Client *client = get_client();
     if (client && !utf8text.empty())
       {
+        delete_selection();
         client->mark (cursor_);
         client->mark_insert (utf8text);
         cursor_ = client->mark();
@@ -276,8 +292,40 @@ private:
     return false;
   }
   bool
+  select_all()
+  {
+    Client *client = get_client();
+    return_unless (client, false);
+    client->mark (0);
+    client->mark2selector();
+    client->mark (-1);
+    cursor_ = client->mark();
+    client->mark2cursor();
+    changed();
+    return client->get_selection();
+  }
+  bool
+  delete_selection()
+  {
+    Client *client = get_client();
+    return_unless (client, false);
+    int start, end, nutf8;
+    const bool has_selection = client->get_selection (&start, &end, &nutf8);
+    if (!has_selection)
+      return false;
+    client->mark (start);
+    client->mark_delete (nutf8);
+    client->hide_selector();
+    cursor_ = client->mark();
+    client->mark2cursor();
+    changed();
+    return true;
+  }
+  bool
   delete_backward ()
   {
+    if (delete_selection())
+      return true;
     Client *client = get_client();
     if (client)
       {
@@ -298,6 +346,8 @@ private:
   bool
   delete_foreward ()
   {
+    if (delete_selection())
+      return true;
     Client *client = get_client();
     if (client)
       {
