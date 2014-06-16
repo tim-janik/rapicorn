@@ -239,34 +239,43 @@ private:
     return cursor_;
   }
   bool
-  move_cursor (CursorMovement cm, bool reset_selection)
+  move_cursor (CursorMovement cm, const bool reset_selection)
   {
+    const bool adjust_selection = !reset_selection;
     Client *client = get_client();
-    if (client)
+    return_unless (client, false);
+    int start, end;
+    const bool has_selection = client->get_selection (&start, &end);
+    // special case, cursor left/right deselects
+    if (has_selection && reset_selection && (cm == PREV_CHAR || cm == NEXT_CHAR))
       {
-        const bool has_selection = client->get_selection();
-        client->mark (cursor_);
-        if (!has_selection && !reset_selection)
-          client->mark2selector();                      // old cursor starts selection
-        int o = client->mark();
-        switch (cm)
-          {
-          case NEXT_CHAR:       client->step_mark (+1); break;
-          case PREV_CHAR:       client->step_mark (-1); break;
-          case WARP_HOME:       client->mark (0);       break;
-          case WARP_END:        client->mark (-1);      break;
-          }
-        int m = client->mark();
-        if (o == m)
-          return false;
-        if (reset_selection && has_selection)
-          client->hide_selector();
-        cursor_ = m;
+        client->mark (cm == PREV_CHAR ? start : end);
+        client->hide_selector();
         client->mark2cursor();
+        cursor_ = client->mark();
         changed();
         return true;
       }
-    return false;
+    client->mark (cursor_);
+    if (!has_selection && adjust_selection)
+      client->mark2selector();                      // old cursor starts selection
+    int o = client->mark();
+    switch (cm)
+      {
+      case NEXT_CHAR:       client->step_mark (+1); break;
+      case PREV_CHAR:       client->step_mark (-1); break;
+      case WARP_HOME:       client->mark (0);       break;
+      case WARP_END:        client->mark (-1);      break;
+      }
+    int m = client->mark();
+    if (o == m)
+      return false;
+    if (reset_selection && has_selection)
+      client->hide_selector();
+    cursor_ = m;
+    client->mark2cursor();
+    changed();
+    return true;
   }
   bool
   insert_literally (const String &utf8text)
