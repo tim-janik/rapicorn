@@ -124,6 +124,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
+  void                  filtered_event          (const XEvent &xevent);
   bool                  process_event           (const XEvent &xevent);
   void                  request_selection       (Atom source, uint64 nonce, String data_type, Atom last_failed = None);
   void                  receive_selection       (const XEvent &xev);
@@ -266,6 +267,28 @@ check_pending (Display *display, Drawable window, int *pending_configures, int *
   XCheckIfEvent (display, &dummy, pending_event_sensor, XPointer (&ps));
   *pending_configures = ps.pending_configures;
   *pending_exposes = ps.pending_exposes;
+}
+
+void
+ScreenWindowX11::filtered_event (const XEvent &xevent)
+{
+  const bool sent = xevent.xany.send_event != 0;
+  const char ff = event_context_.synthesized ? 'F' : 'f';
+  switch (xevent.type)
+    {
+    case KeyPress: {    // XIM often filteres our key presses, but we still need to learn about time & modifier updates
+      const char *kind = xevent.type == KeyPress ? "DN" : "UP";
+      const XKeyEvent &xev = xevent.xkey;
+      if (!sent && xev.keycode != 0 && xev.serial != 0)
+        {
+          event_context_.time = xev.time;
+          event_context_.x = xev.x;
+          event_context_.y = xev.y;
+          event_context_.modifiers = ModifierState (xev.state);
+        }
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d", kind, ff, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode);
+      break; }
+    }
 }
 
 bool
@@ -437,8 +460,8 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           // utf8data is empty for KeyRelease, but we try to fill at least keysym
         }
       EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
-      if (xev.keycode == 0 || xev.serial == 0)
-        ; // avid busting event_context_ from synthesized event
+      if (xev.send_event || xev.keycode == 0 || xev.serial == 0)
+        ; // avid corrupting event_context_ from synthesized event
       else
         {
           event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
@@ -1253,17 +1276,17 @@ X11Context::process_x11()
     {
       XEvent xevent = { 0, };
       XNextEvent (display, &xevent);    // blocks if !XPending
-      if (XFilterEvent (&xevent, None) ||
-          filter_event (xevent))
-        return;                         // lower level event handling
-      bool consumed = false;
+      XEvent evcopy = xevent;
+      // allow event handling hooks, e.g. needed by XIM
+      bool consumed = XFilterEvent (&evcopy, None);
+      consumed = consumed || filter_event (evcopy);
+      // deliver to owning ScreenWindow
       X11Widget *xwidget = x11id_get (xevent.xany.window);
-      if (xwidget)
-        {
-          ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xwidget);
-          if (scw)
-            consumed = scw->process_event (xevent);
-        }
+      ScreenWindowX11 *scw = !xwidget ? NULL : dynamic_cast<ScreenWindowX11*> (xwidget);
+      if (scw && consumed)
+        scw->filtered_event (xevent);           // preserve bookkeeping of ScreenWindows
+      else if (scw)
+        consumed = scw->process_event (xevent); // ScreenWindow event handling
       if (!consumed)
         {
           const char ss = xevent.xany.send_event ? 'S' : 's';
