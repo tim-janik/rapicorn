@@ -106,13 +106,67 @@ class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, pu
   uint     request_chars_, request_digits_;
   int      cursor_;
   TextMode text_mode_;
-  Client*       get_client () const { return interface<Client*>(); }
+  Client  *cached_client_;
+  size_t   client_sig_;
 public:
   EditorImpl() :
     request_chars_ (0), request_digits_ (0),
-    cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE)
+    cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE), cached_client_ (NULL), client_sig_ (0)
   {}
 private:
+  ~EditorImpl()
+  {
+    if (cached_client_)
+      {
+        cached_client_->sig_selection_changed() -= client_sig_;
+        client_sig_ = 0;
+        ReferenceCountable *trash = dynamic_cast<WidgetImpl*> (cached_client_);
+        cached_client_ = NULL;
+        if (trash)
+          unref (trash);
+      }
+  }
+  Client*
+  get_client()
+  {
+    // check if text client changed
+    Client *candidate = interface<Client*>();
+    if (cached_client_ == candidate)
+      return cached_client_;
+    // adjust to new client
+    Client *const old = cached_client_;
+    const size_t old_sig = client_sig_;
+    ReferenceCountable *base = dynamic_cast<WidgetImpl*> (candidate);
+    cached_client_ = base ? candidate : NULL;
+    if (base)
+      {
+        ref (base);
+        client_sig_ = cached_client_->sig_selection_changed() += Aida::slot (this, &EditorImpl::selection_changed);
+      }
+    else
+      client_sig_ = 0;
+    // cleanup old
+    base = dynamic_cast<WidgetImpl*> (old);
+    if (base)
+      {
+        old->sig_selection_changed() -= old_sig;
+        unref (base);
+      }
+    // update new client
+    if (cached_client_)
+      update_client();
+    return cached_client_;
+  }
+  void
+  update_client ()
+  {
+    Client *client = get_client();
+    return_unless (client);
+    client->text_mode (text_mode_);
+    client->cursor2mark();
+    cursor_ = client->mark();
+    selection_changed();
+  }
   virtual void
   size_request (Requisition &requisition)
   {
@@ -135,7 +189,7 @@ private:
   virtual bool
   can_focus () const
   {
-    Client *client = get_client();
+    Client *client = cached_client_;
     return client != NULL;
   }
   virtual void
@@ -355,19 +409,27 @@ private:
   bool
   delete_foreward ()
   {
+    Client *client = get_client();
+    return_unless (client, false);
     if (delete_selection())
       return true;
+    client->mark (cursor_);
+    if (client->mark_at_end())
+      return false;
+    client->mark_delete (1);
+    changed();
+    return true;
+  }
+  void
+  selection_changed()
+  {
     Client *client = get_client();
-    if (client)
-      {
-        client->mark (cursor_);
-        if (client->mark_at_end())
-          return false;
-        client->mark_delete (1);
-        changed();
-        return true;
-      }
-    return false;
+    int start, end, nutf8;
+    const bool has_selection = client->get_selection (&start, &end, &nutf8);
+    if (!has_selection || nutf8 < 1)
+      printerr ("FIXME: give up PRIMARY\n");
+    else
+      printerr ("FIXME: reclaim PRIMARY: claim new: %d chars\n", nutf8);
   }
   virtual void
   text (const String &text)
@@ -379,19 +441,7 @@ private:
   virtual String
   text () const
   {
-    Client *client = get_client();
-    return client ? client->markup_text() : "";
-  }
-  void
-  update_client ()
-  {
-    // FIXME: this funciton and its callers may be optimized when we create our own text layouts
-    Client *client = get_client();
-    if (client)
-      {
-        client->text_mode (text_mode_);
-        // client->markup_text (markup);
-      }
+    return cached_client_ ? cached_client_->markup_text() : "";
   }
   virtual TextMode text_mode      () const                      { return text_mode_; }
   virtual void     text_mode      (TextMode      text_mode)
@@ -402,9 +452,9 @@ private:
       client->text_mode (text_mode_);
     invalidate_size();
   }
-  virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->markup_text() : ""; }
+  virtual String   markup_text    () const                      { return cached_client_ ? cached_client_->markup_text() : ""; }
   virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
-  virtual String   plain_text     () const                      { Client *client = get_client(); return client ? client->plain_text() : ""; }
+  virtual String   plain_text     () const                      { return cached_client_ ? cached_client_->plain_text() : ""; }
   virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
   virtual uint     request_chars  () const                      { return request_chars_; }
   virtual void     request_chars  (uint nc)                     { request_chars_ = nc; invalidate_size(); }

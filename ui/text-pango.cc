@@ -928,6 +928,15 @@ protected:
     rapicorn_pango_mutex.unlock();
     changed();
   }
+  virtual void
+  cursor2mark ()
+  {
+    if (cursor_ != mark_)
+      {
+        mark_ = cursor_;
+        changed();
+      }
+  }
   virtual bool
   mark_at_end () const
   {
@@ -1264,14 +1273,14 @@ protected:
   selection_changed()
   {
     rapicorn_pango_mutex.lock();
-    bool refresh_layout = false;
+    bool real_change = false;
     if (last_selector_attr_)
       {
         PangoAttrList *palist = pango_layout_get_attributes (layout_);
         PangoAttrList *padel = pango_attr_list_filter (palist, attribute_filter, last_selector_attr_);
         pango_attr_list_unref (padel);
         last_selector_attr_ = NULL;
-        refresh_layout = true;
+        real_change = true;
       }
     if (cursor_ >= 0 && selector_ >= 0)
       {
@@ -1281,11 +1290,13 @@ protected:
         PangoAttrList *palist = pango_layout_get_attributes (layout_);
         pango_attr_list_insert (palist, sbg);
         last_selector_attr_ = sbg;
-        refresh_layout = true;
+        real_change = true;
       }
-    if (refresh_layout)
+    if (real_change)
       pango_layout_set_attributes (layout_, pango_layout_get_attributes (layout_)); // refresh layout caches for new attributes
     rapicorn_pango_mutex.unlock();
+    if (real_change)
+      sig_selection_changed.emit();
   }
   virtual void
   render (RenderContext &rcontext, const Rect &rect)

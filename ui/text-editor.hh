@@ -63,6 +63,7 @@ public:
     virtual bool        mark_to_coord   (double x, double y) = 0;               ///< Jump mark to x/y coordinates, returns if moved.
     virtual void        step_mark       (int visual_direction) = 0;             ///< Move mark forward (+1) or backward (-1).
     virtual void        mark2cursor     () = 0;                                 ///< Jump the cursor position to the current mark.
+    virtual void        cursor2mark     () = 0;                                 ///< Set the mark to the current cursor position.
     virtual void        hide_cursor     () = 0;                                 ///< Disable cursor in text area.
     virtual void        mark2selector   () = 0;                                 ///< Set selection mark, counterpart to cursor.
     virtual void        hide_selector   () = 0;                                 ///< Unset any current selection, preserves cursor.
@@ -71,6 +72,8 @@ public:
     virtual void        mark_delete     (uint n_utf8_chars) = 0;                ///< Forward delete characters following mark.
     virtual void        mark_insert     (String utf8string,
                                          const AttrState *astate = NULL) = 0;   ///< Insert characters before mark.
+    // notifications
+    Aida::Signal<void ()> sig_selection_changed;        ///< Notification signal for operations that affected the selection.
   };
 public:
   /* Text::Editor */
