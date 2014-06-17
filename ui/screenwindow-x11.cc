@@ -412,12 +412,12 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         receive_selection (xevent);
       consumed = true;
       break; }
-    case SelectionRequest: { // FIXME: move to x11 event processing
+    case SelectionRequest: {
       const XSelectionRequestEvent &xev = xevent.xselectionrequest;
       EDEBUG ("SelRq: %c=%u [%lx] own=%u %s(%s) -> %ld(%s)", ss, xev.serial,
               xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
               xev.requestor, x11context.atom (xev.property));
-      // reply with selection rejection
+      // reply with selection
       XEvent reply_xevent;
       XSelectionEvent &reply = reply_xevent.xselection;
       reply.type = SelectionNotify;
@@ -429,7 +429,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       reply.target = xev.target;
       reply.property = None; // xev.property;
       reply.time = xev.time;
-      // sedn reply, guard against foreign window deletion
+      // send reply, guard against foreign window deletion
       XErrorEvent dummy = { 0, };
       x11_trap_errors (&dummy);
       Status xstatus = XSendEvent (x11context.display, reply.requestor, False, NoEventMask, &reply_xevent);
@@ -1381,14 +1381,22 @@ X11Context::process_updates ()
 bool
 X11Context::filter_event (const XEvent &xevent)
 {
+  const char ss = xevent.xany.send_event ? 'S' : 's';
+  bool filtered = false;
   switch (xevent.type)
     {
-    case MappingNotify:
+    case MappingNotify: { // only sent to X11 clients that previously queried key maps
+      const XMappingEvent &xev = xevent.xmapping;
       XRefreshKeyboardMapping (const_cast<XMappingEvent*> (&xevent.xmapping));
-      return true;
-    default:
-      return false;
+      EDEBUG ("KyMap: %c=%u win=%u req=Mapping%s first_keycode=%d count=%d", ss, xev.serial, xev.window,
+              xev.request == MappingPointer ? "Pointer" :
+              (xev.request == MappingKeyboard ? "Keyboard" :
+               (xev.request == MappingModifier ? "Modifier" : "Unknown")),
+              xev.first_keycode, xev.count);
+      filtered = true;
+      break; }
     }
+  return filtered;
 }
 
 void
