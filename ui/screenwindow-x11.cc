@@ -42,6 +42,16 @@ struct X11Widget {
   virtual ~X11Widget() {}
 };
 
+// == OwnedSelection ==
+struct OwnedSelection {
+  String        content_type;   // selection mime type
+  Atom          target;         // requestor type atom
+  Time          time;           // selection time
+  uint64        nonce;
+  OwnedSelection() { reset(); }
+  void reset() { target = 0; time = 0; nonce = 0; content_type = ""; }
+};
+
 // == X11Context ==
 class X11Context {
   MainLoop             &loop_;
@@ -64,6 +74,7 @@ public:
   Window                root_window;
   XIM                   input_method;
   XIMStyle              input_style;
+  OwnedSelection        primary;
   int8                  shared_mem_;
   X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
@@ -86,7 +97,7 @@ enum SelectionInputState {
   WAIT_FOR_PROPERTY,
   WAIT_FOR_RESULT,
 };
-struct SelectionInput {
+struct SelectionInput {                 // isel_
   SelectionInputState   state;
   Atom                  slot;           // receiving property (usually RAPICORN_SELECTION)
   vector<uint8>         data;
@@ -399,6 +410,32 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               xev.requestor, x11context.atom (xev.property));
       if (isel_)
         receive_selection (xevent);
+      consumed = true;
+      break; }
+    case SelectionRequest: { // FIXME: move to x11 event processing
+      const XSelectionRequestEvent &xev = xevent.xselectionrequest;
+      EDEBUG ("SelRq: %c=%u [%lx] own=%u %s(%s) -> %ld(%s)", ss, xev.serial,
+              xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
+              xev.requestor, x11context.atom (xev.property));
+      // reply with selection rejection
+      XEvent reply_xevent;
+      XSelectionEvent &reply = reply_xevent.xselection;
+      reply.type = SelectionNotify;
+      reply.serial = 0;
+      reply.send_event = True;
+      reply.display = NULL;
+      reply.requestor = xev.requestor;
+      reply.selection = xev.selection;
+      reply.target = xev.target;
+      reply.property = None; // xev.property;
+      reply.time = xev.time;
+      // sedn reply, guard against foreign window deletion
+      XErrorEvent dummy = { 0, };
+      x11_trap_errors (&dummy);
+      Status xstatus = XSendEvent (x11context.display, reply.requestor, False, NoEventMask, &reply_xevent);
+      XSync (x11context.display, False);
+      x11_untrap_errors();
+      (void) xstatus;
       consumed = true;
       break; }
     case Expose: {
@@ -1120,6 +1157,15 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         case 2:
           atom = mime_to_target_atom (x11context, *command->data_type);
           XSetSelectionOwner (x11context.display, XA_PRIMARY, atom ? window_ : None, event_context_.time);
+          if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
+            {
+              x11context.primary.content_type = *command->data_type;
+              x11context.primary.target = atom;
+              x11context.primary.time = event_context_.time;
+              x11context.primary.nonce = command->nonce;
+            }
+          else
+            x11context.primary.reset();
           break;
         case 3:
           request_selection (XA_PRIMARY, command->nonce, *command->data_type);
