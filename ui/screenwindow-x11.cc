@@ -79,15 +79,15 @@ public:
 
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
-// == SelectionTransfer ==
-enum SelectionState {
+// == SelectionInput ==
+enum SelectionInputState {
   WAIT_INVALID,
   WAIT_FOR_NOTIFY,
   WAIT_FOR_PROPERTY,
   WAIT_FOR_RESULT,
 };
-struct SelectionTransfer {
-  SelectionState        state;
+struct SelectionInput {
+  SelectionInputState   state;
   Atom                  slot;           // receiving property (usually RAPICORN_SELECTION)
   vector<uint8>         data;
   uint64                nonce;
@@ -98,7 +98,7 @@ struct SelectionTransfer {
   Time                  time;
   int                   size_est;       // lower bound provided by INCR response
   RawData               raw;
-  SelectionTransfer() : state (WAIT_INVALID), slot (0), nonce (0), source (0), target (0), owner (0), time (0), size_est (0) {}
+  SelectionInput() : state (WAIT_INVALID), slot (0), nonce (0), source (0), target (0), owner (0), time (0), size_est (0) {}
 };
 
 // == ScreenWindowX11 ==
@@ -115,7 +115,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   int                   last_motion_time_, pending_configures_, pending_exposes_;
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
-  SelectionTransfer    *sel_;
+  SelectionInput    *isel_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   void                  destroy_x11_resources   ();
@@ -138,7 +138,7 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
-  override_redirect_ (false), crossing_focus_ (false), sel_ (NULL)
+  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -148,8 +148,8 @@ ScreenWindowX11::~ScreenWindowX11()
       critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
-  if (sel_)
-    delete sel_;
+  if (isel_)
+    delete isel_;
 }
 
 void
@@ -383,7 +383,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const bool deleted = xev.state == PropertyDelete;
       VDEBUG ("Prop%c: %c=%u w=%u prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       event_context_.time = xev.time;
-      if (sel_ && sel_->slot == xev.atom)
+      if (isel_ && isel_->slot == xev.atom)
         receive_selection (xevent);
       else
         {
@@ -397,7 +397,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("SelNy: %c=%u [%lx] %s(%s) -> %ld(%s)", ss, xev.serial,
               xev.time, x11context.atom (xev.selection), x11context.atom (xev.target),
               xev.requestor, x11context.atom (xev.property));
-      if (sel_)
+      if (isel_)
         receive_selection (xevent);
       consumed = true;
       break; }
@@ -599,39 +599,39 @@ ScreenWindowX11::process_event (const XEvent &xevent)
 void
 ScreenWindowX11::receive_selection (const XEvent &xevent)
 {
-  return_unless (sel_ != NULL);
+  return_unless (isel_ != NULL);
   // SelectionNotify (after XConvertSelection)
-  if (xevent.type == SelectionNotify && sel_->state == WAIT_FOR_NOTIFY)
+  if (xevent.type == SelectionNotify && isel_->state == WAIT_FOR_NOTIFY)
     {
       const XSelectionEvent &xev = xevent.xselection;
-      if (window_ == xev.requestor && sel_->source == xev.selection && sel_->time == xev.time)
+      if (window_ == xev.requestor && isel_->source == xev.selection && isel_->time == xev.time)
         {
           bool retry = false;
-          if (sel_->slot == xev.property)       // Conversion succeeded (except for Qt, see below)
+          if (isel_->slot == xev.property)       // Conversion succeeded (except for Qt, see below)
             {
-              const bool success = x11_get_property_data (x11context.display, xev.requestor, sel_->slot, sel_->raw, 0, True);
-              if (sel_->raw.property_type == x11context.atom ("INCR"))
+              const bool success = x11_get_property_data (x11context.display, xev.requestor, isel_->slot, isel_->raw, 0, True);
+              if (isel_->raw.property_type == x11context.atom ("INCR"))
                 {
-                  sel_->size_est = sel_->raw.data32.size() > 0 ? sel_->raw.data32[0] : 0;
-                  sel_->raw.data32.clear();
-                  sel_->raw.property_type = None;
-                  sel_->raw.format_returned = 0;
-                  sel_->state = WAIT_FOR_PROPERTY;
+                  isel_->size_est = isel_->raw.data32.size() > 0 ? isel_->raw.data32[0] : 0;
+                  isel_->raw.data32.clear();
+                  isel_->raw.property_type = None;
+                  isel_->raw.format_returned = 0;
+                  isel_->state = WAIT_FOR_PROPERTY;
                 }
-              else if (!success || sel_->raw.property_type == None)
+              else if (!success || isel_->raw.property_type == None)
                 retry = true;                   // Conversion failed (Qt style), might retry other result types
-              else if (success && sel_->raw.property_type == x11context.atom ("TEXT"))
+              else if (success && isel_->raw.property_type == x11context.atom ("TEXT"))
                 retry = true;                   // Work around a Qt bug, might retry other result types
               else
-                sel_->state = WAIT_FOR_RESULT;  // Property fully received
+                isel_->state = WAIT_FOR_RESULT;  // Property fully received
             }
           else // xev.property == None
             retry = true;                       // Conversion failed, might retry other result types
           if (retry)
             {
               // Conversion failed, try re-requesting using fallbacks
-              SelectionTransfer *tsel = sel_;
-              sel_ = NULL;
+              SelectionInput *tsel = isel_;
+              isel_ = NULL;
               request_selection (tsel->source, tsel->nonce, tsel->content_type, tsel->target);
               delete tsel;
               return;
@@ -639,33 +639,33 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
         }
     }
   // Property NewValue (after SelectionNotify + INCR)
-  if (xevent.type == PropertyNotify && sel_->state == WAIT_FOR_PROPERTY)
+  if (xevent.type == PropertyNotify && isel_->state == WAIT_FOR_PROPERTY)
     {
       const XPropertyEvent &xev = xevent.xproperty;
-      if (xev.state == PropertyNewValue && sel_->slot == xev.atom)
+      if (xev.state == PropertyNewValue && isel_->slot == xev.atom)
         {
           RawData raw;
-          const bool success = x11_get_property_data (x11context.display, window_, sel_->slot, raw, 0, True);
-          sel_->raw.property_type = raw.property_type;
-          sel_->raw.format_returned = raw.format_returned;
-          sel_->raw.data32.insert (sel_->raw.data32.end(), raw.data32.begin(), raw.data32.end());
-          sel_->raw.data16.insert (sel_->raw.data16.end(), raw.data16.begin(), raw.data16.end());
-          sel_->raw.data8.insert (sel_->raw.data8.end(), raw.data8.begin(), raw.data8.end());
+          const bool success = x11_get_property_data (x11context.display, window_, isel_->slot, raw, 0, True);
+          isel_->raw.property_type = raw.property_type;
+          isel_->raw.format_returned = raw.format_returned;
+          isel_->raw.data32.insert (isel_->raw.data32.end(), raw.data32.begin(), raw.data32.end());
+          isel_->raw.data16.insert (isel_->raw.data16.end(), raw.data16.begin(), raw.data16.end());
+          isel_->raw.data8.insert (isel_->raw.data8.end(), raw.data8.begin(), raw.data8.end());
           if (!success || (raw.data32.size() == 0 && raw.data16.size() == 0 && raw.data8.size() == 0))
-            sel_->state = WAIT_FOR_RESULT; // last property received
+            isel_->state = WAIT_FOR_RESULT; // last property received
         }
     }
   // IPC completed
-  if (sel_->state == WAIT_FOR_RESULT)
+  if (isel_->state == WAIT_FOR_RESULT)
     {
-      sel_->state = WAIT_INVALID;
+      isel_->state = WAIT_INVALID;
       String content_type, content_data;
-      if (sel_->content_type == "text/plain" &&
-          x11_convert_string_property (x11context.display, sel_->raw.property_type, sel_->raw.data8, &content_data))
-        content_type = sel_->content_type;
-      enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_type, content_data, sel_->nonce));
-      delete sel_;
-      sel_ = NULL;
+      if (isel_->content_type == "text/plain" &&
+          x11_convert_string_property (x11context.display, isel_->raw.property_type, isel_->raw.data8, &content_data))
+        content_type = isel_->content_type;
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_type, content_data, isel_->nonce));
+      delete isel_;
+      isel_ = NULL;
     }
 }
 
@@ -1066,9 +1066,9 @@ mime_to_target_atom (X11Context &x11context, const String &mime, Atom last_faile
 void
 ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type, Atom last_failed)
 {
-  if (!sel_)
+  if (!isel_)
     {
-      SelectionTransfer *tsel = new SelectionTransfer();
+      SelectionInput *tsel = new SelectionInput();
       tsel->source = source;
       tsel->content_type = data_type;
       tsel->target = mime_to_target_atom (x11context, tsel->content_type, last_failed);
@@ -1085,7 +1085,7 @@ ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type,
                   window_, x11context.atom (tsel->slot),
                   tsel->owner);
           tsel->state = WAIT_FOR_NOTIFY;
-          sel_ = tsel;
+          isel_ = tsel;
           return; // successfully initiated transfer
         }
       delete tsel;
