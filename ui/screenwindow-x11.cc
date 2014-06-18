@@ -42,16 +42,6 @@ struct X11Widget {
   virtual ~X11Widget() {}
 };
 
-// == OwnedSelection ==
-struct OwnedSelection {
-  String        content_type;   // selection mime type
-  Atom          target;         // requestor type atom
-  Time          time;           // selection time
-  uint64        nonce;
-  OwnedSelection() { reset(); }
-  void reset() { target = 0; time = 0; nonce = 0; content_type = ""; }
-};
-
 // == X11Context ==
 class X11Context {
   MainLoop             &loop_;
@@ -74,7 +64,6 @@ public:
   Window                root_window;
   XIM                   input_method;
   XIMStyle              input_style;
-  OwnedSelection        primary;
   int8                  shared_mem_;
   X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
@@ -84,11 +73,32 @@ public:
   void                  queue_update (size_t xid);
   void                  run        ();
   bool                  connect    ();
+  String                target_atom_to_mime             (const Atom target_atom);
+  Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
+  void                  text_plain_to_target_atoms      (vector<Atom> &targets);
   explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
 
+static inline int
+time_cmp (Time t1, Time t2)
+{
+  if (t1 > t2)
+    return t1 - t2 < 2147483647 ? +1 : -1;      // +1: t1 is later than t2
+  if (t1 < t2)
+    return t2 - t1 < 2147483647 ? -1 : +1;      // -1: t1 is earlier than t2
+  return 0;
+}
+
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
+
+// == OwnedSelection ==
+struct OwnedSelection {         // primary_
+  String        content_type;   // selection mime type
+  Time          time;           // selection time
+  uint64        nonce;
+  OwnedSelection() : time (0), nonce (0) {}
+};
 
 // == SelectionInput ==
 enum SelectionInputState {
@@ -126,7 +136,8 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   int                   last_motion_time_, pending_configures_, pending_exposes_;
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
-  SelectionInput    *isel_;
+  SelectionInput       *isel_;
+  OwnedSelection       *primary_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   void                  destroy_x11_resources   ();
@@ -149,7 +160,7 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
-  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL)
+  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL), primary_ (NULL)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -161,6 +172,8 @@ ScreenWindowX11::~ScreenWindowX11()
     }
   if (isel_)
     delete isel_;
+  if (primary_)
+    delete primary_;
 }
 
 void
@@ -427,8 +440,14 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       reply.requestor = xev.requestor;
       reply.selection = xev.selection;
       reply.target = xev.target;
-      reply.property = None; // xev.property;
+      reply.property = None;
       reply.time = xev.time;
+      const String mime_type = x11context.target_atom_to_mime (reply.target);
+      if (XA_PRIMARY == xev.selection && primary_ && time_cmp (xev.time, primary_->time) >= 0)
+        {
+          // reply.property = xev.property;
+          enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, mime_type, "", primary_->nonce));
+        }
       // send reply, guard against foreign window deletion
       XErrorEvent dummy = { 0, };
       x11_trap_errors (&dummy);
@@ -1079,25 +1098,49 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
     enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
 }
 
-static Atom
-mime_to_target_atom (X11Context &x11context, const String &mime, Atom last_failed = None)
+static const char *const mime_target_atoms[] = {           // determine X11 selection property types from mime
+  "text/plain", "UTF8_STRING",
+  "text/plain", "COMPOUND_TEXT",
+  "text/plain", "TEXT",
+  "text/plain", "STRING",
+};
+
+String
+X11Context::target_atom_to_mime (const Atom target_atom)
 {
-  static const char *const target_atoms[] = {           // determine X11 selection property types from mime
-    "text/plain", "UTF8_STRING",
-    "text/plain", "COMPOUND_TEXT",
-    "text/plain", "TEXT",
-    "text/plain", "STRING",
-  };
-  for (size_t i = 0; i + 1 < ARRAY_SIZE (target_atoms); i += 2)
+  // X11 atom lookup
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (target_atom == atom (mime_target_atoms[i+1]))
+      return mime_target_atoms[i];
+  // direct mime type plausible?
+  const String target = atom (target_atom);
+  if (target.size() && target[0] >= 'a' && target[0] <= 'z' && target.find ('/') != target.npos && target.find ('/') == target.rfind ('/'))
+    return target;      // starts with lower case alpha and has one slash, possibly mime type
+  return "";
+}
+
+Atom
+X11Context::mime_to_target_atom (const String &mime, Atom last_failed)
+{
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
     if (last_failed)                                    // first find last failing request type
       {
-        if (last_failed == x11context.atom (target_atoms[i+1]))
+        if (last_failed == atom (mime_target_atoms[i+1]))
           last_failed = None;                           // skipped all types until last request
         continue;
       }
-    else if (mime == target_atoms[i])
-      return x11context.atom (target_atoms[i+1]);
+    else if (mime == mime_target_atoms[i])
+      return atom (mime_target_atoms[i+1]);
   return None;
+}
+
+void
+X11Context::text_plain_to_target_atoms (vector<Atom> &targets)
+{
+  const String text_plain = "text/plain";
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (text_plain == mime_target_atoms[i])
+      targets.push_back (atom (mime_target_atoms[i+1]));
 }
 
 void
@@ -1108,7 +1151,7 @@ ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type,
       SelectionInput *tsel = new SelectionInput();
       tsel->source = source;
       tsel->content_type = data_type;
-      tsel->target = mime_to_target_atom (x11context, tsel->content_type, last_failed);
+      tsel->target = x11context.mime_to_target_atom (tsel->content_type, last_failed);
       tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
       if (tsel->owner != None && tsel->target != None)
         {
@@ -1155,23 +1198,28 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         {
           Atom atom;
         case 2:
-          atom = mime_to_target_atom (x11context, *command->data_type);
+          atom = x11context.mime_to_target_atom (*command->data_type);
           XSetSelectionOwner (x11context.display, XA_PRIMARY, atom ? window_ : None, event_context_.time);
           if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
             {
-              x11context.primary.content_type = *command->data_type;
-              x11context.primary.target = atom;
-              x11context.primary.time = event_context_.time;
-              x11context.primary.nonce = command->nonce;
+              if (!primary_)
+                primary_ = new OwnedSelection();
+              primary_->content_type = *command->data_type;
+              primary_->time = event_context_.time;
+              primary_->nonce = command->nonce;
             }
           else
-            x11context.primary.reset();
+            {
+              if (primary_)
+                delete primary_;
+              primary_ = NULL;
+            }
           break;
         case 3:
           request_selection (XA_PRIMARY, command->nonce, *command->data_type);
           break;
         case 4:
-          atom = mime_to_target_atom (x11context, *command->data_type);
+          atom = x11context.mime_to_target_atom (*command->data_type);
           XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), atom ? window_ : None, event_context_.time);
           break;
         case 5:

@@ -63,6 +63,7 @@ typedef enum {
   KEY_CANCELED,
   KEY_RELEASE,
   CONTENT_DATA,
+  CONTENT_REQUEST,
   SCROLL_UP,          /* button4 */
   SCROLL_DOWN,        /* button5 */
   SCROLL_LEFT,        /* button6 */

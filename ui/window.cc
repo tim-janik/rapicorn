@@ -923,6 +923,7 @@ WindowImpl::dispatch_event (const Event &event)
     case KEY_CANCELED:
     case KEY_RELEASE:         return dispatch_key_event (event);
     case CONTENT_DATA:        return dispatch_data_event (event);
+    case CONTENT_REQUEST:     return dispatch_data_event (event); // FIXME: need fallback for unhandled events
     case SCROLL_UP:          // button4
     case SCROLL_DOWN:        // button5
     case SCROLL_LEFT:        // button6

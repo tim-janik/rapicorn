@@ -260,6 +260,13 @@ private:
             handled = insert_literally (devent->data);
           }
         break;
+      case CONTENT_REQUEST:
+        devent = dynamic_cast<const EventData*> (&event);
+        if (devent->nonce == 79)
+          {
+            printerr ("CONTENT_REQUEST: target=%s nonce=%u\n", devent->data_type, devent->nonce);
+          }
+        break;
       case BUTTON_PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
         client = get_client();
@@ -427,9 +434,9 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      printerr ("FIXME: give up PRIMARY\n");
+      get_window()->claim_selection (0, ""); // give up ownership
     else
-      printerr ("FIXME: reclaim PRIMARY: claim new: %d chars\n", nutf8);
+      get_window()->claim_selection (79, "text/plain"); // claim new selection
   }
   virtual void
   text (const String &text)
