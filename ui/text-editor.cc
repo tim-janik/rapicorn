@@ -262,9 +262,21 @@ private:
         break;
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
-        if (devent->nonce == 79)
+        client = get_client();
+        if (client && devent->data_type == "text/plain")
           {
-            printerr ("CONTENT_REQUEST: target=%s nonce=%u\n", devent->data_type, devent->nonce);
+            int start, end;
+            const bool has_selection = client->get_selection (&start, &end);
+            if (has_selection && start >= 0 && end > start)
+              {
+                String text = client->plain_text();
+                if (size_t (end) <= text.size())
+                  {
+                    text = text.substr (start, end - start);
+                    if (utf8_validate (text))
+                      get_window()->provide_selection (devent->nonce, "text/plain", text);
+                  }
+              }
           }
         break;
       case BUTTON_PRESS:
@@ -434,9 +446,9 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      get_window()->claim_selection (0, StringVector()); // give up ownership
+      get_window()->claim_selection (StringVector()); // give up ownership
     else
-      get_window()->claim_selection (79, cstrings_to_vector ("text/plain", NULL)); // claim new selection
+      get_window()->claim_selection (cstrings_to_vector ("text/plain", NULL)); // claim new selection
   }
   virtual void
   text (const String &text)
