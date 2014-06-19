@@ -75,7 +75,7 @@ x11_check_shared_image (Display *display, Visual *visual, int depth)
               XSync (display, False); // forces error delivery
               if (!x11_untrap_errors())
                 {
-                  // if we got here uccessfully, shared memory works
+                  // if we got here successfully, shared memory works
                   has_shared_mem = result != 0;
                 }
             }
@@ -343,6 +343,16 @@ set_text_property (Display *display, Window window, Atom property_atom, XICCEnco
   return success;
 }
 
+static bool
+save_set_text_property (Display *display, Window window, Atom property, XICCEncodingStyle ecstyle, const String &text)
+{
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  set_text_property (display, window, property, ecstyle, text, KEEP_EMPTY);
+  XSync (display, False);
+  return 0 == x11_untrap_errors(); // success
+}
+
 enum Mwm {
   MWM_UNSPECIFIED = -1, // leaves FUNC/DECOR unset
   FUNC_ALL = 0x01,      // combining ALL with other flags has adverse effects with mwm
@@ -398,6 +408,34 @@ adjust_mwm_hints (Display *display, Window window, Mwm funcs, Mwm deco)
   XChangeProperty (display, window, xa_mwm_hints, xa_mwm_hints, 32, PropModeReplace, (uint8*) &mwm_hints, 5);
   if (data)
     XFree (data);
+}
+
+static bool
+save_set_byte_property (Display *display, Window window, Atom property, Atom type, const String &ints)
+{
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  XChangeProperty (display, window, property, type, 8, PropModeReplace, (const uint8*) &ints[0], ints.size());
+  XSync (display, False);
+  return 0 == x11_untrap_errors(); // success
+}
+
+static bool
+save_set_integer_property (Display *display, Window window, Atom property, const vector<unsigned long> &ints)
+{
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  XChangeProperty (display, window, property, x11_atom (display, "INTEGER"), 32, PropModeReplace, (uint8*) &ints[0], ints.size());
+  XSync (display, False);
+  return 0 == x11_untrap_errors(); // success
+}
+
+static bool
+save_set_integer_property (Display *display, Window window, Atom property, unsigned long int1)
+{
+  vector<unsigned long> data;
+  data.push_back (int1);
+  return save_set_integer_property (display, window, property, data);
 }
 
 static bool
