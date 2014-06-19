@@ -94,7 +94,7 @@ static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
 // == OwnedSelection ==
 struct OwnedSelection {         // primary_
-  String        content_type;   // selection mime type
+  StringVector  content_types;  // selection mime types
   Time          time;           // selection time
   uint64        nonce;
   OwnedSelection() : time (0), nonce (0) {}
@@ -1196,15 +1196,13 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::CONTENT:
       switch (command->source)
         {
-          Atom atom;
         case 2:
-          atom = x11context.mime_to_target_atom (*command->data_type);
-          XSetSelectionOwner (x11context.display, XA_PRIMARY, atom ? window_ : None, event_context_.time);
+          XSetSelectionOwner (x11context.display, XA_PRIMARY, command->data_types->size() > 0 ? window_ : None, event_context_.time);
           if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
             {
               if (!primary_)
                 primary_ = new OwnedSelection();
-              primary_->content_type = *command->data_type;
+              primary_->content_types = *command->data_types;
               primary_->time = event_context_.time;
               primary_->nonce = command->nonce;
             }
@@ -1216,14 +1214,16 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
             }
           break;
         case 3:
-          request_selection (XA_PRIMARY, command->nonce, *command->data_type);
+          assert_return (command->data_types->size() == 1);
+          request_selection (XA_PRIMARY, command->nonce, (*command->data_types)[0]);
           break;
         case 4:
-          atom = x11context.mime_to_target_atom (*command->data_type);
-          XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), atom ? window_ : None, event_context_.time);
+          XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), command->data_types->size() > 0 ? window_ : None, event_context_.time);
+          // FIXME: implement clipboard copies
           break;
         case 5:
-          request_selection (x11context.atom ("CLIPBOARD"), command->nonce, *command->data_type);
+          assert_return (command->data_types->size() == 1);
+          request_selection (x11context.atom ("CLIPBOARD"), command->nonce, (*command->data_types)[0]);
           break;
         }
       break;

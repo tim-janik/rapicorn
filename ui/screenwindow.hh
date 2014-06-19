@@ -82,12 +82,12 @@ public:
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
-  void          claim_selection         (uint64        nonce,
-                                         const String &data_type); ///< Allow CONTENT_REQUEST events for the X11 PRIMARY selection.
+  void          claim_selection         (uint64 nonce, const StringVector
+                                         &data_types); ///< Allow CONTENT_REQUEST events for the X11 PRIMARY selection.
   void          request_selection       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 PRIMARY selection.
-  void          claim_clipboard         (uint64        nonce,
-                                         const String &data_type); ///< Allow CONTENT_REQUEST events for the X11 CLIPBOARD selection.
+  void          claim_clipboard         (uint64 nonce, const StringVector
+                                         &data_types); ///< Allow CONTENT_REQUEST events for the X11 CLIPBOARD selection.
   void          request_clipboard       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 CLIPBOARD selection.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.
@@ -119,14 +119,14 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
   union {
     struct { ScreenWindow::Config *config;    ScreenWindow::Setup *setup; };
     struct { ScreenWindow::Config *dconfig;   bool dresize; };
-    struct { uint64 source, nonce;            String *data_type; };
+    struct { uint64 source, nonce;            StringVector *data_types; };
     struct { cairo_surface_t      *surface;   Rapicorn::Region *region; };
     struct { int                   button, root_x, root_y; };
     struct { String               *result_msg; };
   };
   ScreenCommand (Type type, ScreenWindow *window);
   ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Config &cfg, bool sizeevent);
-  ScreenCommand (Type type, ScreenWindow *window, uint64 source, uint64 nonce, String data_type);
+  ScreenCommand (Type type, ScreenWindow *window, uint64 source, uint64 nonce, const StringVector &data_types);
   ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
   ScreenCommand (Type type, ScreenWindow *window, cairo_surface_t *surface, const Rapicorn::Region &region);
   ScreenCommand (Type type, ScreenWindow *window, int button, int root_x, int root_y);

@@ -1094,11 +1094,11 @@ WindowImpl::destroy_screen_window ()
 }
 
 void
-WindowImpl::claim_selection (uint64 nonce, const String &data_type)
+WindowImpl::claim_selection (uint64 nonce, const StringVector &data_types)
 {
   // FIXME: this should be per-widget API
   if (screen_window_)
-    screen_window_->claim_selection (nonce, data_type);
+    screen_window_->claim_selection (nonce, data_types);
 }
 
 bool
@@ -1115,11 +1115,11 @@ WindowImpl::request_selection (uint64 nonce, const String &data_type)
 }
 
 void
-WindowImpl::claim_clipboard (uint64 nonce, const String &data_type)
+WindowImpl::claim_clipboard (uint64 nonce, const StringVector &data_types)
 {
   // FIXME: this should be per-widget API
   if (screen_window_)
-    screen_window_->claim_clipboard (nonce, data_type);
+    screen_window_->claim_clipboard (nonce, data_types);
 }
 
 bool

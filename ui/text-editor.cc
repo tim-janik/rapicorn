@@ -434,9 +434,9 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      get_window()->claim_selection (0, ""); // give up ownership
+      get_window()->claim_selection (0, StringVector()); // give up ownership
     else
-      get_window()->claim_selection (79, "text/plain"); // claim new selection
+      get_window()->claim_selection (79, cstrings_to_vector ("text/plain", NULL)); // claim new selection
   }
   virtual void
   text (const String &text)
