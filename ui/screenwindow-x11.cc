@@ -1177,7 +1177,10 @@ ScreenWindowX11::handle_content_request (const size_t nth)
   const Atom requestor_property = xev.property ? xev.property : xev.target; // ICCCM convention
   if (xev.target == x11context.atom ("TIMESTAMP"))
     {
-      if (save_set_integer_property (x11context.display, xev.requestor, requestor_property, primary_->time))
+      vector<unsigned long> ints;
+      ints.push_back (primary_->time);
+      if (save_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
+                             32, ints.data(), ints.size()))
         send_selection_notify (xev.requestor, xev.selection, xev.target, requestor_property, xev.time);
     }
   else if (xev.target == x11context.atom ("MULTIPLE")) // FIXME
@@ -1201,17 +1204,19 @@ ScreenWindowX11::handle_content_request (const size_t nth)
         ecstyle = XStringStyle;
       Atom ptype;
       int pformat;
-      vector<uint8> datav;
-      bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &datav, &ptype, &pformat);
-      transferred = transferred && save_set_property (x11context.display, xev.requestor, requestor_property, ptype, pformat, datav);
+      vector<uint8> chars;
+      bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &chars, &ptype, &pformat);
+      transferred = transferred && pformat == 8 &&
+                    save_set_property (x11context.display, xev.requestor, requestor_property, ptype,
+                                       8, chars.data(), chars.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
   else
     {
       const Atom target = x11context.mime_to_target_atom (cr.data_type);
       const bool transferred = !target ? false :
-                               save_set_byte_property (x11context.display, xev.requestor, requestor_property,
-                                                       target, cr.data);
+                               save_set_property (x11context.display, xev.requestor, requestor_property,
+                                                  target, 8, cr.data.data(), cr.data.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
   content_requests_.erase (content_requests_.begin() + nth);

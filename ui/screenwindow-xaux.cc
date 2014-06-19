@@ -264,13 +264,13 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
 }
 
 static bool
-save_set_property (Display *display, Window window, Atom property_atom, Atom property_type, int format, const vector<uint8> &datav)
+save_set_property (Display *display, Window window, Atom property_atom, Atom property_type,
+                   int element_bits, const void *elements, size_t nelements)
 {
-  assert_return (format == 8 || format == 16 || format == 32, false);
+  assert_return (element_bits == 8 || element_bits == 16 || element_bits == 32, false);
   XErrorEvent dummy = { 0, };
   x11_trap_errors (&dummy);
-  XChangeProperty (display, window, property_atom, property_type, format, PropModeReplace,
-                   datav.data(), datav.size() * uint64 (8) / format);
+  XChangeProperty (display, window, property_atom, property_type, element_bits, PropModeReplace, (const uint8*) elements, nelements);
   XSync (display, False);
   return 0 == x11_untrap_errors(); // success
 }
@@ -425,34 +425,6 @@ adjust_mwm_hints (Display *display, Window window, Mwm funcs, Mwm deco)
   XChangeProperty (display, window, xa_mwm_hints, xa_mwm_hints, 32, PropModeReplace, (uint8*) &mwm_hints, 5);
   if (data)
     XFree (data);
-}
-
-static bool
-save_set_byte_property (Display *display, Window window, Atom property, Atom type, const String &ints)
-{
-  XErrorEvent dummy = { 0, };
-  x11_trap_errors (&dummy);
-  XChangeProperty (display, window, property, type, 8, PropModeReplace, (const uint8*) &ints[0], ints.size());
-  XSync (display, False);
-  return 0 == x11_untrap_errors(); // success
-}
-
-static bool
-save_set_integer_property (Display *display, Window window, Atom property, const vector<unsigned long> &ints)
-{
-  XErrorEvent dummy = { 0, };
-  x11_trap_errors (&dummy);
-  XChangeProperty (display, window, property, x11_atom (display, "INTEGER"), 32, PropModeReplace, (uint8*) &ints[0], ints.size());
-  XSync (display, False);
-  return 0 == x11_untrap_errors(); // success
-}
-
-static bool
-save_set_integer_property (Display *display, Window window, Atom property, unsigned long int1)
-{
-  vector<unsigned long> data;
-  data.push_back (int1);
-  return save_set_integer_property (display, window, property, data);
 }
 
 static bool
