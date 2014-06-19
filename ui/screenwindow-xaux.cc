@@ -263,6 +263,18 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
   return raw.data32;
 }
 
+static bool
+save_set_property (Display *display, Window window, Atom property_atom, Atom property_type, int format, const vector<uint8> &datav)
+{
+  assert_return (format == 8 || format == 16 || format == 32, false);
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  XChangeProperty (display, window, property_atom, property_type, format, PropModeReplace,
+                   datav.data(), datav.size() * uint64 (8) / format);
+  XSync (display, False);
+  return 0 == x11_untrap_errors(); // success
+}
+
 /// Convert any text-alike property types to UTF-8
 static bool
 x11_convert_string_property (Display *display, Atom property_type, vector<uint8> &datav, String *rstring)
@@ -313,44 +325,49 @@ x11_get_string_property (Display *display, Window window, Atom property_atom)
   return rstring;
 }
 
+static bool
+x11_convert_string_for_text_property (Display *display, XICCEncodingStyle ecstyle, const String &string,
+                                      vector<uint8> *datav, Atom *type, int *format)
+{
+  bool success = false;
+  XTextProperty xtp = { 0, };
+  char *textarray = const_cast<char*> (string.data());
+  const int result = Xutf8TextListToTextProperty (display, &textarray, 1, ecstyle, &xtp);
+  if (result >= 0)
+    {
+      datav->insert (datav->end(), xtp.value, xtp.value + xtp.nitems * uint64 (xtp.format) / 8);
+      *type = xtp.encoding;
+      *format = xtp.format;
+      success = true;
+    }
+  if (xtp.value)
+    XFree (xtp.value);
+  return success;
+}
+
 enum XPEmpty { KEEP_EMPTY, DELETE_EMPTY };
 
 static bool
 set_text_property (Display *display, Window window, Atom property_atom, XICCEncodingStyle ecstyle,
                    const String &value, XPEmpty when_empty = KEEP_EMPTY)
 {
-  bool success = true;
+  bool success;
   if (when_empty == DELETE_EMPTY && value.empty())
-    XDeleteProperty (display, window, property_atom);
-  else if (ecstyle == XUTF8StringStyle)
-    XChangeProperty (display, window, property_atom, x11_atom (display, "UTF8_STRING"), 8,
-                     PropModeReplace, (uint8*) value.c_str(), value.size());
+    {
+      XDeleteProperty (display, window, property_atom);
+      success = true;
+    }
   else
     {
-      char *text = const_cast<char*> (value.c_str());
-      XTextProperty xtp = { 0, };
-      const int result = Xutf8TextListToTextProperty (display, &text, 1, ecstyle, &xtp);
-      if (0)
-        printerr ("XUTF8CONVERT: target=%s len=%d result=%d: %s -> %s\n", x11_atom_name (display, xtp.encoding).c_str(), value.size(), result, text, xtp.value);
-      if (result >= 0 && xtp.nitems && xtp.value)
-        XChangeProperty (display, window, property_atom, xtp.encoding, xtp.format,
-                         PropModeReplace, xtp.value, xtp.nitems);
-      else
-        success = false;
-      if (xtp.value)
-        XFree (xtp.value);
+      Atom type = 0;
+      int format = 0;
+      vector<uint8> datav;
+      success = x11_convert_string_for_text_property (display, ecstyle, value, &datav, &type, &format);
+      if (success && format)
+        XChangeProperty (display, window, property_atom, type, format, PropModeReplace,
+                         datav.data(), datav.size() * uint64 (8) / format);
     }
   return success;
-}
-
-static bool
-save_set_text_property (Display *display, Window window, Atom property, XICCEncodingStyle ecstyle, const String &text)
-{
-  XErrorEvent dummy = { 0, };
-  x11_trap_errors (&dummy);
-  set_text_property (display, window, property, ecstyle, text, KEEP_EMPTY);
-  XSync (display, False);
-  return 0 == x11_untrap_errors(); // success
 }
 
 enum Mwm {

@@ -1199,7 +1199,11 @@ ScreenWindowX11::handle_content_request (const size_t nth)
         ecstyle = XCompoundTextStyle;
       else if (xev.target == x11context.atom ("STRING"))
         ecstyle = XStringStyle;
-      const bool transferred = save_set_text_property (x11context.display, xev.requestor, requestor_property, ecstyle, cr.data);
+      Atom ptype;
+      int pformat;
+      vector<uint8> datav;
+      bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &datav, &ptype, &pformat);
+      transferred = transferred && save_set_property (x11context.display, xev.requestor, requestor_property, ptype, pformat, datav);
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
   else
