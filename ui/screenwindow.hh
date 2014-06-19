@@ -82,8 +82,11 @@ public:
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
-  void          claim_selection         (uint64 nonce, const StringVector
+  void          claim_selection         (const StringVector
                                          &data_types); ///< Allow CONTENT_REQUEST events for the X11 PRIMARY selection.
+  void          provide_selection       (uint64         nonce,
+                                         const String  &data_type,
+                                         const String  &data);  ///< Provide selection data in response to a CONTENT_REQUEST event.
   void          request_selection       (uint64        nonce,
                                          const String &data_type); ///< Request a CONTENT_DATA event for the X11 PRIMARY selection.
   void          claim_clipboard         (uint64 nonce, const StringVector
@@ -113,7 +116,7 @@ typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
 struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
 {
-  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, DESTROY, SHUTDOWN, OK, ERROR, };
+  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, PROVIDE, DESTROY, SHUTDOWN, OK, ERROR, };
   Type          type;
   ScreenWindow *screen_window;
   union {

@@ -1094,11 +1094,19 @@ WindowImpl::destroy_screen_window ()
 }
 
 void
-WindowImpl::claim_selection (uint64 nonce, const StringVector &data_types)
+WindowImpl::claim_selection (const StringVector &data_types)
 {
   // FIXME: this should be per-widget API
   if (screen_window_)
-    screen_window_->claim_selection (nonce, data_types);
+    screen_window_->claim_selection (data_types);
+}
+
+void
+WindowImpl::provide_selection (uint64 nonce, const String &data_type, const String &data)
+{
+  // FIXME: this should be per-widget API
+  if (screen_window_)
+    screen_window_->provide_selection (nonce, data_type, data);
 }
 
 bool

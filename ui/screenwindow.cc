@@ -154,9 +154,18 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
-ScreenWindow::claim_selection (uint64 nonce, const StringVector &data_types)
+ScreenWindow::claim_selection (const StringVector &data_types)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, nonce, data_types));
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, 0, data_types));
+}
+
+void
+ScreenWindow::provide_selection (uint64 nonce, const String &data_type, const String &data)
+{
+  StringVector data_types;
+  data_types.push_back (data_type);
+  data_types.push_back (data);
+  queue_command (new ScreenCommand (ScreenCommand::PROVIDE, this, 2, nonce, data_types));
 }
 
 void
@@ -279,7 +288,7 @@ ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int
 ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, uint64 _source, uint64 _nonce, const StringVector &_data_types) :
   type (ctype), screen_window (window), source (_source), nonce (_nonce), data_types (NULL)
 {
-  assert (type == CONTENT);
+  assert (type == CONTENT || type == PROVIDE);
   data_types = new StringVector (_data_types);
 }
 
@@ -309,7 +318,7 @@ ScreenCommand::~ScreenCommand()
     case UMOVE: case URESIZE:
       button = root_x = root_y = 0;
       break;
-    case CONTENT:
+    case PROVIDE: case CONTENT:
       nonce = 0;
       source = 0;
       delete data_types;
@@ -335,7 +344,7 @@ ScreenCommand::reply_type (Type type)
     case CREATE: case SHUTDOWN: return true; // has reply
     case CONFIGURE: case BLIT:  return false;
     case UMOVE: case URESIZE:   return false;
-    case CONTENT:               return false;
+    case PROVIDE: case CONTENT: return false;
     case BEEP: case SHOW:       return false;
     case PRESENT: case DESTROY: return false;
     case OK: case ERROR:        return true; // is reply
