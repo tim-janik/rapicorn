@@ -92,12 +92,21 @@ time_cmp (Time t1, Time t2)
 
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
-// == OwnedSelection ==
-struct OwnedSelection {         // primary_
+// == ContentOffer ==
+struct ContentOffer {           // primary_
   StringVector  content_types;  // selection mime types
   Time          time;           // selection time
-  uint64        nonce;
-  OwnedSelection() : time (0), nonce (0) {}
+  ContentOffer() : time (0) {}
+};
+
+// == ContentRequest ==
+struct ContentRequest {
+  uint64                 nonce;
+  XSelectionRequestEvent xsr;
+  String                 data_type;
+  String                 data;
+  bool                   data_provided;
+  ContentRequest (bool _data_provided = false) : nonce (0), xsr ({ 0, }), data_provided (_data_provided) {}
 };
 
 // == SelectionInput ==
@@ -137,7 +146,8 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
   SelectionInput       *isel_;
-  OwnedSelection       *primary_;
+  ContentOffer         *primary_;
+  vector<ContentRequest> content_requests_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
   void                  destroy_x11_resources   ();
@@ -148,8 +158,10 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   void                  filtered_event          (const XEvent &xevent);
   bool                  process_event           (const XEvent &xevent);
+  bool                  send_selection_notify   (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time);
   void                  request_selection       (Atom source, uint64 nonce, String data_type, Atom last_failed = None);
   void                  receive_selection       (const XEvent &xev);
+  void                  handle_content_request  (size_t nth);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
@@ -430,31 +442,20 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("SelRq: %c=%u [%lx] own=%u %s(%s) -> %ld(%s)", ss, xev.serial,
               xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
               xev.requestor, x11context.atom (xev.property));
-      // reply with selection
-      XEvent reply_xevent;
-      XSelectionEvent &reply = reply_xevent.xselection;
-      reply.type = SelectionNotify;
-      reply.serial = 0;
-      reply.send_event = True;
-      reply.display = NULL;
-      reply.requestor = xev.requestor;
-      reply.selection = xev.selection;
-      reply.target = xev.target;
-      reply.property = None;
-      reply.time = xev.time;
-      const String mime_type = x11context.target_atom_to_mime (reply.target);
-      if (XA_PRIMARY == xev.selection && primary_ && time_cmp (xev.time, primary_->time) >= 0)
+      if (XA_PRIMARY == xev.selection && xev.target && primary_ && time_cmp (xev.time, primary_->time) >= 0)
         {
-          // reply.property = xev.property;
-          enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, mime_type, "", primary_->nonce));
+          const String mime_type = x11context.target_atom_to_mime (xev.target);
+          ContentRequest cr (mime_type.empty());
+          cr.nonce = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
+          cr.xsr = xev;
+          content_requests_.push_back (cr);
+          if (!cr.data_provided)        // have mime_type
+            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, mime_type, "", cr.nonce));
+          else                          // have no mime_type
+            handle_content_request (content_requests_.size() - 1);
         }
-      // send reply, guard against foreign window deletion
-      XErrorEvent dummy = { 0, };
-      x11_trap_errors (&dummy);
-      Status xstatus = XSendEvent (x11context.display, reply.requestor, False, NoEventMask, &reply_xevent);
-      XSync (x11context.display, False);
-      x11_untrap_errors();
-      (void) xstatus;
+      else
+        send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
       consumed = true;
       break; }
     case Expose: {
@@ -1143,6 +1144,75 @@ X11Context::text_plain_to_target_atoms (vector<Atom> &targets)
       targets.push_back (atom (mime_target_atoms[i+1]));
 }
 
+bool
+ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time)
+{
+  XEvent xevent = { 0, };
+  XSelectionEvent &notify = xevent.xselection;
+  notify.type = SelectionNotify;
+  notify.serial = 0;
+  notify.send_event = True;
+  notify.display = NULL;
+  notify.requestor = req_window;
+  notify.selection = selection;
+  notify.target = target;
+  notify.property = req_property;
+  notify.time = req_time;
+  // send notify, guard against foreign window deletion
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  Status xstatus = XSendEvent (x11context.display, notify.requestor, False, NoEventMask, &xevent);
+  XSync (x11context.display, False);
+  x11_untrap_errors();
+  return xstatus != 0; // success
+}
+
+void
+ScreenWindowX11::handle_content_request (const size_t nth)
+{
+  assert_return (nth < content_requests_.size());
+  ContentRequest &cr = content_requests_[nth];
+  assert_return (cr.data_provided == true);
+  const XSelectionRequestEvent &xev = cr.xsr;
+  const Atom requestor_property = xev.property ? xev.property : xev.target; // ICCCM convention
+  if (xev.target == x11context.atom ("TIMESTAMP"))
+    {
+      if (save_set_integer_property (x11context.display, xev.requestor, requestor_property, primary_->time))
+        send_selection_notify (xev.requestor, xev.selection, xev.target, requestor_property, xev.time);
+    }
+  else if (xev.target == x11context.atom ("MULTIPLE")) // FIXME
+    {
+      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
+    }
+  else if (xev.target == x11context.atom ("TARGETS")) // FIXME
+    {
+      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
+    }
+  else if (strncmp (&cr.data_type[0], "text/", 5) == 0)
+    {
+      XICCEncodingStyle ecstyle = XUTF8StringStyle;
+      if      (xev.target == x11context.atom ("UTF8_STRING"))
+        ecstyle = XUTF8StringStyle;
+      else if (xev.target == x11context.atom ("TEXT"))
+        ecstyle = XCompoundTextStyle;
+      else if (xev.target == x11context.atom ("COMPOUND_TEXT"))
+        ecstyle = XCompoundTextStyle;
+      else if (xev.target == x11context.atom ("STRING"))
+        ecstyle = XStringStyle;
+      const bool transferred = save_set_text_property (x11context.display, xev.requestor, requestor_property, ecstyle, cr.data);
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  else
+    {
+      const Atom target = x11context.mime_to_target_atom (cr.data_type);
+      const bool transferred = !target ? false :
+                               save_set_byte_property (x11context.display, xev.requestor, requestor_property,
+                                                       target, cr.data);
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  content_requests_.erase (content_requests_.begin() + nth);
+}
+
 void
 ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type, Atom last_failed)
 {
@@ -1179,6 +1249,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 {
   switch (command->type)
     {
+      bool found;
     case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
       assert_unreached();
     case ScreenCommand::CONFIGURE:
@@ -1201,10 +1272,9 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
           if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
             {
               if (!primary_)
-                primary_ = new OwnedSelection();
+                primary_ = new ContentOffer();
               primary_->content_types = *command->data_types;
               primary_->time = event_context_.time;
-              primary_->nonce = command->nonce;
             }
           else
             {
@@ -1227,6 +1297,24 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
           break;
         }
       break;
+    case ScreenCommand::PROVIDE: {
+      assert_return (command->source == 2);
+      assert_return (command->data_types->size() == 2);
+      found = false;
+      for (auto &cr : content_requests_)
+        if (cr.nonce == command->nonce && !cr.data_provided)
+          {
+            cr.data_provided = true;
+            cr.data_type = (*command->data_types)[0];
+            cr.data = (*command->data_types)[1];
+            handle_content_request (&cr - &content_requests_[0]);
+            found = true;
+            break;
+          }
+      if (!found)
+        RAPICORN_CRITICAL ("content provided for unknown nonce: %u (data_type=%s data_length=%u)",
+                           command->nonce, (*command->data_types)[0], (*command->data_types)[1].size());
+      break; }
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
     case ScreenCommand::URESIZE:   break;  // FIXME
