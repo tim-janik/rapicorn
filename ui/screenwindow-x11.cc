@@ -42,6 +42,15 @@ struct X11Widget {
   virtual ~X11Widget() {}
 };
 
+// == EventStake ==
+struct EventStake {
+  Window        window;
+  unsigned long mask;
+  uint          ref_count;
+  bool          destroyed;
+  EventStake() : window (0), mask (0), ref_count (0), destroyed (false) {}
+};
+
 // == X11Context ==
 class X11Context {
   MainLoop                            &loop_;
@@ -49,13 +58,15 @@ class X11Context {
   map<size_t, X11Widget*>              x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
+  vector<EventStake>                   event_stakes_;
   int8                                 shared_mem_;
-  bool                  x11_dispatcher  (const EventLoop::State &state);
-  bool                  x11_io_handler  (PollFD &pfd);
-  void                  process_x11     ();
-  bool                  filter_event    (const XEvent&);
-  void                  process_updates ();
-  bool                  cmd_dispatcher  (const EventLoop::State &state);
+  bool                  x11_dispatcher          (const EventLoop::State &state);
+  bool                  x11_io_handler          (PollFD &pfd);
+  void                  process_x11             ();
+  bool                  filter_event            (const XEvent&);
+  void                  process_updates         ();
+  bool                  cmd_dispatcher          (const EventLoop::State &state);
+  EventStake*           find_event_stake        (Window window, bool create);
 public:
   ScreenDriver         &screen_driver;
   Display              *display;
@@ -73,6 +84,9 @@ public:
   void                  queue_update (size_t xid);
   void                  run        ();
   bool                  connect    ();
+  void                  ref_events                      (Window window, unsigned long event_mask, const XSetWindowAttributes *attrs = NULL);
+  void                  unref_events                    (Window window);
+  void                  window_destroyed                (Window window);
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
   void                  text_plain_to_target_atoms      (vector<Atom> &targets);
@@ -210,6 +224,8 @@ ScreenWindowX11::destroy_x11_resources()
     {
       XDestroyWindow (x11context.display, window_);
       x11context.x11id_set (window_, NULL);
+      x11context.window_destroyed (window_);
+      x11context.unref_events (window_);
       window_ = 0;
     }
 }
@@ -269,6 +285,8 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
                                     x11context.input_method, x11context.input_style, &input_context_);
   if (!imerr.empty())
     XDEBUG ("XIM: window=%u: %s", window_, imerr.c_str());
+  // ensure to keep this window's event mask around
+  x11context.ref_events (window_, attributes.event_mask, &attributes);
   // configure initial state for this window
   XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, window_, window_,
                           0, 0, request_width, request_height, border, /*above*/ 0, override_redirect_, };
@@ -1540,6 +1558,11 @@ X11Context::filter_event (const XEvent &xevent)
               xev.first_keycode, xev.count);
       filtered = true;
       break; }
+    case DestroyNotify: {
+      const XDestroyWindowEvent &xev = xevent.xdestroywindow;
+      if (xev.window)
+        window_destroyed (xev.window);
+      break; }
     }
   return filtered;
 }
@@ -1565,6 +1588,72 @@ X11Context::x11id_get (size_t xid)
   // do lookup without modifying x11ids
   auto it = x11ids_.find (xid);
   return x11ids_.end() != it ? it->second : NULL;
+}
+
+EventStake*
+X11Context::find_event_stake (Window window, bool create)
+{
+  for (auto &es : event_stakes_)
+    if (es.window == window)
+      return &es;
+  if (!create)
+    return NULL;
+  EventStake es;
+  es.window = window;
+  event_stakes_.push_back (es);
+  return &event_stakes_[event_stakes_.size()-1];
+}
+
+void
+X11Context::window_destroyed (Window window)
+{
+  EventStake *es  = find_event_stake (window, false);
+  if (es)
+    es->destroyed = true;
+}
+
+void
+X11Context::ref_events (Window window, unsigned long event_mask, const XSetWindowAttributes *attrs)
+{
+  EventStake &es = *find_event_stake (window, true);
+  es.ref_count += 1;
+  if (attrs)
+    es.mask |= attrs->event_mask;
+  if (event_mask & ~es.mask)
+    {
+      es.mask |= event_mask;
+      if (!es.destroyed)
+        {
+          XErrorEvent dummy = { 0, };
+          x11_trap_errors (&dummy);
+          XSelectInput (display, es.window, es.mask);
+          XSync (display, False);
+          if (x11_untrap_errors())
+            es.destroyed = true;
+        }
+    }
+}
+
+void
+X11Context::unref_events (Window window)
+{
+  EventStake *window_event_stake = find_event_stake (window, false);
+  assert_return (window_event_stake != NULL);
+  assert_return (window_event_stake->ref_count > 0);
+  window_event_stake->ref_count -= 1;
+  if (window_event_stake->ref_count == 0)
+    {
+      if (!window_event_stake->destroyed)
+        {
+          XErrorEvent dummy = { 0, };
+          x11_trap_errors (&dummy);
+          XSelectInput (display, window_event_stake->window, 0);
+          XSync (display, False);
+          if (x11_untrap_errors())
+            window_event_stake->destroyed = true;
+        }
+      event_stakes_.erase (event_stakes_.begin() + (window_event_stake - &event_stakes_[0]));
+    }
 }
 
 Atom
