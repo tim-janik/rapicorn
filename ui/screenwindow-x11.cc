@@ -51,6 +51,17 @@ struct EventStake {
   EventStake() : window (0), mask (0), ref_count (0), destroyed (false) {}
 };
 
+// == IncrTransfer ==
+struct IncrTransfer {
+  Window       window;
+  Atom         property;
+  Atom         type;
+  size_t       byte_width;
+  size_t       offset;
+  vector<char> bytes;
+  IncrTransfer() : window (0), property (0), type (0), byte_width (0), offset (0) {}
+};
+
 // == X11Context ==
 class X11Context {
   MainLoop                            &loop_;
@@ -59,6 +70,7 @@ class X11Context {
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
   vector<EventStake>                   event_stakes_;
+  vector<IncrTransfer>                 incr_transfers_;
   int8                                 shared_mem_;
   bool                  x11_dispatcher          (const EventLoop::State &state);
   bool                  x11_io_handler          (PollFD &pfd);
@@ -67,11 +79,14 @@ class X11Context {
   void                  process_updates         ();
   bool                  cmd_dispatcher          (const EventLoop::State &state);
   EventStake*           find_event_stake        (Window window, bool create);
+  void                  continue_incr           (Window window, Atom property);
 public:
   ScreenDriver         &screen_driver;
   Display              *display;
-  int                   screen;
   Visual               *visual;
+  size_t                max_request_bytes;
+  size_t                max_property_bytes;
+  int                   screen;
   int                   depth;
   Window                root_window;
   XIM                   input_method;
@@ -87,6 +102,7 @@ public:
   void                  ref_events                      (Window window, unsigned long event_mask, const XSetWindowAttributes *attrs = NULL);
   void                  unref_events                    (Window window);
   void                  window_destroyed                (Window window);
+  bool                  transfer_incr_property          (Window window, Atom property, Atom type, int element_bits, const void *elements, size_t nelements);
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
   void                  text_plain_to_target_atoms      (vector<Atom> &targets);
@@ -1180,16 +1196,15 @@ ScreenWindowX11::handle_content_request (const size_t nth)
       vector<uint8> chars;
       bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &chars, &ptype, &pformat);
       transferred = transferred && pformat == 8 &&
-                    safe_set_property (x11context.display, xev.requestor, requestor_property, ptype,
-                                       8, chars.data(), chars.size());
+                    x11context.transfer_incr_property (xev.requestor, requestor_property, ptype, 8, chars.data(), chars.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
   else
     {
       const Atom target = x11context.mime_to_target_atom (cr.data_type);
       const bool transferred = !target ? false :
-                               safe_set_property (x11context.display, xev.requestor, requestor_property,
-                                                  target, 8, cr.data.data(), cr.data.size());
+                               x11context.transfer_incr_property (xev.requestor, requestor_property,
+                                                                  target, 8, cr.data.data(), cr.data.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
   content_requests_.erase (content_requests_.begin() + nth);
@@ -1312,7 +1327,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
   loop_ (*ref_sink (MainLoop::_new())), command_queue_ (command_queue), reply_queue_ (reply_queue),
-  shared_mem_ (-1), screen_driver (driver), display (NULL), screen (0), visual (NULL), depth (0),
+  shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
+  max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
 {
   XDEBUG ("%s: X11Context started", STRFUNC);
@@ -1343,6 +1359,10 @@ X11Context::connect()
   if (!display)
     return false;
   XSynchronize (display, dbe_x11sync);
+  max_request_bytes = XExtendedMaxRequestSize (display) * 4;
+  if (!max_request_bytes)
+    max_request_bytes = XMaxRequestSize (display) * 4;
+  max_property_bytes = CLAMP (max_request_bytes - 256, 8192, 1048576);
   screen = DefaultScreen (display);
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);
@@ -1513,6 +1533,11 @@ X11Context::filter_event (const XEvent &xevent)
               xev.first_keycode, xev.count);
       filtered = true;
       break; }
+    case PropertyNotify: {
+      const XPropertyEvent &xev = xevent.xproperty;
+      if (!incr_transfers_.empty() && xev.state == PropertyDelete)
+        continue_incr (xev.window, xev.atom);
+      break; }
     case DestroyNotify: {
       const XDestroyWindowEvent &xev = xevent.xdestroywindow;
       if (xev.window)
@@ -1520,6 +1545,54 @@ X11Context::filter_event (const XEvent &xevent)
       break; }
     }
   return filtered;
+}
+
+bool
+X11Context::transfer_incr_property (Window window, Atom property, Atom type, int element_bits, const void *elements, size_t nelements)
+{
+  assert_return (element_bits == 8 || element_bits == 16 || element_bits == 32, false);
+  const long nbytes = nelements * (element_bits / 8);
+  // set property in one chunk
+  if (nbytes < long (max_property_bytes))
+    return safe_set_property (display, window, property, type, element_bits, elements, nelements);
+  // need to start incremental transfer
+  ref_events (window, PropertyChangeMask); // avoid-race: request PropertyChangeMask before safe_set_property("INCR")
+  if (safe_set_property (display, window, property, atom ("INCR"), 32, &nbytes, 1)) // ICCCM sec. 2.5
+    {
+      IncrTransfer it;
+      it.window = window;
+      it.property = property;
+      it.type = type;
+      it.byte_width = element_bits / 8;
+      it.offset = 0;
+      it.bytes.insert (it.bytes.end(), (const char*) elements, (const char*) elements + nelements * it.byte_width);
+      incr_transfers_.push_back (it);
+      return true;
+    }
+  else
+    {
+      unref_events (window);
+      return false;
+    }
+}
+
+void
+X11Context::continue_incr (Window window, Atom property)
+{
+  for (IncrTransfer &it : incr_transfers_)
+    if (it.window == window && it.property == property)
+      {
+        const size_t num = MIN (it.bytes.size() - it.offset, max_property_bytes) / it.byte_width;
+        const bool abort = false == safe_set_property (display, it.window, it.property, it.type, it.byte_width * 8,
+                                                       it.bytes.data() + it.offset, num);
+        it.offset += num * it.byte_width;
+        if (num == 0 || abort) // 0-size termination sent
+          {
+            unref_events (it.window); // no PropertyChangeMask events are needed beyond this
+            incr_transfers_.erase (incr_transfers_.begin() + (&it - &incr_transfers_[0]));
+          }
+        return;
+      }
 }
 
 void
