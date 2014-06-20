@@ -1152,7 +1152,8 @@ ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom 
   x11_trap_errors (&dummy);
   Status xstatus = XSendEvent (x11context.display, notify.requestor, False, NoEventMask, &xevent);
   XSync (x11context.display, False);
-  x11_untrap_errors();
+  if (x11_untrap_errors())
+    xstatus = 0;
   return xstatus != 0; // success
 }
 
