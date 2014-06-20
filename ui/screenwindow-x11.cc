@@ -1117,51 +1117,6 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
     enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
 }
 
-static const char *const mime_target_atoms[] = {           // determine X11 selection property types from mime
-  "text/plain", "UTF8_STRING",
-  "text/plain", "COMPOUND_TEXT",
-  "text/plain", "TEXT",
-  "text/plain", "STRING",
-};
-
-String
-X11Context::target_atom_to_mime (const Atom target_atom)
-{
-  // X11 atom lookup
-  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
-    if (target_atom == atom (mime_target_atoms[i+1]))
-      return mime_target_atoms[i];
-  // direct mime type plausible?
-  const String target = atom (target_atom);
-  if (target.size() && target[0] >= 'a' && target[0] <= 'z' && target.find ('/') != target.npos && target.find ('/') == target.rfind ('/'))
-    return target;      // starts with lower case alpha and has one slash, possibly mime type
-  return "";
-}
-
-Atom
-X11Context::mime_to_target_atom (const String &mime, Atom last_failed)
-{
-  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
-    if (last_failed)                                    // first find last failing request type
-      {
-        if (last_failed == atom (mime_target_atoms[i+1]))
-          last_failed = None;                           // skipped all types until last request
-        continue;
-      }
-    else if (mime == mime_target_atoms[i])
-      return atom (mime_target_atoms[i+1]);
-  return None;
-}
-
-void
-X11Context::text_plain_to_target_atoms (vector<Atom> &targets)
-{
-  const String text_plain = "text/plain";
-  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
-    if (text_plain == mime_target_atoms[i])
-      targets.push_back (atom (mime_target_atoms[i+1]));
-}
-
 bool
 ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time)
 {
@@ -1674,6 +1629,51 @@ X11Context::atom (Atom atom) const
   if (res)
     XFree (res);
   return result;
+}
+
+static const char *const mime_target_atoms[] = {           // determine X11 selection property types from mime
+  "text/plain", "UTF8_STRING",
+  "text/plain", "COMPOUND_TEXT",
+  "text/plain", "TEXT",
+  "text/plain", "STRING",
+};
+
+String
+X11Context::target_atom_to_mime (const Atom target_atom)
+{
+  // X11 atom lookup
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (target_atom == atom (mime_target_atoms[i+1]))
+      return mime_target_atoms[i];
+  // direct mime type plausible?
+  const String target = atom (target_atom);
+  if (target.size() && target[0] >= 'a' && target[0] <= 'z' && target.find ('/') != target.npos && target.find ('/') == target.rfind ('/'))
+    return target;      // starts with lower case alpha and has one slash, possibly mime type
+  return "";
+}
+
+Atom
+X11Context::mime_to_target_atom (const String &mime, Atom last_failed)
+{
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (last_failed)                                    // first find last failing request type
+      {
+        if (last_failed == atom (mime_target_atoms[i+1]))
+          last_failed = None;                           // skipped all types until last request
+        continue;
+      }
+    else if (mime == mime_target_atoms[i])
+      return atom (mime_target_atoms[i+1]);
+  return None;
+}
+
+void
+X11Context::text_plain_to_target_atoms (vector<Atom> &targets)
+{
+  const String text_plain = "text/plain";
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (text_plain == mime_target_atoms[i])
+      targets.push_back (atom (mime_target_atoms[i+1]));
 }
 
 bool
