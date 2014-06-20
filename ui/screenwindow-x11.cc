@@ -265,7 +265,7 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   setup_window (setup);
   configure_window (config, true);
   // create input context if possible
-  String imerr = x11_input_context (x11context.display, window_, attributes.event_mask,
+  String imerr = x11_input_context (x11context.display, window_, &attributes.event_mask,
                                     x11context.input_method, x11context.input_style, &input_context_);
   if (!imerr.empty())
     XDEBUG ("XIM: window=%u: %s", window_, imerr.c_str());

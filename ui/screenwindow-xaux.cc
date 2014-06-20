@@ -550,7 +550,7 @@ x11_input_method (Display *display, XIM *ximp, XIMStyle *bestp, const char *loca
 }
 
 static String
-x11_input_context (Display *display, Window window, unsigned long events, XIM xim, XIMStyle imstyle, XIC *xicp)
+x11_input_context (Display *display, Window window, long *events, XIM xim, XIMStyle imstyle, XIC *xicp)
 {
   *xicp = 0;
   XIC xic = xim ? XCreateIC (xim, XNInputStyle, imstyle, XNClientWindow, window, XNFocusWindow, window, nullptr) : NULL;
@@ -558,8 +558,11 @@ x11_input_context (Display *display, Window window, unsigned long events, XIM xi
     return "failed to create input context";
   // extend window event mask as needed
   unsigned long imevents = 0;
-  if (XGetICValues (xic, XNFilterEvents, &imevents, nullptr) == NULL && imevents != (events & imevents))
-    XSelectInput (display, window, events | imevents);
+  if (XGetICValues (xic, XNFilterEvents, &imevents, nullptr) == NULL && imevents != (*events & imevents))
+    {
+      *events = *events | imevents;
+      XSelectInput (display, window, *events);
+    }
   *xicp = xic;
   return "";
 }
