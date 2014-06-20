@@ -44,11 +44,12 @@ struct X11Widget {
 
 // == X11Context ==
 class X11Context {
-  MainLoop             &loop_;
-  vector<size_t>        queued_updates_; // XIDs
-  map<size_t, X11Widget*> x11ids_;
+  MainLoop                            &loop_;
+  vector<size_t>                       queued_updates_; // XIDs
+  map<size_t, X11Widget*>              x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
+  int8                                 shared_mem_;
   bool                  x11_dispatcher  (const EventLoop::State &state);
   bool                  x11_io_handler  (PollFD &pfd);
   void                  process_x11     ();
@@ -64,7 +65,6 @@ public:
   Window                root_window;
   XIM                   input_method;
   XIMStyle              input_style;
-  int8                  shared_mem_;
   X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
   Atom                  atom         (const String &text, bool force_create = true);
@@ -1339,8 +1339,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
   loop_ (*ref_sink (MainLoop::_new())), command_queue_ (command_queue), reply_queue_ (reply_queue),
-  screen_driver (driver), display (NULL), screen (0), visual (NULL), depth (0),
-  root_window (0), input_method (NULL), shared_mem_ (-1)
+  shared_mem_ (-1), screen_driver (driver), display (NULL), screen (0), visual (NULL), depth (0),
+  root_window (0), input_method (NULL)
 {
   XDEBUG ("%s: X11Context started", STRFUNC);
   do_once {
