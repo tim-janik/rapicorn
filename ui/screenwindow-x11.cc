@@ -1197,7 +1197,7 @@ ScreenWindowX11::handle_content_request (const size_t nth)
     {
       vector<unsigned long> ints;
       ints.push_back (primary_->time);
-      if (save_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
+      if (safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
                              32, ints.data(), ints.size()))
         send_selection_notify (xev.requestor, xev.selection, xev.target, requestor_property, xev.time);
     }
@@ -1225,7 +1225,7 @@ ScreenWindowX11::handle_content_request (const size_t nth)
       vector<uint8> chars;
       bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &chars, &ptype, &pformat);
       transferred = transferred && pformat == 8 &&
-                    save_set_property (x11context.display, xev.requestor, requestor_property, ptype,
+                    safe_set_property (x11context.display, xev.requestor, requestor_property, ptype,
                                        8, chars.data(), chars.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
@@ -1233,7 +1233,7 @@ ScreenWindowX11::handle_content_request (const size_t nth)
     {
       const Atom target = x11context.mime_to_target_atom (cr.data_type);
       const bool transferred = !target ? false :
-                               save_set_property (x11context.display, xev.requestor, requestor_property,
+                               safe_set_property (x11context.display, xev.requestor, requestor_property,
                                                   target, 8, cr.data.data(), cr.data.size());
       send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }

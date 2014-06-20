@@ -264,7 +264,7 @@ x11_get_property_data32 (Display *display, Window window, Atom property_atom)
 }
 
 static bool
-save_set_property (Display *display, Window window, Atom property_atom, Atom property_type,
+safe_set_property (Display *display, Window window, Atom property_atom, Atom property_type,
                    int element_bits, const void *elements, size_t nelements)
 {
   assert_return (element_bits == 8 || element_bits == 16 || element_bits == 32, false);
