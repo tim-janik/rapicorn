@@ -299,7 +299,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->request_selection (nonce, data_type);
+          screen_window->request_content (csource, nonce, data_type);
           return true;
         }
     }
@@ -321,7 +321,7 @@ WidgetImpl::own_content (ContentSourceType content_source, const StringVector &d
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->claim_selection (data_types);
+          screen_window->set_content_owner (content_source, data_types);
           return true;
         }
     }
@@ -340,7 +340,7 @@ WidgetImpl::disown_content (ContentSourceType content_source)
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->claim_selection (StringVector());
+          screen_window->set_content_owner (content_source, StringVector());
           return true;
         }
     }
@@ -361,7 +361,7 @@ WidgetImpl::provide_content (uint64 nonce, const String &data_type, const String
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->provide_selection (nonce, data_type, data);
+          screen_window->provide_content (nonce, data_type, data);
           return true;
         }
     }

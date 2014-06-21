@@ -82,17 +82,9 @@ public:
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
-  void          claim_selection         (const StringVector
-                                         &data_types); ///< Allow CONTENT_REQUEST events for the X11 PRIMARY selection.
-  void          provide_selection       (uint64         nonce,
-                                         const String  &data_type,
-                                         const String  &data);  ///< Provide selection data in response to a CONTENT_REQUEST event.
-  void          request_selection       (uint64        nonce,
-                                         const String &data_type); ///< Request a CONTENT_DATA event for the X11 PRIMARY selection.
-  void          claim_clipboard         (uint64 nonce, const StringVector
-                                         &data_types); ///< Allow CONTENT_REQUEST events for the X11 CLIPBOARD selection.
-  void          request_clipboard       (uint64        nonce,
-                                         const String &data_type); ///< Request a CONTENT_DATA event for the X11 CLIPBOARD selection.
+  void          set_content_owner       (ContentSourceType source, const StringVector &data_types); ///< Yields CONTENT_REQUEST & CONTENT_CLEAR.
+  void          request_content         (ContentSourceType source, uint64 nonce, const String &data_type); ///< Yields CONTENT_DATA.
+  void          provide_content         (uint64 nonce, const String &data_type, const String  &data); ///< Reply for CONTENT_REQUEST.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.
   void          push_event              (Event *event);         ///< Push back an event, so it's the next event returned by pop().
   bool          has_event               ();                     ///< Indicates if pop_event() will return non-NULL.
@@ -116,20 +108,20 @@ typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
 struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
 {
-  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, PROVIDE, DESTROY, SHUTDOWN, OK, ERROR, };
+  enum Type { CREATE = 1, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, OK, ERROR, };
   Type          type;
   ScreenWindow *screen_window;
   union {
     struct { ScreenWindow::Config *config;    ScreenWindow::Setup *setup; };
     struct { ScreenWindow::Config *dconfig;   bool dresize; };
-    struct { uint64 source, nonce;            StringVector *data_types; };
+    struct { uint64 nonce; StringVector *data_types; ContentSourceType source; };
     struct { cairo_surface_t      *surface;   Rapicorn::Region *region; };
     struct { int                   button, root_x, root_y; };
     struct { String               *result_msg; };
   };
   ScreenCommand (Type type, ScreenWindow *window);
   ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Config &cfg, bool sizeevent);
-  ScreenCommand (Type type, ScreenWindow *window, uint64 source, uint64 nonce, const StringVector &data_types);
+  ScreenCommand (Type type, ScreenWindow *window, ContentSourceType source, uint64 nonce, const StringVector &data_types);
   ScreenCommand (Type type, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg);
   ScreenCommand (Type type, ScreenWindow *window, cairo_surface_t *surface, const Rapicorn::Region &region);
   ScreenCommand (Type type, ScreenWindow *window, int button, int root_x, int root_y);

@@ -1262,10 +1262,10 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::CONTENT:
+    case ScreenCommand::OWNER:
       switch (command->source)
         {
-        case 2:
+        case CONTENT_SOURCE_SELECTION:
           XSetSelectionOwner (x11context.display, XA_PRIMARY, command->data_types->size() > 0 ? window_ : None, event_context_.time);
           if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
             {
@@ -1281,22 +1281,27 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
               primary_ = NULL;
             }
           break;
-        case 3:
-          assert_return (command->data_types->size() == 1);
-          request_selection (XA_PRIMARY, command->nonce, (*command->data_types)[0]);
-          break;
-        case 4:
+        case CONTENT_SOURCE_CLIPBOARD:
           XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), command->data_types->size() > 0 ? window_ : None, event_context_.time);
           // FIXME: implement clipboard copies
           break;
-        case 5:
+        }
+      break;
+    case ScreenCommand::CONTENT:
+      switch (command->source)
+        {
+        case CONTENT_SOURCE_SELECTION:
+          assert_return (command->data_types->size() == 1);
+          request_selection (XA_PRIMARY, command->nonce, (*command->data_types)[0]);
+          break;
+        case CONTENT_SOURCE_CLIPBOARD:
           assert_return (command->data_types->size() == 1);
           request_selection (x11context.atom ("CLIPBOARD"), command->nonce, (*command->data_types)[0]);
           break;
         }
       break;
     case ScreenCommand::PROVIDE: {
-      assert_return (command->source == 2);
+      assert_return (command->source == 0);
       assert_return (command->data_types->size() == 2);
       found = false;
       for (auto &cr : content_requests_)

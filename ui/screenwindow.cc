@@ -154,40 +154,26 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
-ScreenWindow::claim_selection (const StringVector &data_types)
+ScreenWindow::set_content_owner (ContentSourceType source, const StringVector &data_types)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 2, 0, data_types));
+  queue_command (new ScreenCommand (ScreenCommand::OWNER, this, source, 0, data_types));
 }
 
 void
-ScreenWindow::provide_selection (uint64 nonce, const String &data_type, const String &data)
+ScreenWindow::provide_content (uint64 nonce, const String &data_type, const String &data)
 {
   StringVector data_types;
   data_types.push_back (data_type);
   data_types.push_back (data);
-  queue_command (new ScreenCommand (ScreenCommand::PROVIDE, this, 2, nonce, data_types));
+  queue_command (new ScreenCommand (ScreenCommand::PROVIDE, this, ContentSourceType (0), nonce, data_types));
 }
 
 void
-ScreenWindow::request_selection (uint64 nonce, const String &data_type)
+ScreenWindow::request_content (ContentSourceType source, uint64 nonce, const String &data_type)
 {
   StringVector data_types;
   data_types.push_back (data_type);
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 3, nonce, data_types));
-}
-
-void
-ScreenWindow::claim_clipboard (uint64 nonce, const StringVector &data_types)
-{
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 4, nonce, data_types));
-}
-
-void
-ScreenWindow::request_clipboard (uint64 nonce, const String &data_type)
-{
-  StringVector data_types;
-  data_types.push_back (data_type);
-  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, 5, nonce, data_types));
+  queue_command (new ScreenCommand (ScreenCommand::CONTENT, this, source, nonce, data_types));
 }
 
 void
@@ -285,10 +271,10 @@ ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int
   croot_y = root_y;
 }
 
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, uint64 _source, uint64 _nonce, const StringVector &_data_types) :
-  type (ctype), screen_window (window), source (_source), nonce (_nonce), data_types (NULL)
+ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, ContentSourceType _source, uint64 _nonce, const StringVector &_data_types) :
+  type (ctype), screen_window (window), nonce (_nonce), data_types (NULL), source (_source)
 {
-  assert (type == CONTENT || type == PROVIDE);
+  assert (type == OWNER || type == CONTENT || type == PROVIDE);
   data_types = new StringVector (_data_types);
 }
 
@@ -318,9 +304,9 @@ ScreenCommand::~ScreenCommand()
     case UMOVE: case URESIZE:
       button = root_x = root_y = 0;
       break;
-    case PROVIDE: case CONTENT:
+    case OWNER: case PROVIDE: case CONTENT:
       nonce = 0;
-      source = 0;
+      source = ContentSourceType (0);
       delete data_types;
       break;
     case BEEP: case SHOW: case PRESENT: case DESTROY: case SHUTDOWN:
@@ -344,6 +330,7 @@ ScreenCommand::reply_type (Type type)
     case CREATE: case SHUTDOWN: return true; // has reply
     case CONFIGURE: case BLIT:  return false;
     case UMOVE: case URESIZE:   return false;
+    case OWNER:
     case PROVIDE: case CONTENT: return false;
     case BEEP: case SHOW:       return false;
     case PRESENT: case DESTROY: return false;
