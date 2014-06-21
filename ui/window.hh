@@ -46,12 +46,6 @@ public:
   virtual WidgetImpl*   get_grab                                (bool                   *unconfined = NULL);
   // main loop
   virtual EventLoop*    get_loop                                ();
-  // content handling
-  void                  claim_selection                         (const StringVector &data_types);
-  void                  provide_selection                       (uint64 nonce, const String &data_type, const String &data);
-  bool                  request_selection                       (uint64 nonce, const String &data_type);
-  void                  claim_clipboard                         (uint64 nonce, const StringVector &data_types);
-  bool                  request_clipboard                       (uint64 nonce, const String &data_type);
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */

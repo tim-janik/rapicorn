@@ -46,6 +46,12 @@ ActivateKeyType key_value_to_activation   (uint32 keysym);
 bool            key_value_is_cancellation (uint32 keysym);
 
 typedef enum {
+  CONTENT_SOURCE_SELECTION = 1, ///< Current selection of a window or screen, under X11 this is the PRIMARY selection.
+  CONTENT_SOURCE_CLIPBOARD,     ///< Clipboard associated with a window or screen, under X11 this is the global CLIPBOARD.
+} ContentSourceType;
+const char* string_from_content_source_type (ContentSourceType ctype);
+
+typedef enum {
   EVENT_NONE,
   MOUSE_ENTER,
   MOUSE_MOVE,
@@ -114,10 +120,10 @@ class EventData : public Event {
 protected:
   explicit        EventData (EventType, const EventContext&, const String &, const String &, uint64);
 public:
-  virtual        ~EventData();
-  String          data_type;
-  String          data;
-  uint64          nonce;
+  virtual          ~EventData();
+  ContentSourceType content_source;
+  String            data_type, data;
+  uint64            nonce;
 };
 struct EventWinSize : public Event {
 protected:

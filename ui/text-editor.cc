@@ -222,7 +222,7 @@ private:
           case 'v':
             if (kevent->key_state & MOD_CONTROL)
               {
-                get_window()->request_clipboard (77, "text/plain"); // FIXME: should operate on viewport
+                request_content (CONTENT_SOURCE_CLIPBOARD, 77, "text/plain");
                 handled = true;
                 break;
               }
@@ -274,7 +274,7 @@ private:
                   {
                     text = text.substr (start, end - start);
                     if (utf8_validate (text))
-                      get_window()->provide_selection (devent->nonce, "text/plain", text);
+                      provide_content (devent->nonce, "text/plain", text);
                   }
               }
           }
@@ -298,7 +298,7 @@ private:
           }
         else if (bevent->button == 2)
           {
-            get_window()->request_selection (77, "text/plain"); // FIXME: should operate on viewport
+            request_content (CONTENT_SOURCE_SELECTION, 77, "text/plain");
           }
         handled = true;
         break;
@@ -446,9 +446,9 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      get_window()->claim_selection (StringVector()); // give up ownership
+      disown_content (CONTENT_SOURCE_SELECTION);
     else
-      get_window()->claim_selection (cstrings_to_vector ("text/plain", NULL)); // claim new selection
+      own_content (CONTENT_SOURCE_SELECTION, cstrings_to_vector ("text/plain", NULL)); // claim new selection
   }
   virtual void
   text (const String &text)

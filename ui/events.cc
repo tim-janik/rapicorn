@@ -29,6 +29,17 @@ public:
 };
 
 const char*
+string_from_content_source_type (ContentSourceType ctype)
+{
+  switch (ctype)
+    {
+    case CONTENT_SOURCE_SELECTION:      return "ContentSourceSelection";
+    case CONTENT_SOURCE_CLIPBOARD:      return "ContentSourceClipboard";
+    default:                            return "<unknown>";
+    }
+}
+
+const char*
 string_from_event_type (EventType etype)
 {
   switch (etype)

@@ -283,6 +283,91 @@ WidgetImpl::notify_key_error ()
     }
 }
 
+/** Request content data.
+ * Request content data from clipboard or selection, etc. This request will result in the delivery of a
+ * CONTENT_DATA event with a @a data_type possibly different from the requested @a data_type.
+ * The event's @a data_type will be empty if no content data is available.
+ * The @a nonce argument is an ID that should be unique for each new request, it is provided by the
+ * CONTENT_DATA event to associate the originating request.
+ */
+bool
+WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const String &data_type)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->request_selection (nonce, data_type);
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Claim ownership for content requests.
+ * Make this widget the owner for future @a content_source requests (delivered as CONTENT_REQUEST events).
+ * The @a data_types contain a list of acceptable types to retrieve contents.
+ * A CONTENT_CLEAR event may be sent to indicate ownership loss, e.g. because another widget or process took on ownership.
+ */
+bool
+WidgetImpl::own_content (ContentSourceType content_source, const StringVector &data_types)
+{
+  assert_return (data_types.size() >= 1, false);
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->claim_selection (data_types);
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Reject ownership for content requests.
+ * Counterpart to WidgetImpl::own_content(), gives up ownership if it was previously acquired.
+ */
+bool
+WidgetImpl::disown_content (ContentSourceType content_source)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->claim_selection (StringVector());
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Provide reply data for CONTENT_REQUEST events.
+ * All CONTENT_REQUEST events need to be honored with provide_content() replies,
+ * the @a nonce argument is provided by the event and must be passed along.
+ * To reject a content request, pass an empty string as @a data_type.
+ */
+bool
+WidgetImpl::provide_content (uint64 nonce, const String &data_type, const String &data)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->provide_selection (nonce, data_type, data);
+          return true;
+        }
+    }
+  return false;
+}
+
 size_t
 WidgetImpl::cross_link (WidgetImpl &link, const WidgetSlot &uncross)
 {
