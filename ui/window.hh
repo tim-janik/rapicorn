@@ -9,7 +9,6 @@ namespace Rapicorn {
 
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
-  friend class  WidgetImpl;
   EventLoop            &loop_;
   ScreenWindow*         screen_window_;
   EventContext          last_event_context_;
@@ -141,6 +140,14 @@ private:
     }
   };
   map<ButtonState,uint> button_state_map_;
+public: // tailored member access for WidgetImpl
+  /// @cond INTERNAL
+  class Internal {
+    friend               class WidgetImpl; // only friends can access private class members
+    static ScreenWindow* screen_window (WindowImpl &window)                     { return window.screen_window_; }
+    static void          set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
+  };
+  /// @endcond
 };
 
 } // Rapicorn

@@ -221,7 +221,7 @@ WidgetImpl::unset_focus ()
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
-        rwidget->set_focus (NULL);
+        WindowImpl::Internal::set_focus (*rwidget, NULL);
     }
 }
 
@@ -235,11 +235,11 @@ WidgetImpl::grab_focus ()
   // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    rwidget->set_focus (NULL);
+    WindowImpl::Internal::set_focus (*rwidget, NULL);
   // set new focus
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
-    rwidget->set_focus (this);
+    WindowImpl::Internal::set_focus (*rwidget, this);
   return rwidget->get_focus() == this;
 }
 
@@ -276,7 +276,11 @@ WidgetImpl::notify_key_error ()
 {
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    rwidget->beep();
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        screen_window->beep();
+    }
 }
 
 size_t
