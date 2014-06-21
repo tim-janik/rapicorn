@@ -280,40 +280,44 @@ sequence WidgetSeq { Widget  widgets; };
  * See also the corresponding implementation class WidgetImpl.
  */
 interface Widget {
-  Requisition     requisition             () = 0;                //< Get the current effective size requisition
-  bool            match_selector          (String selector) = 0; //< Check if selector matches this widget.
-  Widget          query_selector          (String selector) = 0; //< Returns first selector match.
-  WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
-  Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
-  String	test_dump               () = 0;
-  String name = String (_("Name"), _("Identification name of the widget"), "rw");
-  float64 width   = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
-  float64 height  = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
-  bool  hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
-  bool  vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
-  bool  hspread = Bool (_("Horizontal Spread"), _("Whether to expand this widget and all its parents horizontally"), "rw");
-  bool  vspread = Bool (_("Vertical Spread"),   _("Whether to expand this widget and all its parents vertically"), "rw");
-  bool  hshrink = Bool (_("Horizontal Shrink"), _("Whether the widget may be shrunken horizontally"), "rw");
-  bool  vshrink = Bool (_("Vertical Shrink"),   _("Whether the widget may be shrunken vertically"), "rw");
-  String hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
-  String vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
-  bool  visible   = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
-  bool  sensitive = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
+  bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
+  bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
+  /// @name User Sizes and Size Groups
+  String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
+  String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
+  float64 width  = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
+  float64 height = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
+  Requisition requisition () = 0;               //< Get the current effective size requisition
+  /// @name Widget Packing Properties
+  bool    hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
+  bool    vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
+  bool    hspread = Bool (_("Horizontal Spread"), _("Whether to expand this widget and all its parents horizontally"), "rw");
+  bool    vspread = Bool (_("Vertical Spread"),   _("Whether to expand this widget and all its parents vertically"), "rw");
+  bool    hshrink = Bool (_("Horizontal Shrink"), _("Whether the widget may be shrunken horizontally"), "rw");
+  bool    vshrink = Bool (_("Vertical Shrink"),   _("Whether the widget may be shrunken vertically"), "rw");
   float64 hposition = Range (_("Horizontal Position"), _("Horizontal layout position for the widget"), "Prw", 0, 99999, 5);
   float64 hspan     = Range (_("Horizontal Span"),     _("Horizontal span for widget layout"), "Prw", 1, 100000, 5);
   float64 vposition = Range (_("Vertical Position"),   _("Vertical layout position for the widget"), "Prw", 0, 99999, 5);
   float64 vspan     = Range (_("Vertical Span"),       _("Vertical span for widget layout"), "Prw", 1, 100000, 5);
-  int32 left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, 65535, 3);
-  int32 right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, 65535, 3);
-  int32 bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
-  int32 top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
   float64 hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), "Prw", 0, 1, 0.5);
   float64 vanchor = Range (_("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float64 halign = Range (_("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), "Prw", 0, 1, 0.5);
   float64 hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
   float64 valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float64 vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
-  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
+  int32   left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, 65535, 3);
+  int32   right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, 65535, 3);
+  int32   bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
+  int32   top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
+  /// @name Widget Selector API
+  bool            match_selector          (String selector) = 0; //< Check if selector matches this widget.
+  Widget          query_selector          (String selector) = 0; //< Returns first selector match.
+  WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
+  Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
+  /// @name Testing & Debugging
+  String	  test_dump               () = 0;
 };
 
 /// Container is a special type of Widget that can contain other widgets.
