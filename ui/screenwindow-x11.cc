@@ -484,7 +484,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           cr.xsr = xev;
           content_requests_.push_back (cr);
           if (!cr.data_provided)        // have mime_type
-            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, mime_type, "", cr.nonce));
+            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, cr.nonce, mime_type, ""));
           else                          // have no mime_type
             handle_content_request (content_requests_.size() - 1);
         }
@@ -559,7 +559,6 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         }
       if (keysym || !utf8data.empty())
         enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
-      // enqueue_event (create_event_data (CONTENT_DATA, event_context_, "text/plain;charset=utf-8", utf8data));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
@@ -754,7 +753,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
       if (isel_->content_type == "text/plain" &&
           x11_convert_string_property (x11context.display, isel_->raw.property_type, isel_->raw.data8, &content_data))
         content_type = isel_->content_type;
-      enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_type, content_data, isel_->nonce));
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->nonce, content_type, content_data));
       delete isel_;
       isel_ = NULL;
     }
@@ -1239,7 +1238,7 @@ ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type,
       delete tsel;
     }
   // request rejected
-  enqueue_event (create_event_data (CONTENT_DATA, event_context_, "", "", nonce));
+  enqueue_event (create_event_data (CONTENT_DATA, event_context_, nonce, "", ""));
 }
 
 void

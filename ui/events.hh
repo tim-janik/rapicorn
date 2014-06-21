@@ -163,9 +163,9 @@ EventKey*       create_event_key          (EventType           type,
                                            const String       &utf8input);
 EventData*      create_event_data         (EventType           type,
                                            const EventContext &econtext,
+                                           uint64              nonce,
                                            const String       &data_type,
-                                           const String       &data,
-                                           uint64              nonce);
+                                           const String       &data);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

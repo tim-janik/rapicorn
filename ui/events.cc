@@ -132,7 +132,7 @@ create_event_transformed (const Event  &source_event,
     case CONTENT_REQUEST:
       {
         const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
-        return create_event_data (source_event.type, dcontext, data_event->data_type, data_event->data, data_event->nonce);
+        return create_event_data (source_event.type, dcontext, data_event->nonce, data_event->data_type, data_event->data);
       }
     case SCROLL_UP:
     case SCROLL_DOWN:
@@ -260,9 +260,9 @@ EventData::EventData (EventType           etype,
 EventData*
 create_event_data (EventType           type,
                    const EventContext &econtext,
+                   uint64              nonce,
                    const String       &data_type,
-                   const String       &data,
-                   uint64              nonce)
+                   const String       &data)
 {
   struct EventDataImpl : public EventData {
     EventDataImpl (EventType           etype,
