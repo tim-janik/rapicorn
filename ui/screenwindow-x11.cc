@@ -1266,7 +1266,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       switch (command->source)
         {
         case CONTENT_SOURCE_SELECTION:
-          XSetSelectionOwner (x11context.display, XA_PRIMARY, command->data_types->size() > 0 ? window_ : None, event_context_.time);
+          if (command->data_types->size() > 0 || window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
+            XSetSelectionOwner (x11context.display, XA_PRIMARY, command->data_types->size() > 0 ? window_ : None, event_context_.time);
           if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
             {
               if (!primary_)
