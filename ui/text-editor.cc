@@ -263,7 +263,7 @@ private:
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
-        if (client && devent->data_type == "text/plain")
+        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->data_type == "text/plain")
           {
             int start, end;
             const bool has_selection = client->get_selection (&start, &end);

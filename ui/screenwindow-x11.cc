@@ -150,15 +150,17 @@ struct SelectionInput {                 // isel_
   SelectionInputState   state;
   Atom                  slot;           // receiving property (usually RAPICORN_SELECTION)
   vector<uint8>         data;
+  ContentSourceType     content_source;
+  Atom                  source_atom;    // requested selection
   uint64                nonce;
-  Atom                  source;         // requested selection
   String                content_type;   // requested type
   Atom                  target;         // X11 Atom for requested type
   Window                owner;
   Time                  time;
   int                   size_est;       // lower bound provided by INCR response
   RawData               raw;
-  SelectionInput() : state (WAIT_INVALID), slot (0), nonce (0), source (0), target (0), owner (0), time (0), size_est (0) {}
+  SelectionInput() : state (WAIT_INVALID), slot (0), content_source (ContentSourceType (0)), source_atom (0),
+                     nonce (0), target (0), owner (0), time (0), size_est (0) {}
 };
 
 // == ScreenWindowX11 ==
@@ -189,7 +191,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  filtered_event          (const XEvent &xevent);
   bool                  process_event           (const XEvent &xevent);
   bool                  send_selection_notify   (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time);
-  void                  request_selection       (Atom source, uint64 nonce, String data_type, Atom last_failed = None);
+  void                  request_selection       (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed = None);
   void                  receive_selection       (const XEvent &xev);
   void                  handle_content_request  (size_t nth);
   void                  client_message          (const XClientMessageEvent &xevent);
@@ -484,7 +486,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           cr.xsr = xev;
           content_requests_.push_back (cr);
           if (!cr.data_provided)        // have mime_type
-            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, cr.nonce, mime_type, ""));
+            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, CONTENT_SOURCE_SELECTION, cr.nonce, mime_type, ""));
           else                          // have no mime_type
             handle_content_request (content_requests_.size() - 1);
         }
@@ -694,7 +696,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
   if (xevent.type == SelectionNotify && isel_->state == WAIT_FOR_NOTIFY)
     {
       const XSelectionEvent &xev = xevent.xselection;
-      if (window_ == xev.requestor && isel_->source == xev.selection && isel_->time == xev.time)
+      if (window_ == xev.requestor && isel_->source_atom == xev.selection && isel_->time == xev.time)
         {
           bool retry = false;
           if (isel_->slot == xev.property)       // Conversion succeeded (except for Qt, see below)
@@ -722,7 +724,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
               // Conversion failed, try re-requesting using fallbacks
               SelectionInput *tsel = isel_;
               isel_ = NULL;
-              request_selection (tsel->source, tsel->nonce, tsel->content_type, tsel->target);
+              request_selection (tsel->content_source, tsel->source_atom, tsel->nonce, tsel->content_type, tsel->target);
               delete tsel;
               return;
             }
@@ -753,7 +755,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
       if (isel_->content_type == "text/plain" &&
           x11_convert_string_property (x11context.display, isel_->raw.property_type, isel_->raw.data8, &content_data))
         content_type = isel_->content_type;
-      enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->nonce, content_type, content_data));
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->content_source, isel_->nonce, content_type, content_data));
       delete isel_;
       isel_ = NULL;
     }
@@ -1211,24 +1213,25 @@ ScreenWindowX11::handle_content_request (const size_t nth)
 }
 
 void
-ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type, Atom last_failed)
+ScreenWindowX11::request_selection (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed)
 {
   if (!isel_)
     {
       SelectionInput *tsel = new SelectionInput();
-      tsel->source = source;
+      tsel->content_source = content_source;
+      tsel->source_atom = source;
       tsel->content_type = data_type;
       tsel->target = x11context.mime_to_target_atom (tsel->content_type, last_failed);
-      tsel->owner = XGetSelectionOwner (x11context.display, tsel->source);
+      tsel->owner = XGetSelectionOwner (x11context.display, tsel->source_atom);
       if (tsel->owner != None && tsel->target != None)
         {
           tsel->nonce = nonce;
           tsel->time = event_context_.time;
           tsel->slot = x11context.atom ("RAPICORN_SELECTION");
           XDeleteProperty (x11context.display, window_, tsel->slot);
-          XConvertSelection (x11context.display, tsel->source, tsel->target, tsel->slot, window_, tsel->time);
+          XConvertSelection (x11context.display, tsel->source_atom, tsel->target, tsel->slot, window_, tsel->time);
           XDEBUG ("XConvertSelection: [%lx] %s(%s) -> %ld(%s); owner=%ld", tsel->time,
-                  x11context.atom (tsel->source), x11context.atom (tsel->target),
+                  x11context.atom (tsel->source_atom), x11context.atom (tsel->target),
                   window_, x11context.atom (tsel->slot),
                   tsel->owner);
           tsel->state = WAIT_FOR_NOTIFY;
@@ -1238,7 +1241,7 @@ ScreenWindowX11::request_selection (Atom source, uint64 nonce, String data_type,
       delete tsel;
     }
   // request rejected
-  enqueue_event (create_event_data (CONTENT_DATA, event_context_, nonce, "", ""));
+  enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_source, nonce, "", ""));
 }
 
 void
@@ -1292,11 +1295,11 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         {
         case CONTENT_SOURCE_SELECTION:
           assert_return (command->data_types->size() == 1);
-          request_selection (XA_PRIMARY, command->nonce, (*command->data_types)[0]);
+          request_selection (CONTENT_SOURCE_SELECTION, XA_PRIMARY, command->nonce, (*command->data_types)[0]);
           break;
         case CONTENT_SOURCE_CLIPBOARD:
           assert_return (command->data_types->size() == 1);
-          request_selection (x11context.atom ("CLIPBOARD"), command->nonce, (*command->data_types)[0]);
+          request_selection (CONTENT_SOURCE_CLIPBOARD, x11context.atom ("CLIPBOARD"), command->nonce, (*command->data_types)[0]);
           break;
         }
       break;
