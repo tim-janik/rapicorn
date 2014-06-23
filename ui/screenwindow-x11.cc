@@ -1214,7 +1214,9 @@ ScreenWindowX11::handle_content_request (const size_t nth, ContentOffer *const o
   else if (strncmp (&cr.data_type[0], "text/", 5) == 0)
     {
       XICCEncodingStyle ecstyle = XUTF8StringStyle;
-      if      (xev.target == x11context.atom ("UTF8_STRING"))
+      if      (xev.target == x11context.atom ("UTF8_STRING") ||
+               xev.target == x11context.atom ("text/plain;charset=utf-8") ||
+               xev.target == x11context.atom ("text/plain"))
         ecstyle = XUTF8StringStyle;
       else if (xev.target == x11context.atom ("TEXT"))
         ecstyle = XCompoundTextStyle;
@@ -1762,8 +1764,10 @@ X11Context::atom (Atom atom) const
 }
 
 static const char *const mime_target_atoms[] = {           // determine X11 selection property types from mime
-  "text/plain", "UTF8_STRING",
-  "text/plain", "COMPOUND_TEXT",
+  "text/plain", "UTF8_STRING",                  // works best for all clients, xterm et al
+  "text/plain", "text/plain;charset=utf-8",     // listed in Qt targets, but not transmitted by it
+  "text/plain", "text/plain",                   // listed by Gtk+ targets, but not understood by it
+  "text/plain", "COMPOUND_TEXT",                // understood by all legacy X11 clients
   "text/plain", "TEXT",
   "text/plain", "STRING",
 };

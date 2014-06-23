@@ -163,7 +163,8 @@ load_atom_cache (Display *display)
     "_NET_WM_WINDOW_TYPE_DESKTOP", "_NET_WM_WINDOW_TYPE_DIALOG", "_NET_WM_WINDOW_TYPE_DND", "_NET_WM_WINDOW_TYPE_DOCK",
     "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", "_NET_WM_WINDOW_TYPE_MENU", "_NET_WM_WINDOW_TYPE_NORMAL", "_NET_WM_WINDOW_TYPE_NOTIFICATION",
     "_NET_WM_WINDOW_TYPE_POPUP_MENU", "_NET_WM_WINDOW_TYPE_SPLASH", "_NET_WM_WINDOW_TYPE_TOOLBAR", "_NET_WM_WINDOW_TYPE_TOOLTIP",
-    "_NET_WM_WINDOW_TYPE_UTILITY", "_NET_WORKAREA", "RAPICORN_SELECTION", "SAVE_TARGETS", "SM_CLIENT_ID", "__SWM_VROOT", "UTF8_STRING",
+    "_NET_WM_WINDOW_TYPE_UTILITY", "_NET_WORKAREA", "RAPICORN_SELECTION", "SAVE_TARGETS", "SM_CLIENT_ID", "__SWM_VROOT",
+    "text/plain", "text/plain;charset=utf-8", "UTF8_STRING",
     "WM_CLIENT_LEADER", "WM_DELETE_WINDOW", "WM_ICON_NAME", "WM_LOCALE_NAME", "WM_NAME", "WM_PROTOCOLS", "WM_STATE", "WM_TAKE_FOCUS",
     "WM_WINDOW_ROLE", "_XSETTINGS_SETTINGS",
   };
@@ -309,7 +310,9 @@ x11_convert_string_property (Display *display, Atom property_type, vector<uint8>
       if (tlist)
         XFreeStringList (tlist);
     }
-  else if (datav.size() && property_type == x11_atom (display, "UTF8_STRING"))
+  else if (datav.size() && (property_type == x11_atom (display, "UTF8_STRING") ||
+                            property_type == x11_atom (display, "text/plain") ||
+                            property_type == x11_atom (display, "text/plain;charset=utf-8")))
     {
       String result ((const char*) datav.data(), datav.size());
       if (utf8_validate (result))
