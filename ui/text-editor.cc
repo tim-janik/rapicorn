@@ -300,12 +300,18 @@ private:
                   {
                     text = text.substr (start, end - start);
                     if (utf8_validate (text))
-                      provide_content (devent->nonce, "text/plain", text);
+                      {
+                        provide_content (devent->nonce, "text/plain", text);
+                        handled = true;
+                      }
                   }
               }
           }
         else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->data_type == "text/plain")
-          provide_content (devent->nonce, clipboard_.empty() ? "" : "text/plain", clipboard_);
+          {
+            provide_content (devent->nonce, clipboard_.empty() ? "" : "text/plain", clipboard_);
+            handled = true;
+          }
         break;
       case BUTTON_PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
