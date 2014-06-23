@@ -285,6 +285,20 @@ private:
             handled = insert_literally (devent->data);
           }
         break;
+      case CONTENT_CLEAR:
+        devent = dynamic_cast<const EventData*> (&event);
+        client = get_client();
+        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && client->get_selection())
+          {
+            client->hide_selector();
+            handled = true;
+          }
+        if (devent->content_source == CONTENT_SOURCE_CLIPBOARD && !clipboard_.empty())
+          {
+            clipboard_ = "";
+            handled = true;
+          }
+        break;
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
