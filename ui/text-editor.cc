@@ -2,7 +2,6 @@
 #include "text-editor.hh"
 #include "factory.hh"
 #include "container.hh"
-#include "window.hh" // FIXME: unneeded
 
 namespace Rapicorn {
 namespace Text {
