@@ -115,7 +115,7 @@ public:
   bool                  transfer_incr_property          (Window window, Atom property, Atom type, int element_bits, const void *elements, size_t nelements);
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
-  void                  text_plain_to_target_atoms      (vector<Atom> &targets);
+  void                  mime_list_target_atoms          (const String &mime, vector<Atom> &atoms);
   explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
@@ -146,9 +146,8 @@ struct ContentRequest {
   XSelectionRequestEvent xsr;
   String                 data_type;
   String                 data;
-  Time                   offer_time;    // ContentOffer.time
   bool                   data_provided;
-  ContentRequest (bool _data_provided = false) : nonce (0), xsr ({ 0, }), offer_time (0), data_provided (_data_provided) {}
+  ContentRequest () : nonce (0), xsr ({ 0, }), data_provided (false) {}
 };
 
 // == SelectionInput ==
@@ -205,7 +204,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   bool                  send_selection_notify   (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time);
   void                  request_selection       (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed = None);
   void                  receive_selection       (const XEvent &xev);
-  void                  handle_content_request  (size_t nth);
+  void                  handle_content_request  (size_t nth, ContentOffer *offer);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
@@ -491,21 +490,25 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
       if (offer && xev.target && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
         {
-          const String mime_type = x11context.target_atom_to_mime (xev.target); // FIXME: need CONTENT_REQUEST also for MULTIPLE
-          ContentRequest cr (mime_type.empty());        // assigns data_provided
+          ContentRequest cr;
           cr.nonce = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
           cr.xsr = xev;
-          cr.offer_time = offer->time;
           content_requests_.push_back (cr);
-          if (!cr.data_provided)                        // have mime_type
+          if (xev.target == x11context.atom ("TIMESTAMP") || xev.target == x11context.atom ("TARGETS"))
+            {
+              // we take a shortcut here, b/c no actual content is required
+              const size_t nth = content_requests_.size() - 1;
+              content_requests_[nth].data_provided = true;
+              handle_content_request (nth, offer);
+            }
+          else
             {
               ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
                                          offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
                                          ContentSourceType (0);
+              const String mime_type = x11context.target_atom_to_mime (xev.target);
               enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, cr.nonce, mime_type, ""));
             }
-          else                                          // have no mime_type
-            handle_content_request (content_requests_.size() - 1);
         }
       else
         send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
@@ -1176,28 +1179,37 @@ ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom 
 }
 
 void
-ScreenWindowX11::handle_content_request (const size_t nth)
+ScreenWindowX11::handle_content_request (const size_t nth, ContentOffer *const offer)
 {
   assert_return (nth < content_requests_.size());
   ContentRequest &cr = content_requests_[nth];
   assert_return (cr.data_provided == true);
   const XSelectionRequestEvent &xev = cr.xsr;
   const Atom requestor_property = xev.property ? xev.property : xev.target; // ICCCM convention
-  if (xev.target == x11context.atom ("TIMESTAMP"))
+  if (xev.target == x11context.atom ("TIMESTAMP") && offer)
     {
       vector<unsigned long> ints;
-      ints.push_back (cr.offer_time);
-      if (safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
-                             32, ints.data(), ints.size()))
-        send_selection_notify (xev.requestor, xev.selection, xev.target, requestor_property, xev.time);
+      ints.push_back (offer->time);
+      const bool transferred = safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
+                                                  32, ints.data(), ints.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
-  else if (xev.target == x11context.atom ("MULTIPLE")) // FIXME
+  else if (xev.target == x11context.atom ("TARGETS") && offer)
     {
-      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
+      vector<Atom> ints;
+      for (const String &type : offer->content_types)
+        x11context.mime_list_target_atoms (type, ints);
+      ints.push_back (x11context.atom ("TIMESTAMP"));
+      ints.push_back (x11context.atom ("TARGETS"));
+      // unhandled: ints.push_back (x11context.atom ("MULTIPLE"));
+      const bool transferred = safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("ATOM"),
+                                                  32, ints.data(), ints.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
     }
-  else if (xev.target == x11context.atom ("TARGETS")) // FIXME
+  else if (xev.target == x11context.atom ("MULTIPLE"))
     {
-      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
+      // reject; we can implement this if we have suitable test case (X11 client) that requests MULTIPLE
+      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time);
     }
   else if (strncmp (&cr.data_type[0], "text/", 5) == 0)
     {
@@ -1341,7 +1353,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
             cr.data_provided = true;
             cr.data_type = data_types[0];
             cr.data = data_types[1];
-            handle_content_request (&cr - &content_requests_[0]);
+            handle_content_request (&cr - &content_requests_[0], NULL);
             found = true;
             break;
           }
@@ -1786,12 +1798,11 @@ X11Context::mime_to_target_atom (const String &mime, Atom last_failed)
 }
 
 void
-X11Context::text_plain_to_target_atoms (vector<Atom> &targets)
+X11Context::mime_list_target_atoms (const String &mime, vector<Atom> &atoms)
 {
-  const String text_plain = "text/plain";
   for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
-    if (text_plain == mime_target_atoms[i])
-      targets.push_back (atom (mime_target_atoms[i+1]));
+    if (mime == mime_target_atoms[i])
+      atoms.push_back (atom (mime_target_atoms[i+1]));
 }
 
 bool
