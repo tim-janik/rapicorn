@@ -213,8 +213,16 @@ x11_get_property_data (Display *display, Window window, Atom property_atom,
   int abort = XGetWindowProperty (display, window, property_atom, 0, 1073741823 /* fit into 2^32/4 */,
                                   get_and_delete, AnyPropertyType, &type_returned, &raw.format_returned,
                                   &nitems_return, &bytes_after_return, &prop_data) != Success;
-  if (x11_untrap_errors() || type_returned == None)
-    abort++;
+  if (x11_untrap_errors())
+    {
+      XDEBUG ("XGetWindowProperty(%s): property retrieval error: error_code=%d", CQUOTE (x11_atom_name (display, property_atom)), dummy.error_code);
+      abort++;
+    }
+  if (!abort && type_returned == None)
+    {
+      XDEBUG ("XGetWindowProperty(%s): property returned None", CQUOTE (x11_atom_name (display, property_atom)));
+      abort++;
+    }
   if (!abort && bytes_after_return)
     {
       XDEBUG ("XGetWindowProperty(%s): property size exceeds buffer by %u bytes", CQUOTE (x11_atom_name (display, property_atom)), bytes_after_return);

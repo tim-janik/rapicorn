@@ -1577,7 +1577,13 @@ X11Context::transfer_incr_property (Window window, Atom property, Atom type, int
   const long nbytes = nelements * (element_bits / 8);
   // set property in one chunk
   if (nbytes < long (max_property_bytes))
-    return safe_set_property (display, window, property, type, element_bits, elements, nelements);
+    {
+      const bool transferred = safe_set_property (display, window, property, type, element_bits, elements, nelements);
+      if (transferred)
+        XDEBUG ("Transfer: bits=%d bytes=%d %s -> %ld(%s)", element_bits, nelements * (element_bits / 8),
+                atom (type), window, atom (property));
+      return transferred;
+    }
   // need to start incremental transfer
   ref_events (window, PropertyChangeMask); // avoid-race: request PropertyChangeMask before safe_set_property("INCR")
   if (safe_set_property (display, window, property, atom ("INCR"), 32, &nbytes, 1)) // ICCCM sec. 2.5
@@ -1611,6 +1617,8 @@ X11Context::continue_incr (Window window, Atom property)
         it.offset += num * it.byte_width;
         if (num == 0 || abort) // 0-size termination sent
           {
+            XDEBUG ("IncrTransfer: bits=%d bytes=%d %s -> %ld(%s)", it.byte_width * 8, it.bytes.size(),
+                    atom (it.type), it.window, atom (it.property));
             unref_events (it.window); // no PropertyChangeMask events are needed beyond this
             incr_transfers_.erase (incr_transfers_.begin() + (&it - &incr_transfers_[0]));
           }
