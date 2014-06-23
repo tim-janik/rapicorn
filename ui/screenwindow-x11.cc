@@ -36,6 +36,16 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 
 namespace Rapicorn {
 
+template<class Container, class PtrPredicate> typename Container::value_type*
+find_element (Container &container, PtrPredicate f)
+{
+  typedef typename Container::iterator Iterator;
+  for (Iterator first = container.begin(), last = container.end(); first != last; ++first)
+    if (f (*first))
+      return &*first;
+  return NULL;
+}
+
 // == X11Widget ==
 struct X11Widget {
   explicit X11Widget() {}
@@ -123,10 +133,11 @@ time_cmp (Time t1, Time t2)
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
 
 // == ContentOffer ==
-struct ContentOffer {           // primary_
+struct ContentOffer {           // offers_
   StringVector  content_types;  // selection mime types
   Time          time;           // selection time
-  ContentOffer() : time (0) {}
+  Atom          selection;      // e.g. XA_PRIMARY
+  ContentOffer() : time (0), selection (0) {}
 };
 
 // == ContentRequest ==
@@ -135,8 +146,9 @@ struct ContentRequest {
   XSelectionRequestEvent xsr;
   String                 data_type;
   String                 data;
+  Time                   offer_time;    // ContentOffer.time
   bool                   data_provided;
-  ContentRequest (bool _data_provided = false) : nonce (0), xsr ({ 0, }), data_provided (_data_provided) {}
+  ContentRequest (bool _data_provided = false) : nonce (0), xsr ({ 0, }), offer_time (0), data_provided (_data_provided) {}
 };
 
 // == SelectionInput ==
@@ -178,7 +190,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
   SelectionInput       *isel_;
-  ContentOffer         *primary_;
+  vector<ContentOffer>  offers_;
   vector<ContentRequest> content_requests_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
@@ -204,7 +216,7 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
-  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL), primary_ (NULL)
+  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -216,8 +228,6 @@ ScreenWindowX11::~ScreenWindowX11()
     }
   if (isel_)
     delete isel_;
-  if (primary_)
-    delete primary_;
 }
 
 void
@@ -478,16 +488,23 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("SelRq: %c=%u [%lx] own=%u %s(%s) -> %ld(%s)", ss, xev.serial,
               xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
               xev.requestor, x11context.atom (xev.property));
-      if (XA_PRIMARY == xev.selection && xev.target && primary_ && time_cmp (xev.time, primary_->time) >= 0)
+      ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
+      if (offer && xev.target && time_cmp (xev.time, offer->time) >= 0)
         {
-          const String mime_type = x11context.target_atom_to_mime (xev.target);
-          ContentRequest cr (mime_type.empty());
+          const String mime_type = x11context.target_atom_to_mime (xev.target); // FIXME: need CONTENT_REQUEST also for MULTIPLE
+          ContentRequest cr (mime_type.empty());        // assigns data_provided
           cr.nonce = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
           cr.xsr = xev;
+          cr.offer_time = offer->time;
           content_requests_.push_back (cr);
-          if (!cr.data_provided)        // have mime_type
-            enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, CONTENT_SOURCE_SELECTION, cr.nonce, mime_type, ""));
-          else                          // have no mime_type
+          if (!cr.data_provided)                        // have mime_type
+            {
+              ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
+                                         offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
+                                         ContentSourceType (0);
+              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, cr.nonce, mime_type, ""));
+            }
+          else                                          // have no mime_type
             handle_content_request (content_requests_.size() - 1);
         }
       else
@@ -1169,7 +1186,7 @@ ScreenWindowX11::handle_content_request (const size_t nth)
   if (xev.target == x11context.atom ("TIMESTAMP"))
     {
       vector<unsigned long> ints;
-      ints.push_back (primary_->time);
+      ints.push_back (cr.offer_time);
       if (safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
                              32, ints.data(), ints.size()))
         send_selection_notify (xev.requestor, xev.selection, xev.target, requestor_property, xev.time);
@@ -1264,45 +1281,40 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::OWNER:
-      switch (command->source)
+    case ScreenCommand::OWNER: {
+      const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
+                             command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
+                             None;
+      ContentOffer *offer = find_element (offers_, [selection] (const ContentOffer &o) { return o.selection == selection; });
+      if (command->data_types->size() > 0)
+        XSetSelectionOwner (x11context.display, selection, window_, event_context_.time);
+      else if (offer)
+        XSetSelectionOwner (x11context.display, selection, None, event_context_.time);
+      if (window_ == XGetSelectionOwner (x11context.display, selection))
         {
-        case CONTENT_SOURCE_SELECTION:
-          if (command->data_types->size() > 0 || window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
-            XSetSelectionOwner (x11context.display, XA_PRIMARY, command->data_types->size() > 0 ? window_ : None, event_context_.time);
-          if (window_ == XGetSelectionOwner (x11context.display, XA_PRIMARY))
+          if (!offer)
             {
-              if (!primary_)
-                primary_ = new ContentOffer();
-              primary_->content_types = *command->data_types;
-              primary_->time = event_context_.time;
+              offers_.resize (offers_.size()+1);
+              offer = &offers_.back();
+              offer->selection = selection;
             }
-          else
-            {
-              if (primary_)
-                delete primary_;
-              primary_ = NULL;
-            }
-          break;
-        case CONTENT_SOURCE_CLIPBOARD:
-          XSetSelectionOwner (x11context.display, x11context.atom ("CLIPBOARD"), command->data_types->size() > 0 ? window_ : None, event_context_.time);
-          // FIXME: implement clipboard copies
-          break;
+          offer->content_types = *command->data_types;
+          offer->time = event_context_.time;
         }
-      break;
-    case ScreenCommand::CONTENT:
-      switch (command->source)
+      else
         {
-        case CONTENT_SOURCE_SELECTION:
-          assert_return (command->data_types->size() == 1);
-          request_selection (CONTENT_SOURCE_SELECTION, XA_PRIMARY, command->nonce, (*command->data_types)[0]);
-          break;
-        case CONTENT_SOURCE_CLIPBOARD:
-          assert_return (command->data_types->size() == 1);
-          request_selection (CONTENT_SOURCE_CLIPBOARD, x11context.atom ("CLIPBOARD"), command->nonce, (*command->data_types)[0]);
-          break;
+          if (offer)
+            offers_.erase (offers_.begin() + (offer - &offers_[0]));
+          offer = NULL;
         }
-      break;
+      break; }
+    case ScreenCommand::CONTENT: {
+      assert_return (command->data_types->size() == 1);
+      const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
+                             command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
+                             None;
+      request_selection (CONTENT_SOURCE_SELECTION, selection, command->nonce, (*command->data_types)[0]);
+      break; }
     case ScreenCommand::PROVIDE: {
       assert_return (command->source == 0);
       assert_return (command->data_types->size() == 2);
