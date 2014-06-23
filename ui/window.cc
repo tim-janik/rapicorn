@@ -655,6 +655,13 @@ WindowImpl::dispatch_data_event (const Event &event)
   WidgetImpl *focus_widget = get_focus();
   if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
     return true;
+  else if (event.type == CONTENT_REQUEST)
+    {
+      // CONTENT_REQUEST events must be answered
+      const EventData *devent = dynamic_cast<const EventData*> (&event);
+      provide_content (devent->nonce, "", ""); // no-type, i.e. reject request
+      return true;
+    }
   else
     return false;
 }
@@ -923,7 +930,7 @@ WindowImpl::dispatch_event (const Event &event)
     case KEY_CANCELED:
     case KEY_RELEASE:         return dispatch_key_event (event);
     case CONTENT_DATA:        return dispatch_data_event (event);
-    case CONTENT_REQUEST:     return dispatch_data_event (event); // FIXME: need fallback for unhandled events
+    case CONTENT_REQUEST:     return dispatch_data_event (event);
     case SCROLL_UP:          // button4
     case SCROLL_DOWN:        // button5
     case SCROLL_LEFT:        // button6
