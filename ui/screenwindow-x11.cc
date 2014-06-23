@@ -1270,7 +1270,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
       assert_unreached();
     case ScreenCommand::CONFIGURE:
-      configure_window (*command->dconfig, command->dresize);
+      configure_window (*command->config, command->need_resize);
       break;
     case ScreenCommand::BEEP:
       XBell (x11context.display, 0);
@@ -1282,11 +1282,12 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       blit (command->surface, *command->region);
       break;
     case ScreenCommand::OWNER: {
+      const StringVector &data_types = command->string_list;
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
                              command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
                              None;
       ContentOffer *offer = find_element (offers_, [selection] (const ContentOffer &o) { return o.selection == selection; });
-      if (command->data_types->size() > 0)
+      if (data_types.size() > 0)
         XSetSelectionOwner (x11context.display, selection, window_, event_context_.time);
       else if (offer)
         XSetSelectionOwner (x11context.display, selection, None, event_context_.time);
@@ -1298,7 +1299,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
               offer = &offers_.back();
               offer->selection = selection;
             }
-          offer->content_types = *command->data_types;
+          offer->content_types = data_types;
           offer->time = event_context_.time;
         }
       else
@@ -1309,29 +1310,31 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         }
       break; }
     case ScreenCommand::CONTENT: {
-      assert_return (command->data_types->size() == 1);
+      const StringVector &data_types = command->string_list;
+      assert_return (data_types.size() == 1);
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
                              command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
                              None;
-      request_selection (CONTENT_SOURCE_SELECTION, selection, command->nonce, (*command->data_types)[0]);
+      request_selection (CONTENT_SOURCE_SELECTION, selection, command->nonce, data_types[0]);
       break; }
     case ScreenCommand::PROVIDE: {
+      const StringVector &data_types = command->string_list;
       assert_return (command->source == 0);
-      assert_return (command->data_types->size() == 2);
+      assert_return (data_types.size() == 2);
       found = false;
       for (auto &cr : content_requests_)
         if (cr.nonce == command->nonce && !cr.data_provided)
           {
             cr.data_provided = true;
-            cr.data_type = (*command->data_types)[0];
-            cr.data = (*command->data_types)[1];
+            cr.data_type = data_types[0];
+            cr.data = data_types[1];
             handle_content_request (&cr - &content_requests_[0]);
             found = true;
             break;
           }
       if (!found)
         RAPICORN_CRITICAL ("content provided for unknown nonce: %u (data_type=%s data_length=%u)",
-                           command->nonce, (*command->data_types)[0], (*command->data_types)[1].size());
+                           command->nonce, data_types[0], data_types[1].size());
       break; }
     case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
