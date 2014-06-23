@@ -1315,7 +1315,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
                              command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
                              None;
-      request_selection (CONTENT_SOURCE_SELECTION, selection, command->nonce, data_types[0]);
+      request_selection (command->source, selection, command->nonce, data_types[0]);
       break; }
     case ScreenCommand::PROVIDE: {
       const StringVector &data_types = command->string_list;
