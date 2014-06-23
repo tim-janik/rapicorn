@@ -489,7 +489,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
               xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
               xev.requestor, x11context.atom (xev.property));
       ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
-      if (offer && xev.target && time_cmp (xev.time, offer->time) >= 0)
+      if (offer && xev.target && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
         {
           const String mime_type = x11context.target_atom_to_mime (xev.target); // FIXME: need CONTENT_REQUEST also for MULTIPLE
           ContentRequest cr (mime_type.empty());        // assigns data_provided
