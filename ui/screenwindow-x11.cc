@@ -1319,7 +1319,6 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       break; }
     case ScreenCommand::PROVIDE: {
       const StringVector &data_types = command->string_list;
-      assert_return (command->source == 0);
       assert_return (data_types.size() == 2);
       found = false;
       for (auto &cr : content_requests_)
