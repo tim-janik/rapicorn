@@ -60,6 +60,7 @@ string_from_event_type (EventType etype)
     case KEY_CANCELED:          return "KeyCanceled";
     case KEY_RELEASE:           return "KeyRelease";
     case CONTENT_DATA:          return "ContentData";
+    case CONTENT_CLEAR:         return "ContentClear";
     case CONTENT_REQUEST:       return "ContentRequest";
     case SCROLL_UP:             return "ScrollUp";
     case SCROLL_DOWN:           return "ScrollDown";
@@ -129,6 +130,7 @@ create_event_transformed (const Event  &source_event,
         return create_event_key (source_event.type, dcontext, key_event->key, key_event->utf8input);
       }
     case CONTENT_DATA:
+    case CONTENT_CLEAR:
     case CONTENT_REQUEST:
       {
         const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
@@ -276,7 +278,7 @@ create_event_data (EventType           type,
       EventData (etype, econtext, _content_source, _nonce, _data_type, _data)
     {}
   };
-  assert (type == CONTENT_DATA || type == CONTENT_REQUEST);
+  assert (type == CONTENT_DATA || type == CONTENT_CLEAR || type == CONTENT_REQUEST);
   EventData *devent = new EventDataImpl (type, econtext, content_source, nonce, data_type, data);
   Event &test = *devent;
   assert (dynamic_cast<const EventData*> (&test) != NULL);
