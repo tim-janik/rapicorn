@@ -1257,6 +1257,20 @@ ScreenWindowX11::request_selection (ContentSourceType content_source, Atom sourc
         }
       delete tsel;
     }
+  // if PRIMARY is unowned, xterm yields CUT_BUFFER0 (from root window of screen 0, see ICCCM)
+  if (source == XA_PRIMARY && data_type == "text/plain")
+    {
+      source = x11context.atom ("CUT_BUFFER0");
+      String content_data;
+      RawData raw;
+      if (x11_get_property_data (x11context.display, RootWindow (x11context.display, 0), source, raw, 0) &&
+          x11_convert_string_property (x11context.display, raw.property_type, raw.data8, &content_data))
+        {
+          XDEBUG ("XConvertSelection: failed, falling back to %s(%s)", x11context.atom (source), x11context.atom (raw.property_type));
+          enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_source, nonce, data_type, content_data));
+          return; // successfully initiated transfer
+        }
+    }
   // request rejected
   enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_source, nonce, "", ""));
 }
