@@ -514,6 +514,20 @@ ScreenWindowX11::process_event (const XEvent &xevent)
         send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
       consumed = true;
       break; }
+    case SelectionClear: {
+      const XSelectionClearEvent &xev = xevent.xselectionclear;
+      EDEBUG ("SelCl: %c=%u [%lx] own=%u %s", ss, xev.serial, xev.time, xev.window, x11context.atom (xev.selection));
+      ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
+      if (offer && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
+        {
+          ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
+                                     offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
+                                     ContentSourceType (0);
+          enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, source, 0 /*offer->nonce*/, "", ""));
+          offers_.erase (offers_.begin() + (offer - &offers_[0]));
+        }
+      consumed = true;
+      break; }
     case Expose: {
       const XExposeEvent &xev = xevent.xexpose;
       std::vector<Rect> rectangles;
@@ -1332,6 +1346,8 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         }
       else
         {
+          if (data_types.size() > 0) // tried to become owner but failed
+            enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, 0 /*offer->nonce*/, "", ""));
           if (offer)
             offers_.erase (offers_.begin() + (offer - &offers_[0]));
           offer = NULL;
