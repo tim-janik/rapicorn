@@ -378,11 +378,12 @@ private:
   {
     Client *client = get_client();
     return_unless (client, false);
-    client->mark (0);
-    client->mark2selector();
+    client->hide_selector();    // enforces selection_changed later on
     client->mark (-1);
     cursor_ = client->mark();
-    client->mark2cursor();
+    client->mark2cursor();      // cursor might have been at end already
+    client->mark (0);
+    client->mark2selector();    // selects and forces selection_changed
     changed();
     return client->get_selection();
   }
