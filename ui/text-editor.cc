@@ -108,6 +108,7 @@ class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, pu
   TextMode text_mode_;
   Client  *cached_client_;
   size_t   client_sig_;
+  String   clipboard_;
 public:
   EditorImpl() :
     request_chars_ (0), request_digits_ (0),
@@ -219,6 +220,31 @@ private:
                 break;
               }
             goto _default;
+          case 'c':
+            if (kevent->key_state & MOD_CONTROL)
+              {
+                clipboard_ = "";
+                Client *client = get_client();
+                if (client)
+                  {
+                    int start, end, nutf8;
+                    const bool has_selection = client->get_selection (&start, &end, &nutf8);
+                    String text = client->plain_text();
+                    if (has_selection && nutf8 > 0 && size_t (end) <= text.size())
+                      {
+                        text = text.substr (start, end - start);
+                        if (!text.empty() && utf8_validate (text))
+                          clipboard_ = text;
+                      }
+                  }
+                if (clipboard_.empty())
+                  disown_content (CONTENT_SOURCE_CLIPBOARD);
+                else
+                  own_content (CONTENT_SOURCE_CLIPBOARD, cstrings_to_vector ("text/plain", NULL));
+                handled = true;
+                break;
+              }
+            goto _default;
           case 'v':
             if (kevent->key_state & MOD_CONTROL)
               {
@@ -278,6 +304,8 @@ private:
                   }
               }
           }
+        else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->data_type == "text/plain")
+          provide_content (devent->nonce, clipboard_.empty() ? "" : "text/plain", clipboard_);
         break;
       case BUTTON_PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
