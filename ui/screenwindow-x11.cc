@@ -1494,7 +1494,7 @@ X11Context::run()
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
-  // ensure command_queue events are processed
+  // ensure new command_queue events are noticed
   command_queue_.notifier ([&]() { loop_.wakeup(); });
   // process X11 events
   loop_.run();
