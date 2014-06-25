@@ -48,6 +48,7 @@ string_from_event_type (EventType etype)
     case KEY_PRESS:             return "KeyPress";
     case KEY_CANCELED:          return "KeyCanceled";
     case KEY_RELEASE:           return "KeyRelease";
+    case CONTENT_DATA:          return "ContentData";
     case SCROLL_UP:             return "ScrollUp";
     case SCROLL_DOWN:           return "ScrollDown";
     case SCROLL_LEFT:           return "ScrollLeft";
@@ -113,7 +114,12 @@ create_event_transformed (const Event  &source_event,
     case KEY_RELEASE:
       {
         const EventKey *key_event = dynamic_cast<const EventKey*> (&source_event);
-        return create_event_key (source_event.type, dcontext, key_event->key, key_event->key_name.c_str());
+        return create_event_key (source_event.type, dcontext, key_event->key, key_event->utf8input);
+      }
+    case CONTENT_DATA:
+      {
+        const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
+        return create_event_data (source_event.type, dcontext, data_event->data_type, data_event->data);
       }
     case SCROLL_UP:
     case SCROLL_DOWN:
@@ -200,30 +206,62 @@ EventKey::~EventKey()
 EventKey::EventKey (EventType           etype,
                     const EventContext &econtext,
                     uint32              _key,
-                    const String       &_key_name) :
+                    const String       &_utf8input) :
   Event (etype, econtext),
-  key (_key), key_name (_key_name)
+  key (_key), utf8input (_utf8input)
 {}
 
 EventKey*
 create_event_key (EventType           type,
                   const EventContext &econtext,
                   uint32              key,
-                  const char         *name)
+                  const String       &utf8input)
 {
   struct EventKeyImpl : public EventKey {
     EventKeyImpl (EventType           etype,
                   const EventContext &econtext,
                   uint32              _key,
-                  const String       &_key_name) :
-      EventKey (etype, econtext, _key, _key_name)
+                  const String       &_utf8input) :
+      EventKey (etype, econtext, _key, _utf8input)
     {}
   };
   assert (type == KEY_PRESS || type == KEY_RELEASE || type == KEY_CANCELED);
-  EventKey *kevent = new EventKeyImpl (type, econtext, key, name);
+  EventKey *kevent = new EventKeyImpl (type, econtext, key, utf8input);
   Event &test = *kevent;
   assert (dynamic_cast<const EventKey*> (&test) != NULL);
   return kevent;
+}
+
+EventData::~EventData()
+{}
+
+EventData::EventData (EventType           etype,
+                      const EventContext &econtext,
+                      const String       &_data_type,
+                      const String       &_data) :
+  Event (etype, econtext),
+  data_type (_data_type), data (_data)
+{}
+
+EventData*
+create_event_data (EventType           type,
+                   const EventContext &econtext,
+                   const String       &data_type,
+                   const String       &data)
+{
+  struct EventDataImpl : public EventData {
+    EventDataImpl (EventType           etype,
+                   const EventContext &econtext,
+                   const String       &_data_type,
+                   const String       &_data) :
+      EventData (etype, econtext, _data_type, _data)
+    {}
+  };
+  assert (type == CONTENT_DATA);
+  EventData *devent = new EventDataImpl (type, econtext, data_type, data);
+  Event &test = *devent;
+  assert (dynamic_cast<const EventData*> (&test) != NULL);
+  return devent;
 }
 
 EventWinSize::~EventWinSize()

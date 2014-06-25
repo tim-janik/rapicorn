@@ -107,6 +107,7 @@ private:
   bool                  dispatch_focus_event                    (const EventFocus       &fevent);
   bool                  move_focus_dir                          (FocusDirType            focus_dir);
   bool                  dispatch_key_event                      (const Event            &event);
+  bool                  dispatch_data_event                     (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);

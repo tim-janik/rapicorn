@@ -83,6 +83,7 @@ int                   utf8_from_unichar (unichar         uc,
                                          char            str[8]);
 bool                  utf8_validate     (const String   &string,
                                          int            *bound = NULL);
+bool                  utf8_is_locale_charset ();
 
 /* --- implementation bits --- */
 namespace Unicode {

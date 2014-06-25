@@ -65,7 +65,7 @@ public:
   XIM                   input_method;
   XIMStyle              input_style;
   int8                  shared_mem_;
-  X11Widget*              x11id_get   (size_t xid);
+  X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
   Atom                  atom         (const String &text, bool force_create = true);
   String                atom         (Atom atom) const;
@@ -245,9 +245,8 @@ bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
   event_context_.synthesized = xevent.xany.send_event;
-  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), window_);
   const char ss = event_context_.synthesized ? 'S' : 's';
-  const char sf = !consumed ? ss : event_context_.synthesized ? 'F' : 'f';
+  bool consumed = false;
   switch (xevent.type)
     {
     case CreateNotify: {
@@ -356,24 +355,56 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "DN" : "UP";
       KeySym keysym = 0;
-      char buffer[512]; // dummy
       int n = 0;
-      Status ximstatus = XBufferOverflow;
-      if (input_context_ && xevent.type == KeyPress)
-        n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
-      if (ximstatus != XLookupKeySym && ximstatus != XLookupBoth)
+      String utf8data;
+      if (input_context_ && xevent.type == KeyPress) // Xutf8LookupString is undefined for KeyRelease
         {
-          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
-          ximstatus = XLookupKeySym;
+          Status ximstatus = XBufferOverflow;
+          char buffer[512];
+          n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+          if (ximstatus == XBufferOverflow)
+            {
+              Xutf8ResetIC (input_context_);
+              n = 0;
+              keysym = 0;
+            }
+          if (n > 0 && (ximstatus == XLookupChars || ximstatus == XLookupBoth))
+            utf8data.assign (buffer, n);
+          if (not (ximstatus == XLookupBoth || ximstatus == XLookupKeySym))
+            keysym = 0;
         }
-      buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
-      char str[8];
-      utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
-      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
-      if (!consumed && // might have been processed by input context already
-          (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
-        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), str));
+      else // !input_context_
+        {
+          char buffer[512];
+          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
+          if (n > 0 && xevent.type == KeyPress)
+            {
+              /* XLookupString(3) is documented to return Latin-1 characters, but modern implementations
+               * seem to work locale specific. So we may or may not need to convert to UTF-8. Yay!
+               */
+              if (!utf8_is_locale_charset() || !utf8_validate (String (buffer, n)))
+                for (int i = 0; i < n; i++)
+                  {
+                    const uint8 l1char = buffer[i];                   // Latin-1 character
+                    char utf[8];
+                    const int l = utf8_from_unichar (l1char, utf);    // convert to UTF-8
+                    utf8data.append (utf, l);
+                  }
+              else
+                utf8data.append (buffer, n);
+            }
+          // utf8data is empty for KeyRelease, but we try to fill at least keysym
+        }
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
+      if (xev.keycode == 0 || xev.serial == 0)
+        ; // avid busting event_context_ from synthesized event
+      else
+        {
+          event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
+        }
+      if (keysym || !utf8data.empty())
+        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
+      // enqueue_event (create_event_data (CONTENT_DATA, event_context_, "text/plain;charset=utf-8", utf8data));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
@@ -494,7 +525,9 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("Destr: %c=%u w=%u", ss, xev.serial, xev.window);
       consumed = true;
       break; }
-    default: ;
+    default:
+      EDEBUG ("What?: %c=%u w=%u type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.xany.type);
+      break;
     }
   return consumed;
 }
@@ -1053,8 +1086,11 @@ X11Context::process_x11()
   if (XPending (display))
     {
       XEvent xevent = { 0, };
-      XNextEvent (display, &xevent); // blocks if !XPending
-      bool consumed = filter_event (xevent);
+      XNextEvent (display, &xevent);    // blocks if !XPending
+      if (XFilterEvent (&xevent, None) ||
+          filter_event (xevent))
+        return;                         // lower level event handling
+      bool consumed = false;
       X11Widget *xwidget = x11id_get (xevent.xany.window);
       if (xwidget)
         {
