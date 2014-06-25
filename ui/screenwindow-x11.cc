@@ -138,7 +138,8 @@ struct ContentOffer {           // offers_
   StringVector  content_types;  // selection mime types
   Time          time;           // selection time
   Atom          selection;      // e.g. XA_PRIMARY
-  ContentOffer() : time (0), selection (0) {}
+  uint64        nonce;
+  ContentOffer() : time (0), selection (0), nonce (0) {}
 };
 
 // == ContentRequest ==
@@ -538,7 +539,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                                          offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
                                          ContentSourceType (0);
               const String mime_type = x11context.target_atom_to_mime (xev.target);
-              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, 0/*FIXME:offer->nonce*/, mime_type, "", cr.request_id));
+              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, offer->nonce, mime_type, "", cr.request_id));
             }
         }
       else
@@ -554,7 +555,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
           ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
                                      offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
                                      ContentSourceType (0);
-          enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, source, 0 /*offer->nonce*/, "", ""));
+          enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, source, offer->nonce, "", ""));
           offers_.erase (offers_.begin() + (offer - &offers_[0]));
         }
       consumed = true;
@@ -1374,6 +1375,12 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
               offers_.resize (offers_.size()+1);
               offer = &offers_.back();
               offer->selection = selection;
+              offer->nonce = command->nonce;
+            }
+          if (offer->nonce != command->nonce)
+            {
+              enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, offer->nonce, "", ""));
+              offer->nonce = command->nonce;
             }
           offer->content_types = data_types;
           offer->time = event_context_.time;
@@ -1381,7 +1388,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       else
         {
           if (data_types.size() > 0) // tried to become owner but failed
-            enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, 0 /*offer->nonce*/, "", ""));
+            enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, offer->nonce, "", ""));
           if (offer)
             offers_.erase (offers_.begin() + (offer - &offers_[0]));
           offer = NULL;

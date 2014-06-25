@@ -312,7 +312,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
  * A CONTENT_CLEAR event may be sent to indicate ownership loss, e.g. because another widget or process took on ownership.
  */
 bool
-WidgetImpl::own_content (ContentSourceType content_source, const StringVector &data_types)
+WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const StringVector &data_types)
 {
   assert_return (data_types.size() >= 1, false);
   WindowImpl *rwidget = get_window();
@@ -321,7 +321,7 @@ WidgetImpl::own_content (ContentSourceType content_source, const StringVector &d
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->set_content_owner (content_source, data_types);
+          screen_window->set_content_owner (content_source, nonce, data_types);
           return true;
         }
     }
@@ -332,7 +332,7 @@ WidgetImpl::own_content (ContentSourceType content_source, const StringVector &d
  * Counterpart to WidgetImpl::own_content(), gives up ownership if it was previously acquired.
  */
 bool
-WidgetImpl::disown_content (ContentSourceType content_source)
+WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
 {
   WindowImpl *rwidget = get_window();
   if (rwidget)
@@ -340,7 +340,7 @@ WidgetImpl::disown_content (ContentSourceType content_source)
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->set_content_owner (content_source, StringVector());
+          screen_window->set_content_owner (content_source, nonce, StringVector());
           return true;
         }
     }

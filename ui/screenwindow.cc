@@ -168,10 +168,11 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
-ScreenWindow::set_content_owner (ContentSourceType source, const StringVector &data_types)
+ScreenWindow::set_content_owner (ContentSourceType source, uint64 nonce, const StringVector &data_types)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OWNER, this);
   cmd->source = source;
+  cmd->nonce = nonce;
   cmd->string_list = data_types;
   queue_command (cmd);
 }

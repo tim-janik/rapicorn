@@ -237,9 +237,9 @@ private:
                       }
                   }
                 if (clipboard_.empty())
-                  disown_content (CONTENT_SOURCE_CLIPBOARD);
+                  disown_content (CONTENT_SOURCE_CLIPBOARD, 59);
                 else
-                  own_content (CONTENT_SOURCE_CLIPBOARD, cstrings_to_vector ("text/plain", NULL));
+                  own_content (CONTENT_SOURCE_CLIPBOARD, 59, cstrings_to_vector ("text/plain", NULL));
                 handled = true;
                 break;
               }
@@ -288,12 +288,12 @@ private:
       case CONTENT_CLEAR:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
-        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && client->get_selection())
+        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->nonce == 66 && client->get_selection())
           {
             client->hide_selector();
             handled = true;
           }
-        if (devent->content_source == CONTENT_SOURCE_CLIPBOARD && !clipboard_.empty())
+        if (devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->nonce == 59 && !clipboard_.empty())
           {
             clipboard_ = "";
             handled = true;
@@ -302,7 +302,7 @@ private:
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
-        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->data_type == "text/plain")
+        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->nonce == 66 && devent->data_type == "text/plain")
           {
             int start, end;
             const bool has_selection = client->get_selection (&start, &end);
@@ -320,7 +320,7 @@ private:
                   }
               }
           }
-        else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->data_type == "text/plain")
+        else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->nonce == 59 && devent->data_type == "text/plain")
           {
             provide_content (clipboard_.empty() ? "" : "text/plain", clipboard_, devent->request_id);
             handled = true;
@@ -494,9 +494,9 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      disown_content (CONTENT_SOURCE_SELECTION);
+      disown_content (CONTENT_SOURCE_SELECTION, 66);
     else
-      own_content (CONTENT_SOURCE_SELECTION, cstrings_to_vector ("text/plain", NULL)); // claim new selection
+      own_content (CONTENT_SOURCE_SELECTION, 66, cstrings_to_vector ("text/plain", NULL)); // claim new selection
   }
   virtual void
   text (const String &text)
