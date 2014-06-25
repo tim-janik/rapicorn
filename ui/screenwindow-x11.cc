@@ -69,8 +69,10 @@ struct IncrTransfer {
   size_t       byte_width;
   size_t       offset;
   vector<char> bytes;
-  IncrTransfer() : window (0), property (0), type (0), byte_width (0), offset (0) {}
+  uint64       timeout;
+  IncrTransfer() : window (0), property (0), type (0), byte_width (0), offset (0), timeout (0) {}
 };
+#define INCR_TRANSFER_TIMEOUT   (25 * 1000 * 1000)
 
 // == X11Context ==
 class X11Context {
@@ -82,6 +84,7 @@ class X11Context {
   vector<EventStake>                   event_stakes_;
   vector<IncrTransfer>                 incr_transfers_;
   int8                                 shared_mem_;
+  bool                  x11_timer               (const EventLoop::State &state);
   bool                  x11_dispatcher          (const EventLoop::State &state);
   bool                  x11_io_handler          (PollFD &pfd);
   void                  process_x11             ();
@@ -1492,6 +1495,8 @@ X11Context::run()
   loop_.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  // process cleanup actions after expiration times
+  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_timer), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // ensure new command_queue events are noticed
@@ -1516,6 +1521,40 @@ X11Context::run()
     }
   // remove sources and close Pfd file descriptor
   loop_.kill_sources();
+}
+
+bool
+X11Context::x11_timer (const EventLoop::State &state)
+{
+  const uint64 now = state.current_time_usecs;
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      /* lazy timer: we're not forcing event loop wakeups for pending timeouts,
+       * because we're currently just handling non-critical cleanups. the
+       * cleanups are performed after the loop wakes up and timesouts have
+       * expired, however long the loop was sleeping.
+       */
+      for (auto it : incr_transfers_)
+        if (it.timeout <= now)
+          return true;
+      return false;
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      for (size_t i = 0; i < incr_transfers_.size(); i++)
+        if (incr_transfers_[i].timeout <= now)
+          {
+            // waiting for reply expired, killing request
+            const IncrTransfer &it = incr_transfers_[i];
+            safe_set_property (display, it.window, it.property, it.type, it.byte_width * 8, NULL, 0);
+            incr_transfers_.erase (incr_transfers_.begin() + i); // invalidates iterators
+            return true;
+          }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    ;
+  return false;
 }
 
 bool
@@ -1639,6 +1678,7 @@ X11Context::transfer_incr_property (Window window, Atom property, Atom type, int
       it.byte_width = element_bits / 8;
       it.offset = 0;
       it.bytes.insert (it.bytes.end(), (const char*) elements, (const char*) elements + nelements * it.byte_width);
+      it.timeout = timestamp_realtime() + INCR_TRANSFER_TIMEOUT;
       incr_transfers_.push_back (it);
       return true;
     }
@@ -1666,6 +1706,8 @@ X11Context::continue_incr (Window window, Atom property)
             unref_events (it.window); // no PropertyChangeMask events are needed beyond this
             incr_transfers_.erase (incr_transfers_.begin() + (&it - &incr_transfers_[0]));
           }
+        else // refresh timeout to keep IncrTransfer safe from cleanup timer
+          it.timeout = timestamp_realtime() + INCR_TRANSFER_TIMEOUT;
         return;
       }
 }
