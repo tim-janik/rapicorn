@@ -706,9 +706,10 @@ public:
 /* --- TextPangoImpl (TextEditor::Client) --- */
 class TextPangoImpl : public virtual WidgetImpl, public virtual Text::Editor::Client {
   PangoLayout    *layout_;
-  int             mark_, cursor_;
-  double          scoffset_;
   TextMode        text_mode_;
+  int             mark_, cursor_, selector_;
+  double          scoffset_;
+  void           *last_selector_attr_;
 protected:
   virtual TextMode text_mode   () const               { return text_mode_; }
   virtual void
@@ -723,8 +724,8 @@ protected:
 public:
   TextPangoImpl() :
     layout_ (NULL),
-    mark_ (-1), cursor_ (-1), scoffset_ (0),
-    text_mode_ (TEXT_MODE_ELLIPSIZED)
+    text_mode_ (TEXT_MODE_ELLIPSIZED), mark_ (-1), cursor_ (-1), selector_ (-1),
+    scoffset_ (0), last_selector_attr_ (NULL)
   {
     Text::ParaState pstate; // retrieve defaults
     rapicorn_pango_mutex.lock();
@@ -927,6 +928,15 @@ protected:
     rapicorn_pango_mutex.unlock();
     changed();
   }
+  virtual void
+  cursor2mark ()
+  {
+    if (cursor_ != mark_)
+      {
+        mark_ = cursor_;
+        changed();
+      }
+  }
   virtual bool
   mark_at_end () const
   {
@@ -937,8 +947,7 @@ protected:
     return mark_ >= l;
   }
   virtual bool
-  mark_to_coord (double x,
-                 double y)
+  mark_to_coord (double x, double y)
   {
     Rect area = layout_area (NULL);
     if (area.width >= 1 && area.height >= 1)
@@ -994,6 +1003,8 @@ protected:
         cursor_ = mark_;
         expose();
         scroll_to_cursor();
+        if (selector_ >= 0)
+          selection_changed();
         changed();
       }
   }
@@ -1004,8 +1015,55 @@ protected:
       {
         cursor_ = -1;
         expose();
+        if (selector_ >= 0)
+          selection_changed();
         changed();
       }
+  }
+  virtual void
+  mark2selector ()
+  {
+    if (selector_ != mark_)
+      {
+        selector_ = mark_;
+        expose();
+        selection_changed();
+        changed();
+      }
+  }
+  virtual void
+  hide_selector ()
+  {
+    if (selector_ >= 0)
+      {
+        selector_ = -1;
+        expose();
+        selection_changed();
+        changed();
+      }
+  }
+  virtual bool
+  get_selection (int *start, int *end, int *nutf8)
+  {
+    if (cursor_ >= 0 && selector_ >= 0)
+      {
+        const int s = MIN (cursor_, selector_);
+        const int e = MAX (cursor_, selector_);
+        if (start)
+          *start = s;
+        if (end)
+          *end = e;
+        if (nutf8)
+          {
+            const char *c = pango_layout_get_text (layout_);
+            int m, n = 0;
+            for (m = s; m < e; n++)
+              m = utf8_next (c + m) - c;
+            *nutf8 = n;
+          }
+        return true;
+      }
+    return false;
   }
   virtual void
   mark_delete (uint n_utf8_chars)
@@ -1019,7 +1077,7 @@ protected:
     String s = c;
     s.erase (mark_, m - mark_);
     pango_layout_set_text (layout_, s.c_str(), -1);
-    // FIXME: adjust attributes
+    // FIXME: adjust attributes, cursor_, selector_
     rapicorn_pango_mutex.unlock();
     invalidate();
     changed();
@@ -1209,6 +1267,36 @@ protected:
         (vellipsize && !vdot_size))     /* too tall without vellipsization */
       area.width = area.height = 0;
     return area;
+  }
+  static gboolean attribute_filter (PangoAttribute *attr, void *ptr) { return attr == ptr; }
+  void
+  selection_changed()
+  {
+    rapicorn_pango_mutex.lock();
+    bool real_change = false;
+    if (last_selector_attr_)
+      {
+        PangoAttrList *palist = pango_layout_get_attributes (layout_);
+        PangoAttrList *padel = pango_attr_list_filter (palist, attribute_filter, last_selector_attr_);
+        pango_attr_list_unref (padel);
+        last_selector_attr_ = NULL;
+        real_change = true;
+      }
+    if (cursor_ >= 0 && selector_ >= 0)
+      {
+        PangoAttribute *sbg = pango_attr_background_new (0xa8a8, 0xd1d1, 0xffff);
+        sbg->start_index = MIN (cursor_, selector_);
+        sbg->end_index = MAX (cursor_, selector_);
+        PangoAttrList *palist = pango_layout_get_attributes (layout_);
+        pango_attr_list_insert (palist, sbg);
+        last_selector_attr_ = sbg;
+        real_change = true;
+      }
+    if (real_change)
+      pango_layout_set_attributes (layout_, pango_layout_get_attributes (layout_)); // refresh layout caches for new attributes
+    rapicorn_pango_mutex.unlock();
+    if (real_change)
+      sig_selection_changed.emit();
   }
   virtual void
   render (RenderContext &rcontext, const Rect &rect)

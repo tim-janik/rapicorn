@@ -114,7 +114,10 @@ ScreenWindow::viewable ()
 void
 ScreenWindow::configure (const Config &config, bool sizeevent)
 {
-  queue_command (new ScreenCommand (ScreenCommand::CONFIGURE, this, config, sizeevent));
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONFIGURE, this);
+  cmd->config = new ScreenWindow::Config (config);
+  cmd->need_resize = sizeevent;
+  queue_command (cmd);
 }
 
 void
@@ -138,19 +141,60 @@ ScreenWindow::present ()
 void
 ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
-  queue_command (new ScreenCommand (ScreenCommand::BLIT, this, surface, region));
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::BLIT, this);
+  cmd->surface = cairo_surface_reference (surface);
+  cmd->region = new Rapicorn::Region (region);
+  queue_command (cmd);
 }
 
 void
 ScreenWindow::start_user_move (uint button, double root_x, double root_y)
 {
-  queue_command (new ScreenCommand (ScreenCommand::UMOVE, this, button, root_x, root_y));
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::UMOVE, this);
+  cmd->button = button;
+  cmd->root_x = root_x;
+  cmd->root_y = root_y;
+  queue_command (cmd);
 }
 
 void
 ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
 {
-  queue_command (new ScreenCommand (ScreenCommand::URESIZE, this, button, root_x, root_y));
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::URESIZE, this);
+  cmd->button = button;
+  cmd->root_x = root_x;
+  cmd->root_y = root_y;
+  queue_command (cmd);
+}
+
+void
+ScreenWindow::set_content_owner (ContentSourceType source, uint64 nonce, const StringVector &data_types)
+{
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OWNER, this);
+  cmd->source = source;
+  cmd->nonce = nonce;
+  cmd->string_list = data_types;
+  queue_command (cmd);
+}
+
+void
+ScreenWindow::provide_content (const String &data_type, const String &data, uint64 request_id)
+{
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PROVIDE, this);
+  cmd->nonce = request_id;
+  cmd->string_list.push_back (data_type);
+  cmd->string_list.push_back (data);
+  queue_command (cmd);
+}
+
+void
+ScreenWindow::request_content (ContentSourceType source, uint64 nonce, const String &data_type)
+{
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONTENT, this);
+  cmd->source = source;
+  cmd->nonce = nonce;
+  cmd->string_list.push_back (data_type);
+  queue_command (cmd);
 }
 
 void
@@ -210,81 +254,20 @@ ScreenWindow::flags_name (uint64 flags, String combo)
 
 // == ScreenCommand ==
 ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == OK || type == BEEP || type == SHOW || type == PRESENT || type == DESTROY || type == SHUTDOWN);
-}
-
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Config &cfg, bool sizeevent) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == CONFIGURE);
-  dconfig = new ScreenWindow::Config (cfg);
-  dresize = sizeevent;
-}
-
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, const ScreenWindow::Setup &cs, const ScreenWindow::Config &cfg) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == CREATE);
-  setup = new ScreenWindow::Setup (cs);
-  config = new ScreenWindow::Config (cfg);
-}
-
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, cairo_surface_t *csurface, const Rapicorn::Region &cregion) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == BLIT);
-  surface = cairo_surface_reference (csurface);
-  region = new Rapicorn::Region (cregion);
-}
-
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window, int cbutton, int croot_x, int croot_y) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == UMOVE || type == URESIZE);
-  cbutton = button;
-  croot_x = root_x;
-  croot_y = root_y;
-}
-
-ScreenCommand::ScreenCommand (Type type, ScreenWindow *window, const String &result) :
-  type (type), screen_window (window), config (NULL), setup (NULL)
-{
-  assert (type == ERROR);
-  result_msg  = new String (result);
-}
+  type (ctype), screen_window (window), config (NULL), setup (NULL), surface (NULL), region (NULL),
+  nonce (0), root_x (-1), root_y (-1), button (-1), source (ContentSourceType (0)), need_resize (false)
+{}
 
 ScreenCommand::~ScreenCommand()
 {
-  switch (type)
-    {
-    case CREATE:
-      delete setup;
-      delete config;
-      break;
-    case CONFIGURE:
-      dresize = 0;
-      delete dconfig;
-      break;
-    case BLIT:
-      cairo_surface_destroy (surface);
-      delete region;
-      break;
-    case UMOVE: case URESIZE:
-      button = root_x = root_y = 0;
-      break;
-    case BEEP: case SHOW: case PRESENT: case DESTROY: case SHUTDOWN:
-      assert (!config && !setup);
-      break;
-    case OK:
-      assert (!config && !setup);
-      break;
-    case ERROR:
-      delete result_msg;
-      assert (!setup);
-      break;
-    }
+  if (surface)
+    cairo_surface_destroy (surface);
+  if (config)
+    delete config;
+  if (setup)
+    delete setup;
+  if (region)
+    delete region;
 }
 
 bool
@@ -293,11 +276,14 @@ ScreenCommand::reply_type (Type type)
   switch (type)
     {
     case CREATE: case SHUTDOWN: return true; // has reply
-    case CONFIGURE: case BLIT:  return false;
-    case UMOVE: case URESIZE:   return false;
-    case BEEP: case SHOW:       return false;
-    case PRESENT: case DESTROY: return false;
     case OK: case ERROR:        return true; // is reply
+    case CONFIGURE: case BLIT:
+    case UMOVE: case URESIZE:
+    case OWNER:
+    case PROVIDE: case CONTENT:
+    case BEEP: case SHOW:
+    case PRESENT: case DESTROY:
+      return false;
     }
   return false; // silence compiler
 }
@@ -411,7 +397,11 @@ ScreenDriver::create_screen_window (const ScreenWindow::Setup &setup, const Scre
 {
   assert_return (thread_handle_.joinable(), NULL);
   assert_return (reply_queue_.pending() == false, NULL);
-  command_queue_.push (new ScreenCommand (ScreenCommand::CREATE, NULL, setup, config));
+
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CREATE, NULL);
+  cmd->setup = new ScreenWindow::Setup (setup);
+  cmd->config = new ScreenWindow::Config (config);
+  command_queue_.push (cmd);
   ScreenCommand *reply = reply_queue_.pop();
   assert (reply->type == ScreenCommand::OK && reply->screen_window);
   ScreenWindow *screen_window = reply->screen_window;

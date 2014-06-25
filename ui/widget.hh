@@ -124,6 +124,12 @@ protected:
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
   StringVector                list_widget_groups (WidgetGroupType group_type) const;
   void                        notify_key_error  ();
+  /// @{ @name Content Retrival and Offering
+  bool                        request_content   (ContentSourceType csource, uint64 nonce, const String &data_type);
+  bool                        own_content       (ContentSourceType csource, uint64 nonce, const StringVector &data_types);
+  bool                        disown_content    (ContentSourceType csource, uint64 nonce);
+  bool                        provide_content   (const String &data_type, const String &data, uint64 request_id);
+  /// @}
 public:
   explicit                    WidgetImpl        ();
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }

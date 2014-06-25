@@ -132,6 +132,7 @@ bool    equals          (const String &file1,
 char*   memread         (const String &filename,
                          size_t       *lengthp);
 void    memfree         (char         *memread_mem);
+bool    memwrite        (const String &filename, size_t len, const uint8 *bytes);
 String  cwd             ();
 String       vpath_find        (const String &file, const String &mode = "e");
 String       searchpath_find  (const String &searchpath, const String &file, const String &mode = "e");
