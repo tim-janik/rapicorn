@@ -39,11 +39,8 @@ namespace Rapicorn {
 template<class Container, class PtrPredicate> typename Container::value_type*
 find_element (Container &container, PtrPredicate f)
 {
-  typedef typename Container::iterator Iterator;
-  for (Iterator first = container.begin(), last = container.end(); first != last; ++first)
-    if (f (*first))
-      return &*first;
-  return NULL;
+  auto it = std::find_if (container.begin(), container.end(), f);
+  return it == container.end() ? NULL : &*it;
 }
 
 // == X11Widget ==
