@@ -48,8 +48,9 @@ find_element (Container &container, PtrPredicate f)
 
 // == X11Widget ==
 struct X11Widget {
-  explicit X11Widget() {}
-  virtual ~X11Widget() {}
+  explicit     X11Widget() {}
+  virtual     ~X11Widget() {}
+  virtual bool timer    (const EventLoop::State &state, int64 *timeout_usecs_p) = 0;
 };
 
 // == EventStake ==
@@ -173,9 +174,11 @@ struct SelectionInput {                 // isel_
   Time                  time;
   int                   size_est;       // lower bound provided by INCR response
   RawData               raw;
+  uint64                timeout;
   SelectionInput() : state (WAIT_INVALID), slot (0), content_source (ContentSourceType (0)), source_atom (0),
-                     nonce (0), target (0), owner (0), time (0), size_est (0) {}
+                     nonce (0), target (0), owner (0), time (0), size_est (0), timeout (0) {}
 };
+#define SELECTION_INPUT_TIMEOUT   (15 * 1000 * 1000)
 
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
@@ -196,6 +199,7 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   vector<ContentRequest> content_requests_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
+  virtual bool          timer                   (const EventLoop::State &state, int64 *timeout_usecs_p);
   void                  destroy_x11_resources   ();
   void                  handle_command          (ScreenCommand *command);
   void                  setup_window            (const ScreenWindow::Setup &setup);
@@ -258,6 +262,33 @@ ScreenWindowX11::destroy_x11_resources()
       x11context.unref_events (window_);
       window_ = 0;
     }
+}
+
+bool
+ScreenWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
+{
+  const uint64 now = state.current_time_usecs;
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      if (isel_ && isel_->timeout <= now)
+        return true;
+      return false;
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      if (isel_ && isel_->timeout <= now)
+        {
+          // request aborted
+          if (isel_->state != WAIT_INVALID)
+            enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->content_source, isel_->nonce, "", ""));
+          delete isel_;
+          isel_ = NULL;
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    ;
+  return false;
 }
 
 void
@@ -765,6 +796,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
               delete tsel;
               return;
             }
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // refresh timeout to keep safe from cleanup
         }
     }
   // Property NewValue (after SelectionNotify + INCR)
@@ -782,6 +814,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
           isel_->raw.data8.insert (isel_->raw.data8.end(), raw.data8.begin(), raw.data8.end());
           if (!success || (raw.data32.size() == 0 && raw.data16.size() == 0 && raw.data8.size() == 0))
             isel_->state = WAIT_FOR_RESULT; // last property received
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // refresh timeout to keep safe from cleanup
         }
     }
   // IPC completed
@@ -1284,6 +1317,7 @@ ScreenWindowX11::request_selection (ContentSourceType content_source, Atom sourc
                   tsel->owner);
           tsel->state = WAIT_FOR_NOTIFY;
           isel_ = tsel;
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // keep safe from cleanup
           return; // successfully initiated transfer
         }
       delete tsel;
@@ -1537,6 +1571,13 @@ X11Context::x11_timer (const EventLoop::State &state)
       for (auto it : incr_transfers_)
         if (it.timeout <= now)
           return true;
+      for (auto it : x11ids_)
+        {
+          X11Widget *xw = it.second;
+          int64 timeout_usecs = -1;
+          if (xw->timer (state, &timeout_usecs))
+            return true;
+        }
       return false;
     }
   else if (state.phase == state.DISPATCH)
@@ -1550,6 +1591,20 @@ X11Context::x11_timer (const EventLoop::State &state)
             incr_transfers_.erase (incr_transfers_.begin() + i); // invalidates iterators
             return true;
           }
+      for (auto it : x11ids_)
+        {
+          X11Widget *xw = it.second;
+          int64 timeout_usecs = -1;
+          EventLoop::State wstate = state;
+          wstate.phase = state.CHECK;
+          if (xw->timer (wstate, &timeout_usecs))
+            {
+              wstate.phase = state.DISPATCH;
+              // dispatching X11Widget timer can change everything, e.g. x11ids_
+              xw->timer (wstate, &timeout_usecs);
+              return true;
+            }
+        }
       return true;
     }
   else if (state.phase == state.DESTROY)
