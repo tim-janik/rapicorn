@@ -143,12 +143,12 @@ struct ContentOffer {           // offers_
 
 // == ContentRequest ==
 struct ContentRequest {
-  uint64                 nonce;
+  uint64                 request_id;
   XSelectionRequestEvent xsr;
   String                 data_type;
   String                 data;
   bool                   data_provided;
-  ContentRequest () : nonce (0), xsr ({ 0, }), data_provided (false) {}
+  ContentRequest () : request_id (0), xsr ({ 0, }), data_provided (false) {}
 };
 
 // == SelectionInput ==
@@ -522,7 +522,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (offer && xev.target && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
         {
           ContentRequest cr;
-          cr.nonce = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
+          cr.request_id = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
           cr.xsr = xev;
           content_requests_.push_back (cr);
           if (xev.target == x11context.atom ("TIMESTAMP") || xev.target == x11context.atom ("TARGETS"))
@@ -538,7 +538,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
                                          offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
                                          ContentSourceType (0);
               const String mime_type = x11context.target_atom_to_mime (xev.target);
-              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, cr.nonce, mime_type, ""));
+              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, 0/*FIXME:offer->nonce*/, mime_type, "", cr.request_id));
             }
         }
       else
@@ -1400,7 +1400,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       assert_return (data_types.size() == 2);
       found = false;
       for (auto &cr : content_requests_)
-        if (cr.nonce == command->nonce && !cr.data_provided)
+        if (cr.request_id == command->nonce && !cr.data_provided)
           {
             cr.data_provided = true;
             cr.data_type = data_types[0];
@@ -1410,7 +1410,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
             break;
           }
       if (!found)
-        RAPICORN_CRITICAL ("content provided for unknown nonce: %u (data_type=%s data_length=%u)",
+        RAPICORN_CRITICAL ("content provided for unknown request_id: %u (data_type=%s data_length=%u)",
                            command->nonce, data_types[0], data_types[1].size());
       break; }
     case ScreenCommand::PRESENT:   break;  // FIXME

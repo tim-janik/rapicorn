@@ -177,10 +177,10 @@ ScreenWindow::set_content_owner (ContentSourceType source, const StringVector &d
 }
 
 void
-ScreenWindow::provide_content (uint64 nonce, const String &data_type, const String &data)
+ScreenWindow::provide_content (const String &data_type, const String &data, uint64 request_id)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PROVIDE, this);
-  cmd->nonce = nonce;
+  cmd->nonce = request_id;
   cmd->string_list.push_back (data_type);
   cmd->string_list.push_back (data);
   queue_command (cmd);

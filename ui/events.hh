@@ -119,10 +119,10 @@ public:
 };
 class EventData : public Event {
 protected:
-  explicit          EventData (EventType, const EventContext&, ContentSourceType, uint64, const String&, const String&);
+  explicit          EventData (EventType, const EventContext&, ContentSourceType, uint64, const String&, const String&, uint64);
 public:
   virtual          ~EventData();
-  uint64            nonce;
+  uint64            nonce, request_id;
   String            data_type, data;
   ContentSourceType content_source;
 };
@@ -167,7 +167,8 @@ EventData*      create_event_data         (EventType           type,
                                            ContentSourceType   content_source,
                                            uint64              nonce,
                                            const String       &data_type,
-                                           const String       &data);
+                                           const String       &data,
+                                           uint64              request_id = 0);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

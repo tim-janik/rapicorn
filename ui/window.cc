@@ -659,7 +659,7 @@ WindowImpl::dispatch_data_event (const Event &event)
     {
       // CONTENT_REQUEST events must be answered
       const EventData *devent = dynamic_cast<const EventData*> (&event);
-      provide_content (devent->nonce, "", ""); // no-type, i.e. reject request
+      provide_content ("", "", devent->request_id); // no-type, i.e. reject request
       return true;
     }
   else

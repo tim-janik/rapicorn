@@ -128,7 +128,7 @@ protected:
   bool                        request_content   (ContentSourceType csource, uint64 nonce, const String &data_type);
   bool                        own_content       (ContentSourceType csource, const StringVector &data_types);
   bool                        disown_content    (ContentSourceType csource);
-  bool                        provide_content   (uint64 nonce, const String &data_type, const String &data);
+  bool                        provide_content   (const String &data_type, const String &data, uint64 request_id);
   /// @}
 public:
   explicit                    WidgetImpl        ();

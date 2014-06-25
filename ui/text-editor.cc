@@ -314,7 +314,7 @@ private:
                     text = text.substr (start, end - start);
                     if (utf8_validate (text))
                       {
-                        provide_content (devent->nonce, "text/plain", text);
+                        provide_content ("text/plain", text, devent->request_id);
                         handled = true;
                       }
                   }
@@ -322,7 +322,7 @@ private:
           }
         else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->data_type == "text/plain")
           {
-            provide_content (devent->nonce, clipboard_.empty() ? "" : "text/plain", clipboard_);
+            provide_content (clipboard_.empty() ? "" : "text/plain", clipboard_, devent->request_id);
             handled = true;
           }
         break;

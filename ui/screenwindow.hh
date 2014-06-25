@@ -84,7 +84,7 @@ public:
   void          start_user_resize       (uint button, double root_x, double root_y, AnchorType edge); ///< Trigger window resizing.
   void          set_content_owner       (ContentSourceType source, const StringVector &data_types); ///< Yields CONTENT_REQUEST & CONTENT_CLEAR.
   void          request_content         (ContentSourceType source, uint64 nonce, const String &data_type); ///< Yields CONTENT_DATA.
-  void          provide_content         (uint64 nonce, const String &data_type, const String  &data); ///< Reply for CONTENT_REQUEST.
+  void          provide_content         (const String &data_type, const String &data, uint64 request_id); ///< Reply for CONTENT_REQUEST.
   Event*        pop_event               ();                     ///< Fetch the next event for this Window.
   void          push_event              (Event *event);         ///< Push back an event, so it's the next event returned by pop().
   bool          has_event               ();                     ///< Indicates if pop_event() will return non-NULL.

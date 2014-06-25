@@ -134,7 +134,8 @@ create_event_transformed (const Event  &source_event,
     case CONTENT_REQUEST:
       {
         const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
-        return create_event_data (source_event.type, dcontext, data_event->content_source, data_event->nonce, data_event->data_type, data_event->data);
+        return create_event_data (source_event.type, dcontext, data_event->content_source, data_event->nonce,
+                                  data_event->data_type, data_event->data, data_event->request_id);
       }
     case SCROLL_UP:
     case SCROLL_DOWN:
@@ -255,9 +256,10 @@ EventData::EventData (EventType           etype,
                       ContentSourceType   _content_source,
                       uint64              _nonce,
                       const String       &_data_type,
-                      const String       &_data) :
+                      const String       &_data,
+                      uint64              _request_id) :
   Event (etype, econtext),
-  nonce (_nonce), data_type (_data_type), data (_data), content_source (_content_source)
+  nonce (_nonce), request_id (_request_id), data_type (_data_type), data (_data), content_source (_content_source)
 {}
 
 EventData*
@@ -266,7 +268,8 @@ create_event_data (EventType           type,
                    ContentSourceType   content_source,
                    uint64              nonce,
                    const String       &data_type,
-                   const String       &data)
+                   const String       &data,
+                   uint64              request_id)
 {
   struct EventDataImpl : public EventData {
     EventDataImpl (EventType           etype,
@@ -274,12 +277,13 @@ create_event_data (EventType           type,
                    ContentSourceType   _content_source,
                    uint64              _nonce,
                    const String       &_data_type,
-                   const String       &_data) :
-      EventData (etype, econtext, _content_source, _nonce, _data_type, _data)
+                   const String       &_data,
+                   uint64              _request_id) :
+      EventData (etype, econtext, _content_source, _nonce, _data_type, _data, _request_id)
     {}
   };
   assert (type == CONTENT_DATA || type == CONTENT_CLEAR || type == CONTENT_REQUEST);
-  EventData *devent = new EventDataImpl (type, econtext, content_source, nonce, data_type, data);
+  EventData *devent = new EventDataImpl (type, econtext, content_source, nonce, data_type, data, request_id);
   Event &test = *devent;
   assert (dynamic_cast<const EventData*> (&test) != NULL);
   return devent;

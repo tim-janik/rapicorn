@@ -353,7 +353,7 @@ WidgetImpl::disown_content (ContentSourceType content_source)
  * To reject a content request, pass an empty string as @a data_type.
  */
 bool
-WidgetImpl::provide_content (uint64 nonce, const String &data_type, const String &data)
+WidgetImpl::provide_content (const String &data_type, const String &data, uint64 request_id)
 {
   WindowImpl *rwidget = get_window();
   if (rwidget)
@@ -361,7 +361,7 @@ WidgetImpl::provide_content (uint64 nonce, const String &data_type, const String
       ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
-          screen_window->provide_content (nonce, data_type, data);
+          screen_window->provide_content (data_type, data, request_id);
           return true;
         }
     }
