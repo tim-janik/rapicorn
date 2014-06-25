@@ -48,7 +48,7 @@ class ResourceEntry {
   static const ResourceEntry* find_entry (const String&);
   static void                 reg_add    (ResourceEntry*);
 public:
-  template <size_t N> ResourceEntry (const char *res, const char (&idata) [N], size_t data_size = 0) :
+  template<size_t N>  ResourceEntry (const char *res, const char (&idata) [N], size_t data_size = 0) :
     next (NULL), name (res), pdata (idata), psize (N), dsize (data_size)
   { reg_add (this); }
   /*dtor*/           ~ResourceEntry();
