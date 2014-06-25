@@ -17,12 +17,14 @@ typedef Rect Allocation;
 class WidgetImpl;
 class AnchorInfo;
 class SizeGroup;
+class WidgetGroup;
 class Adjustment;
 class ContainerImpl;
 class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
 namespace Selector { class Selob; }
+enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
 
 /* --- event handler --- */
 class EventHandler : public virtual ReferenceCountable {
@@ -44,6 +46,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
+  friend                      class WidgetGroup;
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
@@ -57,6 +60,8 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
+  WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
+  void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
@@ -115,6 +120,9 @@ protected:
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
+  void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
+  void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
+  StringVector                list_widget_groups (WidgetGroupType group_type) const;
   void                        notify_key_error  ();
 public:
   explicit                    WidgetImpl        ();
@@ -160,6 +168,10 @@ public:
   virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); } ///< Allow horizontal shrinking, see #HSHRINK
   virtual bool                vshrink           () const { return test_any_flag (VSHRINK); } ///< Get vertical shrinking flag
   virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); } ///< Allow vertical shrinking, see #VSHRINK
+  virtual String              hsize_group       () const;
+  virtual void                hsize_group       (const String &group_list);
+  virtual String              vsize_group       () const;
+  virtual void                vsize_group       (const String &group_list);
   virtual String              name              () const;            ///< Get Widget name or "id"
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext*             factory_context   () const;
@@ -247,7 +259,7 @@ public:
                                                      const WidgetImpl   &target_widget) const;
   bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
-  Requisition                requisition        ();                             // effective size requisition
+  virtual Requisition        requisition        ();                              // effective size requisition
   void                       set_allocation     (const Allocation &area,
                                                  const Allocation *clip = NULL); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
@@ -320,8 +332,10 @@ public: /* packing */
 private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
+  void               enter_anchored  ();
+  void               leave_anchored  ();
 public:
-  virtual bool       match_selector        (const String &selector);
+  virtual bool         match_selector        (const String &selector);
   virtual WidgetIface* query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
   virtual WidgetIface* query_selector_unique (const String &selector);

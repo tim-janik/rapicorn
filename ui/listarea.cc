@@ -154,7 +154,7 @@ WidgetListImpl::~WidgetListImpl()
   // release size groups
   while (size_groups_.size())
     {
-      SizeGroup *sg = size_groups_.back();
+      WidgetGroup *sg = size_groups_.back();
       size_groups_.pop_back();
       unref (sg);
     }
@@ -801,7 +801,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
-    size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
+    size_groups_.push_back (ref_sink (WidgetGroup::create (" internal WidgetListImpl SizeGroup HSIZE", WIDGET_GROUP_HSIZE)));
   if (with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);

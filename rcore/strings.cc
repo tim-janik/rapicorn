@@ -270,6 +270,70 @@ string_split (const String &string, const String &splitter)
   return sv;
 }
 
+/// Split a string, using any of the @a splitchars as delimiter.
+/// Passing "" as @a splitter will split the string between all position.
+StringVector
+string_split_any (const String &string, const String &splitchars)
+{
+  StringVector sv;
+  if (splitchars.empty())
+    {
+      for (uint i = 0; i < string.size(); i++)
+        sv.push_back (string.substr (i, 1));
+    }
+  else
+    {
+      const char *schars = splitchars.c_str();
+      uint i, l = 0;
+      for (i = 0; i < string.size(); i++)
+        if (strchr (schars, string[i]))
+          {
+            if (i >= l)
+              sv.push_back (string.substr (l, i - l));
+            l = i + 1;
+          }
+      if (i >= l)
+        sv.push_back (string.substr (l, i - l));
+    }
+  return sv;
+}
+
+/// Remove empty elements from a string vector.
+void
+string_vector_erase_empty (StringVector &svector)
+{
+  for (size_t i = svector.size(); i; i--)
+    {
+      const size_t idx = i - 1;
+      if (svector[idx].empty())
+        svector.erase (svector.begin() + idx);
+    }
+}
+
+/// Left-strip all elements of a string vector, see string_lstrip().
+void
+string_vector_lstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_lstrip (s);
+}
+
+/// Right-strip all elements of a string vector, see string_rstrip().
+void
+string_vector_rstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_rstrip (s);
+}
+
+/// Strip all elements of a string vector, see string_strip().
+void
+string_vector_strip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_strip (s);
+}
+
 /** Join a number of strings.
  * Join a string vector into a single string, using @a junctor inbetween each pair of strings.
  */
@@ -838,7 +902,7 @@ memset4 (uint32 *mem, uint32 filler, uint length)
  * @returns @a fallback if no match was found.
  */
 String
-string_vector_find (const StringVector &svector, const String &key, const String &fallback)
+string_vector_find_value (const StringVector &svector, const String &key, const String &fallback)
 {
   for (size_t i = svector.size(); i > 0; i--)
     {

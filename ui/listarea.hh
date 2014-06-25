@@ -33,7 +33,7 @@ class WidgetListImpl : public virtual WidgetListIface,
   mutable Adjustment    *hadjustment_, *vadjustment_;
   RowMap                 row_map_, off_map_;
   vector<bool>           selection_;
-  vector<SizeGroup*>     size_groups_;
+  vector<WidgetGroup*>   size_groups_;
   SelectionMode          selection_mode_;
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
