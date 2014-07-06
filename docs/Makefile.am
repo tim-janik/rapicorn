@@ -15,7 +15,7 @@ PRJ_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q
 DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
 
 # == Extra Tarball Files ==
-EXTRA_DIST += ChangeLog-2009
+EXTRA_DIST += ChangeLog-2009 references.bib
 
 # == Doxygen Install Rules ==
 htmldocsbase  = ${docdir}
