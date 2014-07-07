@@ -12,7 +12,7 @@ TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 # == ptptest ==
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
-ptptest_LDFLAGS = -pthread -lpthread
+ptptest_LDFLAGS = -pthread -lpthread $(AM_LDFLAGS)
 ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
 EXTRA_DIST += typecodetests.idl

@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS	     = . rsvg tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
+INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
@@ -61,6 +61,7 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 

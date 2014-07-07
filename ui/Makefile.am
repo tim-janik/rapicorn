@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS    = . tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
+INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
@@ -80,6 +80,7 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \

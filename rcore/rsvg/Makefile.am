@@ -1,9 +1,10 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CFLAGS   = $(RAPICORN_CORE_CFLAGS)
+INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CFLAGS   += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS) @FPU_FLAGS@
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS) @FPU_FLAGS@
 GLIB_MKENUMS = glib-mkenums
 
 rcore_rsvg_public_headers = $(strip	\
@@ -25,20 +26,16 @@ rcore_rsvg_private_files = $(strip	\
 	librsvg-features.h		\
 )
 
-# === CPU flags ===
-AM_CXXFLAGS = @FPU_FLAGS@
-
 # === libraries ===
 # librapicorn-core
 noinst_LTLIBRARIES = librcore_rsvg@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librcore_rsvg@RAPICORN_RELEASE@_la_SOURCES      = $(rcore_rsvg_sources)
 librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES = 
-librcore_rsvg@RAPICORN_RELEASE@_la_CXXFLAGS     = $(librcore_rsvg@RAPICORN_RELEASE@_la_CFLAGS)
-librcore_rsvg@RAPICORN_RELEASE@_la_CFLAGS       = $(RAPICORN_RSVG_CFLAGS)
 librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
 librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rcore_rsvg_private_files) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES) $(rcore_rsvg_headers)
 

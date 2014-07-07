@@ -1,9 +1,9 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES   += -I$(top_srcdir)
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
-AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
+INCLUDES    += -I$(top_srcdir)
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
@@ -21,7 +21,7 @@ TEST_PROGS        += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
 testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
-testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
+testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
 EXTRA_DIST        += testrcore2.ref
 
 export VPATH	# needed by test programs to find builddir relative input files
