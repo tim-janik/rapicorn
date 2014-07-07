@@ -11,7 +11,7 @@ noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
-configure: @DVLBUILD@ acrapicorn.m4	# acrapicorn.m4 is included by configure.in
+configure: @DVLBUILD@ acrapicorn.m4	# acrapicorn.m4 is included by configure.ac
 
 # === web site ===
 site site-preview site-update:
@@ -123,5 +123,5 @@ release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
 release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.in:RAPICORN_REVISION_VERSION
+	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
 .PHONY: release-news release-check release-upload
