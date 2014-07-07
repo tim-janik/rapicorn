@@ -99,33 +99,83 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	pangocairo	>= 1.29.0
 ])
 
-# setup DEBUG defaults
-if test "x$enable_debug" = "xyes"; then
-  ADDON_CFLAGS="-g -DG_ENABLE_DEBUG -fno-omit-frame-pointer"
-else if test "x$enable_debug" = "xno"; then
-  ADDON_CFLAGS="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-else
-  ADDON_CFLAGS="-DG_DISABLE_CAST_CHECKS"
-fi fi
-# setup CFLAGS
+# compiler, linker & libtool
+saved_CFLAGS="$CFLAGS"
 AC_PROG_CC
-CFLAGS="$CFLAGS $ADDON_CFLAGS"
-# setup LDFLAGS
-AC_PROG_LD
-LDFLAGS="$LDFLAGS $ADDON_LDFLAGS"
-# setup CXXFLAGS
+CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
+saved_CXXFLAGS="$CFLAGS"
+AC_PROG_CPP
+CXXFLAGS="$saved_CXXFLAGS"	# AC_PROG_CXX_G called internally consistently breaks $CXXFLAGS
 AC_PROG_CXX
-CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
-if ${CC} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\)' && \
-   ${CC} -dumpspecs | grep -q -- '--as-needed' ; then
-  LDFLAGS="$LDFLAGS -Wl,--hash-style=both -Wl,--as-needed -Wl,-O1"
-fi
+AC_PROG_CXXCPP
+AC_PROG_LD
+AC_LANG_CPLUSPLUS	# use CXX for compilation tests
+AC_LIB_PROG_LD
+AC_LIB_PROG_LD_GNU
+ACX_PROG_LD_GNU_SYMBOLIC
+AC_SUBST([SYMBOLIC_LDFLAGS])
+ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
+AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
+AM_PROG_LIBTOOL
+AC_LIBTOOL_DLOPEN
 
-# == Compiler Flags ==
-MC_EVAR_ADD(CFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread -lrt)
-AC_LANG_CPLUSPLUS
+# AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
+AC_MSG_CHECKING([whether CC and LD support gnu.hash sections])
+if ${CC-cc} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${LD-ld} --help     | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
+  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+MC_EVAR_ADD(AM_LDFLAGS, -pthread)
+MC_EVAR_ADD(AM_LDFLAGS, -lrt)
+AC_SUBST(AM_LDFLAGS)
+
+# Pick C++ dialect, needed in CXXFLAGS for compile tests
+MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++0x)
+
+# AM_CFLAGS & AM_CXXFLAGS
+MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++0x)
+BOTHCCXXFLAGS=
+if test "x$enable_debug" = "xyes"; then
+  MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ggdb3)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fno-omit-frame-pointer)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fverbose-asm)
+  dnl # MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Q -ftime-report -fmem-report)
+elif test "x$enable_debug" = "xno"; then
+  MC_EVAR_ADD(BOTHCCXXFLAGS, [-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS]) # -DG_DISABLE_ASSERT
+else
+  : # minimum debugging
+fi
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wall)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wdeprecated)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wmissing-prototypes)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wno-pointer-sign)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wnested-externs)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -fno-cond-mismatch)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wmissing-declarations)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wpointer-arith)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wredundant-decls)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Werror=format-security)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -rdynamic)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -pipe)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -O2)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ftracer)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -mcx16)
+dnl # MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wno-invalid-offsetof)
+AM_CFLAGS+=" $BOTHCCXXFLAGS"
+AM_CXXFLAGS+=" $BOTHCCXXFLAGS"
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CXXFLAGS)
+AC_SUBST(AM_CPPFLAGS)
+
+# C & C++ idioms
+AC_C_CONST
+AC_C_INLINE
+AC_HEADER_STDC
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
@@ -459,27 +509,27 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
 AC_DEFUN([RAPICORN_CPU_FLAGS],
 [
-    # --- FPU flags ---
-    # -funroll-loops can boost FPU performance
-    MC_PROG_CC_SPECIAL_FLAGS(FPU_FLAGS, -funroll-loops)
-    AC_SUBST(FPU_FLAGS)
-    # --- MMX flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(MMX_FLAGS, -mmmx -funroll-loops -ftree-vectorize)
-    AC_SUBST(MMX_FLAGS)
-    # --- 3DNow flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(AMD3DNOW_FLAGS, -m3dnow -funroll-loops -ftree-vectorize)
-    AC_SUBST(AMD3DNOW_FLAGS)
-    # --- SSE flags ---
-    # * -mfpmath=sse can harm FPU-algorithm performance
-    # * -funroll-loops can harm SSE loop performance
-    MC_PROG_CC_SPECIAL_FLAGS(SSE_FLAGS, -msse -ftree-vectorize)
-    AC_SUBST(SSE_FLAGS)
-    # --- SSE2 flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(SSE2_FLAGS, -msse2 -ftree-vectorize)
-    AC_SUBST(SSE2_FLAGS)
-    # --- SSE3 flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(SSE3_FLAGS, -msse3 -ftree-vectorize)
-    AC_SUBST(SSE3_FLAGS)
+  # --- FPU flags ---
+  # -funroll-loops can boost FPU performance
+  MC_CC_TRY_OPTION(FPU_FLAGS,  -funroll-loops)
+  AC_SUBST(FPU_FLAGS)
+  # --- MMX flags ---
+  MC_CC_TRY_OPTION(MMX_FLAGS, -mmmx -funroll-loops -ftree-vectorize)
+  AC_SUBST(MMX_FLAGS)
+  # --- 3DNow flags ---
+  MC_CC_TRY_OPTION(AMD3DNOW_FLAGS, -m3dnow -funroll-loops -ftree-vectorize)
+  AC_SUBST(AMD3DNOW_FLAGS)
+  # --- SSE flags ---
+  # * -mfpmath=sse can harm FPU-algorithm performance
+  # * -funroll-loops can harm SSE loop performance
+  MC_CC_TRY_OPTION(SSE_FLAGS, -msse -ftree-vectorize)
+  AC_SUBST(SSE_FLAGS)
+  # --- SSE2 flags ---
+  MC_CC_TRY_OPTION(SSE2_FLAGS, -msse2 -ftree-vectorize)
+  AC_SUBST(SSE2_FLAGS)
+  # --- SSE3 flags ---
+  MC_CC_TRY_OPTION(SSE3_FLAGS, -msse3 -ftree-vectorize)
+  AC_SUBST(SSE3_FLAGS)
 ])
 
 # check for development build rules (autogen.sh based builds)
@@ -507,26 +557,6 @@ AC_SUBST(NOTDVLBUILD)
 AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
 AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
 
-# check compilers and behaviour; setup CFLAGS
-MC_PROG_CC_WITH_CFLAGS
-MC_PROG_CXX_WITH_CXXFLAGS
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_CXXCPP
-AC_C_CONST
-AC_C_INLINE
-AC_HEADER_STDC
-AC_LIB_PROG_LD
-AC_LIB_PROG_LD_GNU
-ACX_PROG_LD_GNU_SYMBOLIC
-AC_SUBST([SYMBOLIC_LDFLAGS])
-ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
-AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
-
-# initialize libtool with dynamic module support
-AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
-
 # check for package requirements.
 MC_IF_VAR_EQ(GCC, yes,,
     AC_MSG_ERROR(This package requires GNU gcc)
@@ -553,13 +583,6 @@ RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 RAPICORN_CPU_FLAGS
-
-# automake @VARIABLE@ exports.
-AC_SUBST(CFLAGS)
-AC_SUBST(CXXFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
-
 
 # create output files
 AC_CONFIG_FILES([
