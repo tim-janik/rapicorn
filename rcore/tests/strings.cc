@@ -1,9 +1,11 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
+#include <rcore/randomhash.hh>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <random>
 using namespace Rapicorn;
 
 namespace {
@@ -723,6 +725,97 @@ test_aligned_array()
   TASSERT (AAData::destructor_calls == 5);      // verifies that all elements have been destructed
 }
 REGISTER_TEST ("Memory/AlignedArray", test_aligned_array);
+
+template<class Gen>
+struct GeneratorBench64 {
+  enum {
+    N_RUNS = 10000,
+    BLOCK_NUMS = 128,
+  };
+  Gen gen_;
+  GeneratorBench64() : gen_() {}
+  void
+  operator() ()
+  {
+    uint64_t sum = 0;
+    for (size_t j = 0; j < N_RUNS; j++)
+      {
+        for (size_t i = 0; i < BLOCK_NUMS; i++)
+          sum ^= gen_();
+      }
+    TASSERT ((sum & 0xffffffff) != 0 && sum >> 32 != 0);
+  }
+  size_t
+  bytes_per_run()
+  {
+    return sizeof (uint64_t) * BLOCK_NUMS * N_RUNS;
+  }
+};
+struct Gen_lrand48 { uint64_t operator() () { return uint64_t (lrand48()) << 32 | lrand48(); } };
+struct Gen_minstd  {
+  std::minstd_rand minstd;
+  uint64_t operator() () { return uint64_t (minstd()) << 32 | minstd(); }
+};
+
+static void
+random_hash_benchmarks()
+{
+  Test::Timer timer;
+  GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
+  double bench_time = timer.benchmark (mb);
+  TMSG ("mt19937_64: timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, mb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
+  bench_time = timer.benchmark (sb);
+  TMSG ("minstd:     timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, sb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
+  bench_time = timer.benchmark (lb);
+  TMSG ("lrand48():  timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, lb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakPRNG> kb;      // core-i7:  185.3MB/s
+  bench_time = timer.benchmark (kb);
+  TMSG ("KeccakPRNG: timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, kb.bytes_per_run() / bench_time / 1048576.);
+}
+REGISTER_SLOWTEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
+
+static void
+test_keccak_prng()
+{
+  KeccakPRNG krandom1;
+  String digest;
+  for (size_t i = 0; i < 6; i++)
+    {
+      const uint64_t r = krandom1();
+      const uint32_t h = r >> 32, l = r;
+      digest += string_format ("%02x%02x%02x%02x%02x%02x%02x%02x",
+                               l & 0xff, (l>>8) & 0xff, (l>>16) & 0xff, l>>24, h & 0xff, (h>>8) & 0xff, (h>>16) & 0xff, h>>24);
+    }
+  // printf ("KeccakPRNG: %s\n", digest.c_str());
+  TASSERT (digest == "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0");
+
+  std::stringstream kss;
+  kss << krandom1;
+  KeccakPRNG krandom2;
+  TASSERT (krandom1 != krandom2 && !(krandom1 == krandom2));
+  kss >> krandom2;
+  TASSERT (krandom1 == krandom2 && !(krandom1 != krandom2));
+  TASSERT (krandom1() == krandom2() && krandom1() == krandom2() && krandom1() == krandom2() && krandom1() == krandom2());
+  krandom1();
+  TASSERT (krandom1 != krandom2);
+  krandom2();
+  TASSERT (krandom1 == krandom2);
+  krandom2.forget();
+  TASSERT (krandom1 != krandom2);
+  krandom1.seed (0x11007700affe0101);
+  krandom2.seed (0x11007700affe0101);
+  TASSERT (krandom1 == krandom2);
+  const uint64_t one = 1;
+  krandom1.seed (one);          // seed with 0x1 directly
+  std::seed_seq seq { 0x01 };   // seed_seq generates "random" bits from its input
+  krandom2.seed (seq);
+  TASSERT (krandom1 != krandom2);
+  krandom2.seed (&one, 1);      // seed with array containing just 0x1
+  TASSERT (krandom1 == krandom2);
+}
+REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
 
 } // Anon
 
