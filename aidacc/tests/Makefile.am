@@ -16,7 +16,7 @@ ptptest_LDFLAGS = -pthread -lpthread $(AM_LDFLAGS)
 ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
 EXTRA_DIST += typecodetests.idl
-typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC) $(CXXSTUB_PY)
+typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC_NODEBUG) $(CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) ${AIDACC} -x CxxStub -G clienthh $< -o xgen-$(@F).hh
 	$(Q) ${AIDACC} -x CxxStub -G clientcc $< -o xgen-$(@F).cc
