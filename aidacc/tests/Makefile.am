@@ -1,8 +1,8 @@
 # Aida - Abstract Interface Definition Architecture
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
-DEFS     += -DRAPICORN_CONVENIENCE
+AM_CPPFLAGS += -I$(top_srcdir) # -I$(top_builddir)
+DEFS        += -DRAPICORN_CONVENIENCE
 
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern

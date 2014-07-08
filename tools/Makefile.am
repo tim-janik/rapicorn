@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES    += -I$(top_srcdir)
+AM_CPPFLAGS += -I$(top_srcdir)
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
