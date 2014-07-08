@@ -61,12 +61,12 @@ rapicorn_private_files = $(strip 	\
 )
 EXTRA_DIST += widget.dox
 
-# === CPU flags ===
-CPU_FLAGS = $(or	\
-	$(patsubst %, @MMX_FLAGS@, $(findstring -mmx.cc, $(<F))), \
-	@FPU_FLAGS@	\
-)
-AM_CXXFLAGS += $(CPU_FLAGS)
+# == Special Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = serverglue.cc clientglue.cc
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
+# === CPU SIMD Flags ===
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.cc, $(<F)))
 
 # === Libraries ===
 # librapicorn
@@ -124,7 +124,6 @@ clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), serverglue.cc clientglue.cc))
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \

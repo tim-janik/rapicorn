@@ -166,11 +166,49 @@ MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -O2)
 MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ftracer)
 MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -mcx16)
 dnl # MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wno-invalid-offsetof)
-AM_CFLAGS+=" $BOTHCCXXFLAGS"
-AM_CXXFLAGS+=" $BOTHCCXXFLAGS"
+MC_EVAR_ADD(AM_CFLAGS,   "$BOTHCCXXFLAGS")
+MC_EVAR_ADD(AM_CXXFLAGS, "$BOTHCCXXFLAGS")
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CXXFLAGS)
 AC_SUBST(AM_CPPFLAGS)
+
+# == CPU Optimizations ==
+# MMX and SSE instruction sets have been introduced way more than a decade ago:
+# Intel Pentium 3: CMOV MMX SSE (1999)
+# VIA C3 Nehemiah: CMOV MMX SSE (2003)
+# Athlon Palomino: CMOV MMX SSE 3DNow (2001)
+SIMD_FLAGS=
+MC_CC_TRY_OPTION(SIMD_FLAGS, -mmmx)
+MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
+# Note, -mfpmath=sse can harm FPU-algorithm performance
+# Note, -funroll-loops can harm SSE loop performance
+#MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
+#AC_SUBST(SIMD_FLAGS)
+# Expect the target architecture to support MMX/SSE if the cmpiler does it.
+MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
+MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
+# Newer vectorization instruction sets, should be optionally supported
+# SSE >= 2, AVX
+SSEAVX_FLAGS=
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse2)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse3)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mssse3)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.1)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.2)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4a)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx2)
+AC_SUBST(SSEAVX_FLAGS)
+
+# == OPTIMIZE_FAST ==
+# Some critical code paths should be optimized to run as fast as possible
+OPTIMIZE_FAST=
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -O3)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -ftree-vectorize)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
+AC_SUBST(OPTIMIZE_FAST)
 
 # C & C++ idioms
 AC_C_CONST
@@ -506,32 +544,6 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
-dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
-AC_DEFUN([RAPICORN_CPU_FLAGS],
-[
-  # --- FPU flags ---
-  # -funroll-loops can boost FPU performance
-  MC_CC_TRY_OPTION(FPU_FLAGS,  -funroll-loops)
-  AC_SUBST(FPU_FLAGS)
-  # --- MMX flags ---
-  MC_CC_TRY_OPTION(MMX_FLAGS, -mmmx -funroll-loops -ftree-vectorize)
-  AC_SUBST(MMX_FLAGS)
-  # --- 3DNow flags ---
-  MC_CC_TRY_OPTION(AMD3DNOW_FLAGS, -m3dnow -funroll-loops -ftree-vectorize)
-  AC_SUBST(AMD3DNOW_FLAGS)
-  # --- SSE flags ---
-  # * -mfpmath=sse can harm FPU-algorithm performance
-  # * -funroll-loops can harm SSE loop performance
-  MC_CC_TRY_OPTION(SSE_FLAGS, -msse -ftree-vectorize)
-  AC_SUBST(SSE_FLAGS)
-  # --- SSE2 flags ---
-  MC_CC_TRY_OPTION(SSE2_FLAGS, -msse2 -ftree-vectorize)
-  AC_SUBST(SSE2_FLAGS)
-  # --- SSE3 flags ---
-  MC_CC_TRY_OPTION(SSE3_FLAGS, -msse3 -ftree-vectorize)
-  AC_SUBST(SSE3_FLAGS)
-])
-
 # check for development build rules (autogen.sh based builds)
 AC_MSG_CHECKING(whether develoment build rules are to be used)
 if test x"$enable_devel_rules" = xyes ; then
@@ -582,7 +594,6 @@ RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
-RAPICORN_CPU_FLAGS
 
 # create output files
 AC_CONFIG_FILES([

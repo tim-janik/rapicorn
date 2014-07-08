@@ -46,9 +46,6 @@ rapicorn_generated_files = $(strip    	\
 EXTRA_DIST += docu.dox
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
-# === CPU flags ===
-AM_CXXFLAGS += @FPU_FLAGS@
-
 # === libraries ===
 # librapicorn-core
 noinst_LTLIBRARIES = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
@@ -65,9 +62,9 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
-# == Optimization Targets ==
+# == Special Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)

@@ -3,8 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CFLAGS   += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS) @FPU_FLAGS@
-AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS) @FPU_FLAGS@
+AM_CFLAGS   += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS)
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rcore_rsvg_public_headers = $(strip	\
