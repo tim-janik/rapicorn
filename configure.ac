@@ -72,13 +72,11 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 
 # initialize automake, don't define PACKAGE and VERSION
 AM_INIT_AUTOMAKE(tar-pax no-define)
-AM_MAINTAINER_MODE      dnl # disable automatic maintainer mode.
 AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=yes]],,enable_debug=yes)
-AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -544,31 +542,6 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
-# check for development build rules (autogen.sh based builds)
-AC_MSG_CHECKING(whether develoment build rules are to be used)
-if test x"$enable_devel_rules" = xyes ; then
-    AC_MSG_RESULT(yes)
-    TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
-    TEST_BUILDDIR=$(cd . ; /bin/pwd)
-    AC_MSG_CHECKING(whether source dir equals build dir)
-    if test "$TEST_SRCDIR" = "$TEST_BUILDDIR" ; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
-    fi
-    DVLBUILD=""
-    NOTDVLBUILD=#
-else
-    AC_MSG_RESULT(no)
-    DVLBUILD=#
-    NOTDVLBUILD=""
-fi
-AC_SUBST(DVLBUILD)
-AC_SUBST(NOTDVLBUILD)
-AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
-AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
-
 # check for package requirements.
 MC_IF_VAR_EQ(GCC, yes,,
     AC_MSG_ERROR(This package requires GNU gcc)
@@ -639,7 +612,6 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
-	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS

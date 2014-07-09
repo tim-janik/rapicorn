@@ -11,7 +11,6 @@ noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
-configure: @DVLBUILD@ acrapicorn.m4	# acrapicorn.m4 is included by configure.ac
 
 # === web site ===
 site site-preview site-update:
