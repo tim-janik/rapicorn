@@ -18,6 +18,7 @@ INTLTOOLIZE=intltoolize
 INTLTOOLIZE_VERSION=0.28
 LIBTOOLIZE=libtoolize
 LIBTOOLIZE_VERSION=1.5.0
+CONFIGURE_OPTIONS=--enable-devel-mode=yes
 
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
@@ -180,5 +181,5 @@ echo "Running: $AUTOCONF"
 $AUTOCONF || exit $?
 
 cd $ORIGDIR
-echo "Running: $srcdir/configure $@"
-$srcdir/configure --enable-maintainer-mode "$@" || exit $?
+echo "Running: $srcdir/configure $CONFIGURE_OPTIONS $@"
+$srcdir/configure $CONFIGURE_OPTIONS "$@" || exit $?

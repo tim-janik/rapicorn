@@ -76,7 +76,8 @@ AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=yes]],,enable_debug=yes)
+AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
+AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=[no/yes]    turn on development mode, default=no],,enable_devel_mode=no)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -207,6 +208,20 @@ MC_CC_TRY_OPTION(OPTIMIZE_FAST, -ftree-vectorize)
 MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
 MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
 AC_SUBST(OPTIMIZE_FAST)
+
+# check for development build rules (autogen.sh based builds)
+if test x"$enable_devel_mode" = xyes ; then
+  TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
+  TEST_BUILDDIR=$(cd . ; /bin/pwd)
+  test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
+    AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
+  }
+  DEVELMODE="" ; NOTDEVELMODE="#"
+else
+  DEVELMODE="#"; NOTDEVELMODE=""
+fi
+AC_SUBST(DEVELMODE)
+AC_SUBST(NOTDEVELMODE)
 
 # C & C++ idioms
 AC_C_CONST
@@ -612,6 +627,7 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
+	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS
