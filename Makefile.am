@@ -115,6 +115,7 @@ distcleancheck_listfiles = true # find . -type f -print
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
 	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
 noinst_DATA += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
 	@$(srcdir)/mkrelease.sh news --first-parent --body
