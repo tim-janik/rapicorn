@@ -894,6 +894,53 @@ test_sha3_hashing()
 }
 REGISTER_TEST ("RandomHash/SHA3 Hashing", test_sha3_hashing);
 
+static void
+test_shake_hashing()
+{
+  std::string inputdata;
+
+  // SHAKE256
+  const char *testdata_shake256_3a3_in =
+    "3A3A819C48EFDE2AD914FBF00E18AB6BC4F14513AB27D0C178A188B61431E7F5623CB66B23346775D386B50E982C493ADBBFC54B9A3CD383382336A1A0B2"
+    "150A15358F336D03AE18F666C7573D55C4FD181C29E6CCFDE63EA35F0ADF5885CFC0A3D84A2B2E4DD24496DB789E663170CEF74798AA1BBCD4574EA0BBA4"
+    "0489D764B2F83AADC66B148B4A0CD95246C127D5871C4F11418690A5DDF01246A0C80A43C70088B6183639DCFDA4125BD113A8F49EE23ED306FAAC576C3F"
+    "B0C1E256671D817FC2534A52F5B439F72E424DE376F4C565CCA82307DD9EF76DA5B7C4EB7E085172E328807C02D011FFBF33785378D79DC266F6A5BE6BB0"
+    "E4A92ECEEBAEB1"; // 2040 bits
+  const char *testdata_shake256_3a3_md =
+    "8a5199b4a7e133e264a86202720655894d48cff344a928cf8347f48379cef347dfc5bcffab99b27b1f89aa2735e23d30088ffa03b9edb02b9635470ab9f1"
+    "038985d55f9ca774572dd006470ea65145469609f9fa0831bf1ffd842dc24acade27bd9816e3b5bf2876cb112232a0eb4475f1dff9f5c713d9ffd4ccb89a"
+    "e5607fe35731df06317949eef646e9591cf3be53add6b7dd2b6096e2b3fb06e662ec8b2d77422daad9463cd155204acdbd38e319613f39f99b6dfb35ca93"
+    "65160066db19835888c2241ff9a731a4acbb5663727aac34a401247fbaa7499e7d5ee5b69d31025e63d04c35c798bca1262d5673a9cf0930b5ad89bd4855"
+    "99dc184528da4790f088ebd170b635d9581632d2ff90db79665ced430089af13c9f21f6d443a818064f17aec9e9c5457001fa8dc6afbadbe3138f388d89d"
+    "0e6f22f66671255b210754ed63d81dce75ce8f189b534e6d6b3539aa51e837c42df9df59c71e6171cd4902fe1bdc73fb1775b5c754a1ed4ea7f3105fc543"
+    "ee0418dad256f3f6118ea77114a16c15355b42877a1db2a7df0e155ae1d8670abcec3450f4e2eec9838f895423ef63d261138baaf5d9f104cb5a957aea06"
+    "c0b9b8c78b0d441796dc0350ddeabb78a33b6f1f9e68ede3d1805c7b7e2cfd54e0fad62f0d8ca67a775dc4546af9096f2edb221db42843d65327861282dc"
+    "946a0ba01a11863ab2d1dfd16e3973d4"; // 4096 bits
+  uint8_t testdata_shake256_hashvalue[512];
+  inputdata = image_to_bytes (testdata_shake256_3a3_in);
+  shake256_hash (inputdata.data(), inputdata.size(), testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue));
+  tprint ("SHAKE256", testdata_shake256_3a3_in, testdata_shake256_hashvalue);
+  assert (byte_image (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue)) == testdata_shake256_3a3_md);
+
+  // testing squeeze_hash() && reset()
+  SHAKE256 shake256;
+  shake256.update ((const uint8_t*) inputdata.data(), inputdata.size());
+  memset (testdata_shake256_hashvalue, 0, sizeof (testdata_shake256_hashvalue));
+  const size_t svlen = sizeof (testdata_shake256_hashvalue);
+  for (size_t i = 0; i < 16; i++) // test incremental readouts
+    shake256.squeeze_digest (testdata_shake256_hashvalue + i * (svlen / 16), svlen / 16);
+  assert (byte_image (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue)) == testdata_shake256_3a3_md);
+  shake256.squeeze_digest (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue));
+  tprint ("SHAKE256", "sequeeze...", testdata_shake256_hashvalue);
+  assert (byte_image (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue)) != testdata_shake256_3a3_md);
+  shake256.reset();
+  shake256.update ((const uint8_t*) inputdata.data(), inputdata.size());
+  shake256.squeeze_digest (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue));
+  tprint ("SHAKE256", "reset...", testdata_shake256_hashvalue);
+  assert (byte_image (testdata_shake256_hashvalue, sizeof (testdata_shake256_hashvalue)) == testdata_shake256_3a3_md);
+}
+REGISTER_TEST ("RandomHash/SHAKE Hashing", test_shake_hashing);
+
 } // Anon
 
 /* vim:set ts=8 sts=2 sw=2: */

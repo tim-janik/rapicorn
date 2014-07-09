@@ -187,6 +187,19 @@ private: State *state_;
 /// Calculate 512 bit SHA3 hash from @a data, returned in @a hashvalue.
 void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
 
+/// SHAKE256 Bit Hashing.
+struct SHAKE256 {
+  /*dtor*/ ~SHAKE256        ();
+  /*ctor*/  SHAKE256        ();         ///< Create context to calculate an unbounded SHAKE256 hash digest.
+  void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+  class     State;
+private: State *state_;
+};
+/// Calculate SHAKE256 arbitrary lengh hash value from @a data, returned in @a hashvalues.
+void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
+
 } // Rapicorn
 
 #endif /* __RAPICORN_RANDOMHASH_HH__ */

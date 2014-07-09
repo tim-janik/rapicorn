@@ -161,7 +161,7 @@ template<size_t HASHBITS, uint8_t DOMAINBITS>
 class SHAKE_Base {
   Lib::KeccakF1600      state_;
   const size_t          rate_;
-  size_t                ipos_;
+  size_t                iopos_;
   bool                  feeding_mode_;
 protected:
   /// Add stream data up to block size into Keccak state via XOR.
@@ -192,7 +192,7 @@ protected:
       state_.permute (24);                      // prepare new block to append last bit
     state_.byte (lastbyte) ^= 0x80;             // 1: last bitrate bit; required by MultiRatePadding
   }
-  SHAKE_Base (size_t rate) : rate_ (rate), ipos_ (0), feeding_mode_ (true)
+  SHAKE_Base (size_t rate) : rate_ (rate), iopos_ (0), feeding_mode_ (true)
   {
     std::fill (&state_[0], &state_[25], 0);
   }
@@ -206,7 +206,7 @@ public:
   reset()
   {
     std::fill (&state_[0], &state_[25], 0);
-    ipos_ = 0;
+    iopos_ = 0;
     feeding_mode_ = true;
   }
   void
@@ -215,33 +215,56 @@ public:
     assert (feeding_mode_ == true);
     while (length)
       {
-        const size_t count = min (byte_rate() - ipos_, length);
-        xor_state (ipos_, data, count);
-        ipos_ += count;
+        const size_t count = min (byte_rate() - iopos_, length);
+        xor_state (iopos_, data, count);
+        iopos_ += count;
         data += count;
         length -= count;
-        if (ipos_ >= byte_rate())
+        if (iopos_ >= byte_rate())
           {
             state_.permute (24);
-            ipos_ = 0;
+            iopos_ = 0;
           }
       }
   }
+  /// Switch from absorbing into squeezing mode and return digest.
   size_t
   get_hash (uint8_t hashvalue[HASHBITS / 8])
   {
     if (feeding_mode_)
       {
         const uint8_t shake_delimiter = DOMAINBITS;
-        absorb_padding (ipos_, shake_delimiter);
-        ipos_ = ~size_t (0);
-        state_.permute (24);
+        absorb_padding (iopos_, shake_delimiter);
         feeding_mode_ = false;
+        state_.permute (24);
+        iopos_ = 0;
       }
     const size_t count = HASHBITS / 8;
     for (size_t i = 0; i < count; i++)
       hashvalue[i] = state_.byte (i);
     return count;
+  }
+  /// Read out the current Keccak state and permute as needed.
+  void
+  squeeze_digest (uint8_t *output, size_t n_out)
+  {
+    assert (HASHBITS == 0);
+    get_hash (output);                  // absorb_padding and leave feeding_mode_
+    assert (feeding_mode_ == false);
+    while (n_out)
+      {
+        const size_t count = std::min (n_out, byte_rate() - iopos_);
+        for (size_t i = 0; i < count; i++)
+          output[i] = state_.byte (iopos_ + i);
+        iopos_ += count;
+        output += count;
+        n_out -= count;
+        if (iopos_ >= byte_rate())
+          {
+            state_.permute (24);
+            iopos_ = 0;
+          }
+      }
   }
 };
 
@@ -283,6 +306,46 @@ sha3_512_hash (const void *data, size_t data_length, uint8_t hashvalue[64])
   SHA3_512 context;
   context.update ((const uint8_t*) data, data_length);
   context.digest (hashvalue);
+}
+
+// == SHAKE256 ==
+struct SHAKE256::State : SHAKE_Base<0, 0x1f> {
+  State() : SHAKE_Base (1088) {}
+};
+
+SHAKE256::SHAKE256 () :
+  state_ (new State())
+{}
+
+SHAKE256::~SHAKE256 ()
+{
+  delete state_;
+}
+
+void
+SHAKE256::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHAKE256::squeeze_digest (uint8_t *hashvalues, size_t n)
+{
+  state_->squeeze_digest (hashvalues, n);
+}
+
+void
+SHAKE256::reset ()
+{
+  state_->reset();
+}
+
+void
+shake256_hash (const void *data, size_t data_length, uint8_t *hashvalues, size_t n)
+{
+  SHAKE256 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.squeeze_digest (hashvalues, n);
 }
 
 } // Rapicorn
