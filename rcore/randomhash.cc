@@ -308,6 +308,46 @@ sha3_512_hash (const void *data, size_t data_length, uint8_t hashvalue[64])
   context.digest (hashvalue);
 }
 
+// == SHAKE128 ==
+struct SHAKE128::State : SHAKE_Base<0, 0x1f> {
+  State() : SHAKE_Base (1344) {}
+};
+
+SHAKE128::SHAKE128 () :
+  state_ (new State())
+{}
+
+SHAKE128::~SHAKE128 ()
+{
+  delete state_;
+}
+
+void
+SHAKE128::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHAKE128::squeeze_digest (uint8_t *hashvalues, size_t n)
+{
+  state_->squeeze_digest (hashvalues, n);
+}
+
+void
+SHAKE128::reset ()
+{
+  state_->reset();
+}
+
+void
+shake128_hash (const void *data, size_t data_length, uint8_t *hashvalues, size_t n)
+{
+  SHAKE128 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.squeeze_digest (hashvalues, n);
+}
+
 // == SHAKE256 ==
 struct SHAKE256::State : SHAKE_Base<0, 0x1f> {
   State() : SHAKE_Base (1088) {}
