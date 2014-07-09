@@ -157,14 +157,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
-	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
-	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"				>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
+	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
 	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
