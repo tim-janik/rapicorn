@@ -4,7 +4,6 @@
 ## GNU Lesser General Public License version 2 or any later version.
 
 # declare variables that we might want to use += on.
-INCLUDES=
 EXTRA_HEADERS=
 MAINTAINERCLEANFILES=$(GENERATED)
 CLEANFILES=$(GENERATED_CLEANFILES)
@@ -115,7 +114,7 @@ slowcheck_parallel--$(1): $(1)
 	&& RAPICORN_TEST="$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 slowcheck: slowcheck_parallel--$(1)
-check: @NOTDVLBUILD@ slowcheck_parallel--$(1)
+check: @NOTDEVELMODE@ slowcheck_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 

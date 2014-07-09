@@ -72,13 +72,12 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 
 # initialize automake, don't define PACKAGE and VERSION
 AM_INIT_AUTOMAKE(tar-pax no-define)
-AM_MAINTAINER_MODE      dnl # disable automatic maintainer mode.
 AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=yes]],,enable_debug=yes)
-AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
+AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
+AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=[no/yes]    turn on development mode, default=no],,enable_devel_mode=no)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -99,33 +98,135 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	pangocairo	>= 1.29.0
 ])
 
-# setup DEBUG defaults
-if test "x$enable_debug" = "xyes"; then
-  ADDON_CFLAGS="-g -DG_ENABLE_DEBUG -fno-omit-frame-pointer"
-else if test "x$enable_debug" = "xno"; then
-  ADDON_CFLAGS="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-else
-  ADDON_CFLAGS="-DG_DISABLE_CAST_CHECKS"
-fi fi
-# setup CFLAGS
+# compiler, linker & libtool
+saved_CFLAGS="$CFLAGS"
 AC_PROG_CC
-CFLAGS="$CFLAGS $ADDON_CFLAGS"
-# setup LDFLAGS
-AC_PROG_LD
-LDFLAGS="$LDFLAGS $ADDON_LDFLAGS"
-# setup CXXFLAGS
+CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
+saved_CXXFLAGS="$CFLAGS"
+AC_PROG_CPP
+CXXFLAGS="$saved_CXXFLAGS"	# AC_PROG_CXX_G called internally consistently breaks $CXXFLAGS
 AC_PROG_CXX
-CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
-if ${CC} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\)' && \
-   ${CC} -dumpspecs | grep -q -- '--as-needed' ; then
-  LDFLAGS="$LDFLAGS -Wl,--hash-style=both -Wl,--as-needed -Wl,-O1"
-fi
+AC_PROG_CXXCPP
+AC_PROG_LD
+AC_LANG_CPLUSPLUS	# use CXX for compilation tests
+AC_LIB_PROG_LD
+AC_LIB_PROG_LD_GNU
+ACX_PROG_LD_GNU_SYMBOLIC
+AC_SUBST([SYMBOLIC_LDFLAGS])
+ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
+AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
+AM_PROG_LIBTOOL
+AC_LIBTOOL_DLOPEN
 
-# == Compiler Flags ==
-MC_EVAR_ADD(CFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -Werror=format-security, -Werror=format-security)
-MC_EVAR_ADD(CXXFLAGS, -std=gnu++0x, -std=gnu++0x -pthread -lrt)
-AC_LANG_CPLUSPLUS
+# AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
+AC_MSG_CHECKING([whether CC and LD support gnu.hash sections])
+if ${CC-cc} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${LD-ld} --help     | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
+  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+MC_EVAR_ADD(AM_LDFLAGS, -pthread)
+MC_EVAR_ADD(AM_LDFLAGS, -lrt)
+AC_SUBST(AM_LDFLAGS)
+
+# Pick C++ dialect, needed in CXXFLAGS for compile tests
+MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++0x)
+
+# AM_CFLAGS & AM_CXXFLAGS
+MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++0x)
+BOTHCCXXFLAGS=
+if test "x$enable_debug" = "xyes"; then
+  MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ggdb3)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fno-omit-frame-pointer)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fverbose-asm)
+  dnl # MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Q -ftime-report -fmem-report)
+elif test "x$enable_debug" = "xno"; then
+  MC_EVAR_ADD(BOTHCCXXFLAGS, [-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS]) # -DG_DISABLE_ASSERT
+else
+  : # minimum debugging
+fi
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wall)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wdeprecated)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wmissing-prototypes)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wno-pointer-sign)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -Wnested-externs)
+MC_CC_TRY_OPTION(AM_CFLAGS,     -fno-cond-mismatch)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wmissing-declarations)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wpointer-arith)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wredundant-decls)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Werror=format-security)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -rdynamic)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -pipe)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -O2)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ftracer)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -mcx16)
+dnl # MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wno-invalid-offsetof)
+MC_EVAR_ADD(AM_CFLAGS,   "$BOTHCCXXFLAGS")
+MC_EVAR_ADD(AM_CXXFLAGS, "$BOTHCCXXFLAGS")
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CXXFLAGS)
+AC_SUBST(AM_CPPFLAGS)
+
+# == CPU Optimizations ==
+# MMX and SSE instruction sets have been introduced way more than a decade ago:
+# Intel Pentium 3: CMOV MMX SSE (1999)
+# VIA C3 Nehemiah: CMOV MMX SSE (2003)
+# Athlon Palomino: CMOV MMX SSE 3DNow (2001)
+SIMD_FLAGS=
+MC_CC_TRY_OPTION(SIMD_FLAGS, -mmmx)
+MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
+# Note, -mfpmath=sse can harm FPU-algorithm performance
+# Note, -funroll-loops can harm SSE loop performance
+#MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
+#AC_SUBST(SIMD_FLAGS)
+# Expect the target architecture to support MMX/SSE if the cmpiler does it.
+MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
+MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
+# Newer vectorization instruction sets, should be optionally supported
+# SSE >= 2, AVX
+SSEAVX_FLAGS=
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse2)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse3)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mssse3)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.1)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.2)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4a)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx)
+MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx2)
+AC_SUBST(SSEAVX_FLAGS)
+
+# == OPTIMIZE_FAST ==
+# Some critical code paths should be optimized to run as fast as possible
+OPTIMIZE_FAST=
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -O3)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -ftree-vectorize)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
+MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
+AC_SUBST(OPTIMIZE_FAST)
+
+# check for development build rules (autogen.sh based builds)
+if test x"$enable_devel_mode" = xyes ; then
+  TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
+  TEST_BUILDDIR=$(cd . ; /bin/pwd)
+  test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
+    AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
+  }
+  DEVELMODE="" ; NOTDEVELMODE="#"
+else
+  DEVELMODE="#"; NOTDEVELMODE=""
+fi
+AC_SUBST(DEVELMODE)
+AC_SUBST(NOTDEVELMODE)
+
+# C & C++ idioms
+AC_C_CONST
+AC_C_INLINE
+AC_HEADER_STDC
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
@@ -456,77 +557,6 @@ AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
-dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
-AC_DEFUN([RAPICORN_CPU_FLAGS],
-[
-    # --- FPU flags ---
-    # -funroll-loops can boost FPU performance
-    MC_PROG_CC_SPECIAL_FLAGS(FPU_FLAGS, -funroll-loops)
-    AC_SUBST(FPU_FLAGS)
-    # --- MMX flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(MMX_FLAGS, -mmmx -funroll-loops -ftree-vectorize)
-    AC_SUBST(MMX_FLAGS)
-    # --- 3DNow flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(AMD3DNOW_FLAGS, -m3dnow -funroll-loops -ftree-vectorize)
-    AC_SUBST(AMD3DNOW_FLAGS)
-    # --- SSE flags ---
-    # * -mfpmath=sse can harm FPU-algorithm performance
-    # * -funroll-loops can harm SSE loop performance
-    MC_PROG_CC_SPECIAL_FLAGS(SSE_FLAGS, -msse -ftree-vectorize)
-    AC_SUBST(SSE_FLAGS)
-    # --- SSE2 flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(SSE2_FLAGS, -msse2 -ftree-vectorize)
-    AC_SUBST(SSE2_FLAGS)
-    # --- SSE3 flags ---
-    MC_PROG_CC_SPECIAL_FLAGS(SSE3_FLAGS, -msse3 -ftree-vectorize)
-    AC_SUBST(SSE3_FLAGS)
-])
-
-# check for development build rules (autogen.sh based builds)
-AC_MSG_CHECKING(whether develoment build rules are to be used)
-if test x"$enable_devel_rules" = xyes ; then
-    AC_MSG_RESULT(yes)
-    TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
-    TEST_BUILDDIR=$(cd . ; /bin/pwd)
-    AC_MSG_CHECKING(whether source dir equals build dir)
-    if test "$TEST_SRCDIR" = "$TEST_BUILDDIR" ; then
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
-    fi
-    DVLBUILD=""
-    NOTDVLBUILD=#
-else
-    AC_MSG_RESULT(no)
-    DVLBUILD=#
-    NOTDVLBUILD=""
-fi
-AC_SUBST(DVLBUILD)
-AC_SUBST(NOTDVLBUILD)
-AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
-AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
-
-# check compilers and behaviour; setup CFLAGS
-MC_PROG_CC_WITH_CFLAGS
-MC_PROG_CXX_WITH_CXXFLAGS
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_CXXCPP
-AC_C_CONST
-AC_C_INLINE
-AC_HEADER_STDC
-AC_LIB_PROG_LD
-AC_LIB_PROG_LD_GNU
-ACX_PROG_LD_GNU_SYMBOLIC
-AC_SUBST([SYMBOLIC_LDFLAGS])
-ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
-AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
-
-# initialize libtool with dynamic module support
-AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
-
 # check for package requirements.
 MC_IF_VAR_EQ(GCC, yes,,
     AC_MSG_ERROR(This package requires GNU gcc)
@@ -534,9 +564,6 @@ MC_IF_VAR_EQ(GCC, yes,,
 MC_IF_VAR_EQ(GXX, yes,,
     AC_MSG_ERROR(This package requires GNU g++)
 )
-
-# check for development tools
-AC_CHECK_PROGS(XMLLINT, xmllint, true)
 
 # find installation utilities
 AC_PROG_INSTALL
@@ -552,14 +579,6 @@ RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
-RAPICORN_CPU_FLAGS
-
-# automake @VARIABLE@ exports.
-AC_SUBST(CFLAGS)
-AC_SUBST(CXXFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
-
 
 # create output files
 AC_CONFIG_FILES([
@@ -605,7 +624,7 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
-	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
+	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS

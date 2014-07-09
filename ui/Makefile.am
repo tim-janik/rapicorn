@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS    = . tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
@@ -61,12 +61,12 @@ rapicorn_private_files = $(strip 	\
 )
 EXTRA_DIST += widget.dox
 
-# === CPU flags ===
-CPU_FLAGS = $(or	\
-	$(patsubst %, @MMX_FLAGS@, $(findstring -mmx.cc, $(<F))), \
-	@FPU_FLAGS@	\
-)
-AM_CXXFLAGS += $(CPU_FLAGS)
+# == Special Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = serverglue.cc clientglue.cc
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
+# === CPU SIMD Flags ===
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.cc, $(<F)))
 
 # === Libraries ===
 # librapicorn
@@ -80,6 +80,7 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
@@ -123,7 +124,6 @@ clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), serverglue.cc clientglue.cc))
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \

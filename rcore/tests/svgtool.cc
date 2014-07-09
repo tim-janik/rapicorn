@@ -188,7 +188,10 @@ using namespace Rapicorn;
 static void
 test_convert_svg2png()
 {
-  Svg::FileP file = Svg::File::load ("sample1.svg");
+  const String svg_name = "sample1.svg";
+  Svg::FileP file = Svg::File::load (svg_name);
+  if (!file)
+    fatal ("Failed to load file: %s", svg_name);
   Svg::ElementP e = file->lookup ("#test-box");
   assert (e);
   const Svg::BBox bbox = e->bbox();

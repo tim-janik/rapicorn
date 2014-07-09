@@ -11,7 +11,6 @@ noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
-configure: @DVLBUILD@ acrapicorn.m4	# acrapicorn.m4 is included by configure.in
 
 # === web site ===
 site site-preview site-update:
@@ -116,6 +115,7 @@ distcleancheck_listfiles = true # find . -type f -print
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
 	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
 noinst_DATA += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
 	@$(srcdir)/mkrelease.sh news --first-parent --body
@@ -123,5 +123,5 @@ release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
 release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.in:RAPICORN_REVISION_VERSION
+	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
 .PHONY: release-news release-check release-upload

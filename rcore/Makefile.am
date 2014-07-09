@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS	     = . rsvg tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
@@ -46,9 +46,6 @@ rapicorn_generated_files = $(strip    	\
 EXTRA_DIST += docu.dox
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
-# === CPU flags ===
-AM_CXXFLAGS += @FPU_FLAGS@
-
 # === libraries ===
 # librapicorn-core
 noinst_LTLIBRARIES = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
@@ -61,12 +58,13 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
-# == Optimization Targets ==
+# == Special Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
@@ -159,14 +157,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
-	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
-	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"				>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
+	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
 	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
