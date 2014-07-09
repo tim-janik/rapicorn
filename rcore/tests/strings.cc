@@ -814,6 +814,8 @@ test_keccak_prng()
   TASSERT (krandom1 != krandom2);
   krandom2.seed (&one, 1);      // seed with array containing just 0x1
   TASSERT (krandom1 == krandom2);
+  krandom2.seed (krandom1);     // uses krandom1.generate
+  TASSERT (krandom1 != krandom2);
 }
 REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
 

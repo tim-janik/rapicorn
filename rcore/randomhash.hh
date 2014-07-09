@@ -87,6 +87,19 @@ public:
       permute1600();
     return state_[opos_++];
   }
+  /// Fill the range [begin, end) with random unsigned integer values.
+  template<typename RandomAccessIterator> void
+  generate (RandomAccessIterator begin, RandomAccessIterator end)
+  {
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type Value;
+    while (begin != end)
+      {
+        const uint64_t rbits = operator()();
+        *begin++ = Value (rbits);
+        if (sizeof (Value) <= 4 && begin != end)
+          *begin++ = Value (rbits >> 32);
+      }
+  }
   /// Compare two generators for state equality.
   friend bool
   operator== (const KeccakPRNG &lhs, const KeccakPRNG &rhs)
