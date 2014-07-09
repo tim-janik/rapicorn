@@ -268,6 +268,126 @@ public:
   }
 };
 
+// == SHA3_224 ==
+struct SHA3_224::State : SHAKE_Base<224, 0x06> {
+  State() : SHAKE_Base (1152) {}
+};
+
+SHA3_224::SHA3_224 () :
+  state_ (new State())
+{}
+
+SHA3_224::~SHA3_224 ()
+{
+  delete state_;
+}
+
+void
+SHA3_224::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHA3_224::digest (uint8_t hashvalue[28])
+{
+  state_->get_hash (hashvalue);
+}
+
+void
+SHA3_224::reset ()
+{
+  state_->reset();
+}
+
+void
+sha3_224_hash (const void *data, size_t data_length, uint8_t hashvalue[28])
+{
+  SHA3_224 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.digest (hashvalue);
+}
+
+// == SHA3_256 ==
+struct SHA3_256::State : SHAKE_Base<256, 0x06> {
+  State() : SHAKE_Base (1088) {}
+};
+
+SHA3_256::SHA3_256 () :
+  state_ (new State())
+{}
+
+SHA3_256::~SHA3_256 ()
+{
+  delete state_;
+}
+
+void
+SHA3_256::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHA3_256::digest (uint8_t hashvalue[32])
+{
+  state_->get_hash (hashvalue);
+}
+
+void
+SHA3_256::reset ()
+{
+  state_->reset();
+}
+
+void
+sha3_256_hash (const void *data, size_t data_length, uint8_t hashvalue[32])
+{
+  SHA3_256 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.digest (hashvalue);
+}
+
+// == SHA3_384 ==
+struct SHA3_384::State : SHAKE_Base<384, 0x06> {
+  State() : SHAKE_Base (832) {}
+};
+
+SHA3_384::SHA3_384 () :
+  state_ (new State())
+{}
+
+SHA3_384::~SHA3_384 ()
+{
+  delete state_;
+}
+
+void
+SHA3_384::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHA3_384::digest (uint8_t hashvalue[48])
+{
+  state_->get_hash (hashvalue);
+}
+
+void
+SHA3_384::reset ()
+{
+  state_->reset();
+}
+
+void
+sha3_384_hash (const void *data, size_t data_length, uint8_t hashvalue[48])
+{
+  SHA3_384 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.digest (hashvalue);
+}
+
 // == SHA3_512 ==
 struct SHA3_512::State : SHAKE_Base<512, 0x06> {
   State() : SHAKE_Base (576) {}

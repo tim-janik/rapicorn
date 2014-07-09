@@ -882,6 +882,36 @@ test_sha3_hashing()
 {
   std::string inputdata;
 
+  // SHA3-224
+  const char *testdata_sha3_224_0f_in = "0F8B2D8FCFD9D68CFFC17CCFB117709B53D26462A3F346FB7C79B85E";
+  const char *testdata_sha3_224_0f_md = "1e693b0bce2372550daef35b14f13ab43441ed6742dee3e86fd1d8ef";
+  uint8_t sha3_224_hashvalue[28];
+  inputdata = image_to_bytes (testdata_sha3_224_0f_in);
+  sha3_224_hash (inputdata.data(), inputdata.size(), sha3_224_hashvalue);
+  tprint ("SHA3-224", testdata_sha3_224_0f_in, sha3_224_hashvalue);
+  assert (byte_image (sha3_224_hashvalue, sizeof (sha3_224_hashvalue)) == testdata_sha3_224_0f_md);
+
+  // SHA3-256
+  const char *testdata_sha3_256_de_in =
+    "DE286BA4206E8B005714F80FB1CDFAEBDE91D29F84603E4A3EBC04686F99A46C9E880B96C574825582E8812A26E5A857FFC6579F63742F";
+  const char *testdata_sha3_256_de_md =
+    "1bc1bcc70f638958db1006af37b02ebd8954ec59b3acbad12eacedbc5b21e908";
+  uint8_t sha3_256_hashvalue[32];
+  inputdata = image_to_bytes (testdata_sha3_256_de_in);
+  sha3_256_hash (inputdata.data(), inputdata.size(), sha3_256_hashvalue);
+  tprint ("SHA3-256", testdata_sha3_256_de_in, sha3_256_hashvalue);
+  assert (byte_image (sha3_256_hashvalue, sizeof (sha3_256_hashvalue)) == testdata_sha3_256_de_md);
+
+  // SHA3-384
+  const char *testdata_sha3_384_1f_in = "1F877C";
+  const char *testdata_sha3_384_1f_md =
+    "14f6f486fb98ed46a4a198040da8079e79e448daacebe905fb4cf0df86ef2a7151f62fe095bf8516eb0677fe607734e2";
+  uint8_t sha3_384_hashvalue[48];
+  inputdata = image_to_bytes (testdata_sha3_384_1f_in);
+  sha3_384_hash (inputdata.data(), inputdata.size(), sha3_384_hashvalue);
+  tprint ("SHA3-384", testdata_sha3_384_1f_in, sha3_384_hashvalue);
+  assert (byte_image (sha3_384_hashvalue, sizeof (sha3_384_hashvalue)) == testdata_sha3_384_1f_md);
+
   // SHA3-512
   const char *testdata_sha3_512_cc_in = "CC";
   const char *testdata_sha3_512_cc_md =

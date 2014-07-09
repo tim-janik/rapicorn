@@ -174,6 +174,45 @@ public:
   }
 };
 
+/// SHA3_224 Bit Hashing.
+struct SHA3_224 {
+  /*dtor*/ ~SHA3_224    ();
+  /*ctor*/  SHA3_224    ();         ///< Create context to calculate a 224 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[28]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 224 bit SHA3 hash from @a data, returned in @a hashvalue.
+void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
+
+/// SHA3_256 Bit Hashing.
+struct SHA3_256 {
+  /*dtor*/ ~SHA3_256    ();
+  /*ctor*/  SHA3_256    ();         ///< Create context to calculate a 256 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[32]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 256 bit SHA3 hash from @a data, returned in @a hashvalue.
+void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
+
+/// SHA3_384 Bit Hashing.
+struct SHA3_384 {
+  /*dtor*/ ~SHA3_384    ();
+  /*ctor*/  SHA3_384    ();         ///< Create context to calculate a 384 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[48]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 384 bit SHA3 hash from @a data, returned in @a hashvalue.
+void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
+
 /// SHA3_512 Bit Hashing.
 struct SHA3_512 {
   /*dtor*/ ~SHA3_512    ();
