@@ -7,6 +7,96 @@
 
 namespace Rapicorn {
 
+/** SHA3_224 - 224 Bit digest generation.
+ * This class implements the SHA3 hash funtion to create 224 Bit digests, see FIPS 202 @cite Fips202.
+ */
+struct SHA3_224 {
+  /*dtor*/ ~SHA3_224    ();
+  /*ctor*/  SHA3_224    ();         ///< Create context to calculate a 224 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[28]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 224 bit SHA3 digest from @a data, see also class SHA3_224.
+void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
+
+/** SHA3_256 - 256 Bit digest generation.
+ * This class implements the SHA3 hash funtion to create 256 Bit digests, see FIPS 202 @cite Fips202.
+ */
+struct SHA3_256 {
+  /*dtor*/ ~SHA3_256    ();
+  /*ctor*/  SHA3_256    ();         ///< Create context to calculate a 256 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[32]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 256 bit SHA3 digest from @a data, see also class SHA3_256.
+void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
+
+/** SHA3_384 - 384 Bit digest generation.
+ * This class implements the SHA3 hash funtion to create 384 Bit digests, see FIPS 202 @cite Fips202.
+ */
+struct SHA3_384 {
+  /*dtor*/ ~SHA3_384    ();
+  /*ctor*/  SHA3_384    ();         ///< Create context to calculate a 384 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[48]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 384 bit SHA3 digest from @a data, see also class SHA3_384.
+void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
+
+/** SHA3_512 - 512 Bit digest generation.
+ * This class implements the SHA3 hash funtion to create 512 Bit digests, see FIPS 202 @cite Fips202.
+ */
+struct SHA3_512 {
+  /*dtor*/ ~SHA3_512    ();
+  /*ctor*/  SHA3_512    ();         ///< Create context to calculate a 512 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[64]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 512 bit SHA3 digest from @a data, see also class SHA3_512.
+void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
+
+/** SHAKE128 - 128 Bit extendable output digest generation.
+ * This class implements the SHA3 extendable output hash funtion with 128 bit security strength, see FIPS 202 @cite Fips202.
+ */
+struct SHAKE128 {
+  /*dtor*/ ~SHAKE128        ();
+  /*ctor*/  SHAKE128        ();         ///< Create context to calculate an unbounded SHAKE128 hash digest.
+  void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+  class     State;
+private: State *state_;
+};
+/// Calculate SHA3 extendable output digest for 128 bit security strength, see also class SHAKE128.
+void    shake128_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
+
+/** SHAKE256 - 256 Bit extendable output digest generation.
+ * This class implements the SHA3 extendable output hash funtion with 256 bit security strength, see FIPS 202 @cite Fips202.
+ */
+struct SHAKE256 {
+  /*dtor*/ ~SHAKE256        ();
+  /*ctor*/  SHAKE256        ();         ///< Create context to calculate an unbounded SHAKE256 hash digest.
+  void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+  class     State;
+private: State *state_;
+};
+/// Calculate SHA3 extendable output digest for 256 bit security strength, see also class SHAKE256.
+void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
+
 namespace Lib { // Namespace for implementation internals
 
 /// The Keccak-f[1600] Permutation, see the Keccak specification @cite Keccak11.
@@ -173,84 +263,6 @@ public:
     return is;
   }
 };
-
-/// SHA3_224 Bit Hashing.
-struct SHA3_224 {
-  /*dtor*/ ~SHA3_224    ();
-  /*ctor*/  SHA3_224    ();         ///< Create context to calculate a 224 bit SHA3 hash digest.
-  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      digest      (uint8_t hashvalue[28]);                ///< Retrieve the resulting hash value.
-  class     State;
-private: State *state_;
-};
-/// Calculate 224 bit SHA3 hash from @a data, returned in @a hashvalue.
-void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
-
-/// SHA3_256 Bit Hashing.
-struct SHA3_256 {
-  /*dtor*/ ~SHA3_256    ();
-  /*ctor*/  SHA3_256    ();         ///< Create context to calculate a 256 bit SHA3 hash digest.
-  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      digest      (uint8_t hashvalue[32]);                ///< Retrieve the resulting hash value.
-  class     State;
-private: State *state_;
-};
-/// Calculate 256 bit SHA3 hash from @a data, returned in @a hashvalue.
-void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
-
-/// SHA3_384 Bit Hashing.
-struct SHA3_384 {
-  /*dtor*/ ~SHA3_384    ();
-  /*ctor*/  SHA3_384    ();         ///< Create context to calculate a 384 bit SHA3 hash digest.
-  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      digest      (uint8_t hashvalue[48]);                ///< Retrieve the resulting hash value.
-  class     State;
-private: State *state_;
-};
-/// Calculate 384 bit SHA3 hash from @a data, returned in @a hashvalue.
-void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
-
-/// SHA3_512 Bit Hashing.
-struct SHA3_512 {
-  /*dtor*/ ~SHA3_512    ();
-  /*ctor*/  SHA3_512    ();         ///< Create context to calculate a 512 bit SHA3 hash digest.
-  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      digest      (uint8_t hashvalue[64]);                ///< Retrieve the resulting hash value.
-  class     State;
-private: State *state_;
-};
-/// Calculate 512 bit SHA3 hash from @a data, returned in @a hashvalue.
-void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
-
-/// SHAKE128 Bit Hashing.
-struct SHAKE128 {
-  /*dtor*/ ~SHAKE128        ();
-  /*ctor*/  SHAKE128        ();         ///< Create context to calculate an unbounded SHAKE128 hash digest.
-  void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
-  class     State;
-private: State *state_;
-};
-/// Calculate SHAKE128 arbitrary lengh hash value from @a data, returned in @a hashvalues.
-void    shake128_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
-
-/// SHAKE256 Bit Hashing.
-struct SHAKE256 {
-  /*dtor*/ ~SHAKE256        ();
-  /*ctor*/  SHAKE256        ();         ///< Create context to calculate an unbounded SHAKE256 hash digest.
-  void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
-  void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
-  void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
-  class     State;
-private: State *state_;
-};
-/// Calculate SHAKE256 arbitrary lengh hash value from @a data, returned in @a hashvalues.
-void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
 
 } // Rapicorn
 
