@@ -63,7 +63,7 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # == Special Optimization Targets ==
-OPTIMIZE_SOURCE_FILES = loop.cc
+OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc
 AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
