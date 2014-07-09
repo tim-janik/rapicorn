@@ -4,6 +4,7 @@
 
 namespace Rapicorn {
 
+// == Lib::KeccakF1600 ==
 static constexpr const uint8_t KECCAK_RHO_OFFSETS[25] = { 0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43,
                                                           25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14 };
 static constexpr const uint64_t KECCAK_ROUND_CONSTANTS[255] = {
@@ -100,6 +101,8 @@ Lib::KeccakF1600::permute (const uint32_t n_rounds)
     }
 }
 
+// == KeccakPRNG ==
+
 /// Keccak permutation for 1600 bits and 24 rounds, see @cite Keccak11.
 void
 KeccakPRNG::permute1600()
@@ -151,6 +154,135 @@ KeccakPRNG::~KeccakPRNG()
   std::fill (&state_[0], &state_[25], 0xaffeaffeaffeaffe);
   forget();
   opos_ = n_nums();
+}
+
+// == SHAKE_Base - primitive for SHA3 hashing ==
+template<size_t HASHBITS, uint8_t DOMAINBITS>
+class SHAKE_Base {
+  Lib::KeccakF1600      state_;
+  const size_t          rate_;
+  size_t                ipos_;
+  bool                  feeding_mode_;
+protected:
+  /// Add stream data up to block size into Keccak state via XOR.
+  size_t
+  xor_state (size_t offset, const uint8_t *input, size_t n_in)
+  {
+    assert (offset + n_in <= byte_rate());
+    size_t i;
+    for (i = offset; i < offset + n_in; i++)
+      state_.byte (i) ^= input[i - offset];
+    return i - offset;
+  }
+  /** Pad stream from offset to block boundary into Keccak state via XOR.
+   * The @a trail argument must contain the termination bit, optionally preceeded by
+   * additional (LSB) bits for domain separation. A permutation is carried out if the
+   * trailing padding bits do not fit into the remaining block length.
+   */
+  void
+  absorb_padding (size_t offset, uint8_t trail = 0x01)
+  {
+    assert (offset < byte_rate());              // offset is first byte following payload
+    assert (trail != 0x00);
+    // MultiRatePadding
+    state_.byte (offset) ^= trail;              // 1: payload boundary bit for MultiRatePadding (and SimplePadding)
+    // state_.bits[i..last] ^= 0x0;             // 0*: bitrate filler for MultiRatePadding (and SimplePadding)
+    const size_t lastbyte = byte_rate() - 1;    // last bitrate byte, may coincide with offset
+    if (offset == lastbyte && trail >= 0x80)
+      state_.permute (24);                      // prepare new block to append last bit
+    state_.byte (lastbyte) ^= 0x80;             // 1: last bitrate bit; required by MultiRatePadding
+  }
+  SHAKE_Base (size_t rate) : rate_ (rate), ipos_ (0), feeding_mode_ (true)
+  {
+    std::fill (&state_[0], &state_[25], 0);
+  }
+public:
+  size_t
+  byte_rate() const
+  {
+    return rate_ / 8;
+  }
+  void
+  reset()
+  {
+    std::fill (&state_[0], &state_[25], 0);
+    ipos_ = 0;
+    feeding_mode_ = true;
+  }
+  void
+  update (const uint8_t *data, size_t length)
+  {
+    assert (feeding_mode_ == true);
+    while (length)
+      {
+        const size_t count = min (byte_rate() - ipos_, length);
+        xor_state (ipos_, data, count);
+        ipos_ += count;
+        data += count;
+        length -= count;
+        if (ipos_ >= byte_rate())
+          {
+            state_.permute (24);
+            ipos_ = 0;
+          }
+      }
+  }
+  size_t
+  get_hash (uint8_t hashvalue[HASHBITS / 8])
+  {
+    if (feeding_mode_)
+      {
+        const uint8_t shake_delimiter = DOMAINBITS;
+        absorb_padding (ipos_, shake_delimiter);
+        ipos_ = ~size_t (0);
+        state_.permute (24);
+        feeding_mode_ = false;
+      }
+    const size_t count = HASHBITS / 8;
+    for (size_t i = 0; i < count; i++)
+      hashvalue[i] = state_.byte (i);
+    return count;
+  }
+};
+
+// == SHA3_512 ==
+struct SHA3_512::State : SHAKE_Base<512, 0x06> {
+  State() : SHAKE_Base (576) {}
+};
+
+SHA3_512::SHA3_512 () :
+  state_ (new State())
+{}
+
+SHA3_512::~SHA3_512 ()
+{
+  delete state_;
+}
+
+void
+SHA3_512::update (const uint8_t *data, size_t length)
+{
+  state_->update (data, length);
+}
+
+void
+SHA3_512::digest (uint8_t hashvalue[64])
+{
+  state_->get_hash (hashvalue);
+}
+
+void
+SHA3_512::reset ()
+{
+  state_->reset();
+}
+
+void
+sha3_512_hash (const void *data, size_t data_length, uint8_t hashvalue[64])
+{
+  SHA3_512 context;
+  context.update ((const uint8_t*) data, data_length);
+  context.digest (hashvalue);
 }
 
 } // Rapicorn

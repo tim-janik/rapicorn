@@ -819,6 +819,81 @@ test_keccak_prng()
 }
 REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
 
+static inline int
+nibble (char c)
+{
+  if (c >= '0' && c <= '9')
+    return c - '0';
+  else if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  else if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  else
+    return -1;
+}
+
+static std::string
+image_to_bytes (const std::string &hex)
+{
+  std::string result;
+  for (size_t i = 0; i + 1 < hex.size(); i += 2)
+    {
+      const int h = nibble (hex[i]), l = nibble (hex[i + 1]);
+      if (h < 0 || l < 0)
+        return "";      // invalid format
+      char b = (unsigned (h) << 4) + l;
+      result.append (&b, 1);
+    }
+  return result;
+}
+
+static std::string
+byte_image (const uint8_t *bytes, size_t n_bytes)
+{
+  std::string s;
+  char buf[8];
+  for (size_t i = 0; i < n_bytes; i++)
+    {
+      sprintf (buf, "%02x", bytes[i]);
+      s += buf;
+    }
+  return s;
+}
+
+static std::string
+short_image (const std::string &input, size_t maximum = 50 * 2)
+{
+  if (input.size() > maximum + 3)
+    return input.substr (0, maximum) + "...";
+  else
+    return input;
+}
+
+template<size_t N> static void
+tprint (const char *name, const char *input, uint8_t (&output)[N])
+{
+  if (!Test::verbose())
+    return;
+  printout ("%s(%s): %s\n", name, short_image (input, 24), short_image (byte_image (output, N), 44));
+}
+
+static void
+test_sha3_hashing()
+{
+  std::string inputdata;
+
+  // SHA3-512
+  const char *testdata_sha3_512_cc_in = "CC";
+  const char *testdata_sha3_512_cc_md =
+    "3939fcc8b57b63612542da31a834e5dcc36e2ee0f652ac72e02624fa2e5adeecc7dd6bb3580224b4d6138706fc6e80597b528051230b00621cc2b22999eaa205";
+  uint8_t sha3_512_hashvalue[64];
+  inputdata = image_to_bytes (testdata_sha3_512_cc_in);
+  sha3_512_hash (inputdata.data(), inputdata.size(), sha3_512_hashvalue);
+  tprint ("SHA3-512", testdata_sha3_512_cc_in, sha3_512_hashvalue);
+  assert (byte_image (sha3_512_hashvalue, sizeof (sha3_512_hashvalue)) == testdata_sha3_512_cc_md);
+}
+REGISTER_TEST ("RandomHash/SHA3 Hashing", test_sha3_hashing);
+
 } // Anon
 
 /* vim:set ts=8 sts=2 sw=2: */

@@ -13,12 +13,24 @@ namespace Lib { // Namespace for implementation internals
 class KeccakF1600 {
   union {
     uint64_t            A[25];
+    uint8_t             bytes[200];
     // __MMX__: __m64   V[25];
   } __attribute__ ((__aligned__ (16)));
 public:
   uint64_t&     operator[]  (int      index)       { return A[index]; }
   uint64_t      operator[]  (int      index) const { return A[index]; }
   void          permute     (uint32_t n_rounds);
+  inline uint8_t&
+  byte (size_t state_index)
+  {
+#if   __BYTE_ORDER == __LITTLE_ENDIAN
+    return bytes[(state_index / 8) * 8 + (state_index % 8)];            // 8 == sizeof (uint64_t)
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return bytes[(state_index / 8) * 8 + (8 - 1 - (state_index % 8))];  // 8 == sizeof (uint64_t)
+#else
+#   error "Unknown __BYTE_ORDER"
+#endif
+  }
 };
 
 } // Lib
@@ -161,6 +173,19 @@ public:
     return is;
   }
 };
+
+/// SHA3_512 Bit Hashing.
+struct SHA3_512 {
+  /*dtor*/ ~SHA3_512    ();
+  /*ctor*/  SHA3_512    ();         ///< Create context to calculate a 512 bit SHA3 hash digest.
+  void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
+  void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
+  void      digest      (uint8_t hashvalue[64]);                ///< Retrieve the resulting hash value.
+  class     State;
+private: State *state_;
+};
+/// Calculate 512 bit SHA3 hash from @a data, returned in @a hashvalue.
+void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
 
 } // Rapicorn
 
