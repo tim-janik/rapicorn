@@ -33,6 +33,7 @@ class KeccakPRNG {
   size_t              opos_;
   void                permute1600();
 public:
+  /// Integral type of the KeccakPRNG generator results.
   typedef uint64_t    result_type;
   /// Amount of 64 bit random numbers per generated block.
   inline size_t       n_nums() const            { return prng_bit_rate_ / 64; }
