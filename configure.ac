@@ -565,9 +565,6 @@ MC_IF_VAR_EQ(GXX, yes,,
     AC_MSG_ERROR(This package requires GNU g++)
 )
 
-# check for development tools
-AC_CHECK_PROGS(XMLLINT, xmllint, true)
-
 # find installation utilities
 AC_PROG_INSTALL
 AC_PROG_LN_S
