@@ -42,6 +42,32 @@ struct TaskStatus {
   String        string     ();  ///< Retrieve string representation of the status information.
 };
 
+/// Entropy gathering and provisioning class.
+class Entropy {
+public:
+  /// Add up to 64 bits to entropy pool.
+  static void     add_bits      (uint64_t bits)                 { add_data (&bits, sizeof (bits)); }
+  /// Add an arbitrary number of bytes to the entropy pool.
+  static void     add_data      (const void *bytes, size_t n_bytes);
+  /// Gather system statistics (might take several milliseconds) and add to the entropy pool.
+  static void     slow_reseed   ();
+  /// Get 64 bit of high quality random bits useful for seeding PRNGs.
+  static uint64_t get_seed      ();
+  /// Fill the range [begin, end) with high quality random seed values.
+  template<typename RandomAccessIterator> static void
+  generate (RandomAccessIterator begin, RandomAccessIterator end)
+  {
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type Value;
+    while (begin != end)
+      {
+        const uint64_t rbits = get_seed();
+        *begin++ = Value (rbits);
+        if (sizeof (Value) <= 4 && begin != end)
+          *begin++ = Value (rbits >> 32);
+      }
+  }
+};
+
 } // Rapicorn
 
 #endif /* __RAPICORN_CPU_HH__ */

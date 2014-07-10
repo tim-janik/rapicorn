@@ -131,6 +131,7 @@ KeccakPRNG::forget()
 void
 KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
 {
+  // printerr ("xor_seed(%p): %s\n", this, String ((const char*) seeds, n_seeds * 8));
   size_t i = 0;
   while (n_seeds)
     {

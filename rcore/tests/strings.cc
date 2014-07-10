@@ -726,6 +726,18 @@ test_aligned_array()
 }
 REGISTER_TEST ("Memory/AlignedArray", test_aligned_array);
 
+static void
+test_entropy()
+{
+  const uint64_t seed1 = Entropy::get_seed();
+  const uint64_t seed2 = Entropy::get_seed();
+  TASSERT (seed1 != seed2);
+  Entropy e;
+  KeccakPRNG k1, k2 (e);
+  TASSERT (k1 != k2);
+}
+REGISTER_TEST ("RandomHash/Entropy", test_entropy);
+
 template<class Gen>
 struct GeneratorBench64 {
   enum {

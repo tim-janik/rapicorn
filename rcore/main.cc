@@ -398,6 +398,9 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
     return;
   program_app_ident = app_ident;
 
+  // ensure entropy pool is ready
+  Entropy::get_seed();
+
   // setup program and application name
   if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
     program_argv0 = argv[0];

@@ -2,11 +2,19 @@
 #include "platform.hh"
 #include "main.hh"
 #include "strings.hh"
+#include "thread.hh"
+#include "randomhash.hh"
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/times.h>
+#include <sys/resource.h>
+#if defined (__i386__) || defined (__x86_64__)
+#  include <x86intrin.h>        // __rdtsc
+#endif
 #include <glib.h>
 
 namespace Rapicorn {
@@ -413,6 +421,202 @@ TaskStatus::string ()
     string_format ("pid=%d task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
                    process_id, task_id, state, processor, priority, (utime + stime) * 0.0001,
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
+}
+
+// == Entropy ==
+static void        system_entropy  (KeccakPRNG &pool);
+static void        runtime_entropy (KeccakPRNG &pool);
+static Mutex       entropy_mutex;
+static KeccakPRNG *entropy_global_pool = NULL;
+static uint64      entropy_mix_simple = 0;
+
+static KeccakPRNG&
+entropy_pool()
+{
+  if (RAPICORN_LIKELY (entropy_global_pool))
+    return *entropy_global_pool;
+  assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
+  // create pool and seed it with system details
+  KeccakPRNG *kpool = new KeccakPRNG();
+  system_entropy (*kpool);
+  // gather entropy from runtime information and mix into pool
+  KeccakPRNG keccak;
+  runtime_entropy (keccak);
+  uint64_t seed_data[25];
+  keccak.generate (&seed_data[0], &seed_data[25]);
+  kpool->seed (seed_data, 25);
+  // establish global pool
+  assert (entropy_global_pool == NULL);
+  entropy_global_pool = kpool;
+  return *entropy_global_pool;
+}
+
+void
+Entropy::slow_reseed ()
+{
+  // gather and mangle entropy data
+  KeccakPRNG keccak;
+  runtime_entropy (keccak);
+  // mix entropy into global pool
+  uint64_t seed_data[25];
+  keccak.generate (&seed_data[0], &seed_data[25]);
+  ScopedLock<Mutex> locker (entropy_mutex);
+  entropy_pool().xor_seed (seed_data, 25);
+}
+
+static constexpr uint64_t
+bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
+{
+  return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
+}
+
+void
+Entropy::add_data (const void *bytes, size_t n_bytes)
+{
+  const uint64_t bits = bytehash_fnv64a ((const uint8_t*) bytes, n_bytes);
+  ScopedLock<Mutex> locker (entropy_mutex);
+  entropy_mix_simple ^= bits + (entropy_mix_simple * 1664525);
+}
+
+uint64_t
+Entropy::get_seed ()
+{
+  ScopedLock<Mutex> locker (entropy_mutex);
+  KeccakPRNG &pool = entropy_pool();
+  if (entropy_mix_simple)
+    {
+      pool.xor_seed (&entropy_mix_simple, 1);
+      entropy_mix_simple = 0;
+    }
+  return pool();
+}
+
+static bool
+hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384)
+{
+  FILE *file = fopen (filename, "r");
+  if (file)
+    {
+      uint64_t buffer[maxbytes / 8];
+      const size_t l = fread (buffer, sizeof (buffer[0]), sizeof (buffer) / sizeof (buffer[0]), file);
+      fclose (file);
+      if (l > 0)
+        {
+          pool.xor_seed (buffer, l);
+          return true;
+        }
+    }
+  return false;
+}
+
+struct HashStamp {
+  uint64_t bstamp;
+#ifdef  CLOCK_PROCESS_CPUTIME_ID
+  uint64_t tcpu;
+#endif
+#if     defined (__i386__) || defined (__x86_64__)
+  uint64_t tsc;
+#endif
+};
+
+static void __attribute__ ((__noinline__))
+hash_time (HashStamp *hstamp)
+{
+  asm (""); // enfore __noinline__
+  hstamp->bstamp = timestamp_benchmark();
+#ifdef  CLOCK_PROCESS_CPUTIME_ID
+  {
+    struct timespec ts;
+    clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &ts);
+    hstamp->tcpu = ts.tv_sec * uint64_t (1000000000) + ts.tv_nsec;
+  }
+#endif
+#if     defined (__i386__) || defined (__x86_64__)
+  hstamp->tsc = __rdtsc();
+#endif
+}
+
+static void
+hash_cpu_usage (KeccakPRNG &pool)
+{
+  union {
+    uint64_t      ui64[24];
+    struct {
+      struct rusage rusage;     // 144 bytes
+      struct tms    tms;        //  32 bytes
+      clock_t       clk;        //   8 bytes
+    };
+  } u = { 0, };
+  getrusage (RUSAGE_SELF, &u.rusage);
+  u.clk = times (&u.tms);
+  pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
+}
+
+static void
+system_entropy (KeccakPRNG &pool)
+{
+  HashStamp hash_stamps[128] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[64] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  *uintp++ = timestamp_startup();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/boot_id");
+  hash_time (stamp++);  hash_file (pool, "/proc/version");
+  hash_time (stamp++);  hash_file (pool, "/proc/cpuinfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/devices");
+  hash_time (stamp++);  hash_file (pool, "/proc/meminfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/buddyinfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/diskstats");
+  hash_time (stamp++);  hash_file (pool, "/proc/uptime");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  *uintp++ = getuid();
+  hash_time (stamp++);  *uintp++ = getgid();
+  hash_time (stamp++);  *uintp++ = getpid();
+  hash_time (stamp++);  *uintp++ = getppid();
+  hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+}
+
+static void
+runtime_entropy (KeccakPRNG &pool)
+{
+  HashStamp hash_stamps[128] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[64] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
+  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
+  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
+  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
+  hash_time (stamp++);  hash_file (pool, "/proc/stat");
+  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
 }
 
 } // Rapicorn
