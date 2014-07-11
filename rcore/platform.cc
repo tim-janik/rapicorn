@@ -424,14 +424,12 @@ TaskStatus::string ()
 }
 
 // == Entropy ==
-static void        system_entropy  (KeccakPRNG &pool);
-static void        runtime_entropy (KeccakPRNG &pool);
 static Mutex       entropy_mutex;
 static KeccakPRNG *entropy_global_pool = NULL;
 static uint64      entropy_mix_simple = 0;
 
-static KeccakPRNG&
-entropy_pool()
+KeccakPRNG&
+Entropy::entropy_pool()
 {
   if (RAPICORN_LIKELY (entropy_global_pool))
     return *entropy_global_pool;
@@ -552,8 +550,8 @@ hash_cpu_usage (KeccakPRNG &pool)
   pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
 }
 
-static void
-system_entropy (KeccakPRNG &pool)
+void
+Entropy::system_entropy (KeccakPRNG &pool)
 {
   HashStamp hash_stamps[128] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
@@ -591,8 +589,8 @@ system_entropy (KeccakPRNG &pool)
   pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
 }
 
-static void
-runtime_entropy (KeccakPRNG &pool)
+void
+Entropy::runtime_entropy (KeccakPRNG &pool)
 {
   HashStamp hash_stamps[128] = { 0, };
   HashStamp *stamp = &hash_stamps[0];

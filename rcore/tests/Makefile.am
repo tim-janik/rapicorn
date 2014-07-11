@@ -73,3 +73,14 @@ check: check-process-handle
 check-unique-process: testrcore1
 	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-unique-process
+# check startup entropy
+check-startup-entropy:
+	$(Q) A=`./testrcore2 --entropy` ; B=`./testrcore2 --entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check-system-entropy:
+	$(Q) A=`./testrcore2 --system-entropy` ; B=`./testrcore2 --system-entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check-runtime-entropy:
+	$(Q) A=`./testrcore2 --runtime-entropy` ; B=`./testrcore2 --runtime-entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check: check-startup-entropy check-system-entropy check-runtime-entropy

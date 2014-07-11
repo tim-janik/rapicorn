@@ -3,6 +3,7 @@
 #define __RAPICORN_CPU_HH__
 
 #include <rcore/utilities.hh>
+#include <rcore/randomhash.hh>
 
 namespace Rapicorn {
 
@@ -44,6 +45,10 @@ struct TaskStatus {
 
 /// Entropy gathering and provisioning class.
 class Entropy {
+  static KeccakPRNG& entropy_pool();
+protected:
+  static void     system_entropy  (KeccakPRNG &pool);
+  static void     runtime_entropy (KeccakPRNG &pool);
 public:
   /// Add up to 64 bits to entropy pool.
   static void     add_bits      (uint64_t bits)                 { add_data (&bits, sizeof (bits)); }
