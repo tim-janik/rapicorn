@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <glob.h>
 #include <sys/times.h>
 #include <sys/resource.h>
 #if defined (__i386__) || defined (__x86_64__)
@@ -510,11 +511,24 @@ hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384
       fclose (file);
       if (l > 0)
         {
+          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
           pool.xor_seed (buffer, l);
           return true;
         }
     }
   return false;
+}
+
+static bool
+hash_glob (KeccakPRNG &pool, const char *fileglob, const size_t maxbytes = 16384)
+{
+  glob_t globbuf = { 0, };
+  glob (fileglob, GLOB_NOSORT, NULL, &globbuf);
+  bool success = false;
+  for (size_t i = globbuf.gl_offs; i < globbuf.gl_pathc; i++)
+    success |= hash_file (pool, globbuf.gl_pathv[i], maxbytes);
+  globfree (&globbuf);
+  return success;
 }
 
 struct HashStamp {
@@ -579,10 +593,14 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/meminfo");
   hash_time (stamp++);  hash_file (pool, "/proc/buddyinfo");
   hash_time (stamp++);  hash_file (pool, "/proc/diskstats");
+  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/net/*/address");
+  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/net/*/address");
+  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/net/*/address");
+  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/ieee80211/phy*/*address*");
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
+  hash_time (stamp++);  hash_file (pool, "/proc/user_beancounters");
+  hash_time (stamp++);  hash_file (pool, "/proc/driver/rtc");
   hash_time (stamp++);  *uintp++ = getuid();
   hash_time (stamp++);  *uintp++ = getgid();
   hash_time (stamp++);  *uintp++ = getpid();
@@ -611,12 +629,19 @@ Entropy::runtime_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
   hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
   hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
   hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
-  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
   hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
   hash_time (stamp++);  hash_file (pool, "/proc/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
+  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
