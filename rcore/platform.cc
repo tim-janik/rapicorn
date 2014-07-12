@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <glob.h>
+#include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
 #if defined (__i386__) || defined (__x86_64__)
@@ -501,6 +502,22 @@ Entropy::get_seed ()
 }
 
 static bool
+hash_stat (KeccakPRNG &pool, const char *filename)
+{
+  struct {
+    struct stat stat;
+    uint64_t padding;
+  } s = { 0, };
+  if (stat (filename, &s.stat) == 0)
+    {
+      pool.xor_seed ((const uint64_t*) &s.stat, sizeof (s.stat) / sizeof (uint64_t));
+      // printout ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
+      return true;
+    }
+  return false;
+}
+
+static bool
 hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384)
 {
   FILE *file = fopen (filename, "r");
@@ -603,6 +620,18 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
   hash_time (stamp++);  hash_file (pool, "/proc/user_beancounters");
   hash_time (stamp++);  hash_file (pool, "/proc/driver/rtc");
+  hash_time (stamp++);  hash_stat (pool, "/var/log/syslog");            // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/log/auth.log");          // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/tmp");                   // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/tmp");                       // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/dev");                       // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/lib/ntp/ntp.drift");     // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/run/utmp");              // for mtime & atime
+  hash_time (stamp++);  hash_stat (pool, "/var/log/wtmp");              // for mtime & atime
+  hash_time (stamp++);  hash_stat (pool, "/sbin/init");                 // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool");                 // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool/cron");            // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool/anacron");         // for atime
   hash_time (stamp++);  *uintp++ = getuid();
   hash_time (stamp++);  *uintp++ = geteuid();
   hash_time (stamp++);  *uintp++ = getgid();
