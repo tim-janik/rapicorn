@@ -428,6 +428,16 @@ static Mutex       entropy_mutex;
 static KeccakPRNG *entropy_global_pool = NULL;
 static uint64      entropy_mix_simple = 0;
 
+/** @class Entropy
+ * To provide good quality random numbers, this class gathers entropy from a variety of sources.
+ * Under Linux, this includes the runtime environment and (if present) devices, interrupts,
+ * disk + network statistics, system load, execution + pipelining + scheduling latencies and of
+ * course random number devices. In combination with well established techniques like
+ * syscall timings (see Entropics13 @cite Entropics13) and a SHA3 algorithm derived random number
+ * generator (KeccakPRNG) for the mixing, the entropy collection is designed to be good enough
+ * to use as seeds for new PRNGs and to securely generate cryptographic tokens like session keys.
+ */
+
 KeccakPRNG&
 Entropy::entropy_pool()
 {

@@ -309,7 +309,7 @@ random_int64 ()
 /** Generate uniformly distributed pseudo-random integer within a range.
  * This function generates a pseudo-random number using class KeccakPRNG,
  * seeded from class Entropy.
- * The generated number will be in the range: begin <= number < end.
+ * The generated number will be in the range: @a begin <= number < @a end.
  */
 int64_t
 random_irange (int64_t begin, int64_t end)
@@ -347,7 +347,7 @@ random_float ()
 /** Generate uniformly distributed pseudo-random floating point number within a range.
  * This function generates a pseudo-random number using class KeccakPRNG,
  * seeded from class Entropy.
- * The generated number will be in the range: begin <= number < end.
+ * The generated number will be in the range: @a begin <= number < @a end.
  */
 double
 random_frange (double begin, double end)

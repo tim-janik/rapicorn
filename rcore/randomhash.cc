@@ -48,7 +48,7 @@ bit_rotate64 (uint64_t bits, unsigned int offset)
   return (bits << offset) | (bits >> (64 - offset));
 }
 
-/// The Keccak-f[1600] permutation for up to 254 rounds, see @cite Keccak11.
+/// The Keccak-f[1600] permutation for up to 254 rounds, see Keccak11 @cite Keccak11.
 void
 Lib::KeccakF1600::permute (const uint32_t n_rounds)
 {
@@ -103,7 +103,7 @@ Lib::KeccakF1600::permute (const uint32_t n_rounds)
 
 // == KeccakPRNG ==
 
-/// Keccak permutation for 1600 bits and 24 rounds, see @cite Keccak11.
+/// Keccak permutation for 1600 bits and 24 rounds, see Keccak11 @cite Keccak11.
 void
 KeccakPRNG::permute1600()
 {
