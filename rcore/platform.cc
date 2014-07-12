@@ -593,18 +593,27 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/meminfo");
   hash_time (stamp++);  hash_file (pool, "/proc/buddyinfo");
   hash_time (stamp++);  hash_file (pool, "/proc/diskstats");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/schedstat");
   hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/net/*/address");
   hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/net/*/address");
   hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/net/*/address");
   hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/ieee80211/phy*/*address*");
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
-  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
   hash_time (stamp++);  hash_file (pool, "/proc/user_beancounters");
   hash_time (stamp++);  hash_file (pool, "/proc/driver/rtc");
   hash_time (stamp++);  *uintp++ = getuid();
+  hash_time (stamp++);  *uintp++ = geteuid();
   hash_time (stamp++);  *uintp++ = getgid();
+  hash_time (stamp++);  *uintp++ = getegid();
   hash_time (stamp++);  *uintp++ = getpid();
-  hash_time (stamp++);  *uintp++ = getppid();
+  hash_time (stamp++);  *uintp++ = getsid (0);
+  int ppid;
+  hash_time (stamp++);  *uintp++ = ppid = getppid();
+  hash_time (stamp++);  *uintp++ = getsid (ppid);
+  hash_time (stamp++);  *uintp++ = getpgrp();
+  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
   hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
   hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
   hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
@@ -629,10 +638,12 @@ Entropy::runtime_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
   hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
   hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
   hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
   hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
   hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
