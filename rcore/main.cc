@@ -278,6 +278,87 @@ program_cwd ()
   return program_cwd0;
 }
 
+static Mutex       prng_mutex;
+static KeccakPRNG *keccak_prng = NULL;
+
+static inline KeccakPRNG&
+initialize_random_generator_LOCKED()
+{
+  if (RAPICORN_UNLIKELY (!keccak_prng))
+    {
+      assert (prng_mutex.try_lock() == false);
+      static uint64 space[(sizeof (KeccakPRNG) + 7) / 8];
+      Entropy e;
+      keccak_prng = new (space) KeccakPRNG (e); // uses e as generator & initializes Entropy
+    }
+  return *keccak_prng;
+}
+
+/** Generate uniformly distributed 64 bit pseudo-random number.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ */
+uint64_t
+random_int64 ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  return rgen();
+}
+
+/** Generate uniformly distributed pseudo-random integer within a range.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: begin <= number < end.
+ */
+int64_t
+random_irange (int64_t begin, int64_t end)
+{
+  return_unless (RAPICORN_UNLIKELY (begin < end), begin);
+  const uint64_t range    = end - begin;
+  const uint64_t quotient = 0xffffffffffffffffULL / range;
+  const uint64_t bound    = quotient * range;
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  uint64_t r;
+  do
+    r = rgen ();
+  while (RAPICORN_UNLIKELY (r >= bound));       // repeats with <50% probability
+  return begin + r / quotient;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: 0.0 <= number < 1.0.
+ */
+double
+random_float ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  double r01;
+  do
+    r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  while (RAPICORN_UNLIKELY (r01 >= 1.0));       // retry if arithmetic exceeds boundary
+  return r01;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number within a range.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: begin <= number < end.
+ */
+double
+random_frange (double begin, double end)
+{
+  return_unless (begin < end, begin + 0 * end); // catch and propagate NaNs
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  const double r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  return end * r01 + (1.0 - r01) * begin;
+}
+
 ScopedLocale::ScopedLocale (locale_t scope_locale) :
   locale_ (NULL)
 {
@@ -397,9 +478,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   if (init_core_initialized())
     return;
   program_app_ident = app_ident;
-
-  // ensure entropy pool is ready
-  Entropy::get_seed();
 
   // setup program and application name
   if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)

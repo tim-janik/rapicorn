@@ -738,6 +738,41 @@ test_entropy()
 }
 REGISTER_TEST ("RandomHash/Entropy", test_entropy);
 
+static void
+test_random_numbers()
+{
+  TASSERT (random_int64() != random_int64());
+  TASSERT (random_float() != random_float());
+  TASSERT (random_irange (-999999999999999999, +999999999999999999) != random_irange (-999999999999999999, +999999999999999999));
+  TASSERT (random_frange (-999999999999999999, +999999999999999999) != random_frange (-999999999999999999, +999999999999999999));
+  for (size_t i = 0; i < 999999; i++)
+    {
+      const uint64_t ri = random_irange (989617512, 9876547656);
+      TASSERT (ri >= 989617512 && ri < 9876547656);
+      const double rf = random_frange (989617512, 9876547656);
+      TASSERT (rf >= 989617512 && rf < 9876547656);
+    }
+  TASSERT (isnan (random_frange (NAN, 1)));
+  TASSERT (isnan (random_frange (0, NAN)));
+#if 0 // example penalty paid in random_int64()
+  size_t i, j = 0;
+  for (i = 0; i < 100; i++)
+    {
+      uint64_t r = k2();
+      j += r > 9223372036854775808ULL;
+      printout (" rand64: %d: 0x%016x\n", r > 9223372036854775808ULL, r);
+    }
+  printout (" rand64: fail: %d/%d -> %f%%\n", j, i, j * 100.0 / i);
+  for (size_t i = 0; i < 100; i++)
+    {
+      // printout (" rand: %+d\n", random_irange (-5, 5));
+      // printout (" rand: %f\n", random_float());
+      printout (" rand: %g\n", random_frange (1000000000000000, 1000000000000000.912345678)-1000000000000000);
+    }
+#endif
+}
+REGISTER_TEST ("RandomHash/Random Numbers", test_random_numbers);
+
 template<class Gen>
 struct GeneratorBench64 {
   enum {
