@@ -159,6 +159,7 @@ public:
     seed (seed_sequence);
   }
   void forget   ();
+  void discard  (unsigned long long count);
   void xor_seed (const uint64_t *seeds, size_t n_seeds);
   /// Reinitialize the generator state using a 64 bit @a seed_value.
   void seed     (uint64_t seed_value = 1)               { seed (&seed_value, 1); }

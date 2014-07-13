@@ -123,6 +123,22 @@ KeccakPRNG::forget()
   permute1600();
 }
 
+/** Discard @a count consecutive random values.
+ * This function is slightly faster than calling operator()() exactly @a count times.
+ */
+void
+KeccakPRNG::discard (unsigned long long count)
+{
+  while (count)
+    {
+      if (opos_ >= n_nums())
+        permute1600();
+      const unsigned long long ull = std::min ((unsigned long long) n_nums() - opos_, count);
+      opos_ += ull;
+      count -= ull;
+    }
+}
+
 /** Incorporate @a seed_values into the current generator state.
  * A block permutation to advance the generator state is carried out per n_nums() seed values.
  * After calling this function, generating the next n_nums() random values will not need to

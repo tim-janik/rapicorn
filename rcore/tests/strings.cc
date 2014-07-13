@@ -846,23 +846,33 @@ test_keccak_prng()
   TASSERT (krandom1 == krandom2 && !(krandom1 != krandom2));
   TASSERT (krandom1() == krandom2() && krandom1() == krandom2() && krandom1() == krandom2() && krandom1() == krandom2());
   krandom1();
-  TASSERT (krandom1 != krandom2);
+  TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
   krandom2();
-  TASSERT (krandom1 == krandom2);
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
+  krandom1.discard (0);
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
+  krandom1.discard (777);
+  TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
+  for (size_t i = 0; i < 777; i++)
+    krandom2();
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
+  krandom1();
+  krandom2.discard (1);
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
   krandom2.forget();
   TASSERT (krandom1 != krandom2);
   krandom1.seed (0x11007700affe0101);
   krandom2.seed (0x11007700affe0101);
-  TASSERT (krandom1 == krandom2);
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
   const uint64_t one = 1;
   krandom1.seed (one);          // seed with 0x1 directly
   std::seed_seq seq { 0x01 };   // seed_seq generates "random" bits from its input
   krandom2.seed (seq);
   TASSERT (krandom1 != krandom2);
   krandom2.seed (&one, 1);      // seed with array containing just 0x1
-  TASSERT (krandom1 == krandom2);
+  TASSERT (krandom1 == krandom2 && krandom1() == krandom2());
   krandom2.seed (krandom1);     // uses krandom1.generate
-  TASSERT (krandom1 != krandom2);
+  TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
 }
 REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
 
