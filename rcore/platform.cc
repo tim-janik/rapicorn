@@ -11,6 +11,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <glob.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
@@ -502,6 +507,62 @@ Entropy::get_seed ()
 }
 
 static bool
+hash_macs (KeccakPRNG &pool)
+{
+  // query devices for the AF_INET family which might be the only one supported
+  int sockfd = socket (AF_INET, SOCK_DGRAM, 0);         // open IPv4 UDP socket
+  if (sockfd < 0)
+    return false;
+  // discover devices by index, might include devices that are 'down'
+  String devices;
+  int ret = 0;
+  for (size_t j = 0; j <= 1 || ret >= 0; j++)           // try [0] and [1]
+    {
+      struct ifreq iftmp = { 0, };
+      iftmp.ifr_ifindex = j;
+      ret = ioctl (sockfd, SIOCGIFNAME, &iftmp);
+      if (ret < 0)
+        continue;
+      if (!devices.empty())
+        devices += ",";
+      devices += iftmp.ifr_name;                        // found name
+      devices += "//";                                  // no inet address
+      if (ioctl (sockfd, SIOCGIFHWADDR, &iftmp) >= 0)   // query MAC
+        {
+          const uint8_t *mac = (const uint8_t*) iftmp.ifr_hwaddr.sa_data;
+          devices += string_format ("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        }
+    }
+  // discover devices that are 'up'
+  char ifcbuffer[8192] = { 0, };                        // buffer space for returning interfaces
+  struct ifconf ifc;
+  ifc.ifc_len = sizeof (ifcbuffer);
+  ifc.ifc_buf = ifcbuffer;
+  ret = ioctl (sockfd, SIOCGIFCONF, &ifc);
+  for (size_t i = 0; ret >= 0 && i < ifc.ifc_len / sizeof (struct ifreq); i++)
+    {
+      const struct ifreq *iface = &ifc.ifc_req[i];
+      if (!devices.empty())
+        devices += ",";
+      devices += iface->ifr_name;                       // found name
+      devices += "/";
+      const uint8_t *addr = (const uint8_t*) &((struct sockaddr_in*) &iface->ifr_addr)->sin_addr;
+      devices += string_format ("%u.%u.%u.%u", addr[0], addr[1], addr[2], addr[3]);
+      devices += "/";                                   // added inet address
+      if (ioctl (sockfd, SIOCGIFHWADDR, iface) >= 0)    // query MAC
+        {
+          const uint8_t *mac = (const uint8_t*) iface->ifr_hwaddr.sa_data;
+          devices += string_format ("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        }
+    }
+  close (sockfd);
+  devices.resize (((devices.size() + 7) / 8) * 8); // align to uint64_t
+  pool.xor_seed ((const uint64_t*) devices.data(), devices.size() / 8);
+  // printout ("SEED(MACs): %s\n", devices.c_str());
+  return !devices.empty();
+}
+
+static bool
 hash_stat (KeccakPRNG &pool, const char *filename)
 {
   struct {
@@ -528,15 +589,15 @@ hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384
       fclose (file);
       if (l > 0)
         {
-          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
           pool.xor_seed (buffer, l);
+          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
           return true;
         }
     }
   return false;
 }
 
-static bool
+static bool __attribute__ ((__unused__))
 hash_glob (KeccakPRNG &pool, const char *fileglob, const size_t maxbytes = 16384)
 {
   glob_t globbuf = { 0, };
@@ -613,10 +674,8 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/1/stat");
   hash_time (stamp++);  hash_file (pool, "/proc/1/sched");
   hash_time (stamp++);  hash_file (pool, "/proc/1/schedstat");
-  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/net/*/address");
-  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/net/*/address");
-  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/net/*/address");
-  hash_time (stamp++);  hash_glob (pool, "/sys/devices/*/*/*/ieee80211/phy*/*address*");
+  hash_time (stamp++);  hash_macs (pool);
+  // hash_glob: "/sys/devices/**/net/*/address", "/sys/devices/*/*/*/ieee80211/phy*/*address*"
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
   hash_time (stamp++);  hash_file (pool, "/proc/user_beancounters");
   hash_time (stamp++);  hash_file (pool, "/proc/driver/rtc");
