@@ -108,10 +108,11 @@ class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, pu
   Client  *cached_client_;
   size_t   client_sig_;
   String   clipboard_;
+  uint64   clipboard_nonce_, selection_nonce_, paste_nonce_;
 public:
   EditorImpl() :
-    request_chars_ (0), request_digits_ (0),
-    cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE), cached_client_ (NULL), client_sig_ (0)
+    request_chars_ (0), request_digits_ (0), cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE),
+    cached_client_ (NULL), client_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
   {}
 private:
   ~EditorImpl()
@@ -237,9 +238,16 @@ private:
                       }
                   }
                 if (clipboard_.empty())
-                  disown_content (CONTENT_SOURCE_CLIPBOARD, 59);
+                  {
+                    if (clipboard_nonce_)
+                      disown_content (CONTENT_SOURCE_CLIPBOARD, clipboard_nonce_);
+                    clipboard_nonce_ = 0;
+                  }
                 else
-                  own_content (CONTENT_SOURCE_CLIPBOARD, 59, cstrings_to_vector ("text/plain", NULL));
+                  {
+                    clipboard_nonce_ = random_nonce();
+                    own_content (CONTENT_SOURCE_CLIPBOARD, clipboard_nonce_, cstrings_to_vector ("text/plain", NULL));
+                  }
                 handled = true;
                 break;
               }
@@ -247,7 +255,8 @@ private:
           case 'v':
             if (kevent->key_state & MOD_CONTROL)
               {
-                request_content (CONTENT_SOURCE_CLIPBOARD, 77, "text/plain");
+                paste_nonce_ = random_nonce();
+                request_content (CONTENT_SOURCE_CLIPBOARD, paste_nonce_, "text/plain");
                 handled = true;
                 break;
               }
@@ -280,29 +289,35 @@ private:
         break;
       case CONTENT_DATA:
         devent = dynamic_cast<const EventData*> (&event);
-        if (devent->nonce == 77 && devent->data_type == "text/plain")
+        if (devent->nonce == paste_nonce_)
           {
-            handled = insert_literally (devent->data);
+            if (devent->data_type == "text/plain")
+              handled = insert_literally (devent->data);
+            paste_nonce_ = 0;
           }
         break;
       case CONTENT_CLEAR:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
-        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->nonce == 66 && client->get_selection())
+        if (selection_nonce_ && devent->nonce == selection_nonce_)
           {
-            client->hide_selector();
+            if (client && client->get_selection())
+              client->hide_selector();
+            selection_nonce_ = 0;
             handled = true;
           }
-        if (devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->nonce == 59 && !clipboard_.empty())
+        else if (clipboard_nonce_ && devent->nonce == clipboard_nonce_)
           {
-            clipboard_ = "";
+            if (!clipboard_.empty())
+              clipboard_ = "";
+            clipboard_nonce_ = 0;
             handled = true;
           }
         break;
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
         client = get_client();
-        if (client && devent->content_source == CONTENT_SOURCE_SELECTION && devent->nonce == 66 && devent->data_type == "text/plain")
+        if (selection_nonce_ && devent->nonce == selection_nonce_ && client && devent->data_type == "text/plain")
           {
             int start, end;
             const bool has_selection = client->get_selection (&start, &end);
@@ -320,10 +335,13 @@ private:
                   }
               }
           }
-        else if (client && devent->content_source == CONTENT_SOURCE_CLIPBOARD && devent->nonce == 59 && devent->data_type == "text/plain")
+        else if (clipboard_nonce_ && devent->nonce == clipboard_nonce_)
           {
-            provide_content (clipboard_.empty() ? "" : "text/plain", clipboard_, devent->request_id);
-            handled = true;
+            if (devent->data_type == "text/plain")
+              {
+                provide_content (clipboard_.empty() ? "" : "text/plain", clipboard_, devent->request_id);
+                handled = true;
+              }
           }
         break;
       case BUTTON_PRESS:
@@ -345,7 +363,8 @@ private:
           }
         else if (bevent->button == 2)
           {
-            request_content (CONTENT_SOURCE_SELECTION, 77, "text/plain");
+            paste_nonce_ = random_nonce();
+            request_content (CONTENT_SOURCE_SELECTION, paste_nonce_, "text/plain");
           }
         handled = true;
         break;
@@ -494,9 +513,16 @@ private:
     int start, end, nutf8;
     const bool has_selection = client->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
-      disown_content (CONTENT_SOURCE_SELECTION, 66);
+      {
+        if (selection_nonce_)
+          disown_content (CONTENT_SOURCE_SELECTION, selection_nonce_);
+        selection_nonce_ = 0;
+      }
     else
-      own_content (CONTENT_SOURCE_SELECTION, 66, cstrings_to_vector ("text/plain", NULL)); // claim new selection
+      {
+        selection_nonce_ = random_nonce();
+        own_content (CONTENT_SOURCE_SELECTION, selection_nonce_, cstrings_to_vector ("text/plain", NULL)); // claim new selection
+      }
   }
   virtual void
   text (const String &text)
