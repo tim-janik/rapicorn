@@ -294,6 +294,18 @@ initialize_random_generator_LOCKED()
   return *keccak_prng;
 }
 
+/// Provide a unique 64 bit identifier that is not 0, see also random_int64().
+uint64_t
+random_nonce ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  uint64_t nonce = rgen();
+  while (RAPICORN_UNLIKELY (nonce == 0))
+    nonce = rgen();
+  return nonce;
+}
+
 /** Generate uniformly distributed 64 bit pseudo-random number.
  * This function generates a pseudo-random number using class KeccakPRNG,
  * seeded from class Entropy.
@@ -314,16 +326,15 @@ random_int64 ()
 int64_t
 random_irange (int64_t begin, int64_t end)
 {
-  return_unless (RAPICORN_UNLIKELY (begin < end), begin);
+  return_unless (begin < end, begin);
   const uint64_t range    = end - begin;
   const uint64_t quotient = 0xffffffffffffffffULL / range;
   const uint64_t bound    = quotient * range;
   ScopedLock<Mutex> locker (prng_mutex);
   KeccakPRNG &rgen = initialize_random_generator_LOCKED();
-  uint64_t r;
-  do
+  uint64_t r = rgen ();
+  while (RAPICORN_UNLIKELY (r >= bound))        // repeats with <50% probability
     r = rgen ();
-  while (RAPICORN_UNLIKELY (r >= bound));       // repeats with <50% probability
   return begin + r / quotient;
 }
 
