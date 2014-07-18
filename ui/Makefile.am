@@ -93,10 +93,17 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 # === Rapicorn IDL ===
-ROPE        = $(srcdir)/../rope
-AIDACC      = $(top_builddir)/aidacc/aidacc-intern
-CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
-EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
+ROPE           = $(srcdir)/../rope
+AIDACC         = $(top_builddir)/aidacc/aidacc-intern
+CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
+EXTRACTDOCS_PY = $(top_srcdir)/aidacc/ExtractDocs.py
+EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh hardcoded.idl
+# generate interfaces.dox to complete docs
+$(rapicorn_cc_sources): interfaces.dox
+interfaces.dox: $(EXTRACTDOCS_PY) $(srcdir)/interfaces.idl
+	${AIDACC} -x ExtractDocs $(srcdir)/interfaces.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+MAINTAINERCLEANFILES += interfaces.dox
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
