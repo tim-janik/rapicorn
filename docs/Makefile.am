@@ -85,7 +85,9 @@ build-docs: doxygen-check
 	$(Q) ! test -e $(DOC_TARGET) || { echo "$@: target directory exists already: $(DOC_TARGET)"; exit 1; }
 	$(Q) mv doxygen-html $(DOC_TARGET)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-.PHONY: build-docs
+.PHONY: build-docs errors
+errors: html-docs
+	@sed 's,/docs/doxygen-srctree/,/,g' error.log
 
 # == Upload build rules ==
 upload-docs: doxygen-check $(git_index_file)
