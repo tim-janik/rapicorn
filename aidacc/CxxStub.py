@@ -415,7 +415,7 @@ class Generator:
     if type_info.fields:
       il = max (len (fl[0]) for fl in type_info.fields)
     for fl in type_info.fields:
-      s += self.generate_property_prototype (fl[0], fl[1], il)
+      s += self.generate_property_prototype (type_info, fl[0], fl[1], il)
     # signals
     if self.gen_mode == G4SERVANT:
       for sg in type_info.signals:
@@ -431,7 +431,7 @@ class Generator:
       il = max (len (m.name) for m in type_info.methods)
       il = max (il, len (self.C (type_info)))
     for m in type_info.methods:
-      s += self.generate_method_decl (m, il)
+      s += self.generate_method_decl (type_info, m, il)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
@@ -462,8 +462,9 @@ class Generator:
     s += 'typedef %s %s;' % (self.C (type_info), alias)
     s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
     return s
-  def generate_method_decl (self, functype, pad):
+  def generate_method_decl (self, class_info, functype, pad):
     s = '  '
+    copydoc = 'See ' + self.type2cpp (class_info) + '::' + functype.name + '()'
     if self.gen_mode == G4SERVANT:
       s += 'virtual '
     s += self.F (self.R (functype.rtype))
@@ -478,7 +479,7 @@ class Generator:
     s += ')'
     if self.gen_mode == G4SERVANT and functype.pure:
       s += ' = 0'
-    s += ';\n'
+    s += '; \t///< %s\n' % copydoc
     return s
   def generate_aida_connection_impl (self, class_info):
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
@@ -593,10 +594,11 @@ class Generator:
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
     hasret = mtype.rtype.storage != Decls.VOID
+    copydoc = 'See ' + self.type2cpp (class_info) + '::' + mtype.name + '()'
     # prototype
     s += self.C (mtype.rtype) + '\n'
     q = '%s::%s (' % (self.C (class_info), mtype.name)
-    s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
+    s += q + self.Args (mtype, 'arg_', len (q)) + ') /// %s\n{\n' % copydoc
     # vars, procedure
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
     if hasret:  s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.method_digest (mtype)
@@ -658,29 +660,30 @@ class Generator:
     # done
     s += '}\n'
     return s
-  def generate_property_prototype (self, fident, ftype, pad = 0):
+  def generate_property_prototype (self, class_info, fident, ftype, pad = 0):
     s, v, v0, ptr = '', '', '', ''
+    copydoc = 'See ' + self.type2cpp (class_info) + '::' + fident
     if self.gen_mode == G4SERVANT:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     pid = fident + ' ' * max (0, pad - len (fident))
     if ftype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
-      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s; \t///< %s\n' % (v0, copydoc)
     elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
-      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
+      s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s; \t///< %s\n' % (v0, copydoc)
     elif ftype.storage == Decls.INTERFACE:
-      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s; \t///< %s\n' % (v0, copydoc)
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
     s = ''
-    tname = self.C (ftype)
+    tname, copydoc = self.C (ftype), 'See ' + self.type2cpp (class_info) + '::' + fident
     # getter prototype
     s += tname + '\n'
     q = '%s::%s (' % (self.C (class_info), fident)
-    s += q + ') const\n{\n'
+    s += q + ') const /// %s\n{\n' % copydoc
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;\n'
     s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
@@ -697,9 +700,9 @@ class Generator:
     # setter prototype
     s += 'void\n'
     if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
-      s += q + 'const ' + tname + ' &value)\n{\n'
+      s += q + 'const ' + tname + ' &value) /// %s\n{\n' % copydoc
     else:
-      s += q + tname + ' value)\n{\n'
+      s += q + tname + ' value) /// %s\n{\n' % copydoc
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
     s += '  __AIDA_Local__::add_header1_call (fb, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
