@@ -58,11 +58,16 @@ DOXYGEN_NEWS            = $(top_srcdir)/NEWS
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
 DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
 DOXYGEN_STYLESHEET	= extrastyles.css
+SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
 build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Git ChangeLog"
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(Q) cp $(srcdir)/references.bib doxygen-srctree/
+	$(QPRINT) "MERGE" "ui/interfaces.dox"
+	$(Q) cd doxygen-srctree/ui && \
+	  sed $(SED_DELETE_ATFILE_LINE1) < interfaces.dox >> interfaces.idl && \
+	  rm interfaces.dox
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
