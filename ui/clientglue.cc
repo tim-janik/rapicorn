@@ -203,8 +203,6 @@ ApplicationH::run_and_exit ()
  * ui-thread and needs to be called before exit(3posix), to avoid parallel
  * execution of the ui-thread while atexit(3posix) handlers or while global
  * destructors are releasing process resources.
- * @param pass_through  The status to return. Useful at the end of main()
- *                      as: return Application::shutdown (exit_status);
  */
 void
 ApplicationH::shutdown()
