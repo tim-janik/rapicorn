@@ -98,6 +98,10 @@ coverage:
 	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
 	$(QPRINT) "BUILD" "coverage/ from tarball"
 	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
+	$(QPRINT) "POLISH" "clean up coverage report titles"
+	$(Q) find coverage/ -name '*.html' -exec sed -i \
+	    -e 's/lcov[ -]*\(code \)\?coverage.report/Rapicorn Code Coverage Report/i' \
+	    -e 's/<title>[^<]*<\/title>/<title>Rapicorn Code Coverage Report<\/title>/i' '{}' \;
 	$(QPRINT) "DONE" "Use: www-browser `pwd`/coverage/index.html"
 clean-local: clean-coverage
 clean-coverage:

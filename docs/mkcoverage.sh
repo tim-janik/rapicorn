@@ -50,7 +50,7 @@ lcov -r cov-stage2.lcov "`pwd`/tmpx.cc" -o cov-stage3.lcov
 lcov -r cov-stage3.lcov "`pwd`/inst/*" -o Coverage-Report
 
 # generate coverage report as HTML
-genhtml -o coverage/ --demangle-cpp --no-branch-coverage Coverage-Report
+genhtml -o coverage/ --demangle-cpp --no-branch-coverage Coverage-Report -t 'check installcheck'
 
 # package report
 test ! -e "$ORIGDIR/coverage/" || rm -r "$ORIGDIR/coverage/"
