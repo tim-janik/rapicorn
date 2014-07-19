@@ -98,7 +98,7 @@ coverage:
 	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
 	$(QPRINT) "BUILD" "coverage/ from tarball"
 	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
-	$(QPRINT) "DONE" "Use: www-browser coverage/index.html"
+	$(QPRINT) "DONE" "Use: www-browser `pwd`/coverage/index.html"
 clean-local: clean-coverage
 clean-coverage:
 	rm -rf coverage/ coverage-build/
