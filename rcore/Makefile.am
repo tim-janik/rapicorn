@@ -206,8 +206,9 @@ $(srcdir)/*.cc: aidavariants.hh
 aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
 	$(Q) cd . \
 	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
-	&& echo '# 1 "$(abs_srcdir)/aidaproto.hh"'		>>xtmp-$(@F) \
+	&& echo '# 1 "aidaproto.hh"'				>>xtmp-$(@F) \
 	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
 	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
 CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
 EXTRA_DIST += aidaproto.hh xmanifold.py
+# not using "$(abs_srcdir)/aidaproto.hh" to avoid hardcoded paths in distribution tarballs
