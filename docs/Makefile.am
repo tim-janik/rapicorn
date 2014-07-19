@@ -89,6 +89,21 @@ build-docs: doxygen-check
 errors: html-docs
 	@sed 's,/docs/doxygen-srctree/,/,g' error.log
 
+# == Coverage Rules ==
+DIST_TARBALL = $(PACKAGE)-$(VERSION).tar.bz2
+coverage:
+	$(QPRINT) "CLEAN" "coverage/"
+	$(Q) rm -rf coverage/ coverage-build/
+	$(QPRINT) "FIND" "dist tarball: $(DIST_TARBALL)"
+	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
+	$(QPRINT) "BUILD" "coverage/ from tarball"
+	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
+	$(QPRINT) "DONE" "Use: www-browser coverage/index.html"
+clean-local: clean-coverage
+clean-coverage:
+	rm -rf coverage/ coverage-build/
+.PHONY: coverage clean-coverage
+
 # == Upload build rules ==
 upload-docs: doxygen-check $(git_index_file)
 	$(AM_V_GEN)
