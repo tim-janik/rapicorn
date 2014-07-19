@@ -57,5 +57,5 @@ test ! -e "$ORIGDIR/coverage/" || rm -r "$ORIGDIR/coverage/"
 mv -v coverage/ "$ORIGDIR"
 
 # cleanup
-cd "$ORIGDIR"
-rm -rf coverage-build/
+#cd "$ORIGDIR"
+#rm -rf coverage-build/
