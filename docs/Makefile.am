@@ -92,6 +92,7 @@ errors: html-docs
 # == Coverage Rules ==
 DIST_TARBALL = $(PACKAGE)-$(VERSION).tar.bz2
 coverage:
+	$(AM_V_GEN)
 	$(QPRINT) "CLEAN" "coverage/"
 	$(Q) rm -rf coverage/ coverage-build/
 	$(QPRINT) "FIND" "dist tarball: $(DIST_TARBALL)"
@@ -109,22 +110,22 @@ clean-coverage:
 .PHONY: coverage clean-coverage
 
 # == Upload build rules ==
-upload-docs: doxygen-check $(git_index_file)
+CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+website-docs: doxygen-check $(git_index_file)
 	$(AM_V_GEN)
-	$(Q) test -e $@ && test "`cat upload-docs/doc-version`" = "$(DOC_VERSION)" || (true \
-	&& rm -rf upload-docs/ \
-	&& $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=upload-docs )
-	$(Q) echo "$(DOC_VERSION)" > upload-docs/doc-version
-clean-upload-docs:
-	rm -rf upload-docs/
-clean-local: clean-upload-docs
+	$(Q) test -e $@ && test "`cat website-docs/doc-version`" = "$(DOC_VERSION)" || (true \
+	&& rm -rf website-docs/ \
+	&& $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=website-docs )
+	$(Q) echo "$(DOC_VERSION)" > website-docs/doc-version
+clean-website-docs:
+	rm -rf website-docs/
+clean-local: clean-website-docs
 # Upload release versions as $DOC_VERSION, otherwise upload as latest/
-upload: upload-docs
+upload: website-docs coverage
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "upload-docs"   "testbit:pub/docs/rapicorn/${DOC_VERSION}" ; }
+	  rsync -zaHP --del "website-docs"   "testbit:pub/docs/rapicorn/${DOC_VERSION}" ; }
 	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "upload-docs/"  "testbit:pub/docs/rapicorn/latest/" ; }
-.PHONY: upload upload-docs
-CHECK_RSYNC   = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+	  rsync -zaHP --del "website-docs/"  "testbit:pub/docs/rapicorn/latest/" ; }
+.PHONY: upload website-docs
