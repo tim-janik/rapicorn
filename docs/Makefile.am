@@ -34,7 +34,6 @@ html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending o
 	$(AM_V_GEN)
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
 	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory html-docs
-	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
 clean-html-docs:
 	rm -rf html/
 clean-local: @INGIT@ clean-html-docs doxygen-clean
@@ -42,7 +41,7 @@ EXTRA_DIST += html
 html-docs: doxygen-check
 	$(Q) rm -rf html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=html
-	$(Q) echo "$(DOC_VERSION)" > html/doc-version
+	$(Q) rm -f html/doc-version && echo "$(DOC_VERSION)" > html/doc-version
 .PHONY: html-docs
 
 # == Doxygen Build Rules ==
