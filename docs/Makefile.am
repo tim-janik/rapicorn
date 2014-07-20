@@ -128,4 +128,5 @@ upload: website-docs coverage
 	  rsync -zaHP --del "website-docs"   "testbit:pub/docs/rapicorn/${DOC_VERSION}" ; }
 	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "website-docs/"  "testbit:pub/docs/rapicorn/latest/" ; }
+	$(Q) rsync -zaHP --del "coverage/"  "testbit:pub/docs/rapicorn/coverage/"
 .PHONY: upload website-docs
