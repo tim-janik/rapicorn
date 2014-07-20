@@ -88,23 +88,35 @@ errors: html-docs
 
 # == Coverage Rules ==
 DIST_TARBALL = $(PACKAGE)-$(VERSION).tar.bz2
-coverage:
+coverage-tree/buildid: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
-	$(QPRINT) "CLEAN" "coverage/"
-	$(Q) rm -rf coverage/ coverage-build/
+	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
+	|| { $(MAKE) $(AM_MAKEFLAGS) --no-print-directory coverage-tree && \
+	     rm -f $@ && echo "$(DOC_VERSION)" > $@ ; }
+coverage-tree:
+	$(AM_V_GEN)
+	$(QPRINT) "CLEAN" "coverage-tree/"
+	$(Q) rm -rf coverage-tree/
 	$(QPRINT) "FIND" "dist tarball: $(DIST_TARBALL)"
 	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
-	$(QPRINT) "BUILD" "coverage/ from tarball"
+	$(QPRINT) "BUILD" "coverage-tree/ from tarball"
+	$(Q) $(srcdir)/mkcoverage.sh --tree-only "$(top_builddir)/$(DIST_TARBALL)"
+.PHONY: coverage-tree # 'make coverage-tree' forces rebuilds, needed by coverage-tree/buildid
+coverage: coverage-tree/buildid
+	$(AM_V_GEN)
+	$(QPRINT) "CLEAN" "coverage/"
+	$(Q) rm -rf coverage/
+	$(QPRINT) "BUILD" "coverage/ from coverage-tree/"
 	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
 	$(QPRINT) "POLISH" "clean up coverage report titles"
 	$(Q) find coverage/ -name '*.html' -exec sed -i \
 	    -e 's/lcov[ -]*\(code \)\?coverage.report/Rapicorn Code Coverage Report/i' \
 	    -e 's/<title>[^<]*<\/title>/<title>Rapicorn Code Coverage Report<\/title>/i' '{}' \;
+	$(Q) rm -f coverage/tarball-version && echo "$(DIST_TARBALL) ($(DOC_VERSION))" > coverage/tarball-version
 	$(QPRINT) "DONE" "Use: www-browser `pwd`/coverage/index.html"
-clean-local: clean-coverage
 clean-coverage:
-	rm -rf coverage/ coverage-build/
-.PHONY: coverage clean-coverage
+	rm -rf coverage/ coverage-tree/
+clean-local: clean-coverage
 
 # == Upload build rules ==
 CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
@@ -125,5 +137,5 @@ upload: website-docs coverage
 	  rsync -zaHP --del "website-docs"   "testbit:pub/docs/rapicorn/${DOC_VERSION}" ; }
 	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "website-docs/"  "testbit:pub/docs/rapicorn/latest/" ; }
-	$(Q) rsync -zaHP --del "coverage/"  "testbit:pub/docs/rapicorn/coverage/"
-.PHONY: upload website-docs
+	$(Q) { set -x ; rsync -zaHP --del "coverage/"  "testbit:pub/docs/rapicorn/coverage/" ; }
+.PHONY: upload

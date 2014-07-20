@@ -2,23 +2,35 @@
 # CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 # Author: 2014, Tim Janik, see https://testbit.eu/
 
+SCRIPTNAME="$0"
+function die  { e="$1"; shift; [ -n "$*" ] && echo "$SCRIPTNAME: $*" >&2; exit "$e" ; }
+ORIGDIR=`pwd`
+
 # exit on errors
 set -e
+
+# parse options
+TREE_ONLY=false
+while [[ $# > 1 ]] ; do case "$1" in
+  --tree-only)	TREE_ONLY=true ;;
+  --)		shift ; break ;;
+  *)		break ;;
+esac ; shift ; done
+
 # echo commands
 test "$V" != "1" || set -x
 
-ORIGDIR=`pwd`
-
 # find dist tarball
 TARBALL="$1"
-test -n "$TARBALL" -a -e "$TARBALL" || { echo "$0: missing tarball" ; false; }
+test -n "$TARBALL" -a -e "$TARBALL" || die 1 "missing tarball"
 
-# extract and build in temporary directory
+# extract and build in tarball directory
 TARBALLF=`basename "$TARBALL"`
-BUILDDIR="coverage-build/${TARBALLF/.tar*/}"
+TARDIR="${TARBALLF/.tar*/}"
+BUILDDIR="coverage-tree/$TARDIR"
 test -e "$BUILDDIR" || {
-  mkdir -p coverage-build
-  tar -x -C coverage-build/ -f "$TARBALL"
+  mkdir -p coverage-tree
+  tar -x -C coverage-tree/ -f "$TARBALL" "$TARDIR"
   # build package with coverage enabled
   ( cd "$BUILDDIR"
     ./configure CC="gcc --coverage" CXX="g++ --coverage" --prefix=`pwd`/inst
@@ -27,6 +39,9 @@ test -e "$BUILDDIR" || {
     make install
   )
 }
+! $TREE_ONLY || exit 0
+
+# create coverage reports in BUILDDIR
 cd "$BUILDDIR"
 
 # remove old coverage data (only needed if not using a fresh build)
@@ -55,7 +70,3 @@ genhtml -o coverage/ --demangle-cpp --no-branch-coverage Coverage-Report -t 'che
 # package report
 test ! -e "$ORIGDIR/coverage/" || rm -r "$ORIGDIR/coverage/"
 mv -v coverage/ "$ORIGDIR"
-
-# cleanup
-#cd "$ORIGDIR"
-#rm -rf coverage-build/
