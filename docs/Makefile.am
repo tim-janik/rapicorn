@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = imports tutorial
 
-QPRINT = @printf '  %-7s%s\n'
+QPRINT = @printf '  %-9s%s\n'
 
 # Describe source tree version (release tag relative, e.g. yy.mm.z-nnn-gHEXHEX)
 DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
@@ -39,6 +39,7 @@ clean-html-docs:
 clean-local: @INGIT@ clean-html-docs doxygen-clean
 EXTRA_DIST += html
 html-docs: doxygen-check
+	$(AM_V_GEN)
 	$(Q) rm -rf html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=html
 	$(Q) rm -f html/doc-version && echo "$(DOC_VERSION)" > html/doc-version

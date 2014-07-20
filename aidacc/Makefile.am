@@ -48,7 +48,7 @@ ${AIDACCV}: plic.py Parser.py
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 
-GPRINT      = @printf '  %-7s%s\n'
+GPRINT      = @printf '  %-9s%s\n'
 
 # == Aida Builtins ==
 # Serialize builtins.idl into a TypeMap stored as a C string:
