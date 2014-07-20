@@ -97,6 +97,8 @@ coverage-tree:
 	$(Q) rm -rf coverage-tree/
 	$(QPRINT) "FIND" "dist tarball: $(DIST_TARBALL)"
 	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
+	$(Q) test ! -e "$(git_index_file)" -o "$(top_builddir)/$(DIST_TARBALL)" -nt "$(git_index_file)" || \
+	  { echo "ERROR: needs rebuild: $(top_builddir)/$(DIST_TARBALL)"; false ; }
 	$(QPRINT) "BUILD" "coverage-tree/ from tarball"
 	$(Q) $(srcdir)/mkcoverage.sh --tree-only "$(top_builddir)/$(DIST_TARBALL)"
 .PHONY: coverage-tree # 'make coverage-tree' forces rebuilds, needed by coverage-tree/buildid
