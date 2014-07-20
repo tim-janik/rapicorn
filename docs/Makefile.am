@@ -9,10 +9,8 @@ QPRINT = @printf '  %-7s%s\n'
 DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
 # Release version, shows last tag reachable
 REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-# Project version as configured
-PRJ_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
-# Detailed documentation version
-DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
+# Detailed documentation version, falls back to package version for tarballs
+DOC_VERSION = $(or $(DSC_VERSION), $(VERSION))
 
 # == Extra Tarball Files ==
 EXTRA_DIST += ChangeLog-2009 references.bib
