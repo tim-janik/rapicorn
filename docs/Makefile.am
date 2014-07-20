@@ -110,8 +110,8 @@ coverage: coverage-tree/buildid
 	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
 	$(QPRINT) "POLISH" "clean up coverage report titles"
 	$(Q) find coverage/ -name '*.html' -exec sed -i \
-	    -e 's/lcov[ -]*\(code \)\?coverage.report/Rapicorn Code Coverage Report/i' \
-	    -e 's/<title>[^<]*<\/title>/<title>Rapicorn Code Coverage Report<\/title>/i' '{}' \;
+	    -e 's/<title>[^<]*<\/title>/<title>Rapicorn Code Coverage Report<\/title>/i' \
+	    -e 's/lcov[ -]*\(code \)\?coverage.report/<a href="http:\/\/rapicorn.org">Rapicorn<\/a> Code Coverage Report/i' '{}' \;
 	$(QPRINT) "GEN" "coverage/tarball-version"
 	$(Q) rm -f coverage/tarball-version && echo "$(DIST_TARBALL) ($(DOC_VERSION))" > coverage/tarball-version
 	$(QPRINT) "DONE" "Use: www-browser `pwd`/coverage/index.html"

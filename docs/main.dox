@@ -14,6 +14,7 @@
 @section weblinks Online Resources
 - <a href="http://rapicorn.org/">Rapicorn Website</a>
 - <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a>
-- <a href="http://dev.testbit.eu/rapicorn/latest/">Latest Online Documentation</a>
+- <a href="https://testbit.eu/pub/docs/rapicorn/latest/">Latest Online Documentation</a>
+- <a href="https://testbit.eu/pub/docs/rapicorn/coverage/">Rapicorn Code Coverage Report</a>
 
 */
