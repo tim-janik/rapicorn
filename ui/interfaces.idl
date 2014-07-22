@@ -449,7 +449,7 @@ interface IdlTestWidget : Widget {
   TestEnum       enum_prop;
   Requisition    record_prop;
   StringSeq      sequence_prop;
-  IdlTestWidget    self_prop;
+  IdlTestWidget  self_prop;
 };
 
 } // Rapicorn
