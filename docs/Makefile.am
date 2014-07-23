@@ -15,7 +15,7 @@ PRJ_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q
 DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
 
 # == Extra Tarball Files ==
-EXTRA_DIST += ChangeLog-2009
+EXTRA_DIST += ChangeLog-2009 references.bib
 
 # == Doxygen Install Rules ==
 htmldocsbase  = ${docdir}
@@ -62,6 +62,7 @@ build-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Git ChangeLog"
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
+	$(Q) cp $(srcdir)/references.bib doxygen-srctree/
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \

@@ -68,6 +68,13 @@ String       program_alias      ();
 String       program_ident      ();
 String       program_cwd        ();
 
+// == Random Numbers ==
+uint64_t        random_nonce    ();
+uint64_t        random_int64    ();
+int64_t         random_irange   (int64_t begin, int64_t end);
+double          random_float    ();
+double          random_frange   (double begin, double end);
+
 // == initialization hooks ==
 class InitHook {
   typedef void (*InitHookFunc) (const StringVector &args);

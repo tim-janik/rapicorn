@@ -15,7 +15,7 @@ rapicorn_public_headers = $(strip	\
 	objects.hh	aidaprops.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
-	quicktimer.hh	thread.hh	\
+	quicktimer.hh	randomhash.hh	thread.hh	\
 	$(rapicorn_impl_headers) \
 	cpuasm.hh	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
@@ -26,7 +26,7 @@ rapicorn_cc_sources = $(sort	\
 	objects.cc	aidaprops.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
-	quicktimer.cc	thread.cc	\
+	quicktimer.cc	randomhash.cc	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	aidacxx.hh			\
@@ -63,7 +63,7 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # == Special Optimization Targets ==
-OPTIMIZE_SOURCE_FILES = loop.cc
+OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc
 AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in

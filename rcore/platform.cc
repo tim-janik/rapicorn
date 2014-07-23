@@ -2,11 +2,26 @@
 #include "platform.hh"
 #include "main.hh"
 #include "strings.hh"
+#include "thread.hh"
+#include "randomhash.hh"
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
+#include <glob.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/times.h>
+#include <sys/resource.h>
+#if defined (__i386__) || defined (__x86_64__)
+#  include <x86intrin.h>        // __rdtsc
+#endif
 #include <glib.h>
 
 namespace Rapicorn {
@@ -413,6 +428,327 @@ TaskStatus::string ()
     string_format ("pid=%d task=%d state=%c processor=%d priority=%d perc=%.2f%% utime=%.3fms stime=%.3fms cutime=%.3f cstime=%.3f",
                    process_id, task_id, state, processor, priority, (utime + stime) * 0.0001,
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
+}
+
+// == Entropy ==
+static Mutex       entropy_mutex;
+static KeccakPRNG *entropy_global_pool = NULL;
+static uint64      entropy_mix_simple = 0;
+
+/** @class Entropy
+ * To provide good quality random numbers, this class gathers entropy from a variety of sources.
+ * Under Linux, this includes the runtime environment and (if present) devices, interrupts,
+ * disk + network statistics, system load, execution + pipelining + scheduling latencies and of
+ * course random number devices. In combination with well established techniques like
+ * syscall timings (see Entropics13 @cite Entropics13) and a SHA3 algorithm derived random number
+ * generator (KeccakPRNG) for the mixing, the entropy collection is designed to be good enough
+ * to use as seeds for new PRNGs and to securely generate cryptographic tokens like session keys.
+ */
+
+KeccakPRNG&
+Entropy::entropy_pool()
+{
+  if (RAPICORN_LIKELY (entropy_global_pool))
+    return *entropy_global_pool;
+  assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
+  // create pool and seed it with system details
+  KeccakPRNG *kpool = new KeccakPRNG();
+  system_entropy (*kpool);
+  // gather entropy from runtime information and mix into pool
+  KeccakPRNG keccak;
+  runtime_entropy (keccak);
+  uint64_t seed_data[25];
+  keccak.generate (&seed_data[0], &seed_data[25]);
+  kpool->seed (seed_data, 25);
+  // establish global pool
+  assert (entropy_global_pool == NULL);
+  entropy_global_pool = kpool;
+  return *entropy_global_pool;
+}
+
+void
+Entropy::slow_reseed ()
+{
+  // gather and mangle entropy data
+  KeccakPRNG keccak;
+  runtime_entropy (keccak);
+  // mix entropy into global pool
+  uint64_t seed_data[25];
+  keccak.generate (&seed_data[0], &seed_data[25]);
+  ScopedLock<Mutex> locker (entropy_mutex);
+  entropy_pool().xor_seed (seed_data, 25);
+}
+
+static constexpr uint64_t
+bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
+{
+  return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
+}
+
+void
+Entropy::add_data (const void *bytes, size_t n_bytes)
+{
+  const uint64_t bits = bytehash_fnv64a ((const uint8_t*) bytes, n_bytes);
+  ScopedLock<Mutex> locker (entropy_mutex);
+  entropy_mix_simple ^= bits + (entropy_mix_simple * 1664525);
+}
+
+uint64_t
+Entropy::get_seed ()
+{
+  ScopedLock<Mutex> locker (entropy_mutex);
+  KeccakPRNG &pool = entropy_pool();
+  if (entropy_mix_simple)
+    {
+      pool.xor_seed (&entropy_mix_simple, 1);
+      entropy_mix_simple = 0;
+    }
+  return pool();
+}
+
+static bool
+hash_macs (KeccakPRNG &pool)
+{
+  // query devices for the AF_INET family which might be the only one supported
+  int sockfd = socket (AF_INET, SOCK_DGRAM, 0);         // open IPv4 UDP socket
+  if (sockfd < 0)
+    return false;
+  // discover devices by index, might include devices that are 'down'
+  String devices;
+  int ret = 0;
+  for (size_t j = 0; j <= 1 || ret >= 0; j++)           // try [0] and [1]
+    {
+      struct ifreq iftmp = { 0, };
+      iftmp.ifr_ifindex = j;
+      ret = ioctl (sockfd, SIOCGIFNAME, &iftmp);
+      if (ret < 0)
+        continue;
+      if (!devices.empty())
+        devices += ",";
+      devices += iftmp.ifr_name;                        // found name
+      devices += "//";                                  // no inet address
+      if (ioctl (sockfd, SIOCGIFHWADDR, &iftmp) >= 0)   // query MAC
+        {
+          const uint8_t *mac = (const uint8_t*) iftmp.ifr_hwaddr.sa_data;
+          devices += string_format ("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        }
+    }
+  // discover devices that are 'up'
+  char ifcbuffer[8192] = { 0, };                        // buffer space for returning interfaces
+  struct ifconf ifc;
+  ifc.ifc_len = sizeof (ifcbuffer);
+  ifc.ifc_buf = ifcbuffer;
+  ret = ioctl (sockfd, SIOCGIFCONF, &ifc);
+  for (size_t i = 0; ret >= 0 && i < ifc.ifc_len / sizeof (struct ifreq); i++)
+    {
+      const struct ifreq *iface = &ifc.ifc_req[i];
+      if (!devices.empty())
+        devices += ",";
+      devices += iface->ifr_name;                       // found name
+      devices += "/";
+      const uint8_t *addr = (const uint8_t*) &((struct sockaddr_in*) &iface->ifr_addr)->sin_addr;
+      devices += string_format ("%u.%u.%u.%u", addr[0], addr[1], addr[2], addr[3]);
+      devices += "/";                                   // added inet address
+      if (ioctl (sockfd, SIOCGIFHWADDR, iface) >= 0)    // query MAC
+        {
+          const uint8_t *mac = (const uint8_t*) iface->ifr_hwaddr.sa_data;
+          devices += string_format ("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        }
+    }
+  close (sockfd);
+  devices.resize (((devices.size() + 7) / 8) * 8); // align to uint64_t
+  pool.xor_seed ((const uint64_t*) devices.data(), devices.size() / 8);
+  // printout ("SEED(MACs): %s\n", devices.c_str());
+  return !devices.empty();
+}
+
+static bool
+hash_stat (KeccakPRNG &pool, const char *filename)
+{
+  struct {
+    struct stat stat;
+    uint64_t padding;
+  } s = { 0, };
+  if (stat (filename, &s.stat) == 0)
+    {
+      pool.xor_seed ((const uint64_t*) &s.stat, sizeof (s.stat) / sizeof (uint64_t));
+      // printout ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
+      return true;
+    }
+  return false;
+}
+
+static bool
+hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384)
+{
+  FILE *file = fopen (filename, "r");
+  if (file)
+    {
+      uint64_t buffer[maxbytes / 8];
+      const size_t l = fread (buffer, sizeof (buffer[0]), sizeof (buffer) / sizeof (buffer[0]), file);
+      fclose (file);
+      if (l > 0)
+        {
+          pool.xor_seed (buffer, l);
+          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
+          return true;
+        }
+    }
+  return false;
+}
+
+static bool __attribute__ ((__unused__))
+hash_glob (KeccakPRNG &pool, const char *fileglob, const size_t maxbytes = 16384)
+{
+  glob_t globbuf = { 0, };
+  glob (fileglob, GLOB_NOSORT, NULL, &globbuf);
+  bool success = false;
+  for (size_t i = globbuf.gl_offs; i < globbuf.gl_pathc; i++)
+    success |= hash_file (pool, globbuf.gl_pathv[i], maxbytes);
+  globfree (&globbuf);
+  return success;
+}
+
+struct HashStamp {
+  uint64_t bstamp;
+#ifdef  CLOCK_PROCESS_CPUTIME_ID
+  uint64_t tcpu;
+#endif
+#if     defined (__i386__) || defined (__x86_64__)
+  uint64_t tsc;
+#endif
+};
+
+static void __attribute__ ((__noinline__))
+hash_time (HashStamp *hstamp)
+{
+  asm (""); // enfore __noinline__
+  hstamp->bstamp = timestamp_benchmark();
+#ifdef  CLOCK_PROCESS_CPUTIME_ID
+  {
+    struct timespec ts;
+    clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &ts);
+    hstamp->tcpu = ts.tv_sec * uint64_t (1000000000) + ts.tv_nsec;
+  }
+#endif
+#if     defined (__i386__) || defined (__x86_64__)
+  hstamp->tsc = __rdtsc();
+#endif
+}
+
+static void
+hash_cpu_usage (KeccakPRNG &pool)
+{
+  union {
+    uint64_t      ui64[24];
+    struct {
+      struct rusage rusage;     // 144 bytes
+      struct tms    tms;        //  32 bytes
+      clock_t       clk;        //   8 bytes
+    };
+  } u = { 0, };
+  getrusage (RUSAGE_SELF, &u.rusage);
+  u.clk = times (&u.tms);
+  pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
+}
+
+void
+Entropy::system_entropy (KeccakPRNG &pool)
+{
+  HashStamp hash_stamps[128] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[64] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  *uintp++ = timestamp_startup();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/boot_id");
+  hash_time (stamp++);  hash_file (pool, "/proc/version");
+  hash_time (stamp++);  hash_file (pool, "/proc/cpuinfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/devices");
+  hash_time (stamp++);  hash_file (pool, "/proc/meminfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/buddyinfo");
+  hash_time (stamp++);  hash_file (pool, "/proc/diskstats");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/1/schedstat");
+  hash_time (stamp++);  hash_macs (pool);
+  // hash_glob: "/sys/devices/**/net/*/address", "/sys/devices/*/*/*/ieee80211/phy*/*address*"
+  hash_time (stamp++);  hash_file (pool, "/proc/uptime");
+  hash_time (stamp++);  hash_file (pool, "/proc/user_beancounters");
+  hash_time (stamp++);  hash_file (pool, "/proc/driver/rtc");
+  hash_time (stamp++);  hash_stat (pool, "/var/log/syslog");            // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/log/auth.log");          // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/tmp");                   // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/tmp");                       // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/dev");                       // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/lib/ntp/ntp.drift");     // for mtime
+  hash_time (stamp++);  hash_stat (pool, "/var/run/utmp");              // for mtime & atime
+  hash_time (stamp++);  hash_stat (pool, "/var/log/wtmp");              // for mtime & atime
+  hash_time (stamp++);  hash_stat (pool, "/sbin/init");                 // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool");                 // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool/cron");            // for atime
+  hash_time (stamp++);  hash_stat (pool, "/var/spool/anacron");         // for atime
+  hash_time (stamp++);  *uintp++ = getuid();
+  hash_time (stamp++);  *uintp++ = geteuid();
+  hash_time (stamp++);  *uintp++ = getgid();
+  hash_time (stamp++);  *uintp++ = getegid();
+  hash_time (stamp++);  *uintp++ = getpid();
+  hash_time (stamp++);  *uintp++ = getsid (0);
+  int ppid;
+  hash_time (stamp++);  *uintp++ = ppid = getppid();
+  hash_time (stamp++);  *uintp++ = getsid (ppid);
+  hash_time (stamp++);  *uintp++ = getpgrp();
+  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
+  hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+}
+
+void
+Entropy::runtime_entropy (KeccakPRNG &pool)
+{
+  HashStamp hash_stamps[128] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[64] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
+  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
+  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
+  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
+  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
+  hash_time (stamp++);  hash_file (pool, "/proc/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
+  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
+  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
 }
 
 } // Rapicorn
