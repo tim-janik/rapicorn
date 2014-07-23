@@ -122,12 +122,16 @@ clean-local: clean-coverage
 # == Upload Rule ==
 CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
 # Upload release versions as $DOC_VERSION, otherwise upload as latest/
-upload: html/doc-version coverage
+upload-docs: html/doc-version
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "html/"   "testbit:pub/docs/rapicorn/${DOC_VERSION}/" ; }
 	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
 	  rsync -zaHP --del "html/"  "testbit:pub/docs/rapicorn/latest/" ; }
+upload-coverage: coverage
+	$(AM_V_GEN)
+	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) { set -x ; rsync -zaHP --del "coverage/"  "testbit:pub/docs/rapicorn/coverage/" ; }
-.PHONY: upload
+upload: upload-coverage upload-docs
+.PHONY: upload upload-docs upload-coverage
