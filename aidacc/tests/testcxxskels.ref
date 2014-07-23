@@ -23,7 +23,7 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "MandatoryNamespace::FirstInterface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          void_func             ();
+  virtual void                          void_func             (); 	///< See FirstInterface::void_func()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
@@ -78,32 +78,32 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::UIWidgetArea"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual bool                          dummy    () const = 0;
-  virtual void                          dummy    (bool) = 0;
-  virtual std::string                   on_click () const = 0;
-  virtual void                          on_click (const std::string&) = 0;
+  virtual bool                          dummy    () const = 0; 	///< See UIWidgetArea::dummy
+  virtual void                          dummy    (bool) = 0; 	///< See UIWidgetArea::dummy
+  virtual std::string                   on_click () const = 0; 	///< See UIWidgetArea::on_click
+  virtual void                          on_click (const std::string&) = 0; 	///< See UIWidgetArea::on_click
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_signal;
   typedef Rapicorn::Aida::AsyncSignal<double (I_UIWidgetAreaIface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  virtual double                        simple_method       ();
-  virtual double                        single_arg          (int n);
-  virtual double                        single_arg2         (int n = 5);
+  virtual double                        simple_method       (); 	///< See UIWidgetArea::simple_method()
+  virtual double                        single_arg          (int n); 	///< See UIWidgetArea::single_arg()
+  virtual double                        single_arg2         (int n = 5); 	///< See UIWidgetArea::single_arg2()
   virtual double                        two_args            (int n,
-                                                             double r);
+                                                             double r); 	///< See UIWidgetArea::two_args()
   virtual double                        two_args2           (int n = 6,
-                                                             double r = 7.7);
+                                                             double r = 7.7); 	///< See UIWidgetArea::two_args2()
   virtual double                        multi_args          (bool b,
                                                              Rapicorn::Aida::int64 n,
                                                              double r,
                                                              int i,
                                                              const std::string &s = "String ding",
-                                                             double y = 5);
+                                                             double y = 5); 	///< See UIWidgetArea::multi_args()
   virtual double                        self_method         (I_UIWidgetAreaIface &ba1,
-                                                             I_UIWidgetAreaIface &ba2);
-  virtual void                          void_method         ();
-  virtual std::string                   on_click2out        ();
-  virtual void                          on_click2in         (const std::string &command);
+                                                             I_UIWidgetAreaIface &ba2); 	///< See UIWidgetArea::self_method()
+  virtual void                          void_method         (); 	///< See UIWidgetArea::void_method()
+  virtual std::string                   on_click2out        (); 	///< See UIWidgetArea::on_click2out()
+  virtual void                          on_click2in         (const std::string &command); 	///< See UIWidgetArea::on_click2in()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIface*&);
@@ -198,7 +198,7 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::QuickIface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          simple_function   (int i = 9);
+  virtual void                          simple_function   (int i = 9); 	///< See QuickIface::simple_function()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIface*&);
@@ -219,29 +219,29 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::MethodTestInterface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          method_with_void           ();
+  virtual void                          method_with_void           (); 	///< See MethodTestInterface::method_with_void()
   virtual bool                          method_with_bools          (bool input,
-                                                                    bool optval = 0);
+                                                                    bool optval = 0); 	///< See MethodTestInterface::method_with_bools()
   virtual int                           method_with_ints32         (int input,
-                                                                    int optval = -2);
+                                                                    int optval = -2); 	///< See MethodTestInterface::method_with_ints32()
   virtual Rapicorn::Aida::int64         method_with_ints64         (Rapicorn::Aida::int64 input,
-                                                                    Rapicorn::Aida::int64 optval = 576460752303423488);
+                                                                    Rapicorn::Aida::int64 optval = 576460752303423488); 	///< See MethodTestInterface::method_with_ints64()
   virtual double                        method_with_floats         (double input,
-                                                                    double optval = 309.9);
+                                                                    double optval = 309.9); 	///< See MethodTestInterface::method_with_floats()
   virtual std::string                   method_with_string         (const std::string &input,
-                                                                    const std::string &optval = "default");
+                                                                    const std::string &optval = "default"); 	///< See MethodTestInterface::method_with_string()
   virtual QuickEnum                     method_with_enum           (QuickEnum input,
-                                                                    QuickEnum optval = QuickEnum (0));
+                                                                    QuickEnum optval = QuickEnum (0)); 	///< See MethodTestInterface::method_with_enum()
   virtual QuickRecord                   method_with_record         (const QuickRecord &input,
-                                                                    const QuickRecord &optval = QuickRecord());
+                                                                    const QuickRecord &optval = QuickRecord()); 	///< See MethodTestInterface::method_with_record()
   virtual QuickSequence                 method_with_sequence       (const QuickSequence &input,
-                                                                    const QuickSequence &optval = QuickSequence());
+                                                                    const QuickSequence &optval = QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
   virtual I_GrandChildIface*            method_with_interface      (I_GrandChildIface &input,
-                                                                    I_GrandChildIface &optval = *(I_GrandChildIface*) NULL);
+                                                                    I_GrandChildIface &optval = *(I_GrandChildIface*) NULL); 	///< See MethodTestInterface::method_with_interface()
   virtual Rapicorn::Aida::Any           method_with_anys           (const Rapicorn::Aida::Any &input,
-                                                                    const Rapicorn::Aida::Any &optval);
+                                                                    const Rapicorn::Aida::Any &optval); 	///< See MethodTestInterface::method_with_anys()
   virtual I_QuickIfaceIface*            method_with_quickiface     (I_QuickIfaceIface &input,
-                                                                    I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL);
+                                                                    I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIface*&);
@@ -368,28 +368,28 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::PropertyTester"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual bool                          bool_prop      () const = 0;
-  virtual void                          bool_prop      (bool) = 0;
-  virtual int                           int32_prop     () const = 0;
-  virtual void                          int32_prop     (int) = 0;
-  virtual Rapicorn::Aida::int64         int64_prop     () const = 0;
-  virtual void                          int64_prop     (Rapicorn::Aida::int64) = 0;
-  virtual double                        float64_prop   () const = 0;
-  virtual void                          float64_prop   (double) = 0;
-  virtual std::string                   string_prop    () const = 0;
-  virtual void                          string_prop    (const std::string&) = 0;
-  virtual QuickEnum                     enum_prop      () const = 0;
-  virtual void                          enum_prop      (QuickEnum) = 0;
-  virtual QuickRecord                   record_prop    () const = 0;
-  virtual void                          record_prop    (const QuickRecord&) = 0;
-  virtual QuickSequence                 sequence_prop  () const = 0;
-  virtual void                          sequence_prop  (const QuickSequence&) = 0;
-  virtual I_GrandChildIface*            interface_prop () const = 0;
-  virtual void                          interface_prop (I_GrandChildIface*) = 0;
-  virtual I_PropertyTesterIface*        self_prop      () const = 0;
-  virtual void                          self_prop      (I_PropertyTesterIface*) = 0;
-  virtual Rapicorn::Aida::Any           any_prop       () const = 0;
-  virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0;
+  virtual bool                          bool_prop      () const = 0; 	///< See PropertyTester::bool_prop
+  virtual void                          bool_prop      (bool) = 0; 	///< See PropertyTester::bool_prop
+  virtual int                           int32_prop     () const = 0; 	///< See PropertyTester::int32_prop
+  virtual void                          int32_prop     (int) = 0; 	///< See PropertyTester::int32_prop
+  virtual Rapicorn::Aida::int64         int64_prop     () const = 0; 	///< See PropertyTester::int64_prop
+  virtual void                          int64_prop     (Rapicorn::Aida::int64) = 0; 	///< See PropertyTester::int64_prop
+  virtual double                        float64_prop   () const = 0; 	///< See PropertyTester::float64_prop
+  virtual void                          float64_prop   (double) = 0; 	///< See PropertyTester::float64_prop
+  virtual std::string                   string_prop    () const = 0; 	///< See PropertyTester::string_prop
+  virtual void                          string_prop    (const std::string&) = 0; 	///< See PropertyTester::string_prop
+  virtual QuickEnum                     enum_prop      () const = 0; 	///< See PropertyTester::enum_prop
+  virtual void                          enum_prop      (QuickEnum) = 0; 	///< See PropertyTester::enum_prop
+  virtual QuickRecord                   record_prop    () const = 0; 	///< See PropertyTester::record_prop
+  virtual void                          record_prop    (const QuickRecord&) = 0; 	///< See PropertyTester::record_prop
+  virtual QuickSequence                 sequence_prop  () const = 0; 	///< See PropertyTester::sequence_prop
+  virtual void                          sequence_prop  (const QuickSequence&) = 0; 	///< See PropertyTester::sequence_prop
+  virtual I_GrandChildIface*            interface_prop () const = 0; 	///< See PropertyTester::interface_prop
+  virtual void                          interface_prop (I_GrandChildIface*) = 0; 	///< See PropertyTester::interface_prop
+  virtual I_PropertyTesterIface*        self_prop      () const = 0; 	///< See PropertyTester::self_prop
+  virtual void                          self_prop      (I_PropertyTesterIface*) = 0; 	///< See PropertyTester::self_prop
+  virtual Rapicorn::Aida::Any           any_prop       () const = 0; 	///< See PropertyTester::any_prop
+  virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0; 	///< See PropertyTester::any_prop
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIface*&);
@@ -413,14 +413,14 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::ButtonArea"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual std::string                   on_click   () const = 0;
-  virtual void                          on_click   (const std::string&) = 0;
-  virtual std::string                   on_click2  () const = 0;
-  virtual void                          on_click2  (const std::string&) = 0;
-  virtual std::string                   on_click3  () const = 0;
-  virtual void                          on_click3  (const std::string&) = 0;
-  virtual ClickType                     click_type () const = 0;
-  virtual void                          click_type (ClickType) = 0;
+  virtual std::string                   on_click   () const = 0; 	///< See ButtonArea::on_click
+  virtual void                          on_click   (const std::string&) = 0; 	///< See ButtonArea::on_click
+  virtual std::string                   on_click2  () const = 0; 	///< See ButtonArea::on_click2
+  virtual void                          on_click2  (const std::string&) = 0; 	///< See ButtonArea::on_click2
+  virtual std::string                   on_click3  () const = 0; 	///< See ButtonArea::on_click3
+  virtual void                          on_click3  (const std::string&) = 0; 	///< See ButtonArea::on_click3
+  virtual ClickType                     click_type () const = 0; 	///< See ButtonArea::click_type
+  virtual void                          click_type (ClickType) = 0; 	///< See ButtonArea::click_type
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_check_activate;
   typedef Rapicorn::Aida::Signal<void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
@@ -447,7 +447,7 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::PureMethods"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual int                           pure_method        (double f) = 0;
+  virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIface*&);
@@ -473,7 +473,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
-                                                                   const OtherNamespace::SomeRecord &sr);
+                                                                   const OtherNamespace::SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIface*&);
@@ -497,10 +497,10 @@ public:
   virtual std::string                    __aida_type_name__ () const	{ return "BseTest::Compressor"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual double                        threshold () const = 0;
-  virtual void                          threshold (double) = 0;
-  virtual double                        ratio     () const = 0;
-  virtual void                          ratio     (double) = 0;
+  virtual double                        threshold () const = 0; 	///< See Compressor::threshold
+  virtual void                          threshold (double) = 0; 	///< See Compressor::threshold
+  virtual double                        ratio     () const = 0; 	///< See Compressor::ratio
+  virtual void                          ratio     (double) = 0; 	///< See Compressor::ratio
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIface*);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);

@@ -289,7 +289,7 @@ interface Widget {
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
   float64 width  = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
   float64 height = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
-  Requisition requisition () = 0;               //< Get the current effective size requisition
+  Requisition requisition () = 0;               ///< Get the current effective size requisition
   /// @name Widget Packing Properties
   bool    hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
   bool    vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
@@ -312,10 +312,10 @@ interface Widget {
   int32   bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
   int32   top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
   /// @name Widget Selector API
-  bool            match_selector          (String selector) = 0; //< Check if selector matches this widget.
-  Widget          query_selector          (String selector) = 0; //< Returns first selector match.
-  WidgetSeq       query_selector_all      (String selector) = 0; //< Returns all selector matches.
-  Widget          query_selector_unique   (String selector) = 0; //< Returns single selector match if unique.
+  bool            match_selector          (String selector) = 0; ///< Check if selector matches this widget.
+  Widget          query_selector          (String selector) = 0; ///< Returns first selector match.
+  WidgetSeq       query_selector_all      (String selector) = 0; ///< Returns all selector matches.
+  Widget          query_selector_unique   (String selector) = 0; ///< Returns single selector match if unique.
   /// @name Testing & Debugging
   String	  test_dump               () = 0;
 };
@@ -449,7 +449,7 @@ interface IdlTestWidget : Widget {
   TestEnum       enum_prop;
   Requisition    record_prop;
   StringSeq      sequence_prop;
-  IdlTestWidget    self_prop;
+  IdlTestWidget  self_prop;
 };
 
 } // Rapicorn

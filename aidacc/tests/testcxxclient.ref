@@ -239,7 +239,7 @@ public:
   template<class SmartHandle>
   static FirstInterfaceHandle   down_cast (SmartHandle smh) { return smh == NULL ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      FirstInterfaceHandle ();
-  void                          void_func            ();
+  void                          void_func            (); 	///< See FirstInterface::void_func()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FirstInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FirstInterfaceHandle&);
@@ -525,30 +525,30 @@ public:
   template<class SmartHandle>
   static UIWidgetAreaHandle     down_cast (SmartHandle smh) { return smh == NULL ? UIWidgetAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      UIWidgetAreaHandle ();
-  bool                          dummy    () const;
-  void                          dummy    (bool);
-  std::string                   on_click () const;
-  void                          on_click (const std::string&);
+  bool                          dummy    () const; 	///< See UIWidgetArea::dummy
+  void                          dummy    (bool); 	///< See UIWidgetArea::dummy
+  std::string                   on_click () const; 	///< See UIWidgetArea::on_click
+  void                          on_click (const std::string&); 	///< See UIWidgetArea::on_click
   __Aida_Signal__void_signal    sig_void_signal () { return __Aida_Signal__void_signal (*this, &UIWidgetAreaHandle::__aida_connect__void_signal); }
   __Aida_Signal__sample_signal  sig_sample_signal () { return __Aida_Signal__sample_signal (*this, &UIWidgetAreaHandle::__aida_connect__sample_signal); }
-  double                        simple_method      ();
-  double                        single_arg         (int n);
-  double                        single_arg2        (int n = 5);
+  double                        simple_method      (); 	///< See UIWidgetArea::simple_method()
+  double                        single_arg         (int n); 	///< See UIWidgetArea::single_arg()
+  double                        single_arg2        (int n = 5); 	///< See UIWidgetArea::single_arg2()
   double                        two_args           (int n,
-                                                    double r);
+                                                    double r); 	///< See UIWidgetArea::two_args()
   double                        two_args2          (int n = 6,
-                                                    double r = 7.7);
+                                                    double r = 7.7); 	///< See UIWidgetArea::two_args2()
   double                        multi_args         (bool b,
                                                     Rapicorn::Aida::int64 n,
                                                     double r,
                                                     int i,
                                                     const std::string &s = "String ding",
-                                                    double y = 5);
+                                                    double y = 5); 	///< See UIWidgetArea::multi_args()
   double                        self_method        (UIWidgetAreaHandle &ba1,
-                                                    UIWidgetAreaHandle &ba2);
-  void                          void_method        ();
-  std::string                   on_click2out       ();
-  void                          on_click2in        (const std::string &command);
+                                                    UIWidgetAreaHandle &ba2); 	///< See UIWidgetArea::self_method()
+  void                          void_method        (); 	///< See UIWidgetArea::void_method()
+  std::string                   on_click2out       (); 	///< See UIWidgetArea::on_click2out()
+  void                          on_click2in        (const std::string &command); 	///< See UIWidgetArea::on_click2in()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const UIWidgetAreaHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, UIWidgetAreaHandle&);
@@ -676,7 +676,7 @@ public:
   template<class SmartHandle>
   static QuickIfaceHandle       down_cast (SmartHandle smh) { return smh == NULL ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      QuickIfaceHandle ();
-  void                          simple_function  (int i = 9);
+  void                          simple_function  (int i = 9); 	///< See QuickIface::simple_function()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickIfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickIfaceHandle&);
@@ -696,29 +696,29 @@ public:
   template<class SmartHandle>
   static MethodTestInterfaceHandle down_cast (SmartHandle smh) { return smh == NULL ? MethodTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      MethodTestInterfaceHandle ();
-  void                          method_with_void          ();
+  void                          method_with_void          (); 	///< See MethodTestInterface::method_with_void()
   bool                          method_with_bools         (bool input,
-                                                           bool optval = 0);
+                                                           bool optval = 0); 	///< See MethodTestInterface::method_with_bools()
   int                           method_with_ints32        (int input,
-                                                           int optval = -2);
+                                                           int optval = -2); 	///< See MethodTestInterface::method_with_ints32()
   Rapicorn::Aida::int64         method_with_ints64        (Rapicorn::Aida::int64 input,
-                                                           Rapicorn::Aida::int64 optval = 576460752303423488);
+                                                           Rapicorn::Aida::int64 optval = 576460752303423488); 	///< See MethodTestInterface::method_with_ints64()
   double                        method_with_floats        (double input,
-                                                           double optval = 309.9);
+                                                           double optval = 309.9); 	///< See MethodTestInterface::method_with_floats()
   std::string                   method_with_string        (const std::string &input,
-                                                           const std::string &optval = "default");
+                                                           const std::string &optval = "default"); 	///< See MethodTestInterface::method_with_string()
   QuickEnum                     method_with_enum          (QuickEnum input,
-                                                           QuickEnum optval = QuickEnum (0));
+                                                           QuickEnum optval = QuickEnum (0)); 	///< See MethodTestInterface::method_with_enum()
   QuickRecord                   method_with_record        (const QuickRecord &input,
-                                                           const QuickRecord &optval = QuickRecord());
+                                                           const QuickRecord &optval = QuickRecord()); 	///< See MethodTestInterface::method_with_record()
   QuickSequence                 method_with_sequence      (const QuickSequence &input,
-                                                           const QuickSequence &optval = QuickSequence());
+                                                           const QuickSequence &optval = QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
   GrandChildHandle              method_with_interface     (GrandChildHandle &input,
-                                                           GrandChildHandle &optval = *(GrandChildHandle*) NULL);
+                                                           GrandChildHandle &optval = *(GrandChildHandle*) NULL); 	///< See MethodTestInterface::method_with_interface()
   Rapicorn::Aida::Any           method_with_anys          (const Rapicorn::Aida::Any &input,
-                                                           const Rapicorn::Aida::Any &optval);
+                                                           const Rapicorn::Aida::Any &optval); 	///< See MethodTestInterface::method_with_anys()
   QuickIfaceHandle              method_with_quickiface    (QuickIfaceHandle &input,
-                                                           QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL);
+                                                           QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const MethodTestInterfaceHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, MethodTestInterfaceHandle&);
@@ -868,28 +868,28 @@ public:
   template<class SmartHandle>
   static PropertyTesterHandle   down_cast (SmartHandle smh) { return smh == NULL ? PropertyTesterHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PropertyTesterHandle ();
-  bool                          bool_prop      () const;
-  void                          bool_prop      (bool);
-  int                           int32_prop     () const;
-  void                          int32_prop     (int);
-  Rapicorn::Aida::int64         int64_prop     () const;
-  void                          int64_prop     (Rapicorn::Aida::int64);
-  double                        float64_prop   () const;
-  void                          float64_prop   (double);
-  std::string                   string_prop    () const;
-  void                          string_prop    (const std::string&);
-  QuickEnum                     enum_prop      () const;
-  void                          enum_prop      (QuickEnum);
-  QuickRecord                   record_prop    () const;
-  void                          record_prop    (const QuickRecord&);
-  QuickSequence                 sequence_prop  () const;
-  void                          sequence_prop  (const QuickSequence&);
-  GrandChildHandle              interface_prop () const;
-  void                          interface_prop (GrandChildHandle);
-  PropertyTesterHandle          self_prop      () const;
-  void                          self_prop      (PropertyTesterHandle);
-  Rapicorn::Aida::Any           any_prop       () const;
-  void                          any_prop       (const Rapicorn::Aida::Any&);
+  bool                          bool_prop      () const; 	///< See PropertyTester::bool_prop
+  void                          bool_prop      (bool); 	///< See PropertyTester::bool_prop
+  int                           int32_prop     () const; 	///< See PropertyTester::int32_prop
+  void                          int32_prop     (int); 	///< See PropertyTester::int32_prop
+  Rapicorn::Aida::int64         int64_prop     () const; 	///< See PropertyTester::int64_prop
+  void                          int64_prop     (Rapicorn::Aida::int64); 	///< See PropertyTester::int64_prop
+  double                        float64_prop   () const; 	///< See PropertyTester::float64_prop
+  void                          float64_prop   (double); 	///< See PropertyTester::float64_prop
+  std::string                   string_prop    () const; 	///< See PropertyTester::string_prop
+  void                          string_prop    (const std::string&); 	///< See PropertyTester::string_prop
+  QuickEnum                     enum_prop      () const; 	///< See PropertyTester::enum_prop
+  void                          enum_prop      (QuickEnum); 	///< See PropertyTester::enum_prop
+  QuickRecord                   record_prop    () const; 	///< See PropertyTester::record_prop
+  void                          record_prop    (const QuickRecord&); 	///< See PropertyTester::record_prop
+  QuickSequence                 sequence_prop  () const; 	///< See PropertyTester::sequence_prop
+  void                          sequence_prop  (const QuickSequence&); 	///< See PropertyTester::sequence_prop
+  GrandChildHandle              interface_prop () const; 	///< See PropertyTester::interface_prop
+  void                          interface_prop (GrandChildHandle); 	///< See PropertyTester::interface_prop
+  PropertyTesterHandle          self_prop      () const; 	///< See PropertyTester::self_prop
+  void                          self_prop      (PropertyTesterHandle); 	///< See PropertyTester::self_prop
+  Rapicorn::Aida::Any           any_prop       () const; 	///< See PropertyTester::any_prop
+  void                          any_prop       (const Rapicorn::Aida::Any&); 	///< See PropertyTester::any_prop
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PropertyTesterHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PropertyTesterHandle&);
@@ -928,14 +928,14 @@ public:
   template<class SmartHandle>
   static ButtonAreaHandle       down_cast (SmartHandle smh) { return smh == NULL ? ButtonAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ButtonAreaHandle ();
-  std::string                   on_click   () const;
-  void                          on_click   (const std::string&);
-  std::string                   on_click2  () const;
-  void                          on_click2  (const std::string&);
-  std::string                   on_click3  () const;
-  void                          on_click3  (const std::string&);
-  ClickType                     click_type () const;
-  void                          click_type (ClickType);
+  std::string                   on_click   () const; 	///< See ButtonArea::on_click
+  void                          on_click   (const std::string&); 	///< See ButtonArea::on_click
+  std::string                   on_click2  () const; 	///< See ButtonArea::on_click2
+  void                          on_click2  (const std::string&); 	///< See ButtonArea::on_click2
+  std::string                   on_click3  () const; 	///< See ButtonArea::on_click3
+  void                          on_click3  (const std::string&); 	///< See ButtonArea::on_click3
+  ClickType                     click_type () const; 	///< See ButtonArea::click_type
+  void                          click_type (ClickType); 	///< See ButtonArea::click_type
   __Aida_Signal__check_activate sig_check_activate () { return __Aida_Signal__check_activate (*this, &ButtonAreaHandle::__aida_connect__check_activate); }
   __Aida_Signal__activate       sig_activate () { return __Aida_Signal__activate (*this, &ButtonAreaHandle::__aida_connect__activate); }
 };
@@ -959,7 +959,7 @@ public:
   template<class SmartHandle>
   static PureMethodsHandle      down_cast (SmartHandle smh) { return smh == NULL ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PureMethodsHandle ();
-  int                           pure_method       (double f);
+  int                           pure_method       (double f); 	///< See PureMethods::pure_method()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const PureMethodsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, PureMethodsHandle&);
@@ -1003,7 +1003,7 @@ public:
   explicit                      NameTestsHandle ();
   void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
                                                            RapicornAidaTest::ClickType qe,
-                                                           const OtherNamespace::SomeRecord &sr);
+                                                           const OtherNamespace::SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NameTestsHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NameTestsHandle&);
@@ -1026,10 +1026,10 @@ public:
   template<class SmartHandle>
   static CompressorHandle       down_cast (SmartHandle smh) { return smh == NULL ? CompressorHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      CompressorHandle ();
-  double                        threshold () const;
-  void                          threshold (double);
-  double                        ratio     () const;
-  void                          ratio     (double);
+  double                        threshold () const; 	///< See Compressor::threshold
+  void                          threshold (double); 	///< See Compressor::threshold
+  double                        ratio     () const; 	///< See Compressor::ratio
+  void                          ratio     (double); 	///< See Compressor::ratio
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const CompressorHandle&);
 void operator>>= (Rapicorn::Aida::FieldReader&, CompressorHandle&);
@@ -1167,7 +1167,7 @@ FirstInterfaceHandle::__aida_typelist__()
   return thl;
 }
 void
-FirstInterfaceHandle::void_func ()
+FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
@@ -1790,7 +1790,7 @@ UIWidgetAreaHandle::__aida_typelist__()
   return thl;
 }
 bool
-UIWidgetAreaHandle::dummy () const
+UIWidgetAreaHandle::dummy () const /// See UIWidgetArea::dummy
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
@@ -1804,7 +1804,7 @@ UIWidgetAreaHandle::dummy () const
   return retval;
 }
 void
-UIWidgetAreaHandle::dummy (bool value)
+UIWidgetAreaHandle::dummy (bool value) /// See UIWidgetArea::dummy
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL);
@@ -1814,7 +1814,7 @@ UIWidgetAreaHandle::dummy (bool value)
   if (fr) delete fr;
 }
 std::string
-UIWidgetAreaHandle::on_click () const
+UIWidgetAreaHandle::on_click () const /// See UIWidgetArea::on_click
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
@@ -1828,7 +1828,7 @@ UIWidgetAreaHandle::on_click () const
   return retval;
 }
 void
-UIWidgetAreaHandle::on_click (const std::string &value)
+UIWidgetAreaHandle::on_click (const std::string &value) /// See UIWidgetArea::on_click
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL);
@@ -1838,7 +1838,7 @@ UIWidgetAreaHandle::on_click (const std::string &value)
   if (fr) delete fr;
 }
 double
-UIWidgetAreaHandle::simple_method ()
+UIWidgetAreaHandle::simple_method () /// See UIWidgetArea::simple_method()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
@@ -1852,7 +1852,7 @@ UIWidgetAreaHandle::simple_method ()
   return retval;
 }
 double
-UIWidgetAreaHandle::single_arg (int arg_n)
+UIWidgetAreaHandle::single_arg (int arg_n) /// See UIWidgetArea::single_arg()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
@@ -1867,7 +1867,7 @@ UIWidgetAreaHandle::single_arg (int arg_n)
   return retval;
 }
 double
-UIWidgetAreaHandle::single_arg2 (int arg_n)
+UIWidgetAreaHandle::single_arg2 (int arg_n) /// See UIWidgetArea::single_arg2()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
@@ -1883,7 +1883,7 @@ UIWidgetAreaHandle::single_arg2 (int arg_n)
 }
 double
 UIWidgetAreaHandle::two_args (int arg_n,
-                              double arg_r)
+                              double arg_r) /// See UIWidgetArea::two_args()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
@@ -1900,7 +1900,7 @@ UIWidgetAreaHandle::two_args (int arg_n,
 }
 double
 UIWidgetAreaHandle::two_args2 (int arg_n,
-                               double arg_r)
+                               double arg_r) /// See UIWidgetArea::two_args2()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
@@ -1921,7 +1921,7 @@ UIWidgetAreaHandle::multi_args (bool arg_b,
                                 double arg_r,
                                 int arg_i,
                                 const std::string &arg_s,
-                                double arg_y)
+                                double arg_y) /// See UIWidgetArea::multi_args()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
@@ -1942,7 +1942,7 @@ UIWidgetAreaHandle::multi_args (bool arg_b,
 }
 double
 UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
-                                 UIWidgetAreaHandle &arg_ba2)
+                                 UIWidgetAreaHandle &arg_ba2) /// See UIWidgetArea::self_method()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
@@ -1958,7 +1958,7 @@ UIWidgetAreaHandle::self_method (UIWidgetAreaHandle &arg_ba1,
   return retval;
 }
 void
-UIWidgetAreaHandle::void_method ()
+UIWidgetAreaHandle::void_method () /// See UIWidgetArea::void_method()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
@@ -1967,7 +1967,7 @@ UIWidgetAreaHandle::void_method ()
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 std::string
-UIWidgetAreaHandle::on_click2out ()
+UIWidgetAreaHandle::on_click2out () /// See UIWidgetArea::on_click2out()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
@@ -1981,7 +1981,7 @@ UIWidgetAreaHandle::on_click2out ()
   return retval;
 }
 void
-UIWidgetAreaHandle::on_click2in (const std::string &arg_command)
+UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidgetArea::on_click2in()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
@@ -2305,7 +2305,7 @@ QuickIfaceHandle::__aida_typelist__()
   return thl;
 }
 void
-QuickIfaceHandle::simple_function (int arg_i)
+QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
@@ -2369,7 +2369,7 @@ MethodTestInterfaceHandle::__aida_typelist__()
   return thl;
 }
 void
-MethodTestInterfaceHandle::method_with_void ()
+MethodTestInterfaceHandle::method_with_void () /// See MethodTestInterface::method_with_void()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
@@ -2379,7 +2379,7 @@ MethodTestInterfaceHandle::method_with_void ()
 }
 bool
 MethodTestInterfaceHandle::method_with_bools (bool arg_input,
-                                              bool arg_optval)
+                                              bool arg_optval) /// See MethodTestInterface::method_with_bools()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
@@ -2396,7 +2396,7 @@ MethodTestInterfaceHandle::method_with_bools (bool arg_input,
 }
 int
 MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
-                                               int arg_optval)
+                                               int arg_optval) /// See MethodTestInterface::method_with_ints32()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
@@ -2413,7 +2413,7 @@ MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
 }
 Rapicorn::Aida::int64
 MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64 arg_input,
-                                               Rapicorn::Aida::int64 arg_optval)
+                                               Rapicorn::Aida::int64 arg_optval) /// See MethodTestInterface::method_with_ints64()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
@@ -2430,7 +2430,7 @@ MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64 arg_input,
 }
 double
 MethodTestInterfaceHandle::method_with_floats (double arg_input,
-                                               double arg_optval)
+                                               double arg_optval) /// See MethodTestInterface::method_with_floats()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
@@ -2447,7 +2447,7 @@ MethodTestInterfaceHandle::method_with_floats (double arg_input,
 }
 std::string
 MethodTestInterfaceHandle::method_with_string (const std::string &arg_input,
-                                               const std::string &arg_optval)
+                                               const std::string &arg_optval) /// See MethodTestInterface::method_with_string()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
@@ -2464,7 +2464,7 @@ MethodTestInterfaceHandle::method_with_string (const std::string &arg_input,
 }
 QuickEnum
 MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
-                                             QuickEnum arg_optval)
+                                             QuickEnum arg_optval) /// See MethodTestInterface::method_with_enum()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
@@ -2481,7 +2481,7 @@ MethodTestInterfaceHandle::method_with_enum (QuickEnum arg_input,
 }
 QuickRecord
 MethodTestInterfaceHandle::method_with_record (const QuickRecord &arg_input,
-                                               const QuickRecord &arg_optval)
+                                               const QuickRecord &arg_optval) /// See MethodTestInterface::method_with_record()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
@@ -2498,7 +2498,7 @@ MethodTestInterfaceHandle::method_with_record (const QuickRecord &arg_input,
 }
 QuickSequence
 MethodTestInterfaceHandle::method_with_sequence (const QuickSequence &arg_input,
-                                                 const QuickSequence &arg_optval)
+                                                 const QuickSequence &arg_optval) /// See MethodTestInterface::method_with_sequence()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
@@ -2515,7 +2515,7 @@ MethodTestInterfaceHandle::method_with_sequence (const QuickSequence &arg_input,
 }
 GrandChildHandle
 MethodTestInterfaceHandle::method_with_interface (GrandChildHandle &arg_input,
-                                                  GrandChildHandle &arg_optval)
+                                                  GrandChildHandle &arg_optval) /// See MethodTestInterface::method_with_interface()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
@@ -2532,7 +2532,7 @@ MethodTestInterfaceHandle::method_with_interface (GrandChildHandle &arg_input,
 }
 Rapicorn::Aida::Any
 MethodTestInterfaceHandle::method_with_anys (const Rapicorn::Aida::Any &arg_input,
-                                             const Rapicorn::Aida::Any &arg_optval)
+                                             const Rapicorn::Aida::Any &arg_optval) /// See MethodTestInterface::method_with_anys()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
@@ -2549,7 +2549,7 @@ MethodTestInterfaceHandle::method_with_anys (const Rapicorn::Aida::Any &arg_inpu
 }
 QuickIfaceHandle
 MethodTestInterfaceHandle::method_with_quickiface (QuickIfaceHandle &arg_input,
-                                                   QuickIfaceHandle &arg_iface0)
+                                                   QuickIfaceHandle &arg_iface0) /// See MethodTestInterface::method_with_quickiface()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
@@ -3229,7 +3229,7 @@ PropertyTesterHandle::__aida_typelist__()
   return thl;
 }
 bool
-PropertyTesterHandle::bool_prop () const
+PropertyTesterHandle::bool_prop () const /// See PropertyTester::bool_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
@@ -3243,7 +3243,7 @@ PropertyTesterHandle::bool_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::bool_prop (bool value)
+PropertyTesterHandle::bool_prop (bool value) /// See PropertyTester::bool_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL);
@@ -3253,7 +3253,7 @@ PropertyTesterHandle::bool_prop (bool value)
   if (fr) delete fr;
 }
 int
-PropertyTesterHandle::int32_prop () const
+PropertyTesterHandle::int32_prop () const /// See PropertyTester::int32_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
@@ -3267,7 +3267,7 @@ PropertyTesterHandle::int32_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::int32_prop (int value)
+PropertyTesterHandle::int32_prop (int value) /// See PropertyTester::int32_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL);
@@ -3277,7 +3277,7 @@ PropertyTesterHandle::int32_prop (int value)
   if (fr) delete fr;
 }
 Rapicorn::Aida::int64
-PropertyTesterHandle::int64_prop () const
+PropertyTesterHandle::int64_prop () const /// See PropertyTester::int64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
@@ -3291,7 +3291,7 @@ PropertyTesterHandle::int64_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64 value)
+PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64 value) /// See PropertyTester::int64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
@@ -3301,7 +3301,7 @@ PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64 value)
   if (fr) delete fr;
 }
 double
-PropertyTesterHandle::float64_prop () const
+PropertyTesterHandle::float64_prop () const /// See PropertyTester::float64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
@@ -3315,7 +3315,7 @@ PropertyTesterHandle::float64_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::float64_prop (double value)
+PropertyTesterHandle::float64_prop (double value) /// See PropertyTester::float64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL);
@@ -3325,7 +3325,7 @@ PropertyTesterHandle::float64_prop (double value)
   if (fr) delete fr;
 }
 std::string
-PropertyTesterHandle::string_prop () const
+PropertyTesterHandle::string_prop () const /// See PropertyTester::string_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
@@ -3339,7 +3339,7 @@ PropertyTesterHandle::string_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::string_prop (const std::string &value)
+PropertyTesterHandle::string_prop (const std::string &value) /// See PropertyTester::string_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL);
@@ -3349,7 +3349,7 @@ PropertyTesterHandle::string_prop (const std::string &value)
   if (fr) delete fr;
 }
 QuickEnum
-PropertyTesterHandle::enum_prop () const
+PropertyTesterHandle::enum_prop () const /// See PropertyTester::enum_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
@@ -3363,7 +3363,7 @@ PropertyTesterHandle::enum_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::enum_prop (QuickEnum value)
+PropertyTesterHandle::enum_prop (QuickEnum value) /// See PropertyTester::enum_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL);
@@ -3373,7 +3373,7 @@ PropertyTesterHandle::enum_prop (QuickEnum value)
   if (fr) delete fr;
 }
 QuickRecord
-PropertyTesterHandle::record_prop () const
+PropertyTesterHandle::record_prop () const /// See PropertyTester::record_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
@@ -3387,7 +3387,7 @@ PropertyTesterHandle::record_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::record_prop (const QuickRecord &value)
+PropertyTesterHandle::record_prop (const QuickRecord &value) /// See PropertyTester::record_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL);
@@ -3397,7 +3397,7 @@ PropertyTesterHandle::record_prop (const QuickRecord &value)
   if (fr) delete fr;
 }
 QuickSequence
-PropertyTesterHandle::sequence_prop () const
+PropertyTesterHandle::sequence_prop () const /// See PropertyTester::sequence_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
@@ -3411,7 +3411,7 @@ PropertyTesterHandle::sequence_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::sequence_prop (const QuickSequence &value)
+PropertyTesterHandle::sequence_prop (const QuickSequence &value) /// See PropertyTester::sequence_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL);
@@ -3421,7 +3421,7 @@ PropertyTesterHandle::sequence_prop (const QuickSequence &value)
   if (fr) delete fr;
 }
 GrandChildHandle
-PropertyTesterHandle::interface_prop () const
+PropertyTesterHandle::interface_prop () const /// See PropertyTester::interface_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
@@ -3435,7 +3435,7 @@ PropertyTesterHandle::interface_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::interface_prop (GrandChildHandle value)
+PropertyTesterHandle::interface_prop (GrandChildHandle value) /// See PropertyTester::interface_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL);
@@ -3445,7 +3445,7 @@ PropertyTesterHandle::interface_prop (GrandChildHandle value)
   if (fr) delete fr;
 }
 PropertyTesterHandle
-PropertyTesterHandle::self_prop () const
+PropertyTesterHandle::self_prop () const /// See PropertyTester::self_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
@@ -3459,7 +3459,7 @@ PropertyTesterHandle::self_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::self_prop (PropertyTesterHandle value)
+PropertyTesterHandle::self_prop (PropertyTesterHandle value) /// See PropertyTester::self_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL);
@@ -3469,7 +3469,7 @@ PropertyTesterHandle::self_prop (PropertyTesterHandle value)
   if (fr) delete fr;
 }
 Rapicorn::Aida::Any
-PropertyTesterHandle::any_prop () const
+PropertyTesterHandle::any_prop () const /// See PropertyTester::any_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
@@ -3483,7 +3483,7 @@ PropertyTesterHandle::any_prop () const
   return retval;
 }
 void
-PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value)
+PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value) /// See PropertyTester::any_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL);
@@ -3587,7 +3587,7 @@ ButtonAreaHandle::__aida_typelist__()
   return thl;
 }
 std::string
-ButtonAreaHandle::on_click () const
+ButtonAreaHandle::on_click () const /// See ButtonArea::on_click
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
@@ -3601,7 +3601,7 @@ ButtonAreaHandle::on_click () const
   return retval;
 }
 void
-ButtonAreaHandle::on_click (const std::string &value)
+ButtonAreaHandle::on_click (const std::string &value) /// See ButtonArea::on_click
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL);
@@ -3611,7 +3611,7 @@ ButtonAreaHandle::on_click (const std::string &value)
   if (fr) delete fr;
 }
 std::string
-ButtonAreaHandle::on_click2 () const
+ButtonAreaHandle::on_click2 () const /// See ButtonArea::on_click2
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
@@ -3625,7 +3625,7 @@ ButtonAreaHandle::on_click2 () const
   return retval;
 }
 void
-ButtonAreaHandle::on_click2 (const std::string &value)
+ButtonAreaHandle::on_click2 (const std::string &value) /// See ButtonArea::on_click2
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL);
@@ -3635,7 +3635,7 @@ ButtonAreaHandle::on_click2 (const std::string &value)
   if (fr) delete fr;
 }
 std::string
-ButtonAreaHandle::on_click3 () const
+ButtonAreaHandle::on_click3 () const /// See ButtonArea::on_click3
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
@@ -3649,7 +3649,7 @@ ButtonAreaHandle::on_click3 () const
   return retval;
 }
 void
-ButtonAreaHandle::on_click3 (const std::string &value)
+ButtonAreaHandle::on_click3 (const std::string &value) /// See ButtonArea::on_click3
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL);
@@ -3659,7 +3659,7 @@ ButtonAreaHandle::on_click3 (const std::string &value)
   if (fr) delete fr;
 }
 ClickType
-ButtonAreaHandle::click_type () const
+ButtonAreaHandle::click_type () const /// See ButtonArea::click_type
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
@@ -3673,7 +3673,7 @@ ButtonAreaHandle::click_type () const
   return retval;
 }
 void
-ButtonAreaHandle::click_type (ClickType value)
+ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL);
@@ -3737,7 +3737,7 @@ PureMethodsHandle::__aida_typelist__()
   return thl;
 }
 int
-PureMethodsHandle::pure_method (double arg_f)
+PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
@@ -3811,7 +3811,7 @@ NameTestsHandle::__aida_typelist__()
 void
 NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecord &arg_qr,
                                             RapicornAidaTest::ClickType arg_qe,
-                                            const OtherNamespace::SomeRecord &arg_sr)
+                                            const OtherNamespace::SomeRecord &arg_sr) /// See NameTests::args_from_other_namespace()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 3), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
@@ -3880,7 +3880,7 @@ CompressorHandle::__aida_typelist__()
   return thl;
 }
 double
-CompressorHandle::threshold () const
+CompressorHandle::threshold () const /// See Compressor::threshold
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
@@ -3894,7 +3894,7 @@ CompressorHandle::threshold () const
   return retval;
 }
 void
-CompressorHandle::threshold (double value)
+CompressorHandle::threshold (double value) /// See Compressor::threshold
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL);
@@ -3904,7 +3904,7 @@ CompressorHandle::threshold (double value)
   if (fr) delete fr;
 }
 double
-CompressorHandle::ratio () const
+CompressorHandle::ratio () const /// See Compressor::ratio
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
@@ -3918,7 +3918,7 @@ CompressorHandle::ratio () const
   return retval;
 }
 void
-CompressorHandle::ratio (double value)
+CompressorHandle::ratio (double value) /// See Compressor::ratio
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL);

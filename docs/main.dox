@@ -2,18 +2,41 @@
 /*! @mainpage
 
 @section documents Documents
-- <a href="rapicorn-NEWS.html"><b>Release News</b></a> - List of updates per release version
-- <a href="rapicorn-ChangeLog.html"><b>ChangeLog</b></a> - Rapicorn Development ChangeLog
-- <a href="classes.html"><b>Class Index</b></a> - Browse documentation by class names.
-- <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> - Hello World tutorial.
-- <a href="pages.html"><b>Related Pages</b></a> - Pages about important components.
+- <a href="rapicorn-NEWS.html"><b>Release News</b></a> <br/>
+  List of updates per release version.
+- <a href="rapicorn-ChangeLog.html"><b>ChangeLog</b></a> <br/>
+  %Rapicorn Development ChangeLog.
+- <a href="classes.html"><b>Class Index</b></a> <br/>
+  Browse documentation by class names.
+- <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> <br/>
+  Hello World tutorial.
+- <a href="pages.html"><b>Related Pages</b></a> <br/>
+  Pages about important components.
 
 @section manpages Manual Pages
-- <a href="rapidrun.1.html"><b>rapidrun.1</b></a>
+- <a href="rapidrun.1.html"><b>rapidrun.1</b></a> <br/>
+  Utility to run and test %Rapicorn dialogs.
 
-@section weblinks Online Resources
-- <a href="http://rapicorn.org/">Rapicorn Website</a>
-- <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a>
-- <a href="http://dev.testbit.eu/rapicorn/latest/">Latest Online Documentation</a>
+@section online Online Resources
+- <a href="http://rapicorn.org/">Rapicorn Website</a> <br/>
+  The official %Rapicorn project website.
+- <a href="https://testbit.eu/wiki/Category:Rapicorn">Rapicorn Wiki Pages</a> <br/>
+  List of wiki pages related to %Rapicorn hosted in the Testbit wiki.
+- <a href="https://groups.google.com/d/forum/rapicorn">Rapicorn Web Forum</a> (Email: <a href="mailto:rapicorn@googlegroups.com">rapicorn@googlegroups.com</a>) <br/>
+  Web and email forum to discuss use and development of and with %Rapicorn.
+- <a href="https://testbit.eu/pub/docs/rapicorn/latest/">Rapicorn Online Documentation</a> <br/>
+  Reference documentation, resource lists, collections of articles and usage tutorials for %Rapicorn.
+
+@section development Rapicorn Development
+- <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a> <br/>
+  Issue tracker of the %Rapicorn repository hosted at GitHub.
+- <a href="https://testbit.eu/wiki/Rapicorn_Task_List">Rapicorn Task List</a> <br/>
+  High level overview of %Rapicorn development tasks and completion status.
+- <a href="https://testbit.eu/pub/docs/rapicorn/coverage/">Rapicorn Code Coverage Report</a> <br/>
+  Test code coverage report based on a recent 'devel' branch version.
+- <a href="https://github.com/tim-janik/rapicorn/tree/devel/">Rapicorn Devel Branch</a> <br/>
+  The 'devel' branch of the %Rapicorn Git repository includes the latest source code developments.
+- <a href="https://github.com/tim-janik/rapicorn/">Rapicorn Git Repository</a> <br/>
+  The 'master' branch of the %Rapicorn Git repository includes all official releases.
 
 */

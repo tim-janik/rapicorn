@@ -724,7 +724,7 @@ ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
 }
 
 // == FieldBuffer ==
-FieldBuffer::FieldBuffer (uint _ntypes) :
+FieldBuffer::FieldBuffer (uint32 _ntypes) :
   buffermem (NULL)
 {
   static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");

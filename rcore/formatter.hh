@@ -10,7 +10,6 @@ namespace Rapicorn {
 namespace Lib { // Namespace for implementation internals
 
 // == StringFormatter ==
-///@cond
 
 /** StringFormatter - printf-like string formatting for C++.
  *
@@ -124,8 +123,6 @@ public:
     return formatter.intern_format<0> (format, args...);
   }
 };
-
-///@endcond
 
 } // Lib
 } // Rapicorn

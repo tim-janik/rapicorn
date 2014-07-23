@@ -36,15 +36,34 @@ value_func (int)
 }
 
 static void
+rapicorn_debug_fatal_syslog_0()
+{
+  // prevent assertion tests from uselessly spewing into syslog
+  const char *v = getenv ("RAPICORN_DEBUG");
+  String s = v ? v : "";
+  s += ":fatal-syslog=0";
+  setenv ("RAPICORN_DEBUG", s.c_str(), 1);
+}
+
+static void
 test_logging (const char *logarg)
 {
   errno = EINVAL;       // used by P* checks
   if (String ("--test-assert") == logarg)
-    RAPICORN_ASSERT (0 == "test-assert");
+    {
+      rapicorn_debug_fatal_syslog_0();
+      RAPICORN_ASSERT (0 == "test-assert");
+    }
   if (String ("--test-unreached") == logarg)
-    RAPICORN_ASSERT_UNREACHED();
+    {
+      rapicorn_debug_fatal_syslog_0();
+      RAPICORN_ASSERT_UNREACHED();
+    }
   if (String ("--test-fatal") == logarg)
-    fatal ("execution has reached a fatal condition (\"test-fatal\")");
+    {
+      rapicorn_debug_fatal_syslog_0();
+      fatal ("execution has reached a fatal condition (\"test-fatal\")");
+    }
   if (String ("--test-TASSERT") == logarg)
     TASSERT (0 == "test-TASSERT");
   if (String ("--test-assertion-hook") == logarg)
