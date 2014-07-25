@@ -537,7 +537,6 @@ public:
   inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT64); u.vdouble = v; }
   inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void operator<<= (Any    v)          { FieldUnion &u = addu (ANY); u.vany = new Any (v); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
 };
 
@@ -593,7 +592,6 @@ public:
   inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
   inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.value = u.vint64; }
   inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }
-  inline void operator>>= (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *u.vany; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
 };

@@ -103,3 +103,19 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 }
 
 } } // Anon::__AIDA_Local__
+
+namespace Rapicorn { namespace Aida {
+// namespace Rapicorn::Aida needed for argument dependent lookups of the operators
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
+{
+  fb.add_any (v);
+}
+static void
+operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
+{
+  v = fr.pop_any();
+}
+} } // Rapicorn::Aida
