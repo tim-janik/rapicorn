@@ -30,6 +30,8 @@ type_kind_name (TypeKind type_kind)
     case FUNC:            return "FUNC";
     case TYPE_REFERENCE:  return "TYPE_REFERENCE";
     case ANY:             return "ANY";
+    case LOCAL:           return "LOCAL";
+    case REMOTE:          return "REMOTE";
     default:              return NULL;
     }
 }
@@ -366,6 +368,10 @@ TypeCode::operator!= (const TypeCode &o) const
 TypeKind
 TypeCode::kind () const
 {
+  if (type_ && name() == "AidaLocal")   // FIXME: bad hack for AidaLocal
+    return LOCAL;
+  if (type_ && name() == "AidaRemote")   // FIXME: bad hack for AidaRemote
+    return REMOTE;
   return AIDA_LIKELY (type_) ? TypeKind (type_->tkind) : UNTYPED;
 }
 

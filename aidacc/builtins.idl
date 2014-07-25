@@ -13,6 +13,8 @@ namespace Aida {
     typedef float64	__builtin__float64;
     typedef String  	__builtin__String;
     typedef Any    	__builtin__Any;
+    typedef Any    	__builtin__AidaLocal;
+    typedef Any    	__builtin__AidaRemote;
   } // __system_typedefs__
   sequence DynamicSequence { Any any; };
   record   DynamicRecord   { Any __builtin__deleteme__; };

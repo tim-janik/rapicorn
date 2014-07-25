@@ -67,6 +67,8 @@ enum TypeKind {
   INSTANCE       = 'C', ///< Interface instance type.
   FUNC           = 'F', ///< Type of methods or signals.
   TYPE_REFERENCE = 'T', ///< Type reference for record fields.
+  LOCAL          = 'L', ///< Local object type.
+  REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
