@@ -223,6 +223,18 @@ struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
 
+// == C++ Traits ==
+/** Check if a type is comparable for equality.
+ * If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
+ */
+template<class T>
+class IsComparable {
+  template<typename U> static char (&check (int))[1 + sizeof (decltype ( std::declval<U>() == std::declval<U>() ))];
+  template<typename>   static char (&check (...))[1];
+public:
+  static constexpr const bool value = sizeof (check<T> (0)) != 1; ///< True iff @a T supports operator==.
+};
+
 } // Rapicorn
 
 #endif // __RAPICORN_CXXAUX_HH__
