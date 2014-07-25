@@ -116,6 +116,7 @@ Any::operator= (const Any &clone)
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
     case INSTANCE:      u_.shandle = new SmartHandle (*clone.u_.shandle); break;
+    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
@@ -126,11 +127,12 @@ Any::reset()
 {
   switch (kind())
     {
-    case STRING:        u_.vstring().~String();                  break;
-    case ANY:           delete u_.vany;                          break;
-    case SEQUENCE:      delete u_.vanys;                         break;
-    case RECORD:        delete u_.vfields;                       break;
-    case INSTANCE:      delete u_.shandle;                       break;
+    case STRING:        u_.vstring().~String();                 break;
+    case ANY:           delete u_.vany;                         break;
+    case SEQUENCE:      delete u_.vanys;                        break;
+    case RECORD:        delete u_.vfields;                      break;
+    case INSTANCE:      delete u_.shandle;                      break;
+    case LOCAL:         delete u_.pholder;                      break;
     default: ;
     }
   type_code_ = TypeMap::notype();
@@ -172,6 +174,8 @@ Any::rekind (TypeKind _kind)
     case ENUM:          name = "Aida::DynamicEnum";     break;
     case SEQUENCE:      name = "Aida::DynamicSequence"; break;
     case RECORD:        name = "Aida::DynamicRecord";   break;
+    case LOCAL:         name = "AidaLocal";             break;
+    case REMOTE:        name = "AidaRemote";            break;
     case INSTANCE:
     default:
       fatal_error (String() + "Aida::Any:rekind: incomplete type: " + type_kind_name (_kind));
@@ -244,6 +248,11 @@ Any::operator== (const Any &clone) const
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
     case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case LOCAL:
+      if (u_.pholder)
+        return u_.pholder->operator== (clone.u_.pholder);
+      else
+        return !clone.u_.pholder;
     default:
       fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
     }
@@ -265,6 +274,13 @@ Any::swap (Any &other)
   memcpy (&other.u_, &this->u_, USIZE);
   memcpy (&this->u_, buffer, USIZE);
   type_code_.swap (other.type_code_);
+}
+
+void
+Any::hold (PlaceHolder *ph)
+{
+  ensure (LOCAL);
+  u_.pholder = ph;
 }
 
 bool

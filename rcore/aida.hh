@@ -181,6 +181,35 @@ class Any /// Generic value type that can hold values of all other types.
     template<class V>
     AnyField (const std::string &_name, const V &value) : name (_name) { this->operator<<= (value); }
   };
+  struct PlaceHolder {
+    virtual                      ~PlaceHolder() {}
+    virtual PlaceHolder*          clone      () const = 0;
+    virtual const std::type_info& type_info  () const = 0;
+    virtual bool                  operator== (const PlaceHolder*) const = 0;
+  };
+  template<class T> struct Holder : PlaceHolder {
+    explicit                      Holder    (const T &value) : value_ (value) {}
+    virtual PlaceHolder*          clone     () const { return new Holder (value_); }
+    virtual const std::type_info& type_info () const { return typeid (T); }
+    virtual bool                  operator== (const PlaceHolder *rhs) const
+    { const Holder *other = dynamic_cast<const Holder*> (rhs); return other ? eq (this, other) : false; }
+    template<class Q = T> static typename std::enable_if<IsComparable<Q>::value, bool>::
+    type eq (const Holder *a, const Holder *b) { return a->value_ == b->value_; }
+    template<class Q = T> static typename std::enable_if<!IsComparable<Q>::value, bool>::
+    type eq (const Holder *a, const Holder *b) { return false; }
+    T value_;
+  };
+  template<class T> T*
+  cast () const
+  {
+    if (kind() != LOCAL)
+      return NULL;
+    const std::type_info &tt = typeid (T);
+    const std::type_info &ht = u_.pholder->type_info();
+    if (tt != ht)
+      return NULL;
+    return &static_cast<Holder<T>*> (u_.pholder)->value_;
+  }
   ///@endcond
 public:
 #ifndef DOXYGEN
@@ -203,10 +232,11 @@ protected:
 private:
   TypeCode type_code_;
   union {
-    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle;
+    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
+  void    hold    (PlaceHolder*);
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
@@ -269,6 +299,31 @@ public:
   void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
   void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
   void operator<<= (const SmartHandle &v);
+  template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
+           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, SmartHandle>::value)>::type* = nullptr>
+  void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().
+  template<class T> friend T*
+  any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
+  {
+    return !any ? NULL : any->cast<T>();
+  }
+  template<class T> friend const T*
+  any_cast (const Any *any)     ///< Cast const Any* into @a const @a T* if possible or return NULL.
+  {
+    return !any ? NULL : any->cast<T>();
+  }
+  template<class T> friend T
+  any_cast (Any &any)           ///< Cast Any& into @a T if possible or throw a std::bad_cast exception.
+  {
+    const T *result = any.cast<typename std::remove_reference<T>::type>();
+    return result ? *result : throw std::bad_cast();
+  }
+  template<class T> friend T
+  any_cast (const Any &any)     ///< Cast const Any& into @a const @a T if possible or throw a std::bad_cast exception.
+  {
+    const T *result = any.cast<typename std::add_const<typename std::remove_reference<T>::type>::type>();
+    return result ? *result : throw std::bad_cast();
+  }
 };
 
 // === EventFd ===
