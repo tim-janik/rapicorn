@@ -288,8 +288,6 @@ struct XFooRecord
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const XFooRecord &other) const;
   bool                          operator!=  (const XFooRecord &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooRecord&);
@@ -395,8 +393,6 @@ struct NestedTypesRec
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const NestedTypesRec &other) const;
   bool                          operator!=  (const NestedTypesRec &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesRec&);
@@ -442,8 +438,6 @@ struct NewRecord
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const NewRecord &other) const;
   bool                          operator!=  (const NewRecord &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NewRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NewRecord&);
@@ -462,8 +456,6 @@ struct InnerRecord
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const InnerRecord &other) const;
   bool                          operator!=  (const InnerRecord &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InnerRecord&);
@@ -479,8 +471,6 @@ struct Refer2Inner
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const Refer2Inner &other) const;
   bool                          operator!=  (const Refer2Inner &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const Refer2Inner&);
 void operator>>= (Rapicorn::Aida::FieldReader&, Refer2Inner&);
@@ -501,8 +491,6 @@ struct SomeRecord
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const SomeRecord &other) const;
   bool                          operator!=  (const SomeRecord &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SomeRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
@@ -662,8 +650,6 @@ struct QuickRecord
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const QuickRecord &other) const;
   bool                          operator!=  (const QuickRecord &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickRecord&);
@@ -1065,8 +1051,6 @@ struct RecordForGroups
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const RecordForGroups &other) const;
   bool                          operator!=  (const RecordForGroups &other) const { return !operator== (other); }
-  void                          operator<<= (Rapicorn::Aida::Any &any);
-  friend void                   operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec);
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordForGroups&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordForGroups&);
@@ -1213,18 +1197,6 @@ XFooRecord::operator== (const XFooRecord &other) const
   if (this->any2 != other.any2) return false;
   if (this->any3 != other.any3) return false;
   return true;
-}
-void
-XFooRecord::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const XFooRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const XFooRecord &self)
@@ -1505,18 +1477,6 @@ NestedTypesRec::operator== (const NestedTypesRec &other) const
   if (this->seq != other.seq) return false;
   return true;
 }
-void
-NestedTypesRec::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const NestedTypesRec &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NestedTypesRec &self)
 {
@@ -1566,18 +1526,6 @@ NewRecord::operator== (const NewRecord &other) const
   if (this->ntr != other.ntr) return false;
   return true;
 }
-void
-NewRecord::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const NewRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const NewRecord &self)
 {
@@ -1607,18 +1555,6 @@ InnerRecord::operator== (const InnerRecord &other) const
   if (this->rec != other.rec) return false;
   return true;
 }
-void
-InnerRecord::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const InnerRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const InnerRecord &self)
 {
@@ -1642,18 +1578,6 @@ Refer2Inner::operator== (const Refer2Inner &other) const
 {
   if (this->r != other.r) return false;
   return true;
-}
-void
-Refer2Inner::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const Refer2Inner &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const Refer2Inner &self)
@@ -1679,18 +1603,6 @@ SomeRecord::operator== (const SomeRecord &other) const
   if (this->r3 != other.r3) return false;
   if (this->r4 != other.r4) return false;
   return true;
-}
-void
-SomeRecord::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const SomeRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SomeRecord &self)
@@ -2213,18 +2125,6 @@ QuickRecord::operator== (const QuickRecord &other) const
   if (this->int1 != other.int1) return false;
   if (this->int2 != other.int2) return false;
   return true;
-}
-void
-QuickRecord::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const QuickRecord &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const QuickRecord &self)
@@ -3952,18 +3852,6 @@ RecordForGroups::operator== (const RecordForGroups &other) const
   if (this->threshold1 != other.threshold1) return false;
   if (this->threshold2 != other.threshold2) return false;
   return true;
-}
-void
-RecordForGroups::operator<<= (Rapicorn::Aida::Any &any)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };
-  Any::any_to_record (any, *this);
-}
-void
-operator<<= (Rapicorn::Aida::Any &any, const RecordForGroups &rec)
-{
-  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };
-  Any::any_from_record (any, rec);
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordForGroups &self)

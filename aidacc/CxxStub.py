@@ -207,8 +207,6 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
-      s += '  ' + self.F ('void') + 'operator<<= (Rapicorn::Aida::Any &any);\n'
-      s += '  ' + self.F ('friend void') + 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec);\n' % self.C (type_info)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -238,17 +236,6 @@ class Generator:
       ident, type_node = field
       s += '  if (this->%s != other.%s) return false;\n' % (ident, ident)
     s += '  return true;\n'
-    s += '}\n'
-
-    s += 'void\n'
-    s += '%s::operator<<= (Rapicorn::Aida::Any &any)\n{\n' % self.C (type_info)
-    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_to_record; };\n'
-    s += '  Any::any_to_record (any, *this);\n'
-    s += '}\n'
-    s += 'void\n' # friend decl
-    s += 'operator<<= (Rapicorn::Aida::Any &any, const %s &rec)\n{\n' % self.C (type_info)
-    s += '  struct Any : public Rapicorn::Aida::Any { using Rapicorn::Aida::Any::any_from_record; };\n'
-    s += '  Any::any_from_record (any, rec);\n'
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
