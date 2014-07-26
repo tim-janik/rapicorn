@@ -320,7 +320,7 @@ class Generator:
     elif type.storage == Decls.INTERFACE:
       s += '  %s.add_object (0);\n' % fb
     elif type.storage == Decls.ANY:
-      s += '  %s.add_any (Rapicorn::Aida::Any());\n' % fb
+      s += '  %s.add_any (Rapicorn::Aida::Any(), *__AIDA_local__client_connection);\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -345,7 +345,7 @@ class Generator:
     elif type.storage == Decls.ANY:
       s += '  { Rapicorn::Aida::Any tmpany;\n'
       s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); %s;\n' % (var, excheck)
-      s += '    %s.add_any (tmpany); }\n' % fb
+      s += '    %s.add_any (tmpany, *__AIDA_local__client_connection); }\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -369,7 +369,7 @@ class Generator:
     elif type_info.storage == Decls.INTERFACE:
       s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
     elif type_info.storage == Decls.ANY:
-      s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any (*__AIDA_local__client_connection)); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type_info.storage)
     return s

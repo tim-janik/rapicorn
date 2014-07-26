@@ -111,11 +111,11 @@ static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v
 static void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
 {
-  fb.add_any (v);
+  fb.add_any (v, *__AIDA_Local__::server_connection);
 }
 static void
 operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 {
-  v = fr.pop_any();
+  v = fr.pop_any (*__AIDA_Local__::server_connection);
 }
 } } // Rapicorn::Aida

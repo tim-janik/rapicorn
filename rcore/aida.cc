@@ -533,7 +533,8 @@ Any::from_proto (const TypeCode type_code, FieldReader &pbr)
       any <<= EnumValue (pbr.pop_evalue());
       break;
     case ANY:
-      any <<= pbr.pop_any();
+      fatal_error ("Any::from_proto: UNIMPLEMENTED: pop_any()"); // FIXME
+      // any <<= pbr.pop_any();
       break;
     case RECORD: {
       const FieldBuffer &fb = pbr.pop_rec();
@@ -603,7 +604,8 @@ Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
       pb.add_evalue (any.as_int());
       break;
     case ANY:
-      pb.add_any (any.as_any());
+      fatal_error ("Any::to_proto: UNIMPLEMENTED: add_any()"); // FIXME
+      // pb.add_any (any.as_any());
       break;
     case RECORD: {
       const size_t field_count = type_code.field_count();
@@ -849,7 +851,7 @@ FieldBuffer::to_string() const
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
         case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        case ANY:       s += string_format (", %s: %p", tn, &fbr.pop_any());                       break;
+        case ANY:       s += string_format (", %s: Any", tn); fbr.skip();                          break;
         default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
@@ -1271,6 +1273,18 @@ SmartHandle
 BaseConnection::remote_origin (const vector<std::string> &feature_key_list)
 {
   assertion_error (__FILE__, __LINE__, "not supported by this object type");
+}
+
+Any*
+BaseConnection::any2remote (const Any &any)
+{
+  return new Any (any);
+}
+
+void
+BaseConnection::any2local (Any &any)
+{
+  // any = any
 }
 
 // == ClientConnection ==

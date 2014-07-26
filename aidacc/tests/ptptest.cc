@@ -421,8 +421,9 @@ test_records ()
   // SimpleRecord to Any
   Any any1;
   any1 <<= sr;
+  assert (any1.kind() == LOCAL);
   AidaTests::SimpleRecord s2;
-  s2 <<= any1;
+  s2 = any_cast<AidaTests::SimpleRecord> (any1);
   assert (s2 == sr);
   // ComboRecord to Any
   AidaTests::ComboRecord cr;
@@ -435,9 +436,10 @@ test_records ()
   assert (cr.any_field.as_string() == "STRING");
   assert (cr.empty_object._orbid() == 777);
   any1 <<= cr;
+  assert (any1.kind() == LOCAL);
   AidaTests::ComboRecord c2;
   assert (c2 != cr && c2.simple_rec != cr.simple_rec && c2.any_field != cr.any_field);
-  c2 <<= any1;
+  c2 = any_cast<AidaTests::ComboRecord> (any1);
   assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field && c2.empty_object._orbid() == 777);
   printf ("  TEST   Aida Record to Any                                              OK\n");
 }

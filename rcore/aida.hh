@@ -148,6 +148,7 @@ public:
 
 // == Type Declarations ==
 class ObjectBroker;
+class BaseConnection;
 class ClientConnection;
 class ServerConnection;
 union FieldUnion;
@@ -515,7 +516,7 @@ public:
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
+  inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32 nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
@@ -570,7 +571,6 @@ public:
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT64); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
   inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
-  inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *u.vany; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline int64              pop_bool   () { FieldUnion &u = fb_popu (BOOL); return u.vint64; }
@@ -579,7 +579,7 @@ public:
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *u.vany; }
+  inline const Any&         pop_any    (BaseConnection &bcon);
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline void operator>>= (uint32 &v)          { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -617,6 +617,8 @@ public:
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
   virtual void           remote_origin  (ImplicitBase *rorigin);
   virtual SmartHandle    remote_origin  (const vector<std::string> &feature_key_list);
+  virtual Any*           any2remote     (const Any&);
+  virtual void           any2local      (Any&);
 };
 
 /// Function typoe for internal signal handling.
@@ -773,6 +775,21 @@ FieldBuffer::reset()
         default: ;
         }
     }
+}
+
+inline void
+FieldBuffer::add_any (const Any &vany, BaseConnection &bcon)
+{
+  FieldUnion &u = addu (ANY);
+  u.vany = bcon.any2remote (vany);
+}
+
+inline const Any&
+FieldReader::pop_any (BaseConnection &bcon)
+{
+  FieldUnion &u = fb_popu (ANY);
+  bcon.any2local (*u.vany);
+  return *u.vany;
 }
 
 } } // Rapicorn::Aida
