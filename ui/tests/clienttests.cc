@@ -14,6 +14,9 @@ create_plain_window ()
   return window;
 }
 
+struct Foo               { double f; };
+struct ExtendedFoo : Foo { bool operator== (const ExtendedFoo &ef) const { return f == ef.f; } };
+
 static void
 test_widget_usage()
 {
@@ -41,6 +44,42 @@ test_widget_usage()
   TASSERT (widget.component<ButtonAreaH> (".Window") == NULL);
   TASSERT (widget.component<WidgetH> (".Window") != NULL);
   TASSERT (widget.component<WidgetH> ("FrobodoNotHere") == NULL);
+  // user_data / any
+  Any any1 (7);
+  widget.set_user_data ("test-int", any1);
+  Any any2 = widget.get_user_data ("test-int");
+  TASSERT (any1 == any2);
+  any2 = widget.get_user_data ("nothere");
+  TASSERT (any1 != any2);
+  widget.set_user_data ("test-float", Any (0.75));
+  any2 = widget.get_user_data ("test-float");
+  TASSERT (any2.as_float() == 0.75);
+  any2 = widget.get_user_data ("test-int");
+  TASSERT (any2.as_int() == 7);
+  widget.set_user_data ("test-string", Any ("Wocks"));
+  any1 = widget.get_user_data ("test-string");
+  TASSERT (any1 == Any ("Wocks"));
+  any2 <<= any1;
+  TASSERT (any2.kind() == Aida::ANY);
+  widget.set_user_data ("test-any", any2);
+  any1 = widget.get_user_data ("test-any");
+  TASSERT (any1.kind() == Aida::ANY);
+  TASSERT (any1.as_any().as_string() == "Wocks");
+  Foo f;
+  f.f = -0.25;
+  any1 <<= f;
+  widget.set_user_data ("test-foo", any1);
+  any2 = widget.get_user_data ("test-foo");
+  TASSERT (f.f == any_cast<Foo> (any2).f);
+  TASSERT (any1 != any2); // Foo is not comparable
+  ExtendedFoo e;
+  e.f = 1.0;
+  any1 <<= e;
+  widget.set_user_data ("test-efoo", any1);
+  any2 = widget.get_user_data ("test-efoo");
+  TASSERT (any1 == any2); // ExtendedFoo is comparable
+  TASSERT (any_cast<ExtendedFoo> (any2).f == 1.0);
+  // not working, any_cast<> requires exact type: TASSERT (any_cast<Foo> (any2).f == 1.0);
 }
 REGISTER_TEST ("Client/Basic Widget Usage", test_widget_usage);
 

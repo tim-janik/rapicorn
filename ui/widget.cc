@@ -659,6 +659,50 @@ WidgetImpl::list_commands ()
   return command_list;
 }
 
+struct NamedAny { String name; Any any; };
+typedef vector<NamedAny> NamedAnyVector;
+
+class UserDataKey : public DataKey<NamedAnyVector*> {
+  virtual void destroy (NamedAnyVector *nav) override
+  {
+    delete nav;
+  }
+};
+static UserDataKey user_data_key;
+
+void
+WidgetImpl::set_user_data (const String &name, const Any &any)
+{
+  return_unless (!name.empty());
+  NamedAnyVector *nav = get_data (&user_data_key);
+  if (!nav)
+    {
+      nav = new NamedAnyVector;
+      set_data (&user_data_key, nav);
+    }
+  for (auto it : *nav)
+    if (it.name == name)
+      {
+        it.any = any;
+        return;
+      }
+  NamedAny nany;
+  nany.name = name;
+  nany.any = any;
+  nav->push_back (nany);
+}
+
+Any
+WidgetImpl::get_user_data (const String &name)
+{
+  NamedAnyVector *nav = get_data (&user_data_key);
+  if (nav)
+    for (auto it : *nav)
+      if (it.name == name)
+        return it.any;
+  return Any();
+}
+
 Property*
 WidgetImpl::lookup_property (const String &property_name)
 {

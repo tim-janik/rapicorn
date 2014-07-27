@@ -119,6 +119,8 @@ protected:
   virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringSeq    &command_args);
+  virtual void                set_user_data     (const String &name, const Any &any);
+  virtual Any                 get_user_data     (const String &name);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
