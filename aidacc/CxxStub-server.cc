@@ -42,13 +42,13 @@ static inline uint64 obj2id  (Rapicorn::Aida::ImplicitBase *obj)
 }
 
 template<class Object> static inline Object*
-smh2obj (const SmartHandle &sh)
+remote_handle_to_interface (const RemoteHandle &sh)
 {
   return id2obj<Object> (sh._orbid());
 }
 
 template<class SMH> static inline SMH
-obj2smh ($AIDA_iface_base$ *self)
+interface_to_remote_handle ($AIDA_iface_base$ *self)
 {
   const uint64 orbid = obj2id (self);
   SMH target;

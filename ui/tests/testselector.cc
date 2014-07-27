@@ -434,7 +434,7 @@ static void
 test_selector_matching ()
 {
   load_ui_defs();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
 
   WindowList wl = app.query_windows ("*");
   size_t prev_window_count = wl.size();

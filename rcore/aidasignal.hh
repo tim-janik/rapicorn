@@ -480,7 +480,7 @@ private:
   CollectorResult result_;
 };
 
-/// Connector provides a simple (dis-)connect interfaces for signals on SmartHandle
+/// Connector provides a simple (dis-)connect interfaces for signals on RemoteHandle
 template<class Object, class SignalSignature>
 class Connector {
   typedef std::function<SignalSignature> CbFunction;

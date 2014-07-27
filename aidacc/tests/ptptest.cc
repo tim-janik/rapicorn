@@ -160,12 +160,12 @@ standard_tests ()
   assert (tcrec.name() == "Aida::DynamicRecord");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
-  // SmartHandle
-  assert (SmartHandle::_null_handle() == NULL);
-  assert (!SmartHandle::_null_handle());
-  assert (SmartHandle::_null_handle()._orbid() == 0);
+  // RemoteHandle
+  assert (RemoteHandle::_null_handle() == NULL);
+  assert (!RemoteHandle::_null_handle());
+  assert (RemoteHandle::_null_handle()._orbid() == 0);
   struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
-  struct OneHandle : SmartHandle { OneHandle (OrbObject &orbo) : SmartHandle (orbo) {} };
+  struct OneHandle : RemoteHandle { OneHandle (OrbObject &orbo) : RemoteHandle (orbo) {} };
   TestOrbObject torbo (1);
   assert (OneHandle (torbo) != NULL);
   assert (OneHandle (torbo));
@@ -385,13 +385,13 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
-static SmartHandle
-generate_broken_smart_handle (uint64_t orbid)
+static RemoteHandle
+generate_broken_remote_handle (uint64_t orbid)
 {
   FieldBuffer8 fb (1);
   fb.add_object (orbid);
   FieldReader fbr (fb);
-  SmartMember<SmartHandle> sh;
+  SmartMember<RemoteHandle> sh;
   assert (sh._orbid() == 0);
   ObjectBroker::pop_handle (fbr, sh);
   assert (sh._orbid() == orbid);
@@ -429,7 +429,7 @@ test_records ()
   AidaTests::ComboRecord cr;
   cr.simple_rec = sr;
   cr.any_field <<= "STRING";
-  SmartHandle sh = generate_broken_smart_handle (777); // handle doesn't work, but has an _orbid to test Any
+  RemoteHandle sh = generate_broken_remote_handle (777); // handle doesn't work, but has an _orbid to test Any
   cr.empty_object = *(AidaTests::EmptyH*) (void*) &sh;
   assert (cr.simple_rec.stringfield == "two");
   assert (cr.simple_rec.int6 == -6);

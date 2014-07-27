@@ -49,7 +49,7 @@ using Rapicorn::int64;
 using Rapicorn::uint64;
 
 // == Prototypes ==
-class SmartHandle;
+class RemoteHandle;
 
 // == TypeKind ==
 /// Classification enum for the underlying kind of a TypeCode.
@@ -232,7 +232,7 @@ protected:
 private:
   TypeCode type_code_;
   union {
-    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle; PlaceHolder *pholder;
+    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; RemoteHandle *shandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
@@ -272,7 +272,7 @@ public:
   bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
   bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
-  bool operator>>= (SmartHandle        &v);
+  bool operator>>= (RemoteHandle       &v);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
@@ -296,9 +296,9 @@ public:
   void operator<<= (const Any         &v); ///< Store an Any.
   void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
   void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
-  void operator<<= (const SmartHandle &v);
+  void operator<<= (const RemoteHandle &v);
   template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
-           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, SmartHandle>::value)>::type* = nullptr>
+           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, RemoteHandle>::value)>::type* = nullptr>
   void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().
   template<class T> friend T*
   any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
@@ -418,62 +418,62 @@ public:
   uint64        orbid           ()            { return orbid_; }
 };
 
-// == SmartHandle ==
-class SmartHandle {
+// == RemoteHandle ==
+class RemoteHandle {
   OrbObject     *orbo_;
-  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
-  typedef NullSmartHandle<SmartHandle> NullHandle;
+  template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
+  typedef NullRemoteHandle<RemoteHandle> NullHandle;
   friend  class ObjectBroker;
-  void    assign (const SmartHandle&);
+  void    assign (const RemoteHandle&);
   void    reset ();
 protected:
-  explicit          SmartHandle (OrbObject&);
-  explicit          SmartHandle ();
+  explicit          RemoteHandle  (OrbObject&);
+  explicit          RemoteHandle  ();
 public:
   uint64            _orbid        () const { return orbo_->orbid(); }
-  virtual          ~SmartHandle   ();
+  virtual          ~RemoteHandle  ();
   static NullHandle _null_handle  ()       { return NullHandle(); }
-  // Determine if this SmartHandle contains an object or null handle.
+  // Determine if this RemoteHandle contains an object or null handle.
   explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
   bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
   bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
-  bool              operator==    (const SmartHandle&) const noexcept;
-  bool              operator!=    (const SmartHandle&) const noexcept;
-  friend bool       operator==    (std::nullptr_t, const SmartHandle &shd) noexcept { return !static_cast<bool> (shd); }
-  friend bool       operator!=    (std::nullptr_t, const SmartHandle &shd) noexcept { return static_cast<bool> (shd); }
+  bool              operator==    (const RemoteHandle&) const noexcept;
+  bool              operator!=    (const RemoteHandle&) const noexcept;
+  friend bool       operator==    (std::nullptr_t, const RemoteHandle &shd) noexcept { return !static_cast<bool> (shd); }
+  friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
 };
 
 // == SmartMember ==
-template<class SmartHandle>
-class SmartMember : public SmartHandle {
+template<class RemoteHandle>
+class SmartMember : public RemoteHandle {
 public:
-  inline   SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
-  explicit SmartMember () : SmartHandle() {}
-  void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
+  inline   SmartMember (const RemoteHandle &src) : RemoteHandle() { *this = src; }
+  explicit SmartMember () : RemoteHandle() {}
+  void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
 
 // == Conversion Type Tags ==
-constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from smart handle.
-constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle from servant.
+constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from remote handle.
+constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {
 protected:
-  static void              tie_handle (SmartHandle&, uint64);
+  static void              tie_handle (RemoteHandle&, uint64);
 public:
-  static void              pop_handle (FieldReader&, SmartHandle&);
+  static void              pop_handle (FieldReader&, RemoteHandle&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return IdentifierParts (orbid).orbid_connection; }
-  static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  template<class TargetHandle> static TargetHandle smart_handle_down_cast (SmartHandle smh);
+  template<class TargetHandle> static TargetHandle remote_handle_down_cast (RemoteHandle smh);
 };
 
 // == FieldBuffer ==
@@ -613,7 +613,7 @@ public:
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
   virtual void           remote_origin  (ImplicitBase *rorigin);
-  virtual SmartHandle    remote_origin  (const vector<std::string> &feature_key_list);
+  virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list);
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
 };
@@ -722,7 +722,7 @@ Any::~Any ()
 }
 
 template<class TargetHandle> TargetHandle
-ObjectBroker::smart_handle_down_cast (SmartHandle smh)
+ObjectBroker::remote_handle_down_cast (RemoteHandle smh)
 {
   TargetHandle target;
   target.assign (smh);                        // aka reinterpret_cast

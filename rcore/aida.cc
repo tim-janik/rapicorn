@@ -115,7 +115,7 @@ Any::operator= (const Any &clone)
     case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.shandle = new SmartHandle (*clone.u_.shandle); break;
+    case INSTANCE:      u_.shandle = new RemoteHandle (*clone.u_.shandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
     }
@@ -149,7 +149,7 @@ Any::retype (const TypeCode &tc)
     case ANY:      u_.vany = new Any();                                        break;
     case SEQUENCE: u_.vanys = new AnyVector();                                 break;
     case RECORD:   u_.vfields = new FieldVector();                             break;
-    case INSTANCE: u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
+    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::_null_handle()); break;
     default:    break;
     }
   type_code_ = tc;
@@ -402,11 +402,11 @@ Any::operator>>= (const FieldVector *&v) const
 }
 
 bool
-Any::operator>>= (SmartHandle &v)
+Any::operator>>= (RemoteHandle &v)
 {
   if (kind() != INSTANCE)
     return false;
-  v = u_.shandle ? *u_.shandle : SmartHandle::_null_handle();
+  v = u_.shandle ? *u_.shandle : RemoteHandle::_null_handle();
   return true;
 }
 
@@ -499,11 +499,11 @@ Any::operator<<= (const FieldVector &v)
 }
 
 void
-Any::operator<<= (const SmartHandle &v)
+Any::operator<<= (const RemoteHandle &v)
 {
   ensure (INSTANCE);
-  SmartHandle *old = u_.shandle;
-  u_.shandle = new SmartHandle (v);
+  RemoteHandle *old = u_.shandle;
+  u_.shandle = new RemoteHandle (v);
   if (old)
     delete old;
 }
@@ -520,30 +520,30 @@ struct OrbObjectImpl : public OrbObject {
 
 static const OrbObjectImpl aida_orb_object_null (0);
 
-// == SmartHandle ==
-static OrbObject* smart_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
+// == RemoteHandle ==
+static OrbObject* remote_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
 
-SmartHandle::SmartHandle (OrbObject &orbo) :
+RemoteHandle::RemoteHandle (OrbObject &orbo) :
   orbo_ (&orbo)
 {
   assert (&orbo);
 }
 
-SmartHandle::SmartHandle() :
-  orbo_ (smart_handle_null_orb_object())
+RemoteHandle::RemoteHandle() :
+  orbo_ (remote_handle_null_orb_object())
 {}
 
 void
-SmartHandle::reset ()
+RemoteHandle::reset ()
 {
-  if (orbo_ != smart_handle_null_orb_object())
+  if (orbo_ != remote_handle_null_orb_object())
     {
-      orbo_ = smart_handle_null_orb_object();
+      orbo_ = remote_handle_null_orb_object();
     }
 }
 
 void
-SmartHandle::assign (const SmartHandle &src)
+RemoteHandle::assign (const RemoteHandle &src)
 {
   if (orbo_ == src.orbo_)
     return;
@@ -552,11 +552,11 @@ SmartHandle::assign (const SmartHandle &src)
   orbo_ = src.orbo_;
 }
 
-SmartHandle::~SmartHandle()
+RemoteHandle::~RemoteHandle()
 {}
 
 bool
-SmartHandle::operator== (const SmartHandle &other) const noexcept
+RemoteHandle::operator== (const RemoteHandle &other) const noexcept
 {
   if (orbo_ && other.orbo_)
     return orbo_->orbid() == other.orbo_->orbid();
@@ -564,7 +564,7 @@ SmartHandle::operator== (const SmartHandle &other) const noexcept
 }
 
 bool
-SmartHandle::operator!= (const SmartHandle &other) const noexcept
+RemoteHandle::operator!= (const RemoteHandle &other) const noexcept
 {
   return !operator== (other);
 }
@@ -575,18 +575,18 @@ static OrboMap orbo_map;
 static Mutex   orbo_mutex;
 
 void
-ObjectBroker::tie_handle (SmartHandle &sh, const uint64 orbid)
+ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
 {
   AIDA_ASSERT (NULL == sh);
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.assign (SmartHandle (*orbo));
+  sh.assign (RemoteHandle (*orbo));
 }
 
 void
-ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh)
 {
   tie_handle (sh, fr.pop_object());
 }
@@ -1127,7 +1127,7 @@ BaseConnection::remote_origin (ImplicitBase*)
  * omitted and generally treated as a regular expression to match against connection
  * feature keys as registered with the ObjectBroker.
  */
-SmartHandle
+RemoteHandle
 BaseConnection::remote_origin (const vector<std::string> &feature_key_list)
 {
   assertion_error (__FILE__, __LINE__, "not supported by this object type");
@@ -1194,7 +1194,7 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual SmartHandle   remote_origin     (const vector<std::string> &feature_key_list);
+  virtual RemoteHandle   remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_orbid (uint64 orbid);
@@ -1210,10 +1210,10 @@ ClientConnectionImpl::pop ()
   return fb;
 }
 
-SmartHandle
+RemoteHandle
 ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
 {
-  SmartMember<SmartHandle> rorigin = SmartHandle::_null_handle();
+  SmartMember<RemoteHandle> rorigin = RemoteHandle::_null_handle();
   const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
   if (connection_id)
     {

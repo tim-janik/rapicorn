@@ -4,9 +4,9 @@
 using namespace Rapicorn;
 
 static void
-test_server_smart_handle()
+test_server_remote_handle()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   ApplicationIface *ab = &app;
   Aida::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
@@ -17,7 +17,7 @@ test_server_smart_handle()
   ApplicationIface *ai = am;
   assert (ai == ab);
 }
-REGISTER_UITHREAD_TEST ("Server/Smart Handle", test_server_smart_handle);
+REGISTER_UITHREAD_TEST ("Server/Remote Handle", test_server_remote_handle);
 
 static void
 test_stock_resources()

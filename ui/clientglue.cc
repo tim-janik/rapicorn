@@ -42,7 +42,7 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   // boot up UI thread
   ApplicationH app = uithread_bootup (argcp, argv, args);
   assert (app != NULL);
-  // assign global smart handle
+  // assign global remote handle
   app_cached = app;
   return app_cached;
 }

@@ -30,19 +30,19 @@ signal_disconnect (size_t signal_handler_id)
 }
 
 static AIDA_UNUSED size_t
-signal_connect (uint64 hhi, uint64 hlo, const SmartHandle &sh, SignalEmitHandler seh, void *data)
+signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &sh, SignalEmitHandler seh, void *data)
 {
   return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data);
 }
 
 static inline uint64
-smh2id (const SmartHandle &sh)
+smh2id (const RemoteHandle &sh)
 {
   return sh._orbid();
 }
 
 template<class SMH> SMH
-smh2cast (const SmartHandle &handle)
+smh2cast (const RemoteHandle &handle)
 {
   const uint64 orbid = __AIDA_Local__::smh2id (handle);
   SMH target;
@@ -52,14 +52,14 @@ smh2cast (const SmartHandle &handle)
 }
 
 static inline void
-add_header2_call (FieldBuffer &fb, const SmartHandle &sh, uint64 h, uint64 l)
+add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
   fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, ObjectBroker::connection_id_from_handle (sh),
                   client_connection->connection_id(), h, l);
 }
 
 static inline void
-add_header1_call (FieldBuffer &fb, const SmartHandle &sh, uint64 h, uint64 l)
+add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, ObjectBroker::connection_id_from_handle (sh), h, l);
 }

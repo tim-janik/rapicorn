@@ -24,7 +24,7 @@ def reindent (prefix, lines):
 
 I_prefix_postfix = ('', 'Iface')
 
-class G4STUB: pass    # generate stub classes (smart handles)
+class G4STUB: pass    # generate stub classes (remote handles)
 class G4SERVANT: pass    # generate servants classes (interfaces)
 
 class Generator:
@@ -68,7 +68,7 @@ class Generator:
   def C4client (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage == Decls.INTERFACE:
-      return tname + 'Handle'                           # construct client class SmartHandle
+      return tname + 'Handle'                           # construct client class RemoteHandle
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
     mode = mode or self.gen_mode
@@ -83,7 +83,7 @@ class Generator:
     return tname
   def M (self, type_node):                              # construct Member type
     if self.gen_mode == G4STUB and type_node.storage == Decls.INTERFACE:
-      classH = self.C4client (type_node) # smart handle class name
+      classH = self.C4client (type_node) # remote handle class name
       classC = self.C4server (type_node) # servant class name
       return 'Rapicorn::Aida::SmartMember<%s>' % classH # classC
     else:
@@ -338,7 +338,7 @@ class Generator:
     l = self.inherit_reduce (l)
     return l
   def interface_class_inheritance (self, type_info):
-    aida_smarthandle, ddc = 'Rapicorn::Aida::SmartHandle', False
+    aida_remotehandle, ddc = 'Rapicorn::Aida::RemoteHandle', False
     l = self.interface_class_ancestors (type_info)
     l = [self.C (pr) for pr in l] # types -> names
     if self.gen_mode == G4SERVANT:
@@ -351,12 +351,12 @@ class Generator:
       if l:
         heritage = 'public'
       else:
-        l, ddc = [aida_smarthandle], True
+        l, ddc = [aida_remotehandle], True
         heritage = 'public virtual'
     if self.gen_mode == G4SERVANT:
       cl = []
     else:
-      cl = l if l == [aida_smarthandle] else [aida_smarthandle] + l
+      cl = l if l == [aida_remotehandle] else [aida_remotehandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_class (self, type_info):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
@@ -370,7 +370,7 @@ class Generator:
     if self.gen_mode == G4STUB:
       for sg in type_info.signals:
         s += self.generate_client_signal_decl (sg, type_info)
-      s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::SmartHandle&, const Rapicorn::Aida::TypeHashList&);\n'
+      s += '  ' + self.F ('static %s' % classC, 9) + '__aida_cast__ (Rapicorn::Aida::RemoteHandle&, const Rapicorn::Aida::TypeHashList&);\n'
       s += '  ' + self.F ('static const Rapicorn::Aida::TypeHash&') + '__aida_typeid__();\n'
     # constructors
     s += 'protected:\n'
@@ -391,8 +391,8 @@ class Generator:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
       s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__();\n'
-      s += '  template<class SmartHandle>\n'
-      s += '  ' + self.F ('static %s' % classH) + 'down_cast (SmartHandle smh) '
+      s += '  template<class RemoteHandle>\n'
+      s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
@@ -500,7 +500,7 @@ class Generator:
     s += '  static const Rapicorn::Aida::TypeHash type_hash = Rapicorn::Aida::TypeHash (%s);\n' % self.class_digest (class_info)
     s += '  return type_hash;\n'
     s += '}\n'
-    s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::SmartHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
+    s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
     s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
     s += '  for (i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i])\n'
@@ -545,10 +545,10 @@ class Generator:
     s += '  obj = __AIDA_Local__::id2obj<%s> (fbr.pop_object());\n' % classC
     s += '}\n'
     s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
-    s += '  return __AIDA_Local__::smh2obj<%s> (sh);\n' % classC
+    s += '  return __AIDA_Local__::remote_handle_to_interface<%s> (sh);\n' % classC
     s += '}\n'
     s += '%s\noperator->* (%s *obj, Rapicorn::Aida::_HandleType)\n{\n' % (classH, classC)
-    s += '  return __AIDA_Local__::obj2smh<%s> (obj);\n' % classH
+    s += '  return __AIDA_Local__::interface_to_remote_handle<%s> (obj);\n' % classH
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'void\n'
@@ -1114,7 +1114,7 @@ class Generator:
           spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
-          s += self.generate_interface_class (tp)     # Class smart handle
+          s += self.generate_interface_class (tp)     # Class remote handle
       if spc_enums:
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
