@@ -461,7 +461,7 @@ class ObjectBroker {
 protected:
   static void              tie_handle (RemoteHandle&, uint64);
 public:
-  static void              pop_handle (FieldReader&, RemoteHandle&);
+  static void              pop_handle (FieldReader&, RemoteHandle&, BaseConnection&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
@@ -512,7 +512,7 @@ public:
   inline void add_evalue (int64 vint64)    { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_object (uint64    objid, BaseConnection &bcon);
   inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
@@ -554,6 +554,7 @@ class FieldReader { // read field buffer contents
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = fb_->upeek (nth_++); return u; }
 public:
   explicit                 FieldReader (const FieldBuffer &fb) : fb_ (&fb), nth_ (0) {}
+  uint64                    debug_bits ();
   inline const FieldBuffer* field_buffer() const { return fb_; }
   inline void               reset      (const FieldBuffer &fb) { fb_ = &fb; nth_ = 0; }
   inline void               reset      () { fb_ = NULL; nth_ = 0; }
@@ -567,7 +568,6 @@ public:
   inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT64); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline int64              pop_bool   () { FieldUnion &u = fb_popu (BOOL); return u.vint64; }
@@ -575,7 +575,7 @@ public:
   inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline uint64             pop_object (BaseConnection &bcon);
   inline const Any&         pop_any    (BaseConnection &bcon);
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
@@ -749,10 +749,24 @@ FieldBuffer::reset()
 }
 
 inline void
+FieldBuffer::add_object (uint64 objid, BaseConnection &bcon)
+{
+  FieldUnion &u = addu (INSTANCE);
+  u.vint64 = objid;
+}
+
+inline void
 FieldBuffer::add_any (const Any &vany, BaseConnection &bcon)
 {
   FieldUnion &u = addu (ANY);
   u.vany = bcon.any2remote (vany);
+}
+
+inline uint64
+FieldReader::pop_object (BaseConnection &bcon)
+{
+  FieldUnion &u = fb_popu (INSTANCE);
+  return u.vint64;
 }
 
 inline const Any&

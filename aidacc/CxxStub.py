@@ -489,11 +489,11 @@ class Generator:
     s += '\n{}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
-    s += '  fb.add_object (__AIDA_Local__::smh2id (handle));\n'
+    s += '  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle);\n'
+    s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle, *__AIDA_Local__::client_connection);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
     s += '%s::__aida_typeid__()\n{\n' % classH
@@ -538,11 +538,11 @@ class Generator:
     s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
-    s += '  fb.add_object (__AIDA_Local__::obj2id (obj));\n'
+    s += '  fb.add_object (__AIDA_Local__::obj2id (obj), *__AIDA_Local__::server_connection);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
-    s += '  obj = __AIDA_Local__::id2obj<%s> (fbr.pop_object());\n' % classC
+    s += '  obj = __AIDA_Local__::id2obj<%s> (fbr.pop_object (*__AIDA_Local__::server_connection));\n' % classC
     s += '}\n'
     s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
     s += '  return __AIDA_Local__::remote_handle_to_interface<%s> (sh);\n' % classC

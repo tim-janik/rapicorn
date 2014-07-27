@@ -318,7 +318,7 @@ class Generator:
     elif type.storage == Decls.SEQUENCE:
       s += '  %s.add_seq (0);\n' % fb
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (0);\n' % fb
+      s += '  %s.add_object (0, *__AIDA_local__client_connection);\n' % fb
     elif type.storage == Decls.ANY:
       s += '  %s.add_any (Rapicorn::Aida::Any(), *__AIDA_local__client_connection);\n' % fb
     else: # FUNC VOID
@@ -341,7 +341,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida_pyobject__")); %s;\n' % (fb, var, excheck)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida_pyobject__"), *__AIDA_local__client_connection); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.ANY:
       s += '  { Rapicorn::Aida::Any tmpany;\n'
       s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); %s;\n' % (var, excheck)
@@ -367,7 +367,7 @@ class Generator:
     elif type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type_info.name, fbr, var)
     elif type_info.storage == Decls.INTERFACE:
-      s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object (*__AIDA_local__client_connection)); ERRORifpy();\n' % (var, fbr)
     elif type_info.storage == Decls.ANY:
       s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any (*__AIDA_local__client_connection)); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
@@ -538,7 +538,7 @@ class Generator:
     else:
       s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL,'
       s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), %s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+    s += '  fb.add_object (object_orbid, *__AIDA_local__client_connection);\n'
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
@@ -580,7 +580,7 @@ class Generator:
     s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
     s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
     s += '__AIDA_local__client_connection->connection_id(), %s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+    s += '  fb.add_object (object_orbid, *__AIDA_local__client_connection);\n'
     # call out
     s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);\n' # deletes fb
     s += '  ERRORifnotret (fr);\n'
@@ -613,7 +613,7 @@ class Generator:
     s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
     s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
     s += '%s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+    s += '  fb.add_object (object_orbid, *__AIDA_local__client_connection);\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 1);\n' # arg
     s += self.generate_add_field_cxximpl ('fb', ftype, 'item')
     # call out

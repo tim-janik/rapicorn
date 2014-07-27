@@ -586,9 +586,9 @@ ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
 }
 
 void
-ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh)
+ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
 {
-  tie_handle (sh, fr.pop_object());
+  tie_handle (sh, fr.pop_object (bcon));
 }
 
 uint
@@ -647,6 +647,12 @@ FieldReader::check_request (int type)
     fatal_error (string_format ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
                                 this, n_types(), nth_,
                                 FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str()));
+}
+
+uint64
+FieldReader::debug_bits ()
+{
+  return fb_->upeek (nth_).vint64;
 }
 
 std::string
@@ -708,8 +714,8 @@ FieldBuffer::to_string() const
         case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        case ANY:       s += string_format (", %s: Any", tn); fbr.skip();                          break;
+        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
@@ -1222,7 +1228,7 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
       FieldBuffer *fr = this->call_remote (fb); // takes over fb
       FieldReader frr (*fr);
       frr.skip_header();
-      ObjectBroker::pop_handle (frr, rorigin);
+      ObjectBroker::pop_handle (frr, rorigin, *this);
       delete fr;
     }
   return rorigin;
@@ -1352,7 +1358,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, Sign
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid);                // emitting object
+  fb.add_object (shandler->oid, *this);         // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1381,7 +1387,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid);                // emitting object
+  fb.add_object (shandler->oid, *this);         // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1421,8 +1427,8 @@ ClientConnectionImpl::type_name_from_orbid (uint64 orbid)
 class ServerConnectionImpl : public ServerConnection {
   TransportChannel         transport_channel_;       // messages sent to server
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  std::unordered_map<ptrdiff_t,uint64> addr_map;
-  std::vector<ptrdiff_t>                 addr_vector;
+  std::unordered_map<ptrdiff_t, uint64> addr_map;
+  std::vector<ptrdiff_t>                addr_vector;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map;
   ImplicitBase *remote_origin_;
 public:
@@ -1499,7 +1505,7 @@ ServerConnectionImpl::dispatch ()
         fbr.reset (*fb);
         ImplicitBase *rorigin = this->remote_origin();
         FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
-        fr->add_object (this->instance2orbid (rorigin));
+        fr->add_object (this->instance2orbid (rorigin), *this);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));

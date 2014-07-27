@@ -8,10 +8,6 @@ test_server_remote_handle()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   ApplicationIface *ab = &app;
-  Aida::FieldBuffer8 fb (4);
-  fb.add_object (uint64 ((BaseObject*) ab));
-  // FIXME: Aida::Coupler &c = *rope_thread_coupler();
-  // c.reader.reset (fb);
   ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
   assert (am == &app);
   ApplicationIface *ai = am;

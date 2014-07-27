@@ -385,19 +385,6 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
-static RemoteHandle
-generate_broken_remote_handle (uint64_t orbid)
-{
-  FieldBuffer8 fb (1);
-  fb.add_object (orbid);
-  FieldReader fbr (fb);
-  RemoteMember<RemoteHandle> sh;
-  assert (sh._orbid() == 0);
-  ObjectBroker::pop_handle (fbr, sh);
-  assert (sh._orbid() == orbid);
-  return sh;
-}
-
 static void
 test_records ()
 {
@@ -429,18 +416,18 @@ test_records ()
   AidaTests::ComboRecord cr;
   cr.simple_rec = sr;
   cr.any_field <<= "STRING";
-  RemoteHandle sh = generate_broken_remote_handle (777); // handle doesn't work, but has an _orbid to test Any
+  RemoteHandle sh = RemoteHandle::_null_handle(); // handle doesn't work, but has an _orbid to test Any
   cr.empty_object = *(AidaTests::EmptyH*) (void*) &sh;
   assert (cr.simple_rec.stringfield == "two");
   assert (cr.simple_rec.int6 == -6);
   assert (cr.any_field.as_string() == "STRING");
-  assert (cr.empty_object._orbid() == 777);
+  assert (cr.empty_object._orbid() == 0);
   any1 <<= cr;
   assert (any1.kind() == LOCAL);
   AidaTests::ComboRecord c2;
   assert (c2 != cr && c2.simple_rec != cr.simple_rec && c2.any_field != cr.any_field);
   c2 = any_cast<AidaTests::ComboRecord> (any1);
-  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field && c2.empty_object._orbid() == 777);
+  assert (c2 == cr && c2.simple_rec == cr.simple_rec && c2.any_field == cr.any_field && c2.empty_object._orbid() == 0);
   printf ("  TEST   Aida Record to Any                                              OK\n");
 }
 

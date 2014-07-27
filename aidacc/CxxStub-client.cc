@@ -30,9 +30,9 @@ signal_disconnect (size_t signal_handler_id)
 }
 
 static AIDA_UNUSED size_t
-signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &sh, SignalEmitHandler seh, void *data)
+signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandler seh, void *data)
 {
-  return client_connection->signal_connect (hhi, hlo, sh._orbid(), seh, data);
+  return client_connection->signal_connect (hhi, hlo, rh._orbid(), seh, data);
 }
 
 static inline uint64
