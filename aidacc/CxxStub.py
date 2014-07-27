@@ -85,7 +85,7 @@ class Generator:
     if self.gen_mode == G4STUB and type_node.storage == Decls.INTERFACE:
       classH = self.C4client (type_node) # remote handle class name
       classC = self.C4server (type_node) # servant class name
-      return 'Rapicorn::Aida::SmartMember<%s>' % classH # classC
+      return 'Rapicorn::Aida::RemoteMember<%s>' % classH # classC
     else:
       return self.R (type_node)
   def V (self, ident, type_node, f_delta = -999999):    # construct Variable

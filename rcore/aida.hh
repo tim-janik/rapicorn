@@ -443,12 +443,12 @@ public:
   friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
 };
 
-// == SmartMember ==
+// == RemoteMember ==
 template<class RemoteHandle>
-class SmartMember : public RemoteHandle {
+class RemoteMember : public RemoteHandle {
 public:
-  inline   SmartMember (const RemoteHandle &src) : RemoteHandle() { *this = src; }
-  explicit SmartMember () : RemoteHandle() {}
+  inline   RemoteMember (const RemoteHandle &src) : RemoteHandle() { *this = src; }
+  explicit RemoteMember () : RemoteHandle() {}
   void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
 

@@ -1213,7 +1213,7 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
 {
-  SmartMember<RemoteHandle> rorigin = RemoteHandle::_null_handle();
+  RemoteMember<RemoteHandle> rorigin = RemoteHandle::_null_handle();
   const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
   if (connection_id)
     {

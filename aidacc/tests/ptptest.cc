@@ -391,7 +391,7 @@ generate_broken_remote_handle (uint64_t orbid)
   FieldBuffer8 fb (1);
   fb.add_object (orbid);
   FieldReader fbr (fb);
-  SmartMember<RemoteHandle> sh;
+  RemoteMember<RemoteHandle> sh;
   assert (sh._orbid() == 0);
   ObjectBroker::pop_handle (fbr, sh);
   assert (sh._orbid() == orbid);

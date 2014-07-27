@@ -276,9 +276,9 @@ struct XFooRecord
   int                           multi3;
   int                           multi4;
   ExtensiveEnum                 enum_field;
-  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface1;
-  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface2;
-  Rapicorn::Aida::SmartMember<FirstInterfaceHandle> iface3;
+  Rapicorn::Aida::RemoteMember<FirstInterfaceHandle> iface1;
+  Rapicorn::Aida::RemoteMember<FirstInterfaceHandle> iface2;
+  Rapicorn::Aida::RemoteMember<FirstInterfaceHandle> iface3;
   Rapicorn::Aida::Any           any1;
   Rapicorn::Aida::Any           any2;
   Rapicorn::Aida::Any           any3;
@@ -362,9 +362,9 @@ struct SequenceSequence : public std::vector<IntSequence>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
 
-struct InterfaceSequence : public std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>>
+struct InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>>
 {
-  typedef std::vector<Rapicorn::Aida::SmartMember<FirstInterfaceHandle>> Sequence;
+  typedef std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
   Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
