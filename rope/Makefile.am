@@ -70,8 +70,8 @@ check-PyStub-testpass-module: __testpass.la
 	&& $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
 	@: # cleanups
 	$(Q) rm -f testpystub.cc __testpass.so
+# DISABLED, broken without rapicorn.so module: check-local: check-PyStub-testpass-module
 CLEANFILES += testpystub.cc __testpass.so testpystub.pyc
-check-local: check-PyStub-testpass-module
 # test PyStub files for Rapicorn interfaces
 check-rapicorn-idl: __pyrapicorn.la pyrapicorn.py
 	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
