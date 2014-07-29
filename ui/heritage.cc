@@ -17,9 +17,9 @@ adjust_color (Color  color,
   return color;
 }
 
-static Color lighten   (Color color) { return adjust_color (color, 1.0, 1.1); }
-static Color darken    (Color color) { return adjust_color (color, 1.0, 0.9); }
-static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
+static __attribute__ ((unused)) Color lighten   (Color color) { return adjust_color (color, 1.0, 1.1); }
+static __attribute__ ((unused)) Color darken    (Color color) { return adjust_color (color, 1.0, 0.9); }
+static __attribute__ ((unused)) Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 static Color
 state_color (Color     color,
@@ -245,7 +245,6 @@ Heritage::resolve_color (const String  &color_name,
                          StateType      state,
                          ColorType      color_type)
 {
-  Aida::TypeCode etype = Aida::TypeCode::from_enum<ColorType>();
   if (color_name[0] == '#')
     {
       uint32 argb = string_to_int (&color_name[1], 16);
@@ -254,9 +253,9 @@ Heritage::resolve_color (const String  &color_name,
       c.alpha (0xff - c.alpha());
       return state_color (c, state, color_type);
     }
-  const Aida::EnumValue evalue = etype.enum_find (color_name);
-  if (evalue.ident)
-    return get_color (state, ColorType (evalue.value));
+  const Aida::EnumValue *evalue = enum_value_find (Aida::enum_value_list<ColorType>(), color_name);
+  if (evalue)
+    return get_color (state, ColorType (evalue->value));
   else
     {
       Color parsed_color = Color::from_name (color_name);
