@@ -377,7 +377,7 @@ interface WidgetList : Container {
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
   bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          viewable                () = 0;
+  bool          screen_viewable         () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
   void          close                   () = 0;
