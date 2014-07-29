@@ -17,6 +17,7 @@ test_basics()
   TASSERT (ev && ev->value == Aida::UNTYPED);
   ev = enum_value_find (tkv, Aida::STRING);
   TASSERT (ev && String ("STRING") == ev->ident);
+  TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 }
 REGISTER_TEST ("Aida/Basics", test_basics);
 

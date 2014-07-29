@@ -11,6 +11,7 @@
 
 namespace Rapicorn { namespace Aida {
 
+#if 0
 const char*
 type_kind_name (TypeKind type_kind)
 {
@@ -35,6 +36,7 @@ type_kind_name (TypeKind type_kind)
     default:              return NULL;
     }
 }
+#endif
 
 // == AidaTypeMap classes ==
 struct InternalList {

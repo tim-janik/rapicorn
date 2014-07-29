@@ -94,6 +94,13 @@ enum_value_list<TypeKind> ()
 }
 template const EnumValue* enum_value_list<TypeKind> ();
 
+const char*
+type_kind_name (TypeKind type_kind)
+{
+  const EnumValue *ev = enum_value_find (enum_value_list<TypeKind>(), type_kind);
+  return ev ? ev->ident : NULL;
+}
+
 // == SignalHandlerIdParts ==
 union SignalHandlerIdParts {
   size_t   vsize;
