@@ -424,11 +424,11 @@ class RemoteHandle {
   template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
   typedef NullRemoteHandle<RemoteHandle> NullHandle;
   friend  class ObjectBroker;
-  void    assign (const RemoteHandle&);
   void    reset ();
 protected:
   explicit          RemoteHandle  (OrbObject&);
   explicit          RemoteHandle  ();
+  void              upgrade_once  (const RemoteHandle&);
 public:
   uint64            _orbid        () const { return orbo_->orbid(); }
   virtual          ~RemoteHandle  ();
@@ -441,6 +441,15 @@ public:
   bool              operator!=    (const RemoteHandle&) const noexcept;
   friend bool       operator==    (std::nullptr_t, const RemoteHandle &shd) noexcept { return !static_cast<bool> (shd); }
   friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
+  template<class TargetHandle> static typename
+  std::enable_if<(std::is_base_of<RemoteHandle, TargetHandle>::value &&
+                  !std::is_same<RemoteHandle, TargetHandle>::value), TargetHandle>::type
+  reinterpret_down_cast (RemoteHandle smh)              ///< Reinterpret & dynamic cast, use discouraged.
+  {
+    TargetHandle target;
+    target.upgrade_once (smh);                          // like reinterpret_cast
+    return TargetHandle::down_cast (target);            // like dynamic_cast (remote)
+  }
 };
 
 // == RemoteMember ==
@@ -473,7 +482,6 @@ public:
   static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  template<class TargetHandle> static TargetHandle remote_handle_down_cast (RemoteHandle smh);
 };
 
 // == FieldBuffer ==
@@ -723,14 +731,6 @@ inline
 Any::~Any ()
 {
   reset();
-}
-
-template<class TargetHandle> TargetHandle
-ObjectBroker::remote_handle_down_cast (RemoteHandle smh)
-{
-  TargetHandle target;
-  target.assign (smh);                        // aka reinterpret_cast
-  return TargetHandle::down_cast (target);    // aka dynamic_cast (remote)
 }
 
 inline void

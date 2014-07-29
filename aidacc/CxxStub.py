@@ -502,10 +502,13 @@ class Generator:
     s += '}\n'
     s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
     s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
+    s += '  %s target;\n' % classH
     s += '  for (i = 0; i < types.size(); i++)\n'
-    s += '    if (mine == types[i])\n'
-    s += '      return __AIDA_Local__::smh2cast<%s> (other);\n' % classH
-    s += '  return %s();\n' % classH
+    s += '    if (mine == types[i]) {\n'
+    s += '      target.upgrade_once (other);\n'
+    s += '      break;\n'
+    s += '    }\n'
+    s += '  return target;\n'
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'const Rapicorn::Aida::TypeHashList\n'

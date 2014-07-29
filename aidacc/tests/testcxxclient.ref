@@ -40,16 +40,6 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
   return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
-template<class SMH> SMH
-smh2cast (const RemoteHandle &handle)
-{
-  const uint64 orbid = handle._orbid();
-  SMH target;
-  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (target, orbid);
-  return target;
-}
-
 static inline void
 add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
@@ -1128,10 +1118,13 @@ FirstInterfaceHandle
 FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  FirstInterfaceHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<FirstInterfaceHandle> (other);
-  return FirstInterfaceHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 FirstInterfaceHandle::__aida_connection__()
@@ -1679,10 +1672,13 @@ UIWidgetAreaHandle
 UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  UIWidgetAreaHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<UIWidgetAreaHandle> (other);
-  return UIWidgetAreaHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 UIWidgetAreaHandle::__aida_connection__()
@@ -1934,10 +1930,13 @@ ParentHandle
 ParentHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  ParentHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<ParentHandle> (other);
-  return ParentHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 ParentHandle::__aida_connection__()
@@ -1988,10 +1987,13 @@ ChildHandle
 ChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  ChildHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<ChildHandle> (other);
-  return ChildHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 const Rapicorn::Aida::TypeHashList
 ChildHandle::__aida_typelist__()
@@ -2037,10 +2039,13 @@ DescendantHandle
 DescendantHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  DescendantHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<DescendantHandle> (other);
-  return DescendantHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 const Rapicorn::Aida::TypeHashList
 DescendantHandle::__aida_typelist__()
@@ -2086,10 +2091,13 @@ GrandChildHandle
 GrandChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  GrandChildHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<GrandChildHandle> (other);
-  return GrandChildHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 const Rapicorn::Aida::TypeHashList
 GrandChildHandle::__aida_typelist__()
@@ -2182,10 +2190,13 @@ QuickIfaceHandle
 QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  QuickIfaceHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<QuickIfaceHandle> (other);
-  return QuickIfaceHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 QuickIfaceHandle::__aida_connection__()
@@ -2246,10 +2257,13 @@ MethodTestInterfaceHandle
 MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  MethodTestInterfaceHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<MethodTestInterfaceHandle> (other);
-  return MethodTestInterfaceHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 MethodTestInterfaceHandle::__aida_connection__()
@@ -2937,10 +2951,13 @@ SignalTestInterfaceHandle
 SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  SignalTestInterfaceHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<SignalTestInterfaceHandle> (other);
-  return SignalTestInterfaceHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 SignalTestInterfaceHandle::__aida_connection__()
@@ -3008,10 +3025,13 @@ ChildInheritingSignalsHandle
 ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  ChildInheritingSignalsHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<ChildInheritingSignalsHandle> (other);
-  return ChildInheritingSignalsHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 const Rapicorn::Aida::TypeHashList
 ChildInheritingSignalsHandle::__aida_typelist__()
@@ -3057,10 +3077,13 @@ AnotherChildHandle
 AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  AnotherChildHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<AnotherChildHandle> (other);
-  return AnotherChildHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 const Rapicorn::Aida::TypeHashList
 AnotherChildHandle::__aida_typelist__()
@@ -3106,10 +3129,13 @@ PropertyTesterHandle
 PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  PropertyTesterHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<PropertyTesterHandle> (other);
-  return PropertyTesterHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 PropertyTesterHandle::__aida_connection__()
@@ -3464,10 +3490,13 @@ ButtonAreaHandle
 ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  ButtonAreaHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<ButtonAreaHandle> (other);
-  return ButtonAreaHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 ButtonAreaHandle::__aida_connection__()
@@ -3614,10 +3643,13 @@ PureMethodsHandle
 PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  PureMethodsHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<PureMethodsHandle> (other);
-  return PureMethodsHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 PureMethodsHandle::__aida_connection__()
@@ -3686,10 +3718,13 @@ NameTestsHandle
 NameTestsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  NameTestsHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<NameTestsHandle> (other);
-  return NameTestsHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 NameTestsHandle::__aida_connection__()
@@ -3757,10 +3792,13 @@ CompressorHandle
 CompressorHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  CompressorHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<CompressorHandle> (other);
-  return CompressorHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 CompressorHandle::__aida_connection__()
@@ -3890,10 +3928,13 @@ SoundModuleHandle
 SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)
 {
   size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();
+  SoundModuleHandle target;
   for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return __AIDA_Local__::smh2cast<SoundModuleHandle> (other);
-  return SoundModuleHandle();
+    if (mine == types[i]) {
+      target.upgrade_once (other);
+      break;
+    }
+  return target;
 }
 Rapicorn::Aida::BaseConnection*
 SoundModuleHandle::__aida_connection__()

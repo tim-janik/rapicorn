@@ -543,13 +543,14 @@ RemoteHandle::reset ()
 }
 
 void
-RemoteHandle::assign (const RemoteHandle &src)
+RemoteHandle::upgrade_once (const RemoteHandle &source)
 {
-  if (orbo_ == src.orbo_)
+  AIDA_ASSERT (_orbid() == 0);
+  if (orbo_ == source.orbo_)
     return;
   if (NULL != *this)
     reset();
-  orbo_ = src.orbo_;
+  orbo_ = source.orbo_;
 }
 
 RemoteHandle::~RemoteHandle()
@@ -582,7 +583,7 @@ ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.assign (RemoteHandle (*orbo));
+  sh.upgrade_once (RemoteHandle (*orbo)); // FIXME
 }
 
 void

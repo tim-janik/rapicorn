@@ -35,16 +35,6 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
   return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
-template<class SMH> SMH
-smh2cast (const RemoteHandle &handle)
-{
-  const uint64 orbid = handle._orbid();
-  SMH target;
-  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (target, orbid);
-  return target;
-}
-
 static inline void
 add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
