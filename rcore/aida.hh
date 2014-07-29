@@ -620,8 +620,8 @@ public:
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin  (ImplicitBase *rorigin);
-  virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list);
+  virtual void           remote_origin  (ImplicitBase *rorigin) = 0;
+  virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list) = 0;
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
 };
@@ -640,7 +640,6 @@ public:
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
   virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
   virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
-  virtual ImplicitBase* remote_origin           () const = 0;
   virtual void          add_interface           (FieldBuffer &fb, const ImplicitBase *ibase) = 0;
   virtual ImplicitBase* pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups

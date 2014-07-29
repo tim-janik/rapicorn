@@ -1208,6 +1208,7 @@ public:
   virtual void          dispatch          ();
   virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
   virtual RemoteHandle  pop_handle        (FieldReader &fr);
+  virtual void          remote_origin     (ImplicitBase *rorigin) { fatal ("assert not reached"); }
   virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
@@ -1461,8 +1462,8 @@ public:
   virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
   virtual bool          pending        ()               { return transport_channel_.has_msg(); }
   virtual void          dispatch       ();
-  virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
   virtual void          remote_origin  (ImplicitBase *rorigin);
+  virtual RemoteHandle  remote_origin  (const vector<std::string> &feature_key_list) { fatal ("assert not reached"); }
   virtual void          add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
   virtual ImplicitBase* pop_interface  (FieldReader &fr);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
@@ -1541,7 +1542,7 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
-        ImplicitBase *rorigin = this->remote_origin();
+        ImplicitBase *rorigin = remote_origin_;
         FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
