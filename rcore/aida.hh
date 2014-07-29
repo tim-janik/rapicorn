@@ -624,10 +624,6 @@ public:
   virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list);
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
-  virtual void           add_handle     (FieldBuffer &fb, const RemoteHandle &rhandle);
-  virtual RemoteHandle   pop_handle     (FieldReader &fr);
-  virtual void           add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
-  virtual ImplicitBase*  pop_interface  (FieldReader &fr);
 };
 
 /// Function typoe for internal signal handling.
@@ -645,6 +641,8 @@ public:
   virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
   virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
   virtual ImplicitBase* remote_origin           () const = 0;
+  virtual void          add_interface           (FieldBuffer &fb, const ImplicitBase *ibase) = 0;
+  virtual ImplicitBase* pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -665,6 +663,8 @@ protected:
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void          add_handle  (FieldBuffer &fb, const RemoteHandle &rhandle) = 0;
+  virtual RemoteHandle  pop_handle  (FieldReader &fr) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;

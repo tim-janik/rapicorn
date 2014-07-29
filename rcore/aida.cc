@@ -1152,32 +1152,6 @@ BaseConnection::any2local (Any &any)
   // any = any
 }
 
-void
-BaseConnection::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
-{
-  fb.add_object (rhandle._orbid());
-}
-
-RemoteHandle
-BaseConnection::pop_handle (FieldReader &fr)
-{
-  RemoteMember<RemoteHandle> remote;
-  ObjectBroker::pop_handle (fr, remote, *this);
-  return remote;
-}
-
-void
-BaseConnection::add_interface (FieldBuffer &fb, const ImplicitBase *ibase)
-{
-  fatal ("assert_not_reached");
-}
-
-ImplicitBase*
-BaseConnection::pop_interface (FieldReader &fr)
-{
-  fatal ("assert_not_reached");
-}
-
 // == ClientConnection ==
 ClientConnection::ClientConnection (const std::string &feature_keys) :
   BaseConnection (feature_keys)
@@ -1232,7 +1206,9 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual RemoteHandle   remote_origin     (const vector<std::string> &feature_key_list);
+  virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
+  virtual RemoteHandle  pop_handle        (FieldReader &fr);
+  virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
@@ -1264,6 +1240,20 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
       delete fr;
     }
   return rorigin;
+}
+
+void
+ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
+{
+  fb.add_object (rhandle._orbid());
+}
+
+RemoteHandle
+ClientConnectionImpl::pop_handle (FieldReader &fr)
+{
+  RemoteMember<RemoteHandle> remote;
+  ObjectBroker::pop_handle (fr, remote, *this);
+  return remote;
 }
 
 void
