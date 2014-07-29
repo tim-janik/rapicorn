@@ -269,7 +269,6 @@ struct XFooRecord
   /// @endcond
   inline                        XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const XFooRecord &other) const;
   bool                          operator!=  (const XFooRecord &other) const { return !operator== (other); }
 };
@@ -281,7 +280,6 @@ struct XFooSequence : public std::vector<bool>
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, XFooSequence&);
@@ -291,7 +289,6 @@ struct IntSequence : public std::vector<int>
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, IntSequence&);
@@ -301,7 +298,6 @@ struct FloatSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, FloatSequence&);
@@ -311,7 +307,6 @@ struct StringSequence : public std::vector<std::string>
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, StringSequence&);
@@ -321,7 +316,6 @@ struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ExtensiveEnumSequence&);
@@ -331,7 +325,6 @@ struct RecordSequence : public std::vector<XFooRecord>
   typedef std::vector<XFooRecord> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, RecordSequence&);
@@ -341,7 +334,6 @@ struct SequenceSequence : public std::vector<IntSequence>
   typedef std::vector<IntSequence> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SequenceSequence&);
@@ -351,7 +343,6 @@ struct InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<First
   typedef std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, InterfaceSequence&);
@@ -361,7 +352,6 @@ struct AnySequence : public std::vector<Rapicorn::Aida::Any>
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, AnySequence&);
@@ -374,7 +364,6 @@ struct NestedTypesRec
   /// @endcond
   inline                        NestedTypesRec () { }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const NestedTypesRec &other) const;
   bool                          operator!=  (const NestedTypesRec &other) const { return !operator== (other); }
 };
@@ -386,7 +375,6 @@ struct NestedTypesSeq : public std::vector<NestedTypesRec>
   typedef std::vector<NestedTypesRec> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
@@ -419,7 +407,6 @@ struct NewRecord
   /// @endcond
   inline                        NewRecord () { i = 0; enum1 = Enum1 (0); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const NewRecord &other) const;
   bool                          operator!=  (const NewRecord &other) const { return !operator== (other); }
 };
@@ -437,7 +424,6 @@ struct InnerRecord
   /// @endcond
   inline                        InnerRecord () { x = 0; y = 0; }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const InnerRecord &other) const;
   bool                          operator!=  (const InnerRecord &other) const { return !operator== (other); }
 };
@@ -452,7 +438,6 @@ struct Refer2Inner
   /// @endcond
   inline                        Refer2Inner () { }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const Refer2Inner &other) const;
   bool                          operator!=  (const Refer2Inner &other) const { return !operator== (other); }
 };
@@ -472,7 +457,6 @@ struct SomeRecord
   /// @endcond
   inline                        SomeRecord () { }
   std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const SomeRecord &other) const;
   bool                          operator!=  (const SomeRecord &other) const { return !operator== (other); }
 };
@@ -631,7 +615,6 @@ struct QuickRecord
   /// @endcond
   inline                        QuickRecord () { int1 = 0; int2 = 0; }
   std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const QuickRecord &other) const;
   bool                          operator!=  (const QuickRecord &other) const { return !operator== (other); }
 };
@@ -643,7 +626,6 @@ struct QuickSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
   std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, QuickSequence&);
@@ -1032,7 +1014,6 @@ struct RecordForGroups
   /// @endcond
   inline                        RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
   std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
-  Rapicorn::Aida::TypeCode      __aida_type_code__ () const	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   bool                          operator==  (const RecordForGroups &other) const;
   bool                          operator!=  (const RecordForGroups &other) const { return !operator== (other); }
 };
@@ -1064,46 +1045,32 @@ namespace Rapicorn {
 namespace Aida {
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1>() { return TypeMap::lookup ("MandatoryNamespace::Enum1"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1c> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum1c>() { return TypeMap::lookup ("MandatoryNamespace::Enum1c"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2>() { return TypeMap::lookup ("MandatoryNamespace::Enum2"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2c> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum2c>() { return TypeMap::lookup ("MandatoryNamespace::Enum2c"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3>() { return TypeMap::lookup ("MandatoryNamespace::Enum3"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3c> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum3c>() { return TypeMap::lookup ("MandatoryNamespace::Enum3c"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4a> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4a>() { return TypeMap::lookup ("MandatoryNamespace::Enum4a"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4b> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4b>() { return TypeMap::lookup ("MandatoryNamespace::Enum4b"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4c> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4c>() { return TypeMap::lookup ("MandatoryNamespace::Enum4c"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4d> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::Enum4d>() { return TypeMap::lookup ("MandatoryNamespace::Enum4d"); }
 
 template<> const EnumValue* enum_value_list<MandatoryNamespace::ExtensiveEnum> ();
-template<> inline TypeCode TypeCode::from_enum<MandatoryNamespace::ExtensiveEnum>() { return TypeMap::lookup ("MandatoryNamespace::ExtensiveEnum"); }
 
 template<> const EnumValue* enum_value_list<InterfaceTests::QuickEnum> ();
-template<> inline TypeCode TypeCode::from_enum<InterfaceTests::QuickEnum>() { return TypeMap::lookup ("InterfaceTests::QuickEnum"); }
 
 template<> const EnumValue* enum_value_list<RapicornAidaTest::ClickType> ();
-template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::ClickType>() { return TypeMap::lookup ("RapicornAidaTest::ClickType"); }
 
 template<> const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
-template<> inline TypeCode TypeCode::from_enum<RapicornAidaTest::MathExpressions>() { return TypeMap::lookup ("RapicornAidaTest::MathExpressions"); }
 } // Aida
 } // Rapicorn
 
@@ -4191,236 +4158,4 @@ enum_value_list<RapicornAidaTest::MathExpressions> () {
 template const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
-
-namespace { // Anon
-static const char __aida_type_map__[] =
-  "AidaTypeMap\0\0\0\0\0x!\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\0\0\0 \7\0\0\30\20"
-  "\0\0\0\0\0\0\20\17\0\0\0\0\0\0\0\0\0\0\0\0\0\0Y\0\0\0\30\20\0\0 \7"
-  "\0\0\0\0\0\0b\0\0\0<\20\0\0 \7\0\0\0\0\0\0E\0\0\0`\20\0\0 \7\0\0$\7"
-  "\0\0d\0\0\0\340\22\0\0 \7\0\0\0\0\0\0i\0\0\0\4\23\0\0 \7\0\0\0\0\0"
-  "\0l\0\0\0(\23\0\0 \7\0\0\0\0\0\0b\0\0\0p\23\0\0 \7\0\0\0\0\0\0i\0\0"
-  "\0\200\23\0\0 \7\0\0\0\0\0\0l\0\0\0\220\23\0\0 \7\0\0\0\0\0\0d\0\0\0"
-  "\234\23\0\0 \7\0\0\0\0\0\0s\0\0\0\260\23\0\0 \7\0\0\0\0\0\0i\0\0\0"
-  "\304\23\0\0 \7\0\0\0\0\0\0i\0\0\0\324\23\0\0 \7\0\0\0\0\0\0i\0\0\0\344"
-  "\23\0\0 \7\0\0\0\0\0\0i\0\0\0\360\23\0\0 \7\0\0\0\0\0\0i\0\0\0\374"
-  "\23\0\0 \7\0\0\0\0\0\0i\0\0\0\10\24\0\0 \7\0\0\0\0\0\0T\0\0\0\24\24"
-  "\0\0 \7\0\0$\24\0\0T\0\0\0L\24\0\0 \7\0\0X\24\0\0T\0\0\0\200\24\0"
-  "\0 \7\0\0X\24\0\0T\0\0\0\214\24\0\0 \7\0\0X\24\0\0Y\0\0\0\230\24\0\0"
-  " \7\0\0\0\0\0\0Y\0\0\0\244\24\0\0 \7\0\0\0\0\0\0Y\0\0\0\260\24\0\0"
-  " \7\0\0\0\0\0\0R\0\0\0L\23\0\0 \7\0\0\344\11\0\0Q\0\0\0\274\24\0\0 "
-  "\7\0\0\240\0\0\0s\0\0\0\344\24\0\0 \7\0\0\0\0\0\0C\0\0\0\10\25\0\0 "
-  "\7\0\0""0\12\0\0Y\0\0\0x\25\0\0 \7\0\0\0\0\0\0Q\0\0\0T\25\0\0 \7\0\0"
-  "\0\2\0\0i\0\0\0\210\25\0\0""8\12\0\0\0\0\0\0l\0\0\0\354\25\0\0L\12"
-  "\0\0\0\0\0\0b\0\0\0T\26\0\0`\12\0\0\0\0\0\0d\0\0\0\244\26\0\0t\12\0"
-  "\0\0\0\0\0s\0\0\0\10\27\0\0\210\12\0\0\0\0\0\0C\0\0\0d\27\0\0 \7\0\0"
-  " \7\0\0C\0\0\0\210\27\0\0 \7\0\0\234\12\0\0C\0\0\0\300\27\0\0 \7\0"
-  "\0""0\12\0\0E\0\0\0\354\27\0\0 \7\0\0\244\12\0\0C\0\0\0\200\30\0\0 "
-  "\7\0\0 \7\0\0C\0\0\0\230\30\0\0 \7\0\0\14\13\0\0E\0\0\0\270\30\0\0 "
-  "\7\0\0\30\13\0\0E\0\0\0\344\30\0\0 \7\0\0""0\13\0\0E\0\0\0\20\31\0\0"
-  " \7\0\0H\13\0\0E\0\0\0H\31\0\0 \7\0\0t\13\0\0E\0\0\0\200\31\0\0 \7"
-  "\0\0\240\13\0\0E\0\0\0\304\31\0\0 \7\0\0\340\13\0\0E\0\0\0\10\32\0\0"
-  " \7\0\0 \14\0\0E\0\0\0X\32\0\0 \7\0\0t\14\0\0E\0\0\0\250\32\0\0 \7"
-  "\0\0\310\14\0\0E\0\0\0\370\32\0\0 \7\0\0\34\15\0\0E\0\0\0$\24\0\0 \7"
-  "\0\0$\7\0\0T\0\0\0x\33\0\0 \7\0\0$\24\0\0Q\0\0\0H\33\0\0 \7\0\0\200"
-  "\3\0\0C\0\0\0X\24\0\0 \7\0\0 \7\0\0d\0\0\0\264\33\0\0 \7\0\0\0\0\0"
-  "\0Q\0\0\0\214\33\0\0 \7\0\0\260\3\0\0C\0\0\0\310\33\0\0 \7\0\0p\15\0"
-  "\0i\0\0\0\24\34\0\0 \7\0\0\0\0\0\0i\0\0\0\34\34\0\0 \7\0\0\0\0\0\0"
-  "T\0\0\0$\34\0\0 \7\0\0,\34\0\0R\0\0\0\350\33\0\0 \7\0\0\200\15\0\0i"
-  "\0\0\0t\34\0\0 \7\0\0\0\0\0\0Q\0\0\0P\34\0\0 \7\0\0 \4\0\0Q\0\0\0\200"
-  "\34\0\0 \7\0\0`\1\0\0E\0\0\0\254\34\0\0 \7\0\0\220\15\0\0C\0\0\0\224"
-  "\35\0\0 \7\0\0 \7\0\0C\0\0\0\274\35\0\0 \7\0\0 \7\0\0T\0\0\0$\34"
-  "\0\0 \7\0\0\374\35\0\0T\0\0\0 \36\0\0 \7\0\0(\36\0\0R\0\0\0\324\35\0"
-  "\0 \7\0\0\204\16\0\0T\0\0\0x\36\0\0 \7\0\0\324\35\0\0Q\0\0\0P\36\0"
-  "\0 \7\0\0\260\4\0\0i\0\0\0\200\36\0\0 \7\0\0\0\0\0\0T\0\0\0\210\36\0"
-  "\0 \7\0\0\270\30\0\0T\0\0\0\224\36\0\0 \7\0\0(\36\0\0R\0\0\0,\34\0"
-  "\0 \7\0\0\220\16\0\0C\0\0\0\244\27\0\0 \7\0\0 \7\0\0C\0\0\0\234\36\0"
-  "\0 \7\0\0 \7\0\0C\0\0\0\300\36\0\0 \7\0\0 \7\0\0E\0\0\0\344\36\0\0"
-  " \7\0\0\244\16\0\0C\0\0\0\20\37\0\0 \7\0\0 \7\0\0i\0\0\0P\37\0\0 \7"
-  "\0\0\0\0\0\0i\0\0\0\\\37\0\0 \7\0\0\0\0\0\0R\0\0\0""0\37\0\0 \7\0\0"
-  "\274\16\0\0d\0\0\0\214\37\0\0 \7\0\0\0\0\0\0Q\0\0\0h\37\0\0 \7\0\0\220"
-  "\5\0\0d\0\0\0\274\37\0\0\310\16\0\0\0\0\0\0b\0\0\0\354\37\0\0 \7"
-  "\0\0\0\0\0\0d\0\0\0\0 \0\0 \7\0\0\0\0\0\0d\0\0\0\20 \0\0 \7\0\0\0\0"
-  "\0\0R\0\0\0\234\37\0\0 \7\0\0\334\16\0\0T\0\0\0H \0\0 \7\0\0\374\35"
-  "\0\0Q\0\0\0  \0\0 \7\0\0\0\6\0\0T\0\0\0\200 \0\0 \7\0\0\350\33\0\0R"
-  "\0\0\0\\ \0\0 \7\0\0\364\16\0\0T\0\0\0\264 \0\0 \7\0\0P\34\0\0Q\0\0"
-  "\0\210 \0\0 \7\0\0@\6\0\0C\0\0\0,\25\0\0 \7\0\0 \7\0\0T\0\0\0\344 \0"
-  "\0 \7\0\0,\34\0\0T\0\0\0\354 \0\0 \7\0\0,\34\0\0T\0\0\0\364 \0\0 \7"
-  "\0\0\350\33\0\0T\0\0\0\374 \0\0 \7\0\0\350\33\0\0R\0\0\0\304 \0\0 "
-  "\7\0\0\374\16\0\0C\0\0\0\4!\0\0 \7\0\0 \7\0\0s\0\0\0H!\0\0 \7\0\0\0"
-  "\0\0\0Q\0\0\0 !\0\0 \7\0\0\320\6\0\0C\0\0\0T!\0\0 \7\0\0 \7\0\0R\0\0"
-  "\0\374\35\0\0 \7\0\0\344\11\0\0Q\0\0\0(\36\0\0 \7\0\0\240\0\0\0\0\0"
-  "\0\0\257\0\0\0\1\0\0\0\0\0\0\0\204\20\0\0\214\20\0\0\214\20\0\0\1\0"
-  "\0\0\0\0\0\0\224\20\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\234\20"
-  "\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\244\20\0\0\254\20\0\0\214"
-  "\20\0\0\4\0\0\0\0\0\0\0\270\20\0\0\300\20\0\0\214\20\0\0\5\0\0\0"
-  "\0\0\0\0\314\20\0\0\324\20\0\0\340\20\0\0\6\0\0\0\0\0\0\0\354\20\0\0"
-  "\364\20\0\0\0\21\0\0\7\0\0\0\0\0\0\0\14\21\0\0\24\21\0\0 \21\0\0\10"
-  "\0\0\0\0\0\0\0,\21\0\0""4\21\0\0@\21\0\0\11\0\0\0\0\0\0\0L\21\0\0\214"
-  "\20\0\0\214\20\0\0\12\0\0\0\0\0\0\0T\21\0\0\\\21\0\0\214\20\0\0\13"
-  "\0\0\0\0\0\0\0h\21\0\0p\21\0\0\214\20\0\0\14\0\0\0\0\0\0\0\200\21"
-  "\0\0\210\21\0\0\214\20\0\0\15\0\0\0\0\0\0\0\224\21\0\0\214\20\0\0\214"
-  "\20\0\0\16\0\0\0\0\0\0\0\234\21\0\0\244\21\0\0\214\20\0\0\17\0\0\0"
-  "\0\0\0\0\264\21\0\0\274\21\0\0\310\21\0\0\20\0\0\0\0\0\0\0\324\21\0"
-  "\0\334\21\0\0\354\21\0\0\21\0\0\0\0\0\0\0\370\21\0\0\0\22\0\0\14\22"
-  "\0\0\22\0\0\0\0\0\0\0\34\22\0\0$\22\0\0""4\22\0\0\24\0\0\0\0\0\0\0"
-  "D\22\0\0\214\20\0\0\214\20\0\0\25\0\0\0\0\0\0\0L\22\0\0\214\20\0\0\214"
-  "\20\0\0\26\0\0\0\0\0\0\0T\22\0\0\214\20\0\0\214\20\0\0\27\0\0\0\0"
-  "\0\0\0\\\22\0\0\214\20\0\0\214\20\0\0\30\0\0\0\0\0\0\0d\22\0\0\214"
-  "\20\0\0\214\20\0\0\360\377\377\377\377\377\377\377l\22\0\0\214\20\0"
-  "\0\214\20\0\0\20\0\0\0\0\0\0\0t\22\0\0\214\20\0\0\214\20\0\0\360\377"
-  "\377\377\377\377\377\377|\22\0\0\214\20\0\0\214\20\0\0\344\377\377"
-  "\377\377\377\377\377\204\22\0\0\214\20\0\0\214\20\0\0*\0\0\0\0\0\0\0"
-  "\214\22\0\0\214\20\0\0\214\20\0\0+\0\0\0\0\0\0\0\224\22\0\0\234\22"
-  "\0\0\214\20\0\0*\0\0\0\0\0\0\0\250\22\0\0\214\20\0\0\214\20\0\0+\0\0"
-  "\0\0\0\0\0\260\22\0\0\234\22\0\0\214\20\0\0,\0\0\0\0\0\0\0\270\22\0"
-  "\0\234\22\0\0\234\22\0\0*\0\0\0\0\0\0\0\300\22\0\0\234\22\0\0\214\20"
-  "\0\0*\0\0\0\0\0\0\0\310\22\0\0\234\22\0\0\320\22\0\0\22\0\0\0\240"
-  "\0\0\0\260\0\0\0\300\0\0\0\320\0\0\0\340\0\0\0\360\0\0\0\0\1\0\0\20"
-  "\1\0\0 \1\0\0""0\1\0\0@\1\0\0P\1\0\0`\1\0\0p\1\0\0\200\1\0\0\220\1\0"
-  "\0\240\1\0\0\260\1\0\0\1\0\0\0,\25\0\0\4\0\0\0\234\25\0\0\260\25\0"
-  "\0\300\25\0\0\334\25\0\0\4\0\0\0\0\26\0\0 \26\0\0""0\26\0\0\334\25\0"
-  "\0\4\0\0\0l\26\0\0|\26\0\0\220\26\0\0\334\25\0\0\4\0\0\0\270\26\0\0"
-  "\314\26\0\0\340\26\0\0\370\26\0\0\4\0\0\0\34\27\0\0""4\27\0\0H\27\0"
-  "\0\334\25\0\0\1\0\0\0\244\27\0\0\31\0\0\0\1\0\0\0\0\0\0\0\14\30\0\0"
-  "\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0 \30\0\0\214\20\0\0\214\20\0"
-  "\0\3\0\0\0\0\0\0\0""8\30\0\0\214\20\0\0\214\20\0\0\4\0\0\0\0\0\0\0P"
-  "\30\0\0\214\20\0\0\214\20\0\0\5\0\0\0\0\0\0\0h\30\0\0\214\20\0\0\214"
-  "\20\0\0\2\0\0\0\244\27\0\0\210\27\0\0\5\0\0\0\1\0\0\0\0\0\0\0\330\30"
-  "\0\0\214\20\0\0\214\20\0\0\5\0\0\0\1\0\0\0\0\0\0\0\4\31\0\0\214\20"
-  "\0\0\214\20\0\0\12\0\0\0\1\0\0\0\0\0\0\0""0\31\0\0\214\20\0\0\214\20"
-  "\0\0\2\0\0\0\0\0\0\0<\31\0\0\214\20\0\0\214\20\0\0\12\0\0\0\1\0\0"
-  "\0\0\0\0\0h\31\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0t\31\0\0\214"
-  "\20\0\0\214\20\0\0\17\0\0\0\1\0\0\0\0\0\0\0\240\31\0\0\214\20\0\0\214"
-  "\20\0\0\2\0\0\0\0\0\0\0\254\31\0\0\214\20\0\0\214\20\0\0\3\0\0\0"
-  "\0\0\0\0\270\31\0\0\214\20\0\0\214\20\0\0\17\0\0\0\1\0\0\0\0\0\0\0\344"
-  "\31\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\360\31\0\0\214\20\0"
-  "\0\214\20\0\0\3\0\0\0\0\0\0\0\374\31\0\0\214\20\0\0\214\20\0\0\24\0"
-  "\0\0\1\0\0\0\0\0\0\0(\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0"
-  "4\32\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0@\32\0\0\214\20\0\0\214"
-  "\20\0\0\4\0\0\0\0\0\0\0L\32\0\0\214\20\0\0\214\20\0\0\24\0\0\0\1\0"
-  "\0\0\0\0\0\0x\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\204\32\0"
-  "\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\220\32\0\0\214\20\0\0\214"
-  "\20\0\0\4\0\0\0\0\0\0\0\234\32\0\0\214\20\0\0\214\20\0\0\24\0\0\0\1"
-  "\0\0\0\0\0\0\0\310\32\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0\324"
-  "\32\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0\340\32\0\0\214\20\0\0"
-  "\214\20\0\0\4\0\0\0\0\0\0\0\354\32\0\0\214\20\0\0\214\20\0\0\24\0\0"
-  "\0\1\0\0\0\0\0\0\0\30\33\0\0\214\20\0\0\214\20\0\0\2\0\0\0\0\0\0\0$"
-  "\33\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0""0\33\0\0\214\20\0\0\214"
-  "\20\0\0\4\0\0\0\0\0\0\0<\33\0\0\214\20\0\0\214\20\0\0\3\0\0\0\244"
-  "\27\0\0\210\27\0\0\230\30\0\0\3\0\0\0\340\3\0\0\360\3\0\0\0\4\0\0<"
-  "\0\0\0\2\0\0\0\0\0\0\0\324\34\0\0\214\20\0\0\214\20\0\0\5\0\0\0\0\0"
-  "\0\0\344\34\0\0\214\20\0\0\214\20\0\0\10\0\0\0\0\0\0\0\364\34\0\0\214"
-  "\20\0\0\214\20\0\0\6\0\0\0\0\0\0\0\4\35\0\0\214\20\0\0\214\20\0\0"
-  "\7\0\0\0\0\0\0\0\24\35\0\0\214\20\0\0\214\20\0\0\20\0\0\0\0\0\0\0$\35"
-  "\0\0\214\20\0\0\214\20\0\0\3\0\0\0\0\0\0\0""4\35\0\0\214\20\0\0\214"
-  "\20\0\0\30\0\0\0\0\0\0\0D\35\0\0\214\20\0\0\214\20\0\0\15\0\0\0\0"
-  "\0\0\0T\35\0\0\214\20\0\0\214\20\0\0\376\377\377\377\377\377\377\377"
-  "d\35\0\0\214\20\0\0\214\20\0\0M\0\0\0\0\0\0\0t\35\0\0\214\20\0\0\214"
-  "\20\0\0\377\1\0\0\0\0\0\0\204\35\0\0\214\20\0\0\214\20\0\0\2\0\0\0"
-  "\200\4\0\0\220\4\0\0\4\0\0\0\320\4\0\0\340\4\0\0\360\4\0\0\260\4\0"
-  "\0\5\0\0\0\0\0\0\0\0\0\0\0\4\37\0\0\214\20\0\0\214\20\0\0\2\0\0\0`\5"
-  "\0\0p\5\0\0\4\0\0\0l\26\0\0\310\37\0\0\324\37\0\0\340\37\0\0\5\0\0"
-  "\0\320\4\0\0\260\5\0\0\300\5\0\0\320\5\0\0\340\5\0\0\1\0\0\0 \6\0\0"
-  "\4\0\0\0p\6\0\0\200\6\0\0\220\6\0\0\240\6\0\0A\0\0\0@\0\0\0P\0\0\0`"
-  "\0\0\0p\0\0\0\200\0\0\0\220\0\0\0\300\1\0\0\320\1\0\0\340\1\0\0\360"
-  "\1\0\0\20\2\0\0 \2\0\0""0\2\0\0@\2\0\0P\2\0\0`\2\0\0p\2\0\0\200\2\0"
-  "\0\220\2\0\0\240\2\0\0\260\2\0\0\300\2\0\0\320\2\0\0\340\2\0\0\360\2"
-  "\0\0\0\3\0\0\20\3\0\0 \3\0\0""0\3\0\0@\3\0\0P\3\0\0`\3\0\0p\3\0\0\220"
-  "\3\0\0\240\3\0\0\300\3\0\0\320\3\0\0\20\4\0\0""0\4\0\0@\4\0\0P\4"
-  "\0\0`\4\0\0p\4\0\0\240\4\0\0\300\4\0\0\0\5\0\0\20\5\0\0 \5\0\0""0\5"
-  "\0\0""0\5\0\0@\5\0\0P\5\0\0\200\5\0\0\240\5\0\0\360\5\0\0\20\6\0\0""0"
-  "\6\0\0P\6\0\0`\6\0\0\260\6\0\0\300\6\0\0\340\6\0\0\360\6\0\0\0\7\0"
-  "\0\20\7\0\0\34\0\0\0MandatoryNamespace::AliasAny\0   \35\0\0\0Mand"
-  "atoryNamespace::AliasBool\0  \35\0\0\0MandatoryNamespace::AliasEnum"
-  "\0  \3\0\0\0V1a\0\0\0\0\0\0   \3\0\0\0V1b\0\2\0\0\0V2\0 \2\0\0\0V3\0"
-  " \4\0\0\0\"v3\"\0   \2\0\0\0V4\0 \7\0\0\0_(\"v4\")\0\2\0\0\0V5\0 \4"
-  "\0\0\0\"v5\"\0   \4\0\0\0\"V5\"\0   \2\0\0\0V6\0 \7\0\0\0_(\"v6\")"
-  "\0\4\0\0\0\"V6\"\0   \2\0\0\0V7\0 \4\0\0\0\"v7\"\0   \7\0\0\0_(\"V7"
-  "\")\0\2\0\0\0V8\0 \7\0\0\0_(\"v8\")\0\7\0\0\0_(\"V8\")\0\2\0\0\0V9\0"
-  " \3\0\0\0V10\0\5\0\0\0\"v10\"\0  \3\0\0\0V11\0\10\0\0\0_(\"v11\")\0"
-  "   \3\0\0\0V12\0\5\0\0\0\"v12\"\0  \3\0\0\0V13\0\3\0\0\0V14\0\10\0"
-  "\0\0_(\"v14\")\0   \3\0\0\0V15\0\5\0\0\0\"v15\"\0  \5\0\0\0\"V15\"\0"
-  "  \3\0\0\0V16\0\10\0\0\0_(\"v16\")\0   \5\0\0\0\"V16\"\0  \3\0\0\0"
-  "V17\0\5\0\0\0\"v17\"\0  \10\0\0\0_(\"V17\")\0   \3\0\0\0V18\0\10\0\0"
-  "\0_(\"v18\")\0   \10\0\0\0_(\"V18\")\0   \3\0\0\0V20\0\3\0\0\0V21\0"
-  "\3\0\0\0V22\0\3\0\0\0V23\0\3\0\0\0V24\0\3\0\0\0V25\0\3\0\0\0V26\0\3"
-  "\0\0\0V27\0\3\0\0\0V28\0\3\0\0\0V30\0\3\0\0\0V31\0\5\0\0\0\"foo\"\0"
-  "  \3\0\0\0V32\0\3\0\0\0V33\0\3\0\0\0V34\0\3\0\0\0V35\0\3\0\0\0V36\0"
-  "\10\0\0\0\"foo\"\"4\"\0   \36\0\0\0MandatoryNamespace::AliasFloat\0"
-  " \36\0\0\0MandatoryNamespace::AliasInt32\0 \36\0\0\0MandatoryNames"
-  "pace::AliasInt64\0 \37\0\0\0MandatoryNamespace::AliasRecord\0\13\0\0"
-  "\0single_bool\0\12\0\0\0single_num\0 \5\0\0\0num64\0  \14\0\0\0sin"
-  "gle_float\0   \15\0\0\0single_string\0  \10\0\0\0sibling1\0   \10\0"
-  "\0\0sibling2\0   \6\0\0\0multi1\0 \6\0\0\0multi2\0 \6\0\0\0multi3\0"
-  " \6\0\0\0multi4\0 \12\0\0\0enum_field\0 !\0\0\0MandatoryNamespace::"
-  "ExtensiveEnum\0  \6\0\0\0iface1\0 \"\0\0\0MandatoryNamespace::First"
-  "Interface\0 \6\0\0\0iface2\0 \6\0\0\0iface3\0 \4\0\0\0any1\0   \4\0"
-  "\0\0any2\0   \4\0\0\0any3\0   !\0\0\0MandatoryNamespace::AliasSeque"
-  "nce\0  \37\0\0\0MandatoryNamespace::AliasString\0\34\0\0\0Interface"
-  "Tests::AnotherChild\0   #\0\0\0InterfaceTests::SignalTestInterface\0"
-  "\37\0\0\0MandatoryNamespace::AnySequence\0\11\0\0\0any_value\0  \16"
-  "\0\0\0Auxdata::Aux32\0 \17\0\0\0default=10007.0\0\13\0\0\0label=Au"
-  "x32\0\24\0\0\0blurb=The Bar number\0   \10\0\0\0hints=rw\0   \16\0\0"
-  "\0Auxdata::Aux64\0 \33\0\0\0default=1152921504606846976\0\13\0\0\0"
-  "label=Aux64\0\34\0\0\0blurb=64bit auxillary number\0   \20\0\0\0Aux"
-  "data::AuxBool\0   \11\0\0\0default=0\0  \15\0\0\0label=AuxBool\0  \17"
-  "\0\0\0blurb=A Boolean\0\17\0\0\0Auxdata::AuxF64\0\15\0\0\0default"
-  "=0.019\0  \14\0\0\0label=AuxF64\0   \22\0\0\0blurb=X coordinate\0 \10"
-  "\0\0\0hints=ro\0   \17\0\0\0Auxdata::AuxStr\0\20\0\0\0default=aux"
-  "test3\0   \14\0\0\0label=AuxStr\0   \27\0\0\0blurb=Specify text her"
-  "e\0\34\0\0\0RapicornAidaTest::ButtonArea\0   \25\0\0\0InterfaceTest"
-  "s::Child\0  \26\0\0\0InterfaceTests::Parent\0 &\0\0\0InterfaceTests"
-  "::ChildInheritingSignals\0 \33\0\0\0RapicornAidaTest::ClickType\0\16"
-  "\0\0\0CLICK_ON_PRESS\0 \20\0\0\0CLICK_ON_RELEASE\0   \21\0\0\0CLIC"
-  "K_SLOW_REPEAT\0  \21\0\0\0CLICK_FAST_REPEAT\0  \20\0\0\0CLICK_KEY_R"
-  "EPEAT\0   \23\0\0\0BseTest::Compressor\0\32\0\0\0InterfaceTests::De"
-  "scendant\0 \31\0\0\0MandatoryNamespace::Enum1\0  \4\0\0\0E1_A\0   \32"
-  "\0\0\0MandatoryNamespace::Enum1c\0 \5\0\0\0E1C_A\0  \31\0\0\0Mand"
-  "atoryNamespace::Enum2\0  \4\0\0\0E2_A\0   \4\0\0\0E2_B\0   \32\0\0\0"
-  "MandatoryNamespace::Enum2c\0 \5\0\0\0E2C_A\0  \5\0\0\0E2C_B\0  \31"
-  "\0\0\0MandatoryNamespace::Enum3\0  \4\0\0\0E3_A\0   \4\0\0\0E3_B\0 "
-  "  \4\0\0\0E3_C\0   \32\0\0\0MandatoryNamespace::Enum3c\0 \5\0\0\0E3"
-  "C_A\0  \5\0\0\0E3C_B\0  \5\0\0\0E3C_C\0  \32\0\0\0MandatoryNamespac"
-  "e::Enum4a\0 \5\0\0\0E4A_A\0  \5\0\0\0E4A_B\0  \5\0\0\0E4A_C\0  \5\0"
-  "\0\0E4A_D\0  \32\0\0\0MandatoryNamespace::Enum4b\0 \5\0\0\0E4B_A\0 "
-  " \5\0\0\0E4B_B\0  \5\0\0\0E4B_C\0  \5\0\0\0E4B_D\0  \32\0\0\0Mandat"
-  "oryNamespace::Enum4c\0 \5\0\0\0E4C_A\0  \5\0\0\0E4C_B\0  \5\0\0\0E4"
-  "C_C\0  \5\0\0\0E4C_D\0  \32\0\0\0MandatoryNamespace::Enum4d\0 \5\0\0"
-  "\0E4D_A\0  \5\0\0\0E4D_B\0  \5\0\0\0E4D_C\0  \5\0\0\0E4D_D\0  )\0\0"
-  "\0MandatoryNamespace::ExtensiveEnumSequence\0  \15\0\0\0enum_eleme"
-  "nts\0  !\0\0\0MandatoryNamespace::FloatSequence\0  \14\0\0\0fractal"
-  "value\0   \32\0\0\0InterfaceTests::GrandChild\0 &\0\0\0MandatoryNam"
-  "espace::Inner::InnerRecord\0 \1\0\0\0x\0  \1\0\0\0y\0  \3\0\0\0rec\0"
-  "\35\0\0\0MandatoryNamespace::NewRecord\0  \37\0\0\0MandatoryNamesp"
-  "ace::IntSequence\0\4\0\0\0numx\0   %\0\0\0MandatoryNamespace::Inter"
-  "faceSequence\0  !\0\0\0RapicornAidaTest::MathExpressions\0  \10\0\0"
-  "\0RESULT_2\0   \10\0\0\0RESULT_5\0   \10\0\0\0RESULT_8\0   \10\0\0\0"
-  "RESULT_6\0   \10\0\0\0RESULT_7\0   \11\0\0\0RESULT_16\0  \10\0\0\0"
-  "RESULT_3\0   \11\0\0\0RESULT_24\0  \11\0\0\0RESULT_13\0  \11\0\0\0R"
-  "ESULT_m2\0  \11\0\0\0RESULT_77\0  \12\0\0\0RESULT_511\0 #\0\0\0Inte"
-  "rfaceTests::MethodTestInterface\0\20\0\0\0Other::NameTests\0   \"\0"
-  "\0\0MandatoryNamespace::NestedTypesRec\0 \36\0\0\0MandatoryNamespac"
-  "e::XFooRecord\0 \3\0\0\0seq\0 \0\0\0MandatoryNamespace::XFooSequenc"
-  "e\0   \"\0\0\0MandatoryNamespace::NestedTypesSeq\0 \3\0\0\0ntr\0\1\0"
-  "\0\0i\0  \5\0\0\0enum1\0  \3\0\0\0xfs\0\36\0\0\0InterfaceTests::Pr"
-  "opertyTester\0 \35\0\0\0RapicornAidaTest::PureMethods\0  \31\0\0\0I"
-  "nterfaceTests::QuickEnum\0  \4\0\0\0ZERO\0   \32\0\0\0InterfaceTest"
-  "s::QuickIface\0 \33\0\0\0InterfaceTests::QuickRecord\0\4\0\0\0int1\0"
-  "   \4\0\0\0int2\0   \35\0\0\0InterfaceTests::QuickSequence\0  \11\0"
-  "\0\0somefloat\0  \30\0\0\0BseTest::RecordForGroups\0   \5\0\0\0rat"
-  "io\0  \6\0\0\0label=\0 \6\0\0\0blurb=\0 \7\0\0\0hints=w\0\15\0\0\0o"
-  "rdinary_bool\0  \12\0\0\0threshold1\0 \12\0\0\0threshold2\0 \"\0\0\0"
-  "MandatoryNamespace::RecordSequence\0 \15\0\0\0repeatedfield\0  \37"
-  "\0\0\0MandatoryNamespace::Refer2Inner\0\1\0\0\0r\0  $\0\0\0Mandator"
-  "yNamespace::SequenceSequence\0   \10\0\0\0moreints\0   \32\0\0\0Oth"
-  "erNamespace::SomeRecord\0 \2\0\0\0r1\0 \2\0\0\0r2\0 \2\0\0\0r3\0 \2"
-  "\0\0\0r4\0 \24\0\0\0BseTest::SoundModule\0   \"\0\0\0MandatoryNames"
-  "pace::StringSequence\0 \5\0\0\0blurb\0  \34\0\0\0InterfaceTests::UI"
-  "WidgetArea\0   \0\0\0\0";
-
-static Rapicorn::Init __aida_autoinit_type_map__ ([]() {
-  Rapicorn::Aida::TypeMap::enlist_map (__aida_type_map__);
-});
-} // Anon
-
 

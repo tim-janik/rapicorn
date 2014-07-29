@@ -164,8 +164,7 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
-RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*)); // assert slim TypeCode impl
-RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + MAX (sizeof (uint64), sizeof (void*))); // assert slim Any impl
+RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
 Any&
 Any::operator= (const Any &clone)
@@ -173,7 +172,7 @@ Any::operator= (const Any &clone)
   if (this == &clone)
     return *this;
   reset();
-  type_code_ = clone.type_code_;
+  type_kind_ = clone.type_kind_;
   switch (kind())
     {
     case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
@@ -200,55 +199,24 @@ Any::reset()
     case LOCAL:         delete u_.pholder;                      break;
     default: ;
     }
-  type_code_ = TypeMap::notype();
+  type_kind_ = UNTYPED;
   u_.vuint64 = 0;
 }
 
 void
-Any::retype (const TypeCode &tc)
+Any::rekind (TypeKind _kind)
 {
   reset();
-  switch (tc.kind())
+  type_kind_ = _kind;
+  switch (_kind)
     {
     case STRING:   new (&u_.vstring()) String();                               break;
     case ANY:      u_.vany = new Any();                                        break;
     case SEQUENCE: u_.vanys = new AnyVector();                                 break;
     case RECORD:   u_.vfields = new FieldVector();                             break;
     case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::_null_handle()); break;
-    default:    break;
+    default:       break;
     }
-  type_code_ = tc;
-}
-
-void
-Any::rekind (TypeKind _kind)
-{
-  const char *name;
-  switch (_kind)
-    {
-    case UNTYPED:
-      reset();
-      return;
-    case BOOL:          name = "bool";                  break;
-    case INT32:         name = "int32";                 break;
-      // case UINT32:   name = "uint32";                break;
-    case INT64:         name = "int64";                 break;
-    case FLOAT64:       name = "float64";               break;
-    case STRING:        name = "String";                break;
-    case ANY:           name = "Any";                   break;
-    case ENUM:          name = "Aida::DynamicEnum";     break;
-    case SEQUENCE:      name = "Aida::DynamicSequence"; break;
-    case RECORD:        name = "Aida::DynamicRecord";   break;
-    case LOCAL:         name = "AidaLocal";             break;
-    case REMOTE:        name = "AidaRemote";            break;
-    case INSTANCE:
-    default:
-      fatal_error (String() + "Aida::Any:rekind: incomplete type: " + type_kind_name (_kind));
-    }
-  TypeCode tc = TypeMap::lookup (name);
-  if (tc.untyped())
-    fatal_error (String() + "Aida::Any:rekind: unknown type: " + name);
-  retype (tc);
 }
 
 template<class T> String any_field_name (const T          &);
@@ -273,7 +241,7 @@ String
 Any::to_string (const String &field_name) const
 {
   String s = "{ ";
-  s += "type=" + Rapicorn::string_to_cquote (type().name());
+  s += "type=" + Rapicorn::string_to_cquote (type_kind_name (kind()));
   if (!field_name.empty())
     s += ", name=" + Rapicorn::string_to_cquote (field_name);
   switch (kind())
@@ -298,7 +266,7 @@ Any::to_string (const String &field_name) const
 bool
 Any::operator== (const Any &clone) const
 {
-  if (type_code_ != clone.type_code_)
+  if (type_kind_ != clone.type_kind_)
     return false;
   switch (kind())
     {
@@ -338,7 +306,7 @@ Any::swap (Any &other)
   memcpy (buffer, &other.u_, USIZE);
   memcpy (&other.u_, &this->u_, USIZE);
   memcpy (&this->u_, buffer, USIZE);
-  type_code_.swap (other.type_code_);
+  std::swap (type_kind_, other.type_kind_);
 }
 
 void
@@ -1837,5 +1805,3 @@ ObjectBroker::post_msg (FieldBuffer *fb)
 }
 
 } } // Rapicorn::Aida
-
-#include "aidamap.cc"

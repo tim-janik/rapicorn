@@ -68,7 +68,7 @@ const EnumValue* enum_value_find  (const EnumValue *values, const String &name);
 size_t           enum_value_count (const EnumValue *values);                     ///< Count number of enum values.
 
 // == TypeKind ==
-/// Classification enum for the underlying kind of a TypeCode.
+/// Classification enum for the underlying type.
 enum TypeKind {
   UNTYPED        = 0,   ///< Type indicator for unused Any instances.
   VOID           = 'v', ///< 'void' type.
@@ -90,72 +90,6 @@ enum TypeKind {
 template<> const EnumValue* enum_value_list<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
-
-// == TypeCode ==
-struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
-{
-  /*copy*/              TypeCode        (const TypeCode&);
-  /*dtor*/             ~TypeCode        ();
-  bool                  operator!=      (const TypeCode&) const;
-  bool                  operator==      (const TypeCode&) const;
-  TypeCode&             operator=       (const TypeCode&);
-  void                  swap            (TypeCode &other);      ///< Swap the contents of @a this and @a other in constant time.
-  TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
-  std::string           kind_name       () const;               ///< Obtain the name of kind().
-  std::string           name            () const;               ///< Obtain the type name.
-  size_t                aux_count       () const;               ///< Number of items of auxillary data.
-  std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
-  std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
-  std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
-  size_t                prerequisite_count () const;            ///< Number of interface prerequisites
-  std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
-  size_t                field_count     () const;               ///< Number of fields in a record type.
-  TypeCode              field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
-  std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
-  TypeCode              resolve         () const;               ///< Returns type code after resolving kind TYPE_REFERENCE.
-  bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
-  std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
-  bool                  enum_combinable () const;               ///< Indicate if multiple enum values are combinable into a mask.
-  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
-  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
-  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
-  String                enum_string     (int64 value) const;    ///< Convert enum value to string, possibly combining identifiers.
-  int64                 enum_parse      (const String &value_string, String *error = NULL) const; ///< Parse an enum_string() result.
-  template<class E> static
-  inline TypeCode       from_enum       ();                     ///< Retrieve a TypeCode by giving the enum C++ type.
-  class InternalType;
-  class MapHandle;
-private: // implementation bits
-  explicit              TypeCode        (MapHandle*, InternalType*);
-  static TypeCode       notype          (MapHandle*);
-  friend class TypeMap;
-  MapHandle    *handle_;
-  InternalType *type_;
-};
-
-class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
-{
-  TypeCode::MapHandle  *handle_;
-  friend class TypeCode::MapHandle;
-  explicit              TypeMap      (TypeCode::MapHandle*);
-  static TypeMap        builtins     ();
-  static TypeMap        enlist_map   (size_t length, const char *static_type_map, bool global);
-public:
-  /*copy*/              TypeMap      (const TypeMap&);
-  TypeMap&              operator=    (const TypeMap&);
-  /*dtor*/             ~TypeMap      ();
-  size_t                type_count   () const;                  ///< Number of TypeCode classes in this TypeMap.
-  const TypeCode        type         (size_t      index) const; ///< Obtain a TypeCode by index.
-  int                   error_status ();                        ///< Obtain errno status from load().
-  static TypeMap        load         (std::string file_name);   ///< Load a new TypeMap and register for global lookups.
-  static TypeCode       lookup       (std::string name);        ///< Globally lookup a TypeCode by name.
-  static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
-  TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
-  static TypeCode       notype       ();
-  template<ssize_t S>
-  static void           enlist_map   (const char (&static_type_map)[S]) { enlist_map (S, static_type_map, true); }
-};
 
 // == Type Declarations ==
 class ObjectBroker;
@@ -241,7 +175,7 @@ protected:
   bool  plain_zero_type (TypeKind kind);
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
 private:
-  TypeCode type_code_;
+  TypeKind type_kind_;
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; RemoteHandle *shandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
@@ -255,16 +189,13 @@ private:
 public:
   /*dtor*/ ~Any    ();                                   ///< Any destructor.
   explicit  Any    ();                                   ///< Default initialize Any with no type.
-  explicit  Any    (const TypeCode &tc);                 ///< Default initialize Any for a specific type.
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
   template<class V>
   explicit  Any    (const V &value);                     ///< Initialize Any with a @a value convertible to an Any.
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
-  TypeCode  type   () const { return type_code_; }       ///< Obtain the full TypeCode for the contents of this Any.
-  TypeKind  kind   () const { return type_code_.kind(); } ///< Obtain the underlying primitive type kind.
-  void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
+  TypeKind  kind   () const { return type_kind_; }       ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);               ///< Swap the contents of @a this and @a other in constant time.
   bool operator>>= (bool          &v) const { int64 d; const bool r = to_int (d, 1); v = d; return r; }
   bool operator>>= (char          &v) const { int64 d; const bool r = to_int (d, 7); v = d; return r; }
@@ -683,39 +614,24 @@ public: /// @name API for remote types.
 };
 
 // == inline implementations ==
-template<class E> inline TypeCode
-TypeCode::from_enum () // fallback for unspecialized types
-{
-  static_assert (0 * sizeof (E), "no EnumInfo specialisation for this type");
-  return *(TypeCode*) NULL; // silence compiler
-}
-
 template<class V> inline
 Any::Any (const V &value) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator<<= (value);
 }
 
 template<> inline
 Any::Any<Any::Field> (const Any::Field &clone) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);
 }
 
 inline
 Any::Any() :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {}
-
-inline
-Any::Any (const TypeCode &tc) :
-  type_code_ (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u_ {0}
-{
-  if (!plain_zero_type (tc.kind()))
-    retype (tc);        // carry out special initializations
-}
 
 inline bool
 Any::plain_zero_type (TypeKind kind)
@@ -732,7 +648,7 @@ Any::plain_zero_type (TypeKind kind)
 
 inline
 Any::Any (const Any &clone) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);
 }

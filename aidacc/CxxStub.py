@@ -203,7 +203,6 @@ class Generator:
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
     s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
-    s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '__aida_type_code__ () const\t{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
@@ -398,9 +397,6 @@ class Generator:
     c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if ddc:
       s += c
-    if ddc and self.gen_mode == G4SERVANT:
-      s += '  ' + self.F ('Rapicorn::Aida::TypeCode') + '         __aida_type_code__ ()\t'
-      s += '{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }\n'
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
       s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
@@ -951,19 +947,6 @@ class Generator:
     s += '};\n'
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
-  def generate_type_map (self, types):
-    s = '\n'
-    import TypeMap
-    binary_type_map = TypeMap.generate_type_map (types)
-    s += 'namespace { // Anon\n'
-    s += 'static const char __aida_type_map__[] =\n  '
-    cq = TypeMap.cquote (binary_type_map)
-    s += re.sub ('\n', '\n  ', cq) + ';\n\n'
-    s += 'static Rapicorn::Init __aida_autoinit_type_map__ ([]() {\n'
-    s += '  Rapicorn::Aida::TypeMap::enlist_map (__aida_type_map__);\n'
-    s += '});\n'
-    s += '} // Anon\n'
-    return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVANT
     s = ''
@@ -1030,7 +1013,6 @@ class Generator:
     s = '\n'
     classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
     s += 'template<> const EnumValue* enum_value_list<%s> ();\n' % classFull
-    s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
@@ -1180,10 +1162,6 @@ class Generator:
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
           s += self.generate_enum_impl (tp)
-    # generate unmarshalling server calls
-    if self.gen_clientcc:
-      s += self.open_namespace (None)
-      s += self.generate_type_map (types) + '\n'
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT
