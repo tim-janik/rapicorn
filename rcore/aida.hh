@@ -631,10 +631,12 @@ class ServerConnection : public BaseConnection {
 protected:
   /*ctor*/           ServerConnection (const std::string &feature_keys);
   virtual           ~ServerConnection ();
-public: /// @name API for remote calls
-  virtual uint64        instance2orbid (const ImplicitBase*) = 0;
-  virtual ImplicitBase* orbid2instance (uint64) = 0;
-  virtual ImplicitBase* remote_origin  () const = 0;
+public:
+  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
+  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
+  virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
+  virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
+  virtual ImplicitBase* remote_origin           () const = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -645,8 +647,6 @@ public:
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
-  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
-  virtual void emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
 };
 
 /// Connection context for IPC clients. @nosubgrouping

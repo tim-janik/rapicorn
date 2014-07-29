@@ -1465,18 +1465,20 @@ class ServerConnectionImpl : public ServerConnection {
 public:
   explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
-  virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
-  virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
-  virtual void          dispatch   ();
+  uint64                instance2orbid (const ImplicitBase*);
+  ImplicitBase*         orbid2instance (uint64);
+  virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
+  virtual bool          pending        ()               { return transport_channel_.has_msg(); }
+  virtual void          dispatch       ();
   virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
   virtual void          remote_origin  (ImplicitBase *rorigin);
   virtual void          add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
   virtual ImplicitBase* pop_interface  (FieldReader &fr);
-  virtual uint64        instance2orbid (const ImplicitBase*);
-  virtual ImplicitBase* orbid2instance (uint64);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
+  virtual ImplicitBase*     interface_from_handle   (const RemoteHandle &rhandle);
+  virtual void              interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle);
 };
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
@@ -1598,6 +1600,20 @@ ServerConnectionImpl::dispatch ()
     }
   if (AIDA_UNLIKELY (fb))
     delete fb;
+}
+
+ImplicitBase*
+ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
+{
+  return orbid2instance (rhandle._orbid());
+}
+
+void
+ServerConnectionImpl::interface_to_handle (ImplicitBase *ibase, RemoteHandle &rhandle)
+{
+  const uint64 orbid = instance2orbid (ibase);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (rhandle, orbid);
 }
 
 void
