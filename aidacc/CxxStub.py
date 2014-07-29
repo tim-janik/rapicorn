@@ -280,10 +280,27 @@ class Generator:
     s += '  return back();\n'
     s += '}\n'
     return s
-  def generate_enum_info_specialization (self, type_info):
+  def generate_enum_impl (self, type_info):
     s = '\n'
-    classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
-    s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
+    enum_ns, enum_class = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
+    l = []
+    s += 'template<> const EnumValue*\n'
+    s += 'enum_value_list<%s::%s> () {\n' % (enum_ns, enum_class)
+    s += '  static const EnumValue values[] = {\n'
+    import TypeMap
+    for opt in type_info.options:
+      (ident, label, blurb, number) = opt
+      # number = self.c_long_postfix (number)
+      number = enum_ns + '::' + ident
+      ident = TypeMap.cquote (ident)
+      label = TypeMap.cquote (label)
+      label = "NULL" if label == '""' else label
+      blurb = TypeMap.cquote (blurb)
+      blurb = "NULL" if blurb == '""' else blurb
+      s += '    { %s,\t%s, %s, %s },\n' % (number, ident, label, blurb)
+    s += '    { 0,\tNULL, NULL, NULL }     // sentinel\n  };\n'
+    s += '  return values;\n}\n'
+    s += 'template const EnumValue* enum_value_list<%s::%s> ();\n' % (enum_ns, enum_class)
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -1009,6 +1026,12 @@ class Generator:
       s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
     s += '/// @endcond\n'
     return s
+  def generate_enum_info_specialization (self, type_info):
+    s = '\n'
+    classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
+    s += 'template<> const EnumValue* enum_value_list<%s> ();\n' % classFull
+    s += 'template<> inline TypeCode TypeCode::from_enum<%s>() { return TypeMap::lookup ("%s"); }\n' % (classFull, classFull)
+    return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
     lstrip = re.compile ('^\n*')
@@ -1127,6 +1150,7 @@ class Generator:
     if self.gen_clientcc or self.gen_servercc:
       self.gen_mode = G4SERVANT if self.gen_servercc else G4STUB
       s += '\n// --- Implementations ---\n'
+      spc_enums = []
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
@@ -1136,6 +1160,8 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
+        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
+          spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             s += self.open_namespace (tp)
@@ -1150,6 +1176,10 @@ class Generator:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
+      if spc_enums:
+        s += self.open_namespace (self.ns_aida)
+        for tp in spc_enums:
+          s += self.generate_enum_impl (tp)
     # generate unmarshalling server calls
     if self.gen_clientcc:
       s += self.open_namespace (None)

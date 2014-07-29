@@ -9,6 +9,18 @@ struct Foo { int i; bool operator== (const Foo &o) const { return i == o.i; } };
 struct Bar { String s; };       // uncomparable
 
 static void
+test_basics()
+{
+  const Aida::EnumValue *tkv = Aida::enum_value_list<Aida::TypeKind>();
+  TASSERT (tkv != NULL && enum_value_count (tkv) > 0);
+  const Aida::EnumValue *ev = enum_value_find (tkv, "UNTYPED");
+  TASSERT (ev && ev->value == Aida::UNTYPED);
+  ev = enum_value_find (tkv, Aida::STRING);
+  TASSERT (ev && String ("STRING") == ev->ident);
+}
+REGISTER_TEST ("Aida/Basics", test_basics);
+
+static void
 test_any()
 {
   Any a;

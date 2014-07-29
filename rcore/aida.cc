@@ -36,6 +36,64 @@ namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
+// == EnumValue ==
+size_t
+enum_value_count (const EnumValue *values)
+{
+  size_t n = 0;
+  if (values)
+    while (values[n].ident)
+      n++;
+  return n;
+}
+
+const EnumValue*
+enum_value_find (const EnumValue *values, int64 value)
+{
+  if (values)
+    for (size_t i = 0; values[i].ident; i++)
+      if (values[i].value == value)
+        return &values[i];
+  return NULL;
+}
+
+const EnumValue*
+enum_value_find (const EnumValue *values, const String &name)
+{
+  if (values)
+    for (size_t i = 0; values[i].ident; i++)
+      if (string_match_identifier_tail (values[i].ident, name))
+        return &values[i];
+  return NULL;
+}
+
+// == TypeKind ==
+template<> const EnumValue*
+enum_value_list<TypeKind> ()
+{
+  static const EnumValue values[] = {
+    { UNTYPED,          "UNTYPED",              NULL, NULL },
+    { VOID,             "VOID",                 NULL, NULL },
+    { BOOL,             "BOOL",                 NULL, NULL },
+    { INT32,            "INT32",                NULL, NULL },
+    { INT64,            "INT64",                NULL, NULL },
+    { FLOAT64,          "FLOAT64",              NULL, NULL },
+    { STRING,           "STRING",               NULL, NULL },
+    { ENUM,             "ENUM",                 NULL, NULL },
+    { SEQUENCE,         "SEQUENCE",             NULL, NULL },
+    { RECORD,           "RECORD",               NULL, NULL },
+    { INSTANCE,         "INSTANCE",             NULL, NULL },
+    { FUNC,             "FUNC",                 NULL, NULL },
+    { TYPE_REFERENCE,   "TYPE_REFERENCE",       NULL, NULL },
+    { LOCAL,            "LOCAL",                NULL, NULL },
+    { REMOTE,           "REMOTE",               NULL, NULL },
+    { ANY,              "ANY",                  NULL, NULL },
+    { 0,                NULL,                   NULL, NULL }     // sentinel
+  };
+  return values;
+}
+template const EnumValue* enum_value_list<TypeKind> ();
+
 // == SignalHandlerIdParts ==
 union SignalHandlerIdParts {
   size_t   vsize;

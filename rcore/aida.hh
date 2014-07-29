@@ -51,6 +51,22 @@ using Rapicorn::uint64;
 // == Prototypes ==
 class RemoteHandle;
 
+// == EnumValue ==
+/// Aida info for enumeration values.
+struct EnumValue {
+  int64       value;
+  const char *ident, *label, *blurb;
+  constexpr EnumValue (int64 dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
+  constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
+    value (v), ident (vident), label (vlabel), blurb (vblurb) {}
+};
+
+template<class Enum>
+const EnumValue* enum_value_list  (); ///< Template to be specialised for enums to introspect enum values.
+const EnumValue* enum_value_find  (const EnumValue *values, int64 value);        ///< Find first enum value equal to @a value.
+const EnumValue* enum_value_find  (const EnumValue *values, const String &name); ///< Find first enum value matching @a name.
+size_t           enum_value_count (const EnumValue *values);                     ///< Count number of enum values.
+
 // == TypeKind ==
 /// Classification enum for the underlying kind of a TypeCode.
 enum TypeKind {
@@ -71,14 +87,9 @@ enum TypeKind {
   REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
-const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
+template<> const EnumValue* enum_value_list<TypeKind> ();
 
-/// Aida wrapper for enumeration values.
-struct EnumValue {
-  int64 value;
-  const char *ident, *label, *blurb;
-  constexpr EnumValue (int64 dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
-};
+const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
 // == TypeCode ==
 struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
