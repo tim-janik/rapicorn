@@ -61,7 +61,7 @@ testpystub.cc: testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref xgen-$@
 	$(Q) echo "static PyMethodDef __testpass_methods__[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >> xgen-$@
 	$(Q) echo 'PyMODINIT_FUNC init__testpass (void) { Py_InitModule ("__testpass", __testpass_methods__); }' >> xgen-$@
-	$(Q) mv xgen-$@ $@
+	$(Q) (echo '#include <py-rope.hh>' && cat xgen-$@ ) > $@ && rm -f xgen-$@
 check-PyStub-testpass-module: __testpass.la
 	@: # check .cc syntax: already done by building __testpass.so
 	@: # check .py syntax

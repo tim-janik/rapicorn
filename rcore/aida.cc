@@ -588,7 +588,7 @@ ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
 void
 ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
 {
-  tie_handle (sh, fr.pop_object (bcon));
+  tie_handle (sh, fr.pop_object());
 }
 
 uint
@@ -1151,6 +1151,32 @@ BaseConnection::any2local (Any &any)
   // any = any
 }
 
+void
+BaseConnection::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
+{
+  fb.add_object (rhandle._orbid());
+}
+
+RemoteHandle
+BaseConnection::pop_handle (FieldReader &fr)
+{
+  RemoteMember<RemoteHandle> remote;
+  ObjectBroker::pop_handle (fr, remote, *this);
+  return remote;
+}
+
+void
+BaseConnection::add_interface (FieldBuffer &fb, const ImplicitBase *ibase)
+{
+  fatal ("assert_not_reached");
+}
+
+ImplicitBase*
+BaseConnection::pop_interface (FieldReader &fr)
+{
+  fatal ("assert_not_reached");
+}
+
 // == ClientConnection ==
 ClientConnection::ClientConnection (const std::string &feature_keys) :
   BaseConnection (feature_keys)
@@ -1161,7 +1187,12 @@ ClientConnection::~ClientConnection ()
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
-  struct SignalHandler { uint64 hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
+  struct SignalHandler {
+    uint64 hhi, hlo, cid;
+    RemoteMember<RemoteHandle> remote;
+    SignalEmitHandler *seh;
+    void *data;
+  };
   typedef std::set<uint64> UIntSet;
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages sent to client
@@ -1201,7 +1232,7 @@ public:
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
   virtual RemoteHandle   remote_origin     (const vector<std::string> &feature_key_list);
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data);
+  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_orbid (uint64 orbid);
 };
@@ -1228,7 +1259,7 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
       FieldBuffer *fr = this->call_remote (fb); // takes over fb
       FieldReader frr (*fr);
       frr.skip_header();
-      ObjectBroker::pop_handle (frr, rorigin, *this);
+      rorigin = pop_handle (frr);
       delete fr;
     }
   return rorigin;
@@ -1337,16 +1368,16 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 }
 
 size_t
-ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data)
+ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data)
 {
-  assert_return (orbid > 0, 0);
+  assert_return (rhandle._orbid() > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
   assert_return (hlo > 0, 0);
   assert_return (seh != NULL, 0);
   SignalHandler *shandler = new SignalHandler;
   shandler->hhi = hhi;
   shandler->hlo = hlo;
-  shandler->oid = orbid;                        // emitting object
+  shandler->remote = rhandle;                   // emitting object
   shandler->cid = 0;
   shandler->seh = seh;
   shandler->data = data;
@@ -1356,9 +1387,9 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, Sign
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid, *this);         // emitting object
+  add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1385,9 +1416,9 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid, *this);         // emitting object
+  add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1439,7 +1470,9 @@ public:
   virtual void          dispatch   ();
   virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
   virtual void          remote_origin  (ImplicitBase *rorigin);
-  virtual uint64        instance2orbid (ImplicitBase*);
+  virtual void          add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
+  virtual ImplicitBase* pop_interface  (FieldReader &fr);
+  virtual uint64        instance2orbid (const ImplicitBase*);
   virtual ImplicitBase* orbid2instance (uint64);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
@@ -1464,8 +1497,20 @@ ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
   remote_origin_ = rorigin;
 }
 
+void
+ServerConnectionImpl::add_interface (FieldBuffer &fb, const ImplicitBase *ibase)
+{
+  fb.add_object (this->instance2orbid (ibase));
+}
+
+ImplicitBase*
+ServerConnectionImpl::pop_interface (FieldReader &fr)
+{
+  return orbid2instance (fr.pop_object());
+}
+
 uint64
-ServerConnectionImpl::instance2orbid (ImplicitBase *instance)
+ServerConnectionImpl::instance2orbid (const ImplicitBase *instance)
 {
   const ptrdiff_t addr = reinterpret_cast<ptrdiff_t> (instance);
   const auto it = addr_map.find (addr);
@@ -1505,7 +1550,7 @@ ServerConnectionImpl::dispatch ()
         fbr.reset (*fb);
         ImplicitBase *rorigin = this->remote_origin();
         FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
-        fr->add_object (this->instance2orbid (rorigin), *this);
+        add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));

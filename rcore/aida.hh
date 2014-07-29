@@ -512,7 +512,7 @@ public:
   inline void add_evalue (int64 vint64)    { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_object (uint64    objid, BaseConnection &bcon);
+  inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
@@ -575,7 +575,7 @@ public:
   inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_object (BaseConnection &bcon);
+  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const Any&         pop_any    (BaseConnection &bcon);
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
@@ -616,6 +616,10 @@ public:
   virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list);
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
+  virtual void           add_handle     (FieldBuffer &fb, const RemoteHandle &rhandle);
+  virtual RemoteHandle   pop_handle     (FieldReader &fr);
+  virtual void           add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
+  virtual ImplicitBase*  pop_interface  (FieldReader &fr);
 };
 
 /// Function typoe for internal signal handling.
@@ -628,7 +632,7 @@ protected:
   /*ctor*/           ServerConnection (const std::string &feature_keys);
   virtual           ~ServerConnection ();
 public: /// @name API for remote calls
-  virtual uint64        instance2orbid (ImplicitBase*) = 0;
+  virtual uint64        instance2orbid (const ImplicitBase*) = 0;
   virtual ImplicitBase* orbid2instance (uint64) = 0;
   virtual ImplicitBase* remote_origin  () const = 0;
 protected: /// @name Registry for IPC method lookups
@@ -654,7 +658,7 @@ protected:
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
 public: /// @name API for signal event handlers.
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data) = 0;
+  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
 public: /// @name API for remote types.
   virtual std::string   type_name_from_orbid (uint64 orbid) = 0;
@@ -749,24 +753,10 @@ FieldBuffer::reset()
 }
 
 inline void
-FieldBuffer::add_object (uint64 objid, BaseConnection &bcon)
-{
-  FieldUnion &u = addu (INSTANCE);
-  u.vint64 = objid;
-}
-
-inline void
 FieldBuffer::add_any (const Any &vany, BaseConnection &bcon)
 {
   FieldUnion &u = addu (ANY);
   u.vany = bcon.any2remote (vany);
-}
-
-inline uint64
-FieldReader::pop_object (BaseConnection &bcon)
-{
-  FieldUnion &u = fb_popu (INSTANCE);
-  return u.vint64;
 }
 
 inline const Any&

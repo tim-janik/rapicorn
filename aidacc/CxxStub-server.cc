@@ -30,15 +30,11 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 }
 
 // objects
-template<class Target> static inline Target* id2obj (uint64 oid)
+template<class Target> static inline Target*
+id2obj (uint64 oid)
 {
   Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
   return dynamic_cast<Target*> (instance);
-}
-
-static inline uint64 obj2id  (Rapicorn::Aida::ImplicitBase *obj)
-{
-  return server_connection->instance2orbid (obj);
 }
 
 template<class Object> static inline Object*
@@ -50,7 +46,7 @@ remote_handle_to_interface (const RemoteHandle &sh)
 template<class SMH> static inline SMH
 interface_to_remote_handle ($AIDA_iface_base$ *self)
 {
-  const uint64 orbid = obj2id (self);
+  const uint64 orbid = server_connection->instance2orbid (self);
   SMH target;
   struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
   Broker::tie_handle (target, orbid);

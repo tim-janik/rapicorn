@@ -5,6 +5,9 @@
 #include <Python.h> // must be included first to configure std headers
 #include <rapicorn.hh>
 
-PyObject*       py_remote_handle_create (const Rapicorn::Aida::RemoteHandle &rhandle);
+void                         py_remote_handle_push    (const Rapicorn::Aida::RemoteHandle &rhandle);
+void                         py_remote_handle_pop     (void);
+Rapicorn::Aida::RemoteHandle py_remote_handle_extract (PyObject *object);
+Rapicorn::Aida::RemoteHandle py_remote_handle_ensure  (PyObject *object); // sets PyErr_Occurred() if null_handle
 
 #endif /* __RAPICORN_PY_ROPE_HH__ */

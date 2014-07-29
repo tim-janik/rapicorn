@@ -32,19 +32,13 @@ signal_disconnect (size_t signal_handler_id)
 static AIDA_UNUSED size_t
 signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandler seh, void *data)
 {
-  return client_connection->signal_connect (hhi, hlo, rh._orbid(), seh, data);
-}
-
-static inline uint64
-smh2id (const RemoteHandle &sh)
-{
-  return sh._orbid();
+  return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
 template<class SMH> SMH
 smh2cast (const RemoteHandle &handle)
 {
-  const uint64 orbid = __AIDA_Local__::smh2id (handle);
+  const uint64 orbid = handle._orbid();
   SMH target;
   struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
   Broker::tie_handle (target, orbid);

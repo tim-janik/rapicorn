@@ -37,19 +37,13 @@ signal_disconnect (size_t signal_handler_id)
 static AIDA_UNUSED size_t
 signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandler seh, void *data)
 {
-  return client_connection->signal_connect (hhi, hlo, rh._orbid(), seh, data);
-}
-
-static inline uint64
-smh2id (const RemoteHandle &sh)
-{
-  return sh._orbid();
+  return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
 template<class SMH> SMH
 smh2cast (const RemoteHandle &handle)
 {
-  const uint64 orbid = __AIDA_Local__::smh2id (handle);
+  const uint64 orbid = handle._orbid();
   SMH target;
   struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
   Broker::tie_handle (target, orbid);
@@ -1117,7 +1111,7 @@ FirstInterfaceHandle::FirstInterfaceHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const FirstInterfaceHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, FirstInterfaceHandle &handle)
@@ -1668,7 +1662,7 @@ UIWidgetAreaHandle::UIWidgetAreaHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, UIWidgetAreaHandle &handle)
@@ -1923,7 +1917,7 @@ ParentHandle::ParentHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ParentHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ParentHandle &handle)
@@ -1977,7 +1971,7 @@ ChildHandle::ChildHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildHandle &handle)
@@ -2026,7 +2020,7 @@ DescendantHandle::DescendantHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const DescendantHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, DescendantHandle &handle)
@@ -2075,7 +2069,7 @@ GrandChildHandle::GrandChildHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const GrandChildHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, GrandChildHandle &handle)
@@ -2171,7 +2165,7 @@ QuickIfaceHandle::QuickIfaceHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const QuickIfaceHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, QuickIfaceHandle &handle)
@@ -2235,7 +2229,7 @@ MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const MethodTestInterfaceHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, MethodTestInterfaceHandle &handle)
@@ -2926,7 +2920,7 @@ SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SignalTestInterfaceHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, SignalTestInterfaceHandle &handle)
@@ -2997,7 +2991,7 @@ ChildInheritingSignalsHandle::ChildInheritingSignalsHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildInheritingSignalsHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ChildInheritingSignalsHandle &handle)
@@ -3046,7 +3040,7 @@ AnotherChildHandle::AnotherChildHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const AnotherChildHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, AnotherChildHandle &handle)
@@ -3095,7 +3089,7 @@ PropertyTesterHandle::PropertyTesterHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PropertyTesterHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, PropertyTesterHandle &handle)
@@ -3453,7 +3447,7 @@ ButtonAreaHandle::ButtonAreaHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ButtonAreaHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, ButtonAreaHandle &handle)
@@ -3603,7 +3597,7 @@ PureMethodsHandle::PureMethodsHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PureMethodsHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, PureMethodsHandle &handle)
@@ -3675,7 +3669,7 @@ NameTestsHandle::NameTestsHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const NameTestsHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, NameTestsHandle &handle)
@@ -3746,7 +3740,7 @@ CompressorHandle::CompressorHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const CompressorHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, CompressorHandle &handle)
@@ -3879,7 +3873,7 @@ SoundModuleHandle::SoundModuleHandle ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SoundModuleHandle &handle)
 {
-  fb.add_object (__AIDA_Local__::smh2id (handle), *__AIDA_Local__::client_connection);
+  __AIDA_Local__::client_connection->add_handle (fb, handle);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, SoundModuleHandle &handle)

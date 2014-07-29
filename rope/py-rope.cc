@@ -43,12 +43,13 @@ static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
   // parse args: application_name, cmdline_args
-  const char *ns = NULL;
-  unsigned int nl = 0;
+  const char *ns = NULL, *appclassstr = NULL;
+  unsigned int nl = 0, appclasslen = 0;
   PyObject *list;
-  if (!PyArg_ParseTuple (args, "s#O", &ns, &nl, &list))
+  if (!PyArg_ParseTuple (args, "s#Os#", &ns, &nl, &list, &appclassstr, &appclasslen))
     return NULL;
-  String application_name (ns, nl); // first argument
+  String application_name (ns, nl);                     // first argument
+  String appclass_name (appclassstr, appclasslen);      // third argument
   const ssize_t len = PyList_Size (list);
   if (len < 0)
     return NULL;
@@ -77,11 +78,10 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   iargs.push_back (string_format ("cpu-affinity=%d", !ThisThread::affinity()));
   // initialize core
   ApplicationH app = init_app (application_name, &argc, argv, iargs);
-  uint64 app_id = app._orbid();
-  if (app_id == 0)
-    ; // FIXME: throw exception
+  if (!app)
+    return PyErr_Format (PyExc_RuntimeError, "Rapicorn initialization failed");
   atexit (shutdown_rapicorn_atexit);
-  return PyLong_FromUnsignedLongLong (app_id);
+  return __AIDA_pyfactory__create_handle (app, appclass_name.empty() ? NULL : appclass_name.c_str());
 }
 
 static PyObject*
@@ -234,18 +234,40 @@ register_py_remote_handle_type (PyObject *module)
     return;
   Py_INCREF (&py_remote_handle_type_object);
   PyModule_AddObject (module, "PyRemoteHandle", (PyObject*) &py_remote_handle_type_object); // allows new from Python
-  py_remote_handle_create (RemoteMember());
 }
 
 } // Anon
 
-PyObject*
-py_remote_handle_create (const Rapicorn::Aida::RemoteHandle &rhandle)
+void
+py_remote_handle_push (const Rapicorn::Aida::RemoteHandle &rhandle)
 {
+  if (next_remote_handle)
+    fatal ("py_remote_handle_push: stack overflow");
   next_remote_handle = rhandle;
-  PyObject *o = PyObject_CallFunction (PYTO (&py_remote_handle_type_object), PYS ("s"), "foobar");
+}
+
+void
+py_remote_handle_pop (void)
+{
   next_remote_handle = RemoteHandle::_null_handle();
-  return o;
+}
+
+Rapicorn::Aida::RemoteHandle
+py_remote_handle_extract (PyObject *object)
+{
+  if (PyObject_TypeCheck (object, &py_remote_handle_type_object))
+    return PYRH (object)->remote;
+  else
+    return Rapicorn::Aida::RemoteHandle::_null_handle();
+}
+
+Rapicorn::Aida::RemoteHandle
+py_remote_handle_ensure (PyObject *object) // sets PyErr_Occurred() if null_handle
+{
+  Rapicorn::Aida::RemoteHandle remote = py_remote_handle_extract (object);
+  if (!remote && !PyErr_Occurred())
+    PyErr_Format (PyExc_RuntimeError, "invalid call to NULL handle instance of Rapicorn.PyRemoteHandle");
+  return remote;
 }
 
 // --- Python module definitions (global namespace) ---
