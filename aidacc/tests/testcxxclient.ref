@@ -3991,6 +3991,7 @@ enum_value_list<MandatoryNamespace::Enum1> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum1> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum1c> () {
@@ -4000,6 +4001,7 @@ enum_value_list<MandatoryNamespace::Enum1c> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum1c> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum2> () {
@@ -4010,6 +4012,7 @@ enum_value_list<MandatoryNamespace::Enum2> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum2> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum2c> () {
@@ -4020,6 +4023,7 @@ enum_value_list<MandatoryNamespace::Enum2c> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum2c> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum3> () {
@@ -4031,6 +4035,7 @@ enum_value_list<MandatoryNamespace::Enum3> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum3> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum3c> () {
@@ -4042,6 +4047,7 @@ enum_value_list<MandatoryNamespace::Enum3c> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum3c> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum4a> () {
@@ -4054,6 +4060,7 @@ enum_value_list<MandatoryNamespace::Enum4a> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum4a> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum4b> () {
@@ -4066,6 +4073,7 @@ enum_value_list<MandatoryNamespace::Enum4b> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum4b> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum4c> () {
@@ -4078,6 +4086,7 @@ enum_value_list<MandatoryNamespace::Enum4c> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum4c> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::Enum4d> () {
@@ -4090,6 +4099,7 @@ enum_value_list<MandatoryNamespace::Enum4d> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::Enum4d> ();
 
 template<> const EnumValue*
 enum_value_list<MandatoryNamespace::ExtensiveEnum> () {
@@ -4133,6 +4143,7 @@ enum_value_list<MandatoryNamespace::ExtensiveEnum> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<MandatoryNamespace::ExtensiveEnum> ();
 
 template<> const EnumValue*
 enum_value_list<InterfaceTests::QuickEnum> () {
@@ -4142,6 +4153,7 @@ enum_value_list<InterfaceTests::QuickEnum> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<InterfaceTests::QuickEnum> ();
 
 template<> const EnumValue*
 enum_value_list<RapicornAidaTest::ClickType> () {
@@ -4155,6 +4167,7 @@ enum_value_list<RapicornAidaTest::ClickType> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<RapicornAidaTest::ClickType> ();
 
 template<> const EnumValue*
 enum_value_list<RapicornAidaTest::MathExpressions> () {
@@ -4175,6 +4188,7 @@ enum_value_list<RapicornAidaTest::MathExpressions> () {
   };
   return values;
 }
+template const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
 

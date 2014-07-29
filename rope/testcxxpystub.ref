@@ -123,7 +123,7 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
 static void
 __AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
 {
-  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
+  if (pyvalue == Py_None)               any = Rapicorn::Aida::Any();
   else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
   else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
   else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
