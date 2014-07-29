@@ -213,7 +213,7 @@ __AIDA_pyfactory__create_handle (RemoteHandle remote, const char *forced_type_na
     type_name = forced_type_name;
   else
     {
-      const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (remote._orbid());
+      const std::string fqtn = __AIDA_local__client_connection->type_name_from_handle (remote);
       type_name = fqtn;
       size_t p = type_name.find ("::");
       while (p != std::string::npos)

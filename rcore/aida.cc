@@ -1234,7 +1234,7 @@ public:
   virtual RemoteHandle   remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
-  virtual std::string   type_name_from_orbid (uint64 orbid);
+  virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
 };
 
 FieldBuffer*
@@ -1447,9 +1447,9 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 }
 
 std::string
-ClientConnectionImpl::type_name_from_orbid (uint64 orbid)
+ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 {
-  const uint type_index = IdentifierParts (orbid).orbid_type_index;
+  const uint type_index = IdentifierParts (rhandle._orbid()).orbid_type_index;
   return type_name_db.type_name (type_index);
 }
 
