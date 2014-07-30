@@ -3,6 +3,7 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include "regex.hh"
+#include "objects.hh"           // BaseObject*
 #include "../configure.h"       // HAVE_SYS_EVENTFD_H
 
 #include <string.h>
@@ -1063,6 +1064,147 @@ public:
 };
 static TypeNameDB type_name_db;
 
+// == ObjectMap ==
+template<class Instance>
+class ObjectMap {
+public:
+  typedef std::shared_ptr<Instance>     InstanceP;
+private:
+  struct Entry {
+    OrbObjectP  orbop;
+    InstanceP   instancep;
+  };
+  size_t                                start_id_, id_mask_;
+  std::vector<Entry>                    entries_;
+  std::unordered_map<Instance*, uint64> map_;
+  std::vector<uint>                     free_list_;
+  std::function<uint64 (InstanceP)>     orbid_hook_;
+  class MappedObject : public virtual OrbObject {
+    ObjectMap &omap_;
+  public:
+    explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) {}
+    virtual ~MappedObject ()                            { omap_.delete_orbid (orbid()); } // FIXME: might kill other, ABA problem
+  };
+  void          delete_orbid            (uint64            orbid);
+  uint          next_index              ();
+  template<class Num> static constexpr uint64_t
+  hash_fnv64a (const Num *data, size_t length, uint64_t hash = 0xcbf29ce484222325)
+  {
+    return length ? hash_fnv64a (data + 1, length - 1, 0x100000001b3 * (hash ^ data[0])) : hash;
+  }
+public:
+  explicit   ObjectMap          (size_t            start_id = 0) : start_id_ (start_id), id_mask_ (0xffffffffffffffff) {}
+  /*dtor*/  ~ObjectMap          ()                 { assert (entries_.size() == 0); assert (map_.size() == 0); }
+  OrbObjectP orbo_from_instance (InstanceP         instancep);
+  InstanceP  instance_from_orbo (const OrbObjectP &orbo);
+  OrbObjectP orbo_from_orbid    (uint64            orbid);
+  void       assign_start_id    (uint64 start_id, uint64 mask = 0xffffffffffffffff);
+  void       assign_orbid_hook  (const std::function<uint64 (InstanceP)> &orbid_hook);
+};
+
+template<class Instance> void
+ObjectMap<Instance>::assign_start_id (uint64 start_id, uint64 id_mask)
+{
+  assert (entries_.size() == 0);
+  assert ((start_id_ & id_mask) == start_id_);
+  start_id_ = start_id;
+  assert (id_mask > 0);
+  id_mask_ = id_mask;
+  assert (map_.size() == 0);
+}
+
+template<class Instance> void
+ObjectMap<Instance>::assign_orbid_hook (const std::function<uint64 (InstanceP)> &orbid_hook)
+{
+  orbid_hook_ = orbid_hook;
+}
+
+template<class Instance> void
+ObjectMap<Instance>::delete_orbid (uint64 orbid)
+{
+  assert ((orbid & id_mask_) >= start_id_);
+  const uint64 index = (orbid & id_mask_) - start_id_;
+  assert (index < entries_.size());
+  Entry &e = entries_[index];
+  assert (e.instancep != NULL);
+  e.instancep = NULL;
+  e.orbop = NULL;
+  free_list_.push_back (index);
+}
+
+template<class Instance> uint
+ObjectMap<Instance>::next_index ()
+{
+  uint idx;
+  const size_t FREE_LENGTH = 5;
+  if (free_list_.size() > FREE_LENGTH)
+    {
+      const size_t prandom = hash_fnv64a (free_list_.data(), free_list_.size());
+      const size_t end = free_list_.size(), j = prandom % (end - 1);
+      assert (j < end - 1); // use end-1 to avoid popping the last pushed slot
+      idx = free_list_[j];
+      free_list_[j] = free_list_[end - 1];
+      free_list_.pop_back();
+    }
+  else
+    {
+      idx = entries_.size();
+      entries_.resize (idx + 1);
+    }
+  return idx;
+}
+
+template<class Instance> OrbObjectP
+ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
+{
+  OrbObjectP orbo;
+  if (instancep)
+    {
+      uint64 orbid = map_[instancep.get()];
+      if (AIDA_UNLIKELY (orbid == 0))
+        {
+          const uint64 index = next_index();
+          uint64 masked_bits = 0;
+          if (orbid_hook_)
+            {
+              masked_bits = orbid_hook_ (instancep);
+              assert ((masked_bits & id_mask_) == 0);
+            }
+          orbid = (start_id_ + index) | masked_bits;
+          orbo = std::make_shared<MappedObject> (orbid, *this);
+          Entry e { orbo, instancep };
+          entries_[index] = e;
+          map_[instancep.get()] = orbid;
+        }
+      else
+        orbo = entries_[(orbid & id_mask_) - start_id_].orbop;
+    }
+  return orbo;
+}
+
+template<class Instance> OrbObjectP
+ObjectMap<Instance>::orbo_from_orbid (uint64 orbid)
+{
+  assert ((orbid & id_mask_) >= start_id_);
+  const uint64 index = (orbid & id_mask_) - start_id_;
+  if (index < entries_.size() && entries_[index].instancep) // check for deletion
+    return entries_[index].orbop;
+  return OrbObjectP();
+}
+
+template<class Instance> std::shared_ptr<Instance>
+ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
+{
+  const uint64 orbid = orbo ? orbo->orbid() : 0;
+  if ((orbid & id_mask_) >= start_id_)
+    {
+      const uint64 index = (orbid & id_mask_) - start_id_;
+      if (index < entries_.size())
+        return entries_[index].instancep;
+    }
+  return NULL;
+}
+
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &feature_keys) :
   feature_keys_ (feature_keys), conid_ (0)
@@ -1082,7 +1224,7 @@ BaseConnection::assign_id (uint connection_id)
 
 /// Provide initial handle for remote connections.
 void
-BaseConnection::remote_origin (ImplicitBase*)
+BaseConnection::remote_origin (ImplicitBaseP)
 {
   assertion_error (__FILE__, __LINE__, "not supported by this object type");
 }
@@ -1169,7 +1311,7 @@ public:
   virtual void          dispatch          ();
   virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
   virtual RemoteHandle  pop_handle        (FieldReader &fr);
-  virtual void          remote_origin     (ImplicitBase *rorigin) { fatal ("assert not reached"); }
+  virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
   virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
@@ -1402,51 +1544,57 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 std::string
 ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 {
-  const uint type_index = IdentifierParts (rhandle._orbid()).orbid_type_index;
+  const uint type_index = OrbObject::orbid_type_index (rhandle._orbid());
   return type_name_db.type_name (type_index);
 }
 
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
-  TransportChannel         transport_channel_;       // messages arriving at server
+  TransportChannel         transport_channel_;  // messages arriving at server
+  ObjectMap<ImplicitBase>  object_map_;         // map of all objects used remotely
+  ImplicitBaseP            remote_origin_;
+  std::unordered_map<size_t, EmitResultHandler> emit_result_map_;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  std::unordered_map<ptrdiff_t, uint64> addr_map;
-  std::vector<ptrdiff_t>                addr_vector;
-  std::unordered_map<size_t, EmitResultHandler> emit_result_map;
-  ImplicitBase *remote_origin_;
 public:
   explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
-  uint64                instance2orbid (const ImplicitBase*);
-  ImplicitBase*         orbid2instance (uint64);
   virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
   virtual bool          pending        ()               { return transport_channel_.has_msg(); }
   virtual void          dispatch       ();
-  virtual void          remote_origin  (ImplicitBase *rorigin);
+  virtual void          remote_origin  (ImplicitBaseP rorigin);
   virtual RemoteHandle  remote_origin  (const vector<std::string> &feature_key_list) { fatal ("assert not reached"); }
-  virtual void          add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
-  virtual ImplicitBase* pop_interface  (FieldReader &fr);
+  virtual void          add_interface  (FieldBuffer &fb, ImplicitBaseP ibase);
+  virtual ImplicitBaseP pop_interface  (FieldReader &fr);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
-  virtual ImplicitBase*     interface_from_handle   (const RemoteHandle &rhandle);
-  virtual void              interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle);
+  virtual ImplicitBaseP     interface_from_handle   (const RemoteHandle &rhandle);
+  virtual void              interface_to_handle     (ImplicitBaseP ibase, RemoteHandle &rhandle);
 };
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
   ServerConnection (feature_keys), remote_origin_ (NULL)
 {
-  addr_map[0] = 0;                                      // lookiing up NULL yields uint64 (0)
-  addr_vector.push_back (0);                            // orbid uint64 (0) yields NULL
-  uint realid = ObjectBroker::register_connection (*this, 0xaaaa);
+  const uint realid = ObjectBroker::register_connection (*this, 0xaaaa);
   if (!realid)
     fatal_error ("Aida: failed to register ServerConnection");
   assign_id (realid);
+  const uint64 start_id = OrbObject::orbid_make (realid, // connection_id() must match connection_id_from_orbid()
+                                                 0,      // type_name_db.index, see orbid_hook
+                                                 1);     // counter = first object id
+  object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
+  auto orbid_hook = [this] (ObjectMap<ImplicitBase>::InstanceP instance) {
+    // hook is needed to determine the type_name index for newly created orbids
+    // embedding the type_name into orbids is a small hack for Python to create the correct Handle type
+    const uint64 type_index = type_name_db.index (instance->__aida_type_name__());
+    return OrbObject::orbid_make (0, type_index, 0);
+  };
+  object_map_.assign_orbid_hook (orbid_hook);
 }
 
 void
-ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
+ServerConnectionImpl::remote_origin (ImplicitBaseP rorigin)
 {
   if (rorigin)
     AIDA_ASSERT (remote_origin_ == NULL);
@@ -1456,37 +1604,18 @@ ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
 }
 
 void
-ServerConnectionImpl::add_interface (FieldBuffer &fb, const ImplicitBase *ibase)
+ServerConnectionImpl::add_interface (FieldBuffer &fb, ImplicitBaseP ibase)
 {
-  fb.add_object (this->instance2orbid (ibase));
+  OrbObjectP orbo = object_map_.orbo_from_instance (ibase);
+  fb.add_object (orbo ? orbo->orbid() : 0);
 }
 
-ImplicitBase*
+ImplicitBaseP
 ServerConnectionImpl::pop_interface (FieldReader &fr)
 {
-  return orbid2instance (fr.pop_object());
-}
-
-uint64
-ServerConnectionImpl::instance2orbid (const ImplicitBase *instance)
-{
-  const ptrdiff_t addr = reinterpret_cast<ptrdiff_t> (instance);
-  const auto it = addr_map.find (addr);
-  if (AIDA_LIKELY (it != addr_map.end()))
-    return (*it).second;
-  const uint64 orbid = IdentifierParts (IdentifierParts::ORBID(), connection_id(), // see connection_id_from_orbid
-                                        addr_vector.size(), type_name_db.index (instance->__aida_type_name__())).vuint64;
-  addr_vector.push_back (addr);
-  addr_map[addr] = orbid;
-  return orbid;
-}
-
-ImplicitBase*
-ServerConnectionImpl::orbid2instance (uint64 orbid)
-{
-  const uint32 index = IdentifierParts (orbid).orbid32; // see connection_id_from_orbid
-  const ptrdiff_t addr = AIDA_LIKELY (index < addr_vector.size()) ? addr_vector[index] : 0;
-  return reinterpret_cast<ImplicitBase*> (addr);
+  const uint64 orbid = fr.pop_object();
+  OrbObjectP orbo = object_map_.orbo_from_orbid (orbid);
+  return object_map_.instance_from_orbo (orbo);
 }
 
 void
@@ -1506,7 +1635,7 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
-        ImplicitBase *rorigin = remote_origin_;
+        ImplicitBaseP rorigin = remote_origin_;
         FieldBuffer *fr = FieldBuffer::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
@@ -1558,35 +1687,36 @@ ServerConnectionImpl::dispatch ()
     delete fb;
 }
 
-ImplicitBase*
+ImplicitBaseP
 ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
 {
-  return orbid2instance (rhandle._orbid());
+  OrbObjectP orbo = object_map_.orbo_from_orbid (rhandle._orbid()); // FIXME: handle should store OrbObjectP directly
+  return object_map_.instance_from_orbo (orbo);
 }
 
 void
-ServerConnectionImpl::interface_to_handle (ImplicitBase *ibase, RemoteHandle &rhandle)
+ServerConnectionImpl::interface_to_handle (ImplicitBaseP ibase, RemoteHandle &rhandle)
 {
-  const uint64 orbid = instance2orbid (ibase);
+  OrbObjectP orbo = object_map_.orbo_from_instance (ibase); // FIXME: handle should store OrbObjectP directly
   struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (rhandle, orbid);
+  Broker::tie_handle (rhandle, orbo ? orbo->orbid() : 0);
 }
 
 void
 ServerConnectionImpl::emit_result_handler_add (size_t id, const EmitResultHandler &handler)
 {
-  AIDA_ASSERT (emit_result_map.count (id) == 0);        // PARANOID
-  emit_result_map[id] = handler;
+  AIDA_ASSERT (emit_result_map_.count (id) == 0);        // PARANOID
+  emit_result_map_[id] = handler;
 }
 
 ServerConnectionImpl::EmitResultHandler
 ServerConnectionImpl::emit_result_handler_pop (size_t id)
 {
-  auto it = emit_result_map.find (id);
-  if (AIDA_LIKELY (it != emit_result_map.end()))
+  auto it = emit_result_map_.find (id);
+  if (AIDA_LIKELY (it != emit_result_map_.end()))
     {
       EmitResultHandler emit_result_handler = it->second;
-      emit_result_map.erase (it);
+      emit_result_map_.erase (it);
       return emit_result_handler;
     }
   else

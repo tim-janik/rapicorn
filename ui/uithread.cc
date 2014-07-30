@@ -151,7 +151,7 @@ private:
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // Setup root handle for remote calls
-    ApplicationImpl::the().__aida_connection__()->remote_origin (&ApplicationImpl::the());
+    ApplicationImpl::the().__aida_connection__()->remote_origin (BaseObject::shared_ptr (&ApplicationImpl::the()));
     // Complete initialization by signalling caller
     idata_->done = true;
     idata_->mutex.lock();

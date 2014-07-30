@@ -33,7 +33,7 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 template<class Target> static inline Target*
 remote_handle_to_interface (const RemoteHandle &remote)
 {
-  Rapicorn::Aida::ImplicitBase *instance = server_connection->interface_from_handle (remote);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->interface_from_handle (remote).get();
   return dynamic_cast<Target*> (instance);
 }
 
@@ -41,8 +41,20 @@ template<class SMH> static inline SMH
 interface_to_remote_handle ($AIDA_iface_base$ *ibase)
 {
   SMH target;
-  server_connection->interface_to_handle (ibase, target);
+  server_connection->interface_to_handle (Rapicorn::BaseObject::shared_ptr (ibase), target);
   return target;
+}
+
+template<class Target> static inline void
+field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instane)
+{
+  server_connection->add_interface (fb, Rapicorn::BaseObject::shared_ptr (instane));
+}
+
+template<class Target> static inline Target*
+field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
+{
+  return dynamic_cast<Target*> (server_connection->pop_interface (fr).get());
 }
 
 // messages

@@ -217,6 +217,22 @@ Deletable::invoke_deletion_hooks()
 }
 
 // == BaseObject ==
+/// Static unref function for std::shared_ptr<BaseObject> Deleter.
+static void
+base_object_unref (BaseObject *object)
+{
+  object->unref();
+}
+
+std::shared_ptr<BaseObject>
+BaseObject::shared_ptr (BaseObject *object)
+{
+  if (object)
+    return std::shared_ptr<BaseObject> (ref (object), base_object_unref);
+  else
+    return std::shared_ptr<BaseObject>();
+}
+
 void
 BaseObject::dispose ()
 {}

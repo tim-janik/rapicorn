@@ -128,6 +128,7 @@ protected:
   template<class C>  class InterfaceMatch;
   virtual void                 dispose   ();
 public:
+  static std::shared_ptr<BaseObject> shared_ptr (BaseObject*); ///< Wrap BaseObject into a std::shared_ptr<>().
 };
 typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
 typedef Aida::Property     Property;     // import Property from Aida namespace

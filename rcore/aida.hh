@@ -92,6 +92,10 @@ template<> const EnumValue* enum_value_list<TypeKind> ();
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
 // == Type Declarations ==
+class ImplicitBase;
+typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
+class OrbObject;
+typedef std::shared_ptr<OrbObject>    OrbObjectP;
 class ObjectBroker;
 class BaseConnection;
 class ClientConnection;
@@ -335,19 +339,11 @@ union IdentifierParts {
     uint   msg_unused2 : 8;
     uint   message_id : 8;
   };
-  struct { // OrbID bits
-    uint   orbid32 : 32;
-    uint   orbid_connection : 16;
-    uint   orbid_type_index : 16;
-  };
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
   constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
     sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con),
     msg_unused2 (0), message_id (IdentifierParts (id).message_id)
   {}
-  struct ORBID {}; // constructor tag
-  constexpr IdentifierParts (const ORBID&, uint orbid_con, uint orbid_v32, uint type_index) :
-    orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_type_index (type_index) {}
 };
 constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 
@@ -359,7 +355,15 @@ protected:
   explicit      OrbObject       (uint64 orbid);
   virtual      ~OrbObject       () = 0;
 public:
-  uint64        orbid           ()              { return orbid_; }
+  uint64 orbid                    () const                      { return orbid_; }
+  uint16 connection               () const                      { return orbid_connection (orbid_); }
+  uint16 type_index               () const                      { return orbid_type_index (orbid_); }
+  uint32 counter                  () const                      { return orbid_counter (orbid_); }
+  static uint16 orbid_connection  (uint64 orbid)                { return orbid >> 48 /* & 0xffff */; }
+  static uint16 orbid_type_index  (uint64 orbid)                { return orbid >> 32 /* & 0xffff */; }
+  static uint32 orbid_counter     (uint64 orbid)                { return orbid /* & 0xffffffff */; }
+  static uint64 orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
+  { return (uint64 (connection) << 48) | (uint64 (type_index) << 32) | counter; }
 };
 
 // == RemoteHandle ==
@@ -422,7 +426,7 @@ public:
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
-  static inline uint  connection_id_from_orbid  (uint64 orbid)        { return IdentifierParts (orbid).orbid_connection; }
+  static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
   static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
@@ -565,7 +569,7 @@ public:
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin  (ImplicitBase *rorigin) = 0;
+  virtual void           remote_origin  (ImplicitBaseP rorigin) = 0;
   virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list) = 0;
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
@@ -583,10 +587,10 @@ protected:
 public:
   typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
-  virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
-  virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
-  virtual void          add_interface           (FieldBuffer &fb, const ImplicitBase *ibase) = 0;
-  virtual ImplicitBase* pop_interface           (FieldReader &fr) = 0;
+  virtual ImplicitBaseP interface_from_handle   (const RemoteHandle &rhandle) = 0;
+  virtual void          interface_to_handle     (ImplicitBaseP ibase, RemoteHandle &rhandle) = 0;
+  virtual void          add_interface           (FieldBuffer &fb, ImplicitBaseP ibase) = 0;
+  virtual ImplicitBaseP pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
