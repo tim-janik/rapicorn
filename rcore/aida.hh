@@ -342,7 +342,8 @@ union IdentifierParts {
   };
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
   constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
-    sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con), message_id (IdentifierParts (id).message_id)
+    sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con),
+    msg_unused2 (0), message_id (IdentifierParts (id).message_id)
   {}
   struct ORBID {}; // constructor tag
   constexpr IdentifierParts (const ORBID&, uint orbid_con, uint orbid_v32, uint type_index) :
@@ -353,11 +354,12 @@ constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 // == OrbObject ==
 /// Internal management structure for objects known to the ORB.
 class OrbObject {
-  uint64      orbid_;
+  const uint64  orbid_;
 protected:
   explicit      OrbObject       (uint64 orbid);
+  virtual      ~OrbObject       () = 0;
 public:
-  uint64        orbid           ()            { return orbid_; }
+  uint64        orbid           ()              { return orbid_; }
 };
 
 // == RemoteHandle ==
@@ -414,6 +416,9 @@ protected:
 public:
   static void              pop_handle (FieldReader&, RemoteHandle&, BaseConnection&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
+  static uint              register_connection   (BaseConnection    &connection, uint suggested_id);
+  static void              unregister_connection (BaseConnection    &connection);
+  static BaseConnection*   connection_from_id    (uint64             connection_id);
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
@@ -422,8 +427,6 @@ public:
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
-  static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
 };
 
 // == FieldBuffer ==
@@ -474,7 +477,9 @@ public:
   static String       type_name (int field_type);
   static FieldBuffer* _new (uint32 _ntypes); // Heap allocated FieldBuffer
   // static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* renew_into_result (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   inline void operator<<= (uint32 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (ULongIffy v)       { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -546,19 +551,17 @@ public:
 // == Connections ==
 /// Base connection context for ORB message exchange.
 class BaseConnection {
-  uint              index_;
   const std::string feature_keys_;
+  uint              conid_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
-  void                   register_connection  ();
-  void                   unregister_connection();
   explicit               BaseConnection  (const std::string &feature_keys);
   virtual               ~BaseConnection  ();
   virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  static BaseConnection* connection_from_id (uint id);  ///< Lookup for connection, used by ORB for message delivery.
+  void                   assign_id       (uint connection_id);
 public:
-  uint                   connection_id  () const;   ///< Get unique conneciton ID (returns 0 if unregistered).
+  uint                   connection_id  () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.

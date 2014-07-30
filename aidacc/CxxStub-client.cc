@@ -51,10 +51,10 @@ add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 static inline FieldBuffer*
 new_emit_result (const FieldBuffer *fb, uint64 h, uint64 l, uint32 n)
 {
-  return ObjectBroker::renew_into_result (const_cast<FieldBuffer*> (fb),
-                                          Rapicorn::Aida::MSGID_EMIT_RESULT,
-                                          ObjectBroker::receiver_connection_id (fb->first_id()),
-                                          h, l, n);
+  return FieldBuffer::renew_into_result (const_cast<FieldBuffer*> (fb),
+                                         Rapicorn::Aida::MSGID_EMIT_RESULT,
+                                         ObjectBroker::receiver_connection_id (fb->first_id()),
+                                         h, l, n);
 }
 
 } } // Anon::__AIDA_Local__

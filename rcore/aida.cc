@@ -546,6 +546,9 @@ OrbObject::OrbObject (uint64 orbid) :
   orbid_ (orbid)
 {}
 
+OrbObject::~OrbObject()
+{} // force vtable emission
+
 // == OrbObjectImpl ==
 struct OrbObjectImpl : public OrbObject {
   OrbObjectImpl (ptrdiff_t obid) : OrbObject (obid) {}
@@ -601,36 +604,6 @@ bool
 RemoteHandle::operator!= (const RemoteHandle &other) const noexcept
 {
   return !operator== (other);
-}
-
-// == ObjectBroker ==
-typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
-static OrboMap orbo_map;
-static Mutex   orbo_mutex;
-
-void
-ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
-{
-  AIDA_ASSERT (NULL == sh);
-  ScopedLock<Mutex> locker (orbo_mutex);
-  OrbObject *orbo = orbo_map[orbid];
-  if (AIDA_UNLIKELY (!orbo))
-    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.upgrade_once (RemoteHandle (*orbo)); // FIXME
-}
-
-void
-ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
-{
-  tie_handle (sh, fr.pop_object());
-}
-
-uint
-ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
-{
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  const uint handler_index = handler_id_parts.signal_handler_index;
-  return handler_index ? handler_id_parts.orbid_connection : 0;
 }
 
 // == FieldBuffer ==
@@ -780,7 +753,7 @@ FieldBuffer::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint
 }
 
 FieldBuffer*
-ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+FieldBuffer::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
@@ -792,7 +765,7 @@ ObjectBroker::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection,
 }
 
 FieldBuffer*
-ObjectBroker::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+FieldBuffer::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   FieldBuffer *fb = const_cast<FieldBuffer*> (fbr.field_buffer());
   fbr.reset();
@@ -1091,68 +1064,20 @@ public:
 static TypeNameDB type_name_db;
 
 // == BaseConnection ==
-#define MAX_CONNECTIONS         8       ///< Arbitrary limit that can be extended if needed
-static Atomic<BaseConnection*>  global_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
-
-static void
-register_connection (uint *indexp, BaseConnection *con)
-{
-  assert_return (*indexp == ~uint (0) && con);
-  for (size_t i = 0; i < MAX_CONNECTIONS; i++)
-    {
-      *indexp = i;
-      if (global_connections[i].cas (NULL, con))
-        return;
-    }
-  *indexp = ~uint (0);
-  fatal_error ("Aida: MAX_CONNECTIONS limit reached");
-}
-
-static void
-unregister_connection (uint *indexp)
-{
-  assert_return (*indexp < MAX_CONNECTIONS && global_connections[*indexp]);
-  const uint index = *indexp;
-  *indexp = ~uint (0);
-  global_connections[index].store (NULL);
-}
-
 BaseConnection::BaseConnection (const std::string &feature_keys) :
-  index_ (~uint (0)), feature_keys_ (feature_keys)
+  feature_keys_ (feature_keys), conid_ (0)
 {
   AIDA_ASSERT (feature_keys_.size() && feature_keys_[0] == ':' && feature_keys_[feature_keys_.size()-1] == ':');
 }
 
 BaseConnection::~BaseConnection ()
-{
-  if (index_ < MAX_CONNECTIONS)
-    Aida::unregister_connection (&index_);
-}
+{}
 
 void
-BaseConnection::register_connection()
+BaseConnection::assign_id (uint connection_id)
 {
-  assert_return (index_ > MAX_CONNECTIONS);
-  Aida::register_connection (&index_, this);
-}
-
-void
-BaseConnection::unregister_connection()
-{
-  assert_return (index_ < MAX_CONNECTIONS);
-  Aida::unregister_connection (&index_);
-}
-
-uint
-BaseConnection::connection_id () const
-{
-  return index_ < MAX_CONNECTIONS ? 1 + index_ : 0;
-}
-
-BaseConnection*
-BaseConnection::connection_from_id (uint id)
-{
-  return id && id <= MAX_CONNECTIONS ? global_connections[id-1].load() : NULL;
+  assert_return (conid_ == 0);
+  conid_ = connection_id;
 }
 
 /// Provide initial handle for remote connections.
@@ -1217,11 +1142,14 @@ public:
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    register_connection();
+    uint realid = ObjectBroker::register_connection (*this, 0xcccc);
+    if (!realid)
+      fatal_error ("Aida: failed to register ClientConnection");
+    assign_id (realid);
   }
   ~ClientConnectionImpl ()
   {
-    unregister_connection();
+    ObjectBroker::unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
   }
@@ -1489,7 +1417,7 @@ class ServerConnectionImpl : public ServerConnection {
   ImplicitBase *remote_origin_;
 public:
   explicit              ServerConnectionImpl (const std::string &feature_keys);
-  virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
+  virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
   uint64                instance2orbid (const ImplicitBase*);
   ImplicitBase*         orbid2instance (uint64);
   virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
@@ -1511,7 +1439,10 @@ ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
 {
   addr_map[0] = 0;                                      // lookiing up NULL yields uint64 (0)
   addr_vector.push_back (0);                            // orbid uint64 (0) yields NULL
-  register_connection();
+  uint realid = ObjectBroker::register_connection (*this, 0xaaaa);
+  if (!realid)
+    fatal_error ("Aida: failed to register ServerConnection");
+  assign_id (realid);
 }
 
 void
@@ -1576,7 +1507,7 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBase *rorigin = remote_origin_;
-        FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
+        FieldBuffer *fr = FieldBuffer::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
@@ -1742,6 +1673,50 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 }
 
 // == ObjectBroker ==
+#define MAX_CONNECTIONS        7                                             // arbitrary limit that can be extended if needed
+static Atomic<BaseConnection*> orb_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
+
+uint
+ObjectBroker::register_connection (BaseConnection &connection, uint suggested_id)
+{
+  for (size_t i = 0; i < MAX_CONNECTIONS; i++)
+    {
+      if (suggested_id + i == 0)
+        suggested_id++;
+      const uint64 idx = (suggested_id + i) % MAX_CONNECTIONS;
+      if (orb_connections[idx] == NULL &&
+          orb_connections[idx].cas (NULL, &connection))
+        return suggested_id + i;
+    }
+  return 0;
+}
+
+void
+ObjectBroker::unregister_connection (BaseConnection &connection)
+{
+  const uint64 conid = connection.connection_id();
+  assert_return (conid > 0);
+  const uint64 idx = conid % MAX_CONNECTIONS;
+  assert_return (orb_connections[idx] == &connection);
+  orb_connections[idx].store (NULL);
+}
+
+///< Connection lookup by id, used for message delivery.
+BaseConnection*
+ObjectBroker::connection_from_id (uint64 conid)
+{
+  const uint64 idx = conid % MAX_CONNECTIONS;
+  return conid ? orb_connections[idx].load() : NULL;
+}
+
+uint
+ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
+{
+  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
+  const size_t handler_index = handler_id_parts.signal_handler_index;
+  return handler_index ? handler_id_parts.orbid_connection : 0; // FIXME
+}
+
 ServerConnection*
 ObjectBroker::new_server_connection (const std::string &feature_keys)
 {
@@ -1759,9 +1734,9 @@ ObjectBroker::new_client_connection (const std::string &feature_keys)
 uint
 ObjectBroker::connection_id_from_keys (const vector<std::string> &feature_key_list)
 { // feature_key_list is a list of key=regex_pattern pairs
-  for (uint id = 1; id <= MAX_CONNECTIONS; id++)
+  for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
     {
-      BaseConnection *bcon = BaseConnection::connection_from_id (id);
+      BaseConnection *bcon = orb_connections[idx];
       if (!bcon)
         continue;
       const String &feature_keys = bcon->feature_keys_;
@@ -1782,7 +1757,7 @@ ObjectBroker::connection_id_from_keys (const vector<std::string> &feature_key_li
           if (!Regex::match_simple (value, string_option_get (feature_keys, key), Regex::EXTENDED | Regex::CASELESS, Regex::MATCH_NORMAL))
             goto mismatch;
         }
-      return id; // all of feature_key_list matched
+      return bcon->connection_id(); // all of feature_key_list matched
     mismatch: ;
     }
   return 0;     // unmatched
@@ -1794,7 +1769,7 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   assert_return (fb);
   const MessageId msgid = MessageId (fb->first_id());
   const uint connection_id = ObjectBroker::sender_connection_id (msgid);
-  BaseConnection *bcon = BaseConnection::connection_from_id (connection_id);
+  BaseConnection *bcon = connection_from_id (connection_id);
   if (!bcon)
     fatal_error (string_format ("Message ID without valid connection: %016x (connection_id=%u)", msgid, connection_id));
   const bool needsresult = msgid_has_result (msgid);
@@ -1802,6 +1777,27 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
     fatal_error (string_format ("mismatch of result flag and receiver_connection: %016x", msgid));
   bcon->send_msg (fb);
+}
+
+typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
+static OrboMap orbo_map;
+static Mutex   orbo_mutex;
+
+void
+ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
+{
+  AIDA_ASSERT (NULL == sh);
+  ScopedLock<Mutex> locker (orbo_mutex);
+  OrbObject *orbo = orbo_map[orbid];
+  if (AIDA_UNLIKELY (!orbo))
+    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
+  sh.upgrade_once (RemoteHandle (*orbo)); // FIXME
+}
+
+void
+ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
+{
+  tie_handle (sh, fr.pop_object());
 }
 
 } } // Rapicorn::Aida

@@ -74,13 +74,13 @@ add_header2_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
 static inline FieldBuffer*
 new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 static inline FieldBuffer*
 new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 // slot
