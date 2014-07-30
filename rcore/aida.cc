@@ -1203,7 +1203,7 @@ class ClientConnectionImpl : public ClientConnection {
   };
   typedef std::set<uint64> UIntSet;
   pthread_spinlock_t            signal_spin_;
-  TransportChannel              transport_channel_;     // messages sent to client
+  TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
   std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
   std::vector<SignalHandler*>   signal_handlers_;
@@ -1481,7 +1481,7 @@ ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
-  TransportChannel         transport_channel_;       // messages sent to server
+  TransportChannel         transport_channel_;       // messages arriving at server
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
   std::unordered_map<ptrdiff_t, uint64> addr_map;
   std::vector<ptrdiff_t>                addr_vector;
