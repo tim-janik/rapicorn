@@ -367,7 +367,7 @@ class Generator:
     elif type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type_info.name, fbr, var)
     elif type_info.storage == Decls.INTERFACE:
-      s += '  %s = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (%s)); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (%s)); ERRORifpy();\n' % (var, fbr)
     elif type_info.storage == Decls.ANY:
       s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any (*__AIDA_local__client_connection)); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID

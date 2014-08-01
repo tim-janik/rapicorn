@@ -41,7 +41,9 @@ template<class SMH> static inline SMH
 interface_to_remote_handle ($AIDA_iface_base$ *ibase)
 {
   SMH target;
-  server_connection->interface_to_handle (Rapicorn::BaseObject::shared_ptr (ibase), target);
+  struct CastingServerConnection : ServerConnection { using ServerConnection::cast_interface_handle; };
+  CastingServerConnection *cs_con = (CastingServerConnection*) server_connection;
+  cs_con->cast_interface_handle (target, Rapicorn::BaseObject::shared_ptr (ibase));
   return target;
 }
 

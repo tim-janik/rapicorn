@@ -40,16 +40,30 @@ namespace Rapicorn { namespace Aida {
 #endif
 #define AIDA_LIKELY             AIDA_ISLIKELY
 
-// == Standard Types ==
+// == Type Imports ==
 using std::vector;
-typedef std::string String;
 using Rapicorn::int32;
 using Rapicorn::uint32;
 using Rapicorn::int64;
 using Rapicorn::uint64;
+typedef std::string String;
 
-// == Prototypes ==
+// == Forward Declarations ==
 class RemoteHandle;
+class OrbObject;
+class ImplicitBase;
+class ObjectBroker;
+class BaseConnection;
+class ClientConnection;
+class ServerConnection;
+union FieldUnion;
+class FieldBuffer;
+class FieldReader;
+class PropertyList;
+class Property;
+typedef std::shared_ptr<OrbObject>    OrbObjectP;
+typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // == EnumValue ==
 /// Aida info for enumeration values.
@@ -90,22 +104,6 @@ enum TypeKind {
 template<> const EnumValue* enum_value_list<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
-
-// == Type Declarations ==
-class ImplicitBase;
-typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
-class OrbObject;
-typedef std::shared_ptr<OrbObject>    OrbObjectP;
-class ObjectBroker;
-class BaseConnection;
-class ClientConnection;
-class ServerConnection;
-union FieldUnion;
-class FieldBuffer;
-class FieldReader;
-typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
-class PropertyList;
-class Property;
 
 // == ImplicitBase ==
 class ImplicitBase /// Abstract base interface that all IDL interfaces are implicitely derived from.
@@ -368,35 +366,35 @@ public:
 
 // == RemoteHandle ==
 class RemoteHandle {
-  OrbObject     *orbo_;
+  OrbObjectP        orbop_;
   template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
   typedef NullRemoteHandle<RemoteHandle> NullHandle;
-  friend  class ObjectBroker;
-  void    reset ();
+  void              reset ();
 protected:
-  explicit          RemoteHandle  (OrbObject&);
-  explicit          RemoteHandle  ();
-  void              upgrade_once  (const RemoteHandle&);
+  static OrbObjectP null_orb_object ();
+  explicit          RemoteHandle    (OrbObjectP);
+  explicit          RemoteHandle    () : orbop_ (null_orb_object()) {}
+  void              cast_null_into  (const RemoteHandle&);
 public:
-  uint64            _orbid        () const { return orbo_->orbid(); }
+  uint64            _orbid        () const { return orbop_->orbid(); }
   virtual          ~RemoteHandle  ();
   static NullHandle _null_handle  ()       { return NullHandle(); }
   // Determine if this RemoteHandle contains an object or null handle.
-  explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
-  bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
-  bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
-  bool              operator==    (const RemoteHandle&) const noexcept;
-  bool              operator!=    (const RemoteHandle&) const noexcept;
-  friend bool       operator==    (std::nullptr_t, const RemoteHandle &shd) noexcept { return !static_cast<bool> (shd); }
-  friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
+  explicit          operator bool () const noexcept               { return 0 != _orbid(); }
+  bool              operator==    (std::nullptr_t) const noexcept { return 0 == _orbid(); }
+  bool              operator!=    (std::nullptr_t) const noexcept { return 0 != _orbid(); }
+  bool              operator==    (const RemoteHandle &rh) const noexcept { return _orbid() == rh._orbid(); }
+  bool              operator!=    (const RemoteHandle &rh) const noexcept { return !operator== (rh); }
+  friend bool       operator==    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd == nullp; }
+  friend bool       operator!=    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd != nullp; }
   template<class TargetHandle> static typename
   std::enable_if<(std::is_base_of<RemoteHandle, TargetHandle>::value &&
                   !std::is_same<RemoteHandle, TargetHandle>::value), TargetHandle>::type
   reinterpret_down_cast (RemoteHandle smh)              ///< Reinterpret & dynamic cast, use discouraged.
   {
     TargetHandle target;
-    target.upgrade_once (smh);                          // like reinterpret_cast
-    return TargetHandle::down_cast (target);            // like dynamic_cast (remote)
+    target.cast_null_into (smh);                        // like reinterpret_cast<>
+    return TargetHandle::down_cast (target);            // like dynamic_cast<>
   }
 };
 
@@ -415,10 +413,7 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle fr
 
 // == ObjectBroker ==
 class ObjectBroker {
-protected:
-  static void              tie_handle (RemoteHandle&, uint64);
 public:
-  static void              pop_handle (FieldReader&, RemoteHandle&, BaseConnection&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static uint              register_connection   (BaseConnection    &connection, uint suggested_id);
   static void              unregister_connection (BaseConnection    &connection);
@@ -582,13 +577,13 @@ typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection (const std::string &feature_keys);
-  virtual           ~ServerConnection ();
+  /*ctor*/           ServerConnection      (const std::string &feature_keys);
+  virtual           ~ServerConnection      ();
+  virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
   virtual ImplicitBaseP interface_from_handle   (const RemoteHandle &rhandle) = 0;
-  virtual void          interface_to_handle     (ImplicitBaseP ibase, RemoteHandle &rhandle) = 0;
   virtual void          add_interface           (FieldBuffer &fb, ImplicitBaseP ibase) = 0;
   virtual ImplicitBaseP pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
@@ -612,7 +607,7 @@ protected:
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void          add_handle  (FieldBuffer &fb, const RemoteHandle &rhandle) = 0;
-  virtual RemoteHandle  pop_handle  (FieldReader &fr) = 0;
+  virtual void          pop_handle  (FieldReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;

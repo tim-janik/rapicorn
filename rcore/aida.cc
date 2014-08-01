@@ -550,62 +550,48 @@ OrbObject::OrbObject (uint64 orbid) :
 OrbObject::~OrbObject()
 {} // force vtable emission
 
-// == OrbObjectImpl ==
-struct OrbObjectImpl : public OrbObject {
-  OrbObjectImpl (ptrdiff_t obid) : OrbObject (obid) {}
+class NullOrbObject : public virtual OrbObject {
+public:
+  explicit NullOrbObject() : OrbObject (0) {}
+  virtual ~NullOrbObject()                 {}
 };
 
-static const OrbObjectImpl aida_orb_object_null (0);
-
 // == RemoteHandle ==
-static OrbObject* remote_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
+static void (RemoteHandle::*pmf_cast_null_into) (const RemoteHandle&);
 
-RemoteHandle::RemoteHandle (OrbObject &orbo) :
-  orbo_ (&orbo)
+OrbObjectP
+RemoteHandle::null_orb_object ()
 {
-  assert (&orbo);
+  static OrbObjectP null_orbo = [] () {                 // use lambda to sneak in extra code
+    pmf_cast_null_into = &RemoteHandle::cast_null_into; // export cast_null_into() for internal upgrades
+    return std::make_shared<NullOrbObject> ();
+  } ();                                                 // executes lambda atomically
+  return null_orbo;
 }
 
-RemoteHandle::RemoteHandle() :
-  orbo_ (remote_handle_null_orb_object())
+RemoteHandle::RemoteHandle (OrbObjectP orbo) :
+  orbop_ (orbo ? orbo : null_orb_object())
 {}
 
 void
 RemoteHandle::reset ()
 {
-  if (orbo_ != remote_handle_null_orb_object())
-    {
-      orbo_ = remote_handle_null_orb_object();
-    }
+  orbop_ = null_orb_object();
 }
 
 void
-RemoteHandle::upgrade_once (const RemoteHandle &source)
+RemoteHandle::cast_null_into (const RemoteHandle &source)
 {
   AIDA_ASSERT (_orbid() == 0);
-  if (orbo_ == source.orbo_)
-    return;
-  if (NULL != *this)
-    reset();
-  orbo_ = source.orbo_;
+  orbop_ = source.orbop_;
 }
 
 RemoteHandle::~RemoteHandle()
 {}
 
-bool
-RemoteHandle::operator== (const RemoteHandle &other) const noexcept
-{
-  if (orbo_ && other.orbo_)
-    return orbo_->orbid() == other.orbo_->orbid();
-  return orbo_ == other.orbo_;
-}
-
-bool
-RemoteHandle::operator!= (const RemoteHandle &other) const noexcept
-{
-  return !operator== (other);
-}
+struct OrbObjectRemoteHandle : RemoteHandle {
+  OrbObjectRemoteHandle (OrbObjectP orbo) : RemoteHandle (orbo && orbo->orbid() ? orbo : null_orb_object()) {}
+};
 
 // == FieldBuffer ==
 FieldBuffer::FieldBuffer (uint32 _ntypes) :
@@ -1310,7 +1296,7 @@ public:
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
   virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
-  virtual RemoteHandle  pop_handle        (FieldReader &fr);
+  virtual void          pop_handle        (FieldReader &fr, RemoteHandle &rhandle);
   virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
   virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
@@ -1340,7 +1326,7 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
       FieldBuffer *fr = this->call_remote (fb); // takes over fb
       FieldReader frr (*fr);
       frr.skip_header();
-      rorigin = pop_handle (frr);
+      pop_handle (frr, rorigin);
       delete fr;
     }
   return rorigin;
@@ -1352,12 +1338,25 @@ ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
   fb.add_object (rhandle._orbid());
 }
 
-RemoteHandle
-ClientConnectionImpl::pop_handle (FieldReader &fr)
+typedef std::map<uint64, OrbObjectP> ClientOrboMap;
+static ClientOrboMap client_orbo_map;   // FIXME: integrate into client connection
+static Mutex         client_orbo_mutex;
+
+void
+ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 {
-  RemoteMember<RemoteHandle> remote;
-  ObjectBroker::pop_handle (fr, remote, *this);
-  return remote;
+  const uint64 orbid = fr.pop_object();
+  ScopedLock<Mutex> locker (client_orbo_mutex);
+  OrbObjectP orbo = client_orbo_map[orbid];
+  if (AIDA_UNLIKELY (!orbo))
+    {
+      struct ClientOrbObject : public OrbObject {
+        ClientOrbObject (uint64 orbid) : OrbObject (orbid) {}
+      };
+      orbo = std::make_shared<ClientOrbObject> (orbid);
+      client_orbo_map[orbid] = orbo;
+    }
+  (rhandle.*pmf_cast_null_into) (OrbObjectRemoteHandle (orbo));
 }
 
 void
@@ -1570,7 +1569,7 @@ public:
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
   virtual ImplicitBaseP     interface_from_handle   (const RemoteHandle &rhandle);
-  virtual void              interface_to_handle     (ImplicitBaseP ibase, RemoteHandle &rhandle);
+  virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
 };
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
@@ -1695,11 +1694,10 @@ ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
 }
 
 void
-ServerConnectionImpl::interface_to_handle (ImplicitBaseP ibase, RemoteHandle &rhandle)
+ServerConnectionImpl::cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase)
 {
-  OrbObjectP orbo = object_map_.orbo_from_instance (ibase); // FIXME: handle should store OrbObjectP directly
-  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (rhandle, orbo ? orbo->orbid() : 0);
+  OrbObjectP orbo = object_map_.orbo_from_instance (ibase);
+  (rhandle.*pmf_cast_null_into) (OrbObjectRemoteHandle (orbo));
 }
 
 void
@@ -1907,27 +1905,6 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
     fatal_error (string_format ("mismatch of result flag and receiver_connection: %016x", msgid));
   bcon->send_msg (fb);
-}
-
-typedef std::map<ptrdiff_t, OrbObject*> OrboMap;
-static OrboMap orbo_map;
-static Mutex   orbo_mutex;
-
-void
-ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
-{
-  AIDA_ASSERT (NULL == sh);
-  ScopedLock<Mutex> locker (orbo_mutex);
-  OrbObject *orbo = orbo_map[orbid];
-  if (AIDA_UNLIKELY (!orbo))
-    orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.upgrade_once (RemoteHandle (*orbo)); // FIXME
-}
-
-void
-ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
-{
-  tie_handle (sh, fr.pop_object());
 }
 
 } } // Rapicorn::Aida

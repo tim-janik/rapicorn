@@ -41,6 +41,14 @@ static Rapicorn::Init __AIDA_init__client_connection ([]() {
   __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection (":AidaClientConnection:PyStub:idl_file=aidacc/tests/testpass.idl:");
 });
 
+static inline RemoteHandle
+__AIDA_local__client_connection_pop_handle (FieldReader &fr)
+{
+  Rapicorn::Aida::RemoteMember<RemoteHandle> rhandle;
+  __AIDA_local__client_connection->pop_handle (fr, rhandle);
+  return rhandle;
+}
+
 // helpers
 static inline void
 add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
@@ -339,11 +347,11 @@ aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "multi4", &pyfoR) < 0) goto error;
   pyfoR = __AIDA_pyfactory__create_enum ("MandatoryNamespace.ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
   pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "any1", &pyfoR) < 0) goto error;
@@ -630,7 +638,7 @@ aida_pyInterfaceSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+    pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -1401,7 +1409,7 @@ __AIDA_pyemit2__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *
   fbr.skip_header();
   fbr.skip();  // skip handler_id
   Rapicorn::Aida::uint64 emit_result_id = fbr.pop_int64();
-  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 1, item);
@@ -1847,7 +1855,7 @@ __AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (PyObject *pyself, PyObject *p
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1913,7 +1921,7 @@ __AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__ (PyObject *pyself, PyObject *p
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -2885,7 +2893,7 @@ __AIDA_pyemit1__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldB
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -2969,7 +2977,7 @@ __AIDA_pyemit1__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffe
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -3011,9 +3019,9 @@ __AIDA_pyemit1__ChildInheritingSignals__child_signal (const Rapicorn::Aida::Fiel
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
-  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 1, item);
   item = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 2, item);
@@ -3453,7 +3461,7 @@ __AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a__ (PyObject *pyself, PyObject 
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -3501,7 +3509,7 @@ __AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f__ (PyObject *pyself, PyObject 
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }

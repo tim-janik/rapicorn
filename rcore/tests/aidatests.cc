@@ -25,8 +25,8 @@ test_basics()
   assert (!RemoteHandle::_null_handle());
   assert (RemoteHandle::_null_handle()._orbid() == 0);
   struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
-  struct OneHandle : RemoteHandle { OneHandle (OrbObject &orbo) : RemoteHandle (orbo) {} };
-  TestOrbObject torbo (1);
+  struct OneHandle : RemoteHandle { OneHandle (OrbObjectP orbo) : RemoteHandle (orbo) {} };
+  std::shared_ptr<TestOrbObject> torbo = std::make_shared<TestOrbObject> (1);
   assert (OneHandle (torbo) != NULL);
   assert (OneHandle (torbo));
   assert (OneHandle (torbo)._orbid() == 1);

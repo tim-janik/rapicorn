@@ -506,7 +506,7 @@ class Generator:
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle, *__AIDA_Local__::client_connection);\n'
+    s += '  __AIDA_Local__::client_connection->pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
     s += '%s::__aida_typeid__()\n{\n' % classH
@@ -514,11 +514,11 @@ class Generator:
     s += '  return type_hash;\n'
     s += '}\n'
     s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
+    s += '  const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
     s += '  %s target;\n' % classH
-    s += '  for (i = 0; i < types.size(); i++)\n'
+    s += '  for (size_t i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i]) {\n'
-    s += '      target.upgrade_once (other);\n'
+    s += '      target.cast_null_into (other);\n'
     s += '      break;\n'
     s += '    }\n'
     s += '  return target;\n'
