@@ -80,7 +80,7 @@ ListModelBinding::disconnect()
   assert_return (lrelay_ != NULL);
   store.sig_updates() -= conid_updates_;
   lrelay_.sig_refill() -= conid_refill_;
-  lrelay_ = lrelay_.down_cast (lrelay_._null_handle());
+  lrelay_ = lrelay_.down_cast (lrelay_.__aida_null_handle__());
 }
 
 void

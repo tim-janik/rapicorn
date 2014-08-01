@@ -350,13 +350,13 @@ constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 class OrbObject {
   const uint64  orbid_;
 protected:
-  explicit      OrbObject       (uint64 orbid);
-  virtual      ~OrbObject       () = 0;
+  explicit      OrbObject         (uint64 orbid);
+  virtual      ~OrbObject         () = 0;
 public:
-  uint64 orbid                    () const                      { return orbid_; }
-  uint16 connection               () const                      { return orbid_connection (orbid_); }
-  uint16 type_index               () const                      { return orbid_type_index (orbid_); }
-  uint32 counter                  () const                      { return orbid_counter (orbid_); }
+  uint64        orbid             () const                      { return orbid_; }
+  uint16        connection        () const                      { return orbid_connection (orbid_); }
+  uint16        type_index        () const                      { return orbid_type_index (orbid_); }
+  uint32        counter           () const                      { return orbid_counter (orbid_); }
   static uint16 orbid_connection  (uint64 orbid)                { return orbid >> 48 /* & 0xffff */; }
   static uint16 orbid_type_index  (uint64 orbid)                { return orbid >> 32 /* & 0xffff */; }
   static uint32 orbid_counter     (uint64 orbid)                { return orbid /* & 0xffffffff */; }
@@ -367,34 +367,37 @@ public:
 // == RemoteHandle ==
 class RemoteHandle {
   OrbObjectP        orbop_;
-  template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
-  typedef NullRemoteHandle<RemoteHandle> NullHandle;
-  void              reset ();
-  const OrbObjectP& peek_orb_object () const;
+  template<class Parent>
+  struct NullRemoteHandleT : public Parent {
+    TypeHashList __aida_typelist__ () { return TypeHashList(); }
+  };
+  typedef NullRemoteHandleT<RemoteHandle> NullRemoteHandle;
+  static OrbObjectP __aida_null_orb_object__ ();
 protected:
-  static OrbObjectP null_orb_object ();
-  explicit          RemoteHandle    (OrbObjectP);
-  explicit          RemoteHandle    () : orbop_ (null_orb_object()) {}
-  void              cast_null_into  (const RemoteHandle&);
+  explicit          RemoteHandle             (OrbObjectP);
+  explicit          RemoteHandle             () : orbop_ (__aida_null_orb_object__()) {}
+  const OrbObjectP& __aida_orb_object__      () const;
+  void              __aida_upgrade_from__    (const OrbObjectP&);
+  void              __aida_upgrade_from__    (const RemoteHandle &rhandle) { __aida_upgrade_from__ (rhandle.__aida_orb_object__()); }
 public:
-  uint64            _orbid        () const { return orbop_->orbid(); }
-  virtual          ~RemoteHandle  ();
-  static NullHandle _null_handle  ()       { return NullHandle(); }
+  virtual                ~RemoteHandle         ();
+  uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
+  static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
   // Determine if this RemoteHandle contains an object or null handle.
-  explicit          operator bool () const noexcept               { return 0 != _orbid(); }
-  bool              operator==    (std::nullptr_t) const noexcept { return 0 == _orbid(); }
-  bool              operator!=    (std::nullptr_t) const noexcept { return 0 != _orbid(); }
-  bool              operator==    (const RemoteHandle &rh) const noexcept { return _orbid() == rh._orbid(); }
-  bool              operator!=    (const RemoteHandle &rh) const noexcept { return !operator== (rh); }
-  friend bool       operator==    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd == nullp; }
-  friend bool       operator!=    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd != nullp; }
+  explicit    operator bool () const noexcept               { return 0 != __aida_orbid__(); }
+  bool        operator==    (std::nullptr_t) const noexcept { return 0 == __aida_orbid__(); }
+  bool        operator!=    (std::nullptr_t) const noexcept { return 0 != __aida_orbid__(); }
+  bool        operator==    (const RemoteHandle &rh) const noexcept { return __aida_orbid__() == rh.__aida_orbid__(); }
+  bool        operator!=    (const RemoteHandle &rh) const noexcept { return !operator== (rh); }
+  friend bool operator==    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd == nullp; }
+  friend bool operator!=    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd != nullp; }
   template<class TargetHandle> static typename
   std::enable_if<(std::is_base_of<RemoteHandle, TargetHandle>::value &&
                   !std::is_same<RemoteHandle, TargetHandle>::value), TargetHandle>::type
-  reinterpret_down_cast (RemoteHandle smh)              ///< Reinterpret & dynamic cast, use discouraged.
+  __aida_reinterpret_down_cast__ (RemoteHandle smh)     ///< Reinterpret & dynamic cast, use discouraged.
   {
     TargetHandle target;
-    target.cast_null_into (smh);                        // like reinterpret_cast<>
+    target.__aida_upgrade_from__ (smh);                 // like reinterpret_cast<>
     return TargetHandle::down_cast (target);            // like dynamic_cast<>
   }
 };
@@ -423,7 +426,7 @@ public:
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
-  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }

@@ -518,7 +518,7 @@ class Generator:
     s += '  %s target;\n' % classH
     s += '  for (size_t i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i]) {\n'
-    s += '      target.cast_null_into (other);\n'
+    s += '      target.__aida_upgrade_from__ (other);\n'
     s += '      break;\n'
     s += '    }\n'
     s += '  return target;\n'

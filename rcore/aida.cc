@@ -215,7 +215,7 @@ Any::rekind (TypeKind _kind)
     case ANY:      u_.vany = new Any();                                        break;
     case SEQUENCE: u_.vanys = new AnyVector();                                 break;
     case RECORD:   u_.vfields = new FieldVector();                             break;
-    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::_null_handle()); break;
+    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
     default:       break;
     }
 }
@@ -256,7 +256,7 @@ Any::to_string (const String &field_name) const
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
     case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
-    case INSTANCE:      s += string_format (", value=#%08x", u_.shandle->_orbid());             break;
+    case INSTANCE:      s += string_format (", value=#%08x", u_.shandle->__aida_orbid__());     break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -280,7 +280,7 @@ Any::operator== (const Any &clone) const
     case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
     case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
-    case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
+    case INSTANCE:    if ((u_.shandle ? u_.shandle->__aida_orbid__() : 0) != (clone.u_.shandle ? clone.u_.shandle->__aida_orbid__() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
     case LOCAL:
       if (u_.pholder)
@@ -352,7 +352,7 @@ Any::as_int () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return !u_.vanys->empty();
     case RECORD:        return !u_.vfields->empty();
-    case INSTANCE:      return u_.shandle && u_.shandle->_orbid();
+    case INSTANCE:      return u_.shandle && u_.shandle->__aida_orbid__();
     default:            return 0;
     }
 }
@@ -440,7 +440,7 @@ Any::operator>>= (RemoteHandle &v)
 {
   if (kind() != INSTANCE)
     return false;
-  v = u_.shandle ? *u_.shandle : RemoteHandle::_null_handle();
+  v = u_.shandle ? *u_.shandle : RemoteHandle::__aida_null_handle__();
   return true;
 }
 
@@ -557,49 +557,40 @@ public:
 };
 
 // == RemoteHandle ==
-static void              (RemoteHandle::*pmf_cast_null_into)  (const RemoteHandle&);
+static void              (RemoteHandle::*pmf_upgrade_from)  (const OrbObjectP&);
 static const OrbObjectP& (RemoteHandle::*pmf_peek_orb_object) () const;
 
 OrbObjectP
-RemoteHandle::null_orb_object ()
+RemoteHandle::__aida_null_orb_object__ ()
 {
-  static OrbObjectP null_orbo = [] () {                 // use lambda to sneak in extra code
-    pmf_cast_null_into = &RemoteHandle::cast_null_into; // export accessors for internal maintenance
-    pmf_peek_orb_object = &RemoteHandle::peek_orb_object;
+  static OrbObjectP null_orbo = [] () {                         // use lambda to sneak in extra code
+    pmf_upgrade_from = &RemoteHandle::__aida_upgrade_from__;    // export accessors for internal maintenance
+    pmf_peek_orb_object = &RemoteHandle::__aida_orb_object__;
     return std::make_shared<NullOrbObject> ();
-  } ();                                                 // executes lambda atomically
+  } ();                                                         // executes lambda atomically
   return null_orbo;
 }
 
 const OrbObjectP&
-RemoteHandle::peek_orb_object () const
+RemoteHandle::__aida_orb_object__ () const
 {
   return orbop_;
 }
 
 RemoteHandle::RemoteHandle (OrbObjectP orbo) :
-  orbop_ (orbo ? orbo : null_orb_object())
+  orbop_ (orbo ? orbo : __aida_null_orb_object__())
 {}
 
+/// Upgrade a @a Null RemoteHandle into a handle for an existing object.
 void
-RemoteHandle::reset ()
+RemoteHandle::__aida_upgrade_from__ (const OrbObjectP &orbop)
 {
-  orbop_ = null_orb_object();
-}
-
-void
-RemoteHandle::cast_null_into (const RemoteHandle &source)
-{
-  AIDA_ASSERT (_orbid() == 0);
-  orbop_ = source.orbop_;
+  AIDA_ASSERT (__aida_orbid__() == 0);
+  orbop_ = orbop;
 }
 
 RemoteHandle::~RemoteHandle()
 {}
-
-struct OrbObjectRemoteHandle : RemoteHandle {
-  OrbObjectRemoteHandle (OrbObjectP orbo) : RemoteHandle (orbo && orbo->orbid() ? orbo : null_orb_object()) {}
-};
 
 // == FieldBuffer ==
 FieldBuffer::FieldBuffer (uint32 _ntypes) :
@@ -1327,7 +1318,7 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
 {
-  RemoteMember<RemoteHandle> rorigin = RemoteHandle::_null_handle();
+  RemoteMember<RemoteHandle> rorigin = RemoteHandle::__aida_null_handle__();
   const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
   if (connection_id)
     {
@@ -1345,7 +1336,7 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
 void
 ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
 {
-  fb.add_object (rhandle._orbid());
+  fb.add_object (rhandle.__aida_orbid__());
 }
 
 void
@@ -1361,7 +1352,7 @@ ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
       orbo = std::make_shared<ClientOrbObject> (orbid);
       id2orbo_map_[orbid] = orbo;
     }
-  (rhandle.*pmf_cast_null_into) (OrbObjectRemoteHandle (orbo));
+  (rhandle.*pmf_upgrade_from) (orbo);
 }
 
 void
@@ -1469,7 +1460,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 size_t
 ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data)
 {
-  assert_return (rhandle._orbid() > 0, 0);
+  assert_return (rhandle.__aida_orbid__() > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
   assert_return (hlo > 0, 0);
   assert_return (seh != NULL, 0);
@@ -1486,7 +1477,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
@@ -1515,7 +1506,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
@@ -1548,7 +1539,7 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 std::string
 ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 {
-  const uint type_index = OrbObject::orbid_type_index (rhandle._orbid());
+  const uint type_index = OrbObject::orbid_type_index (rhandle.__aida_orbid__());
   return type_name_db.type_name (type_index);
 }
 
@@ -1701,7 +1692,7 @@ void
 ServerConnectionImpl::cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase)
 {
   OrbObjectP orbo = object_map_.orbo_from_instance (ibase);
-  (rhandle.*pmf_cast_null_into) (OrbObjectRemoteHandle (orbo));
+  (rhandle.*pmf_upgrade_from) (orbo);
 }
 
 void

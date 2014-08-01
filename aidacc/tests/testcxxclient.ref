@@ -1102,7 +1102,7 @@ FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
   FirstInterfaceHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -1656,7 +1656,7 @@ UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
   UIWidgetAreaHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -1914,7 +1914,7 @@ ParentHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn
   ParentHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -1971,7 +1971,7 @@ ChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn:
   ChildHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -2023,7 +2023,7 @@ DescendantHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
   DescendantHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -2075,7 +2075,7 @@ GrandChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
   GrandChildHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -2174,7 +2174,7 @@ QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
   QuickIfaceHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -2241,7 +2241,7 @@ MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
   MethodTestInterfaceHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -2935,7 +2935,7 @@ SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
   SignalTestInterfaceHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3009,7 +3009,7 @@ ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other
   ChildInheritingSignalsHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3061,7 +3061,7 @@ AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
   AnotherChildHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3113,7 +3113,7 @@ PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
   PropertyTesterHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3474,7 +3474,7 @@ ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
   ButtonAreaHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3627,7 +3627,7 @@ PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
   PureMethodsHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3702,7 +3702,7 @@ NameTestsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapic
   NameTestsHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3776,7 +3776,7 @@ CompressorHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
   CompressorHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;
@@ -3912,7 +3912,7 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
   SoundModuleHandle target;
   for (size_t i = 0; i < types.size(); i++)
     if (mine == types[i]) {
-      target.cast_null_into (other);
+      target.__aida_upgrade_from__ (other);
       break;
     }
   return target;

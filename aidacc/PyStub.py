@@ -318,7 +318,7 @@ class Generator:
     elif type.storage == Decls.SEQUENCE:
       s += '  %s.add_seq (0);\n' % fb
     elif type.storage == Decls.INTERFACE:
-      s += '  __AIDA_local__client_connection->add_handle (%s, RemoteHandle::_null_handle());\n' % fb
+      s += '  __AIDA_local__client_connection->add_handle (%s, RemoteHandle::__aida_null_handle__());\n' % fb
     elif type.storage == Decls.ANY:
       s += '  %s.add_any (Rapicorn::Aida::Any(), *__AIDA_local__client_connection);\n' % fb
     else: # FUNC VOID
@@ -500,7 +500,7 @@ class Generator:
     s += '__AIDA_pyconnect__%s__ (PyObject *pyself, PyObject *pyargs)\n' % digeststring
     s += '{\n'
     s += '  while (0) { error: return NULL; }\n'
-    s += '  RemoteHandle remote = RemoteHandle::_null_handle();\n'
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
     s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
@@ -528,7 +528,7 @@ class Generator:
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
-    s += '  RemoteHandle remote = RemoteHandle::_null_handle();\n'
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self + args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
@@ -573,7 +573,7 @@ class Generator:
     s += '{\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;\n' # header + self
-    s += '  RemoteHandle remote = RemoteHandle::_null_handle();\n'
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
     s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
@@ -605,7 +605,7 @@ class Generator:
     s += '{\n'
     s += '  PyObject *item;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;\n' # header + self + arg
-    s += '  RemoteHandle remote = RemoteHandle::_null_handle();\n'
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");\n' # self + arg
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
     s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'

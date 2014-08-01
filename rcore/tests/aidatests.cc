@@ -21,18 +21,18 @@ test_basics()
   TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 
   // RemoteHandle
-  assert (RemoteHandle::_null_handle() == NULL);
-  assert (!RemoteHandle::_null_handle());
-  assert (RemoteHandle::_null_handle()._orbid() == 0);
+  assert (RemoteHandle::__aida_null_handle__() == NULL);
+  assert (!RemoteHandle::__aida_null_handle__());
+  assert (RemoteHandle::__aida_null_handle__().__aida_orbid__() == 0);
   struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
   struct OneHandle : RemoteHandle { OneHandle (OrbObjectP orbo) : RemoteHandle (orbo) {} };
   std::shared_ptr<TestOrbObject> torbo = std::make_shared<TestOrbObject> (1);
   assert (OneHandle (torbo) != NULL);
   assert (OneHandle (torbo));
-  assert (OneHandle (torbo)._orbid() == 1);
-  assert (OneHandle (torbo)._null_handle() == NULL);
-  assert (!OneHandle (torbo)._null_handle());
-  assert (OneHandle (torbo)._null_handle()._orbid() == 0);
+  assert (OneHandle (torbo).__aida_orbid__() == 1);
+  assert (OneHandle (torbo).__aida_null_handle__() == NULL);
+  assert (!OneHandle (torbo).__aida_null_handle__());
+  assert (OneHandle (torbo).__aida_null_handle__().__aida_orbid__() == 0);
 }
 REGISTER_TEST ("Aida/Basics", test_basics);
 

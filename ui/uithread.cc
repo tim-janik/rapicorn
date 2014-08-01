@@ -253,7 +253,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   // install handler for UIThread test cases
   wrap_test_runner();
   auto keys = string_split (RAPICORN_NAMESPACE_NAME ":CxxStub:AidaServerConnection:idl_file=\\bui/interfaces.idl", ":");
-  return Aida::RemoteHandle::reinterpret_down_cast<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
+  return Aida::RemoteHandle::__aida_reinterpret_down_cast__<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
 }
 
 } // Rapicorn
