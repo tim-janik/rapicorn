@@ -1267,10 +1267,12 @@ class ClientConnectionImpl : public ClientConnection {
   TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
   std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
+  typedef std::map<uint64, OrbObjectP> Id2OrboMap;
+  Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
-  SignalHandler*                signal_lookup (size_t handler_id);
   UIntSet                       ehandler_set; // client event handler
   bool                          blocking_for_sem_;
+  SignalHandler*                signal_lookup (size_t handler_id);
 public:
   ClientConnectionImpl (const std::string &feature_keys) :
     ClientConnection (feature_keys), blocking_for_sem_ (false)
@@ -1346,23 +1348,18 @@ ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
   fb.add_object (rhandle._orbid());
 }
 
-typedef std::map<uint64, OrbObjectP> ClientOrboMap;
-static ClientOrboMap client_orbo_map;   // FIXME: integrate into client connection
-static Mutex         client_orbo_mutex;
-
 void
 ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 {
   const uint64 orbid = fr.pop_object();
-  ScopedLock<Mutex> locker (client_orbo_mutex);
-  OrbObjectP orbo = client_orbo_map[orbid];
+  OrbObjectP orbo = id2orbo_map_[orbid];
   if (AIDA_UNLIKELY (!orbo))
     {
       struct ClientOrbObject : public OrbObject {
         ClientOrbObject (uint64 orbid) : OrbObject (orbid) {}
       };
       orbo = std::make_shared<ClientOrbObject> (orbid);
-      client_orbo_map[orbid] = orbo;
+      id2orbo_map_[orbid] = orbo;
     }
   (rhandle.*pmf_cast_null_into) (OrbObjectRemoteHandle (orbo));
 }
