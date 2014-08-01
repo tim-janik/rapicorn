@@ -370,6 +370,7 @@ class RemoteHandle {
   template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
   typedef NullRemoteHandle<RemoteHandle> NullHandle;
   void              reset ();
+  const OrbObjectP& peek_orb_object () const;
 protected:
   static OrbObjectP null_orb_object ();
   explicit          RemoteHandle    (OrbObjectP);

@@ -557,16 +557,24 @@ public:
 };
 
 // == RemoteHandle ==
-static void (RemoteHandle::*pmf_cast_null_into) (const RemoteHandle&);
+static void              (RemoteHandle::*pmf_cast_null_into)  (const RemoteHandle&);
+static const OrbObjectP& (RemoteHandle::*pmf_peek_orb_object) () const;
 
 OrbObjectP
 RemoteHandle::null_orb_object ()
 {
   static OrbObjectP null_orbo = [] () {                 // use lambda to sneak in extra code
-    pmf_cast_null_into = &RemoteHandle::cast_null_into; // export cast_null_into() for internal upgrades
+    pmf_cast_null_into = &RemoteHandle::cast_null_into; // export accessors for internal maintenance
+    pmf_peek_orb_object = &RemoteHandle::peek_orb_object;
     return std::make_shared<NullOrbObject> ();
   } ();                                                 // executes lambda atomically
   return null_orbo;
+}
+
+const OrbObjectP&
+RemoteHandle::peek_orb_object () const
+{
+  return orbop_;
 }
 
 RemoteHandle::RemoteHandle (OrbObjectP orbo) :
@@ -1689,8 +1697,7 @@ ServerConnectionImpl::dispatch ()
 ImplicitBaseP
 ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
 {
-  OrbObjectP orbo = object_map_.orbo_from_orbid (rhandle._orbid()); // FIXME: handle should store OrbObjectP directly
-  return object_map_.instance_from_orbo (orbo);
+  return object_map_.instance_from_orbo ((rhandle.*pmf_peek_orb_object)());
 }
 
 void
