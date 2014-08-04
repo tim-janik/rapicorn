@@ -5,6 +5,7 @@
 #include <rapicorn-core.hh>
 #include <ui/application.hh>
 #include <ui/arrangement.hh>
+#include <ui/binding.hh>
 #include <ui/buttons.hh>
 #include <ui/container.hh>
 #include <ui/cmdlib.hh>
