@@ -5,11 +5,9 @@
 #include <rcore/cxxaux.hh>
 #include <string>
 #include <vector>
-#include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
 #include <type_traits>
-#include <memory>
 #include <future>
 #include <set>
 #include <map>

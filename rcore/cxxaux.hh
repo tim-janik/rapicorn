@@ -10,6 +10,7 @@
 #include <stdint.h>			// uint64_t
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
+#include <memory>
 #include <string>
 #include <vector>
 #include <map>
@@ -234,6 +235,13 @@ class IsComparable {
 public:
   static constexpr const bool value = sizeof (check<T> (0)) != 1; ///< True iff @a T supports operator==.
 };
+
+/// Check if a type @a T is a std::shared_ptr<T>.
+template<class T> struct IsSharedPtr                      : std::false_type {};
+template<class T> struct IsSharedPtr<std::shared_ptr<T> > : std::true_type {};
+/// Check if a type @a T is a std::weak_ptr<T>.
+template<class T> struct IsWeakPtr                        : std::false_type {};
+template<class T> struct IsWeakPtr<std::weak_ptr<T> >     : std::true_type {};
 
 } // Rapicorn
 
