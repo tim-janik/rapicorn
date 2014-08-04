@@ -214,6 +214,14 @@ record Pixbuf {
   StringSeq variables;
 };
 
+/// BinadbleRelay - A server side proxy to provide the BindableIface API for server objects
+interface BindableRelay {
+  signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
+  signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
+  signal void relay_list (String bpath, int64 nonce);              ///< Signal to request listing of property names.
+  void  report_result (int64 nonce, Any result, String error) = 0; ///< Function to report set/get/list results.
+};
+
 /// Classification for element update request messages.
 enum UpdateKind {
   UPDATE_READ,                  ///< Indicates an element range read request.
