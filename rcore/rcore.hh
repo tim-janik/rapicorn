@@ -6,6 +6,7 @@
 #include <rcore/aida.hh>
 #include <rcore/aidacxx.hh>
 #include <rcore/aidaprops.hh>
+#include <rcore/bindable.hh>
 #include <rcore/blobres.hh>
 #include <rcore/cpuasm.hh>
 #include <rcore/cxxaux.hh>
