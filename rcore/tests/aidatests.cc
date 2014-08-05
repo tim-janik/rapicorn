@@ -223,4 +223,31 @@ test_dynamics()
 }
 REGISTER_TEST ("Aida/Any Dynamics", test_dynamics);
 
+static void
+test_cxxaux()
+{
+  class SimpleType {
+    SimpleType () {}
+    friend class FriendAllocator<SimpleType>;
+  };
+  std::shared_ptr<SimpleType> simple = FriendAllocator<SimpleType>::make_shared ();
+
+  class ComplexType {
+    ComplexType (int, double, void*) {}        // Private ctor.
+    friend class FriendAllocator<ComplexType>; // Allow access to ctor/dtor of ComplexType.
+  };
+  std::shared_ptr<ComplexType> complex = FriendAllocator<ComplexType>::make_shared (77, -0.5, (void*) 0);
+
+  static_assert (IsSharedPtr<SimpleType>::value == false, "testing IsSharedPtr");
+  static_assert (IsWeakPtr<std::shared_ptr<SimpleType> >::value == false, "testing IsWeakPtr");
+  static_assert (IsSharedPtr<std::shared_ptr<SimpleType> >::value == true, "testing IsSharedPtr");
+  static_assert (IsWeakPtr<std::weak_ptr<SimpleType> >::value == true, "testing IsWeakPtr");
+  static_assert (IsSharedPtr<std::weak_ptr<SimpleType> >::value == false, "testing IsSharedPtr");
+  static_assert (IsComparable<SimpleType>::value == false, "testing IsComparable");
+  static_assert (IsComparable<FriendAllocator<SimpleType> >::value == true, "testing IsComparable");
+  static_assert (IsComparable<int>::value == true, "testing IsComparable");
+  static_assert (IsComparable<ComplexType>::value == false, "testing IsComparable");
+}
+REGISTER_TEST ("Aida/Cxx Auxillaries", test_cxxaux);
+
 } // Anon
