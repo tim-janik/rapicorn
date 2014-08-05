@@ -123,12 +123,17 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
 // == BaseObject ==
 class BaseObject : public virtual ReferenceCountable, public virtual Aida::ImplicitBase {
+  static void shared_ptr_deleter (BaseObject*);
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
   virtual void                 dispose   ();
 public:
-  static std::shared_ptr<BaseObject> shared_ptr (BaseObject*); ///< Wrap BaseObject into a std::shared_ptr<>().
+  template<class Class, typename std::enable_if<std::is_base_of<BaseObject, Class>::value>::type* = nullptr>
+  static std::shared_ptr<Class> shared_ptr (Class *object) ///< Wrap BaseObject or derived type into a std::shared_ptr<>().
+  {
+    return object ? std::shared_ptr<Class> (ref (object), shared_ptr_deleter) : std::shared_ptr<Class>();
+  }
 };
 typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
 typedef Aida::Property     Property;     // import Property from Aida namespace
