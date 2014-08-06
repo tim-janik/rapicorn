@@ -23,6 +23,7 @@ class ContainerImpl;
 class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
+typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 namespace Selector { class Selob; }
 enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
 
@@ -200,6 +201,9 @@ public:
   bool                        try_set_property  (const String    &property_name,
                                                  const String    &value);
   const PropertyList&         list_properties   ();
+  // bindings
+  virtual void                data_context      (ObjectIface     &context);
+  ObjectIfaceP                data_context      () const;
   /* commands */
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);

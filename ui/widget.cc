@@ -734,6 +734,30 @@ WidgetImpl::try_set_property (const String &property_name, const String &value)
   return __aida_setter__ (property_name, value);
 }
 
+static DataKey<ObjectIfaceP> data_context_key;
+
+void
+WidgetImpl::data_context (ObjectIface &dcontext)
+{
+  if (NULL == &dcontext) // NULL references are a bad idea
+    delete_data (&data_context_key);
+  else
+    set_data (&data_context_key, shared_ptr (&dcontext));
+}
+
+ObjectIfaceP
+WidgetImpl::data_context () const
+{
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (!oip)
+    {
+      WidgetImpl *p = parent();
+      if (p)
+        return p->data_context();
+    }
+  return oip;
+}
+
 static class OvrKey : public DataKey<Requisition> {
   Requisition
   fallback()
