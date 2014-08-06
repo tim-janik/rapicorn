@@ -1353,7 +1353,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
       XBell (x11context.display, 0);
       break;
     case ScreenCommand::SHOW:
-      XMapWindow (x11context.display, window_);
+      XMapRaised (x11context.display, window_);
       break;
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
