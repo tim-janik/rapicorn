@@ -202,6 +202,8 @@ public:
                                                  const String    &value);
   const PropertyList&         list_properties   ();
   // bindings
+  void                        add_binding       (const String &property, const String &binding_path);
+  void                        remove_binding    (const String &property);
   virtual void                data_context      (ObjectIface     &context);
   ObjectIfaceP                data_context      () const;
   /* commands */

@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "widget.hh"
+#include "binding.hh"
 #include "container.hh"
 #include "adjustment.hh"
 #include "window.hh"
@@ -758,6 +759,45 @@ WidgetImpl::data_context () const
   return oip;
 }
 
+typedef vector<BindingP> BindingVector;
+class BindingVectorKey : public DataKey<BindingVector*> {
+  virtual void destroy (BindingVector *data) override
+  {
+    for (auto b : *data)
+      b->reset();
+    delete data;
+  }
+};
+static BindingVectorKey binding_key;
+
+void
+WidgetImpl::add_binding (const String &property, const String &binding_path)
+{
+  assert_return (false == anchored());
+  BindingP bp = Binding::make_shared (*this, property, binding_path);
+  BindingVector *bv = get_data (&binding_key);
+  if (!bv)
+    {
+      bv = new BindingVector;
+      set_data (&binding_key, bv);
+    }
+  bv->push_back (bp);
+}
+
+void
+WidgetImpl::remove_binding (const String &property)
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    for (auto bi = bv->begin(); bi != bv->end(); ++bi)
+      if ((*bi)->instance_property() == property)
+        {
+          (*bi)->reset();
+          bv->erase (bi);
+          return;
+      }
+}
+
 static class OvrKey : public DataKey<Requisition> {
   Requisition
   fallback()
@@ -1406,6 +1446,16 @@ WidgetImpl::enter_anchored ()
         if (wgroup)
           wgroup->add_widget (*this);
       }
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    {
+      ObjectIfaceP dc = data_context();
+      if (dc)
+        for (BindingP b : *bv)
+          b->bind_context (dc);
+      else
+        printerr ("FIXME: not binding, no data_context\n");
+    }
 }
 
 void
@@ -1414,6 +1464,10 @@ WidgetImpl::leave_anchored ()
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
   for (auto *wgroup : widget_groups)
     wgroup->remove_widget (*this);
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    for (BindingP b : *bv)
+      b->reset();
 }
 
 static WidgetImpl *global_debug_dump_marker = NULL;
