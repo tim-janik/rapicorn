@@ -4,8 +4,6 @@
  * @brief Rapicorn user interface API classes.
  */
 
-include "hardcoded.idl";
-
 namespace Rapicorn {
 
 Const MAXINT32 = +4294967295;
@@ -214,8 +212,11 @@ record Pixbuf {
   StringSeq variables;
 };
 
+/// Base class for all interface types.
+interface Object {};
+
 /// BinadbleRelay - A server side proxy to provide the BindableIface API for server objects
-interface BindableRelay {
+interface BindableRelay : Object {
   signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
   signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
   signal void relay_list (String bpath, int64 nonce);              ///< Signal to request listing of property names.
@@ -255,7 +256,7 @@ record UpdateRequest {
  * For many model implementations, in-order read outs should be of complexity O(1),
  * while random order read outs may be of O(log n) or even O(n).
  */
-interface ListModel {
+interface ListModel : Object {
   int32       count   () = 0;		        ///< Obtain the number of rows provided by this model.
   Any         row     (int32 index) = 0;        ///< Read-out row at @a index. In-order read outs are generally fastest.
   signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
@@ -266,7 +267,7 @@ interface ListModel {
  * This allows use of a ListModel in for example a list view, while the data to
  * be displayed is provided sparsely on demand through explicit API calls.
  */
-interface ListModelRelay {
+interface ListModelRelay : Object {
   ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
   void        fill   (int32 first, AnySeq asq) = 0;   ///< Provide row data as requested by refill().
   signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
@@ -287,7 +288,7 @@ sequence WidgetSeq { Widget  widgets; };
 /** Widget is the base type for all UI elements.
  * See also the corresponding implementation class WidgetImpl.
  */
-interface Widget {
+interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
@@ -415,7 +416,7 @@ sequence WindowList { Window windows; };
  * such as the facility to create Window objects on the screen.
  * @nosubgrouping
  */
-interface Application {
+interface Application : Object {
   /// @name Application Startup
   String        auto_path       (String         file_name,
                                  String         binary_path,

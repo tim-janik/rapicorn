@@ -99,7 +99,7 @@ ROPE           = $(srcdir)/../rope
 AIDACC         = $(top_builddir)/aidacc/aidacc-intern
 CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
 EXTRACTDOCS_PY = $(top_srcdir)/aidacc/ExtractDocs.py
-EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh hardcoded.idl
+EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh
 # generate interfaces.dox to complete docs
 $(rapicorn_cc_sources): interfaces.dox
 interfaces.dox: $(EXTRACTDOCS_PY) $(srcdir)/interfaces.idl
