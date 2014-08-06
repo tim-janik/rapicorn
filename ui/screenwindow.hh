@@ -75,7 +75,7 @@ public:
   State         get_state               ();                     ///< Retrieve the current window state.
   void          beep                    ();                     ///< Issue an audible bell.
   void          show                    ();                     ///< Show window on screen.
-  void          present                 ();                     ///< Demand user attention for this window.
+  void          present                 (bool user_activation); ///< Make window the active window, user activation might enforce this.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
   void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
   void          configure               (const Config &config, bool sizeevent); ///< Change window configuration, requesting size event.
@@ -117,7 +117,7 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
   ScreenWindow::Setup  *setup;
   cairo_surface_t      *surface;
   Rapicorn::Region     *region;
-  uint64                nonce;
+  union { uint64        nonce, u64; };
   int                   root_x, root_y, button;
   ContentSourceType     source;
   bool                  need_resize;

@@ -133,9 +133,11 @@ ScreenWindow::show ()
 }
 
 void
-ScreenWindow::present ()
+ScreenWindow::present (bool user_activation)
 {
-  queue_command (new ScreenCommand (ScreenCommand::PRESENT, this));
+  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PRESENT, this);
+  cmd->u64 = user_activation;
+  queue_command (cmd);
 }
 
 void

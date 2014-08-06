@@ -1355,6 +1355,20 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
     case ScreenCommand::SHOW:
       XMapRaised (x11context.display, window_);
       break;
+    case ScreenCommand::PRESENT:
+      {
+        const bool user_activation = command->u64;
+        XEvent xevent = { ClientMessage, }; // rest is zeroed
+        xevent.xclient.window = window_;
+        xevent.xclient.message_type = x11context.atom ("_NET_ACTIVE_WINDOW");
+        xevent.xclient.format = 32;
+        xevent.xclient.data.l[0] = user_activation ? 2 : 1; // source indication: 0=unkown, 1=application, 2=user-action
+        xevent.xclient.data.l[1] = event_context_.time;
+        xevent.xclient.data.l[2] = 0; // our currently active window; FIXME: add support for transient dialogs
+        xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0;
+        XSendEvent (x11context.display, x11context.root_window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
+      }
+      break;
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
@@ -1420,7 +1434,6 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         RAPICORN_CRITICAL ("content provided for unknown request_id: %u (data_type=%s data_length=%u)",
                            command->nonce, data_types[0], data_types[1].size());
       break; }
-    case ScreenCommand::PRESENT:   break;  // FIXME
     case ScreenCommand::UMOVE:     break;  // FIXME
     case ScreenCommand::URESIZE:   break;  // FIXME
     case ScreenCommand::DESTROY:
