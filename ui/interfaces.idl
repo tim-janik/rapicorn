@@ -215,7 +215,7 @@ record Pixbuf {
 /// Base class for all interface types.
 interface Object {};
 
-/// BinadbleRelay - A server side proxy to provide the BindableIface API for server objects
+/// BinadbleRelay - A server side relay to provide the BindableIface API for client objects to servants.
 interface BindableRelay : Object {
   signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
   signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
@@ -439,8 +439,9 @@ interface Application : Object {
   Window        query_window    (String selector) = 0;  ///< Returns first Window match for @a selector.
   WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
-  /// @name Application Registries
-  ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
+  /// @name Application Factory
+  BindableRelay create_bindable_relay    () = 0;        ///< Create a BindableRelay, usually for uses in @a data_context.
+  /// Create a ListModelRelay coupled with a ListModel registered as @a name.
   ListModelRelay create_list_model_relay (String name = "") = 0;
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
