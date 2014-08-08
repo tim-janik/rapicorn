@@ -98,7 +98,7 @@ def Bindable (klass):
     else: # old style class
       self.__dict__[name] = value
     if hasattr (self, '__aida_relay__'):
-      pass # FIXME: self.__aida_relay__.notify_change (name)
+      self.__aida_relay__.report_notify (name)
   klass.__setattr__ = __setattr__
   # hook into __init__ to setup a relay that dispatches property changes
   orig__init__ = getattr (klass, '__init__')
