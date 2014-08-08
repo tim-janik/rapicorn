@@ -11,7 +11,7 @@ hello_window = """
       <VBox spacing="30">
         <HBox>
           <Label markup-text="Enter Name:"/>
-          <TextEditor> <Label markup-text="@bind name"/> </TextEditor>
+          <TextEditor> <Label markup-text="@bind title"/> </TextEditor>
         </HBox>
       </VBox>
     </Alignment>
@@ -22,7 +22,13 @@ app.load_string ("T", hello_window) # useless namespace
 
 window = app.create_window ("T:testbind-py")
 
-# window.data_context (None) # FIXME
+@Rapicorn.Bindable
+class ObjectModel (object):
+  def __init__ (self):
+    self.title = "Hello There!"
+om = ObjectModel()
+
+window.data_context (om.__aida_relay__)
 
 window.show()
 app.loop()
