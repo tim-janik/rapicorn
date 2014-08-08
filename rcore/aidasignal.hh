@@ -400,19 +400,19 @@ class Signal /*final*/ :
 {
   typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
   typedef typename ProtoSignal::CbFunction             CbFunction;
+public:
+  using ProtoSignal::emit;
   class Connector {
-    Signal &signal_;
-    friend class Signal;
+    friend     class Signal;
+    Signal    &signal_;
     Connector& operator= (const Connector&) = delete;
-    explicit Connector (Signal &signal) : signal_ (signal) {}
+    explicit   Connector (Signal &signal) : signal_ (signal) {}
   public:
     /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
     size_t operator+= (const CbFunction &cb)              { return signal_.connect (cb); }
     /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
     bool   operator-= (size_t connection_id)              { return signal_.disconnect (connection_id); }
   };
-public:
-  using ProtoSignal::emit;
   /// Signal constructor, supports a default callback as argument.
   Signal (const CbFunction &method = CbFunction()) : ProtoSignal (method) {}
   /// Retrieve a connector object with operator+= and operator-= to connect and disconnect signal handlers.
