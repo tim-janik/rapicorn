@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "bindable.hh"
+#include "thread.hh"
 #include <unordered_map>
 
 namespace Rapicorn {
@@ -23,20 +24,54 @@ BindablePath::match (const std::string &name) const
 }
 
 // == BindableIface ==
+static std::unordered_map<const BindableIface*, BindableIface::BindableNotifySignal> bindable_signal_map;
+static Spinlock                                                                      bindable_signal_mutex;
+
+BindableIface::~BindableIface ()
+{
+  ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
+  auto it = bindable_signal_map.find (this);
+  if (it != bindable_signal_map.end())
+    bindable_signal_map.erase (it);
+}
+
+BindableIface::BindableNotifySignal::Connector
+BindableIface::sig_bindable_notify () const
+{
+  ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
+  return bindable_signal_map[this]();
+}
+
 void
 BindableIface::bindable_notify (const std::string &name) const
 {
-  BinadableAccessor::notify_property_change (this, name);
+  ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
+  BindableNotifySignal &sig = bindable_signal_map[this];
+  sig_map_locker.unlock();
+  sig.emit (name);
 }
 
 // == BinadableAccessor ==
-static std::unordered_multimap<const BindableIface*, BinadableAccessor*> property_accessor_mmap;
 void
-BinadableAccessor::notify_property_change (const BindableIface *pa, const String &name)
+BinadableAccessor::ctor()
 {
-  auto range = property_accessor_mmap.equal_range (pa);
-  for (auto it = range.first; it != range.second; ++it)
-    it->second->notify_property (name);
+  notify_id_ = bindable_.sig_bindable_notify() += slot (this, &BinadableAccessor::notify_property);
+}
+
+BinadableAccessor::~BinadableAccessor ()
+{
+  /* depending on how users manage memory, bindable_ *might* have been destroyed already.
+   * just in case, we're *not* using bindable_.sig_bindable_notify() but instead go through
+   * disconnecting from bindable_signal_map directly.
+   */
+  {
+    ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
+    auto it = bindable_signal_map.find (&bindable_); // using bindable_ pointer but not the object
+    if (it != bindable_signal_map.end())
+      it->second() -= notify_id_;
+  }
+  if (adaptor_)
+    delete adaptor_;
 }
 
 BinadableAccessor::StringList
@@ -44,7 +79,7 @@ BinadableAccessor::list_propertis ()
 {
   BindablePath bpath;
   Any dummy;
-  pa_.bindable_get (bpath, dummy);
+  bindable_.bindable_get (bpath, dummy);
   return bpath.plist;
 }
 
@@ -54,7 +89,7 @@ BinadableAccessor::get_property (const String &name)
   BindablePath bpath;
   const_cast<String&> (bpath.path) = name;
   Any any;
-  pa_.bindable_get (bpath, any);
+  bindable_.bindable_get (bpath, any);
   return any;
 }
 

@@ -16,9 +16,13 @@ struct BindablePath {
 
 /// BindableIface - An interface implemented by custom user objects to be accessible to data bindings.
 struct BindableIface {
-  void          bindable_notify   (const std::string  &name) const;                ///< Notify listeners that property @a name changed.
-  virtual void  bindable_set      (const BindablePath &bpath, const Any &any) = 0; ///< Set the property matched by @a path to @a any.
-  virtual void  bindable_get      (const BindablePath &bpath, Any &any) = 0;       ///< Get the property matched by @a path as @a any.
+  virtual     ~BindableIface   ();
+  virtual void bindable_set    (const BindablePath &bpath, const Any &any) = 0; ///< Set the property matched by @a path to @a any.
+  virtual void bindable_get    (const BindablePath &bpath, Any &any) = 0;       ///< Get the property matched by @a path as @a any.
+  typedef Signal<void (const String &property_name)> BindableNotifySignal;
+  BindableNotifySignal::
+  Connector    sig_bindable_notify () const;                   ///< Signal to notify listeners, see bindable_notify().
+  void         bindable_notify     (const String &name) const; ///< Notify listeners that property @a name changed.
 };
 typedef std::shared_ptr<BindableIface> BindableIfaceP;
 
@@ -91,17 +95,18 @@ protected: // BindableIface
 /// BinadableAccessor - A client side driver object that uses the BindableIface API on behalf of a BindableRelay.
 class BinadableAccessor {
   BindableAdaptorBase *adaptor_; // type erasure
-  BindableIface    &pa_;
-  static void   notify_property_change  (const BindableIface *pa, const String &name);
+  BindableIface    &bindable_;
+  size_t            notify_id_;
   friend struct BindableIface;
+  void          ctor                    ();
 public:
   typedef std::vector<std::string> StringList;
 
   template<class Source,
            typename std::enable_if<!std::is_base_of<BindableIface, Source>::value>::type* = nullptr>
-  explicit BinadableAccessor (Source &source) : adaptor_ (new BindableAdaptor<Source> (source)), pa_ (*adaptor_) {}
-  explicit BinadableAccessor (BindableIface &pa) : adaptor_ (NULL), pa_ (pa)        {}
-  virtual ~BinadableAccessor ()                                                          { if (adaptor_) delete adaptor_; }
+  explicit BinadableAccessor (Source    &source) : adaptor_ (new BindableAdaptor<Source> (source)), bindable_ (*adaptor_) { ctor(); }
+  explicit BinadableAccessor (BindableIface &bi) : adaptor_ (NULL), bindable_ (bi)                                        { ctor(); }
+  virtual ~BinadableAccessor ();
   Any        get_property            (const String &name);
   void       set_property            (const String &name, const Any &any);
   void       notify_property         (const String &name);
