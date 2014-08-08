@@ -220,7 +220,8 @@ interface BindableRelay : Object {
   signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
   signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
   signal void relay_list (String bpath, int64 nonce);              ///< Signal to request listing of property names.
-  void  report_result (int64 nonce, Any result, String error) = 0; ///< Function to report set/get/list results.
+  void report_notify     (String bpath) = 0;                       ///< Notify about changes of a property.
+  void report_result (int64 nonce, Any result, String error) = 0;  ///< Function to report set/get/list results.
 };
 
 /// Classification for element update request messages.

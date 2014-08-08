@@ -26,6 +26,7 @@ private: // BindableIface
   virtual void  bindable_set            (const String &bpath, const Any &any) override;
   virtual void  bindable_get            (const String &bpath, Any &any) override;
 public: // BindableRelayIface
+  virtual void  report_notify           (const String &bpath) override;
   virtual void  report_result           (int64 nonce, const Any &result, const String &error) override;
 };
 

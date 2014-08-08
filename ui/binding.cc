@@ -49,6 +49,12 @@ BindableRelayImpl::bindable_get (const String &bpath, Any &any)
 }
 
 void
+BindableRelayImpl::report_notify (const String &bpath)
+{
+  bindable_notify (bpath);
+}
+
+void
 BindableRelayImpl::report_result (int64 nonce, const Any &result, const String &error)
 {
   auto it = std::find_if (requests_.begin(), requests_.end(), [nonce] (const Request &req) { return req.nonce == uint64 (nonce); });
