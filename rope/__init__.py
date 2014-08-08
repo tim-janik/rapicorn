@@ -85,3 +85,35 @@ def app_init (application_name = None):
   return Rapicorn.app
 Rapicorn.app_init = app_init
 del app_init
+
+# Bindable decorator to use Python objects as data_context
+def Bindable (klass):
+  """Change objects of klass to hook up with a BindableRelay in __init__ and notify the relay from __setattr__."""
+  assert Rapicorn.app != None
+  # hook into __setattr__ to notify the relay
+  orig__setattr__ = getattr (klass, '__setattr__', None)
+  def __setattr__ (self, name, value):
+    if orig__setattr__:
+      orig__setattr__ (self, name, value)
+    else: # old style class
+      self.__dict__[name] = value
+    if hasattr (self, '__aida_relay__'):
+      pass # FIXME: self.__aida_relay__.notify_change (name)
+  klass.__setattr__ = __setattr__
+  # hook into __init__ to setup a relay that dispatches property changes
+  orig__init__ = getattr (klass, '__init__')
+  def __init__ (self, *args, **kwargs):
+    orig__init__ (self, *args, **kwargs)
+    def relay_set (path, nonce, value):
+      setattr (self, path, value)
+      self.__aida_relay__.report_result (nonce, None, "")
+    def relay_get (path, nonce):
+      v = getattr (self, path, None)
+      self.__aida_relay__.report_result (nonce, v, "")
+    self.__aida_relay__ = Rapicorn.app.create_bindable_relay()
+    self.__aida_relay__.sig_relay_get += relay_get
+    self.__aida_relay__.sig_relay_set += relay_set
+  klass.__init__ = __init__
+  return klass
+Rapicorn.Bindable = Bindable
+del Bindable
