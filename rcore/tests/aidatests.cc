@@ -255,15 +255,16 @@ REGISTER_TEST ("Aida/Cxx Auxillaries", test_cxxaux);
 // intrusive BindableIface implementation
 struct SimpleInt : BindableIface {
   int a;
+  SimpleInt (int init) : a (init) {}
 protected: // BindableIface methods
-  virtual void bindable_get (const BindablePath &bpath, Any &any)
+  virtual void bindable_get (const String &bpath, Any &any)
   {
-    if (bpath.match ("a"))
+    if (bindable_match (bpath, "a"))
       any <<= a;
   }
-  virtual void bindable_set (const BindablePath &bpath, const Any &any)
+  virtual void bindable_set (const String &bpath, const Any &any)
   {
-    if (bpath.match ("a"))
+    if (bindable_match (bpath, "a"))
       any >>= a;
   }
 };
@@ -275,15 +276,15 @@ struct SimpleString {   // non-BindableIface
 
 namespace Rapicorn {    // for template specialisation
 template<> void
-bindable_accessor_get (const BindableIface &paccessible, const BindablePath &bpath, Any &any, SimpleString &s)
+bindable_accessor_get (const BindableIface &bindable, const String &bpath, Any &any, SimpleString &s)
 {
-  if (bpath.match ("b"))
+  if (bindable.bindable_match (bpath, "b"))
     any <<= s.b;
 }
 template<> void
-bindable_accessor_set (const BindableIface &paccessible, const BindablePath &bpath, const Any &any, SimpleString &s)
+bindable_accessor_set (const BindableIface &bindable, const String &bpath, const Any &any, SimpleString &s)
 {
-  if (bpath.match ("b"))
+  if (bindable.bindable_match (bpath, "b"))
     any >>= s.b;
 }
 } // Rapicorn           // for template specialisation
@@ -301,14 +302,14 @@ protected:
 public:
   /*ctor*/ BindableAdaptor (SimpleDouble &d) : self_ (d) {}
 protected: // BindableIface methods
-  virtual void bindable_get (const BindablePath &bpath, Any &any)
+  virtual void bindable_get (const String &bpath, Any &any)
   {
-    if (bpath.match ("d"))
+    if (bindable_match (bpath, "d"))
       any <<= self_.d;
   }
-  virtual void bindable_set (const BindablePath &bpath, const Any &any)
+  virtual void bindable_set (const String &bpath, const Any &any)
   {
-    if (bpath.match ("d"))
+    if (bindable_match (bpath, "d"))
       any >>= self_.d;
   }
 };
@@ -319,29 +320,30 @@ namespace { // Anon
 static void
 test_bindings()
 {
+  Any any;
   // check intrusive BindableIface implementation
-  SimpleInt a;
+  SimpleInt a { 49 };
   BinadableAccessor ba (a);
-  auto aprops = ba.list_propertis();
-  TASSERT (aprops.size() == 1 && aprops[0] == "a");
+  any = ba.get_property ("a");
+  TASSERT (any.as_int() == 49);
 
   // check non-intrusive BindableIface implementation for shared_ptr
-  std::shared_ptr<SimpleString> bshared = std::make_shared<SimpleString> (SimpleString { "testing..." });
+  std::shared_ptr<SimpleString> bshared = std::make_shared<SimpleString> (SimpleString { "T2" });
   BinadableAccessor bb (bshared);
-  auto bprops = bb.list_propertis();
-  TASSERT (bprops.size() == 1 && bprops[0] == "b");
+  any = bb.get_property ("b");
+  TASSERT (any.as_string() == "T2");
 
   // check non-intrusive BindableIface implementation for weak_ptr
   std::weak_ptr<SimpleString> cweak = bshared;
   BinadableAccessor bc (cweak);
-  auto cprops = bc.list_propertis();
-  TASSERT (cprops.size() == 1 && cprops[0] == "b");
+  any = bc.get_property ("b");
+  TASSERT (any.as_string() == "T2");
 
   // check non-intrusive BindableIface implementation via BindableAdaptor<> specialisation
-  SimpleDouble d;
+  SimpleDouble d { -0.5 };
   BinadableAccessor bd (d);
-  auto dprops = bd.list_propertis();
-  TASSERT (dprops.size() == 1 && dprops[0] == "d");
+  any = bd.get_property ("d");
+  TASSERT (any.as_float() == -0.5);
 }
 REGISTER_TEST ("Aida/Bindings", test_bindings);
 

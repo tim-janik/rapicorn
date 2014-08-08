@@ -5,24 +5,6 @@
 
 namespace Rapicorn {
 
-// == BindablePath ==
-bool
-BindablePath::match (const std::string &name) const
-{
-  if (path.empty())
-    {
-      BindablePath &mpath = const_cast<BindablePath&> (*this);
-      mpath.plist.push_back (name);
-      return false;
-    }
-  if (name == path)
-    return true;
-  if (name.size() < path.size() && path.data()[name.size()] == '.' &&
-      path.compare (0, name.size(), name) == 0)
-    return true;
-  return false;
-}
-
 // == BindableIface ==
 static std::unordered_map<const BindableIface*, BindableIface::BindableNotifySignal> bindable_signal_map;
 static Spinlock                                                                      bindable_signal_mutex;
@@ -33,6 +15,17 @@ BindableIface::~BindableIface ()
   auto it = bindable_signal_map.find (this);
   if (it != bindable_signal_map.end())
     bindable_signal_map.erase (it);
+}
+
+bool
+BindableIface::bindable_match (const String &bpath, const String &name) const
+{
+  if (name == bpath)
+    return true;
+  if (name.size() < bpath.size() && bpath.data()[name.size()] == '.' &&
+      bpath.compare (0, name.size(), name) == 0)
+    return true;
+  return false;
 }
 
 BindableIface::BindableNotifySignal::Connector
@@ -74,22 +67,11 @@ BinadableAccessor::~BinadableAccessor ()
     delete adaptor_;
 }
 
-BinadableAccessor::StringList
-BinadableAccessor::list_propertis ()
-{
-  BindablePath bpath;
-  Any dummy;
-  bindable_.bindable_get (bpath, dummy);
-  return bpath.plist;
-}
-
 Any
 BinadableAccessor::get_property (const String &name)
 {
-  BindablePath bpath;
-  const_cast<String&> (bpath.path) = name;
   Any any;
-  bindable_.bindable_get (bpath, any);
+  bindable_.bindable_get (name, any);
   return any;
 }
 

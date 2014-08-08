@@ -20,19 +20,19 @@ BindableRelayImpl::~BindableRelayImpl ()
 {}
 
 void
-BindableRelayImpl::bindable_set (const BindablePath &bpath, const Any &any)
+BindableRelayImpl::bindable_set (const String &bpath, const Any &any)
 {
-  const Request req (Request::SET, random_nonce(), bpath.path);
+  const Request req (Request::SET, random_nonce(), bpath);
   requests_.push_back (req);
   sig_relay_set.emit (req.path, req.nonce, any);
 }
 
 void
-BindableRelayImpl::bindable_get (const BindablePath &bpath, Any &any)
+BindableRelayImpl::bindable_get (const String &bpath, Any &any)
 {
   auto it = std::find_if (requests_.begin(), requests_.end(),
                           [&bpath] (const Request &req) {
-                            return req.type == Request::CACHE && req.path == bpath.path;
+                            return req.type == Request::CACHE && req.path == bpath;
                           });
   if (it != requests_.end()) // result provided from previous property read out
     {
@@ -41,7 +41,7 @@ BindableRelayImpl::bindable_get (const BindablePath &bpath, Any &any)
       requests_.erase (it);
       return;
     }
-  const Request req (Request::GET, random_nonce(), bpath.path);
+  const Request req (Request::GET, random_nonce(), bpath);
   requests_.push_back (req);
   sig_relay_get.emit (req.path, req.nonce);
   // we're not immediately returning a value,
@@ -116,9 +116,8 @@ Binding::bindable_notify (const String &property)
 void
 Binding::bindable_to_object ()
 {
-  BindablePath bpath { binding_path_ };
   Any a;
-  binding_context_->bindable_get (bpath, a);
+  binding_context_->bindable_get (binding_path_, a);
   if (a.kind())
     {
       struct ObjectIface : Rapicorn::ObjectIface { using Rapicorn::ObjectIface::__aida_setter__; };
@@ -133,8 +132,7 @@ Binding::object_to_bindable ()
   Any a;
   String stringvalue = ((ObjectIface*) &instance_)->__aida_getter__ (instance_property_);
   a <<= stringvalue; // FIXME: Aida needs Any setters/getters
-  BindablePath bpath { binding_path_ };
-  binding_context_->bindable_set (bpath, a);
+  binding_context_->bindable_set (binding_path_, a);
 }
 
 void

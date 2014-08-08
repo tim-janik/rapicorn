@@ -23,8 +23,8 @@ protected:
   explicit      BindableRelayImpl       ();
   virtual      ~BindableRelayImpl       ();
 private: // BindableIface
-  virtual void  bindable_set            (const BindablePath &bpath, const Any &any) override;
-  virtual void  bindable_get            (const BindablePath &bpath, Any &any) override;
+  virtual void  bindable_set            (const String &bpath, const Any &any) override;
+  virtual void  bindable_get            (const String &bpath, Any &any) override;
 public: // BindableRelayIface
   virtual void  report_result           (int64 nonce, const Any &result, const String &error) override;
 };

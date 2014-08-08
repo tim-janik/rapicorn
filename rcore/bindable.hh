@@ -7,18 +7,12 @@
 
 namespace Rapicorn {
 
-/// BindablePath - A dot separated list of objects and property names to identify a bindable property.
-struct BindablePath {
-  const std::string        path;
-  std::vector<std::string> plist;
-  bool                     match    (const std::string &name) const;
-};
-
 /// BindableIface - An interface implemented by custom user objects to be accessible to data bindings.
 struct BindableIface {
   virtual     ~BindableIface   ();
-  virtual void bindable_set    (const BindablePath &bpath, const Any &any) = 0; ///< Set the property matched by @a path to @a any.
-  virtual void bindable_get    (const BindablePath &bpath, Any &any) = 0;       ///< Get the property matched by @a path as @a any.
+  bool         bindable_match  (const String &bpath, const String &name) const; ///< Match the binding path segments against @a name.
+  virtual void bindable_set    (const String &bpath, const Any &any) = 0; ///< Set the property matched by @a path to @a any.
+  virtual void bindable_get    (const String &bpath, Any &any) = 0;       ///< Get the property matched by @a path as @a any.
   typedef Signal<void (const String &property_name)> BindableNotifySignal;
   BindableNotifySignal::
   Connector    sig_bindable_notify () const;                   ///< Signal to notify listeners, see bindable_notify().
@@ -28,11 +22,11 @@ typedef std::shared_ptr<BindableIface> BindableIfaceP;
 
 /// Global function template to be overridden to implement non-intrusive property getters via BindableAdaptor.
 template<class Source> void
-bindable_accessor_get (const BindableIface &paccessible, const BindablePath &bpath, Any &any, Source&);
+bindable_accessor_get (const BindableIface &paccessible, const String &bpath, Any &any, Source&);
 
 /// Global function template to be overridden to implement non-intrusive property setters via BindableAdaptor.
 template<class Source> void
-bindable_accessor_set (const BindableIface &paccessible, const BindablePath &bpath, const Any &any, Source&);
+bindable_accessor_set (const BindableIface &paccessible, const String &bpath, const Any &any, Source&);
 
 /// BindableAdaptorBase - Base template for BindableAdaptor.
 class BindableAdaptorBase : virtual public BindableIface {
@@ -55,12 +49,12 @@ public:
   /*ctor*/ BindableAdaptor (std::shared_ptr<Source> sp) : self_ (sp) {}
 protected: // BindableIface
   virtual void
-  bindable_set (const BindablePath &bpath, const Any &any)
+  bindable_set (const String &bpath, const Any &any)
   {
     bindable_accessor_set (*this, bpath, any, *self_.get());
   }
   virtual void
-  bindable_get (const BindablePath &bpath, Any &any)
+  bindable_get (const String &bpath, Any &any)
   {
     bindable_accessor_get (*this, bpath, any, *self_.get());
   }
@@ -75,7 +69,7 @@ public:
   /*ctor*/ BindableAdaptor (std::weak_ptr<Source> sp) : self_ (sp) {}
 protected: // BindableIface
   virtual void
-  bindable_set (const BindablePath &bpath, const Any &any)
+  bindable_set (const String &bpath, const Any &any)
   {
     std::shared_ptr<Source> sp = self_.lock();
     Source *source = sp.get();
@@ -83,7 +77,7 @@ protected: // BindableIface
       bindable_accessor_set (*this, bpath, any, *source);
   }
   virtual void
-  bindable_get (const BindablePath &bpath, Any &any)
+  bindable_get (const String &bpath, Any &any)
   {
     std::shared_ptr<Source> sp = self_.lock();
     Source *source = sp.get();
@@ -100,8 +94,6 @@ class BinadableAccessor {
   friend struct BindableIface;
   void          ctor                    ();
 public:
-  typedef std::vector<std::string> StringList;
-
   template<class Source,
            typename std::enable_if<!std::is_base_of<BindableIface, Source>::value>::type* = nullptr>
   explicit BinadableAccessor (Source    &source) : adaptor_ (new BindableAdaptor<Source> (source)), bindable_ (*adaptor_) { ctor(); }
@@ -110,7 +102,6 @@ public:
   Any        get_property            (const String &name);
   void       set_property            (const String &name, const Any &any);
   void       notify_property         (const String &name);
-  StringList list_propertis          ();
 };
 
 } // Rapicorn
