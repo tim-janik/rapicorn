@@ -154,7 +154,7 @@ WidgetImpl::propagate_state (bool notify_changed)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
-    sig_changed.emit(); // changed() does not imply invalidate(), see above
+    sig_changed.emit (""); // changed() does not imply invalidate(), see above
 }
 
 void
@@ -181,7 +181,7 @@ WidgetImpl::set_flag (uint64 flag, bool on)
           repack (pa, pa); // includes invalidate();
           invalidate_parent(); // request resize even if flagged as invalid already
         }
-      changed();
+      changed ("flags");
     }
 }
 
@@ -1325,10 +1325,10 @@ WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, 
 }
 
 void
-WidgetImpl::changed()
+WidgetImpl::changed (const String &name)
 {
   if (!finalizing())
-    sig_changed.emit();
+    sig_changed.emit (name);
 }
 
 void
@@ -1706,14 +1706,12 @@ WidgetImpl::vscale (double f)
 }
 
 void
-WidgetImpl::do_changed()
-{
-}
+WidgetImpl::do_changed (const String &name)
+{}
 
 void
 WidgetImpl::do_invalidate()
-{
-}
+{}
 
 bool
 WidgetImpl::do_event (const Event &event)

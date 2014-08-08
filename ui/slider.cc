@@ -104,7 +104,7 @@ protected:
     if (flip_ != flip)
       {
         flip_ = flip;
-        changed();
+        changed ("flipped");
       }
   }
   virtual ~SliderAreaImpl()
@@ -130,7 +130,7 @@ public:
     adjustment_ = &adjustment;
     avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
     arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
-    changed();
+    changed ("adjustment");
   }
   virtual Adjustment*
   adjustment () const
@@ -294,7 +294,7 @@ class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventH
     if (vertical_skid_ != vs)
       {
         vertical_skid_ = vs;
-        changed();
+        changed ("vertical_skid");
       }
   }
 public:

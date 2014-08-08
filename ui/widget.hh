@@ -106,7 +106,7 @@ protected:
                                                  double       new_height);
   /* signal methods */
   virtual void                do_invalidate     ();
-  virtual void                do_changed        ();
+  virtual void                do_changed        (const String &name);
   /* idlers & timers */
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
@@ -230,17 +230,17 @@ public:
   /* invalidation / changes */
   void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
-  void                        changed           ();
+  void                        changed           (const String &name);
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
   void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  Aida::Signal<void ()>                 sig_finalize;
-  Aida::Signal<void ()>                 sig_changed;
-  Aida::Signal<void ()>                 sig_invalidate;
-  Aida::Signal<void (WidgetImpl *old)>  sig_hierarchy_changed;
+  Aida::Signal<void ()>                   sig_finalize;
+  Aida::Signal<void (const String &name)> sig_changed;
+  Aida::Signal<void ()>                   sig_invalidate;
+  Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // widget coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative

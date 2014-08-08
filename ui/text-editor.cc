@@ -357,7 +357,7 @@ private:
               {
                 cursor_ = m;
                 client->mark2cursor();
-                changed();
+                changed ("cursor");
               }
             (void) moved;
           }
@@ -392,7 +392,7 @@ private:
         client->hide_selector();
         client->mark2cursor();
         cursor_ = client->mark();
-        changed();
+        changed ("cursor");
         return true;
       }
     client->mark (cursor_);
@@ -413,7 +413,7 @@ private:
       client->hide_selector();
     cursor_ = m;
     client->mark2cursor();
-    changed();
+    changed ("cursor");
     return true;
   }
   bool
@@ -434,7 +434,8 @@ private:
         client->mark_insert (utf8text);
         cursor_ = client->mark();
         client->mark2cursor();
-        changed();
+        changed ("text");
+        changed ("cursor");
         return true;
       }
     return false;
@@ -450,7 +451,7 @@ private:
     client->mark2cursor();      // cursor might have been at end already
     client->mark (0);
     client->mark2selector();    // selects and forces selection_changed
-    changed();
+    changed ("cursor");
     return client->get_selection();
   }
   bool
@@ -467,7 +468,7 @@ private:
     client->hide_selector();
     cursor_ = client->mark();
     client->mark2cursor();
-    changed();
+    changed ("cursor");
     return true;
   }
   bool
@@ -487,7 +488,8 @@ private:
         cursor_ = m;
         client->mark2cursor();
         client->mark_delete (1);
-        changed();
+        changed ("text");
+        changed ("cursor");
         return true;
       }
     return false;
@@ -503,7 +505,8 @@ private:
     if (client->mark_at_end())
       return false;
     client->mark_delete (1);
-    changed();
+    changed ("text");
+    changed ("cursor");
     return true;
   }
   void
