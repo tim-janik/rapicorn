@@ -59,6 +59,12 @@ void
 WidgetImpl::constructed()
 {}
 
+void
+WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
+{
+  f (*this);
+}
+
 bool
 WidgetImpl::ancestry_visible () const
 {

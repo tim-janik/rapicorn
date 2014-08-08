@@ -66,6 +66,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
+  virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
   /* flag handling */
   bool                        change_flags_silently (uint64 mask, bool on);
   enum {

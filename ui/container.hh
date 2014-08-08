@@ -44,6 +44,7 @@ public:
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
+  virtual void          foreach_recursive  (const std::function<void (WidgetImpl&)> &f) override;
   virtual size_t        n_children      () = 0;
   virtual WidgetImpl*   nth_child       (size_t nth) = 0;
   bool                  has_children    ()                              { return 0 != n_children(); }

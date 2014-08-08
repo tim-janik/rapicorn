@@ -366,6 +366,14 @@ ContainerImpl::child_affine (const WidgetImpl &widget)
 }
 
 void
+ContainerImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
+{
+  f (*this);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    cw->foreach_recursive (f);
+}
+
+void
 ContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   WidgetImpl::hierarchy_changed (old_toplevel);
