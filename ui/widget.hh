@@ -63,6 +63,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
+  void                        data_context_changed ();
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();

@@ -746,10 +746,17 @@ static DataKey<ObjectIfaceP> data_context_key;
 void
 WidgetImpl::data_context (ObjectIface &dcontext)
 {
-  if (NULL == &dcontext) // NULL references are a bad idea
-    delete_data (&data_context_key);
-  else
-    set_data (&data_context_key, shared_ptr (&dcontext));
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (oip.get() != &dcontext)
+    {
+      oip = shared_ptr (&dcontext);
+      if (oip)
+        set_data (&data_context_key, shared_ptr (&dcontext));
+      else
+        delete_data (&data_context_key);
+      if (anchored())
+        foreach_recursive ([] (WidgetImpl &widget) { widget.data_context_changed(); });
+    }
 }
 
 ObjectIfaceP
@@ -775,6 +782,21 @@ class BindingVectorKey : public DataKey<BindingVector*> {
   }
 };
 static BindingVectorKey binding_key;
+
+void
+WidgetImpl::data_context_changed ()
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    {
+      ObjectIfaceP dc = data_context();
+      for (BindingP b : *bv)
+        if (dc)
+          b->bind_context (dc);
+        else
+          b->reset();
+    }
+}
 
 void
 WidgetImpl::add_binding (const String &property, const String &binding_path)
@@ -1452,16 +1474,7 @@ WidgetImpl::enter_anchored ()
         if (wgroup)
           wgroup->add_widget (*this);
       }
-  BindingVector *bv = get_data (&binding_key);
-  if (bv)
-    {
-      ObjectIfaceP dc = data_context();
-      if (dc)
-        for (BindingP b : *bv)
-          b->bind_context (dc);
-      else
-        printerr ("FIXME: not binding, no data_context\n");
-    }
+  data_context_changed();
 }
 
 void
@@ -1470,10 +1483,7 @@ WidgetImpl::leave_anchored ()
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
   for (auto *wgroup : widget_groups)
     wgroup->remove_widget (*this);
-  BindingVector *bv = get_data (&binding_key);
-  if (bv)
-    for (BindingP b : *bv)
-      b->reset();
+  data_context_changed();
 }
 
 static WidgetImpl *global_debug_dump_marker = NULL;
