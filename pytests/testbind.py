@@ -10,8 +10,12 @@ hello_window = """
     <Alignment padding="15">
       <VBox spacing="30">
         <HBox>
-          <Label markup-text="Enter Name:"/>
+          <Label markup-text="Editable Text: "/>
           <TextEditor> <Label markup-text="@bind title"/> </TextEditor>
+        </HBox>
+        <HBox homogeneous="true" spacing="15">
+          <Button on-click="show" hexpand="1">    <Label markup-text="Show Model"/> </Button>
+          <Button on-click="shuffle"> <Label markup-text="Shuffle Model"/> </Button>
         </HBox>
       </VBox>
     </Alignment>
@@ -30,5 +34,15 @@ om = ObjectModel()
 
 window.data_context (om.__aida_relay__)
 
+def window_command_handler (cmdname, args):
+  if cmdname == 'show':
+    print 'ObjectModel.title:', om.title
+  if cmdname == 'shuffle':
+    import random
+    v = 'Random bits:' + str (random.randrange (1000000))
+    om.title = v
+  return True
+
+window.sig_commands += window_command_handler
 window.show()
 app.loop()
