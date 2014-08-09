@@ -32,22 +32,24 @@ public: // BindableRelayIface
 
 /// Binding class to bind an @a instance @a property to another object's property.
 class Binding {
-  ObjectIface   &instance_;
+  ObjectImpl    &instance_;
   const String   instance_property_;
+  size_t         instance_sigid_ = 0;
   BindableIfaceP binding_context_;
   const String   binding_path_;
   size_t         binding_sigid_ = 0;
-  explicit Binding (ObjectIface &instance, const String &instance_property, const String &binding_path);
+  explicit Binding (ObjectImpl &instance, const String &instance_property, const String &binding_path);
   virtual ~Binding ();
   friend class FriendAllocator<Binding>;        // provide make_shared for non-public ctor
   void            bindable_to_object ();
   void            object_to_bindable ();
+  void            object_notify      (const String &property);
   void            bindable_notify    (const String &property);
 public:
   String          instance_property () const     { return instance_property_; }
   void            bind_context      (ObjectIfaceP binding_context);
   void            reset             ();
-  static BindingP make_shared       (ObjectIface &instance, const String &instance_property, const String &binding_path)
+  static BindingP make_shared       (ObjectImpl &instance, const String &instance_property, const String &binding_path)
   { return FriendAllocator<Binding>::make_shared (instance, instance_property, binding_path); }
 };
 

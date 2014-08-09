@@ -49,12 +49,6 @@ BindableRelayImpl::bindable_get (const String &bpath, Any &any)
 }
 
 void
-BindableRelayImpl::report_notify (const String &bpath)
-{
-  bindable_notify (bpath);
-}
-
-void
 BindableRelayImpl::report_result (int64 nonce, const Any &result, const String &error)
 {
   auto it = std::find_if (requests_.begin(), requests_.end(), [nonce] (const Request &req) { return req.nonce == uint64 (nonce); });
@@ -79,6 +73,12 @@ BindableRelayImpl::report_result (int64 nonce, const Any &result, const String &
   requests_.erase (it);
 }
 
+void
+BindableRelayImpl::report_notify (const String &bpath)
+{
+  bindable_notify (bpath);
+}
+
 BindableRelayIface*
 ApplicationImpl::create_bindable_relay ()
 {
@@ -88,12 +88,30 @@ ApplicationImpl::create_bindable_relay ()
 }
 
 // == Binding ==
-Binding::Binding (ObjectIface &instance, const String &instance_property, const String &binding_path) :
+Binding::Binding (ObjectImpl &instance, const String &instance_property, const String &binding_path) :
   instance_ (instance), instance_property_ (instance_property), binding_path_ (binding_path)
 {}
 
 Binding::~Binding ()
-{}
+{
+  reset();
+}
+
+void
+Binding::reset()
+{
+  if (instance_sigid_)
+    {
+      instance_.sig_changed() -= instance_sigid_;
+      instance_sigid_ = 0;
+    }
+  if (binding_sigid_)
+    {
+      binding_context_->sig_bindable_notify() -= binding_sigid_;
+      binding_sigid_ = 0;
+    }
+  binding_context_.reset();
+}
 
 void
 Binding::bind_context (ObjectIfaceP object)
@@ -101,22 +119,17 @@ Binding::bind_context (ObjectIfaceP object)
   BindableIfaceP binding_context = std::dynamic_pointer_cast<BindableIface> (object);
   if (binding_context.get() != binding_context_.get())
     {
-      if (binding_context_)
-        reset();
+      reset();
       binding_context_ = binding_context;
       if (binding_context_)
         {
-          bindable_to_object();
+          instance_sigid_ = instance_.sig_changed() += slot (this, &Binding::object_notify);
           binding_sigid_ = binding_context_->sig_bindable_notify() += slot (this, &Binding::bindable_notify);
+          bindable_to_object();
         }
     }
-}
-
-void
-Binding::bindable_notify (const String &property)
-{
-  if (property == binding_path_)
-    bindable_to_object();
+  else if (binding_context_.get())
+    reset();
 }
 
 void
@@ -142,11 +155,17 @@ Binding::object_to_bindable ()
 }
 
 void
-Binding::reset()
+Binding::bindable_notify (const String &property)
 {
-  binding_context_->sig_bindable_notify() -= binding_sigid_;
-  binding_sigid_ = 0;
-  binding_context_.reset();
+  if (property == binding_path_)
+    bindable_to_object();
+}
+
+void
+Binding::object_notify (const String &property)
+{
+  if (property == instance_property_)
+    object_to_bindable();
 }
 
 } // Rapicorn
