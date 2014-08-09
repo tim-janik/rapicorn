@@ -1,10 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/serverapi.hh>
-// serverapi.hh includes widget.hh after WidgetIface declaration
-
 #ifndef __RAPICORN_WIDGET_HH_
 #define __RAPICORN_WIDGET_HH_
 
+#include <ui/object.hh>
 #include <ui/events.hh>
 #include <ui/region.hh>
 #include <ui/commands.hh>
@@ -43,7 +41,7 @@ public:
 
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
-class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer {
+class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
@@ -106,7 +104,7 @@ protected:
                                                  double       new_height);
   /* signal methods */
   virtual void                do_invalidate     ();
-  virtual void                do_changed        (const String &name);
+  virtual void                do_changed        (const String &name) override;
   /* idlers & timers */
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
@@ -230,7 +228,6 @@ public:
   /* invalidation / changes */
   void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
-  void                        changed           (const String &name);
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
   void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
@@ -238,7 +235,6 @@ public:
   void                        force_visual_update  ();
   /* public signals */
   Aida::Signal<void ()>                   sig_finalize;
-  Aida::Signal<void (const String &name)> sig_changed;
   Aida::Signal<void ()>                   sig_invalidate;
   Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
@@ -368,8 +364,6 @@ protected:
 private:
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
-inline bool operator== (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 == &widget2; }
-inline bool operator!= (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 != &widget2; }
 
 // == WidgetIfaceVector ==
 struct WidgetIfaceVector : public std::vector<WidgetIface*> {

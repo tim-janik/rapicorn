@@ -50,7 +50,6 @@ WidgetIface::impl () const
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE | SENSITIVE),
   parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
-  sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -1325,13 +1324,6 @@ WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, 
 }
 
 void
-WidgetImpl::changed (const String &name)
-{
-  if (!finalizing())
-    sig_changed.emit (name);
-}
-
-void
 WidgetImpl::invalidate_parent ()
 {
   /* propagate (size) invalidation from children to parents */
@@ -1707,7 +1699,9 @@ WidgetImpl::vscale (double f)
 
 void
 WidgetImpl::do_changed (const String &name)
-{}
+{
+  ObjectImpl::do_changed (name);
+}
 
 void
 WidgetImpl::do_invalidate()

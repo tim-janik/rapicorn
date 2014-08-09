@@ -14,7 +14,7 @@ rapicorn_public_headers = $(strip	\
 	cmdlib.hh			commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
 	image.hh	widget.hh	imageframe.hh	keysymbols.hh	\
-	layoutcontainers.hh	listarea.hh	models.hh	\
+	layoutcontainers.hh	listarea.hh	models.hh	object.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
 	scrollwidgets.hh	selector.hh	selob.hh	\
@@ -32,7 +32,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	cmdlib.cc			commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
 	image.cc	widget.cc	imageframe.cc	\
-	layoutcontainers.cc	listarea.cc	models.cc	\
+	layoutcontainers.cc	listarea.cc	models.cc	object.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\
 	scrollwidgets.cc	selector.cc	selob.cc	\
