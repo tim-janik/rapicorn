@@ -114,6 +114,21 @@ public:
     request_chars_ (0), request_digits_ (0), cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE),
     cached_client_ (NULL), client_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
   {}
+protected:
+  virtual void
+  do_changed (const String &name) override
+  {
+    SingleContainerImpl::do_changed (name);
+    if (name == "text")
+      {
+        changed ("markup_text");  // notify aliasing properties
+        ObjectImpl *client_object = dynamic_cast<ObjectImpl*> (get_client());
+        if (client_object)
+          {
+            client_object->changed ("markup_text");  // bad hack, need tighter coupling between Client and Editor
+          }
+      }
+  }
 private:
   ~EditorImpl()
   {
