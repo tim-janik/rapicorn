@@ -1756,6 +1756,7 @@ WidgetImpl::name (const String &str)
     delete_data (&widget_name_key);
   else
     set_data (&widget_name_key, str);
+  changed ("name");
 }
 
 FactoryContext*
