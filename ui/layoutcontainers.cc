@@ -19,6 +19,8 @@ Alignment::__aida_properties__()
   return property_list;
 }
 
+#define U16(v)   CLAMP (v, 0, 65535)
+
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
   uint16 left_padding_, right_padding_;
   uint16 bottom_padding_, top_padding_;
@@ -75,18 +77,18 @@ public:
       }
     child.set_allocation (area);
   }
-  virtual uint  left_padding   () const  { return left_padding_; }
-  virtual void  left_padding   (uint c)  { left_padding_ = c; invalidate(); }
-  virtual uint  right_padding  () const  { return right_padding_; }
-  virtual void  right_padding  (uint c)  { right_padding_ = c; invalidate(); }
-  virtual uint  bottom_padding () const  { return bottom_padding_; }
-  virtual void  bottom_padding (uint c)  { bottom_padding_ = c; invalidate(); }
-  virtual uint  top_padding    () const  { return top_padding_; }
-  virtual void  top_padding    (uint c)  { top_padding_ = c; invalidate(); }
-  virtual uint  padding        () const  { assert_unreached(); return 0; }
-  virtual void  padding        (uint c)
+  virtual int  left_padding   () const { return left_padding_; }
+  virtual void left_padding   (int c)  { left_padding_ = U16 (c); invalidate(); }
+  virtual int  right_padding  () const { return right_padding_; }
+  virtual void right_padding  (int c)  { right_padding_ = U16 (c); invalidate(); }
+  virtual int  bottom_padding () const { return bottom_padding_; }
+  virtual void bottom_padding (int c)  { bottom_padding_ = U16 (c); invalidate(); }
+  virtual int  top_padding    () const { return top_padding_; }
+  virtual void top_padding    (int c)  { top_padding_ = U16 (c); invalidate(); }
+  virtual int  padding        () const { assert_unreached(); return 0; }
+  virtual void padding        (int c)
   {
-    left_padding_ = right_padding_ = bottom_padding_ = top_padding_ = c;
+    left_padding_ = right_padding_ = bottom_padding_ = top_padding_ = U16 (c);
     invalidate();
   }
 };
@@ -119,9 +121,9 @@ class HBoxImpl : public virtual TableImpl, public virtual HBox {
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
-  virtual uint  spacing  () const                               { return col_spacing(); }
-  virtual void  spacing  (uint cspacing)                        { col_spacing (cspacing); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)     { TableImpl::homogeneous (chomogeneous_widgets); }
+  virtual int   spacing         () const                        { return col_spacing(); }
+  virtual void  spacing         (int cspacing)                  { col_spacing (MIN (INT_MAX, cspacing)); }
 public:
   explicit
   HBoxImpl()
@@ -159,9 +161,9 @@ class VBoxImpl : public virtual TableImpl, public virtual VBox {
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_widgets)       { TableImpl::homogeneous (chomogeneous_widgets); }
-  virtual uint  spacing  () const                               { return row_spacing(); }
-  virtual void  spacing  (uint cspacing)                        { row_spacing (cspacing); }
+  virtual void  homogeneous     (bool chomogeneous_widgets)     { TableImpl::homogeneous (chomogeneous_widgets); }
+  virtual int   spacing         () const                        { return row_spacing(); }
+  virtual void  spacing         (int cspacing)                  { row_spacing (MIN (INT_MAX, cspacing)); }
 public:
   explicit
   VBoxImpl()

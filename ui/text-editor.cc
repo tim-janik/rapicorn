@@ -102,7 +102,7 @@ Editor::__aida_properties__()
 }
 
 class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, public virtual EventHandler {
-  uint     request_chars_, request_digits_;
+  uint16   request_chars_, request_digits_;
   int      cursor_;
   TextMode text_mode_;
   Client  *cached_client_;
@@ -567,10 +567,10 @@ private:
   virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
   virtual String   plain_text     () const                      { return cached_client_ ? cached_client_->plain_text() : ""; }
   virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
-  virtual uint     request_chars  () const                      { return request_chars_; }
-  virtual void     request_chars  (uint nc)                     { request_chars_ = nc; invalidate_size(); }
-  virtual uint     request_digits () const                      { return request_digits_; }
-  virtual void     request_digits (uint nd)                     { request_digits_ = nd; invalidate_size(); }
+  virtual int      request_chars  () const                      { return request_chars_; }
+  virtual void     request_chars  (int nc)                      { request_chars_ = CLAMP (nc, 0, 65535); invalidate_size(); }
+  virtual int      request_digits () const                      { return request_digits_; }
+  virtual void     request_digits (int nd)                      { request_digits_ = CLAMP (nd, 0, 65535); invalidate_size(); }
 };
 static const WidgetFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 

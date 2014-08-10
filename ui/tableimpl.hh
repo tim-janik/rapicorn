@@ -51,11 +51,11 @@ public:
   virtual void          insert_rows     (uint first_row, uint n_rows);
   virtual void          insert_cols     (uint first_col, uint n_cols);
   virtual bool          homogeneous     () const                        { return homogeneous_widgets; }
-  virtual void          homogeneous     (bool chomogeneous_widgets)       { homogeneous_widgets = chomogeneous_widgets; invalidate(); }
-  virtual uint          col_spacing     () const                        { return default_col_spacing; }
-  virtual void          col_spacing     (uint cspacing);
-  virtual uint          row_spacing     () const                        { return default_row_spacing; }
-  virtual void          row_spacing     (uint rspacing);
+  virtual void          homogeneous     (bool chomogeneous_widgets)     { homogeneous_widgets = chomogeneous_widgets; invalidate(); }
+  virtual int           col_spacing     () const                        { return default_col_spacing; }
+  virtual void          col_spacing     (int cspacing);
+  virtual int           row_spacing     () const                        { return default_row_spacing; }
+  virtual void          row_spacing     (int rspacing);
 };
 
 } // Rapicorn

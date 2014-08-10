@@ -49,8 +49,8 @@ public:
     static Property *properties[] = {
       MakeProperty (PropertyHost, bool_prop,            "Label", "Blurb", "rw"),
       MakeProperty (PropertyHost, const_bool_prop,      "Label", "Blurb", "rw"),
-      MakeProperty (PropertyHost, uint_prop,            "Label", "Blurb", 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, const_uint_prop,      "Label", "Blurb", 0, 100, 5, "rw"),
+      // MakeProperty (PropertyHost, uint_prop,         "Label", "Blurb", 0, 100, 5, "rw"),
+      // MakeProperty (PropertyHost, const_uint_prop,   "Label", "Blurb", 0, 100, 5, "rw"),
       MakeProperty (PropertyHost, int_prop,             "Label", "Blurb", 0, 100, 5, "rw"),
       MakeProperty (PropertyHost, const_int_prop,       "Label", "Blurb", 0, 100, 5, "rw"),
       MakeProperty (PropertyHost, double_prop,          "Label", "Blurb", 0, 100, 0.5, "rw"),
@@ -76,7 +76,7 @@ property_test()
   Aida::Property **properties = ph.list_properties().list_properties (&n_properties);
   (void) properties;
   // printf ("created %d properties.\n", ph.list_properties().n_properties);
-  TASSERT (n_properties == 15 - 1);
+  TASSERT (n_properties == 15 - 3);
 }
 REGISTER_UITHREAD_TEST ("Objects/Property Test", property_test);
 

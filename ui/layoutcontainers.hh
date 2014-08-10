@@ -7,19 +7,19 @@
 namespace Rapicorn {
 
 class Alignment : public virtual ContainerImpl {
-  virtual uint  padding         () const  = 0;
+  virtual int   padding         () const  = 0;
 protected:
   virtual const PropertyList&   __aida_properties__ ();
 public:
-  virtual uint  left_padding    () const  = 0;
-  virtual void  left_padding    (uint c)  = 0;
-  virtual uint  right_padding   () const  = 0;
-  virtual void  right_padding   (uint c)  = 0;
-  virtual uint  bottom_padding  () const  = 0;
-  virtual void  bottom_padding  (uint c)  = 0;
-  virtual uint  top_padding     () const  = 0;
-  virtual void  top_padding     (uint c)  = 0;
-  virtual void  padding         (uint c)  = 0;
+  virtual int   left_padding    () const  = 0;
+  virtual void  left_padding    (int c)  = 0;
+  virtual int   right_padding   () const  = 0;
+  virtual void  right_padding   (int c)  = 0;
+  virtual int   bottom_padding  () const  = 0;
+  virtual void  bottom_padding  (int c)  = 0;
+  virtual int   top_padding     () const  = 0;
+  virtual void  top_padding     (int c)  = 0;
+  virtual void  padding         (int c)  = 0;
 };
 
 class HBox : public virtual ContainerImpl {
@@ -28,8 +28,8 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
-  virtual uint  spacing         () const = 0;
-  virtual void  spacing         (uint cspacing) = 0;
+  virtual int   spacing         () const = 0;
+  virtual void  spacing         (int cspacing) = 0;
 };
 
 class VBox : public virtual ContainerImpl {
@@ -38,8 +38,8 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
-  virtual uint  spacing         () const = 0;
-  virtual void  spacing         (uint cspacing) = 0;
+  virtual int   spacing         () const = 0;
+  virtual void  spacing         (int cspacing) = 0;
 };
 
 } // Rapicorn

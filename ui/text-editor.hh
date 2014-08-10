@@ -85,10 +85,10 @@ public:
   virtual void          markup_text    (const String &markup) = 0;
   virtual String        plain_text     () const = 0;
   virtual void          plain_text     (const String &ptext) = 0;
-  virtual uint          request_chars  () const = 0;
-  virtual void          request_chars  (uint nc) = 0;
-  virtual uint          request_digits () const = 0;
-  virtual void          request_digits (uint nd) = 0;
+  virtual int           request_chars  () const = 0;
+  virtual void          request_chars  (int nc) = 0;
+  virtual int           request_digits () const = 0;
+  virtual void          request_digits (int nd) = 0;
 };
 
 } // Text
