@@ -174,7 +174,8 @@ struct PropertyEnum : Property {
   virtual String get_value   (PropertyHostInterface &obj);
   virtual bool   get_range   (PropertyHostInterface &obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
-template<class Class, typename Type> inline Property*
+template<class Class, typename Type,
+         typename std::enable_if<std::is_enum<Type>::value>::type* = nullptr> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 {
