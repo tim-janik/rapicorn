@@ -139,8 +139,15 @@ Binding::bindable_to_object ()
   binding_context_->bindable_get (binding_path_, a);
   if (a.kind())
     {
-      struct ObjectIface : Rapicorn::ObjectIface { using Rapicorn::ObjectIface::__aida_setter__; };
-      ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.as_string());
+      Any o; // check old value before setting, to avoid notification loops when calling the setter for unchanged values
+      struct ObjectIface : Rapicorn::ObjectIface {
+        using Rapicorn::ObjectIface::__aida_getter__;
+        using Rapicorn::ObjectIface::__aida_setter__;
+      };
+      String stringvalue = ((ObjectIface*) &instance_)->__aida_getter__ (instance_property_);
+      o <<= stringvalue; // FIXME: Aida needs Any setters/getters
+      if (o != a)
+        ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.as_string());
     }
 }
 
