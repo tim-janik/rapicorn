@@ -95,6 +95,7 @@ class TypeInfo (BaseDecl):
     self.is_forward = False
     self.options = []           # holds: (ident, label, blurb, number)
     self.combinable = False
+    self.location = ('', '??', '??') # holds: (input_file, input_line, input_col)
     if (self.storage == RECORD or
         self.storage == INTERFACE):
       self.fields = []          # holds: (ident, TypeInfo)
@@ -186,6 +187,7 @@ class TypeInfo (BaseDecl):
     ti.is_forward = self.is_forward
     ti.options += self.options
     ti.combinable = self.combinable
+    ti.location = ('', '??', '??')              # clones are *not* defined in the same location
     if hasattr (self, 'ioj_stream'):
       ti.ioj_stream = self.ioj_stream
     if hasattr (self, 'namespace'):
@@ -223,6 +225,8 @@ class TypeInfo (BaseDecl):
     assert self.storage == ENUM
     self.combinable = as_flags
     self.update_auxdata ({ 'enum_combinable' : int (bool (self.combinable)) })
+  def set_location (self, input_file, input_line, input_col):
+    self.location = (input_file, input_line, input_col)
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)
