@@ -8,13 +8,15 @@ DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
 XML_FILES        =
-EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS)
+EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
 X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
 
+EXAMPLES = example-bind.py
+
 # === tests ===
-TEST_PYPROGS = simple.py loop.py testrapicorn.py chekwidgets.py testgc.py
+TEST_PYPROGS = simple.py loop.py testrapicorn.py chekwidgets.py testgc.py testbind.py
 
 # === python-call-info ===
 python-call-info:

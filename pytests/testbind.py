@@ -7,18 +7,7 @@ app = Rapicorn.app_init ("Test Rapicorn Bindings")
 # Define the elements of the dialog window to be displayed.
 hello_window = """
   <tmpl:define id="testbind-py" inherit="Window">
-    <Alignment padding="15">
-      <VBox spacing="30">
-        <HBox>
-          <Label markup-text="Editable Text: "/>
-          <TextEditor> <Label markup-text="@bind title"/> </TextEditor>
-        </HBox>
-        <HBox homogeneous="true" spacing="15">
-          <Button on-click="show" hexpand="1">    <Label markup-text="Show Model"/> </Button>
-          <Button on-click="shuffle"> <Label markup-text="Shuffle Model"/> </Button>
-        </HBox>
-      </VBox>
-    </Alignment>
+    <IdlTestWidget id="test-widget" string-prop="@bind somestring"/>
   </tmpl:define>
 """
 
@@ -29,20 +18,42 @@ window = app.create_window ("T:testbind-py")
 @Rapicorn.Bindable
 class ObjectModel (object):
   def __init__ (self):
-    self.title = "Hello There!"
+    self.somestring = "initial-somestring"
 om = ObjectModel()
 
 window.data_context (om.__aida_relay__)
 
-def window_command_handler (cmdname, args):
-  if cmdname == 'show':
-    print 'ObjectModel.title:', om.title
-  if cmdname == 'shuffle':
-    import random
-    v = 'Random bits:' + str (random.randrange (1000000))
-    om.title = v
-  return True
-
-window.sig_commands += window_command_handler
 window.show()
-app.loop()
+
+# sync local state with remote state, because of possible binding
+# notification ping-pong we have to do this in 2 phases
+def sync_remote():
+  # process events (signals) pending locally or remotely
+  while app.iterate (False, True): pass # process signals pending locally
+  app.test_hook()                       # force round trip, ensure we pickup notifications pending remotely
+  while app.iterate (False, True): pass # process new batch of signals
+  # our processing might have queued binding updates for the remote, so sync once more
+  app.test_hook()                       # pick up remote notifications again
+  while app.iterate (False, True): pass # process final set of signals
+
+import sys
+testwidget = window.query_selector_unique ('#test-widget')
+assert testwidget
+
+sync_remote() # give binding time to initialize
+
+# check value binding from ObjectModel property to UI property
+for word in ('test001', 'IxyzI', '3989812241x', 'a', 'aa', 'bbb', 'done'):
+  om.somestring = word
+  sync_remote() # give binding time to propagate value
+  #print "SEE1: " + testwidget.string_prop + ' (expect: ' + word + ')'
+  assert testwidget.string_prop == word
+
+sync_remote() # give binding time to complete the last updates
+
+# check value binding from UI property to ObjectModel property
+for word in ('uiuiui22', 'HelloHello', 'x7c6g3j9', 'T', 'Te', 'Tes', 'Test'):
+  testwidget.string_prop = word
+  sync_remote() # give binding time to propagate value
+  #print "SEE2: " + om.somestring + ' (expect: ' + word + ')'
+  assert om.somestring == word
