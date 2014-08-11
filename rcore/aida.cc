@@ -616,7 +616,7 @@ void
 RemoteHandle::__aida_upgrade_from__ (const OrbObjectP &orbop)
 {
   AIDA_ASSERT (__aida_orbid__() == 0);
-  orbop_ = orbop;
+  orbop_ = orbop ? orbop : __aida_null_orb_object__();
 }
 
 RemoteHandle::~RemoteHandle()
