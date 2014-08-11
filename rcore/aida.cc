@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 // == Auxillary macros ==
 #ifndef __GNUC__
@@ -36,6 +37,8 @@
 namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
+
+typedef std::weak_ptr<OrbObject>    OrbObjectW;
 
 // == Message IDs ==
 /// Mask MessageId bits, see IdentifierParts.message_id.
@@ -1086,7 +1089,7 @@ public:
   typedef std::shared_ptr<Instance>     InstanceP;
 private:
   struct Entry {
-    OrbObjectP  orbop;
+    OrbObjectW  orbow;
     InstanceP   instancep;
   };
   size_t                                start_id_, id_mask_;
@@ -1098,7 +1101,7 @@ private:
     ObjectMap &omap_;
   public:
     explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) {}
-    virtual ~MappedObject ()                            { omap_.delete_orbid (orbid()); } // FIXME: might kill other, ABA problem
+    virtual ~MappedObject ()                              { omap_.delete_orbid (orbid()); }
   };
   void          delete_orbid            (uint64            orbid);
   uint          next_index              ();
@@ -1141,9 +1144,13 @@ ObjectMap<Instance>::delete_orbid (uint64 orbid)
   const uint64 index = (orbid & id_mask_) - start_id_;
   assert (index < entries_.size());
   Entry &e = entries_[index];
-  assert (e.instancep != NULL);
-  e.instancep = NULL;
-  e.orbop = NULL;
+  assert (e.orbow.expired());   // ensure last OrbObjectP reference has been dropped
+  assert (e.instancep != NULL); // ensure *first* deletion attempt for this entry
+  auto it = map_.find (e.instancep.get());
+  assert (it != map_.end());
+  map_.erase (it);
+  e.instancep.reset();
+  e.orbow.reset();
   free_list_.push_back (index);
 }
 
@@ -1172,7 +1179,7 @@ ObjectMap<Instance>::next_index ()
 template<class Instance> OrbObjectP
 ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
 {
-  OrbObjectP orbo;
+  OrbObjectP orbop;
   if (instancep)
     {
       uint64 orbid = map_[instancep.get()];
@@ -1186,15 +1193,15 @@ ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
               assert ((masked_bits & id_mask_) == 0);
             }
           orbid = (start_id_ + index) | masked_bits;
-          orbo = std::make_shared<MappedObject> (orbid, *this);
-          Entry e { orbo, instancep };
+          orbop = std::make_shared<MappedObject> (orbid, *this); // calls delete_orbid from dtor
+          Entry e { orbop, instancep };
           entries_[index] = e;
           map_[instancep.get()] = orbid;
         }
       else
-        orbo = entries_[(orbid & id_mask_) - start_id_].orbop;
+        orbop = entries_[(orbid & id_mask_) - start_id_].orbow.lock();
     }
-  return orbo;
+  return orbop;
 }
 
 template<class Instance> OrbObjectP
@@ -1203,7 +1210,7 @@ ObjectMap<Instance>::orbo_from_orbid (uint64 orbid)
   assert ((orbid & id_mask_) >= start_id_);
   const uint64 index = (orbid & id_mask_) - start_id_;
   if (index < entries_.size() && entries_[index].instancep) // check for deletion
-    return entries_[index].orbop;
+    return entries_[index].orbow.lock();
   return OrbObjectP();
 }
 
@@ -1370,13 +1377,13 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
 void
 ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
 {
-  fb.add_object (rhandle.__aida_orbid__());
+  fb.add_orbid (rhandle.__aida_orbid__());
 }
 
 void
 ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 {
-  const uint64 orbid = fr.pop_object();
+  const uint64 orbid = fr.pop_orbid();
   OrbObjectP orbo = id2orbo_map_[orbid];
   if (AIDA_UNLIKELY (!orbo))
     {
@@ -1579,6 +1586,7 @@ ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 class ServerConnectionImpl : public ServerConnection {
   TransportChannel         transport_channel_;  // messages arriving at server
   ObjectMap<ImplicitBase>  object_map_;         // map of all objects used remotely
+  std::unordered_set<OrbObjectP> live_remotes_;
   ImplicitBaseP            remote_origin_;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map_;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
@@ -1632,16 +1640,18 @@ ServerConnectionImpl::remote_origin (ImplicitBaseP rorigin)
 void
 ServerConnectionImpl::add_interface (FieldBuffer &fb, ImplicitBaseP ibase)
 {
-  OrbObjectP orbo = object_map_.orbo_from_instance (ibase);
-  fb.add_object (orbo ? orbo->orbid() : 0);
+  OrbObjectP orbop = object_map_.orbo_from_instance (ibase);
+  fb.add_orbid (orbop ? orbop->orbid() : 0);
+  if (orbop)
+    live_remotes_.insert (orbop);
 }
 
 ImplicitBaseP
 ServerConnectionImpl::pop_interface (FieldReader &fr)
 {
-  const uint64 orbid = fr.pop_object();
-  OrbObjectP orbo = object_map_.orbo_from_orbid (orbid);
-  return object_map_.instance_from_orbo (orbo);
+  const uint64 orbid = fr.pop_orbid();
+  OrbObjectP orbop = object_map_.orbo_from_orbid (orbid);
+  return object_map_.instance_from_orbo (orbop);
 }
 
 void
@@ -1724,6 +1734,7 @@ ServerConnectionImpl::cast_interface_handle (RemoteHandle &rhandle, ImplicitBase
 {
   OrbObjectP orbo = object_map_.orbo_from_instance (ibase);
   (rhandle.*pmf_upgrade_from) (orbo);
+  assert_return (ibase == NULL || rhandle != NULL);
 }
 
 void
