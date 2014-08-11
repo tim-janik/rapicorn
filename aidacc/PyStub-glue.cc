@@ -51,13 +51,13 @@ __AIDA_local__client_connection_pop_handle (FieldReader &fr)
 static inline void
 add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
 }
 
 static inline void
 add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
+  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
                   __AIDA_local__client_connection->connection_id(), h, l);
 }
 

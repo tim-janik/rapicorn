@@ -483,7 +483,7 @@ class Generator:
     s += '  result = PyObject_Call (callable, tuple, NULL);\n' # we MUST return EMIT_RESULT to be PyException safe
     if async:
       s += '  rb = Rapicorn::Aida::FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
-      s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digestnums
+      s += 'Rapicorn::Aida::ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digestnums
       s += '  *rb <<= emit_result_id;\n'
       s += '  if (PyErr_Occurred()) {\n'
       s += '  ' + self.generate_add_0_cxximpl ('(*rb)', stype.rtype)

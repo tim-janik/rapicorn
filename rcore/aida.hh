@@ -304,41 +304,48 @@ template<class Y> struct ValueType<const Y&> { typedef Y T; };
 
 // == Message IDs ==
 enum MessageId {
-  MSGID_NONE           = 0x0000000000000000ULL, ///< No message ID.
-  MSGID_ONEWAY_CALL    = 0x1000000000000000ULL, ///< One-way method call (void return).
-  MSGID_DISCONNECT     = 0x2000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
-  MSGID_EMIT_ONEWAY    = 0x3000000000000000ULL, ///< One-way signal emissions (void return).
-  MSGID_DROP_REFS      = 0x4000000000000000ULL, ///< FIXME: Unimplemented.
-  // unused            = 0x5
-  // unused            = 0x6
-  // unused            = 0x7
-  MSGID_HELLO_REQUEST  = 0x8000000000000000ULL, ///< Two-way hello message and connection request.
-  MSGID_TWOWAY_CALL    = 0x9000000000000000ULL, ///< Two-way method call, returns result message.
-  MSGID_CONNECT        = 0xa000000000000000ULL, ///< Signal handler connection/disconnection request.
-  MSGID_EMIT_TWOWAY    = 0xb000000000000000ULL, ///< Two-way signal emissions, returns result message.
-  MSGID_HELLO_REPLY    = 0xc000000000000000ULL, ///< Reply message for two-way hello request.
-  MSGID_CALL_RESULT    = 0xd000000000000000ULL, ///< Result message for two-way call.
-  MSGID_CONNECT_RESULT = 0xe000000000000000ULL, ///< Result message for signal handler connection/disconnection.
-  MSGID_EMIT_RESULT    = 0xf000000000000000ULL, ///< Result message for two-way signal emissions.
+  // none                   = 0x0000000000000000
+  MSGID_CALL_ONEWAY         = 0x1000000000000000ULL, ///< One-way method call (void return).
+  MSGID_EMIT_ONEWAY         = 0x2000000000000000ULL, ///< One-way signal emissions (void return).
+  MSGID_META_ONEWAY         = 0x3000000000000000ULL, ///< One-way method call (void return).
+  MSGID_CONNECT             = 0x4000000000000000ULL, ///< Signal handler (dis-)connection, expects CONNECT_RESULT.
+  MSGID_CALL_TWOWAY         = 0x5000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
+  MSGID_EMIT_TWOWAY         = 0x6000000000000000ULL, ///< Two-way signal emissions, expects EMIT_RESULT.
+  MSGID_META_TWOWAY         = 0x7000000000000000ULL, ///< Two-way method call, expects META_REPLY.
+  // meta_exception         = 0x8000000000000000
+  MSGID_DISCONNECT          = 0xa000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
+  MSGID_CONNECT_RESULT      = 0xc000000000000000ULL, ///< Result message for CONNECT.
+  MSGID_CALL_RESULT         = 0xd000000000000000ULL, ///< Result message for CALL_TWOWAY.
+  MSGID_EMIT_RESULT         = 0xe000000000000000ULL, ///< Result message for EMIT_TWOWAY.
+  MSGID_META_REPLY          = 0xf000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
+  // meta messages and results
+  MSGID_META_HELLO          = 0x7100000000000000ULL, ///< Hello from client, expects WELCOME.
+  MSGID_META_WELCOME        = 0xf100000000000000ULL, ///< Hello reply from server, contains remote_origin.
+  MSGID_META_GARBAGE_SWEEP  = 0x7200000000000000ULL, ///< Garbage collection cycle, expects GARBAGE_REPORT.
+  MSGID_META_GARBAGE_REPORT = 0xf200000000000000ULL, ///< Reports expired/retained references.
+  MSGID_META_SEEN_GARBAGE   = 0x3300000000000000ULL, ///< Client indicates garbage collection may be useful.
 };
-inline bool      msgid_has_result (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0x8000000000000000ULL; }
-inline bool      msgid_is_result  (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0xc000000000000000ULL; }
-inline MessageId msgid_as_result  (MessageId mid) { return MessageId (mid | 0x4000000000000000ULL); }
-inline uint64    msgid_mask       (uint64    mid) { return  mid & 0xf000000000000000ULL; }
+/// Check if msgid is a reply for a two-way call (one of the _RESULT or _REPLY message ids).
+inline constexpr bool msgid_is_result (MessageId msgid) { return (msgid & 0xc000000000000000ULL) == 0xc000000000000000ULL; }
 
+/// Helper structure to pack MessageId, sender and receiver connection IDs.
 union IdentifierParts {
-  uint64 vuint64;
+  uint64        vuint64;
   struct { // MessageId bits
-    uint   sender_connection : 16;
-    uint   msg_unused : 16;
-    uint   receiver_connection : 16;
-    uint   msg_unused2 : 8;
-    uint   message_id : 8;
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+    uint        sender_connection : 16, free16 : 16, destination_connection : 16, free8 : 8, message_id : 8;
+# elif __BYTE_ORDER == __BIG_ENDIAN
+    uint        message_id : 8, free8 : 8, destination_connection : 16, free16 : 16, sender_connection : 16;
+# endif
+    static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   };
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
-  constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
-    sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con),
-    msg_unused2 (0), message_id (IdentifierParts (id).message_id)
+  constexpr IdentifierParts (MessageId id, uint destination, uint sender) :
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+    sender_connection (sender), free16 (0), destination_connection (destination), free8 (0), message_id (IdentifierParts (id).message_id)
+# elif __BYTE_ORDER == __BIG_ENDIAN
+    message_id (IdentifierParts (id).message_id), free8 (0), destination_connection (destination), free16 (0), sender_connection (sender)
+# endif
   {}
 };
 constexpr uint64 CONNECTION_MASK = 0x0000ffff;
@@ -426,8 +433,8 @@ public:
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
   static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
+  static inline uint  destination_connection_id (uint64 msgid)        { return IdentifierParts (msgid).destination_connection; }
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
-  static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
 };
 
 // == FieldBuffer ==
@@ -468,8 +475,8 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany, BaseConnection &bcon);
-  inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
-  inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32 nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint32 nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();

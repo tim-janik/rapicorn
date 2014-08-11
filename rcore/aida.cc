@@ -37,6 +37,36 @@ namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
+// == Message IDs ==
+/// Mask MessageId bits, see IdentifierParts.message_id.
+static inline constexpr MessageId
+msgid_mask (uint64 msgid)
+{
+  // return MessageId (IdentifierParts (IdentifierParts (msgid).message_id, 0, 0).vuint64);
+  return MessageId (msgid & 0xff00000000000000ULL);
+}
+
+/// Add the highest bit that indicates results or replies, does not neccessarily yield a valid result message id.
+static inline constexpr MessageId
+msgid_as_result (MessageId msgid)
+{
+  return MessageId (msgid | 0x8000000000000000ULL);
+}
+
+/// Check if @a msgid expects a _RESULT or _REPLY message.
+static inline constexpr bool
+msgid_needs_result (MessageId msgid)
+{
+  return (msgid & 0xc000000000000000ULL) == 0x4000000000000000ULL;
+}
+
+/// Check if the @a msgid matches @a check_id, @a msgid will be masked accordingly.
+static inline constexpr bool
+msgid_is (uint64 msgid, MessageId check_id)
+{
+  return msgid_mask (msgid) == check_id;
+}
+
 // == EnumValue ==
 size_t
 enum_value_count (const EnumValue *values)
@@ -1318,15 +1348,19 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
 {
-  RemoteMember<RemoteHandle> rorigin = RemoteHandle::__aida_null_handle__();
+  RemoteMember<RemoteHandle> rorigin;
   const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
   if (connection_id)
     {
       FieldBuffer *fb = FieldBuffer::_new (3);
-      fb->add_header2 (MSGID_HELLO_REQUEST, connection_id, this->connection_id(), 0, 0);
+      fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
       FieldBuffer *fr = this->call_remote (fb); // takes over fb
       FieldReader frr (*fr);
-      frr.skip_header();
+      const MessageId msgid = MessageId (frr.pop_int64());
+      frr.skip(); // hashhigh
+      frr.skip(); // hashlow
+      if (!msgid_is (msgid, MSGID_META_WELCOME))
+        fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
       pop_handle (frr, rorigin);
       delete fr;
     }
@@ -1380,7 +1414,7 @@ ClientConnectionImpl::dispatch ()
           AIDA_ASSERT (fr == NULL);
         else // MSGID_EMIT_TWOWAY
           {
-            AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == MSGID_EMIT_RESULT);
+            AIDA_ASSERT (fr && msgid_is (fr->first_id(), MSGID_EMIT_RESULT));
             ObjectBroker::post_msg (fr);
           }
       }
@@ -1395,10 +1429,7 @@ ClientConnectionImpl::dispatch ()
                                         STRFUNC, handler_id, msgid, hashhigh, hashlow));
       }
       break;
-    case MSGID_HELLO_REPLY:     // handled in call_remote
-    case MSGID_CALL_RESULT:     // handled in call_remote
-    case MSGID_CONNECT_RESULT:  // handled in call_remote
-    default:
+    default: // result/reply messages are handled in call_remote
       print_warning (string_format ("%s: invalid message: %016x", STRFUNC, msgid));
       break;
     }
@@ -1412,7 +1443,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
   AIDA_ASSERT (fb != NULL);
   // enqueue method call message
   const MessageId msgid = MessageId (fb->first_id());
-  const bool needsresult = msgid_has_result (msgid);
+  const bool needsresult = msgid_needs_result (msgid);
   if (!needsresult)
     {
       ObjectBroker::post_msg (fb);
@@ -1624,14 +1655,14 @@ ServerConnectionImpl::dispatch ()
   const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
     {
-    case MSGID_HELLO_REQUEST:
+    case MSGID_META_HELLO:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBaseP rorigin = remote_origin_;
-        FieldBuffer *fr = FieldBuffer::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
+        FieldBuffer *fr = FieldBuffer::renew_into_result (fbr, MSGID_META_WELCOME, ObjectBroker::sender_connection_id (msgid), 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
@@ -1641,8 +1672,8 @@ ServerConnectionImpl::dispatch ()
       }
       break;
     case MSGID_CONNECT:
-    case MSGID_TWOWAY_CALL:
-    case MSGID_ONEWAY_CALL:
+    case MSGID_CALL_TWOWAY:
+    case MSGID_CALL_ONEWAY:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
@@ -1651,9 +1682,9 @@ ServerConnectionImpl::dispatch ()
         FieldBuffer *fr = server_method_implementation (fbr);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
-        if (idmask == MSGID_ONEWAY_CALL)
+        if (idmask == MSGID_CALL_ONEWAY)
           AIDA_ASSERT (fr == NULL);
-        else // MSGID_TWOWAY_CALL
+        else // MSGID_CALL_TWOWAY
           {
             const uint64 resultmask = msgid_as_result (MessageId (idmask));
             AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
@@ -1891,14 +1922,14 @@ ObjectBroker::post_msg (FieldBuffer *fb)
 {
   assert_return (fb);
   const MessageId msgid = MessageId (fb->first_id());
-  const uint connection_id = ObjectBroker::sender_connection_id (msgid);
+  const uint connection_id = ObjectBroker::destination_connection_id (msgid);
   BaseConnection *bcon = connection_from_id (connection_id);
   if (!bcon)
     fatal_error (string_format ("Message ID without valid connection: %016x (connection_id=%u)", msgid, connection_id));
-  const bool needsresult = msgid_has_result (msgid);
-  const uint receiver_connection = ObjectBroker::receiver_connection_id (msgid);
-  if (needsresult != (receiver_connection > 0)) // FIXME: move downwards
-    fatal_error (string_format ("mismatch of result flag and receiver_connection: %016x", msgid));
+  const bool needsresult = msgid_needs_result (msgid);
+  const uint sender_connection = ObjectBroker::sender_connection_id (msgid);
+  if (needsresult != (sender_connection > 0)) // FIXME: move downwards
+    fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
   bcon->send_msg (fb);
 }
 
