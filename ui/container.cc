@@ -335,12 +335,12 @@ ContainerImpl::add (WidgetImpl *widget)
   add (*widget);
 }
 
-void
+bool
 ContainerImpl::remove (WidgetImpl &widget)
 {
   ContainerImpl *container = widget.parent();
   if (!container)
-    throw NullPointer();
+    return false;
   widget.ref();
   if (widget.visible())
     {
@@ -356,6 +356,7 @@ ContainerImpl::remove (WidgetImpl &widget)
   container->remove_child (widget);
   widget.invalidate();
   widget.unref();
+  return true;
 }
 
 Affine
@@ -677,8 +678,7 @@ ContainerImpl::dump_test_data (TestStream &tstream)
 }
 
 WidgetIface*
-ContainerImpl::create_child (const std::string   &widget_identifier,
-                             const StringSeq &args)
+ContainerImpl::create_widget (const String &widget_identifier, const StringSeq &args) // ContainerIface
 {
   WidgetImpl &widget = Factory::create_ui_widget (widget_identifier, args);
   ref_sink (widget);
@@ -690,6 +690,14 @@ ContainerImpl::create_child (const std::string   &widget_identifier,
   }
   unref (widget);
   return &widget;
+}
+
+void
+ContainerImpl::remove_widget (WidgetIface &child) // ContainerIface method
+{
+  WidgetImpl *widget = dynamic_cast<WidgetImpl*> (&child);
+  if (widget)
+    remove (widget);
 }
 
 SingleContainerImpl::SingleContainerImpl () :

@@ -327,7 +327,8 @@ interface Widget {
 /// See also the corresponding implementation class ContainerImpl.
 interface Container : Widget {
   /// Create a child widget from the @a widget_identifier template and add it to the container.
-  Widget create_child (String widget_identifier, StringSeq args = 0) = 0;
+  Widget create_widget (String widget_identifier, StringSeq args = 0) = 0;
+  void   remove_widget (Widget child) = 0;
 };
 
 /** The ButtonArea interface provides button click handling.

@@ -7,12 +7,12 @@ using namespace Rapicorn;
 static void
 add_button_row (ContainerH area, uint row)
 {
-  WidgetH child = area.create_child ("RapicornExamples:button-row", Strings ("id=row#" + string_from_uint (row)));
+  WidgetH child = area.create_widget ("RapicornExamples:button-row", Strings ("id=row#" + string_from_uint (row)));
   ContainerH brow = ContainerH::down_cast (child);
   for (uint i = 0; i < 50; i++)
     {
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
-      child = brow.create_child ("RapicornExamples:test-button", args);
+      child = brow.create_widget ("RapicornExamples:test-button", args);
       ButtonAreaH button = child.component<ButtonAreaH> (".Button");
       button.on_click (string_format ("Widget::print('Button-Click: (%d,%d)')", row, i));
     }
