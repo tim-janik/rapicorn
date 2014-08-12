@@ -1486,7 +1486,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
         event_queue_.push_back (fr);
       else
         {
-          FieldReader frr (*fb);
+          FieldReader frr (*fr);
           const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
           print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
         }
