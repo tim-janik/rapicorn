@@ -14,8 +14,8 @@ protected:
   virtual      ~VirtualTypeid      ();
 public:
   String        typeid_name        ();
-  static String cxx_demangle       (const char *mangled_identifier);
 };
+String          cxx_demangle       (const char *mangled_identifier);
 
 // == ClassDoctor (used for private class copies) ==
 #ifdef  __RAPICORN_BUILD__
