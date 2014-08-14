@@ -1392,12 +1392,6 @@ WidgetImpl::leave_anchored ()
     wgroup->remove_widget (*this);
 }
 
-void
-WidgetImpl::type_cast_error (const char *dest_type)
-{
-  fatal ("failed to dynamic_cast<%s> widget: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
-}
-
 static WidgetImpl *global_debug_dump_marker = NULL;
 
 String

@@ -25,9 +25,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        add_child         (WidgetImpl           &widget) = 0;
-  virtual void        repack_child      (WidgetImpl           &widget,
-                                         const PackInfo &orig,
-                                         const PackInfo &pnew);
+  virtual void        repack_child      (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
   virtual void        unparent_child    (WidgetImpl           &widget);
   virtual void        dispose_widget    (WidgetImpl           &widget);
@@ -49,8 +47,8 @@ public:
   virtual size_t        n_children      () = 0;
   virtual WidgetImpl*   nth_child       (size_t nth) = 0;
   bool                  has_children    ()                              { return 0 != n_children(); }
-  void                  remove          (WidgetImpl           &widget);
-  void                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL); remove (*widget); }
+  bool                  remove          (WidgetImpl           &widget);
+  bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
   virtual Affine        child_affine    (const WidgetImpl             &widget); /* container => widget affine */
@@ -64,8 +62,8 @@ public:
   virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
-  virtual WidgetIface*    create_child    (const std::string      &widget_identifier,
-                                         const StringSeq    &args);
+  virtual WidgetIface* create_widget    (const String &widget_identifier, const StringSeq &args) override;
+  virtual void         remove_widget    (WidgetIface &child) override;
 };
 
 // == Single Child Container ==
@@ -76,7 +74,7 @@ protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}
-  WidgetImpl&             get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
+  WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
@@ -124,7 +122,7 @@ protected:
   virtual void          render                  (RenderContext&, const Rect&) {}
   virtual ChildWalker   local_children          () const { return value_walker (widgets); }
   virtual size_t        n_children              () { return widgets.size(); }
-  virtual WidgetImpl*     nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
   virtual void          add_child               (WidgetImpl   &widget);
   virtual void          remove_child            (WidgetImpl   &widget);
   void                  raise_child             (WidgetImpl   &widget);

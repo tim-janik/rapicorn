@@ -2,7 +2,7 @@
 #include "objects.hh"
 #include "thread.hh"
 #include <typeinfo>
-#include <cxxabi.h>
+#include <cxxabi.h> // abi::__cxa_demangle
 
 namespace Rapicorn {
 
@@ -16,8 +16,12 @@ VirtualTypeid::typeid_name ()
   return cxx_demangle (typeid (*this).name());
 }
 
+/** Demangle a std::typeinfo.name() string into a proper C++ type name.
+ * This function uses abi::__cxa_demangle() from <cxxabi.h> to demangle C++ type names,
+ * which works for g++, libstdc++, clang++, libc++.
+ */
 String
-VirtualTypeid::cxx_demangle (const char *mangled_identifier)
+cxx_demangle (const char *mangled_identifier)
 {
   int status = 0;
   char *malloced_result = abi::__cxa_demangle (mangled_identifier, NULL, NULL, &status);
@@ -217,6 +221,13 @@ Deletable::invoke_deletion_hooks()
 }
 
 // == BaseObject ==
+/// Static unref function for the ::shared_ptr() Deleter.
+void
+BaseObject::shared_ptr_deleter (BaseObject *object)
+{
+  object->unref();
+}
+
 void
 BaseObject::dispose ()
 {}

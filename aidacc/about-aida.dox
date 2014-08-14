@@ -65,4 +65,30 @@ ImplicitBase provides means to introspect properties on an instance and to query
 For dynamic language bindings such as Python, every accessible instance needs to have a "final" type that has been specified in an IDL file. This type is what is returned from the Rapicorn::Aida::ImplicitBase.__aida_type_name__() method that all instances implement.
 To ensure this property, implementation classes that implement multiple IDL interfaces should ultimately derive a single IDL interface which in turn derives (directly or indirectly) from all of the required IDL interfaces.
 
+
+@section ipc IPC - Interprocess / -Thread Communication
+
+Rapicorn provides a strict split between threads with at least the following roles:
+- User Thread - User threads are the threads that use the Rapicorn API, internally the API calls have an associated @a ClientConnection.
+- UIThread - The main Rapicorn thread, this is the thread that runs the main event loop for Rapicorn's user interface, it has a @a ServerConnection associated with it.
+- Rendering Thread - At least for the X11 backend a separate thread is used that talks to the X11 server and handles low level display server events like XExpose.
+
+While the current IPC models is based on threads only, the separation between Client and Server thread has been implemented so that only minor extensions are needed to cross a process boundary in the future.
+
+Procedure calls between "Client" threads (thread with a @a ClientConnection) and the "Server" thread (thread with a @a ServerConnection) are possible as follows:
+- Using a remote object handle, the Client thread can send a one-way method call (void-return) to the Server and move on without further delays.
+- Using a remote object handle, the Client thread can send a two-way method call to the Server, which will block until the method call result has been received.
+- The Server can emit one-way signals (void-return) which Client code can connect to. Clients that run a main loop can receive notifications about such signal emissions and execute the corresponding callbacks locally.
+- The Server can start an asynchronous signal emission that allows deferred collection of callback return values. This works across thread boundaries, it involves the Client sending back return results from its callback handlers. Emission will take as long as all Client callbacks have submitted back results.
+
+@section drc Distributed Reference Counting
+
+Due to the nature of the allowed IPC calls in Rapicorn, references to C++ object instances need to be maintained ("counted") only on the Server side (the Rapicorn::UIThread).
+The reference counting implementation is based on std::shared_ptr<> and works as follows:
+-# The @a ServerConnection keeps a list of all instance references that are sent to the Client, this list consists of std::shared_ptr<Instance> structures that keep the instances alive.
+-# The @a ClientConnection keeps a list of all remote instances that it has received and that are exposed through the API via RemoteHandle which manages its own std::shared_ptr<>. The list consits of std::weak_ptr<> structures. Upon decrement of the last reference to a remote instance (deleter execution of the std::shared_ptr<> managed by RemoteHandle), the Client notifies the Server by sending a @b SEEN_GARBAGE message.
+-# In response to a @b SEEN_GARBAGE message, the Server starts a garbage collection cycle. The Server moves all instance references from its alive list into a sweep list. Upon completion, it prompts the Client with a @b GARBAGE_SWEEP message to report back all garbage references. The Server may apply certain thresholds so that a @b SEEN_GARBAGE message need not result in starting a collection cycle immediately. The Server continues to serve remote calls, possibly adding new entries into its alive list that will not be affected by the current garbage collection cycle.
+-# Collecting garbage in the Client works by creating a list of all the std::weak_ptr<> references that have expired. The list of corresponding ids is sent back to the Server in a @b GARBAGE_REPORT reply message. The Client may then succinctly delete all expired std::weak_ptr<> structures from its list.
+-# Upon receiving the @b GARBAGE_REPORT message, the Server releases all reported ids from its sweep list. Instances remaining on the sweep list are merged back into the alive list. This completes one garbage collection cycle initiated by the @b SEEN_GARBAGE message.
+
 */

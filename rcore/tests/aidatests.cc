@@ -21,18 +21,18 @@ test_basics()
   TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 
   // RemoteHandle
-  assert (RemoteHandle::_null_handle() == NULL);
-  assert (!RemoteHandle::_null_handle());
-  assert (RemoteHandle::_null_handle()._orbid() == 0);
+  assert (RemoteHandle::__aida_null_handle__() == NULL);
+  assert (!RemoteHandle::__aida_null_handle__());
+  assert (RemoteHandle::__aida_null_handle__().__aida_orbid__() == 0);
   struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
-  struct OneHandle : RemoteHandle { OneHandle (OrbObject &orbo) : RemoteHandle (orbo) {} };
-  TestOrbObject torbo (1);
+  struct OneHandle : RemoteHandle { OneHandle (OrbObjectP orbo) : RemoteHandle (orbo) {} };
+  std::shared_ptr<TestOrbObject> torbo = std::make_shared<TestOrbObject> (1);
   assert (OneHandle (torbo) != NULL);
   assert (OneHandle (torbo));
-  assert (OneHandle (torbo)._orbid() == 1);
-  assert (OneHandle (torbo)._null_handle() == NULL);
-  assert (!OneHandle (torbo)._null_handle());
-  assert (OneHandle (torbo)._null_handle()._orbid() == 0);
+  assert (OneHandle (torbo).__aida_orbid__() == 1);
+  assert (OneHandle (torbo).__aida_null_handle__() == NULL);
+  assert (!OneHandle (torbo).__aida_null_handle__());
+  assert (OneHandle (torbo).__aida_null_handle__().__aida_orbid__() == 0);
 }
 REGISTER_TEST ("Aida/Basics", test_basics);
 
@@ -222,5 +222,32 @@ test_dynamics()
   printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
 }
 REGISTER_TEST ("Aida/Any Dynamics", test_dynamics);
+
+static void
+test_cxxaux()
+{
+  class SimpleType {
+    SimpleType () {}
+    friend class FriendAllocator<SimpleType>;
+  };
+  std::shared_ptr<SimpleType> simple = FriendAllocator<SimpleType>::make_shared ();
+
+  class ComplexType {
+    ComplexType (int, double, void*) {}        // Private ctor.
+    friend class FriendAllocator<ComplexType>; // Allow access to ctor/dtor of ComplexType.
+  };
+  std::shared_ptr<ComplexType> complex = FriendAllocator<ComplexType>::make_shared (77, -0.5, (void*) 0);
+
+  static_assert (IsSharedPtr<SimpleType>::value == false, "testing IsSharedPtr");
+  static_assert (IsWeakPtr<std::shared_ptr<SimpleType> >::value == false, "testing IsWeakPtr");
+  static_assert (IsSharedPtr<std::shared_ptr<SimpleType> >::value == true, "testing IsSharedPtr");
+  static_assert (IsWeakPtr<std::weak_ptr<SimpleType> >::value == true, "testing IsWeakPtr");
+  static_assert (IsSharedPtr<std::weak_ptr<SimpleType> >::value == false, "testing IsSharedPtr");
+  static_assert (IsComparable<SimpleType>::value == false, "testing IsComparable");
+  static_assert (IsComparable<FriendAllocator<SimpleType> >::value == true, "testing IsComparable");
+  static_assert (IsComparable<int>::value == true, "testing IsComparable");
+  static_assert (IsComparable<ComplexType>::value == false, "testing IsComparable");
+}
+REGISTER_TEST ("Aida/Cxx Auxillaries", test_cxxaux);
 
 } // Anon

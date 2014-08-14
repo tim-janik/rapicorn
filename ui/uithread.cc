@@ -151,7 +151,7 @@ private:
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // Setup root handle for remote calls
-    ApplicationImpl::the().__aida_connection__()->remote_origin (&ApplicationImpl::the());
+    ApplicationImpl::the().__aida_connection__()->remote_origin (BaseObject::shared_ptr (&ApplicationImpl::the()));
     // Complete initialization by signalling caller
     idata_->done = true;
     idata_->mutex.lock();
@@ -253,7 +253,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   // install handler for UIThread test cases
   wrap_test_runner();
   auto keys = string_split (RAPICORN_NAMESPACE_NAME ":CxxStub:AidaServerConnection:idl_file=\\bui/interfaces.idl", ":");
-  return Aida::RemoteHandle::reinterpret_down_cast<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
+  return Aida::RemoteHandle::__aida_reinterpret_down_cast__<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
 }
 
 } // Rapicorn

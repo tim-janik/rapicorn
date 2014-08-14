@@ -159,7 +159,7 @@ py_remote_handle_hash (PyObject *v)
 {
   PyTypeObject *tp = v->ob_type;
   (void) tp;                    // FIXME: check type
-  uint64 u = PYRH (v)->remote._orbid();
+  uint64 u = PYRH (v)->remote.__aida_orbid__();
   u ^= (u * 0xa316eef5) >> 32;          // propagate high order bits into low order bits
   long h = u;                           // potentially shrinks 64 bit to 32 bit
   if (h == -1)                          // invalid for python hash to distinguish failures
@@ -222,8 +222,8 @@ py_remote_handle_compare (PyObject *v, PyObject *w)
     }
   if (v == w)
     return 0;
-  const uint64 vi = PYRH (v)->remote._orbid();
-  const uint64 wi = PYRH (w)->remote._orbid();
+  const uint64 vi = PYRH (v)->remote.__aida_orbid__();
+  const uint64 wi = PYRH (w)->remote.__aida_orbid__();
   return vi > wi ? +1 : vi < wi ? -1 : 0;
 }
 
@@ -249,7 +249,7 @@ py_remote_handle_push (const Rapicorn::Aida::RemoteHandle &rhandle)
 void
 py_remote_handle_pop (void)
 {
-  next_remote_handle = RemoteHandle::_null_handle();
+  next_remote_handle = RemoteHandle::__aida_null_handle__();
 }
 
 Rapicorn::Aida::RemoteHandle
@@ -258,7 +258,7 @@ py_remote_handle_extract (PyObject *object)
   if (PyObject_TypeCheck (object, &py_remote_handle_type_object))
     return PYRH (object)->remote;
   else
-    return Rapicorn::Aida::RemoteHandle::_null_handle();
+    return Rapicorn::Aida::RemoteHandle::__aida_null_handle__();
 }
 
 Rapicorn::Aida::RemoteHandle

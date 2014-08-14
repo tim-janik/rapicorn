@@ -5,11 +5,9 @@
 #include <rcore/cxxaux.hh>
 #include <string>
 #include <vector>
-#include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
 #include <stdarg.h>
 #include <type_traits>
-#include <memory>
 #include <future>
 #include <set>
 #include <map>
@@ -40,16 +38,30 @@ namespace Rapicorn { namespace Aida {
 #endif
 #define AIDA_LIKELY             AIDA_ISLIKELY
 
-// == Standard Types ==
+// == Type Imports ==
 using std::vector;
-typedef std::string String;
 using Rapicorn::int32;
 using Rapicorn::uint32;
 using Rapicorn::int64;
 using Rapicorn::uint64;
+typedef std::string String;
 
-// == Prototypes ==
+// == Forward Declarations ==
 class RemoteHandle;
+class OrbObject;
+class ImplicitBase;
+class ObjectBroker;
+class BaseConnection;
+class ClientConnection;
+class ServerConnection;
+union FieldUnion;
+class FieldBuffer;
+class FieldReader;
+class PropertyList;
+class Property;
+typedef std::shared_ptr<OrbObject>    OrbObjectP;
+typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // == EnumValue ==
 /// Aida info for enumeration values.
@@ -90,18 +102,6 @@ enum TypeKind {
 template<> const EnumValue* enum_value_list<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
-
-// == Type Declarations ==
-class ObjectBroker;
-class BaseConnection;
-class ClientConnection;
-class ServerConnection;
-union FieldUnion;
-class FieldBuffer;
-class FieldReader;
-typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
-class PropertyList;
-class Property;
 
 // == ImplicitBase ==
 class ImplicitBase /// Abstract base interface that all IDL interfaces are implicitely derived from.
@@ -304,93 +304,106 @@ template<class Y> struct ValueType<const Y&> { typedef Y T; };
 
 // == Message IDs ==
 enum MessageId {
-  MSGID_NONE           = 0x0000000000000000ULL, ///< No message ID.
-  MSGID_ONEWAY_CALL    = 0x1000000000000000ULL, ///< One-way method call (void return).
-  MSGID_DISCONNECT     = 0x2000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
-  MSGID_EMIT_ONEWAY    = 0x3000000000000000ULL, ///< One-way signal emissions (void return).
-  MSGID_DROP_REFS      = 0x4000000000000000ULL, ///< FIXME: Unimplemented.
-  // unused            = 0x5
-  // unused            = 0x6
-  // unused            = 0x7
-  MSGID_HELLO_REQUEST  = 0x8000000000000000ULL, ///< Two-way hello message and connection request.
-  MSGID_TWOWAY_CALL    = 0x9000000000000000ULL, ///< Two-way method call, returns result message.
-  MSGID_CONNECT        = 0xa000000000000000ULL, ///< Signal handler connection/disconnection request.
-  MSGID_EMIT_TWOWAY    = 0xb000000000000000ULL, ///< Two-way signal emissions, returns result message.
-  MSGID_HELLO_REPLY    = 0xc000000000000000ULL, ///< Reply message for two-way hello request.
-  MSGID_CALL_RESULT    = 0xd000000000000000ULL, ///< Result message for two-way call.
-  MSGID_CONNECT_RESULT = 0xe000000000000000ULL, ///< Result message for signal handler connection/disconnection.
-  MSGID_EMIT_RESULT    = 0xf000000000000000ULL, ///< Result message for two-way signal emissions.
+  // none                   = 0x0000000000000000
+  MSGID_CALL_ONEWAY         = 0x1000000000000000ULL, ///< One-way method call (void return).
+  MSGID_EMIT_ONEWAY         = 0x2000000000000000ULL, ///< One-way signal emissions (void return).
+  MSGID_META_ONEWAY         = 0x3000000000000000ULL, ///< One-way method call (void return).
+  MSGID_CONNECT             = 0x4000000000000000ULL, ///< Signal handler (dis-)connection, expects CONNECT_RESULT.
+  MSGID_CALL_TWOWAY         = 0x5000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
+  MSGID_EMIT_TWOWAY         = 0x6000000000000000ULL, ///< Two-way signal emissions, expects EMIT_RESULT.
+  MSGID_META_TWOWAY         = 0x7000000000000000ULL, ///< Two-way method call, expects META_REPLY.
+  // meta_exception         = 0x8000000000000000
+  MSGID_DISCONNECT          = 0xa000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
+  MSGID_CONNECT_RESULT      = 0xc000000000000000ULL, ///< Result message for CONNECT.
+  MSGID_CALL_RESULT         = 0xd000000000000000ULL, ///< Result message for CALL_TWOWAY.
+  MSGID_EMIT_RESULT         = 0xe000000000000000ULL, ///< Result message for EMIT_TWOWAY.
+  MSGID_META_REPLY          = 0xf000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
+  // meta messages and results
+  MSGID_META_HELLO          = 0x7100000000000000ULL, ///< Hello from client, expects WELCOME.
+  MSGID_META_WELCOME        = 0xf100000000000000ULL, ///< Hello reply from server, contains remote_origin.
+  MSGID_META_GARBAGE_SWEEP  = 0x7200000000000000ULL, ///< Garbage collection cycle, expects GARBAGE_REPORT.
+  MSGID_META_GARBAGE_REPORT = 0xf200000000000000ULL, ///< Reports expired/retained references.
+  MSGID_META_SEEN_GARBAGE   = 0x3300000000000000ULL, ///< Client indicates garbage collection may be useful.
 };
-inline bool      msgid_has_result (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0x8000000000000000ULL; }
-inline bool      msgid_is_result  (MessageId mid) { return (mid & 0xc000000000000000ULL) == 0xc000000000000000ULL; }
-inline MessageId msgid_as_result  (MessageId mid) { return MessageId (mid | 0x4000000000000000ULL); }
-inline uint64    msgid_mask       (uint64    mid) { return  mid & 0xf000000000000000ULL; }
+/// Check if msgid is a reply for a two-way call (one of the _RESULT or _REPLY message ids).
+inline constexpr bool msgid_is_result (MessageId msgid) { return (msgid & 0xc000000000000000ULL) == 0xc000000000000000ULL; }
 
+/// Helper structure to pack MessageId, sender and receiver connection IDs.
 union IdentifierParts {
-  uint64 vuint64;
+  uint64        vuint64;
   struct { // MessageId bits
-    uint   sender_connection : 16;
-    uint   msg_unused : 16;
-    uint   receiver_connection : 16;
-    uint   msg_unused2 : 8;
-    uint   message_id : 8;
-  };
-  struct { // OrbID bits
-    uint   orbid32 : 32;
-    uint   orbid_connection : 16;
-    uint   orbid_type_index : 16;
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+    uint        sender_connection : 16, free16 : 16, destination_connection : 16, free8 : 8, message_id : 8;
+# elif __BYTE_ORDER == __BIG_ENDIAN
+    uint        message_id : 8, free8 : 8, destination_connection : 16, free16 : 16, sender_connection : 16;
+# endif
+    static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   };
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
-  constexpr IdentifierParts (MessageId id, uint sender_con, uint receiver_con) :
-    sender_connection (sender_con), msg_unused (0), receiver_connection (receiver_con), message_id (IdentifierParts (id).message_id)
+  constexpr IdentifierParts (MessageId id, uint destination, uint sender) :
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+    sender_connection (sender), free16 (0), destination_connection (destination), free8 (0), message_id (IdentifierParts (id).message_id)
+# elif __BYTE_ORDER == __BIG_ENDIAN
+    message_id (IdentifierParts (id).message_id), free8 (0), destination_connection (destination), free16 (0), sender_connection (sender)
+# endif
   {}
-  struct ORBID {}; // constructor tag
-  constexpr IdentifierParts (const ORBID&, uint orbid_con, uint orbid_v32, uint type_index) :
-    orbid32 (orbid_v32), orbid_connection (orbid_con), orbid_type_index (type_index) {}
 };
 constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 
 // == OrbObject ==
 /// Internal management structure for objects known to the ORB.
 class OrbObject {
-  uint64      orbid_;
+  const uint64  orbid_;
 protected:
-  explicit      OrbObject       (uint64 orbid);
+  explicit      OrbObject         (uint64 orbid);
+  virtual      ~OrbObject         () = 0;
 public:
-  uint64        orbid           ()            { return orbid_; }
+  uint64        orbid             () const                      { return orbid_; }
+  uint16        connection        () const                      { return orbid_connection (orbid_); }
+  uint16        type_index        () const                      { return orbid_type_index (orbid_); }
+  uint32        counter           () const                      { return orbid_counter (orbid_); }
+  static uint16 orbid_connection  (uint64 orbid)                { return orbid >> 48 /* & 0xffff */; }
+  static uint16 orbid_type_index  (uint64 orbid)                { return orbid >> 32 /* & 0xffff */; }
+  static uint32 orbid_counter     (uint64 orbid)                { return orbid /* & 0xffffffff */; }
+  static uint64 orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
+  { return (uint64 (connection) << 48) | (uint64 (type_index) << 32) | counter; }
 };
 
 // == RemoteHandle ==
 class RemoteHandle {
-  OrbObject     *orbo_;
-  template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
-  typedef NullRemoteHandle<RemoteHandle> NullHandle;
-  friend  class ObjectBroker;
-  void    reset ();
+  OrbObjectP        orbop_;
+  template<class Parent>
+  struct NullRemoteHandleT : public Parent {
+    TypeHashList __aida_typelist__ () { return TypeHashList(); }
+  };
+  typedef NullRemoteHandleT<RemoteHandle> NullRemoteHandle;
+  static OrbObjectP __aida_null_orb_object__ ();
 protected:
-  explicit          RemoteHandle  (OrbObject&);
-  explicit          RemoteHandle  ();
-  void              upgrade_once  (const RemoteHandle&);
+  explicit          RemoteHandle             (OrbObjectP);
+  explicit          RemoteHandle             () : orbop_ (__aida_null_orb_object__()) {}
+  const OrbObjectP& __aida_orb_object__      () const;
+  void              __aida_upgrade_from__    (const OrbObjectP&);
+  void              __aida_upgrade_from__    (const RemoteHandle &rhandle) { __aida_upgrade_from__ (rhandle.__aida_orb_object__()); }
 public:
-  uint64            _orbid        () const { return orbo_->orbid(); }
-  virtual          ~RemoteHandle  ();
-  static NullHandle _null_handle  ()       { return NullHandle(); }
+  virtual                ~RemoteHandle         ();
+  uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
+  static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
   // Determine if this RemoteHandle contains an object or null handle.
-  explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
-  bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
-  bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
-  bool              operator==    (const RemoteHandle&) const noexcept;
-  bool              operator!=    (const RemoteHandle&) const noexcept;
-  friend bool       operator==    (std::nullptr_t, const RemoteHandle &shd) noexcept { return !static_cast<bool> (shd); }
-  friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
+  explicit    operator bool () const noexcept               { return 0 != __aida_orbid__(); }
+  bool        operator==    (std::nullptr_t) const noexcept { return 0 == __aida_orbid__(); }
+  bool        operator!=    (std::nullptr_t) const noexcept { return 0 != __aida_orbid__(); }
+  bool        operator==    (const RemoteHandle &rh) const noexcept { return __aida_orbid__() == rh.__aida_orbid__(); }
+  bool        operator!=    (const RemoteHandle &rh) const noexcept { return !operator== (rh); }
+  friend bool operator==    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd == nullp; }
+  friend bool operator!=    (std::nullptr_t nullp, const RemoteHandle &shd) noexcept { return shd != nullp; }
   template<class TargetHandle> static typename
   std::enable_if<(std::is_base_of<RemoteHandle, TargetHandle>::value &&
                   !std::is_same<RemoteHandle, TargetHandle>::value), TargetHandle>::type
-  reinterpret_down_cast (RemoteHandle smh)              ///< Reinterpret & dynamic cast, use discouraged.
+  __aida_reinterpret_down_cast__ (RemoteHandle smh)     ///< Reinterpret & dynamic cast, use discouraged.
   {
     TargetHandle target;
-    target.upgrade_once (smh);                          // like reinterpret_cast
-    return TargetHandle::down_cast (target);            // like dynamic_cast (remote)
+    target.__aida_upgrade_from__ (smh);                 // like reinterpret_cast<>
+    return TargetHandle::down_cast (target);            // like dynamic_cast<>
   }
 };
 
@@ -409,21 +422,19 @@ constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle fr
 
 // == ObjectBroker ==
 class ObjectBroker {
-protected:
-  static void              tie_handle (RemoteHandle&, uint64);
 public:
-  static void              pop_handle (FieldReader&, RemoteHandle&, BaseConnection&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
+  static uint              register_connection   (BaseConnection    &connection, uint suggested_id);
+  static void              unregister_connection (BaseConnection    &connection);
+  static BaseConnection*   connection_from_id    (uint64             connection_id);
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
-  static inline uint  connection_id_from_orbid  (uint64 orbid)        { return IdentifierParts (orbid).orbid_connection; }
-  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
+  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
+  static inline uint  destination_connection_id (uint64 msgid)        { return IdentifierParts (msgid).destination_connection; }
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
-  static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
-  static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
 };
 
 // == FieldBuffer ==
@@ -462,10 +473,10 @@ public:
   inline void add_evalue (int64 vint64)    { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_orbid  (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany, BaseConnection &bcon);
-  inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
-  inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32 nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint32 nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
@@ -474,7 +485,9 @@ public:
   static String       type_name (int field_type);
   static FieldBuffer* _new (uint32 _ntypes); // Heap allocated FieldBuffer
   // static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* renew_into_result (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static FieldBuffer* renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   inline void operator<<= (uint32 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (ULongIffy v)       { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -525,7 +538,7 @@ public:
   inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline uint64             pop_orbid  () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const Any&         pop_any    (BaseConnection &bcon);
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
@@ -546,23 +559,21 @@ public:
 // == Connections ==
 /// Base connection context for ORB message exchange.
 class BaseConnection {
-  uint              index_;
   const std::string feature_keys_;
+  uint              conid_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
-  void                   register_connection  ();
-  void                   unregister_connection();
   explicit               BaseConnection  (const std::string &feature_keys);
   virtual               ~BaseConnection  ();
   virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  static BaseConnection* connection_from_id (uint id);  ///< Lookup for connection, used by ORB for message delivery.
+  void                   assign_id       (uint connection_id);
 public:
-  uint                   connection_id  () const;   ///< Get unique conneciton ID (returns 0 if unregistered).
+  uint                   connection_id  () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin  (ImplicitBase *rorigin) = 0;
+  virtual void           remote_origin  (ImplicitBaseP rorigin) = 0;
   virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list) = 0;
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
@@ -575,15 +586,15 @@ typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection (const std::string &feature_keys);
-  virtual           ~ServerConnection ();
+  /*ctor*/           ServerConnection      (const std::string &feature_keys);
+  virtual           ~ServerConnection      ();
+  virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
-  virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
-  virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
-  virtual void          add_interface           (FieldBuffer &fb, const ImplicitBase *ibase) = 0;
-  virtual ImplicitBase* pop_interface           (FieldReader &fr) = 0;
+  virtual ImplicitBaseP interface_from_handle   (const RemoteHandle &rhandle) = 0;
+  virtual void          add_interface           (FieldBuffer &fb, ImplicitBaseP ibase) = 0;
+  virtual ImplicitBaseP pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -605,7 +616,7 @@ protected:
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void          add_handle  (FieldBuffer &fb, const RemoteHandle &rhandle) = 0;
-  virtual RemoteHandle  pop_handle  (FieldReader &fr) = 0;
+  virtual void          pop_handle  (FieldReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;

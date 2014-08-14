@@ -506,7 +506,7 @@ class Generator:
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  Rapicorn::Aida::ObjectBroker::pop_handle (fbr, handle, *__AIDA_Local__::client_connection);\n'
+    s += '  __AIDA_Local__::client_connection->pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
     s += '%s::__aida_typeid__()\n{\n' % classH
@@ -514,11 +514,11 @@ class Generator:
     s += '  return type_hash;\n'
     s += '}\n'
     s += '%s\n%s::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn::Aida::TypeHashList &types)\n{\n' % classH2 # similar to ctor
-    s += '  size_t i; const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
+    s += '  const Rapicorn::Aida::TypeHash &mine = __aida_typeid__();\n'
     s += '  %s target;\n' % classH
-    s += '  for (i = 0; i < types.size(); i++)\n'
+    s += '  for (size_t i = 0; i < types.size(); i++)\n'
     s += '    if (mine == types[i]) {\n'
-    s += '      target.upgrade_once (other);\n'
+    s += '      target.__aida_upgrade_from__ (other);\n'
     s += '      break;\n'
     s += '    }\n'
     s += '  return target;\n'
@@ -554,11 +554,11 @@ class Generator:
     s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
-    s += '  __AIDA_Local__::server_connection->add_interface (fb, obj);\n'
+    s += '  __AIDA_Local__::field_buffer_add_interface (fb, obj);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
-    s += '  obj = dynamic_cast<%s*> (__AIDA_Local__::server_connection->pop_interface (fbr));\n' % classC
+    s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr);\n' % classC
     s += '}\n'
     s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
     s += '  return __AIDA_Local__::remote_handle_to_interface<%s> (sh);\n' % classC

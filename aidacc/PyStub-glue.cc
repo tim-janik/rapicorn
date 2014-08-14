@@ -39,17 +39,25 @@ static Rapicorn::Init __AIDA_init__client_connection ([]() {
   __AIDA_local__client_connection = Rapicorn::Aida::ObjectBroker::new_client_connection ($AIDA_pyclient_feature_keys$);
 });
 
+static inline RemoteHandle
+__AIDA_local__client_connection_pop_handle (FieldReader &fr)
+{
+  Rapicorn::Aida::RemoteMember<RemoteHandle> rhandle;
+  __AIDA_local__client_connection->pop_handle (fr, rhandle);
+  return rhandle;
+}
+
 // helpers
 static inline void
 add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
 }
 
 static inline void
 add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
+  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
                   __AIDA_local__client_connection->connection_id(), h, l);
 }
 

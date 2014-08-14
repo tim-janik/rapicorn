@@ -1,6 +1,6 @@
 
 #ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
 #endif
 
 namespace { // Anon
@@ -38,23 +38,23 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
 static inline void
 add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, ObjectBroker::connection_id_from_handle (sh),
+  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
                   client_connection->connection_id(), h, l);
 }
 
 static inline void
 add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, ObjectBroker::connection_id_from_handle (sh), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l);
 }
 
 static inline FieldBuffer*
 new_emit_result (const FieldBuffer *fb, uint64 h, uint64 l, uint32 n)
 {
-  return ObjectBroker::renew_into_result (const_cast<FieldBuffer*> (fb),
-                                          Rapicorn::Aida::MSGID_EMIT_RESULT,
-                                          ObjectBroker::receiver_connection_id (fb->first_id()),
-                                          h, l, n);
+  return FieldBuffer::renew_into_result (const_cast<FieldBuffer*> (fb),
+                                         Rapicorn::Aida::MSGID_EMIT_RESULT,
+                                         ObjectBroker::sender_connection_id (fb->first_id()),
+                                         h, l, n);
 }
 
 } } // Anon::__AIDA_Local__
