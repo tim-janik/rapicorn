@@ -28,13 +28,10 @@ window.show()
 # sync local state with remote state, because of possible binding
 # notification ping-pong we have to do this in 2 phases
 def sync_remote():
-  # process events (signals) pending locally or remotely
-  while app.iterate (False, True): pass # process signals pending locally
-  app.test_hook()                       # force round trip, ensure we pickup notifications pending remotely
-  while app.iterate (False, True): pass # process new batch of signals
-  # our processing might have queued binding updates for the remote, so sync once more
-  app.test_hook()                       # pick up remote notifications again
-  while app.iterate (False, True): pass # process final set of signals
+  for i in range (2):                     # settling bindings may require extra round trips
+    while app.iterate (False, True): pass # process signals and events pending locally
+    app.test_hook()                       # force round trip, ensure we pickup notifications pending remotely
+  while app.iterate (False, True): pass   # process new/remaining batch of signals and events
 
 import sys
 testwidget = window.query_selector_unique ('#test-widget')
@@ -57,3 +54,6 @@ for word in ('uiuiui22', 'HelloHello', 'x7c6g3j9', 'T', 'Te', 'Tes', 'Test'):
   sync_remote() # give binding time to propagate value
   #print "SEE2: " + om.somestring + ' (expect: ' + word + ')'
   assert om.somestring == word
+
+# OK if we got here
+print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
