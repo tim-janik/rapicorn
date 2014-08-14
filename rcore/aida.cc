@@ -33,12 +33,21 @@
 #define AIDA_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define AIDA_CPP_PASTE2(a,b)                    AIDA_CPP_PASTE2i (a,b)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
+#define GCLOG(...)                              RAPICORN_KEY_DEBUG ("GCStats", __VA_ARGS__)
+#define AIDA_MESSAGES_ENABLED()                 rapicorn_debug_check ("AidaMsg")
+#define AIDA_MESSAGE(...)                       RAPICORN_KEY_DEBUG ("AidaMsg", __VA_ARGS__)
 
 namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
 typedef std::weak_ptr<OrbObject>    OrbObjectW;
+
+template<class Type> static String
+typeid_name (Type &object)
+{
+  return cxx_demangle (typeid (object).name());
+}
 
 // == Message IDs ==
 /// Mask MessageId bits, see IdentifierParts.message_id.
@@ -1100,7 +1109,7 @@ private:
   class MappedObject : public virtual OrbObject {
     ObjectMap &omap_;
   public:
-    explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) {}
+    explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) { assert (orbid); }
     virtual ~MappedObject ()                              { omap_.delete_orbid (orbid()); }
   };
   void          delete_orbid            (uint64            orbid);
@@ -1295,15 +1304,16 @@ class ClientConnectionImpl : public ClientConnection {
   TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
   std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
-  typedef std::map<uint64, OrbObjectP> Id2OrboMap;
+  typedef std::map<uint64, OrbObjectW> Id2OrboMap;
   Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
   UIntSet                       ehandler_set; // client event handler
   bool                          blocking_for_sem_;
+  bool                          seen_garbage_;
   SignalHandler*                signal_lookup (size_t handler_id);
 public:
   ClientConnectionImpl (const std::string &feature_keys) :
-    ClientConnection (feature_keys), blocking_for_sem_ (false)
+    ClientConnection (feature_keys), blocking_for_sem_ (false), seen_garbage_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
@@ -1328,6 +1338,7 @@ public:
   }
   void                  notify_for_result ()            { if (blocking_for_sem_) sem_post (&transport_sem_); }
   void                  block_for_result  ()            { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
+  void                  gc_sweep          (const FieldBuffer *fb);
   virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
   virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
@@ -1340,6 +1351,28 @@ public:
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
+  struct ClientOrbObject;
+  void
+  client_orb_object_deleting (ClientOrbObject &coo)
+  {
+    if (!seen_garbage_)
+      {
+        seen_garbage_ = true;
+        FieldBuffer *fb = FieldBuffer::_new (3);
+        fb->add_header1 (MSGID_META_SEEN_GARBAGE, coo.connection(), this->connection_id(), 0);
+        GCLOG ("ClientConnectionImpl: SEEN_GARBAGE (%016x)", coo.orbid());
+        FieldBuffer *fr = this->call_remote (fb); // takes over fb
+        assert (fr == NULL);
+      }
+  }
+  struct ClientOrbObject : public OrbObject {
+    ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_ (c)
+    { assert (orbid); }
+    virtual ~ClientOrbObject () override
+    { client_.client_orb_object_deleting (*this); }
+  private:
+    ClientConnectionImpl &client_;
+  };
 };
 
 FieldBuffer*
@@ -1384,16 +1417,39 @@ void
 ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 {
   const uint64 orbid = fr.pop_orbid();
-  OrbObjectP orbo = id2orbo_map_[orbid];
-  if (AIDA_UNLIKELY (!orbo))
+  OrbObjectP orbop = id2orbo_map_[orbid].lock();
+  if (AIDA_UNLIKELY (!orbop) && orbid)
     {
-      struct ClientOrbObject : public OrbObject {
-        ClientOrbObject (uint64 orbid) : OrbObject (orbid) {}
-      };
-      orbo = std::make_shared<ClientOrbObject> (orbid);
-      id2orbo_map_[orbid] = orbo;
+      orbop = std::make_shared<ClientOrbObject> (orbid, *this);
+      id2orbo_map_[orbid] = orbop;
     }
-  (rhandle.*pmf_upgrade_from) (orbo);
+  (rhandle.*pmf_upgrade_from) (orbop);
+}
+
+void
+ClientConnectionImpl::gc_sweep (const FieldBuffer *fb)
+{
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  assert (msgid_is (msgid, MSGID_META_GARBAGE_SWEEP));
+  // collect expired object ids and send to server
+  vector<uint64> trashids;
+  for (auto it = id2orbo_map_.begin(); it != id2orbo_map_.end();)
+    if (it->second.expired())
+      {
+        trashids.push_back (it->first);
+        it = id2orbo_map_.erase (it);
+      }
+    else
+      ++it;
+  FieldBuffer *fr = FieldBuffer::_new (3 + 1 + trashids.size()); // header + length + items
+  fr->add_header1 (MSGID_META_GARBAGE_REPORT, ObjectBroker::sender_connection_id (msgid), 0, 0); // header
+  fr->add_int64 (trashids.size()); // length
+  for (auto v : trashids)
+    fr->add_int64 (v); // items
+  GCLOG ("ClientConnectionImpl: GARBAGE_REPORT: %u trash ids", trashids.size());
+  ObjectBroker::post_msg (fr);
+  seen_garbage_ = false;
 }
 
 void
@@ -1436,6 +1492,9 @@ ClientConnectionImpl::dispatch ()
                                         STRFUNC, handler_id, msgid, hashhigh, hashlow));
       }
       break;
+    case MSGID_META_GARBAGE_SWEEP:
+      gc_sweep (fb);
+      break;
     default: // result/reply messages are handled in call_remote
       print_warning (string_format ("%s: invalid message: %016x", STRFUNC, msgid));
       break;
@@ -1449,14 +1508,14 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 {
   AIDA_ASSERT (fb != NULL);
   // enqueue method call message
-  const MessageId msgid = MessageId (fb->first_id());
-  const bool needsresult = msgid_needs_result (msgid);
+  const MessageId callid = MessageId (fb->first_id());
+  const bool needsresult = msgid_needs_result (callid);
   if (!needsresult)
     {
       ObjectBroker::post_msg (fb);
       return NULL;
     }
-  const MessageId resultid = MessageId (msgid_mask (msgid_as_result (msgid)));
+  const MessageId resultid = MessageId (msgid_mask (msgid_as_result (callid)));
   blocking_for_sem_ = true; // results will notify semaphore
   ObjectBroker::post_msg (fb);
   FieldBuffer *fr;
@@ -1484,6 +1543,11 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 #endif
       else if (retmask == MSGID_DISCONNECT || retmask == MSGID_EMIT_ONEWAY || retmask == MSGID_EMIT_TWOWAY)
         event_queue_.push_back (fr);
+      else if (retmask == MSGID_META_GARBAGE_SWEEP)
+        {
+          gc_sweep (fr);
+          delete fr;
+        }
       else
         {
           FieldReader frr (*fr);
@@ -1586,10 +1650,11 @@ ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 class ServerConnectionImpl : public ServerConnection {
   TransportChannel         transport_channel_;  // messages arriving at server
   ObjectMap<ImplicitBase>  object_map_;         // map of all objects used remotely
-  std::unordered_set<OrbObjectP> live_remotes_;
   ImplicitBaseP            remote_origin_;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map_;
+  std::unordered_set<OrbObjectP> live_remotes_, *sweep_remotes_;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
+  void                  start_garbage_collection (uint client_connection);
 public:
   explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
@@ -1607,8 +1672,25 @@ public:
   virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
 };
 
+void
+ServerConnectionImpl::start_garbage_collection (uint client_connection)
+{
+  if (sweep_remotes_)
+    {
+      print_warning ("ServerConnectionImpl::start_garbage_collection: duplicate garbage collection request unimplemented");
+      return;
+    }
+  // GARBAGE_SWEEP
+  sweep_remotes_ = new std::unordered_set<OrbObjectP>();
+  sweep_remotes_->swap (live_remotes_);
+  FieldBuffer *fb = FieldBuffer::_new (3);
+  fb->add_header2 (MSGID_META_GARBAGE_SWEEP, client_connection, this->connection_id(), 0, 0);
+  GCLOG ("ServerConnectionImpl: GARBAGE_SWEEP: %u candidates", sweep_remotes_->size());
+  ObjectBroker::post_msg (fb);
+}
+
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
-  ServerConnection (feature_keys), remote_origin_ (NULL)
+  ServerConnection (feature_keys), remote_origin_ (NULL), sweep_remotes_ (NULL)
 {
   const uint realid = ObjectBroker::register_connection (*this, 0xaaaa);
   if (!realid)
@@ -1701,6 +1783,39 @@ ServerConnectionImpl::dispatch ()
             ObjectBroker::post_msg (fr);
           }
       }
+      break;
+    case MSGID_META_SEEN_GARBAGE:
+      {
+        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        if (hashhigh && hashlow == 0) // convention, SEEN_GARBAGE sends sender_connection in hashhigh
+          {
+            const uint sender_connection = hashhigh;
+            start_garbage_collection (sender_connection);
+          }
+      }
+      break;
+    case MSGID_META_GARBAGE_REPORT:
+      if (sweep_remotes_)
+        {
+          const uint64 __attribute__ ((__unused__)) hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+          const uint64 sweeps = sweep_remotes_->size();
+          const uint64 n_ids = fbr.pop_int64();
+          std::unordered_set<uint64> trashids;
+          trashids.reserve (n_ids);
+          for (uint64 i = 0; i < n_ids; i++)
+            trashids.insert (fbr.pop_int64());
+          uint64 retain = 0;
+          for (auto orbop : *sweep_remotes_)
+            if (trashids.find (orbop->orbid()) == trashids.end())
+              {
+                live_remotes_.insert (orbop);   // retained objects
+                retain++;
+              }
+          delete sweep_remotes_;                // deletes references
+          sweep_remotes_ = NULL;
+          GCLOG ("ServerConnectionImpl: GARBAGE_COLLECTED: considered=%u retained=%u purged=%u active=%u",
+                 sweeps, retain, sweeps - retain, live_remotes_.size());
+        }
       break;
     case MSGID_EMIT_RESULT:
       {
@@ -1941,6 +2056,12 @@ ObjectBroker::post_msg (FieldBuffer *fb)
   const uint sender_connection = ObjectBroker::sender_connection_id (msgid);
   if (needsresult != (sender_connection > 0)) // FIXME: move downwards
     fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
+  if (AIDA_MESSAGES_ENABLED())
+    {
+      FieldReader fbr (*fb);
+      const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+      AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
+    }
   bcon->send_msg (fb);
 }
 
