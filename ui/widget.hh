@@ -358,7 +358,6 @@ protected:
   static ContainerImpl* container_cast  (WidgetImpl *widget)    { return widget ? widget->as_container_impl() : NULL; }
   static WindowImpl*    window_cast     (WidgetImpl *widget)    { return widget ? widget->as_window_impl() : NULL; }
 private:
-  void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
 inline bool operator== (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 == &widget2; }
