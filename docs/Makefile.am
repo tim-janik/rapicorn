@@ -13,7 +13,7 @@ REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
 DOC_VERSION = $(or $(DSC_VERSION), $(VERSION))
 
 # == Extra Tarball Files ==
-EXTRA_DIST += ChangeLog-2009 references.bib
+EXTRA_DIST += ChangeLog-2009 references.bib doxygen_footer.html
 
 # == Doxygen Install Rules ==
 htmldocsbase  = ${docdir}
@@ -54,7 +54,6 @@ html-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Git ChangeLog"
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
-	$(Q) cp $(srcdir)/references.bib doxygen-srctree/
 	$(QPRINT) "MERGE" "ui/interfaces.dox"
 	$(Q) cd doxygen-srctree/ui && \
 	  sed $(SED_DELETE_ATFILE_LINE1) < interfaces.dox >> interfaces.idl && \
