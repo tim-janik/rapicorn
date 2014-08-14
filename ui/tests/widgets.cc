@@ -8,7 +8,7 @@ using namespace Rapicorn;
 static void
 test_window()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
 
   // FIXME: this needs porting to use client API
 

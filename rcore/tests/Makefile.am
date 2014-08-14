@@ -12,7 +12,7 @@ LDADDS		 = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 # == test programs ==
 LOGTEST_PROGS     += testrcore1
 TEST_PROGS        += testrcore1
-testrcore1_SOURCES = multitest.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
+testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc testrcore1.ref
 

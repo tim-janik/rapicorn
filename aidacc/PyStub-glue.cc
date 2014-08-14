@@ -29,6 +29,7 @@
 using Rapicorn::Aida::uint64;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
+using Rapicorn::Aida::RemoteHandle;
 
 // connection
 static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
@@ -39,6 +40,19 @@ static Rapicorn::Init __AIDA_init__client_connection ([]() {
 });
 
 // helpers
+static inline void
+add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+{
+  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
+}
+
+static inline void
+add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+{
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
+                  __AIDA_local__client_connection->connection_id(), h, l);
+}
+
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
@@ -107,7 +121,7 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
 static void
 __AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
 {
-  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
+  if (pyvalue == Py_None)               any = Rapicorn::Aida::Any();
   else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
   else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
   else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
@@ -189,20 +203,28 @@ __AIDA_pyfactory__create_enum (const char *enum_name, uint64 enum_value)
 }
 
 static inline PyObject*
-__AIDA_pyfactory__create_from_orbid (uint64 orbid)
+__AIDA_pyfactory__create_handle (RemoteHandle remote, const char *forced_type_name = NULL)
 {
+  if (!remote) // null handle
+    return None_INCREF();
   PyObject *result = NULL, *pyid;
-  const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
-  std::string type_name = fqtn;
-  size_t p = type_name.find ("::");
-  while (p != std::string::npos)
+  std::string type_name;
+  if (forced_type_name)
+    type_name = forced_type_name;
+  else
     {
-      type_name.replace (p, 2, ".");            // Foo::Bar::baz -> Foo.Bar.baz
-      p = type_name.find ("::", p + 1);
+      const std::string fqtn = __AIDA_local__client_connection->type_name_from_handle (remote);
+      type_name = fqtn;
+      size_t p = type_name.find ("::");
+      while (p != std::string::npos)
+        {
+          type_name.replace (p, 2, ".");        // Foo::Bar::baz -> Foo.Bar.baz
+          p = type_name.find ("::", p + 1);
+        }
     }
   if (!__AIDA_pyfactory__create_pyobject__)
     return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
-  pyid = PyLong_FromUnsignedLongLong (orbid);
+  pyid = PyLong_FromUnsignedLongLong (0);       // long slot used for enum values
   if (pyid)
     {
       PyObject *tuple = PyTuple_New (2);
@@ -210,7 +232,9 @@ __AIDA_pyfactory__create_from_orbid (uint64 orbid)
         {
           PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name.c_str()));
           PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+          py_remote_handle_push (remote);
           result = PyObject_Call (__AIDA_pyfactory__create_pyobject__, tuple, NULL);
+          py_remote_handle_pop();
           Py_DECREF (tuple);
         }
       Py_XDECREF (pyid);

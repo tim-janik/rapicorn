@@ -36,6 +36,71 @@ namespace Rapicorn {
 /// The Aida namespace provides all IDL functionality exported to C++.
 namespace Aida {
 
+// == EnumValue ==
+size_t
+enum_value_count (const EnumValue *values)
+{
+  size_t n = 0;
+  if (values)
+    while (values[n].ident)
+      n++;
+  return n;
+}
+
+const EnumValue*
+enum_value_find (const EnumValue *values, int64 value)
+{
+  if (values)
+    for (size_t i = 0; values[i].ident; i++)
+      if (values[i].value == value)
+        return &values[i];
+  return NULL;
+}
+
+const EnumValue*
+enum_value_find (const EnumValue *values, const String &name)
+{
+  if (values)
+    for (size_t i = 0; values[i].ident; i++)
+      if (string_match_identifier_tail (values[i].ident, name))
+        return &values[i];
+  return NULL;
+}
+
+// == TypeKind ==
+template<> const EnumValue*
+enum_value_list<TypeKind> ()
+{
+  static const EnumValue values[] = {
+    { UNTYPED,          "UNTYPED",              NULL, NULL },
+    { VOID,             "VOID",                 NULL, NULL },
+    { BOOL,             "BOOL",                 NULL, NULL },
+    { INT32,            "INT32",                NULL, NULL },
+    { INT64,            "INT64",                NULL, NULL },
+    { FLOAT64,          "FLOAT64",              NULL, NULL },
+    { STRING,           "STRING",               NULL, NULL },
+    { ENUM,             "ENUM",                 NULL, NULL },
+    { SEQUENCE,         "SEQUENCE",             NULL, NULL },
+    { RECORD,           "RECORD",               NULL, NULL },
+    { INSTANCE,         "INSTANCE",             NULL, NULL },
+    { FUNC,             "FUNC",                 NULL, NULL },
+    { TYPE_REFERENCE,   "TYPE_REFERENCE",       NULL, NULL },
+    { LOCAL,            "LOCAL",                NULL, NULL },
+    { REMOTE,           "REMOTE",               NULL, NULL },
+    { ANY,              "ANY",                  NULL, NULL },
+    { 0,                NULL,                   NULL, NULL }     // sentinel
+  };
+  return values;
+}
+template const EnumValue* enum_value_list<TypeKind> ();
+
+const char*
+type_kind_name (TypeKind type_kind)
+{
+  const EnumValue *ev = enum_value_find (enum_value_list<TypeKind>(), type_kind);
+  return ev ? ev->ident : NULL;
+}
+
 // == SignalHandlerIdParts ==
 union SignalHandlerIdParts {
   size_t   vsize;
@@ -99,8 +164,7 @@ ImplicitBase::~ImplicitBase()
 }
 
 // == Any ==
-RAPICORN_STATIC_ASSERT (sizeof (TypeCode) <= 2 * sizeof (void*)); // assert slim TypeCode impl
-RAPICORN_STATIC_ASSERT (sizeof (Any) <= sizeof (TypeCode) + MAX (sizeof (uint64), sizeof (void*))); // assert slim Any impl
+RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
 Any&
 Any::operator= (const Any &clone)
@@ -108,14 +172,15 @@ Any::operator= (const Any &clone)
   if (this == &clone)
     return *this;
   reset();
-  type_code_ = clone.type_code_;
+  type_kind_ = clone.type_kind_;
   switch (kind())
     {
     case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
     case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.shandle = new SmartHandle (*clone.u_.shandle); break;
+    case INSTANCE:      u_.shandle = new RemoteHandle (*clone.u_.shandle); break;
+    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
@@ -126,60 +191,32 @@ Any::reset()
 {
   switch (kind())
     {
-    case STRING:        u_.vstring().~String();                  break;
-    case ANY:           delete u_.vany;                          break;
-    case SEQUENCE:      delete u_.vanys;                         break;
-    case RECORD:        delete u_.vfields;                       break;
-    case INSTANCE:      delete u_.shandle;                       break;
+    case STRING:        u_.vstring().~String();                 break;
+    case ANY:           delete u_.vany;                         break;
+    case SEQUENCE:      delete u_.vanys;                        break;
+    case RECORD:        delete u_.vfields;                      break;
+    case INSTANCE:      delete u_.shandle;                      break;
+    case LOCAL:         delete u_.pholder;                      break;
     default: ;
     }
-  type_code_ = TypeMap::notype();
+  type_kind_ = UNTYPED;
   u_.vuint64 = 0;
-}
-
-void
-Any::retype (const TypeCode &tc)
-{
-  reset();
-  switch (tc.kind())
-    {
-    case STRING:   new (&u_.vstring()) String();                               break;
-    case ANY:      u_.vany = new Any();                                        break;
-    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
-    case RECORD:   u_.vfields = new FieldVector();                             break;
-    case INSTANCE: u_.shandle = new SmartHandle (SmartHandle::_null_handle()); break;
-    default:    break;
-    }
-  type_code_ = tc;
 }
 
 void
 Any::rekind (TypeKind _kind)
 {
-  const char *name;
+  reset();
+  type_kind_ = _kind;
   switch (_kind)
     {
-    case UNTYPED:
-      reset();
-      return;
-    case BOOL:          name = "bool";                  break;
-    case INT32:         name = "int32";                 break;
-      // case UINT32:   name = "uint32";                break;
-    case INT64:         name = "int64";                 break;
-    case FLOAT64:       name = "float64";               break;
-    case STRING:        name = "String";                break;
-    case ANY:           name = "Any";                   break;
-    case ENUM:          name = "Aida::DynamicEnum";     break;
-    case SEQUENCE:      name = "Aida::DynamicSequence"; break;
-    case RECORD:        name = "Aida::DynamicRecord";   break;
-    case INSTANCE:
-    default:
-      fatal_error (String() + "Aida::Any:rekind: incomplete type: " + type_kind_name (_kind));
+    case STRING:   new (&u_.vstring()) String();                               break;
+    case ANY:      u_.vany = new Any();                                        break;
+    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
+    case RECORD:   u_.vfields = new FieldVector();                             break;
+    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::_null_handle()); break;
+    default:       break;
     }
-  TypeCode tc = TypeMap::lookup (name);
-  if (tc.untyped())
-    fatal_error (String() + "Aida::Any:rekind: unknown type: " + name);
-  retype (tc);
 }
 
 template<class T> String any_field_name (const T          &);
@@ -204,7 +241,7 @@ String
 Any::to_string (const String &field_name) const
 {
   String s = "{ ";
-  s += "type=" + Rapicorn::string_to_cquote (type().name());
+  s += "type=" + Rapicorn::string_to_cquote (type_kind_name (kind()));
   if (!field_name.empty())
     s += ", name=" + Rapicorn::string_to_cquote (field_name);
   switch (kind())
@@ -229,7 +266,7 @@ Any::to_string (const String &field_name) const
 bool
 Any::operator== (const Any &clone) const
 {
-  if (type_code_ != clone.type_code_)
+  if (type_kind_ != clone.type_kind_)
     return false;
   switch (kind())
     {
@@ -244,6 +281,11 @@ Any::operator== (const Any &clone) const
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
     case INSTANCE:    if ((u_.shandle ? u_.shandle->_orbid() : 0) != (clone.u_.shandle ? clone.u_.shandle->_orbid() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case LOCAL:
+      if (u_.pholder)
+        return u_.pholder->operator== (clone.u_.pholder);
+      else
+        return !clone.u_.pholder;
     default:
       fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
     }
@@ -264,7 +306,14 @@ Any::swap (Any &other)
   memcpy (buffer, &other.u_, USIZE);
   memcpy (&other.u_, &this->u_, USIZE);
   memcpy (&this->u_, buffer, USIZE);
-  type_code_.swap (other.type_code_);
+  std::swap (type_kind_, other.type_kind_);
+}
+
+void
+Any::hold (PlaceHolder *ph)
+{
+  ensure (LOCAL);
+  u_.pholder = ph;
 }
 
 bool
@@ -386,11 +435,11 @@ Any::operator>>= (const FieldVector *&v) const
 }
 
 bool
-Any::operator>>= (SmartHandle &v)
+Any::operator>>= (RemoteHandle &v)
 {
   if (kind() != INSTANCE)
     return false;
-  v = u_.shandle ? *u_.shandle : SmartHandle::_null_handle();
+  v = u_.shandle ? *u_.shandle : RemoteHandle::_null_handle();
   return true;
 }
 
@@ -483,153 +532,13 @@ Any::operator<<= (const FieldVector &v)
 }
 
 void
-Any::operator<<= (const SmartHandle &v)
+Any::operator<<= (const RemoteHandle &v)
 {
   ensure (INSTANCE);
-  SmartHandle *old = u_.shandle;
-  u_.shandle = new SmartHandle (v);
+  RemoteHandle *old = u_.shandle;
+  u_.shandle = new RemoteHandle (v);
   if (old)
     delete old;
-}
-
-void
-Any::from_proto (const TypeCode type_code, FieldReader &pbr)
-{
-  Any &any = *this;
-  switch (type_code.kind())
-    {
-    case BOOL:
-      any <<= pbr.pop_bool();
-      break;
-    case INT32:
-      any <<= pbr.pop_int64();
-      break;
-    case INT64:
-      any <<= pbr.pop_int64();
-      break;
-    case FLOAT64:
-      any <<= pbr.pop_double();
-      break;
-    case STRING:
-      any <<= pbr.pop_string();
-      break;
-    case ENUM:
-      any <<= EnumValue (pbr.pop_evalue());
-      break;
-    case ANY:
-      any <<= pbr.pop_any();
-      break;
-    case RECORD: {
-      const FieldBuffer &fb = pbr.pop_rec();
-      FieldReader fbr (fb);
-      const size_t field_count = type_code.field_count();
-      assert_return (fbr.n_types() == field_count);
-      Any::FieldVector fields;
-      for (size_t i = 0; i < field_count; i++)
-        {
-          TypeCode ftc = type_code.field (i).resolve();
-          Any fany (ftc);
-          fany.from_proto (ftc, fbr);
-          fields.push_back (Any::Field (ftc.name(), fany));
-        }
-      any.retype (type_code);
-      any <<= fields;
-    } break;
-    case SEQUENCE: {
-      const FieldBuffer &pb = pbr.pop_seq();
-      FieldReader rbr (pb);
-      assert_return (type_code.field_count() == 1);
-      TypeCode ftc = type_code.field (0).resolve();
-      const size_t len = rbr.remaining();
-      Any::AnyVector anys;
-      anys.resize (len);
-      for (size_t k = 0; k < len; k++)
-        {
-          Any fany (ftc);
-          fany.from_proto (ftc, rbr);
-          anys.push_back (fany);
-        }
-      any.retype (type_code);
-      any <<= anys;
-    } break;
-    case INSTANCE: {
-      SmartMember<SmartHandle> sh;
-      ObjectBroker::pop_handle (pbr, sh);
-      any <<= sh;
-    } break;
-    case TYPE_REFERENCE: // ?
-    default:
-      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
-      break;
-    }
-}
-
-void
-Any::to_proto (const TypeCode type_code, FieldBuffer &pb) const
-{
-  assert_return (pb.capacity() - pb.size() >= 1);
-  const Any &any = *this;
-  switch (type_code.kind())
-    {
-    case BOOL:
-      pb.add_bool (any.as_int());
-      break;
-    case INT32: case INT64:
-      pb.add_int64 (any.as_int());
-      break;
-    case FLOAT64:
-      pb.add_double (any.as_float());
-      break;
-    case STRING:
-      pb.add_string (any.as_string());
-      break;
-    case ENUM:
-      pb.add_evalue (any.as_int());
-      break;
-    case ANY:
-      pb.add_any (any.as_any());
-      break;
-    case RECORD: {
-      const size_t field_count = type_code.field_count();
-      FieldBuffer &rb = pb.add_rec (type_code.field_count());
-      assert_return (rb.capacity() - rb.size() >= field_count);
-      const Any::FieldVector *fields = NULL;
-      any >>= fields;
-      for (size_t i = 0; i < field_count; i++)
-        {
-          TypeCode ftc = type_code.field (i).resolve();
-          const Any *pany = NULL;
-          for (size_t j = 0; fields && j < fields->size(); j++)
-            if ((*fields)[j].name == ftc.name())
-              pany = &(*fields)[j];
-          uint64 amem[(sizeof (Any) + 7) / 8];
-          const Any &fany = *(pany ? pany : new (amem) Any (ftc));      // stack Any constructor
-          fany.to_proto (ftc, rb);
-          if (!pany)
-            fany.~Any();                                                // stack Any destructor
-        }
-    } break;
-    case SEQUENCE: {
-      assert_return (type_code.field_count() == 1);
-      TypeCode ftc = type_code.field (0).resolve();
-      const Any::AnyVector *anys = NULL;
-      any >>= anys;
-      const size_t len = anys ? anys->size() : 0;
-      FieldBuffer &rb = pb.add_seq (len);
-      for (size_t i = 0; i < len; i++)
-        {
-          const Any &fany = (*anys)[i];
-          fany.to_proto (ftc, rb);
-        }
-    } break;
-    case INSTANCE:
-      pb.add_object (u_.shandle ? u_.shandle->_orbid() : 0);
-      break;
-    case TYPE_REFERENCE: // ?
-    default:
-      critical ("%s: unknown type: %s", STRLOC(), type_code.kind_name().c_str());
-      break;
-    }
 }
 
 // == OrbObject ==
@@ -644,43 +553,44 @@ struct OrbObjectImpl : public OrbObject {
 
 static const OrbObjectImpl aida_orb_object_null (0);
 
-// == SmartHandle ==
-static OrbObject* smart_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
+// == RemoteHandle ==
+static OrbObject* remote_handle_null_orb_object () { return &const_cast<OrbObjectImpl&> (aida_orb_object_null); }
 
-SmartHandle::SmartHandle (OrbObject &orbo) :
+RemoteHandle::RemoteHandle (OrbObject &orbo) :
   orbo_ (&orbo)
 {
   assert (&orbo);
 }
 
-SmartHandle::SmartHandle() :
-  orbo_ (smart_handle_null_orb_object())
+RemoteHandle::RemoteHandle() :
+  orbo_ (remote_handle_null_orb_object())
 {}
 
 void
-SmartHandle::reset ()
+RemoteHandle::reset ()
 {
-  if (orbo_ != smart_handle_null_orb_object())
+  if (orbo_ != remote_handle_null_orb_object())
     {
-      orbo_ = smart_handle_null_orb_object();
+      orbo_ = remote_handle_null_orb_object();
     }
 }
 
 void
-SmartHandle::assign (const SmartHandle &src)
+RemoteHandle::upgrade_once (const RemoteHandle &source)
 {
-  if (orbo_ == src.orbo_)
+  AIDA_ASSERT (_orbid() == 0);
+  if (orbo_ == source.orbo_)
     return;
   if (NULL != *this)
     reset();
-  orbo_ = src.orbo_;
+  orbo_ = source.orbo_;
 }
 
-SmartHandle::~SmartHandle()
+RemoteHandle::~RemoteHandle()
 {}
 
 bool
-SmartHandle::operator== (const SmartHandle &other) const noexcept
+RemoteHandle::operator== (const RemoteHandle &other) const noexcept
 {
   if (orbo_ && other.orbo_)
     return orbo_->orbid() == other.orbo_->orbid();
@@ -688,7 +598,7 @@ SmartHandle::operator== (const SmartHandle &other) const noexcept
 }
 
 bool
-SmartHandle::operator!= (const SmartHandle &other) const noexcept
+RemoteHandle::operator!= (const RemoteHandle &other) const noexcept
 {
   return !operator== (other);
 }
@@ -699,18 +609,18 @@ static OrboMap orbo_map;
 static Mutex   orbo_mutex;
 
 void
-ObjectBroker::tie_handle (SmartHandle &sh, const uint64 orbid)
+ObjectBroker::tie_handle (RemoteHandle &sh, const uint64 orbid)
 {
   AIDA_ASSERT (NULL == sh);
   ScopedLock<Mutex> locker (orbo_mutex);
   OrbObject *orbo = orbo_map[orbid];
   if (AIDA_UNLIKELY (!orbo))
     orbo_map[orbid] = orbo = new OrbObjectImpl (orbid);
-  sh.assign (SmartHandle (*orbo));
+  sh.upgrade_once (RemoteHandle (*orbo)); // FIXME
 }
 
 void
-ObjectBroker::pop_handle (FieldReader &fr, SmartHandle &sh)
+ObjectBroker::pop_handle (FieldReader &fr, RemoteHandle &sh, BaseConnection &bcon)
 {
   tie_handle (sh, fr.pop_object());
 }
@@ -773,6 +683,12 @@ FieldReader::check_request (int type)
                                 FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str()));
 }
 
+uint64
+FieldReader::debug_bits ()
+{
+  return fb_->upeek (nth_).vint64;
+}
+
 std::string
 FieldBuffer::first_id_str() const
 {
@@ -832,8 +748,8 @@ FieldBuffer::to_string() const
         case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        case ANY:       s += string_format (", %s: %p", tn, &fbr.pop_any());                       break;
+        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
@@ -1251,10 +1167,22 @@ BaseConnection::remote_origin (ImplicitBase*)
  * omitted and generally treated as a regular expression to match against connection
  * feature keys as registered with the ObjectBroker.
  */
-SmartHandle
+RemoteHandle
 BaseConnection::remote_origin (const vector<std::string> &feature_key_list)
 {
   assertion_error (__FILE__, __LINE__, "not supported by this object type");
+}
+
+Any*
+BaseConnection::any2remote (const Any &any)
+{
+  return new Any (any);
+}
+
+void
+BaseConnection::any2local (Any &any)
+{
+  // any = any
 }
 
 // == ClientConnection ==
@@ -1267,7 +1195,12 @@ ClientConnection::~ClientConnection ()
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
-  struct SignalHandler { uint64 hhi, hlo, oid, cid; SignalEmitHandler *seh; void *data; };
+  struct SignalHandler {
+    uint64 hhi, hlo, cid;
+    RemoteMember<RemoteHandle> remote;
+    SignalEmitHandler *seh;
+    void *data;
+  };
   typedef std::set<uint64> UIntSet;
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages sent to client
@@ -1306,10 +1239,13 @@ public:
   virtual FieldBuffer*  call_remote       (FieldBuffer*);
   virtual FieldBuffer*  pop               ();
   virtual void          dispatch          ();
-  virtual SmartHandle   remote_origin     (const vector<std::string> &feature_key_list);
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data);
+  virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
+  virtual RemoteHandle  pop_handle        (FieldReader &fr);
+  virtual void          remote_origin     (ImplicitBase *rorigin) { fatal ("assert not reached"); }
+  virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
+  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
-  virtual std::string   type_name_from_orbid (uint64 orbid);
+  virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
 };
 
 FieldBuffer*
@@ -1322,10 +1258,10 @@ ClientConnectionImpl::pop ()
   return fb;
 }
 
-SmartHandle
+RemoteHandle
 ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
 {
-  SmartMember<SmartHandle> rorigin = SmartHandle::_null_handle();
+  RemoteMember<RemoteHandle> rorigin = RemoteHandle::_null_handle();
   const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
   if (connection_id)
     {
@@ -1334,10 +1270,24 @@ ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list
       FieldBuffer *fr = this->call_remote (fb); // takes over fb
       FieldReader frr (*fr);
       frr.skip_header();
-      ObjectBroker::pop_handle (frr, rorigin);
+      rorigin = pop_handle (frr);
       delete fr;
     }
   return rorigin;
+}
+
+void
+ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
+{
+  fb.add_object (rhandle._orbid());
+}
+
+RemoteHandle
+ClientConnectionImpl::pop_handle (FieldReader &fr)
+{
+  RemoteMember<RemoteHandle> remote;
+  ObjectBroker::pop_handle (fr, remote, *this);
+  return remote;
 }
 
 void
@@ -1443,16 +1393,16 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 }
 
 size_t
-ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data)
+ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data)
 {
-  assert_return (orbid > 0, 0);
+  assert_return (rhandle._orbid() > 0, 0);
   assert_return (hhi > 0, 0);   // FIXME: check for signal id
   assert_return (hlo > 0, 0);
   assert_return (seh != NULL, 0);
   SignalHandler *shandler = new SignalHandler;
   shandler->hhi = hhi;
   shandler->hlo = hlo;
-  shandler->oid = orbid;                        // emitting object
+  shandler->remote = rhandle;                   // emitting object
   shandler->cid = 0;
   shandler->seh = seh;
   shandler->data = data;
@@ -1462,9 +1412,9 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, uint64 orbid, Sign
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid);                // emitting object
+  add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1491,9 +1441,9 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
   FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->oid);
+  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote._orbid());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
-  fb.add_object (shandler->oid);                // emitting object
+  add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
   FieldBuffer *connection_result = call_remote (&fb); // deletes fb
@@ -1522,9 +1472,9 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 }
 
 std::string
-ClientConnectionImpl::type_name_from_orbid (uint64 orbid)
+ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
 {
-  const uint type_index = IdentifierParts (orbid).orbid_type_index;
+  const uint type_index = IdentifierParts (rhandle._orbid()).orbid_type_index;
   return type_name_db.type_name (type_index);
 }
 
@@ -1533,23 +1483,27 @@ ClientConnectionImpl::type_name_from_orbid (uint64 orbid)
 class ServerConnectionImpl : public ServerConnection {
   TransportChannel         transport_channel_;       // messages sent to server
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  std::unordered_map<ptrdiff_t,uint64> addr_map;
-  std::vector<ptrdiff_t>                 addr_vector;
+  std::unordered_map<ptrdiff_t, uint64> addr_map;
+  std::vector<ptrdiff_t>                addr_vector;
   std::unordered_map<size_t, EmitResultHandler> emit_result_map;
   ImplicitBase *remote_origin_;
 public:
   explicit              ServerConnectionImpl (const std::string &feature_keys);
   virtual              ~ServerConnectionImpl ()         { unregister_connection(); }
-  virtual int           notify_fd  ()                   { return transport_channel_.inputfd(); }
-  virtual bool          pending    ()                   { return transport_channel_.has_msg(); }
-  virtual void          dispatch   ();
-  virtual ImplicitBase* remote_origin  () const         { return remote_origin_; }
+  uint64                instance2orbid (const ImplicitBase*);
+  ImplicitBase*         orbid2instance (uint64);
+  virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
+  virtual bool          pending        ()               { return transport_channel_.has_msg(); }
+  virtual void          dispatch       ();
   virtual void          remote_origin  (ImplicitBase *rorigin);
-  virtual uint64        instance2orbid (ImplicitBase*);
-  virtual ImplicitBase* orbid2instance (uint64);
+  virtual RemoteHandle  remote_origin  (const vector<std::string> &feature_key_list) { fatal ("assert not reached"); }
+  virtual void          add_interface  (FieldBuffer &fb, const ImplicitBase *ibase);
+  virtual ImplicitBase* pop_interface  (FieldReader &fr);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
+  virtual ImplicitBase*     interface_from_handle   (const RemoteHandle &rhandle);
+  virtual void              interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle);
 };
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
@@ -1570,8 +1524,20 @@ ServerConnectionImpl::remote_origin (ImplicitBase *rorigin)
   remote_origin_ = rorigin;
 }
 
+void
+ServerConnectionImpl::add_interface (FieldBuffer &fb, const ImplicitBase *ibase)
+{
+  fb.add_object (this->instance2orbid (ibase));
+}
+
+ImplicitBase*
+ServerConnectionImpl::pop_interface (FieldReader &fr)
+{
+  return orbid2instance (fr.pop_object());
+}
+
 uint64
-ServerConnectionImpl::instance2orbid (ImplicitBase *instance)
+ServerConnectionImpl::instance2orbid (const ImplicitBase *instance)
 {
   const ptrdiff_t addr = reinterpret_cast<ptrdiff_t> (instance);
   const auto it = addr_map.find (addr);
@@ -1609,9 +1575,9 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
-        ImplicitBase *rorigin = this->remote_origin();
+        ImplicitBase *rorigin = remote_origin_;
         FieldBuffer *fr = ObjectBroker::renew_into_result (fbr, MSGID_HELLO_REPLY, ObjectBroker::receiver_connection_id (msgid), 0, 0, 1);
-        fr->add_object (this->instance2orbid (rorigin));
+        add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));
@@ -1659,6 +1625,20 @@ ServerConnectionImpl::dispatch ()
     }
   if (AIDA_UNLIKELY (fb))
     delete fb;
+}
+
+ImplicitBase*
+ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
+{
+  return orbid2instance (rhandle._orbid());
+}
+
+void
+ServerConnectionImpl::interface_to_handle (ImplicitBase *ibase, RemoteHandle &rhandle)
+{
+  const uint64 orbid = instance2orbid (ibase);
+  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
+  Broker::tie_handle (rhandle, orbid);
 }
 
 void
@@ -1825,5 +1805,3 @@ ObjectBroker::post_msg (FieldBuffer *fb)
 }
 
 } } // Rapicorn::Aida
-
-#include "aidamap.cc"

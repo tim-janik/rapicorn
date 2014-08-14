@@ -26,6 +26,7 @@ namespace Rapicorn {
 
 // == Convenient Aida Types ==
 using Aida::Any;
+using Aida::any_cast;
 
 // == Common (stdc++) Utilities ==
 using ::std::swap;

@@ -35,8 +35,8 @@ class _RapicornSource (_Aida_loop.Source):
 
 # Main event loop intergration for Rapicorn.Application
 class MainApplication (Rapicorn.Application):
-  def __init__ (self, _aida_id):
-    super (MainApplication, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (MainApplication, self).__init__()
     self.__dict__['__cached_exitable'] = False
     self.sig_missing_primary += lambda: Rapicorn.app.__dict__.__setitem__ ('__cached_exitable', True)
   def iterate (self, may_block, may_dispatch):
@@ -70,6 +70,7 @@ class MainApplication (Rapicorn.Application):
 
 # Application Initialization
 Rapicorn.app = None
+Rapicorn._appclass = MainApplication
 def app_init (application_name = None):
   from pyrapicorn import Rapicorn
   assert Rapicorn.app == None
@@ -78,9 +79,9 @@ def app_init (application_name = None):
   if application_name == None:
     import os
     application_name = os.path.abspath (sys.argv[0] or '-')
-  orbid = _cxxrapicorn._init_dispatcher (application_name, sys.argv)
-  # setup global Application
-  Rapicorn.app = MainApplication (pyrapicorn._BaseClass_._AidaID_ (orbid))
+  # initialize and setup global Application
+  Rapicorn.app = _cxxrapicorn._init_dispatcher (application_name, sys.argv, "Rapicorn._appclass")
+  del Rapicorn._appclass
   return Rapicorn.app
 Rapicorn.app_init = app_init
 del app_init

@@ -31,6 +31,7 @@
 using Rapicorn::Aida::uint64;
 using Rapicorn::Aida::FieldBuffer;
 using Rapicorn::Aida::FieldReader;
+using Rapicorn::Aida::RemoteHandle;
 
 // connection
 static Rapicorn::Aida::ClientConnection *__AIDA_local__client_connection = NULL;
@@ -41,6 +42,19 @@ static Rapicorn::Init __AIDA_init__client_connection ([]() {
 });
 
 // helpers
+static inline void
+add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+{
+  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh), h, l);
+}
+
+static inline void
+add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+{
+  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_handle (sh),
+                  __AIDA_local__client_connection->connection_id(), h, l);
+}
+
 static PyObject*
 PyErr_Format_from_AIDA_error (const FieldBuffer *fr)
 {
@@ -109,7 +123,7 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
 static void
 __AIDA_pyconvert__pyany_to_any (Rapicorn::Aida::Any &any, PyObject *pyvalue)
 {
-  if (pyvalue == Py_None)               any.retype (Rapicorn::Aida::TypeMap::notype());
+  if (pyvalue == Py_None)               any = Rapicorn::Aida::Any();
   else if (PyString_Check (pyvalue))    any <<= PyString_As_std_string (pyvalue);
   else if (PyBool_Check (pyvalue))      any <<= bool (pyvalue == Py_True);
   else if (PyInt_Check (pyvalue))       any <<= PyInt_AS_LONG (pyvalue);
@@ -191,20 +205,28 @@ __AIDA_pyfactory__create_enum (const char *enum_name, uint64 enum_value)
 }
 
 static inline PyObject*
-__AIDA_pyfactory__create_from_orbid (uint64 orbid)
+__AIDA_pyfactory__create_handle (RemoteHandle remote, const char *forced_type_name = NULL)
 {
+  if (!remote) // null handle
+    return None_INCREF();
   PyObject *result = NULL, *pyid;
-  const std::string fqtn = __AIDA_local__client_connection->type_name_from_orbid (orbid);
-  std::string type_name = fqtn;
-  size_t p = type_name.find ("::");
-  while (p != std::string::npos)
+  std::string type_name;
+  if (forced_type_name)
+    type_name = forced_type_name;
+  else
     {
-      type_name.replace (p, 2, ".");            // Foo::Bar::baz -> Foo.Bar.baz
-      p = type_name.find ("::", p + 1);
+      const std::string fqtn = __AIDA_local__client_connection->type_name_from_handle (remote);
+      type_name = fqtn;
+      size_t p = type_name.find ("::");
+      while (p != std::string::npos)
+        {
+          type_name.replace (p, 2, ".");        // Foo::Bar::baz -> Foo.Bar.baz
+          p = type_name.find ("::", p + 1);
+        }
     }
   if (!__AIDA_pyfactory__create_pyobject__)
     return PyErr_Format (PyExc_RuntimeError, "unregistered AIDA_pyfactory");
-  pyid = PyLong_FromUnsignedLongLong (orbid);
+  pyid = PyLong_FromUnsignedLongLong (0);       // long slot used for enum values
   if (pyid)
     {
       PyObject *tuple = PyTuple_New (2);
@@ -212,7 +234,9 @@ __AIDA_pyfactory__create_from_orbid (uint64 orbid)
         {
           PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name.c_str()));
           PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+          py_remote_handle_push (remote);
           result = PyObject_Call (__AIDA_pyfactory__create_pyobject__, tuple, NULL);
+          py_remote_handle_pop();
           Py_DECREF (tuple);
         }
       Py_XDECREF (pyid);
@@ -260,23 +284,23 @@ aida_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
   item = PyDict_GetItemString (dictR, "enum_field"); ERRORif (!item);
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface1"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface2"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface3"); ERRORif (!item);
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "any1"); ERRORif (!item);
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   item = PyDict_GetItemString (dictR, "any2"); ERRORif (!item);
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   item = PyDict_GetItemString (dictR, "any3"); ERRORif (!item);
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -315,17 +339,17 @@ aida_pyXFooRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "multi4", &pyfoR) < 0) goto error;
   pyfoR = __AIDA_pyfactory__create_enum ("MandatoryNamespace.ExtensiveEnum", fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "any1", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "any2", &pyfoR) < 0) goto error;
-  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+  pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   if (PyDict_Take_Item (dictR, "any3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
@@ -591,7 +615,7 @@ aida_pyInterfaceSequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuff
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
-    fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+    __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   }
   success = true;
  error:
@@ -606,7 +630,7 @@ aida_pyInterfaceSequence_proto_pop (Rapicorn::Aida::FieldReader &src)
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+    pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -628,7 +652,7 @@ aida_pyAnySequence_proto_add (PyObject *pyinput, Rapicorn::Aida::FieldBuffer &ds
     PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     { Rapicorn::Aida::Any tmpany;
       __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-      fb.add_any (tmpany); }
+      fb.add_any (tmpany, *__AIDA_local__client_connection); }
   }
   success = true;
  error:
@@ -643,7 +667,7 @@ aida_pyAnySequence_proto_pop (Rapicorn::Aida::FieldReader &src)
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+    pyfoR = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -1028,14 +1052,14 @@ aida_pyRecordForGroups_proto_pop (Rapicorn::Aida::FieldReader &src)
 static PyObject*
 __AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -1047,14 +1071,14 @@ __AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1074,14 +1098,14 @@ __AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xe4e890540b4c0579ULL, 0xe14a7ffaa82f1c4fULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1103,14 +1127,14 @@ __AIDA_pycall__e4e890540b4c0579e14a7ffaa82f1c4f__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x9cfaa316ccbb6ea0ULL, 0x6cc5207c5520e081ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1132,14 +1156,14 @@ __AIDA_pycall__9cfaa316ccbb6ea06cc5207c5520e081__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x64511c410b16c274ULL, 0x19b47eb22b4cd4d4ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // r
@@ -1163,14 +1187,14 @@ __AIDA_pycall__64511c410b16c27419b47eb22b4cd4d4__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x2089150ae3f7ad80ULL, 0xe6154471cb4560e0ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // n
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // r
@@ -1194,14 +1218,14 @@ __AIDA_pycall__2089150ae3f7ad80e6154471cb4560e0__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 6), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 6) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x349f073a5bad36fdULL, 0xf7a10ae13b8e391bULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // b
   fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // n
@@ -1233,18 +1257,18 @@ __AIDA_pycall__349f073a5bad36fdf7a10ae13b8e391b__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x4b479b2f4e3ba551ULL, 0xb7c407eee57eb21aULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // ba1
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // ba2
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1264,14 +1288,14 @@ __AIDA_pycall__4b479b2f4e3ba551b7c407eee57eb21a__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -1283,14 +1307,14 @@ __AIDA_pycall__dbb304ad4df15873ca276abf2bb1603c__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
@@ -1310,14 +1334,14 @@ __AIDA_pycall__b8bc20394724087abc7b1e7d30aeb178__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__3432c3bb41bc72a0533bc22135f973bf__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // command
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1347,9 +1371,10 @@ static PyObject*
 __AIDA_pyconnect__0774aa0ffbdf5f023f1b5247dca90c86__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -1359,7 +1384,7 @@ __AIDA_pyconnect__0774aa0ffbdf5f023f1b5247dca90c86__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, oid, __AIDA_pyemit1__UIWidgetArea__void_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, remote, __AIDA_pyemit1__UIWidgetArea__void_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1376,7 +1401,7 @@ __AIDA_pyemit2__UIWidgetArea__sample_signal (const Rapicorn::Aida::FieldBuffer *
   fbr.skip_header();
   fbr.skip();  // skip handler_id
   Rapicorn::Aida::uint64 emit_result_id = fbr.pop_int64();
-  item = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 1, item);
@@ -1399,9 +1424,10 @@ static PyObject*
 __AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -1411,7 +1437,7 @@ __AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, oid, __AIDA_pyemit2__UIWidgetArea__sample_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, remote, __AIDA_pyemit2__UIWidgetArea__sample_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1419,14 +1445,14 @@ __AIDA_pyconnect__219d8339499d690e08bca1e9a82f86b0__ (PyObject *pyself, PyObject
 static PyObject*
 __AIDA_pygetter__f67db704b9d460d6d4950feab697e61e__ (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.dummy
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -1446,14 +1472,14 @@ __AIDA_pygetter__f67db704b9d460d6d4950feab697e61e__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5__ (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.dummy
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -1467,14 +1493,14 @@ __AIDA_pysetter__7aaf2f96f30428293d0391e5b72e7ba5__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a__ (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.on_click
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -1494,14 +1520,14 @@ __AIDA_pygetter__58ba68f6b64584c9a7d2686edb40f27a__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb__ (PyObject *pyself, PyObject *pyargs) // UIWidgetArea.on_click
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -1515,14 +1541,14 @@ __AIDA_pysetter__f0025ec0fa66e3e2880c10e8e6b57cfb__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pycall__76ac7a704663d24623abac49621c6802__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // i
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -1536,14 +1562,14 @@ __AIDA_pycall__76ac7a704663d24623abac49621c6802__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 0), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -1555,14 +1581,14 @@ __AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__55291a7348d1424232dac90dde65a764__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1586,14 +1612,14 @@ __AIDA_pycall__55291a7348d1424232dac90dde65a764__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1617,14 +1643,14 @@ __AIDA_pycall__dc38cf6855c54108328ddcdcec8f161e__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__678de8636167b6a1b27d37ca066b5335__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1648,14 +1674,14 @@ __AIDA_pycall__678de8636167b6a1b27d37ca066b5335__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xeea6d5fb184699a3ULL, 0xce05c988a9bfd2d9ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1679,14 +1705,14 @@ __AIDA_pycall__eea6d5fb184699a3ce05c988a9bfd2d9__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__646f80849d732dc572fd1ede45b153e3__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x646f80849d732dc5ULL, 0x72fd1ede45b153e3ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1710,14 +1736,14 @@ __AIDA_pycall__646f80849d732dc572fd1ede45b153e3__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xee3b0b1c6eb52bdeULL, 0x13729d2db240b4f9ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1741,14 +1767,14 @@ __AIDA_pycall__ee3b0b1c6eb52bde13729d2db240b4f9__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   if (!aida_pyQuickRecord_proto_add (item, fb)) goto error;
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1772,14 +1798,14 @@ __AIDA_pycall__852c7f5942a87cce487dc78cd38240f6__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   if (!aida_pyQuickSequence_proto_add (item, fb)) goto error;
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
@@ -1803,25 +1829,25 @@ __AIDA_pycall__5534838e08bdc63dd852fd5abb88ab7d__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1834,29 +1860,29 @@ __AIDA_pycall__fe9af28dc9c5de7d418be0c0e085ea6d__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__807e5dacf307a2772b65069e50e63c80__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   item = PyTuple_GET_ITEM (pyargs, 2); // optval
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyconvert__pyany_from_any (frr.pop_any()); ERRORifpy();
+        pyfoR = __AIDA_pyconvert__pyany_from_any (frr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1869,25 +1895,25 @@ __AIDA_pycall__807e5dacf307a2772b65069e50e63c80__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__be67f4e0afeafd685cdf24c075b03215__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 2), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // input
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   item = PyTuple_GET_ITEM (pyargs, 2); // iface0
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1916,9 +1942,10 @@ static PyObject*
 __AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -1928,7 +1955,7 @@ __AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, oid, __AIDA_pyemit1__SignalTestInterface__void_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, remote, __AIDA_pyemit1__SignalTestInterface__void_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -1964,9 +1991,10 @@ static PyObject*
 __AIDA_pyconnect__31529d809bd68e6ba11d55517d4325ae__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -1976,7 +2004,7 @@ __AIDA_pyconnect__31529d809bd68e6ba11d55517d4325ae__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, oid, __AIDA_pyemit2__SignalTestInterface__bool_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, remote, __AIDA_pyemit2__SignalTestInterface__bool_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2012,9 +2040,10 @@ static PyObject*
 __AIDA_pyconnect__ac712d196d3466f3eb06bf4f2b2a414c__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2024,7 +2053,7 @@ __AIDA_pyconnect__ac712d196d3466f3eb06bf4f2b2a414c__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, oid, __AIDA_pyemit2__SignalTestInterface__int32_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, remote, __AIDA_pyemit2__SignalTestInterface__int32_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2060,9 +2089,10 @@ static PyObject*
 __AIDA_pyconnect__1439d37d87e2668b57ded621e6b0cde6__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2072,7 +2102,7 @@ __AIDA_pyconnect__1439d37d87e2668b57ded621e6b0cde6__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, oid, __AIDA_pyemit2__SignalTestInterface__int64_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, remote, __AIDA_pyemit2__SignalTestInterface__int64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2108,9 +2138,10 @@ static PyObject*
 __AIDA_pyconnect__4c5a782eaa76edb0b66fbaa524004fd9__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2120,7 +2151,7 @@ __AIDA_pyconnect__4c5a782eaa76edb0b66fbaa524004fd9__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, oid, __AIDA_pyemit2__SignalTestInterface__float64_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, remote, __AIDA_pyemit2__SignalTestInterface__float64_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2156,9 +2187,10 @@ static PyObject*
 __AIDA_pyconnect__bc5c00f41d7c710d368d920fb6c136e6__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2168,7 +2200,7 @@ __AIDA_pyconnect__bc5c00f41d7c710d368d920fb6c136e6__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, oid, __AIDA_pyemit2__SignalTestInterface__string_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, remote, __AIDA_pyemit2__SignalTestInterface__string_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2204,9 +2236,10 @@ static PyObject*
 __AIDA_pyconnect__60702e53aca1b772eac0d39852c951fb__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2216,7 +2249,7 @@ __AIDA_pyconnect__60702e53aca1b772eac0d39852c951fb__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, oid, __AIDA_pyemit2__SignalTestInterface__enum_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, remote, __AIDA_pyemit2__SignalTestInterface__enum_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2252,9 +2285,10 @@ static PyObject*
 __AIDA_pyconnect__755d247d6abfde87093ff68bbb0f5257__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2264,7 +2298,7 @@ __AIDA_pyconnect__755d247d6abfde87093ff68bbb0f5257__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, oid, __AIDA_pyemit2__SignalTestInterface__record_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, remote, __AIDA_pyemit2__SignalTestInterface__record_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2300,9 +2334,10 @@ static PyObject*
 __AIDA_pyconnect__b5c453295aa722077c0fa1c12417b139__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2312,7 +2347,7 @@ __AIDA_pyconnect__b5c453295aa722077c0fa1c12417b139__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, oid, __AIDA_pyemit2__SignalTestInterface__sequence_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, remote, __AIDA_pyemit2__SignalTestInterface__sequence_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2334,10 +2369,10 @@ __AIDA_pyemit2__SignalTestInterface__interface_result (const Rapicorn::Aida::Fie
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   *rb <<= emit_result_id;
   if (PyErr_Occurred()) {
-    (*rb).add_object (0);
+    __AIDA_local__client_connection->add_handle ((*rb), RemoteHandle::_null_handle());
     goto error;
   } else {
-    (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);
+    __AIDA_local__client_connection->add_handle ((*rb), py_remote_handle_extract (result)); ERROR_callable_ifpy (callable);
   }
  error:
   Py_XDECREF (result);
@@ -2348,9 +2383,10 @@ static PyObject*
 __AIDA_pyconnect__e8ef1fe5de31f95bc0e4bcc410120585__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2360,7 +2396,7 @@ __AIDA_pyconnect__e8ef1fe5de31f95bc0e4bcc410120585__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, oid, __AIDA_pyemit2__SignalTestInterface__interface_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, remote, __AIDA_pyemit2__SignalTestInterface__interface_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2382,12 +2418,12 @@ __AIDA_pyemit2__SignalTestInterface__any_result (const Rapicorn::Aida::FieldBuff
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
   *rb <<= emit_result_id;
   if (PyErr_Occurred()) {
-    (*rb).add_any (Rapicorn::Aida::Any());
+    (*rb).add_any (Rapicorn::Aida::Any(), *__AIDA_local__client_connection);
     goto error;
   } else {
     { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, result); ERROR_callable_ifpy (callable);
-    (*rb).add_any (tmpany); }
+    (*rb).add_any (tmpany, *__AIDA_local__client_connection); }
   }
  error:
   Py_XDECREF (result);
@@ -2398,9 +2434,10 @@ static PyObject*
 __AIDA_pyconnect__296163d4220985ce40daacab4a841093__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2410,7 +2447,7 @@ __AIDA_pyconnect__296163d4220985ce40daacab4a841093__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x296163d4220985ceULL, 0x40daacab4a841093ULL, oid, __AIDA_pyemit2__SignalTestInterface__any_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x296163d4220985ceULL, 0x40daacab4a841093ULL, remote, __AIDA_pyemit2__SignalTestInterface__any_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2432,10 +2469,10 @@ __AIDA_pyemit2__SignalTestInterface__self_result (const Rapicorn::Aida::FieldBuf
   rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   *rb <<= emit_result_id;
   if (PyErr_Occurred()) {
-    (*rb).add_object (0);
+    __AIDA_local__client_connection->add_handle ((*rb), RemoteHandle::_null_handle());
     goto error;
   } else {
-    (*rb).add_object (PyAttr_As_uint64 (result, "__aida_pyobject__")); ERROR_callable_ifpy (callable);
+    __AIDA_local__client_connection->add_handle ((*rb), py_remote_handle_extract (result)); ERROR_callable_ifpy (callable);
   }
  error:
   Py_XDECREF (result);
@@ -2446,9 +2483,10 @@ static PyObject*
 __AIDA_pyconnect__35828273200534f772873f1374d6093b__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2458,7 +2496,7 @@ __AIDA_pyconnect__35828273200534f772873f1374d6093b__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x35828273200534f7ULL, 0x72873f1374d6093bULL, oid, __AIDA_pyemit2__SignalTestInterface__self_result, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x35828273200534f7ULL, 0x72873f1374d6093bULL, remote, __AIDA_pyemit2__SignalTestInterface__self_result, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2482,9 +2520,10 @@ static PyObject*
 __AIDA_pyconnect__e79b3592345942f66818e92df5df5bef__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2494,7 +2533,7 @@ __AIDA_pyconnect__e79b3592345942f66818e92df5df5bef__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, oid, __AIDA_pyemit1__SignalTestInterface__void_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe79b3592345942f6ULL, 0x6818e92df5df5befULL, remote, __AIDA_pyemit1__SignalTestInterface__void_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2523,9 +2562,10 @@ static PyObject*
 __AIDA_pyconnect__495e3d2d698caad7f16b2f75ddaf3220__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2535,7 +2575,7 @@ __AIDA_pyconnect__495e3d2d698caad7f16b2f75ddaf3220__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, oid, __AIDA_pyemit1__SignalTestInterface__bool_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL, remote, __AIDA_pyemit1__SignalTestInterface__bool_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2564,9 +2604,10 @@ static PyObject*
 __AIDA_pyconnect__1d335377194859d1fa00c7fb47bc82e4__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2576,7 +2617,7 @@ __AIDA_pyconnect__1d335377194859d1fa00c7fb47bc82e4__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, oid, __AIDA_pyemit1__SignalTestInterface__int32_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL, remote, __AIDA_pyemit1__SignalTestInterface__int32_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2605,9 +2646,10 @@ static PyObject*
 __AIDA_pyconnect__52b8b36ec08458caeecdb452f6b51528__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2617,7 +2659,7 @@ __AIDA_pyconnect__52b8b36ec08458caeecdb452f6b51528__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, oid, __AIDA_pyemit1__SignalTestInterface__int64_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, remote, __AIDA_pyemit1__SignalTestInterface__int64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2646,9 +2688,10 @@ static PyObject*
 __AIDA_pyconnect__dcacb20b2d942f30242d314085f3e44a__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2658,7 +2701,7 @@ __AIDA_pyconnect__dcacb20b2d942f30242d314085f3e44a__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, oid, __AIDA_pyemit1__SignalTestInterface__float64_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL, remote, __AIDA_pyemit1__SignalTestInterface__float64_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2687,9 +2730,10 @@ static PyObject*
 __AIDA_pyconnect__9bb22c59672e3921981c8364b2197db9__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2699,7 +2743,7 @@ __AIDA_pyconnect__9bb22c59672e3921981c8364b2197db9__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, oid, __AIDA_pyemit1__SignalTestInterface__string_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL, remote, __AIDA_pyemit1__SignalTestInterface__string_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2728,9 +2772,10 @@ static PyObject*
 __AIDA_pyconnect__62459d25ac74ebedd598edad744f61b7__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2740,7 +2785,7 @@ __AIDA_pyconnect__62459d25ac74ebedd598edad744f61b7__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, oid, __AIDA_pyemit1__SignalTestInterface__enum_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL, remote, __AIDA_pyemit1__SignalTestInterface__enum_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2769,9 +2814,10 @@ static PyObject*
 __AIDA_pyconnect__e4c732769519ca6a8cf6e34972e875aa__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2781,7 +2827,7 @@ __AIDA_pyconnect__e4c732769519ca6a8cf6e34972e875aa__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, oid, __AIDA_pyemit1__SignalTestInterface__record_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL, remote, __AIDA_pyemit1__SignalTestInterface__record_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2810,9 +2856,10 @@ static PyObject*
 __AIDA_pyconnect__eca8cf0dd80dee4a1bb3845a0704c774__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2822,7 +2869,7 @@ __AIDA_pyconnect__eca8cf0dd80dee4a1bb3845a0704c774__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, oid, __AIDA_pyemit1__SignalTestInterface__sequence_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL, remote, __AIDA_pyemit1__SignalTestInterface__sequence_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2838,7 +2885,7 @@ __AIDA_pyemit1__SignalTestInterface__interface_arg (const Rapicorn::Aida::FieldB
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -2851,9 +2898,10 @@ static PyObject*
 __AIDA_pyconnect__c2562bdab457affd189f1ba486f30579__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2863,7 +2911,7 @@ __AIDA_pyconnect__c2562bdab457affd189f1ba486f30579__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, oid, __AIDA_pyemit1__SignalTestInterface__interface_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, remote, __AIDA_pyemit1__SignalTestInterface__interface_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2879,7 +2927,7 @@ __AIDA_pyemit1__SignalTestInterface__any_arg (const Rapicorn::Aida::FieldBuffer 
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+  item = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -2892,9 +2940,10 @@ static PyObject*
 __AIDA_pyconnect__445abac8fb3999b7422ee36946f0b021__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2904,7 +2953,7 @@ __AIDA_pyconnect__445abac8fb3999b7422ee36946f0b021__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, oid, __AIDA_pyemit1__SignalTestInterface__any_arg, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, remote, __AIDA_pyemit1__SignalTestInterface__any_arg, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2920,7 +2969,7 @@ __AIDA_pyemit1__SignalTestInterface__self_args (const Rapicorn::Aida::FieldBuffe
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
   if (PyErr_Occurred()) goto error;
   result = PyObject_Call (callable, tuple, NULL);
@@ -2933,9 +2982,10 @@ static PyObject*
 __AIDA_pyconnect__f62d65c3c8ab76a77f95ce585cfc2b0c__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2945,7 +2995,7 @@ __AIDA_pyconnect__f62d65c3c8ab76a77f95ce585cfc2b0c__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, oid, __AIDA_pyemit1__SignalTestInterface__self_args, callable);
+    result = __AIDA_local__client_connection->signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, remote, __AIDA_pyemit1__SignalTestInterface__self_args, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -2961,11 +3011,11 @@ __AIDA_pyemit1__ChildInheritingSignals__child_signal (const Rapicorn::Aida::Fiel
   FieldReader fbr (*sfb);
   fbr.skip_header();
   fbr.skip();  // skip handler_id
-  item = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 0, item);
-  item = __AIDA_pyfactory__create_from_orbid (fbr.pop_object()); ERRORifpy();
+  item = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (fbr)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 1, item);
-  item = __AIDA_pyconvert__pyany_from_any (fbr.pop_any()); ERRORifpy();
+  item = __AIDA_pyconvert__pyany_from_any (fbr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
   PyTuple_SET_ITEM (tuple, 2, item);
   item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
   PyTuple_SET_ITEM (tuple, 3, item);
@@ -2984,9 +3034,10 @@ static PyObject*
 __AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -2996,7 +3047,7 @@ __AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, oid, __AIDA_pyemit1__ChildInheritingSignals__child_signal, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, remote, __AIDA_pyemit1__ChildInheritingSignals__child_signal, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -3004,14 +3055,14 @@ __AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__ (PyObject *pyself, PyObject
 static PyObject*
 __AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.bool_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3031,14 +3082,14 @@ __AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__a88d7a16adc7ad4333e7a32598f08880__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.bool_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3052,14 +3103,14 @@ __AIDA_pysetter__a88d7a16adc7ad4333e7a32598f08880__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.int32_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3079,14 +3130,14 @@ __AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__7b7b3182160469e4bd3c44c3a57484eb__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.int32_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3100,14 +3151,14 @@ __AIDA_pysetter__7b7b3182160469e4bd3c44c3a57484eb__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.int64_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3127,14 +3178,14 @@ __AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__b33bf89d2259a1db0154420aebe9a16c__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.int64_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3148,14 +3199,14 @@ __AIDA_pysetter__b33bf89d2259a1db0154420aebe9a16c__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.float64_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3175,14 +3226,14 @@ __AIDA_pygetter__b3d53f6a66ba171ec9e2fe1ad9d2d2ab__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__f1df5bd296ac78e2bb263cff89927093__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.float64_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3196,14 +3247,14 @@ __AIDA_pysetter__f1df5bd296ac78e2bb263cff89927093__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.string_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3223,14 +3274,14 @@ __AIDA_pygetter__d11acce29fa83acfb251b5fc0f737558__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__fadb1eed1d8d358a17cd2ca684080698__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.string_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3244,14 +3295,14 @@ __AIDA_pysetter__fadb1eed1d8d358a17cd2ca684080698__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.enum_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3271,14 +3322,14 @@ __AIDA_pygetter__42f93106aeb5af11dc4094dc01da9f81__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__99206fff699c82d61dcbc77498569411__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.enum_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3292,14 +3343,14 @@ __AIDA_pysetter__99206fff699c82d61dcbc77498569411__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.record_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3319,14 +3370,14 @@ __AIDA_pygetter__b6ab96740d7834eee7873bec722bb0c8__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__55aaf8cee9dd7a4683d8416416740bf0__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.record_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   if (!aida_pyQuickRecord_proto_add (item, fb)) goto error;
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3340,14 +3391,14 @@ __AIDA_pysetter__55aaf8cee9dd7a4683d8416416740bf0__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.sequence_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3367,14 +3418,14 @@ __AIDA_pygetter__7f96e6ff442ecdd5db054c03831fd75b__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__f86952a034b8bc843be169a3f0a9a07d__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.sequence_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   if (!aida_pyQuickSequence_proto_add (item, fb)) goto error;
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3388,21 +3439,21 @@ __AIDA_pysetter__f86952a034b8bc843be169a3f0a9a07d__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.interface_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -3415,16 +3466,16 @@ __AIDA_pygetter__f3cef8a00677d9318733ca529b58ea4a__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__bf62779e2a11aebb95547f4e29ca3814__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.interface_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -3436,21 +3487,21 @@ __AIDA_pysetter__bf62779e2a11aebb95547f4e29ca3814__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.self_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyfactory__create_from_orbid (frr.pop_object()); ERRORifpy();
+        pyfoR = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection->pop_handle (frr)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -3463,16 +3514,16 @@ __AIDA_pygetter__dd2a04f6c2fc300568868b01ea78948f__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__1a1ee3ab20ab3c2feeaf17826dba2891__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.self_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
-  fb.add_object (PyAttr_As_uint64 (item, "__aida_pyobject__")); ERRORifpy();
+  __AIDA_local__client_connection->add_handle (fb, py_remote_handle_extract (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -3484,21 +3535,21 @@ __AIDA_pysetter__1a1ee3ab20ab3c2feeaf17826dba2891__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.any_prop
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
     Rapicorn::Aida::FieldReader frr (*fr);
     frr.skip_header();
     if (frr.remaining() == 1) {
-        pyfoR = __AIDA_pyconvert__pyany_from_any (frr.pop_any()); ERRORifpy();
+        pyfoR = __AIDA_pyconvert__pyany_from_any (frr.pop_any (*__AIDA_local__client_connection)); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -3511,18 +3562,18 @@ __AIDA_pygetter__b54c6ac2d1c8f9321c8ea2813f2c268e__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__e0c7d397e652f3f7bbdf7826e88f4f42__ (PyObject *pyself, PyObject *pyargs) // PropertyTester.any_prop
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   { Rapicorn::Aida::Any tmpany;
     __AIDA_pyconvert__pyany_to_any (tmpany, item); ERRORifpy();
-    fb.add_any (tmpany); }
+    fb.add_any (tmpany, *__AIDA_local__client_connection); }
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   if (fr) { delete fr; fr = NULL; }
   return None_INCREF();
@@ -3562,9 +3613,10 @@ static PyObject*
 __AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -3574,7 +3626,7 @@ __AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, oid, __AIDA_pyemit2__ButtonArea__check_activate, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, remote, __AIDA_pyemit2__ButtonArea__check_activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -3598,9 +3650,10 @@ static PyObject*
 __AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (PyObject *pyself, PyObject *pyargs)
 {
   while (0) { error: return NULL; }
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
   PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
+  remote = py_remote_handle_ensure (item); ERRORifpy();
   PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure
   Rapicorn::Aida::uint64 result = 0;
   if (callable == Py_None) {
@@ -3610,7 +3663,7 @@ __AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (PyObject *pyself, PyObject
   } else {
     if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");
     Py_INCREF (callable);
-    result = __AIDA_local__client_connection->signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, oid, __AIDA_pyemit1__ButtonArea__activate, callable);
+    result = __AIDA_local__client_connection->signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, remote, __AIDA_pyemit1__ButtonArea__activate, callable);
   }
   PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();
   return pyres;
@@ -3618,14 +3671,14 @@ __AIDA_pyconnect__0c46b868988bad84ff7acbea142bbcd0__ (PyObject *pyself, PyObject
 static PyObject*
 __AIDA_pygetter__199859aecc756e97a744332174ed27f4__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3645,14 +3698,14 @@ __AIDA_pygetter__199859aecc756e97a744332174ed27f4__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__db3a24116c6539852a0576faff45b4b2__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3666,14 +3719,14 @@ __AIDA_pysetter__db3a24116c6539852a0576faff45b4b2__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__1b448d91990181da9751c08ae956c729__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click2
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3693,14 +3746,14 @@ __AIDA_pygetter__1b448d91990181da9751c08ae956c729__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__fc93898ba4104662c918694fe5c2bfef__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click2
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3714,14 +3767,14 @@ __AIDA_pysetter__fc93898ba4104662c918694fe5c2bfef__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click3
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3741,14 +3794,14 @@ __AIDA_pygetter__5176fbf25dcf50f44d7ae8b51fb816b5__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.on_click3
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3762,14 +3815,14 @@ __AIDA_pysetter__1c1990dca0fde97c6cc2c7cc49d811f8__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.click_type
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3789,14 +3842,14 @@ __AIDA_pygetter__b6ab79b43e1f0df9aa0f1ec5c39b704a__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8__ (PyObject *pyself, PyObject *pyargs) // ButtonArea.click_type
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3810,14 +3863,14 @@ __AIDA_pysetter__1f5a6d031cb7e1042d4a207f0842bec8__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // f
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb); // deletes fb
@@ -3839,14 +3892,14 @@ __AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (PyObject *pyself, PyObject *pyargs)
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 3), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 3) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1); // qr
   if (!aida_pyQuickRecord_proto_add (item, fb)) goto error;
   item = PyTuple_GET_ITEM (pyargs, 2); // qe
@@ -3864,14 +3917,14 @@ __AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (PyObject *pyself, PyObject *p
 static PyObject*
 __AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20__ (PyObject *pyself, PyObject *pyargs) // Compressor.threshold
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3891,14 +3944,14 @@ __AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b__ (PyObject *pyself, PyObject *pyargs) // Compressor.threshold
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
@@ -3912,14 +3965,14 @@ __AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e__ (PyObject *pyself, PyObject *pyargs) // Compressor.ratio
 {
-  uint64 object_orbid;
   PyObject *item, *pyfoR = NULL;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), __AIDA_local__client_connection->connection_id(), 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header2_call (fb, remote, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);
   ERRORifnotret (fr);
   if (fr) {
@@ -3939,14 +3992,14 @@ __AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e__ (PyObject *pyself, PyObject 
 static PyObject*
 __AIDA_pysetter__302f0b5b99a2a6c8c8b771894ecd9315__ (PyObject *pyself, PyObject *pyargs) // Compressor.ratio
 {
-  uint64 object_orbid;
   PyObject *item;
   FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;
+  RemoteHandle remote = RemoteHandle::_null_handle();
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);
-  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();
-  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL);
-  fb.add_object (object_orbid);
+  remote = py_remote_handle_ensure (item); ERRORifpy();
+  add_header1_call (fb, remote, 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL);
+  __AIDA_local__client_connection->add_handle (fb, remote);
   item = PyTuple_GET_ITEM (pyargs, 1);
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);

@@ -37,30 +37,18 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 }
 
 // objects
-template<class Target> static inline Target* id2obj (uint64 oid)
+template<class Target> static inline Target*
+remote_handle_to_interface (const RemoteHandle &remote)
 {
-  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->interface_from_handle (remote);
   return dynamic_cast<Target*> (instance);
 }
 
-static inline uint64 obj2id  (Rapicorn::Aida::ImplicitBase *obj)
-{
-  return server_connection->instance2orbid (obj);
-}
-
-template<class Object> static inline Object*
-smh2obj (const SmartHandle &sh)
-{
-  return id2obj<Object> (sh._orbid());
-}
-
 template<class SMH> static inline SMH
-obj2smh (Rapicorn::Aida::ImplicitBase *self)
+interface_to_remote_handle (Rapicorn::Aida::ImplicitBase *ibase)
 {
-  const uint64 orbid = obj2id (self);
   SMH target;
-  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (target, orbid);
+  server_connection->interface_to_handle (ibase, target);
   return target;
 }
 
@@ -111,6 +99,22 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 
 } } // Anon::__AIDA_Local__
 
+namespace Rapicorn { namespace Aida {
+// namespace Rapicorn::Aida needed for argument dependent lookups of the operators
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
+{
+  fb.add_any (v, *__AIDA_Local__::server_connection);
+}
+static void
+operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
+{
+  v = fr.pop_any (*__AIDA_Local__::server_connection);
+}
+} } // Rapicorn::Aida
+
 
 // --- Interfaces (class declarations) ---
 
@@ -126,7 +130,6 @@ protected:
   virtual /*Des*/                       ~I_FirstInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "MandatoryNamespace::FirstInterface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -181,7 +184,6 @@ protected:
   virtual /*Des*/                       ~I_UIWidgetAreaIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::UIWidgetArea"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -227,7 +229,6 @@ protected:
   virtual /*Des*/                       ~I_ParentIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::Parent"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -301,7 +302,6 @@ protected:
   virtual /*Des*/                       ~I_QuickIfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::QuickIface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -322,7 +322,6 @@ protected:
   virtual /*Des*/                       ~I_MethodTestInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::MethodTestInterface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -365,7 +364,6 @@ protected:
   virtual /*Des*/                       ~I_SignalTestInterfaceIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::SignalTestInterface"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -471,7 +469,6 @@ protected:
   virtual /*Des*/                       ~I_PropertyTesterIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::PropertyTester"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -516,7 +513,6 @@ protected:
   virtual /*Des*/                       ~I_ButtonAreaIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::ButtonArea"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -550,7 +546,6 @@ protected:
   virtual /*Des*/                       ~I_PureMethodsIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::PureMethods"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -574,7 +569,6 @@ protected:
   virtual /*Des*/                       ~I_NameTestsIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "Other::NameTests"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -600,7 +594,6 @@ protected:
   virtual /*Des*/                       ~I_CompressorIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "BseTest::Compressor"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -624,7 +617,6 @@ protected:
   virtual /*Des*/                       ~I_SoundModuleIface () = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeCode               __aida_type_code__ ()	{ return Rapicorn::Aida::TypeMap::lookup (__aida_type_name__()); }
   virtual std::string                    __aida_type_name__ () const	{ return "BseTest::SoundModule"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -646,22 +638,22 @@ I_FirstInterfaceIface::~I_FirstInterfaceIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_FirstInterfaceIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_FirstInterfaceIface> (fbr.pop_object());
+  obj = dynamic_cast<I_FirstInterfaceIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_FirstInterfaceIface*
 operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_FirstInterfaceIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_FirstInterfaceIface> (sh);
 }
 FirstInterfaceHandle
 operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<FirstInterfaceHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<FirstInterfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_FirstInterfaceIface::__aida_connection__()
@@ -692,22 +684,22 @@ I_UIWidgetAreaIface::~I_UIWidgetAreaIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_UIWidgetAreaIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetAreaIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_UIWidgetAreaIface> (fbr.pop_object());
+  obj = dynamic_cast<I_UIWidgetAreaIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_UIWidgetAreaIface*
 operator->* (UIWidgetAreaHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_UIWidgetAreaIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_UIWidgetAreaIface> (sh);
 }
 UIWidgetAreaHandle
 operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<UIWidgetAreaHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<UIWidgetAreaHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_UIWidgetAreaIface::__aida_connection__()
@@ -737,22 +729,22 @@ I_ParentIface::~I_ParentIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ParentIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ParentIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_ParentIface> (fbr.pop_object());
+  obj = dynamic_cast<I_ParentIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_ParentIface*
 operator->* (ParentHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_ParentIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_ParentIface> (sh);
 }
 ParentHandle
 operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<ParentHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<ParentHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_ParentIface::__aida_connection__()
@@ -780,22 +772,22 @@ I_ChildIface::~I_ChildIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_ChildIface> (fbr.pop_object());
+  obj = dynamic_cast<I_ChildIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_ChildIface*
 operator->* (ChildHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_ChildIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_ChildIface> (sh);
 }
 ChildHandle
 operator->* (I_ChildIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<ChildHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<ChildHandle> (obj);
 }
 void
 I_ChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -819,22 +811,22 @@ I_DescendantIface::~I_DescendantIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_DescendantIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_DescendantIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_DescendantIface> (fbr.pop_object());
+  obj = dynamic_cast<I_DescendantIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_DescendantIface*
 operator->* (DescendantHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_DescendantIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_DescendantIface> (sh);
 }
 DescendantHandle
 operator->* (I_DescendantIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<DescendantHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<DescendantHandle> (obj);
 }
 void
 I_DescendantIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -859,22 +851,22 @@ I_GrandChildIface::~I_GrandChildIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_GrandChildIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_GrandChildIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_GrandChildIface> (fbr.pop_object());
+  obj = dynamic_cast<I_GrandChildIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_GrandChildIface*
 operator->* (GrandChildHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_GrandChildIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_GrandChildIface> (sh);
 }
 GrandChildHandle
 operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<GrandChildHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<GrandChildHandle> (obj);
 }
 void
 I_GrandChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -900,22 +892,22 @@ I_QuickIfaceIface::~I_QuickIfaceIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_QuickIfaceIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIfaceIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_QuickIfaceIface> (fbr.pop_object());
+  obj = dynamic_cast<I_QuickIfaceIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_QuickIfaceIface*
 operator->* (QuickIfaceHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_QuickIfaceIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_QuickIfaceIface> (sh);
 }
 QuickIfaceHandle
 operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<QuickIfaceHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<QuickIfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_QuickIfaceIface::__aida_connection__()
@@ -943,22 +935,22 @@ I_MethodTestInterfaceIface::~I_MethodTestInterfaceIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_MethodTestInterfaceIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_MethodTestInterfaceIface> (fbr.pop_object());
+  obj = dynamic_cast<I_MethodTestInterfaceIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_MethodTestInterfaceIface*
 operator->* (MethodTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_MethodTestInterfaceIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_MethodTestInterfaceIface> (sh);
 }
 MethodTestInterfaceHandle
 operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<MethodTestInterfaceHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<MethodTestInterfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_MethodTestInterfaceIface::__aida_connection__()
@@ -986,22 +978,22 @@ I_SignalTestInterfaceIface::~I_SignalTestInterfaceIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SignalTestInterfaceIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_SignalTestInterfaceIface> (fbr.pop_object());
+  obj = dynamic_cast<I_SignalTestInterfaceIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_SignalTestInterfaceIface*
 operator->* (SignalTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_SignalTestInterfaceIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_SignalTestInterfaceIface> (sh);
 }
 SignalTestInterfaceHandle
 operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<SignalTestInterfaceHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<SignalTestInterfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_SignalTestInterfaceIface::__aida_connection__()
@@ -1029,22 +1021,22 @@ I_ChildInheritingSignalsIface::~I_ChildInheritingSignalsIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildInheritingSignalsIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildInheritingSignalsIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_ChildInheritingSignalsIface> (fbr.pop_object());
+  obj = dynamic_cast<I_ChildInheritingSignalsIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_ChildInheritingSignalsIface*
 operator->* (ChildInheritingSignalsHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_ChildInheritingSignalsIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_ChildInheritingSignalsIface> (sh);
 }
 ChildInheritingSignalsHandle
 operator->* (I_ChildInheritingSignalsIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<ChildInheritingSignalsHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<ChildInheritingSignalsHandle> (obj);
 }
 void
 I_ChildInheritingSignalsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1068,22 +1060,22 @@ I_AnotherChildIface::~I_AnotherChildIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_AnotherChildIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_AnotherChildIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_AnotherChildIface> (fbr.pop_object());
+  obj = dynamic_cast<I_AnotherChildIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_AnotherChildIface*
 operator->* (AnotherChildHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_AnotherChildIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_AnotherChildIface> (sh);
 }
 AnotherChildHandle
 operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<AnotherChildHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<AnotherChildHandle> (obj);
 }
 void
 I_AnotherChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1107,22 +1099,22 @@ I_PropertyTesterIface::~I_PropertyTesterIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PropertyTesterIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTesterIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_PropertyTesterIface> (fbr.pop_object());
+  obj = dynamic_cast<I_PropertyTesterIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_PropertyTesterIface*
 operator->* (PropertyTesterHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_PropertyTesterIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_PropertyTesterIface> (sh);
 }
 PropertyTesterHandle
 operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<PropertyTesterHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<PropertyTesterHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_PropertyTesterIface::__aida_connection__()
@@ -1164,22 +1156,22 @@ I_ButtonAreaIface::~I_ButtonAreaIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ButtonAreaIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonAreaIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_ButtonAreaIface> (fbr.pop_object());
+  obj = dynamic_cast<I_ButtonAreaIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_ButtonAreaIface*
 operator->* (ButtonAreaHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_ButtonAreaIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_ButtonAreaIface> (sh);
 }
 ButtonAreaHandle
 operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<ButtonAreaHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<ButtonAreaHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_ButtonAreaIface::__aida_connection__()
@@ -1211,22 +1203,22 @@ I_PureMethodsIface::~I_PureMethodsIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PureMethodsIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethodsIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_PureMethodsIface> (fbr.pop_object());
+  obj = dynamic_cast<I_PureMethodsIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_PureMethodsIface*
 operator->* (PureMethodsHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_PureMethodsIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_PureMethodsIface> (sh);
 }
 PureMethodsHandle
 operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<PureMethodsHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<PureMethodsHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_PureMethodsIface::__aida_connection__()
@@ -1257,22 +1249,22 @@ I_NameTestsIface::~I_NameTestsIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTestsIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTestsIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_NameTestsIface> (fbr.pop_object());
+  obj = dynamic_cast<I_NameTestsIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_NameTestsIface*
 operator->* (NameTestsHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_NameTestsIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_NameTestsIface> (sh);
 }
 NameTestsHandle
 operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<NameTestsHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<NameTestsHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_NameTestsIface::__aida_connection__()
@@ -1303,22 +1295,22 @@ I_CompressorIface::~I_CompressorIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_CompressorIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_CompressorIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_CompressorIface> (fbr.pop_object());
+  obj = dynamic_cast<I_CompressorIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_CompressorIface*
 operator->* (CompressorHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_CompressorIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_CompressorIface> (sh);
 }
 CompressorHandle
 operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<CompressorHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<CompressorHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_CompressorIface::__aida_connection__()
@@ -1348,22 +1340,22 @@ I_SoundModuleIface::~I_SoundModuleIface ()
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModuleIface *obj)
 {
-  fb.add_object (__AIDA_Local__::obj2id (obj));
+  __AIDA_Local__::server_connection->add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModuleIface* &obj)
 {
-  obj = __AIDA_Local__::id2obj<I_SoundModuleIface> (fbr.pop_object());
+  obj = dynamic_cast<I_SoundModuleIface*> (__AIDA_Local__::server_connection->pop_interface (fbr));
 }
 I_SoundModuleIface*
 operator->* (SoundModuleHandle &sh, Rapicorn::Aida::_ServantType)
 {
-  return __AIDA_Local__::smh2obj<I_SoundModuleIface> (sh);
+  return __AIDA_Local__::remote_handle_to_interface<I_SoundModuleIface> (sh);
 }
 SoundModuleHandle
 operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType)
 {
-  return __AIDA_Local__::obj2smh<SoundModuleHandle> (obj);
+  return __AIDA_Local__::interface_to_remote_handle<SoundModuleHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_SoundModuleIface::__aida_connection__()

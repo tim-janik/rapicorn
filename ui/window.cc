@@ -1008,7 +1008,7 @@ WindowImpl::get_loop ()
 }
 
 bool
-WindowImpl::viewable ()
+WindowImpl::screen_viewable ()
 {
   return visible() && screen_window_ && screen_window_->viewable();
 }

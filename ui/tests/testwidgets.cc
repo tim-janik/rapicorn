@@ -84,7 +84,7 @@ REGISTER_UITHREAD_TEST ("Factory/Test Widget Factory", test_factory);
 static void
 test_cxx_server_gui ()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
   WidgetImpl &twidget = Factory::create_ui_widget ("TestWidget");
@@ -122,7 +122,7 @@ assertions_passed ()
 static void
 test_test_widget ()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
@@ -160,7 +160,7 @@ static void
 test_idl_test_widget ()
 {
   ensure_ui_file();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window_iface = *app.create_window ("RapicornTest:test-widget-window");
   TOK();
   WindowImpl &window = window_iface.impl();
@@ -198,7 +198,7 @@ static void
 test_complex_dialog ()
 {
   ensure_ui_file();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface *windowp = app.query_window ("/#"); // invalid path
   TASSERT (windowp == NULL);
 

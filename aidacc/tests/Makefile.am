@@ -9,12 +9,9 @@ AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
-# == ptptest ==
-noinst_PROGRAMS = ptptest
-ptptest_SOURCES = ptptest.cc
-ptptest_LDFLAGS = -pthread -lpthread $(AM_LDFLAGS)
-ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
-ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
+# automake doesn't always emit CXXCOMPILE
+CXXCOMPILE ?= $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+
 EXTRA_DIST += typecodetests.idl
 typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC_NODEBUG) $(CXXSTUB_PY)
 	$(AM_V_GEN)
@@ -62,18 +59,6 @@ check-testfail: $(srcdir)/testfail.idl
 	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' <$(TSTOUT) >$(TSTOUT).tmp && mv $(TSTOUT).tmp $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
-
-# == Aida Unit Tests ==
-check-aida-standard-types: ptptest
-	$(Q) ./ptptest --tests
-check-local: check-aida-standard-types
-
-# == Test TypeMap ==
-check-aida-format-TypeMap: $(srcdir)/testpass.idl $(TYPEMAP_PY) ptptest
-	$(Q) ${AIDACC} $< -x TypeMap ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
-	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
-	$(Q) rm -f idltypes.map
-check-local: check-aida-format-TypeMap
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref

@@ -49,7 +49,7 @@ public:
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
-  virtual bool          viewable                                ();
+  virtual bool          screen_viewable                         ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();

@@ -85,9 +85,9 @@ protected:
         find_adjustments (adjustment_source_, &adj);
         if (!adj)
           {
-            Aida::TypeCode etype = Aida::TypeCode::from_enum<AdjustmentSourceType>();
+            const Aida::EnumValue *evalue = enum_value_find (Aida::enum_value_list<AdjustmentSourceType>(), adjustment_source_);
             throw Exception ("SliderArea failed to get Adjustment (",
-                             etype.enum_string (adjustment_source_),
+                             evalue ? evalue->ident : "???",
                              ") from ancestors: ", name());
           }
         adjustment (*adj);

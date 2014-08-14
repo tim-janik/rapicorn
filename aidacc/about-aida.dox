@@ -38,7 +38,7 @@ The "aidacc" compiler is used to compile Aida IDL files into executable code.
   - This allows remote invocation of the server functions through the client API (currently across threads).
   - Full developer control is provided on the server and client side about threading, remote connection use and main loop integration.
 -# <b>Reference Counting</b>
-  - Client side interface instances are always accessed through smart-pointers which automate reference counting.
+  - Client side interface instances are always accessed through RemoteHandle smart pointers which automate reference counting.
   - Remote instance lifetime is tracked through ref-counting per connections. @UNIMPLEMENTED{TODO: port Beast ref counting}
   - All client side API uses are meant to be either automatically reference counted (C++) or garbage collected (Python). The corresponding logic is implemented in the respective code generators.
 -# <b>Performance</b> - The IDL and generated C++ code is designed, profiled and optimized as follows:

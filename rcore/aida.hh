@@ -49,10 +49,26 @@ using Rapicorn::int64;
 using Rapicorn::uint64;
 
 // == Prototypes ==
-class SmartHandle;
+class RemoteHandle;
+
+// == EnumValue ==
+/// Aida info for enumeration values.
+struct EnumValue {
+  int64       value;
+  const char *ident, *label, *blurb;
+  constexpr EnumValue (int64 dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
+  constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
+    value (v), ident (vident), label (vlabel), blurb (vblurb) {}
+};
+
+template<class Enum>
+const EnumValue* enum_value_list  (); ///< Template to be specialised for enums to introspect enum values.
+const EnumValue* enum_value_find  (const EnumValue *values, int64 value);        ///< Find first enum value equal to @a value.
+const EnumValue* enum_value_find  (const EnumValue *values, const String &name); ///< Find first enum value matching @a name.
+size_t           enum_value_count (const EnumValue *values);                     ///< Count number of enum values.
 
 // == TypeKind ==
-/// Classification enum for the underlying kind of a TypeCode.
+/// Classification enum for the underlying type.
 enum TypeKind {
   UNTYPED        = 0,   ///< Type indicator for unused Any instances.
   VOID           = 'v', ///< 'void' type.
@@ -67,85 +83,17 @@ enum TypeKind {
   INSTANCE       = 'C', ///< Interface instance type.
   FUNC           = 'F', ///< Type of methods or signals.
   TYPE_REFERENCE = 'T', ///< Type reference for record fields.
+  LOCAL          = 'L', ///< Local object type.
+  REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
+template<> const EnumValue* enum_value_list<TypeKind> ();
+
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
-
-/// Aida wrapper for enumeration values.
-struct EnumValue {
-  int64 value;
-  const char *ident, *label, *blurb;
-  constexpr EnumValue (int64 dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
-};
-
-// == TypeCode ==
-struct TypeCode /// Representation of type information to describe structured type compositions and for the Any class.
-{
-  /*copy*/              TypeCode        (const TypeCode&);
-  /*dtor*/             ~TypeCode        ();
-  bool                  operator!=      (const TypeCode&) const;
-  bool                  operator==      (const TypeCode&) const;
-  TypeCode&             operator=       (const TypeCode&);
-  void                  swap            (TypeCode &other);      ///< Swap the contents of @a this and @a other in constant time.
-  TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
-  std::string           kind_name       () const;               ///< Obtain the name of kind().
-  std::string           name            () const;               ///< Obtain the type name.
-  size_t                aux_count       () const;               ///< Number of items of auxillary data.
-  std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
-  std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
-  std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
-  size_t                prerequisite_count () const;            ///< Number of interface prerequisites
-  std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
-  size_t                field_count     () const;               ///< Number of fields in a record type.
-  TypeCode              field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
-  std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
-  TypeCode              resolve         () const;               ///< Returns type code after resolving kind TYPE_REFERENCE.
-  bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
-  std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
-  bool                  enum_combinable () const;               ///< Indicate if multiple enum values are combinable into a mask.
-  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  EnumValue             enum_value      (size_t index) const;   ///< Obtain an enum value as: (value, ident, label, blurb)
-  EnumValue             enum_find       (int64 value) const;    ///< Find first enum value equal to @a value.
-  EnumValue             enum_find       (const String &name) const; ///< Find first enum value matching @a name.
-  String                enum_string     (int64 value) const;    ///< Convert enum value to string, possibly combining identifiers.
-  int64                 enum_parse      (const String &value_string, String *error = NULL) const; ///< Parse an enum_string() result.
-  template<class E> static
-  inline TypeCode       from_enum       ();                     ///< Retrieve a TypeCode by giving the enum C++ type.
-  class InternalType;
-  class MapHandle;
-private: // implementation bits
-  explicit              TypeCode        (MapHandle*, InternalType*);
-  static TypeCode       notype          (MapHandle*);
-  friend class TypeMap;
-  MapHandle    *handle_;
-  InternalType *type_;
-};
-
-class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
-{
-  TypeCode::MapHandle  *handle_;
-  friend class TypeCode::MapHandle;
-  explicit              TypeMap      (TypeCode::MapHandle*);
-  static TypeMap        builtins     ();
-  static TypeMap        enlist_map   (size_t length, const char *static_type_map, bool global);
-public:
-  /*copy*/              TypeMap      (const TypeMap&);
-  TypeMap&              operator=    (const TypeMap&);
-  /*dtor*/             ~TypeMap      ();
-  size_t                type_count   () const;                  ///< Number of TypeCode classes in this TypeMap.
-  const TypeCode        type         (size_t      index) const; ///< Obtain a TypeCode by index.
-  int                   error_status ();                        ///< Obtain errno status from load().
-  static TypeMap        load         (std::string file_name);   ///< Load a new TypeMap and register for global lookups.
-  static TypeCode       lookup       (std::string name);        ///< Globally lookup a TypeCode by name.
-  static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
-  TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
-  static TypeCode       notype       ();
-  template<ssize_t S>
-  static void           enlist_map   (const char (&static_type_map)[S]) { enlist_map (S, static_type_map, true); }
-};
 
 // == Type Declarations ==
 class ObjectBroker;
+class BaseConnection;
 class ClientConnection;
 class ServerConnection;
 union FieldUnion;
@@ -179,6 +127,35 @@ class Any /// Generic value type that can hold values of all other types.
     template<class V>
     AnyField (const std::string &_name, const V &value) : name (_name) { this->operator<<= (value); }
   };
+  struct PlaceHolder {
+    virtual                      ~PlaceHolder() {}
+    virtual PlaceHolder*          clone      () const = 0;
+    virtual const std::type_info& type_info  () const = 0;
+    virtual bool                  operator== (const PlaceHolder*) const = 0;
+  };
+  template<class T> struct Holder : PlaceHolder {
+    explicit                      Holder    (const T &value) : value_ (value) {}
+    virtual PlaceHolder*          clone     () const { return new Holder (value_); }
+    virtual const std::type_info& type_info () const { return typeid (T); }
+    virtual bool                  operator== (const PlaceHolder *rhs) const
+    { const Holder *other = dynamic_cast<const Holder*> (rhs); return other ? eq (this, other) : false; }
+    template<class Q = T> static typename std::enable_if<IsComparable<Q>::value, bool>::
+    type eq (const Holder *a, const Holder *b) { return a->value_ == b->value_; }
+    template<class Q = T> static typename std::enable_if<!IsComparable<Q>::value, bool>::
+    type eq (const Holder *a, const Holder *b) { return false; }
+    T value_;
+  };
+  template<class T> T*
+  cast () const
+  {
+    if (kind() != LOCAL)
+      return NULL;
+    const std::type_info &tt = typeid (T);
+    const std::type_info &ht = u_.pholder->type_info();
+    if (tt != ht)
+      return NULL;
+    return &static_cast<Holder<T>*> (u_.pholder)->value_;
+  }
   ///@endcond
 public:
 #ifndef DOXYGEN
@@ -197,33 +174,28 @@ public:
 protected:
   bool  plain_zero_type (TypeKind kind);
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
-  template<class Rec> static void any_to_record   (Any &any, Rec &record);
 private:
-  TypeCode type_code_;
+  TypeKind type_kind_;
   union {
-    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; SmartHandle *shandle;
+    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; RemoteHandle *shandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
+  void    hold    (PlaceHolder*);
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
   bool    to_int  (int64 &v, char b) const;
-  void    to_proto   (const TypeCode type_code, FieldBuffer &fb) const;
-  void    from_proto (const TypeCode type_code, FieldReader &fbr);
 public:
   /*dtor*/ ~Any    ();                                   ///< Any destructor.
   explicit  Any    ();                                   ///< Default initialize Any with no type.
-  explicit  Any    (const TypeCode &tc);                 ///< Default initialize Any for a specific type.
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
   template<class V>
   explicit  Any    (const V &value);                     ///< Initialize Any with a @a value convertible to an Any.
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
   bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
   bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
-  TypeCode  type   () const { return type_code_; }       ///< Obtain the full TypeCode for the contents of this Any.
-  TypeKind  kind   () const { return type_code_.kind(); } ///< Obtain the underlying primitive type kind.
-  void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
+  TypeKind  kind   () const { return type_kind_; }       ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);               ///< Swap the contents of @a this and @a other in constant time.
   bool operator>>= (bool          &v) const { int64 d; const bool r = to_int (d, 1); v = d; return r; }
   bool operator>>= (char          &v) const { int64 d; const bool r = to_int (d, 7); v = d; return r; }
@@ -242,7 +214,7 @@ public:
   bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
   bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
-  bool operator>>= (SmartHandle        &v);
+  bool operator>>= (RemoteHandle       &v);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
@@ -266,7 +238,32 @@ public:
   void operator<<= (const Any         &v); ///< Store an Any.
   void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
   void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
-  void operator<<= (const SmartHandle &v);
+  void operator<<= (const RemoteHandle &v);
+  template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
+           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, RemoteHandle>::value)>::type* = nullptr>
+  void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().
+  template<class T> friend T*
+  any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
+  {
+    return !any ? NULL : any->cast<T>();
+  }
+  template<class T> friend const T*
+  any_cast (const Any *any)     ///< Cast const Any* into @a const @a T* if possible or return NULL.
+  {
+    return !any ? NULL : any->cast<T>();
+  }
+  template<class T> friend T
+  any_cast (Any &any)           ///< Cast Any& into @a T if possible or throw a std::bad_cast exception.
+  {
+    const T *result = any.cast<typename std::remove_reference<T>::type>();
+    return result ? *result : throw std::bad_cast();
+  }
+  template<class T> friend T
+  any_cast (const Any &any)     ///< Cast const Any& into @a const @a T if possible or throw a std::bad_cast exception.
+  {
+    const T *result = any.cast<typename std::add_const<typename std::remove_reference<T>::type>::type>();
+    return result ? *result : throw std::bad_cast();
+  }
 };
 
 // === EventFd ===
@@ -363,62 +360,70 @@ public:
   uint64        orbid           ()            { return orbid_; }
 };
 
-// == SmartHandle ==
-class SmartHandle {
+// == RemoteHandle ==
+class RemoteHandle {
   OrbObject     *orbo_;
-  template<class Parent> struct NullSmartHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
-  typedef NullSmartHandle<SmartHandle> NullHandle;
+  template<class Parent> struct NullRemoteHandle : public Parent { TypeHashList __aida_typelist__ () { return TypeHashList(); } };
+  typedef NullRemoteHandle<RemoteHandle> NullHandle;
   friend  class ObjectBroker;
-  void    assign (const SmartHandle&);
   void    reset ();
 protected:
-  explicit          SmartHandle (OrbObject&);
-  explicit          SmartHandle ();
+  explicit          RemoteHandle  (OrbObject&);
+  explicit          RemoteHandle  ();
+  void              upgrade_once  (const RemoteHandle&);
 public:
   uint64            _orbid        () const { return orbo_->orbid(); }
-  virtual          ~SmartHandle   ();
+  virtual          ~RemoteHandle  ();
   static NullHandle _null_handle  ()       { return NullHandle(); }
-  // Determine if this SmartHandle contains an object or null handle.
+  // Determine if this RemoteHandle contains an object or null handle.
   explicit          operator bool () const noexcept               { return 0 != orbo_->orbid(); }
   bool              operator==    (std::nullptr_t) const noexcept { return !static_cast<bool> (*this); }
   bool              operator!=    (std::nullptr_t) const noexcept { return static_cast<bool> (*this); }
-  bool              operator==    (const SmartHandle&) const noexcept;
-  bool              operator!=    (const SmartHandle&) const noexcept;
+  bool              operator==    (const RemoteHandle&) const noexcept;
+  bool              operator!=    (const RemoteHandle&) const noexcept;
+  friend bool       operator==    (std::nullptr_t, const RemoteHandle &shd) noexcept { return !static_cast<bool> (shd); }
+  friend bool       operator!=    (std::nullptr_t, const RemoteHandle &shd) noexcept { return static_cast<bool> (shd); }
+  template<class TargetHandle> static typename
+  std::enable_if<(std::is_base_of<RemoteHandle, TargetHandle>::value &&
+                  !std::is_same<RemoteHandle, TargetHandle>::value), TargetHandle>::type
+  reinterpret_down_cast (RemoteHandle smh)              ///< Reinterpret & dynamic cast, use discouraged.
+  {
+    TargetHandle target;
+    target.upgrade_once (smh);                          // like reinterpret_cast
+    return TargetHandle::down_cast (target);            // like dynamic_cast (remote)
+  }
 };
-inline bool operator== (std::nullptr_t, const SmartHandle &shd) noexcept { return !static_cast<bool> (shd); }
-inline bool operator!= (std::nullptr_t, const SmartHandle &shd) noexcept { return static_cast<bool> (shd); }
 
-// == SmartMember ==
-template<class SmartHandle>
-class SmartMember : public SmartHandle {
+// == RemoteMember ==
+template<class RemoteHandle>
+class RemoteMember : public RemoteHandle {
 public:
-  inline   SmartMember (const SmartHandle &src) : SmartHandle() { *this = src; }
-  explicit SmartMember () : SmartHandle() {}
-  void     operator=   (const SmartHandle &src) { SmartHandle::operator= (src); }
+  inline   RemoteMember (const RemoteHandle &src) : RemoteHandle() { *this = src; }
+  explicit RemoteMember () : RemoteHandle() {}
+  void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
 
 // == Conversion Type Tags ==
-constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from smart handle.
-constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve smart handle from servant.
+constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from remote handle.
+constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {
 protected:
-  static void              tie_handle (SmartHandle&, uint64);
+  static void              tie_handle (RemoteHandle&, uint64);
 public:
-  static void              pop_handle (FieldReader&, SmartHandle&);
+  static void              pop_handle (FieldReader&, RemoteHandle&, BaseConnection&);
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static ServerConnection* new_server_connection (const std::string &feature_keys);
   static ClientConnection* new_client_connection (const std::string &feature_keys);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return IdentifierParts (orbid).orbid_connection; }
-  static inline uint  connection_id_from_handle (const SmartHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
+  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh._orbid()); }
   static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   static inline uint  receiver_connection_id    (uint64 msgid)        { return IdentifierParts (msgid).receiver_connection; }
   static FieldBuffer* renew_into_result         (FieldBuffer *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static FieldBuffer* renew_into_result         (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  template<class TargetHandle> static TargetHandle smart_handle_down_cast (SmartHandle smh);
 };
 
 // == FieldBuffer ==
@@ -458,7 +463,7 @@ public:
   inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
+  inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint c, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint c, uint r, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, c, r).vuint64); add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint32 nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
@@ -480,7 +485,6 @@ public:
   inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT64); u.vdouble = v; }
   inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void operator<<= (Any    v)          { FieldUnion &u = addu (ANY); u.vany = new Any (v); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
 };
 
@@ -500,6 +504,7 @@ class FieldReader { // read field buffer contents
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = fb_->upeek (nth_++); return u; }
 public:
   explicit                 FieldReader (const FieldBuffer &fb) : fb_ (&fb), nth_ (0) {}
+  uint64                    debug_bits ();
   inline const FieldBuffer* field_buffer() const { return fb_; }
   inline void               reset      (const FieldBuffer &fb) { fb_ = &fb; nth_ = 0; }
   inline void               reset      () { fb_ = NULL; nth_ = 0; }
@@ -513,8 +518,6 @@ public:
   inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT64); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
-  inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *u.vany; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline int64              pop_bool   () { FieldUnion &u = fb_popu (BOOL); return u.vint64; }
@@ -523,7 +526,7 @@ public:
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *u.vany; }
+  inline const Any&         pop_any    (BaseConnection &bcon);
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline void operator>>= (uint32 &v)          { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -536,7 +539,6 @@ public:
   inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
   inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.value = u.vint64; }
   inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }
-  inline void operator>>= (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *u.vany; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
 };
@@ -560,8 +562,10 @@ public:
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin  (ImplicitBase *rorigin);
-  virtual SmartHandle    remote_origin  (const vector<std::string> &feature_key_list);
+  virtual void           remote_origin  (ImplicitBase *rorigin) = 0;
+  virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list) = 0;
+  virtual Any*           any2remote     (const Any&);
+  virtual void           any2local      (Any&);
 };
 
 /// Function typoe for internal signal handling.
@@ -573,10 +577,13 @@ class ServerConnection : public BaseConnection {
 protected:
   /*ctor*/           ServerConnection (const std::string &feature_keys);
   virtual           ~ServerConnection ();
-public: /// @name API for remote calls
-  virtual uint64        instance2orbid (ImplicitBase*) = 0;
-  virtual ImplicitBase* orbid2instance (uint64) = 0;
-  virtual ImplicitBase* remote_origin  () const = 0;
+public:
+  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
+  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
+  virtual ImplicitBase* interface_from_handle   (const RemoteHandle &rhandle) = 0;
+  virtual void          interface_to_handle     (ImplicitBase *ibase, RemoteHandle &rhandle) = 0;
+  virtual void          add_interface           (FieldBuffer &fb, const ImplicitBase *ibase) = 0;
+  virtual ImplicitBase* pop_interface           (FieldReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -587,8 +594,6 @@ public:
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
-  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
-  virtual void emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
 };
 
 /// Connection context for IPC clients. @nosubgrouping
@@ -599,47 +604,34 @@ protected:
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void          add_handle  (FieldBuffer &fb, const RemoteHandle &rhandle) = 0;
+  virtual RemoteHandle  pop_handle  (FieldReader &fr) = 0;
 public: /// @name API for signal event handlers.
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, uint64 orbid, SignalEmitHandler seh, void *data) = 0;
+  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
 public: /// @name API for remote types.
-  virtual std::string   type_name_from_orbid (uint64 orbid) = 0;
+  virtual std::string   type_name_from_handle (const RemoteHandle &rhandle) = 0;
 };
 
 // == inline implementations ==
-template<class E> inline TypeCode
-TypeCode::from_enum () // fallback for unspecialized types
-{
-  static_assert (0 * sizeof (E), "no EnumInfo specialisation for this type");
-  return *(TypeCode*) NULL; // silence compiler
-}
-
 template<class V> inline
 Any::Any (const V &value) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator<<= (value);
 }
 
 template<> inline
 Any::Any<Any::Field> (const Any::Field &clone) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);
 }
 
 inline
 Any::Any() :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {}
-
-inline
-Any::Any (const TypeCode &tc) :
-  type_code_ (plain_zero_type (tc.kind()) ? tc : TypeMap::notype()), u_ {0}
-{
-  if (!plain_zero_type (tc.kind()))
-    retype (tc);        // carry out special initializations
-}
 
 inline bool
 Any::plain_zero_type (TypeKind kind)
@@ -656,7 +648,7 @@ Any::plain_zero_type (TypeKind kind)
 
 inline
 Any::Any (const Any &clone) :
-  type_code_ (TypeMap::notype()), u_ {0}
+  type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);
 }
@@ -665,40 +657,6 @@ inline
 Any::~Any ()
 {
   reset();
-}
-
-template<class Rec> inline void
-Any::any_from_record (Any &any, const Rec &record)
-{
-  const std::string record_type_name = record.__aida_type_name__();
-  TypeCode type_code = TypeMap::lookup (record_type_name);
-  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
-  FieldBuffer8 cfb (1);
-  cfb <<= record;
-  FieldReader fbr (cfb);
-  any.from_proto (type_code, fbr);
-}
-
-template<class Rec> inline void
-Any::any_to_record (Any &any, Rec &record)
-{
-  const std::string record_type_name = record.__aida_type_name__();
-  TypeCode type_code = TypeMap::lookup (record_type_name);
-  AIDA_ASSERT_RETURN (type_code.kind() == RECORD);
-  AIDA_ASSERT_RETURN (any.kind() == RECORD);
-  FieldBuffer8 cfb (1);
-  any.to_proto (type_code, cfb);
-  FieldReader fbr (cfb);
-  AIDA_ASSERT_RETURN (fbr.get_type() == RECORD);
-  fbr >>= record;
-}
-
-template<class TargetHandle> TargetHandle
-ObjectBroker::smart_handle_down_cast (SmartHandle smh)
-{
-  TargetHandle target;
-  target.assign (smh);                        // aka reinterpret_cast
-  return TargetHandle::down_cast (target);    // aka dynamic_cast (remote)
 }
 
 inline void
@@ -718,6 +676,21 @@ FieldBuffer::reset()
         default: ;
         }
     }
+}
+
+inline void
+FieldBuffer::add_any (const Any &vany, BaseConnection &bcon)
+{
+  FieldUnion &u = addu (ANY);
+  u.vany = bcon.any2remote (vany);
+}
+
+inline const Any&
+FieldReader::pop_any (BaseConnection &bcon)
+{
+  FieldUnion &u = fb_popu (ANY);
+  bcon.any2local (*u.vany);
+  return *u.vany;
 }
 
 } } // Rapicorn::Aida

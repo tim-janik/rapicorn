@@ -316,6 +316,9 @@ interface Widget {
   Widget          query_selector          (String selector) = 0; ///< Returns first selector match.
   WidgetSeq       query_selector_all      (String selector) = 0; ///< Returns all selector matches.
   Widget          query_selector_unique   (String selector) = 0; ///< Returns single selector match if unique.
+  /// @name Hosting arbitrary user data
+  void            set_user_data           (String name, Any any) = 0;   ///< Store user data @a any under @a name.
+  Any             get_user_data           (String name) = 0;            ///< Retrieve user data stored under @a name.
   /// @name Testing & Debugging
   String	  test_dump               () = 0;
 };
@@ -377,7 +380,7 @@ interface WidgetList : Container {
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
   bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          viewable                () = 0;
+  bool          screen_viewable         () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
   void          close                   () = 0;

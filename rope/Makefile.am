@@ -61,7 +61,7 @@ testpystub.cc: testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref xgen-$@
 	$(Q) echo "static PyMethodDef __testpass_methods__[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >> xgen-$@
 	$(Q) echo 'PyMODINIT_FUNC init__testpass (void) { Py_InitModule ("__testpass", __testpass_methods__); }' >> xgen-$@
-	$(Q) mv xgen-$@ $@
+	$(Q) (echo '#include <py-rope.hh>' && cat xgen-$@ ) > $@ && rm -f xgen-$@
 check-PyStub-testpass-module: __testpass.la
 	@: # check .cc syntax: already done by building __testpass.so
 	@: # check .py syntax
@@ -70,8 +70,8 @@ check-PyStub-testpass-module: __testpass.la
 	&& $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
 	@: # cleanups
 	$(Q) rm -f testpystub.cc __testpass.so
+# DISABLED, broken without rapicorn.so module: check-local: check-PyStub-testpass-module
 CLEANFILES += testpystub.cc __testpass.so testpystub.pyc
-check-local: check-PyStub-testpass-module
 # test PyStub files for Rapicorn interfaces
 check-rapicorn-idl: __pyrapicorn.la pyrapicorn.py
 	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
