@@ -1034,7 +1034,7 @@ EventLoop::PollFDSource::~PollFDSource ()
 } // Rapicorn
 
 // == Loop Description ==
-/*! @page EventLoops    Event Loops and Event Sources
+/*! @page eventloops    Event Loops and Event Sources
   Rapicorn <a href="http://en.wikipedia.org/wiki/Event_loop">event loops</a>
   are a programming facility to execute callback handlers (dispatch event sources) according to expiring Timers,
   IO events or arbitrary other conditions.
