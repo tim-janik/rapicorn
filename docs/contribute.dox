@@ -1,0 +1,47 @@
+// Licensed GNU LGPL v3 or later, see: www.gnu.org	-*- mode:visual-line -*-
+/*! @page contribute	Contributing to Rapicorn
+@tableofcontents
+
+- @ref contributors
+  - @subpage aida
+  - @subpage eventloops
+  - @subpage widgets
+  - @subpage todo
+  - @subpage bug
+  - @subpage rapicorn-NEWS
+  - @subpage rapicorn-ChangeLog
+
+
+@section contributors Welcoming Contributors
+
+As a free software project, the Rapicorn project is inviting everyone to participate with ideas, code,
+wiki contributions, artwork, documentation or other means.
+
+This part of the manual will cover aspects helping developers to work with the internals of the toolkit.
+
+@section buildarch Build Architecture
+
+There are several parts in Rapicorn useful to learn about to navigate through its source code.
+
+Build pieces:
+- @c aidacc/ : The IDL used to compile the API definitions and generate the language bindings.
+- @c librapicorn.so : The actual Rapicorn library, written in C++11, consisting of:
+  - @c rcore/ : Rapicorn core functions, routines to work with strings, IO, configuration and IPC.
+  - @c ui/ : This directory contains the IDL API and the collection of user interface elements, the UI factory and data bindings provided by Rapicorn.
+- @c tools/rapidrun : A sample executable that loads and displays Rapciorn UI declarations. This tool is also used for unit testing.
+- @c res/ : The collection of various resources, e.g. icons that are built into @c librapicorn.so.
+
+
+@section develres Development Resources
+- <a class="el" href="https://github.com/tim-janik/rapicorn/issues">Issues - Bug Tracker</a> <br/>
+  Issue tracker of the %Rapicorn repository hosted at GitHub.
+- <a class="el" href="https://testbit.eu/wiki/Rapicorn_Task_List">Task List</a> <br/>
+  High level overview of %Rapicorn development tasks and completion status.
+- <a class="el" href="https://testbit.eu/pub/docs/rapicorn/coverage/">Code Coverage Report</a> <br/>
+  Test code coverage report based on a recent 'devel' branch version.
+- <a class="el" href="https://github.com/tim-janik/rapicorn/tree/devel/">Development Branch</a> <br/>
+  The @c 'devel' branch of the %Rapicorn Git repository includes the latest source code developments.
+- <a class="el" href="https://github.com/tim-janik/rapicorn/">Release Branch</a> <br/>
+  The @c 'master' branch of the %Rapicorn Git repository includes all official releases.
+
+*/
