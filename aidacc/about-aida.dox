@@ -1,7 +1,9 @@
-/*! @page Aida-IDL-Compiler		Aida - Abstract Interface Definition Architecture
+// Licensed GNU LGPL v3 or later, see: www.gnu.org	-*- mode:visual-line -*-
+/*! @page aida		Aida - Abstract Interface Definition Architecture
+@tableofcontents
 
-Aida is an architecture, centered around abstract interface definitions, used for programming of remote objects.
-The "aidacc" compiler is used to compile Aida IDL files into executable code.
+Aida is the IDL (interface definition language) specification and compiler used to define the Rapicorn API.
+The generated bindings support remote execution of methods and signals across thread boundaries and garbage collection of distributed references. The IDL compiler executable is called @c aidacc.
 
 @section motivations Motivating considerations for the creation of Aida.
 
@@ -81,7 +83,7 @@ Procedure calls between "Client" threads (thread with a @a ClientConnection) and
 - The Server can emit one-way signals (void-return) which Client code can connect to. Clients that run a main loop can receive notifications about such signal emissions and execute the corresponding callbacks locally.
 - The Server can start an asynchronous signal emission that allows deferred collection of callback return values. This works across thread boundaries, it involves the Client sending back return results from its callback handlers. Emission will take as long as all Client callbacks have submitted back results.
 
-@section drc Distributed Reference Counting
+@subsection drc Distributed Reference Counting
 
 Due to the nature of the allowed IPC calls in Rapicorn, references to C++ object instances need to be maintained ("counted") only on the Server side (the Rapicorn::UIThread).
 The reference counting implementation is based on std::shared_ptr<> and works as follows:
