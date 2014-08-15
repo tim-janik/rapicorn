@@ -1,25 +1,20 @@
-/*! @page rapicorn-tutorial Rapicorn Tutorial
+// Licensed GNU LGPL v3 or later, see: www.gnu.org	-*- mode:visual-line -*-
+/*! @page apps	Developing Applications with Rapicorn
+@tableofcontents
 
+@section apps-overview UI Design Overview
 
-@section Introduction
+The primary way to create user interfaces in Rapicorn is via declarative XML syntax.
+The declarations combine smaller components (buttons, labels) into layout containers (VBox, Table) to form larger units.
+Data bindings are used in the declarations to link UI elements to properties of application model objects.
 
-Rapicorn is a toolkit for rapid development of user interfaces for C++ and Python development.
-As of 2012, much is still in prototype/alpha development stage, but a strong set of foundation
-technologies has already been established.
-
-Everybody is invited to participate with ideas, code, wiki contributions, artwork and of course to help with this tutorial.
-
-The main tutorial page is hosted on the Rapicorn website.
-Contributions and feedback are best discussed in the Rapicorn forum or the talk page.
-- http://rapicorn.org/Rapicorn_Tutorial
-- http://rapicorn.org/Talk:Rapicorn_Tutorial
+@TODO: Data bindings are a fairly new concept and still need to be described here.
 
 
 @section hello Hello Rapicorn
 
 Like many others, Rapicorn is an event driven user interface (UI) toolkit, which determines its programming model.
-That is, Rapicorn is used to define and present UI elements (widgets) to the user and then waits and reacts to input
-events provided by the user.
+That is, Rapicorn is used to define and present UI elements (widgets) to the user and then waits and reacts to input events provided by the user.
 So in a nutshel, a Rapicorn program looks like this:
 -# Application Startup.
 -# Dialog creation and display.
@@ -85,5 +80,4 @@ the event loop from running and control is handed back to the main program.
 Most programs will simply exit at this point.
 
 
-@copyright	Tutorial contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://rapicorn.org/LICENSE-AS-IS
 */
