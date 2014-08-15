@@ -46,7 +46,10 @@ DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
-DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
+DOXYGEN_TAGFILES        = $(strip \
+	imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
+	imports/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/		\
+)
 DOXYGEN_STYLESHEET	= extrastyles.css
 SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
 html-docs: doxygen-check
@@ -65,9 +68,9 @@ html-docs: doxygen-check
 	$(QPRINT) "HIDE" "internal enum definitions"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[cC] -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
-	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2
+	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2 imports/cppreference-doxygen-web.tag.xml.bz2
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
-	$(Q) rm -f imports/tagfile-susv4.xml
+	$(Q) rm -f imports/tagfile-susv4.xml imports/cppreference-doxygen-web.tag.xml
 	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "MOVE" "HTML Documentation..."
