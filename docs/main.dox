@@ -12,17 +12,19 @@
 
 @section intro Introduction
 
-Rapicorn is a toolkit for declarative UI design.
-Users can create complex reusable components and arrange UI elements in a handfull of
+%Rapicorn is a toolkit for declarative UI design, it provides controls, layouts, resources,
+data bindings, declarative markup and a multithreaded IPC layer.
+Users can create complex reusable components and arrange UI elements in a handful of
 XML lines. Data bindings to user defined model objects are automatically setup with simple
-keywords.
-Rapicorn is implemented in C++11, but it's API is defined in an IDL to support arbitrary languages.
-Among other things Rapicorn has:
-* Layout widgets such as Table, HBox, VBox, Window;
-* Language bindings to use the Rapicorn API from C++ and Python;
-* Thread separation of application and UI logic, so layouting and rendering is done in the background.
+attribute specifications.
+%Rapicorn is implemented in C++11, but it's API is defined in an IDL to support API uses from arbitrary languages.
+Among other things %Rapicorn has:
+- Controls such as Button, List, TextEditor;
+- Layouts such as Table, HBox, VBox, Window;
+- Language bindings to use the %Rapicorn API from C++ and Python;
+- Thread separation of application and UI logic, so layouting and rendering is done in the background.
 
-Rapicorn is developed as a free software project and welcomes contributions from everyone, see @subpage contribute.
+%Rapicorn is developed as a free software project under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a> and welcomes contributions from everyone, see @subpage contribute.
 
 
 @section introlinks Links and Resources
@@ -41,6 +43,6 @@ Rapicorn is developed as a free software project and welcomes contributions from
   Utility to run and test %Rapicorn dialogs.
 
 
-@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://rapicorn.org/LICENSE-AS-IS
+@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://testbit.eu/_mirror/LICENSE-AS-IS
 
 */
