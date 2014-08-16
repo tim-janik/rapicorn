@@ -5,10 +5,10 @@
 - @ref intro
 - @subpage apps
 - @subpage contribute
+- <a class="el" href="citelist.html">Bibliographic References</a>
 - <a class="el" href="classes.html">Index of Classes</a>
 - <a class="el" href="namespacemembers_func.html">Index of Functions</a>
-- <a class="el" href="pages.html">Index of Pages</a>
-- <a class="el" href="citelist.html">Bibliographic References</a>
+- <a class="el" href="files.html">Index of Files</a>
 
 @section intro Introduction
 
@@ -24,7 +24,7 @@ Among other things %Rapicorn has:
 - Language bindings to use the %Rapicorn API from C++ and Python;
 - Thread separation of application and UI logic, so layouting and rendering is done in the background.
 
-%Rapicorn is developed as a free software project under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a> and welcomes contributions from everyone, see @subpage contribute.
+%Rapicorn is developed as a free software project under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a> and welcomes contributions from everyone, see @ref contribute.
 
 
 @section introlinks Links and Resources
