@@ -45,6 +45,7 @@ DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariant
 DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
+DOXYGEN_LAYOUT_DIFF     = $(srcdir)/layout.diff
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
 DOXYGEN_TAGFILES        = $(strip \
 	imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
