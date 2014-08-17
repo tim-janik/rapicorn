@@ -2,7 +2,7 @@
 /*! @mainpage
 @tableofcontents
 
-- @ref intro
+- @subpage intro
 - @subpage configuration
 - @subpage apps
 - @subpage contribute
@@ -11,7 +11,11 @@
 - <a class="el" href="namespacemembers_func.html">Index of Functions</a>
 - <a class="el" href="files.html">Index of Files</a>
 
-@section intro Introduction
+@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://testbit.eu/_mirror/LICENSE-AS-IS
+*/ // @mainpage
+
+/*! @page intro Introduction
+@tableofcontents
 
 %Rapicorn is a toolkit for declarative UI design, it provides controls, layouts, resources,
 data bindings, declarative markup and a multithreaded IPC layer.
@@ -43,7 +47,4 @@ Among other things %Rapicorn has:
 - <a href="rapidrun.1.html"><b>rapidrun.1</b></a> <br/>
   Utility to run and test %Rapicorn dialogs.
 
-
-@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://testbit.eu/_mirror/LICENSE-AS-IS
-
-*/
+*/ // @page intro
