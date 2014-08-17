@@ -1,5 +1,25 @@
-// == docu.dox ==						-*-mode:c++-*-
-// This file contains various general documentation snippets for Rapicorn.
+// Licensed GNU LGPL v3 or later, see: www.gnu.org	-*- mode:visual-line -*-
+/*! @page configuration         Settings and Configuration
+@tableofcontents
+
+@section env Environment Variables
+
+Some functions in %Rapicorn can be configured through environment variables.
+Using these variables will affect all programs that make use of %Rapicorn.
+The environment variables supported are as follows:
+- #$RAPICORN_FLIPPER - Used for feature toggles.
+- #$RAPICORN_DEBUG - Used to gather extra information and debug the runtime.
+- #$RAPICORN_TEST - Used to configure the testing framework.
+
+@section buildsettings Build Settings
+
+What follows is a (non comprehensive) list of settings utilized by %Rapicorn during build time.
+
+- #__FILE_DIR__ - Macro for compiler CWD.
+
+*/
+
+// == documentation snippets ==
 
 /** Environment variable to configure and enable feature toggles (flippers).
  * Flippers are feature toggles that are used to enable certain development behaviour at runtime.

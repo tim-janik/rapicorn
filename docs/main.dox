@@ -3,6 +3,7 @@
 @tableofcontents
 
 - @ref intro
+- @subpage configuration
 - @subpage apps
 - @subpage contribute
 - <a class="el" href="citelist.html">Bibliographic References</a>

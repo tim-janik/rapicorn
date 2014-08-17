@@ -38,7 +38,7 @@ html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending o
 
 # == Doxygen Build Rules ==
 HTMLMAN_FILES     	= imports/rapidrun.1.html
-DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox
+DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox docs/configuration.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
 			  aidacc/CxxStub.py
