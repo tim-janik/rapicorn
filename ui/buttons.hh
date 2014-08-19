@@ -24,16 +24,15 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
   virtual bool          handle_event            (const Event &event);
 public:
   explicit              ButtonAreaImpl  ();
-  virtual bool          activate_widget   ();
-  virtual String        on_click        () const                { return on_click_[0]; }
-  virtual void          on_click        (const String &command) { on_click_[0] = string_strip (command); }
-  virtual String        on_click2       () const                { return on_click_[1]; }
-  virtual void          on_click2       (const String &command) { on_click_[1] = string_strip (command); }
-  virtual String        on_click3       () const                { return on_click_[2]; }
-  virtual void          on_click3       (const String &command) { on_click_[2] = string_strip (command); }
-  virtual ClickType     click_type      () const                { return click_type_; }
-  virtual void          click_type      (ClickType  click_type) { reset(); click_type_ = click_type; }
-  virtual const PropertyList& __aida_properties__ ();
+  virtual bool          activate_widget ();
+  virtual ClickType     click_type      () const override;
+  virtual void          click_type      (ClickType click_type) override;
+  virtual String        on_click        () const override;
+  virtual void          on_click        (const String &command) override;
+  virtual String        on_click2       () const override;
+  virtual void          on_click2       (const String &command) override;
+  virtual String        on_click3       () const override;
+  virtual void          on_click3       (const String &command) override;
 };
 
 } // Rapicorn

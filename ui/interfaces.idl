@@ -358,11 +358,12 @@ interface Table : Container {
   void  insert_rows (int32 first_row, int32 n_rows) = 0; ///< Insert a number of rows, shifting or stretching children as needed.
 };
 
-/** The ButtonArea interface provides button click handling.
- * Certain actions can be associated with button1, button2 and button3 clicks to be caried out when the
- * respective mouse button is clicked.
+/** The ButtonArea interface provides an area with the ability to process button clicks.
+ * Arbitraty actions can be associated with button1, button2 and button3 clicks to be caried
+ * out when the respective mouse button is clicked.
  */
 interface ButtonArea : Container {
+  ClickType     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
   String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
