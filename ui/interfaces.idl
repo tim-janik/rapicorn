@@ -343,6 +343,21 @@ interface Container : Widget {
   void   remove_widget (Widget child) = 0;
 };
 
+/// The Table layout container allows to arrange widgets in rows and columns.
+/// See also the corresponding implementation class TableImpl.
+interface Table : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 col_spacing = Range (_("Column Spacing"), _("The amount of space between two consecutive columns"), "rw", 0, 65535, 10);
+  int32 row_spacing = Range (_("Row Spacing"), _("The amount of space between two consecutive rows"), "rw", 0, 65535, 10);
+  int32 n_cols      = Range (_("Number of Columns"), _("The number of columns available in this table to attach children"), "rw", 0, MAXINT31, 1);
+  int32 n_rows      = Range (_("Number of Rows"), _("The number of rows available in this table to attach children"), "rw", 0, MAXINT31, 1);
+  bool  is_col_used (int32 col) = 0; ///< Find out if any child allocates the specified column.
+  bool  is_row_used (int32 row) = 0; ///< Find out if any child allocates the specified row.
+  void  resize      (int32 n_cols, int32 n_rows) = 0;    ///< Resize columns and rows, but accomodate for space needed by children.
+  void  insert_cols (int32 first_col, int32 n_cols) = 0; ///< Insert a number of columns, shifting or stretching children as needed.
+  void  insert_rows (int32 first_row, int32 n_rows) = 0; ///< Insert a number of rows, shifting or stretching children as needed.
+};
+
 /** The ButtonArea interface provides button click handling.
  * Certain actions can be associated with button1, button2 and button3 clicks to be caried out when the
  * respective mouse button is clicked.

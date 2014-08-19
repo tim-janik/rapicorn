@@ -46,7 +46,6 @@ rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
 	scrollwidgetsimpl.hh		\
 	sinfeximpl.hh			\
-	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
 	clientapi.hh			\

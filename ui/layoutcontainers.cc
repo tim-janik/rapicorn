@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "layoutcontainers.hh"
-#include "tableimpl.hh"
+#include "table.hh"
 #include "factory.hh"
 
 namespace Rapicorn {
@@ -110,7 +110,7 @@ class HBoxImpl : public virtual TableImpl, public virtual HBox {
   virtual void
   add_child (WidgetImpl &widget)
   {
-    uint col = get_n_cols();
+    uint col = n_cols();
     while (col > 0 && !is_col_used (col - 1))
       col--;
     if (is_col_used (col))
@@ -150,7 +150,7 @@ class VBoxImpl : public virtual TableImpl, public virtual VBox {
   virtual void
   add_child (WidgetImpl &widget)
   {
-    uint row = get_n_rows();
+    uint row = n_rows();
     while (row > 0 && !is_row_used (row - 1))
       row--;
     if (is_row_used (row))

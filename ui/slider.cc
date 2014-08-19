@@ -1,6 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "slider.hh"
-#include "tableimpl.hh"
+#include "table.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
