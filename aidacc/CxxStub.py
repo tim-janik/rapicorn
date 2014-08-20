@@ -589,6 +589,13 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_list_properties (self, class_info):
+    def fill_range (ptype, hints):
+      if ptype.storage in (Decls.INT64,):
+        rmin = ptype.auxdata.get ('min', 'INT64_MIN')
+        rmax = ptype.auxdata.get ('max', 'INT64_MAX')
+        rstp = ptype.auxdata.get ('step', '0')
+        return '%s, %s, %s, %s' % (rmin, rmax, rstp, hints)
+      return hints
     if not self.property_list:
       return ''
     assert self.gen_mode == G4SERVANT
@@ -599,8 +606,8 @@ class Generator:
       cmmt = '// ' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE, Decls.ANY) else ''
       default_flags = '""' if fl[1].auxdata.has_key ('label') else '"rw"'
       label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
-      dflags = fl[1].auxdata.get ('hints', default_flags)
-      s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
+      hints = fl[1].auxdata.get ('hints', default_flags)
+      s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, fill_range (fl[1], hints))
       if cmmt:
         self.warning ('%s::%s: property type not supported: %s' %
                       (self.namespaced_identifier (classC), fl[0], self.type2cpp (fl[1])), *fl[1].location)

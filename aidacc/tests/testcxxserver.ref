@@ -1146,7 +1146,7 @@ I_PropertyTesterIface::__aida_properties__ ()
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, bool_prop, "bool_prop", "", "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int32_prop, "int32_prop", "", "rw"),
-    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int64_prop, "int64_prop", "", "rw"),
+    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int64_prop, "int64_prop", "", INT64_MIN, INT64_MAX, 0, "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, float64_prop, "float64_prop", "", "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, string_prop, "string_prop", "", "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, enum_prop, "enum_prop", "", "rw"),
