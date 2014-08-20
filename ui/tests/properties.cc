@@ -25,10 +25,6 @@ class PropertyHost {
   void          double_prop (double v)       		{}
   double        const_double_prop () const   		{ return 0; }
   void          const_double_prop (double v) 		{}
-  float         float_prop () const          		{ return 0; }
-  void          float_prop (float v)         		{}
-  float         const_float_prop () const    		{ return 0; }
-  void          const_float_prop (float v)   		{}
   Point         point_prop () const       		{ return Point (7, 7); }
   void          point_prop (Point v)       		{}
   Point         const_point_prop () const      		{ return Point (7, 7); }
@@ -55,9 +51,7 @@ public:
       MakeProperty (PropertyHost, const_int_prop,       "Label", "Blurb", 0, 100, 5, "rw"),
       MakeProperty (PropertyHost, double_prop,          "Label", "Blurb", 0, 100, 0.5, "rw"),
       MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, float_prop,           "Label", "Blurb", 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, const_float_prop,     "Label", "Blurb", 0, 100, 0.5, "rw"),
-      // MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
+      // MakeProperty (PropertyHost, point_prop,        "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
       MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "rw"),
       MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "rw"),
       MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", "rw"),
@@ -76,7 +70,7 @@ property_test()
   Aida::Property **properties = ph.list_properties().list_properties (&n_properties);
   (void) properties;
   // printf ("created %d properties.\n", ph.list_properties().n_properties);
-  TASSERT (n_properties == 15 - 3);
+  TASSERT (n_properties == 13 - 3);
 }
 REGISTER_UITHREAD_TEST ("Objects/Property Test", property_test);
 

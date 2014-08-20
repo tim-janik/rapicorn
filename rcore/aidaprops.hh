@@ -111,12 +111,6 @@ create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  int64 min_value, int64 max_value, int64 stepping, const char *hints)
 { return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* float */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (float), float (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 float min_value, float max_value, float stepping, const char *hints)
-{ return new PropertyRange<Class,float> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 /* double */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (double), double (Class::*getter) () const,
