@@ -6,19 +6,28 @@
 
 namespace Rapicorn {
 
-class Arrangement : public virtual ContainerImpl {
-protected:
-  virtual const PropertyList& __aida_properties__ ();
+class ArrangementImpl : public virtual MultiContainerImpl, public virtual ArrangementIface {
+  Point         origin_;
+  float         origin_hanchor_;
+  float         origin_vanchor_;
+  Rect          child_area_;
 public:
-  virtual double xorigin         () const = 0;
-  virtual void   xorigin         (double v) = 0;
-  virtual double yorigin         () const = 0;
-  virtual void   yorigin         (double v) = 0;
-  virtual float  origin_hanchor  () const = 0;
-  virtual void   origin_hanchor  (float align) = 0;
-  virtual float  origin_vanchor  () const = 0;
-  virtual void   origin_vanchor  (float align) = 0;
-  virtual Rect   child_area      () = 0;
+  explicit       ArrangementImpl ();
+  virtual       ~ArrangementImpl ();
+
+  virtual double xorigin         () const override;
+  virtual void   xorigin         (double) override;
+  virtual double yorigin         () const override;
+  virtual void   yorigin         (double) override;
+  virtual double origin_hanchor  () const override;
+  virtual void   origin_hanchor  (double) override;
+  virtual double origin_vanchor  () const override;
+  virtual void   origin_vanchor  (double) override;
+  virtual Rect   child_area      ();
+protected:
+  virtual void   size_request            (Requisition &requisition);
+  virtual void   size_allocate           (Allocation area, bool changed);
+  Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
 };
 
 } // Rapicorn

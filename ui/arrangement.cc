@@ -1,21 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "arrangementimpl.hh"
+#include "arrangement.hh"
 #include "factory.hh"
 
 namespace Rapicorn {
-
-const PropertyList&
-Arrangement::__aida_properties__()
-{
-  static Property *properties[] = {
-    MakeProperty (Arrangement, xorigin,        _("X-Origin"),           _("The x coordinate origin to be displayed by the arrangement"), -MAXDOUBLE, +MAXDOUBLE, 10, "rw"),
-    MakeProperty (Arrangement, yorigin,        _("Y-Origin"),           _("The y coordinate origin to be displayed by the arrangement"), -MAXDOUBLE, +MAXDOUBLE, 10, "rw"),
-    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
-    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
-}
 
 ArrangementImpl::ArrangementImpl() :
   origin_ (0, 0),
@@ -26,6 +13,62 @@ ArrangementImpl::ArrangementImpl() :
 
 ArrangementImpl::~ArrangementImpl()
 {}
+
+double
+ArrangementImpl::xorigin () const
+{
+  return origin_.x;
+}
+
+void
+ArrangementImpl::xorigin (double v)
+{
+  origin_.x = v;
+  invalidate();
+  changed ("xorigin");
+}
+
+double
+ArrangementImpl::yorigin () const
+{
+  return origin_.y;
+}
+
+void
+ArrangementImpl::yorigin (double v)
+{
+  origin_.y = v;
+  invalidate();
+  changed ("yorigin");
+}
+
+double
+ArrangementImpl::origin_hanchor () const
+{
+  return origin_hanchor_;
+}
+
+void
+ArrangementImpl::origin_hanchor (double align)
+{
+  origin_hanchor_ = align;
+  invalidate();
+  changed ("origin_hanchor");
+}
+
+double
+ArrangementImpl::origin_vanchor () const
+{
+  return origin_vanchor_;
+}
+
+void
+ArrangementImpl::origin_vanchor (double align)
+{
+  origin_vanchor_ = align;
+  invalidate();
+  changed ("origin_vanchor");
+}
 
 Allocation
 ArrangementImpl::local_child_allocation (WidgetImpl &child,

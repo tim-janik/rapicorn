@@ -343,6 +343,15 @@ interface Container : Widget {
   void   remove_widget (Widget child) = 0;
 };
 
+/// The Arrangement layout container allows coordinate driven free form positioning of children.
+/// See also the corresponding implementation class ArrangementImpl.
+interface Arrangement : Container {
+  float64 xorigin        = Range (_("X-Origin"), _("The x coordinate origin to be displayed by the arrangement"), "rw", -MININT31, +MAXINT31, 10);
+  float64 yorigin        = Range (_("Y-Origin"), _("The y coordinate origin to be displayed by the arrangement"), "rw", -MININT31, +MAXINT31, 10);
+  float64 origin_hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), "rw", 0, 1, 0.1);
+  float64 origin_vanchor = Range (_("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"),   "rw", 0, 1, 0.1);
+};
+
 /// The Table layout container allows to arrange widgets in rows and columns.
 /// See also the corresponding implementation class TableImpl.
 interface Table : Container {
