@@ -23,7 +23,7 @@ protected:
   {
     static Property *properties[] = {
       MakeProperty (WidgetListRowImpl, selected,  _("Selected"), _("Indicates wether this row is selected"), "rw"),
-      MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), "ro"),
+      MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), INT_MIN, INT_MAX, 0, "ro"),
     };
     static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__());
     return property_list;

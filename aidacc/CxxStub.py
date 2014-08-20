@@ -590,9 +590,14 @@ class Generator:
     return s
   def generate_server_list_properties (self, class_info):
     def fill_range (ptype, hints):
-      if ptype.storage in (Decls.INT64,):
+      if   ptype.storage in (Decls.INT64,):
         rmin = ptype.auxdata.get ('min', 'INT64_MIN')
         rmax = ptype.auxdata.get ('max', 'INT64_MAX')
+        rstp = ptype.auxdata.get ('step', '0')
+        return '%s, %s, %s, %s' % (rmin, rmax, rstp, hints)
+      elif ptype.storage in (Decls.INT32,):
+        rmin = ptype.auxdata.get ('min', 'INT32_MIN')
+        rmax = ptype.auxdata.get ('max', 'INT32_MAX')
         rstp = ptype.auxdata.get ('step', '0')
         return '%s, %s, %s, %s' % (rmin, rmax, rstp, hints)
       return hints
