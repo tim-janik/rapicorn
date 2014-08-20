@@ -8,18 +8,18 @@
 namespace Rapicorn {
 
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonAreaIface,
-                       public virtual EventHandler, public virtual FocusFrame::Client {
+                       public virtual EventHandler, public virtual FocusFrameImpl::Client {
   uint          button_, repeater_, unpress_;
   ClickType     click_type_;
-  FocusFrame   *focus_frame_;
+  FocusFrameImpl *focus_frame_;
   String        on_click_[3];
   virtual void          dump_private_data       (TestStream &tstream);
   bool                  activate_button_command (int button);
   bool                  activate_command        ();
   void                  activate_click          (int button, EventType etype);
   virtual bool          can_focus               () const;
-  virtual bool          register_focus_frame    (FocusFrame &frame);
-  virtual void          unregister_focus_frame  (FocusFrame &frame);
+  virtual bool          register_focus_frame    (FocusFrameImpl &frame);
+  virtual void          unregister_focus_frame  (FocusFrameImpl &frame);
   virtual void          reset                   (ResetMode mode = RESET_ALL);
   virtual bool          handle_event            (const Event &event);
 public:

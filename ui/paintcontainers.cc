@@ -188,240 +188,310 @@ public:
 };
 static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
+// == FrameImpl ==
+FrameImpl::FrameImpl() :
+  normal_frame_ (FRAME_ETCHED_IN),
+  impressed_frame_ (FRAME_ETCHED_IN),
+  overlap_child_ (false), tight_focus_ (false)
+{}
+
+FrameImpl::~FrameImpl()
+{}
+
+// hook for FocusFrameImpl
+bool
+FrameImpl::tap_tight_focus (int onoffx)
+{
+  if (onoffx >= 0)
+    {
+      tight_focus_ = onoffx != 0;
+      invalidate();
+    }
+  return tight_focus_;
+}
+
+bool
+FrameImpl::is_tight_focus() const
+{
+  return tight_focus_ && ((normal_frame_ == FRAME_FOCUS || normal_frame_ == FRAME_NONE) &&
+                          (impressed_frame_ == FRAME_FOCUS || impressed_frame_ == FRAME_NONE));
+}
+
 void
-Frame::frame_type (FrameType ft)
+FrameImpl::do_changed (const String &name)
+{
+  SingleContainerImpl::do_changed (name);
+  if (overlap_child())
+    expose();
+  else
+    expose_enclosure();
+}
+
+FrameType
+FrameImpl::normal_frame () const
+{
+  return normal_frame_;
+}
+
+void
+FrameImpl::normal_frame (FrameType ft)
+{
+  if (normal_frame_ != ft)
+    {
+      normal_frame_ = ft;
+      expose_enclosure();
+      changed ("normal_frame");
+    }
+}
+
+FrameType
+FrameImpl::impressed_frame () const
+{
+  return impressed_frame_;
+}
+
+void
+FrameImpl::impressed_frame (FrameType ft)
+{
+  if (impressed_frame_ != ft)
+    {
+      impressed_frame_ = ft;
+      expose_enclosure();
+      changed ("impressed_frame");
+    }
+}
+
+FrameType
+FrameImpl::frame_type () const
+{
+  // this is a write-only propery
+  RAPICORN_ASSERT_UNREACHED();
+}
+
+void
+FrameImpl::frame_type (FrameType ft)
 {
   normal_frame (ft);
   impressed_frame (ft);
 }
 
-const PropertyList&
-Frame::__aida_properties__()
+bool
+FrameImpl::overlap_child () const
 {
-  static Property *properties[] = {
-    MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
-    MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw"),
-    MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), "w"),
-    MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "rw"),
-    MakeProperty (Frame, tight_focus,     _("Tight Focus"),    _("Prevent extra padding around focus frames"), "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  return overlap_child_;
 }
 
-class FrameImpl : public virtual SingleContainerImpl, public virtual Frame {
-  FrameType normal_frame_, impressed_frame_;
-  bool      overlap_child_, tight_focus_;
-  bool
-  is_tight_focus()
-  {
-    return tight_focus_ && ((normal_frame_ == FRAME_FOCUS || normal_frame_ == FRAME_NONE) &&
-                             (impressed_frame_ == FRAME_FOCUS || impressed_frame_ == FRAME_NONE));
-  }
-public:
-  explicit FrameImpl() :
-    normal_frame_ (FRAME_ETCHED_IN),
-    impressed_frame_ (FRAME_ETCHED_IN),
-    overlap_child_ (false), tight_focus_ (false)
-  {}
-  ~FrameImpl()
-  {}
-protected:
-  virtual void
-  do_changed (const String &name)
-  {
-    SingleContainerImpl::do_changed (name);
-    if (overlap_child())
-      expose();
-    else
-      expose_enclosure();
-  }
-  virtual void          normal_frame    (FrameType ft)  { normal_frame_ = ft; changed ("normal_frame"); }
-  virtual FrameType     normal_frame    () const        { return normal_frame_; }
-  virtual void          impressed_frame (FrameType ft)  { impressed_frame_ = ft; changed ("impressed_frame"); }
-  virtual FrameType     impressed_frame () const        { return impressed_frame_; }
-  virtual bool          overlap_child   () const        { return overlap_child_; }
-  virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed ("overlap_child"); }
-  virtual bool          tight_focus     () const        { return tight_focus_; }
-  virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed ("tight_focus"); }
-  virtual FrameType     current_frame   () const        { return ancestry_impressed() ? impressed_frame() : normal_frame(); }
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    SingleContainerImpl::size_request (requisition);
-    int thickness = is_tight_focus() ? 1 : 2;
-    if (overlap_child_)
-      {
-        requisition.width = MAX (requisition.width, 2 * thickness);
-        requisition.height = MAX (requisition.height, 2 * thickness);
-      }
-    else
-      {
-        requisition.width += 2 * thickness;
-        requisition.height += 2 * thickness;
-      }
-  }
-  virtual void
-  size_allocate (Allocation area, bool changed)
-  {
-    if (has_visible_child())
-      {
-        Allocation carea = area;
-        if (!overlap_child_)
-          {
-            int thickness = is_tight_focus() ? 1 : 2;
-            carea.x += thickness;
-            carea.y += thickness;
-            carea.width -= 2 * thickness;
-            carea.height -= 2 * thickness;
-          }
-        WidgetImpl &child = get_child();
-        Allocation child_area = layout_child (child, carea);
-        child.set_allocation (child_area);
-      }
-  }
-public:
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    IRect ia = allocation();
-    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    int thickness = is_tight_focus() ? 1 : 2;
-    if (width >= thickness && height >= thickness)
-      {
-        Color border1, border2;
-        Color outer_upper_left;
-        Color inner_upper_left;
-        Color inner_lower_right;
-        Color outer_lower_right;
-        switch (current_frame())
-          {
-          case FRAME_IN:
-            outer_upper_left = dark_glint();
-            inner_upper_left = dark_shadow();
-            inner_lower_right = light_shadow();
-            outer_lower_right = light_glint();
-            break;
-          case FRAME_OUT:
-            outer_upper_left = light_shadow();
-            inner_upper_left = light_glint();
-            inner_lower_right = dark_glint();
-            outer_lower_right = dark_shadow();
-            break;
-          case FRAME_ETCHED_IN:
-            outer_upper_left = dark_shadow();
-            inner_upper_left = light_glint();
-            inner_lower_right = dark_shadow();
-            outer_lower_right = light_glint();
-            break;
-          case FRAME_ETCHED_OUT:
-            outer_upper_left = light_glint();
-            inner_upper_left = dark_shadow();
-            inner_lower_right = light_glint();
-            outer_lower_right = dark_shadow();
-            break;
-          case FRAME_FOCUS:
-            if (is_tight_focus())
-              border1 = focus_color();
-            else
-              border2 = focus_color();
-            break;
-          case FRAME_ALERT_FOCUS:
-            border1 = 0xff000000;
-            border2 = 0xffff0000;
-            break;
-          case FRAME_NONE:       /* no space to draw frame */
-          case FRAME_BACKGROUND: /* space available, but frame is invisible */
-          default: ;
-          }
-        vector<double> dashes;
-        dashes.push_back (3);
-        dashes.push_back (2);
-        cairo_t *cr = cairo_context (rcontext, rect);
-        CPainter painter (cr);
-        if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
-          painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
-        if (border1)
-          painter.draw_border (x, y, width, height, border1, dashes);
-        if (border2)
-          painter.draw_border (x + 1, y + 1, width - 2, height - 2, border2, dashes);
-      }
-  }
-};
+void
+FrameImpl::overlap_child (bool ovc)
+{
+  overlap_child_ = ovc;
+  invalidate();
+  changed ("overlap_child");
+}
+
+FrameType
+FrameImpl::current_frame ()
+{
+  return ancestry_impressed() ? impressed_frame() : normal_frame();
+}
+
+void
+FrameImpl::size_request (Requisition &requisition)
+{
+  SingleContainerImpl::size_request (requisition);
+  const int thickness = is_tight_focus() ? 1 : 2;
+  if (overlap_child_)
+    {
+      requisition.width = MAX (requisition.width, 2 * thickness);
+      requisition.height = MAX (requisition.height, 2 * thickness);
+    }
+  else
+    {
+      requisition.width += 2 * thickness;
+      requisition.height += 2 * thickness;
+    }
+}
+
+void
+FrameImpl::size_allocate (Allocation area, bool changed)
+{
+  if (has_visible_child())
+    {
+      Allocation carea = area;
+      if (!overlap_child_)
+        {
+          const int thickness = is_tight_focus() ? 1 : 2;
+          carea.x += thickness;
+          carea.y += thickness;
+          carea.width -= 2 * thickness;
+          carea.height -= 2 * thickness;
+        }
+      WidgetImpl &child = get_child();
+      Allocation child_area = layout_child (child, carea);
+      child.set_allocation (child_area);
+    }
+}
+
+void
+FrameImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  IRect ia = allocation();
+  int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+  const int thickness = is_tight_focus() ? 1 : 2;
+  if (width >= thickness && height >= thickness)
+    {
+      Color border1, border2;
+      Color outer_upper_left;
+      Color inner_upper_left;
+      Color inner_lower_right;
+      Color outer_lower_right;
+      switch (current_frame())
+        {
+        case FRAME_IN:
+          outer_upper_left = dark_glint();
+          inner_upper_left = dark_shadow();
+          inner_lower_right = light_shadow();
+          outer_lower_right = light_glint();
+          break;
+        case FRAME_OUT:
+          outer_upper_left = light_shadow();
+          inner_upper_left = light_glint();
+          inner_lower_right = dark_glint();
+          outer_lower_right = dark_shadow();
+          break;
+        case FRAME_ETCHED_IN:
+          outer_upper_left = dark_shadow();
+          inner_upper_left = light_glint();
+          inner_lower_right = dark_shadow();
+          outer_lower_right = light_glint();
+          break;
+        case FRAME_ETCHED_OUT:
+          outer_upper_left = light_glint();
+          inner_upper_left = dark_shadow();
+          inner_lower_right = light_glint();
+          outer_lower_right = dark_shadow();
+          break;
+        case FRAME_FOCUS:
+          if (is_tight_focus())
+            border1 = focus_color();
+          else
+            border2 = focus_color();
+          break;
+        case FRAME_ALERT_FOCUS:
+          border1 = 0xff000000;
+          border2 = 0xffff0000;
+          break;
+        case FRAME_NONE:       /* no space to draw frame */
+        case FRAME_BACKGROUND: /* space available, but frame is invisible */
+        default: ;
+        }
+      vector<double> dashes;
+      dashes.push_back (3);
+      dashes.push_back (2);
+      cairo_t *cr = cairo_context (rcontext, rect);
+      CPainter painter (cr);
+      if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
+        painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
+      if (border1)
+        painter.draw_border (x, y, width, height, border1, dashes);
+      if (border2)
+        painter.draw_border (x + 1, y + 1, width - 2, height - 2, border2, dashes);
+    }
+}
+
 static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 
-const PropertyList&
-FocusFrame::__aida_properties__()
+// == FocusFrameImpl ==
+FocusFrameImpl::FocusFrameImpl() :
+  focus_frame_ (FRAME_FOCUS),
+  client_ (NULL), conid_client_ (0)
+{}
+
+FocusFrameImpl::~FocusFrameImpl ()
+{}
+
+void
+FocusFrameImpl::client_changed (const String &name)
 {
-  static Property *properties[] = {
-    MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
-  };
-  static const PropertyList property_list (properties, Frame::__aida_properties__());
-  return property_list;
+  if (name == "flags" or name.empty())
+    {
+      if (overlap_child())
+        expose();
+      else
+        expose_enclosure();
+    }
 }
 
-class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
-  FrameType focus_frame_;
-  Client   *client_;
-  size_t    conid_client_;
-  virtual void
-  set_focus_child (WidgetImpl *widget)
-  {
-    FrameImpl::set_focus_child (widget);
-    expose_enclosure();
-  }
-  void
-  client_changed (const String &name)
-  {
-    if (name == "flags" or name.empty())
-      {
-        if (overlap_child())
-          expose();
-        else
-          expose_enclosure();
-      }
-  }
-  virtual void
-  hierarchy_changed (WidgetImpl *old_toplevel)
-  {
-    if (client_)
-      {
-        client_->sig_changed() -= conid_client_;
-        conid_client_ = 0;
-        client_->unregister_focus_frame (*this);
-      }
-    client_ = NULL;
-    this->FrameImpl::hierarchy_changed (old_toplevel);
-    if (anchored())
-      {
-        Client *client = parent_interface<Client*>();
-        if (client && client->register_focus_frame (*this))
-          client_ = client;
-        if (client_)
-          conid_client_ = client_->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
-      }
-  }
-protected:
-  virtual void          focus_frame     (FrameType ft)  { focus_frame_ = ft; changed ("focus_frame"); }
-  virtual FrameType     focus_frame     () const        { return focus_frame_; }
-  virtual FrameType
-  current_frame () const
-  {
-    bool in_focus = has_focus();
-    in_focus |= get_focus_child() != NULL;
-    in_focus |= client_ && client_->has_focus();
-    ContainerImpl *cclient_ = container_cast (client_);
-    in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
-    if (in_focus)
-      return focus_frame();
-    return ancestry_impressed() ? impressed_frame() : normal_frame();
-  }
-public:
-  explicit FocusFrameImpl() :
-    focus_frame_ (FRAME_FOCUS),
-    client_ (NULL), conid_client_ (0)
-  {}
-};
+void
+FocusFrameImpl::set_focus_child (WidgetImpl *widget)
+{
+  FrameImpl::set_focus_child (widget);
+  expose_enclosure();
+}
+
+void
+FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  if (client_)
+    {
+      client_->sig_changed() -= conid_client_;
+      conid_client_ = 0;
+      client_->unregister_focus_frame (*this);
+    }
+  client_ = NULL;
+  this->FrameImpl::hierarchy_changed (old_toplevel);
+  if (anchored())
+    {
+      Client *client = parent_interface<Client*>();
+      if (client && client->register_focus_frame (*this))
+        client_ = client;
+      if (client_)
+        conid_client_ = client_->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
+    }
+}
+
+void
+FocusFrameImpl::focus_frame (FrameType ft)
+{
+  focus_frame_ = ft;
+  changed ("focus_frame");
+}
+
+FrameType
+FocusFrameImpl::focus_frame () const
+{
+  return focus_frame_;
+}
+
+FrameType
+FocusFrameImpl::current_frame ()
+{
+  bool in_focus = has_focus();
+  in_focus |= get_focus_child() != NULL;
+  in_focus |= client_ && client_->has_focus();
+  ContainerImpl *cclient_ = container_cast (client_);
+  in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
+  if (in_focus)
+    return focus_frame();
+  return ancestry_impressed() ? impressed_frame() : normal_frame();
+}
+
+bool
+FocusFrameImpl::tight_focus () const
+{
+  return const_cast<FocusFrameImpl*> (this)->tap_tight_focus (-1);
+}
+
+void
+FocusFrameImpl::tight_focus (bool tf)
+{
+  if (tf != tight_focus())
+    {
+      const_cast<FocusFrameImpl*> (this)->tap_tight_focus (tf);
+      changed ("tight_focus");
+    }
+}
+
 static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
 
 } // Rapicorn

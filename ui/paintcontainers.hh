@@ -44,32 +44,56 @@ private:
   LightingType                  shade                   () const { RAPICORN_ASSERT_UNREACHED(); }
 };
 
-class Frame : public virtual ContainerImpl {
-  FrameType                     frame_type      () const        { RAPICORN_ASSERT_UNREACHED(); }
+class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface {
+  FrameType         normal_frame_, impressed_frame_;
+  bool              overlap_child_, tight_focus_;
+  bool              is_tight_focus    () const;
 protected:
-  virtual const PropertyList&   __aida_properties__ ();
-public:
-  void                          frame_type      (FrameType ft);
-  virtual FrameType             normal_frame    () const = 0;
-  virtual void                  normal_frame    (FrameType ft) = 0;
-  virtual FrameType             impressed_frame () const = 0;
-  virtual void                  impressed_frame (FrameType ft) = 0;
-  virtual bool                  overlap_child   () const = 0;
-  virtual void                  overlap_child   (bool ovc) = 0;
-  virtual bool                  tight_focus     () const = 0;
-  virtual void                  tight_focus     (bool ovc) = 0;
+  bool              tap_tight_focus (int onoffx);
+  virtual          ~FrameImpl       () override;
+  virtual void      do_changed      (const String &name) override;
+  virtual void      size_request    (Requisition &requisition) override;
+  virtual void      size_allocate   (Allocation area, bool changed) override;
+  virtual void      render          (RenderContext &rcontext, const Rect &rect) override;
+public: // FrameIface
+  explicit          FrameImpl       ();
+  virtual FrameType current_frame   () override;
+  virtual FrameType normal_frame    () const override;
+  virtual void      normal_frame    (FrameType) override;
+  virtual FrameType impressed_frame () const override;
+  virtual void      impressed_frame (FrameType) override;
+  virtual FrameType frame_type      () const override;
+  virtual void      frame_type      (FrameType) override;
+  virtual bool      overlap_child   () const override;
+  virtual void      overlap_child   (bool) override;
 };
 
-class FocusFrame : public virtual Frame {
+class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface {
 protected:
-  virtual const PropertyList&   __aida_properties__         ();
+  virtual          ~FocusFrameImpl    () override;
+  virtual void      set_focus_child   (WidgetImpl *widget) override;
+  virtual void      hierarchy_changed (WidgetImpl *old_toplevel) override;
 public:
-  virtual void                  focus_frame             (FrameType ft) = 0;
-  virtual FrameType             focus_frame             () const = 0;
+  explicit          FocusFrameImpl    ();
+  /** FocusFrame registers itself with ancestors that implement the FocusFrameImpl::Client interface.
+   * This is useful for ancestors to be notified about a FocusFrameImpl descendant to implement
+   * ::can_focus efficiently and for a FocusFrame to reflect its ancestor's ::has_focus state.
+   */
   struct Client : public virtual WidgetImpl {
-    virtual bool                register_focus_frame    (FocusFrame &frame) = 0;
-    virtual void                unregister_focus_frame  (FocusFrame &frame) = 0;
+    virtual bool    register_focus_frame    (FocusFrameImpl &frame) = 0;
+    virtual void    unregister_focus_frame  (FocusFrameImpl &frame) = 0;
   };
+  virtual FrameType current_frame () override;
+  // FocusFrameIface
+  virtual FrameType focus_frame   () const override;
+  virtual void      focus_frame   (FrameType) override;
+  virtual bool      tight_focus   () const override;
+  virtual void      tight_focus   (bool) override;
+private:
+  FrameType         focus_frame_;
+  Client           *client_;
+  size_t            conid_client_;
+  void              client_changed (const String &name);
 };
 
 } // Rapicorn

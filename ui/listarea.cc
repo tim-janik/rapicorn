@@ -13,8 +13,8 @@ namespace Rapicorn {
 // == WidgetListRowImpl ==
 class WidgetListRowImpl : public virtual SingleContainerImpl,
                           public virtual EventHandler,
-                          public virtual FocusFrame::Client {
-  FocusFrame     *focus_frame_;
+                          public virtual FocusFrameImpl::Client {
+  FocusFrameImpl *focus_frame_;
   int             index_;
   WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
 protected:
@@ -62,14 +62,14 @@ protected:
     return focus_frame_ != NULL;
   }
   virtual bool
-  register_focus_frame (FocusFrame &frame)
+  register_focus_frame (FocusFrameImpl &frame)
   {
     if (!focus_frame_)
       focus_frame_ = &frame;
     return focus_frame_ == &frame;
   }
   virtual void
-  unregister_focus_frame (FocusFrame &frame)
+  unregister_focus_frame (FocusFrameImpl &frame)
   {
     if (focus_frame_ == &frame)
       focus_frame_ = NULL;

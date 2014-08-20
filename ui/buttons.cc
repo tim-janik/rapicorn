@@ -149,7 +149,7 @@ ButtonAreaImpl::can_focus () const
 }
 
 bool
-ButtonAreaImpl::register_focus_frame (FocusFrame &frame)
+ButtonAreaImpl::register_focus_frame (FocusFrameImpl &frame)
 {
   if (!focus_frame_)
     focus_frame_ = &frame;
@@ -157,7 +157,7 @@ ButtonAreaImpl::register_focus_frame (FocusFrame &frame)
 }
 
 void
-ButtonAreaImpl::unregister_focus_frame (FocusFrame &frame)
+ButtonAreaImpl::unregister_focus_frame (FocusFrameImpl &frame)
 {
   if (focus_frame_ == &frame)
     focus_frame_ = NULL;

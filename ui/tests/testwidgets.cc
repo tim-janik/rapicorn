@@ -233,7 +233,7 @@ test_complex_dialog ()
   widget = window.query_selector_unique (":root .Frame");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
-  TASSERT (widget != NULL && dynamic_cast<Frame*> (widget) != NULL);
+  TASSERT (widget != NULL && dynamic_cast<FrameIface*> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button .Label");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");

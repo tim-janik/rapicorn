@@ -352,6 +352,23 @@ interface Arrangement : Container {
   float64 origin_vanchor = Range (_("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"),   "rw", 0, 1, 0.1);
 };
 
+/// The Frame container decorates its single child with a state dependant frame drawing.
+/// See also the corresponding implementation class FrameImpl.
+interface Frame : Container {
+  FrameType normal_frame    = Enum (_("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw");
+  FrameType impressed_frame = Enum (_("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw");
+  FrameType frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
+  bool      overlap_child   = Bool (_("Overlap Child"),  _("Draw frame into child allocation"), "rw");
+  FrameType current_frame () = 0; ///< Retrieve the kind of frame that is currently being displayed.
+};
+
+/// The FocusFrame container decorates its single child depending on whether its descendants have focus.
+/// See also the corresponding implementation class FocusFrameImpl.
+interface FocusFrame : Frame {
+  FrameType focus_frame = Enum (_("Focus Frame"), _("The kind of frame to draw in focus state"), "rw");
+  bool      tight_focus = Bool (_("Tight Focus"), _("Prevent extra padding around focus frames"), "rw");
+};
+
 /// The Table layout container allows to arrange widgets in rows and columns.
 /// See also the corresponding implementation class TableImpl.
 interface Table : Container {
