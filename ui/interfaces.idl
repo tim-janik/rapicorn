@@ -442,6 +442,20 @@ interface Table : Container {
   void  insert_rows (int32 first_row, int32 n_rows) = 0; ///< Insert a number of rows, shifting or stretching children as needed.
 };
 
+/// The HBox layout container arranges its children horizontally.
+/// See also the corresponding implementation class HBoxImpl.
+interface HBox : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 spacing     = Range (_("Spacing"), _("The amount of space between two children"), "rw", 0, 65535, 10);
+};
+
+/// The VBox layout container arranges its children vertically.
+/// See also the corresponding implementation class VBoxImpl.
+interface VBox : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 spacing     = Range (_("Spacing"), _("The amount of space between two children"), "rw", 0, 65535, 10);
+};
+
 /** The ButtonArea interface provides an area with the ability to process button clicks.
  * Arbitraty actions can be associated with button1, button2 and button3 clicks to be caried
  * out when the respective mouse button is clicked.

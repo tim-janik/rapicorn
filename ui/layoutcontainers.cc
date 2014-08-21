@@ -1,6 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "layoutcontainers.hh"
-#include "table.hh"
 #include "factory.hh"
 
 namespace Rapicorn {
@@ -147,84 +146,103 @@ AlignmentImpl::padding (int c)
 static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 
 // == HBoxImpl ==
-const PropertyList&
-HBox::__aida_properties__()
+HBoxImpl::HBoxImpl()
+{}
+
+HBoxImpl::~HBoxImpl()
+{}
+
+void
+HBoxImpl::add_child (WidgetImpl &widget)
 {
-  static Property *properties[] = {
-    MakeProperty (HBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
-    MakeProperty (HBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  uint col = n_cols();
+  while (col > 0 && !is_col_used (col - 1))
+    col--;
+  if (is_col_used (col))
+    expand_table (col, 1, UINT_MAX, 0); // grow for appending
+  widget.hposition (col);
+  widget.hspan (1);
+  TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
 }
 
-class HBoxImpl : public virtual TableImpl, public virtual HBox {
-  virtual const PropertyList& __aida_properties__() { return HBox::__aida_properties__(); }
-  virtual void
-  add_child (WidgetImpl &widget)
-  {
-    uint col = n_cols();
-    while (col > 0 && !is_col_used (col - 1))
-      col--;
-    if (is_col_used (col))
-      insert_cols (col, 1);     // should never be triggered
-    widget.hposition (col);
-    widget.hspan (1);
-    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
-  }
-protected:
-  virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_widgets)     { TableImpl::homogeneous (chomogeneous_widgets); }
-  virtual int   spacing         () const                        { return col_spacing(); }
-  virtual void  spacing         (int cspacing)                  { col_spacing (MIN (INT_MAX, cspacing)); }
-public:
-  explicit
-  HBoxImpl()
-  {}
-  ~HBoxImpl()
-  {}
-};
+bool
+HBoxImpl::homogeneous () const
+{
+  return TableLayoutImpl::homogeneous();
+}
+
+void
+HBoxImpl::homogeneous (bool homogeneous_widgets)
+{
+  TableLayoutImpl::homogeneous (homogeneous_widgets);
+}
+
+int
+HBoxImpl::spacing () const
+{
+  return col_spacing();
+}
+
+void
+HBoxImpl::spacing (int vspacing)
+{
+  if (vspacing != col_spacing())
+    {
+      col_spacing (vspacing);
+      changed ("spacing");
+    }
+}
+
 static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
 
 // == VBoxImpl ==
-const PropertyList&
-VBox::__aida_properties__()
+VBoxImpl::VBoxImpl()
+{}
+
+VBoxImpl::~VBoxImpl()
+{}
+
+void
+VBoxImpl::add_child (WidgetImpl &widget)
 {
-  static Property *properties[] = {
-    MakeProperty (VBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
-    MakeProperty (VBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  uint row = n_rows();
+  while (row > 0 && !is_row_used (row - 1))
+    row--;
+  if (is_row_used (row))
+    expand_table (UINT_MAX, 0, row, 1); // grow for appending
+  widget.vposition (row);
+  widget.vspan (1);
+  TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
 }
 
-class VBoxImpl : public virtual TableImpl, public virtual VBox {
-  /* pack properties */
-  virtual const PropertyList& __aida_properties__() { return VBox::__aida_properties__(); }
-  virtual void
-  add_child (WidgetImpl &widget)
-  {
-    uint row = n_rows();
-    while (row > 0 && !is_row_used (row - 1))
-      row--;
-    if (is_row_used (row))
-      insert_rows (row, 1);     // should never be triggered
-    widget.vposition (row);
-    widget.vspan (1);
-    TableImpl::add_child (widget); /* ref, sink, set_parent, insert */
-  }
-protected:
-  virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
-  virtual void  homogeneous     (bool chomogeneous_widgets)     { TableImpl::homogeneous (chomogeneous_widgets); }
-  virtual int   spacing         () const                        { return row_spacing(); }
-  virtual void  spacing         (int cspacing)                  { row_spacing (MIN (INT_MAX, cspacing)); }
-public:
-  explicit
-  VBoxImpl()
-  {}
-  ~VBoxImpl()
-  {}
-};
+bool
+VBoxImpl::homogeneous () const
+{
+  return TableLayoutImpl::homogeneous();
+}
+
+void
+VBoxImpl::homogeneous (bool homogeneous_widgets)
+{
+  TableLayoutImpl::homogeneous (homogeneous_widgets);
+}
+
+int
+VBoxImpl::spacing () const
+{
+  return row_spacing();
+}
+
+void
+VBoxImpl::spacing (int vspacing)
+{
+  if (vspacing != row_spacing())
+    {
+      row_spacing (vspacing);
+      changed ("spacing");
+    }
+}
+
 static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
 
 } // Rapicorn

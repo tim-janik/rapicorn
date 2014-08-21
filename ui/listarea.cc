@@ -796,7 +796,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   IFDEBUG (dbg_created++);
   WidgetImpl *widget = &Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
   lr->lrow = ref_sink (widget)->interface<WidgetListRowImpl*>();
-  lr->lrow->interface<HBox>().spacing (5); // FIXME
+  lr->lrow->interface<HBoxIface>().spacing (5); // FIXME
   widget = ref_sink (&Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList()));
   lr->cols.push_back (widget);
 

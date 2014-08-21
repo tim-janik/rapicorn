@@ -3,6 +3,7 @@
 #define __RAPICORN_LAYOUT_CONTAINERS_HH__
 
 #include <ui/container.hh>
+#include <ui/table.hh>
 
 namespace Rapicorn {
 
@@ -27,24 +28,28 @@ public:
   virtual void  padding         (int c) override;
 };
 
-class HBox : public virtual ContainerImpl {
+class HBoxImpl : public virtual TableLayoutImpl, public virtual HBoxIface {
 protected:
-  virtual const PropertyList&   __aida_properties__ ();
+  virtual      ~HBoxImpl        () override;
+  virtual void  add_child       (WidgetImpl &widget) override;
 public:
-  virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
-  virtual int   spacing         () const = 0;
-  virtual void  spacing         (int cspacing) = 0;
+  explicit      HBoxImpl        ();
+  virtual bool  homogeneous     () const override;
+  virtual void  homogeneous     (bool homogeneous_widgets) override;
+  virtual int   spacing         () const override;
+  virtual void  spacing         (int cspacing) override;
 };
 
-class VBox : public virtual ContainerImpl {
+class VBoxImpl : public virtual TableLayoutImpl, public virtual VBoxIface {
 protected:
-  virtual const PropertyList&   __aida_properties__ ();
+  virtual      ~VBoxImpl        () override;
+  virtual void  add_child       (WidgetImpl &widget) override;
 public:
-  virtual bool  homogeneous     () const = 0;
-  virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
-  virtual int   spacing         () const = 0;
-  virtual void  spacing         (int cspacing) = 0;
+  explicit      VBoxImpl        ();
+  virtual bool  homogeneous     () const override;
+  virtual void  homogeneous     (bool homogeneous_widgets) override;
+  virtual int   spacing         () const override;
+  virtual void  spacing         (int vspacing) override;
 };
 
 } // Rapicorn
