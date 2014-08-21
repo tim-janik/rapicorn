@@ -1,12 +1,72 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "table.hh"
 // This file is derived from GtkTable code, Copyright (C) 1996-2002 by the GTK+ project.
+#include "table.hh"
 #include "factory.hh"
-
 #include <algorithm>
 
 namespace Rapicorn {
 
+// == TableImpl ==
+void
+TableImpl::homogeneous (bool h)
+{
+  if (h != homogeneous())
+    {
+      TableLayoutImpl::homogeneous (h);
+      changed ("homogeneous");
+    }
+}
+
+void
+TableImpl::col_spacing (int spacing)
+{
+  if (spacing != col_spacing())
+    {
+      TableLayoutImpl::col_spacing (spacing);
+      changed ("col_spacing");
+    }
+}
+
+void
+TableImpl::row_spacing (int spacing)
+{
+  if (spacing != row_spacing())
+    {
+      TableLayoutImpl::row_spacing (spacing);
+      changed ("row_spacing");
+    }
+}
+
+void
+TableImpl::resize (int ncols, int nrows)
+{
+  const int old_cols = n_cols(), old_rows = n_rows();
+  resize_table (ncols, nrows);
+  if (old_cols != n_cols())
+    changed ("n_cols");
+  if (old_rows != n_rows())
+    changed ("n_rows");
+}
+
+void
+TableImpl::insert_cols (int first_col, int ncols)
+{
+  const int old_cols = n_cols();
+  TableLayoutImpl::expand_table (first_col, ncols, UINT_MAX, 0);
+  if (old_cols != n_cols())
+    changed ("n_cols");
+}
+
+void
+TableImpl::insert_rows (int first_row, int nrows)
+{
+  const int old_rows = n_rows();
+  TableLayoutImpl::expand_table (UINT_MAX, 0, first_row, nrows);
+  if (old_rows != n_rows())
+    changed ("n_rows");
+}
+
+// == TableLayoutImpl ==
 static uint
 left_attach (const WidgetImpl::PackInfo &pi)
 {
@@ -35,16 +95,14 @@ top_attach (const WidgetImpl::PackInfo &pi)
   return iround (MAX (b + 1, t));
 }
 
-TableImpl::TableImpl() :
-  default_row_spacing_ (0),
-  default_col_spacing_ (0),
-  homogeneous_widgets_ (false)
+TableLayoutImpl::TableLayoutImpl() :
+  default_col_spacing_ (0), default_row_spacing_ (0), homogeneous_widgets_ (false)
 {
   resize_table (1, 1);
 }
 
 bool
-TableImpl::is_row_used (int srow)
+TableLayoutImpl::is_row_used (int srow)
 {
   const uint row = srow;
   if (row < rows_.size())
@@ -58,7 +116,7 @@ TableImpl::is_row_used (int srow)
 }
 
 bool
-TableImpl::is_col_used (int scol)
+TableLayoutImpl::is_col_used (int scol)
 {
   const uint col = scol;
   if (col < cols_.size())
@@ -72,7 +130,7 @@ TableImpl::is_col_used (int scol)
 }
 
 void
-TableImpl::resize_table (uint n_cols, uint n_rows)
+TableLayoutImpl::resize_table (uint n_cols, uint n_rows)
 {
   n_rows = MAX (n_rows, 1);
   n_cols = MAX (n_cols, 1);
@@ -106,22 +164,19 @@ TableImpl::resize_table (uint n_cols, uint n_rows)
     }
   if (need_row_invalidate || need_col_invalidate)
     invalidate();
-  if (need_col_invalidate)
-    changed ("n_cols");
-  if (need_row_invalidate)
-    changed ("n_rows");
 }
 
 void
-TableImpl::insert_rows (int sfirst_row, int sn_rows)
+TableLayoutImpl::expand_table (const uint first_col, const uint n_cols, const uint first_row, const uint n_rows)
 {
-  const uint first_row = sfirst_row, n_rows = sn_rows;
-  if (!n_rows)
-    return;
-  resize_table (cols_.size(), rows_.size() + n_rows);
+  resize_table (cols_.size() + n_cols, rows_.size() + n_rows);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       const PackInfo &pi = cw->pack_info();
+      if (left_attach (pi) >= first_col)
+        cw->hposition (cw->hposition() + n_cols);
+      else if (first_col < right_attach (pi))
+        cw->hspan (cw->hspan() + n_cols);
       if (bottom_attach (pi) >= first_row)
         cw->vposition (cw->vposition() + n_rows);
       else if (first_row < top_attach (pi))
@@ -130,60 +185,35 @@ TableImpl::insert_rows (int sfirst_row, int sn_rows)
 }
 
 void
-TableImpl::insert_cols (int sfirst_col, int sn_cols)
+TableLayoutImpl::homogeneous (bool h)
 {
-  const uint first_col = sfirst_col, n_cols = sn_cols;
-  if (!n_cols)
-    return;
-  resize_table (cols_.size() + n_cols, rows_.size());
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    {
-      const PackInfo &pi = cw->pack_info();
-      if (left_attach (pi) >= first_col)
-        cw->hposition (cw->hposition() + n_cols);
-      else if (first_col < right_attach (pi))
-        cw->hspan (cw->hspan() + n_cols);
-    }
+  homogeneous_widgets_ = h;
+  invalidate();
 }
 
 void
-TableImpl::homogeneous (bool h)
+TableLayoutImpl::col_spacing (uint16 cspacing)
 {
-  if (h != homogeneous_widgets_)
-    {
-      homogeneous_widgets_ = h;
-      invalidate();
-      changed ("homogeneous");
-    }
-}
-
-void
-TableImpl::col_spacing (int cspacing)
-{
-  default_col_spacing_ = CLAMP (cspacing, 0, 65535);
+  default_col_spacing_ = cspacing;
   for (uint col = 0; col < cols_.size(); col++)
     cols_[col].spacing = default_col_spacing_;
   invalidate();
-  changed ("col_spacing");
 }
 
 void
-TableImpl::row_spacing (int rspacing)
+TableLayoutImpl::row_spacing (uint16 rspacing)
 {
-  default_row_spacing_ = CLAMP (rspacing, 0, 65535);
+  default_row_spacing_ = rspacing;
   for (uint row = 0; row < rows_.size(); row++)
     rows_[row].spacing = default_row_spacing_;
   invalidate();
-  changed ("row_spacing");
 }
 
-TableImpl::~TableImpl()
+TableLayoutImpl::~TableLayoutImpl()
 {}
 
 void
-TableImpl::repack_child (WidgetImpl       &widget,
-                         const PackInfo &orig,
-                         const PackInfo &pnew)
+TableLayoutImpl::repack_child (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew)
 {
   uint n_cols = right_attach (pnew), n_rows = top_attach (pnew);
   if (n_cols > cols_.size() || n_rows > rows_.size())
@@ -192,7 +222,7 @@ TableImpl::repack_child (WidgetImpl       &widget,
 }
 
 void
-TableImpl::size_request (Requisition &requisition)
+TableLayoutImpl::size_request (Requisition &requisition)
 {
   size_request_init ();
   size_request_pass1 ();
@@ -211,7 +241,7 @@ TableImpl::size_request (Requisition &requisition)
 }
 
 void
-TableImpl::size_allocate (Allocation area, bool changed)
+TableLayoutImpl::size_allocate (Allocation area, bool changed)
 {
   size_allocate_init ();
   size_allocate_pass1 ();
@@ -219,7 +249,7 @@ TableImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-TableImpl::size_request_init()
+TableLayoutImpl::size_request_init()
 {
   for (uint row = 0; row < rows_.size(); row++)
     {
@@ -253,7 +283,7 @@ TableImpl::size_request_init()
 }
 
 void
-TableImpl::size_request_pass1()
+TableLayoutImpl::size_request_pass1()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
@@ -277,7 +307,7 @@ TableImpl::size_request_pass1()
 }
 
 void
-TableImpl::size_request_pass2()
+TableLayoutImpl::size_request_pass2()
 {
   if (homogeneous())
     {
@@ -297,7 +327,7 @@ TableImpl::size_request_pass2()
 }
 
 void
-TableImpl::size_request_pass3()
+TableLayoutImpl::size_request_pass3()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
@@ -386,7 +416,7 @@ TableImpl::size_request_pass3()
 }
 
 void
-TableImpl::size_allocate_init()
+TableLayoutImpl::size_allocate_init()
 {
   /* Initialize the rows and cols.
    *  By default, rows and cols do not expand and do shrink.
@@ -515,15 +545,8 @@ TableImpl::size_allocate_init()
       }
 }
 
-bool
-TableImpl::RowCol::lesser_allocation (const TableImpl::RowCol *const &v1,
-                                      const TableImpl::RowCol *const &v2)
-{
-  return v1->allocation < v2->allocation;
-}
-
 void
-TableImpl::size_allocate_pass1 ()
+TableLayoutImpl::size_allocate_pass1 ()
 {
   /* If we were allocated more space than we requested
    *  then we have to expand any expandable rows and columns
@@ -753,7 +776,7 @@ TableImpl::size_allocate_pass1 ()
 }
 
 void
-TableImpl::size_allocate_pass2 ()
+TableLayoutImpl::size_allocate_pass2 ()
 {
   Allocation area = allocation(), child_area;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
