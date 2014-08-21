@@ -380,6 +380,16 @@ interface Arrangement : Container {
   float64 origin_vanchor = Range (_("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"),   "rw", 0, 1, 0.1);
 };
 
+/// The Alignment layout container allows adding of extra padding around its child.
+/// See also the corresponding implementation class AlignmentImpl.
+interface Alignment : Container {
+  int32 left_padding   = Range (_("Left Padding"),   _("Amount of padding to add at the child's left side"),   "rw", 0, 65535, 3);
+  int32 right_padding  = Range (_("Right Padding"),  _("Amount of padding to add at the child's right side"),  "rw", 0, 65535, 3);
+  int32 bottom_padding = Range (_("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), "rw", 0, 65535, 3);
+  int32 top_padding    = Range (_("Top Padding"),    _("Amount of padding to add at the child's top side"),    "rw", 0, 65535, 3);
+  int32 padding        = Range (_("Padding"),        _("Amount of padding to add at the child's sides"),       "wo", 0, 65535, 3);
+};
+
 /// The Frame container decorates its single child with a state dependant frame drawing.
 /// See also the corresponding implementation class FrameImpl.
 interface Frame : Container {
