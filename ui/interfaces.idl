@@ -286,9 +286,8 @@ interface Widget;
 /// A sequence of Widget objects.
 sequence WidgetSeq { Widget  widgets; };
 
-/** Widget is the base type for all UI elements.
- * See also the corresponding implementation class WidgetImpl.
- */
+/// Widget is the base type for all UI elements.
+/// See also the corresponding implementation class WidgetImpl.
 interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
@@ -347,6 +346,7 @@ interface Container : Widget {
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
+ * See also the corresponding implementation class WindowImpl.
  */
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
@@ -435,6 +435,7 @@ interface Table : Container {
 /** The ButtonArea interface provides an area with the ability to process button clicks.
  * Arbitraty actions can be associated with button1, button2 and button3 clicks to be caried
  * out when the respective mouse button is clicked.
+ * See also the corresponding implementation class ButtonAreaImpl.
  */
 interface ButtonArea : Container {
   ClickType     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
@@ -445,6 +446,7 @@ interface ButtonArea : Container {
 
 /** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
+ * See also the corresponding implementation class WidgetListImpl.
  */
 interface WidgetList : Container {
   String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
@@ -462,14 +464,15 @@ interface WidgetList : Container {
 /** The Drawable interface allows display of custom images.
  * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
  * The draw_rect() method is used to draw into the remote widget.
+ * See also the corresponding implementation class DrawableImpl.
  */
 interface Drawable : Widget {
   signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
   void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
-/** Image widgets are used to display pixel or vector images.
- */
+/// Image widgets are used to display pixel or vector images.
+/// See also the corresponding implementation class ImageImpl.
 interface Image : Widget {
   String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
   Pixbuf        pixbuf;
@@ -479,6 +482,7 @@ interface Image : Widget {
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
  * such as the facility to create Window objects on the screen.
+ * See also the corresponding implementation class ApplicationImpl.
  * @nosubgrouping
  */
 interface Application : Object {
@@ -522,6 +526,7 @@ enum TestEnum {
 };
 
 /// A widget used exclusively for unit testing.
+/// See also the corresponding implementation class IdlTestWidgetImpl.
 interface IdlTestWidget : Widget {
   bool           bool_prop;
   int32          int_prop;
