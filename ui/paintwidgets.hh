@@ -6,15 +6,19 @@
 
 namespace Rapicorn {
 
-class Arrow : public virtual WidgetImpl {
+class ArrowImpl : public virtual WidgetImpl, public virtual ArrowIface {
+  DirType dir_;
 protected:
-  virtual
-  const PropertyList&    __aida_properties__();
+  virtual               ~ArrowImpl      () override;
+  virtual void           size_request   (Requisition &requisition) override;
+  virtual void           size_allocate (Allocation area, bool changed) override;
+  virtual void           render (RenderContext &rcontext, const Rect &rect) override;
 public:
-  virtual void           arrow_dir      (DirType dir) = 0;
-  virtual DirType        arrow_dir      () const = 0;
-  virtual void           size_policy    (SizePolicyType spol) = 0;
-  virtual SizePolicyType size_policy    () const = 0;
+  explicit               ArrowImpl      ();
+  virtual void           arrow_dir      (DirType dir) override;
+  virtual DirType        arrow_dir      () const override;
+  virtual void           size_policy    (SizePolicyType spol) override;
+  virtual SizePolicyType size_policy    () const override;
 };
 
 class DotGrid : public virtual WidgetImpl {
@@ -49,7 +53,6 @@ protected:
   virtual void  size_request    (Requisition &requisition);
   virtual void  size_allocate   (Allocation area, bool changed);
   virtual void  render          (RenderContext &rcontext, const Rect &rect);
-  virtual const PropertyList&   __aida_properties__ ();
 public:
   explicit      DrawableImpl    ();
 };

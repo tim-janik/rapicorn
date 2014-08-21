@@ -11,74 +11,81 @@
 
 namespace Rapicorn {
 
-static DataKey<SizePolicyType> size_policy_key;
+// == ArrowImpl ==
+ArrowImpl::ArrowImpl() :
+  dir_ (DIR_RIGHT)
+{}
 
-const PropertyList&
-Arrow::__aida_properties__()
+ArrowImpl::~ArrowImpl()
+{}
+
+DirType
+ArrowImpl::arrow_dir () const
 {
-  static Property *properties[] = {
-    MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
-    MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
-  };
-  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
-  return property_list;
+  return dir_;
 }
 
-class ArrowImpl : public virtual WidgetImpl, public virtual Arrow {
-  DirType dir_;
-public:
-  explicit ArrowImpl() :
-    dir_ (DIR_RIGHT)
-  {}
-  ~ArrowImpl()
-  {}
-  virtual void    arrow_dir (DirType dir)       { dir_ = dir; expose(); }
-  virtual DirType arrow_dir () const            { return dir_; }
-  virtual void
-  size_policy (SizePolicyType spol)
-  {
-    if (!spol)
-      delete_data (&size_policy_key);
-    else
-      set_data (&size_policy_key, spol);
-  }
-  virtual SizePolicyType
-  size_policy () const
-  {
-    SizePolicyType spol = get_data (&size_policy_key);
-    return spol;
-  }
-protected:
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    requisition.width = 3;
-    requisition.height = 3;
-  }
-  virtual void
-  size_allocate (Allocation area, bool changed)
-  {
-    SizePolicyType spol = size_policy();
-    if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
-      tune_requisition (area.height, -1);
-    else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
-      tune_requisition (-1, area.width);
-  }
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    IRect ia = allocation();
-    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    if (width >= 2 && height >= 2)
-      {
-        cairo_t *cr = cairo_context (rcontext, rect);
-        CPainter painter (cr);
-        painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
-      }
-  }
-};
+void
+ArrowImpl::arrow_dir (DirType dir)
+{
+  dir_ = dir;
+  expose();
+  changed ("arrow_dir");
+}
+
+static DataKey<SizePolicyType> size_policy_key;
+
+SizePolicyType
+ArrowImpl::size_policy () const
+{
+  SizePolicyType spol = get_data (&size_policy_key);
+  return spol;
+}
+
+void
+ArrowImpl::size_policy (SizePolicyType spol)
+{
+  if (!spol)
+    delete_data (&size_policy_key);
+  else
+    set_data (&size_policy_key, spol);
+  invalidate_size();
+  changed ("size_policy");
+}
+
+void
+ArrowImpl::size_request (Requisition &requisition)
+{
+  requisition.width = 3;
+  requisition.height = 3;
+}
+
+void
+ArrowImpl::size_allocate (Allocation area, bool changed)
+{
+  SizePolicyType spol = size_policy();
+  if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
+    tune_requisition (area.height, -1);
+  else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
+    tune_requisition (-1, area.width);
+}
+
+void
+ArrowImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  IRect ia = allocation();
+  int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+  if (width >= 2 && height >= 2)
+    {
+      cairo_t *cr = cairo_context (rcontext, rect);
+      CPainter painter (cr);
+      painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
+    }
+}
+
 static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
 
+// == DotGrid ==
 void
 DotGrid::dot_type (FrameType ft)
 {
@@ -204,12 +211,6 @@ static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::Do
 DrawableImpl::DrawableImpl() :
   x_ (0), y_ (0)
 {}
-
-const PropertyList&
-DrawableImpl::__aida_properties__ ()
-{
-  return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::__aida_properties__(), DrawableIface::__aida_properties__());
-}
 
 void
 DrawableImpl::size_request (Requisition &requisition)

@@ -461,9 +461,16 @@ interface WidgetList : Container {
   void          unselect_range (int32 first, int32 length) = 0;
 };
 
-/** The Drawable interface allows display of custom images.
- * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
- * The draw_rect() method is used to draw into the remote widget.
+/// The Arrow widget paints a single arrow with configurable direction.
+/// See also the corresponding implementation class ArrowImpl.
+interface Arrow : Widget {
+  DirType        arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
+  SizePolicyType size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
+};
+
+/** The Drawable widget allows display of custom graphics.
+ * A Drawable widget allows client-side rendering by emitting the redraw() signal when updates are needed.
+ * The draw_rect() method is used to draw into the widget display.
  * See also the corresponding implementation class DrawableImpl.
  */
 interface Drawable : Widget {
