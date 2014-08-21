@@ -343,6 +343,34 @@ interface Container : Widget {
   void   remove_widget (Widget child) = 0;
 };
 
+/** Window represents the toplevel onscreen widget.
+ * A Window interface is the main user visible handle for screen objects in Rapicorn.
+ * Windows can be obtained from the Application singleton. They contain UI elements
+ * like buttons and text fields, and the neccessary logic for UI event processing.
+ */
+interface Window : Container {
+  String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
+  bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
+  bool          screen_viewable         () = 0;
+  void          show                    () = 0;
+  bool          closed                  () = 0;
+  void          close                   () = 0;
+  bool          snapshot                (String     pngname) = 0;
+  signal bool   commands                (String     cmdname, StringSeq args);
+  signal void   displayed               ();
+  bool          synthesize_click        (Widget       widget,
+                                         int32        button,
+                                         float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
+  bool          synthesize_enter        (float64      xalign = 0.5,
+                                         float64      yalign = 0.5) = 0;
+  bool          synthesize_leave        () = 0;
+  bool          synthesize_delete       () = 0;
+};
+
+/// A sequence of Window objects.
+sequence WindowList { Window windows; };
+
 /// The Arrangement layout container allows coordinate driven free form positioning of children.
 /// See also the corresponding implementation class ArrangementImpl.
 interface Arrangement : Container {
@@ -415,22 +443,6 @@ interface ButtonArea : Container {
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
 };
 
-/** The Drawable interface allows display of custom images.
- * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
- * The draw_rect() method is used to draw into the remote widget.
- */
-interface Drawable : Widget {
-  signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
-};
-
-/** Image widgets are used to display pixel or vector images.
- */
-interface Image : Widget {
-  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
-  Pixbuf        pixbuf;
-};
-
 /** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
  */
@@ -447,33 +459,21 @@ interface WidgetList : Container {
   void          unselect_range (int32 first, int32 length) = 0;
 };
 
-/** Window represents the toplevel onscreen widget.
- * A Window interface is the main user visible handle for screen objects in Rapicorn.
- * Windows can be obtained from the Application singleton. They contain UI elements
- * like buttons and text fields, and the neccessary logic for UI event processing.
+/** The Drawable interface allows display of custom images.
+ * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
+ * The draw_rect() method is used to draw into the remote widget.
  */
-interface Window : Container {
-  String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
-  bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          screen_viewable         () = 0;
-  void          show                    () = 0;
-  bool          closed                  () = 0;
-  void          close                   () = 0;
-  bool          snapshot                (String     pngname) = 0;
-  signal bool   commands                (String     cmdname, StringSeq args);
-  signal void   displayed               ();
-  bool          synthesize_click        (Widget       widget,
-                                         int32        button,
-                                         float64      xalign = 0.5,
-                                         float64      yalign = 0.5) = 0;
-  bool          synthesize_enter        (float64      xalign = 0.5,
-                                         float64      yalign = 0.5) = 0;
-  bool          synthesize_leave        () = 0;
-  bool          synthesize_delete       () = 0;
+interface Drawable : Widget {
+  signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
-/// A sequence of Window objects.
-sequence WindowList { Window windows; };
+/** Image widgets are used to display pixel or vector images.
+ */
+interface Image : Widget {
+  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
+  Pixbuf        pixbuf;
+};
 
 /** Application singleton.
  * For each Rapicorn program, there exists one global Application singleton.
@@ -514,12 +514,14 @@ interface Application : Object {
   int64         test_hook               () = 0;
 };
 
+/// An enum used exclusively for unit testing.
 enum TestEnum {
   TEST_ENUM_VALUE1,
   TEST_ENUM_VALUE2,
   TEST_ENUM_VALUE3,
 };
 
+/// A widget used exclusively for unit testing.
 interface IdlTestWidget : Widget {
   bool           bool_prop;
   int32          int_prop;
