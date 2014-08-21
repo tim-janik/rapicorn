@@ -468,6 +468,21 @@ interface Arrow : Widget {
   SizePolicyType size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
 };
 
+/// The DotGrid widget paints a configurable set of dots arranged in a grid.
+/// See also the corresponding implementation class DotGridImpl.
+interface DotGrid : Widget {
+  FrameType normal_dot      = Enum (_("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw");
+  FrameType impressed_dot   = Enum (_("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw");
+  FrameType dot_type        = Enum (_("Dot Type"), _("The kind of dot-frame to draw in all states"), "wo");
+  int32 n_hdots             = Range (_("H-Dot #"), _("The number of horizontal dots to be drawn"), "rw", 0, 99999, 3);
+  int32 n_vdots             = Range (_("V-Dot #"), _("The number of vertical dots to be drawn"), "rw", 0, 99999, 3);
+  int32 right_padding_dots  = Range (_("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), "rw", 0, 65535, 3);
+  int32 top_padding_dots    = Range (_("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), "rw", 0, 65535, 3);
+  int32 left_padding_dots   = Range (_("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), "rw", 0, 65535, 3);
+  int32 bottom_padding_dots = Range (_("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), "rw", 0, 65535, 3);
+  FrameType current_dot () = 0; ///< Retrieve the kind of dot that is currently being displayed.
+};
+
 /** The Drawable widget allows display of custom graphics.
  * A Drawable widget allows client-side rendering by emitting the redraw() signal when updates are needed.
  * The draw_rect() method is used to draw into the widget display.
