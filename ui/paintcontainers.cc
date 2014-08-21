@@ -6,8 +6,27 @@
 
 namespace Rapicorn {
 
+// == AmbienceImpl ==
+AmbienceImpl::AmbienceImpl() :
+  normal_background_ ("none"),
+  prelight_background_ ("none"),
+  impressed_background_ ("none"),
+  insensitive_background_ ("none"),
+  normal_lighting_ (LIGHTING_UPPER_LEFT),
+  prelight_lighting_ (LIGHTING_UPPER_LEFT),
+  impressed_lighting_ (LIGHTING_LOWER_RIGHT),
+  insensitive_lighting_ (LIGHTING_CENTER),
+  normal_shade_ (LIGHTING_UPPER_LEFT),
+  prelight_shade_ (LIGHTING_UPPER_LEFT),
+  impressed_shade_ (LIGHTING_LOWER_RIGHT),
+  insensitive_shade_ (LIGHTING_CENTER)
+{}
+
+AmbienceImpl::~AmbienceImpl()
+{}
+
 void
-Ambience::background (const String &color)
+AmbienceImpl::background (const String &color)
 {
   insensitive_background (color);
   prelight_background (color);
@@ -16,7 +35,7 @@ Ambience::background (const String &color)
 }
 
 void
-Ambience::lighting (LightingType sh)
+AmbienceImpl::lighting (LightingType sh)
 {
   insensitive_lighting (sh);
   prelight_lighting (sh);
@@ -25,7 +44,7 @@ Ambience::lighting (LightingType sh)
 }
 
 void
-Ambience::shade (LightingType sh)
+AmbienceImpl::shade (LightingType sh)
 {
   insensitive_shade (LIGHTING_NONE);
   prelight_shade (LIGHTING_NONE);
@@ -33,159 +52,270 @@ Ambience::shade (LightingType sh)
   normal_shade (sh);
 }
 
-const PropertyList&
-Ambience::__aida_properties__()
+String
+AmbienceImpl::background () const
 {
-  static Property *properties[] = {
-    MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
-    MakeProperty (Ambience, prelight_background, _("Prelight Background"), _("The kind of background painted when prelight"), "rw"),
-    MakeProperty (Ambience, impressed_background, _("Impressed Background"), _("The kind of background painted when impressed"), "rw"),
-    MakeProperty (Ambience, normal_background, _("Normal Background"), _("The kind of background painted when normal"), "rw"),
-    MakeProperty (Ambience, insensitive_lighting, _("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw"),
-    MakeProperty (Ambience, prelight_lighting, _("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw"),
-    MakeProperty (Ambience, impressed_lighting, _("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw"),
-    MakeProperty (Ambience, normal_lighting, _("Normal Lighting"), _("The kind of lighting painted when normal"), "rw"),
-    MakeProperty (Ambience, insensitive_shade, _("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw"),
-    MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), "rw"),
-    MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), "rw"),
-    MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), "rw"),
-    MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "wo"),
-    MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "wo"),
-    MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "wo"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  RAPICORN_ASSERT_UNREACHED();
 }
 
-class AmbienceImpl : public virtual SingleContainerImpl, public virtual Ambience {
-  String insensitive_background_, prelight_background_, impressed_background_, normal_background_;
-  LightingType insensitive_lighting_, prelight_lighting_, impressed_lighting_, normal_lighting_;
-  LightingType insensitive_shade_, prelight_shade_, impressed_shade_, normal_shade_;
-public:
-  explicit AmbienceImpl() :
-    insensitive_background_ ("none"),
-    prelight_background_ ("none"),
-    impressed_background_ ("none"),
-    normal_background_ ("none"),
-    insensitive_lighting_ (LIGHTING_CENTER),
-    prelight_lighting_ (LIGHTING_UPPER_LEFT),
-    impressed_lighting_ (LIGHTING_LOWER_RIGHT),
-    normal_lighting_ (LIGHTING_UPPER_LEFT),
-    insensitive_shade_ (LIGHTING_CENTER),
-    prelight_shade_ (LIGHTING_UPPER_LEFT),
-    impressed_shade_ (LIGHTING_LOWER_RIGHT),
-    normal_shade_ (LIGHTING_UPPER_LEFT)
-  {}
-  ~AmbienceImpl()
-  {}
-  virtual void          insensitive_background  (const String &color) { insensitive_background_ = color; expose(); }
-  virtual String        insensitive_background  () const              { return insensitive_background_; }
-  virtual void          prelight_background     (const String &color) { prelight_background_ = color; expose(); }
-  virtual String        prelight_background     () const              { return prelight_background_; }
-  virtual void          impressed_background    (const String &color) { impressed_background_ = color; expose(); }
-  virtual String        impressed_background    () const              { return impressed_background_; }
-  virtual void          normal_background       (const String &color) { normal_background_ = color; expose(); }
-  virtual String        normal_background       () const              { return normal_background_; }
-  virtual void          insensitive_lighting    (LightingType sh)     { insensitive_lighting_ = sh; expose(); }
-  virtual LightingType  insensitive_lighting    () const              { return insensitive_lighting_; }
-  virtual void          prelight_lighting       (LightingType sh)     { prelight_lighting_ = sh; expose(); }
-  virtual LightingType  prelight_lighting       () const              { return prelight_lighting_; }
-  virtual void          impressed_lighting      (LightingType sh)     { impressed_lighting_ = sh; expose(); }
-  virtual LightingType  impressed_lighting      () const              { return impressed_lighting_; }
-  virtual void          normal_lighting         (LightingType sh)     { normal_lighting_ = sh; expose(); }
-  virtual LightingType  normal_lighting         () const              { return normal_lighting_; }
-  virtual void          insensitive_shade       (LightingType sh)     { insensitive_shade_ = sh; expose(); }
-  virtual LightingType  insensitive_shade       () const              { return insensitive_shade_; }
-  virtual void          prelight_shade          (LightingType sh)     { prelight_shade_ = sh; expose(); }
-  virtual LightingType  prelight_shade          () const              { return prelight_shade_; }
-  virtual void          impressed_shade         (LightingType sh)     { impressed_shade_ = sh; expose(); }
-  virtual LightingType  impressed_shade         () const              { return impressed_shade_; }
-  virtual void          normal_shade            (LightingType sh)     { normal_shade_ = sh; expose(); }
-  virtual LightingType  normal_shade            () const              { return normal_shade_; }
-private:
-  void
-  render_shade (cairo_t      *cairo,
-                int           x,
-                int           y,
-                int           width,
-                int           height,
-                LightingType  st)
-  {
-    int shade_alpha = 0x3b;
-    Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
-    LightingType dark_flag = st & LIGHTING_DARK_FLAG;
-    CPainter painter (cairo);
-    if (dark_flag)
-      swap (light, dark);
-    switch (st & ~LIGHTING_DARK_FLAG)
-      {
-      case LIGHTING_UPPER_LEFT:
-        painter.draw_center_shade_rect (x, y, light, x + width - 1, y + height - 1, dark);
-        break;
-      case LIGHTING_UPPER_RIGHT:
-        painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
-        break;
-      case LIGHTING_LOWER_LEFT:
-        painter.draw_center_shade_rect (x, y + height - 1, light, x + width - 1, y, dark);
-        break;
-      case LIGHTING_LOWER_RIGHT:
-        painter.draw_center_shade_rect (x + width - 1, y + height - 1, light, x, y, dark);
-        break;
-      case LIGHTING_CENTER:
-        render_shade (cairo, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
-        render_shade (cairo, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
-        render_shade (cairo, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
-        render_shade (cairo, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
-        break;
-      case LIGHTING_DIFFUSE:
-        painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, light);
-        break;
-      case LIGHTING_NONE:
-        break;
-      }
-  }
-public:
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    IRect ia = allocation();
-    const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
-    /* render background */
-    String background_color;
-    if (bimpressed)
-      background_color = impressed_background();
-    else if (insensitive())
-      background_color = insensitive_background();
-    else if (bprelight)
-      background_color = prelight_background();
-    else
-      background_color = normal_background();
-    Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
-    cairo_t *cr = cairo_context (rcontext, rect);
-    CPainter painter (cr);
-    if (background)
-      painter.draw_filled_rect (x, y, width, height, background);
-    /* render lighting (mutually exclusive) */
-    if (bimpressed && impressed_lighting())
-      render_shade (cr, x, y, width, height, impressed_lighting());
-    else if (insensitive() && insensitive_lighting())
-      render_shade (cr, x, y, width, height, insensitive_lighting());
-    else if (bprelight && prelight_lighting())
-      render_shade (cr, x, y, width, height, prelight_lighting());
-    else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
-      render_shade (cr, x, y, width, height, normal_lighting());
-    /* render shade (combinatoric) */
-    if (bimpressed && impressed_shade())
-      render_shade (cr, x, y, width, height, impressed_shade());
-    if (insensitive() && insensitive_shade())
-      render_shade (cr, x, y, width, height, insensitive_shade());
-    if (bprelight && prelight_shade())
-      render_shade (cr, x, y, width, height, prelight_shade());
-    if (!bimpressed && !insensitive() && !bprelight && normal_shade())
-      render_shade (cr, x, y, width, height, normal_shade());
-  }
-};
+LightingType
+AmbienceImpl::lighting () const
+{
+  RAPICORN_ASSERT_UNREACHED();
+}
+
+LightingType
+AmbienceImpl::shade () const
+{
+  RAPICORN_ASSERT_UNREACHED();
+}
+
+void
+AmbienceImpl::insensitive_background (const String &color)
+{
+  insensitive_background_ = color;
+  expose();
+  changed ("insensitive_background");
+}
+
+String
+AmbienceImpl::insensitive_background () const
+{
+  return insensitive_background_;
+}
+
+void
+AmbienceImpl::prelight_background (const String &color)
+{
+  prelight_background_ = color;
+  expose();
+  changed ("prelight_background");
+}
+
+String
+AmbienceImpl::prelight_background () const
+{
+  return prelight_background_;
+}
+
+void
+AmbienceImpl::impressed_background (const String &color)
+{
+  impressed_background_ = color;
+  expose();
+  changed ("impressed_background");
+}
+
+String
+AmbienceImpl::impressed_background () const
+{
+  return impressed_background_;
+}
+
+void
+AmbienceImpl::normal_background (const String &color)
+{
+  normal_background_ = color;
+  expose();
+  changed ("normal_background");
+}
+
+String
+AmbienceImpl::normal_background () const
+{
+  return normal_background_;
+}
+
+void
+AmbienceImpl::insensitive_lighting (LightingType sh)
+{
+  insensitive_lighting_ = sh;
+  expose();
+  changed ("insensitive_lighting");
+}
+
+LightingType
+AmbienceImpl::insensitive_lighting () const
+{
+  return insensitive_lighting_;
+}
+
+void
+AmbienceImpl::prelight_lighting (LightingType sh)
+{
+  prelight_lighting_ = sh;
+  expose();
+  changed ("prelight_lighting");
+}
+
+LightingType
+AmbienceImpl::prelight_lighting () const
+{
+  return prelight_lighting_;
+}
+
+void
+AmbienceImpl::impressed_lighting (LightingType sh)
+{
+  impressed_lighting_ = sh;
+  expose();
+  changed ("impressed_lighting");
+}
+
+LightingType
+AmbienceImpl::impressed_lighting () const
+{
+  return impressed_lighting_;
+}
+
+void
+AmbienceImpl::normal_lighting (LightingType sh)
+{
+  normal_lighting_ = sh;
+  expose();
+  changed ("normal_lighting");
+}
+
+LightingType
+AmbienceImpl::normal_lighting () const
+{
+  return normal_lighting_;
+}
+
+void
+AmbienceImpl::insensitive_shade (LightingType sh)
+{
+  insensitive_shade_ = sh;
+  expose();
+  changed ("insensitive_shade");
+}
+
+LightingType
+AmbienceImpl::insensitive_shade () const
+{
+  return insensitive_shade_;
+}
+
+void
+AmbienceImpl::prelight_shade (LightingType sh)
+{
+  prelight_shade_ = sh;
+  expose();
+  changed ("prelight_shade");
+}
+
+LightingType
+AmbienceImpl::prelight_shade () const
+{
+  return prelight_shade_;
+}
+
+void
+AmbienceImpl::impressed_shade (LightingType sh)
+{
+  impressed_shade_ = sh;
+  expose();
+  changed ("impressed_shade");
+}
+
+LightingType
+AmbienceImpl::impressed_shade () const
+{
+  return impressed_shade_;
+}
+
+void
+AmbienceImpl::normal_shade (LightingType sh)
+{
+  normal_shade_ = sh;
+  expose();
+  changed ("normal_shade");
+}
+
+LightingType
+AmbienceImpl::normal_shade () const
+{
+  return normal_shade_;
+}
+
+void
+AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height, LightingType st)
+{
+  int shade_alpha = 0x3b;
+  Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
+  LightingType dark_flag = st & LIGHTING_DARK_FLAG;
+  CPainter painter (cairo);
+  if (dark_flag)
+    swap (light, dark);
+  switch (st & ~LIGHTING_DARK_FLAG)
+    {
+    case LIGHTING_UPPER_LEFT:
+      painter.draw_center_shade_rect (x, y, light, x + width - 1, y + height - 1, dark);
+      break;
+    case LIGHTING_UPPER_RIGHT:
+      painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
+      break;
+    case LIGHTING_LOWER_LEFT:
+      painter.draw_center_shade_rect (x, y + height - 1, light, x + width - 1, y, dark);
+      break;
+    case LIGHTING_LOWER_RIGHT:
+      painter.draw_center_shade_rect (x + width - 1, y + height - 1, light, x, y, dark);
+      break;
+    case LIGHTING_CENTER:
+      render_shade (cairo, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
+      render_shade (cairo, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
+      render_shade (cairo, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
+      render_shade (cairo, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
+      break;
+    case LIGHTING_DIFFUSE:
+      painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, light);
+      break;
+    case LIGHTING_NONE:
+      break;
+    }
+}
+
+void
+AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  IRect ia = allocation();
+  const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+  bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
+  /* render background */
+  String background_color;
+  if (bimpressed)
+    background_color = impressed_background();
+  else if (insensitive())
+    background_color = insensitive_background();
+  else if (bprelight)
+    background_color = prelight_background();
+  else
+    background_color = normal_background();
+  Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
+  cairo_t *cr = cairo_context (rcontext, rect);
+  CPainter painter (cr);
+  if (background)
+    painter.draw_filled_rect (x, y, width, height, background);
+  /* render lighting (mutually exclusive) */
+  if (bimpressed && impressed_lighting())
+    render_shade (cr, x, y, width, height, impressed_lighting());
+  else if (insensitive() && insensitive_lighting())
+    render_shade (cr, x, y, width, height, insensitive_lighting());
+  else if (bprelight && prelight_lighting())
+    render_shade (cr, x, y, width, height, prelight_lighting());
+  else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
+    render_shade (cr, x, y, width, height, normal_lighting());
+  /* render shade (combinatoric) */
+  if (bimpressed && impressed_shade())
+    render_shade (cr, x, y, width, height, impressed_shade());
+  if (insensitive() && insensitive_shade())
+    render_shade (cr, x, y, width, height, insensitive_shade());
+  if (bprelight && prelight_shade())
+    render_shade (cr, x, y, width, height, prelight_shade());
+  if (!bimpressed && !insensitive() && !bprelight && normal_shade())
+    render_shade (cr, x, y, width, height, normal_shade());
+}
+
 static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
 // == FrameImpl ==

@@ -369,6 +369,26 @@ interface FocusFrame : Frame {
   bool      tight_focus = Bool (_("Tight Focus"), _("Prevent extra padding around focus frames"), "rw");
 };
 
+/// The Ambience container provides its single child with state dependant background painting.
+/// See also the corresponding implementation class AmbienceImpl.
+interface Ambience : Container {
+  String normal_background          = String (_("Normal Background"), _("The kind of background painted when normal"), "rw");
+  String prelight_background        = String (_("Prelight Background"), _("The kind of background painted when prelight"), "rw");
+  String impressed_background       = String (_("Impressed Background"), _("The kind of background painted when impressed"), "rw");
+  String insensitive_background     = String (_("Insensitive Background"), _("The kind of background painted when insensitive"), "rw");
+  LightingType normal_lighting      = Enum (_("Normal Lighting"), _("The kind of lighting painted when normal"), "rw");
+  LightingType prelight_lighting    = Enum (_("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw");
+  LightingType impressed_lighting   = Enum (_("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw");
+  LightingType insensitive_lighting = Enum (_("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw");
+  LightingType normal_shade         = Enum (_("Normal Shade"), _("The kind of shade painted when normal"), "rw");
+  LightingType prelight_shade       = Enum (_("Prelight Shade"), _("The kind of shade painted when prelight"), "rw");
+  LightingType impressed_shade      = Enum (_("Impressed Shade"), _("The kind of shade painted when impressed"), "rw");
+  LightingType insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
+  String       background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
+  LightingType lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
+  LightingType shade                = Enum (_("Shade"), _("The kind of shade painted for all modes"), "wo");
+};
+
 /// The Table layout container allows to arrange widgets in rows and columns.
 /// See also the corresponding implementation class TableImpl.
 interface Table : Container {

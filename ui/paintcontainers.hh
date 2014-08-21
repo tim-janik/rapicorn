@@ -6,42 +6,48 @@
 
 namespace Rapicorn {
 
-class Ambience : public virtual ContainerImpl {
+class AmbienceImpl : public virtual SingleContainerImpl, public virtual AmbienceIface {
+  String normal_background_, prelight_background_, impressed_background_, insensitive_background_;
+  LightingType normal_lighting_, prelight_lighting_, impressed_lighting_, insensitive_lighting_;
+  LightingType normal_shade_, prelight_shade_, impressed_shade_, insensitive_shade_;
 protected:
-  virtual const PropertyList&   __aida_properties__         ();
+  void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, LightingType st);
+  virtual void         render                  (RenderContext &rcontext, const Rect &rect) override;
+  virtual             ~AmbienceImpl            () override;
 public:
-  virtual void                  insensitive_background  (const String &color) = 0;
-  virtual String                insensitive_background  () const = 0;
-  virtual void                  prelight_background     (const String &color) = 0;
-  virtual String                prelight_background     () const = 0;
-  virtual void                  impressed_background    (const String &color) = 0;
-  virtual String                impressed_background    () const = 0;
-  virtual void                  normal_background       (const String &color) = 0;
-  virtual String                normal_background       () const = 0;
-  virtual void                  insensitive_lighting    (LightingType sh) = 0;
-  virtual LightingType          insensitive_lighting    () const = 0;
-  virtual void                  prelight_lighting       (LightingType sh) = 0;
-  virtual LightingType          prelight_lighting       () const = 0;
-  virtual void                  impressed_lighting      (LightingType sh) = 0;
-  virtual LightingType          impressed_lighting      () const = 0;
-  virtual void                  normal_lighting         (LightingType sh) = 0;
-  virtual LightingType          normal_lighting         () const = 0;
-  virtual void                  insensitive_shade       (LightingType sh) = 0;
-  virtual LightingType          insensitive_shade       () const = 0;
-  virtual void                  prelight_shade          (LightingType sh) = 0;
-  virtual LightingType          prelight_shade          () const = 0;
-  virtual void                  impressed_shade         (LightingType sh) = 0;
-  virtual LightingType          impressed_shade         () const = 0;
-  virtual void                  normal_shade            (LightingType sh) = 0;
-  virtual LightingType          normal_shade            () const = 0;
-  /* group setters */
-  void                          background              (const String &color);
-  void                          lighting                (LightingType sh);
-  void                          shade                   (LightingType sh);
+  explicit             AmbienceImpl            ();
+  virtual void         insensitive_background  (const String &color) override;
+  virtual String       insensitive_background  () const override;
+  virtual void         prelight_background     (const String &color) override;
+  virtual String       prelight_background     () const override;
+  virtual void         impressed_background    (const String &color) override;
+  virtual String       impressed_background    () const override;
+  virtual void         normal_background       (const String &color) override;
+  virtual String       normal_background       () const override;
+  virtual void         insensitive_lighting    (LightingType sh) override;
+  virtual LightingType insensitive_lighting    () const override;
+  virtual void         prelight_lighting       (LightingType sh) override;
+  virtual LightingType prelight_lighting       () const override;
+  virtual void         impressed_lighting      (LightingType sh) override;
+  virtual LightingType impressed_lighting      () const override;
+  virtual void         normal_lighting         (LightingType sh) override;
+  virtual LightingType normal_lighting         () const override;
+  virtual void         insensitive_shade       (LightingType sh) override;
+  virtual LightingType insensitive_shade       () const override;
+  virtual void         prelight_shade          (LightingType sh) override;
+  virtual LightingType prelight_shade          () const override;
+  virtual void         impressed_shade         (LightingType sh) override;
+  virtual LightingType impressed_shade         () const override;
+  virtual void         normal_shade            (LightingType sh) override;
+  virtual LightingType normal_shade            () const override;
+  // group setters
+  virtual void         background              (const String &color) override;
+  virtual void         lighting                (LightingType sh) override;
+  virtual void         shade                   (LightingType sh) override;
 private:
-  String                        background              () const { RAPICORN_ASSERT_UNREACHED(); }
-  LightingType                  lighting                () const { RAPICORN_ASSERT_UNREACHED(); }
-  LightingType                  shade                   () const { RAPICORN_ASSERT_UNREACHED(); }
+  virtual String       background              () const override;
+  virtual LightingType lighting                () const override;
+  virtual LightingType shade                   () const override;
 };
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface {
