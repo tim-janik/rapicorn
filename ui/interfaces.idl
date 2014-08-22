@@ -6,9 +6,10 @@
 
 namespace Rapicorn {
 
-Const MAXINT32 = +4294967295;
-Const MAXINT31 = +2147483647;
-Const MININT31 = -2147483648;
+Const MAXINT32   = +4294967295;
+Const MAXINT31   = +2147483647;
+Const MININT31   = -2147483648;
+Const MAXFLOAT64 = 1.7976931348623157e+308;
 
 /// Enum used to specify how adjustments are picked from Widget ancestry.
 enum AdjustmentSourceType {
@@ -582,6 +583,24 @@ interface IdlTestWidget : Widget {
   Requisition    record_prop;
   StringSeq      sequence_prop;
   IdlTestWidget  self_prop;
+};
+
+/// A container used exclusively for unit testing.
+/// See also the corresponding implementation class TestContainerImpl.
+interface TestContainer : Container {
+  String  value            = String ("Value", "Store string value for assertion", "rw");
+  String  assert_value     = String ("Assert Value", "Assert a particular string value", "rw");
+  float64 assert_left      = Range ("Assert-Left", "Assert positioning of the left widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_right     = Range ("Assert-Right", "Assert positioning of the right widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_bottom    = Range ("Assert-Bottom", "Assert positioning of the bottom widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_top       = Range ("Assert-Top", "Assert positioning of the top widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_width     = Range ("Assert-Width", "Assert amount of the widget width", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_height    = Range ("Assert-Height", "Assert amount of the widget height", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 epsilon          = Range ("Epsilon", "Epsilon within which assertions must hold", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  bool    paint_allocation = Bool ("Paint Allocation", "Fill allocation rectangle with a solid color", "rw");
+  bool    fatal_asserts    = Bool ("Fatal-Asserts", "Handle assertion failures as fatal errors", "rw");
+  String  accu             = String ("Accumulator", "Store string value and keep history", "rw");
+  String  accu_history     = String ("Accu-History", "Concatenated accumulator history", "rw");
 };
 
 } // Rapicorn

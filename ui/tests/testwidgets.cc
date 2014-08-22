@@ -48,7 +48,6 @@ test_factory ()
                  program_file());
   TOK();
   WidgetImpl *widget;
-  TestContainer *twidget;
   WindowIface &testwin = *app.create_window ("RapicornTest:test-TestWidgetL2");
   testwin.show();
   run_main_loop_recursive (false);
@@ -56,7 +55,7 @@ test_factory ()
   WindowImpl *window = &testwin.impl();
   widget = window->interface<WidgetImpl*> ("TestWidgetL2");
   TASSERT (widget != NULL);
-  twidget = dynamic_cast<TestContainer*> (widget);
+  TestContainerImpl *twidget = dynamic_cast<TestContainerImpl*> (widget);
   TASSERT (twidget != NULL);
   if (0)
     {
@@ -95,14 +94,14 @@ test_cxx_server_gui ()
   window.impl().sig_displayed() += [&window]() { window.close(); };
   TOK();
   /* verify and assert at least one TestWidget rendering */
-  uint old_seen_test = TestContainer::seen_test_widgets();
+  uint old_seen_test = TestContainerImpl::seen_test_widgets();
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
   run_main_loop_recursive();
   TOK();
   /* assert TestWidget rendering */
-  uint seen_test = TestContainer::seen_test_widgets();
+  uint seen_test = TestContainerImpl::seen_test_widgets();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
 }
 REGISTER_UITHREAD_TEST ("TestWidget/Test C++ Server Side GUI", test_cxx_server_gui);
@@ -126,7 +125,7 @@ test_test_widget ()
   WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
-  TestContainer *twidget = window.interface<TestContainer*>();
+  TestContainerImpl *twidget = window.interface<TestContainerImpl*>();
   TASSERT (twidget != NULL);
   twidget->sig_assertion_ok() += assertion_ok;
   twidget->sig_assertions_passed() += assertions_passed;
@@ -136,10 +135,10 @@ test_test_widget ()
   /* close window (and exit main loop) after first expose */
   window.impl().sig_displayed() += [&window]() { window.close(); };
   /* verify and assert at least one TestWidget rendering */
-  uint old_seen_test = TestContainer::seen_test_widgets();
+  uint old_seen_test = TestContainerImpl::seen_test_widgets();
   window.show();
   run_main_loop_recursive();
-  uint seen_test = TestContainer::seen_test_widgets();
+  uint seen_test = TestContainerImpl::seen_test_widgets();
   TASSERT (seen_test > old_seen_test);
   /* test widget rendering also executed various assertions */
 }
