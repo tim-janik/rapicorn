@@ -7,15 +7,17 @@
 
 namespace Rapicorn {
 
-/* --- ScrollArea --- */
-class ScrollArea : public virtual ContainerImpl, public virtual AdjustmentSource {
+class ScrollAreaImpl : public virtual SingleContainerImpl, public virtual ScrollAreaIface, public virtual AdjustmentSource {
+  Adjustment           *hadjustment_, *vadjustment_;
+  Adjustment&           hadjustment();
+  Adjustment&           vadjustment();
 protected:
-  explicit              ScrollArea();
+  virtual Adjustment*   get_adjustment  (AdjustmentSourceType adj_source, const String &name = "") override;
 public:
-  virtual double        xoffset         () const = 0;
-  virtual double        yoffset         () const = 0;
-  virtual void          scroll_to       (double x,
-                                         double y) = 0;
+  explicit              ScrollAreaImpl  ();
+  virtual double        x_offset        () override;
+  virtual double        y_offset        () override;
+  virtual void          scroll_to       (double x, double y) override;
 };
 
 } // Rapicorn

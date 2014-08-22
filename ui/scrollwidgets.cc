@@ -1,21 +1,16 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "scrollwidgetsimpl.hh"
+#include "scrollwidgets.hh"
 #include "window.hh"
 #include "factory.hh"
 
 namespace Rapicorn {
 
-/* --- ScrollArea --- */
-ScrollArea::ScrollArea()
-{}
-
-/* --- ScrollAreaImpl --- */
 ScrollAreaImpl::ScrollAreaImpl() :
   hadjustment_ (NULL), vadjustment_ (NULL)
 {}
 
 Adjustment&
-ScrollAreaImpl::hadjustment () const
+ScrollAreaImpl::hadjustment ()
 {
   if (!hadjustment_)
     hadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
@@ -23,7 +18,7 @@ ScrollAreaImpl::hadjustment () const
 }
 
 Adjustment&
-ScrollAreaImpl::vadjustment () const
+ScrollAreaImpl::vadjustment ()
 {
   if (!vadjustment_)
     vadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
@@ -31,8 +26,7 @@ ScrollAreaImpl::vadjustment () const
 }
 
 Adjustment*
-ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source,
-                                const String        &name)
+ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source, const String &name)
 {
   switch (adj_source)
     {
@@ -46,13 +40,13 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source,
 }
 
 double
-ScrollAreaImpl::xoffset () const
+ScrollAreaImpl::x_offset ()
 {
   return round (hadjustment().value());
 }
 
 double
-ScrollAreaImpl::yoffset () const
+ScrollAreaImpl::y_offset ()
 {
   return round (vadjustment().value());
 }

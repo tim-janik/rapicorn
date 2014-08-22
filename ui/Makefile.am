@@ -43,7 +43,6 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	screenwindow-x11.cc	screenwindow.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
-	scrollwidgetsimpl.hh		\
 	sinfeximpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
