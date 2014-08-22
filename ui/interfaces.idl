@@ -585,6 +585,12 @@ interface IdlTestWidget : Widget {
   IdlTestWidget  self_prop;
 };
 
+/// A container used for snapshooting and unit testing.
+/// See also the corresponding implementation class TestBoxImpl.
+interface TestBox : Container {
+  String snapshot_file = String (_("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw");
+};
+
 /// A container used exclusively for unit testing.
 /// See also the corresponding implementation class TestContainerImpl.
 interface TestContainer : Container {

@@ -291,67 +291,67 @@ TestContainerImpl::pseudo_selector (Selector::Selob &selob, const String &ident,
 static const WidgetFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 // == TestBoxImpl ==
-const PropertyList&
-TestBox::__aida_properties__()
+TestBoxImpl::TestBoxImpl() :
+  handler_id_ (0)
+{}
+
+TestBoxImpl::~TestBoxImpl()
 {
-  static Property *properties[] = {
-    MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  if (handler_id_)
+    {
+      remove_exec (handler_id_);
+      handler_id_ = 0;
+    }
 }
 
-class TestBoxImpl : public virtual SingleContainerImpl, public virtual TestBox {
-  String snapshot_file_;
-  uint   handler_id_;
-protected:
-  virtual String snapshot_file () const                 { return snapshot_file_; }
-  virtual void   snapshot_file (const String &val)      { snapshot_file_ = val; invalidate(); }
-  ~TestBoxImpl()
-  {
-    if (handler_id_)
-      {
-        remove_exec (handler_id_);
-        handler_id_ = 0;
-      }
-  }
-  void
-  make_snapshot ()
-  {
-    WindowImpl *wwidget = get_window();
-    if (snapshot_file_ != "" && wwidget)
-      {
-        cairo_surface_t *isurface = wwidget->create_snapshot (allocation());
-        cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
-        cairo_surface_destroy (isurface);
-        String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-        printerr ("%s: wrote %s: %s\n", name().c_str(), snapshot_file_.c_str(), err.c_str());
-      }
-    if (handler_id_)
-      {
-        remove_exec (handler_id_);
-        handler_id_ = 0;
-      }
-  }
-public:
-  explicit TestBoxImpl() :
-    handler_id_ (0)
-  {}
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    if (!handler_id_)
-      {
-        WindowImpl *wwidget = get_window();
-        if (wwidget)
-          {
-            EventLoop *loop = wwidget->get_loop();
-            if (loop)
-              handler_id_ = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
-          }
-      }
-  }
-};
+String
+TestBoxImpl::snapshot_file () const
+{
+  return snapshot_file_;
+}
+
+void
+TestBoxImpl::snapshot_file (const String &val)
+{
+  snapshot_file_ = val;
+  invalidate();
+  changed ("snapshot_file");
+}
+
+void
+TestBoxImpl::make_snapshot ()
+{
+  WindowImpl *wwidget = get_window();
+  if (snapshot_file_ != "" && wwidget)
+    {
+      cairo_surface_t *isurface = wwidget->create_snapshot (allocation());
+      cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
+      cairo_surface_destroy (isurface);
+      String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
+      printerr ("%s: wrote %s: %s\n", name().c_str(), snapshot_file_.c_str(), err.c_str());
+    }
+  if (handler_id_)
+    {
+      remove_exec (handler_id_);
+      handler_id_ = 0;
+    }
+}
+
+void
+TestBoxImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  if (!handler_id_)
+    {
+      WindowImpl *wwidget = get_window();
+      if (wwidget)
+        {
+          EventLoop *loop = wwidget->get_loop();
+          if (loop)
+            handler_id_ = loop->exec_now (Aida::slot (*this, &TestBoxImpl::make_snapshot));
+        }
+    }
+}
+
 static const WidgetFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
 
 // == IdlTestWidgetImpl ==

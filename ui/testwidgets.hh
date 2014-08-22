@@ -45,11 +45,17 @@ public:
   Aida::Signal<void ()>                         sig_assertions_passed;
 };
 
-class TestBox : public virtual ContainerImpl {
+class TestBoxImpl : public virtual SingleContainerImpl, public virtual TestBoxIface {
+  String snapshot_file_;
+  uint   handler_id_;
+  void   make_snapshot ();
+protected:
+  virtual void        render          (RenderContext &rcontext, const Rect &rect) override;
 public:
-  virtual String      snapshot_file   () const = 0;
-  virtual void        snapshot_file   (const String &val) = 0;
-  const PropertyList& __aida_properties__ ();
+  explicit            TestBoxImpl     ();
+  virtual            ~TestBoxImpl     () override;
+  virtual String      snapshot_file   () const override;
+  virtual void        snapshot_file   (const String &val) override;
 };
 
 class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidgetIface {
