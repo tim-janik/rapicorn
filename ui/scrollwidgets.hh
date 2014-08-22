@@ -3,7 +3,7 @@
 #define __RAPICORN_SCROLL_WIDGETS_HH__
 
 #include <ui/adjustment.hh>
-#include <ui/container.hh>
+#include <ui/viewport.hh>
 
 namespace Rapicorn {
 
@@ -18,6 +18,23 @@ public:
   virtual double        x_offset        () override;
   virtual double        y_offset        () override;
   virtual void          scroll_to       (double x, double y) override;
+};
+
+class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
+  Adjustment *hadjustment_, *vadjustment_;
+  size_t conid_hadjustment_, conid_vadjustment_;
+  void                          adjustment_changed      ();
+  bool                          scroll                  (EventType scroll_dir);
+protected:
+  virtual void                  hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual void                  size_allocate           (Allocation area, bool changed) override;
+  virtual void                  set_focus_child         (WidgetImpl *widget) override;
+  virtual void                  scroll_to_child         (WidgetImpl &widget);
+  virtual const CommandList&    list_commands           () override;
+  virtual bool                  handle_event            (const Event &event);
+  virtual void                  reset                   (ResetMode mode);
+public:
+  explicit                      ScrollPortImpl          ();
 };
 
 } // Rapicorn
