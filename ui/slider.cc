@@ -1,154 +1,137 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "slider.hh"
-#include "table.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
 
 namespace Rapicorn {
 
-SliderArea::SliderArea() :
-  sig_slider_changed (Aida::slot (*this, &SliderArea::slider_changed))
-{}
+class SliderSkidImpl;
+
+// == SliderAreaImpl ==
+SliderAreaImpl::SliderAreaImpl() :
+  adjustment_ (NULL), avc_id_ (0), arc_id_ (0),
+  adjustment_source_ (ADJUSTMENT_SOURCE_NONE),
+  flip_ (false),
+  sig_slider_changed (Aida::slot (*this, &SliderAreaImpl::slider_changed))
+{
+  Adjustment *adj = Adjustment::create();
+  adjustment (*adj);
+  adj->unref();
+}
+
+SliderAreaImpl::~SliderAreaImpl()
+{
+  unset_adjustment();
+}
 
 void
-SliderArea::slider_changed()
+SliderAreaImpl::slider_changed()
 {}
 
 bool
-SliderArea::move (MoveType movement)
+SliderAreaImpl::move (MoveType movement)
 {
   Adjustment *adj = adjustment();
   return flipped() ? adj->move_flipped (movement) : adj->move (movement);
 }
 
 const CommandList&
-SliderArea::list_commands ()
+SliderAreaImpl::list_commands ()
 {
   static Command *commands[] = {
-    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
-    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
-    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),
-    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, MOVE_PAGE_BACKWARD),
+    MakeNamedCommand (SliderAreaImpl, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
+    MakeNamedCommand (SliderAreaImpl, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
+    MakeNamedCommand (SliderAreaImpl, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),
+    MakeNamedCommand (SliderAreaImpl, "page-decrement", _("Large slider decrement"), move, MOVE_PAGE_BACKWARD),
   };
   static const CommandList command_list (commands, ContainerImpl::list_commands());
   return command_list;
 }
 
-const PropertyList&
-SliderArea::__aida_properties__()
+void
+SliderAreaImpl::unset_adjustment()
 {
-  static Property *properties[] = {
-    MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
-    MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  if (avc_id_)
+    adjustment_->sig_value_changed() -= avc_id_;
+  avc_id_ = 0;
+  if (arc_id_)
+    adjustment_->sig_range_changed() -= arc_id_;
+  arc_id_ = 0;
+  adjustment_->unref();
+  adjustment_ = NULL;
 }
 
-class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
-  Adjustment          *adjustment_;
-  size_t               avc_id_, arc_id_;
-  AdjustmentSourceType adjustment_source_;
-  bool                 flip_;
-  void
-  unset_adjustment()
-  {
-    if (avc_id_)
-      adjustment_->sig_value_changed() -= avc_id_;
-    avc_id_ = 0;
-    if (arc_id_)
-      adjustment_->sig_range_changed() -= arc_id_;
-    arc_id_ = 0;
-    adjustment_->unref();
-    adjustment_ = NULL;
-  }
-  virtual const PropertyList& __aida_properties__() { return SliderArea::__aida_properties__(); }
-protected:
-  virtual AdjustmentSourceType
-  adjustment_source () const
-  {
-    return adjustment_source_;
-  }
-  virtual void
-  adjustment_source (AdjustmentSourceType adj_source)
-  {
-    adjustment_source_ = adj_source;
-  }
-  virtual void
-  hierarchy_changed (WidgetImpl *old_toplevel)
-  {
-    this->TableImpl::hierarchy_changed (old_toplevel);
-    if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
-      {
-        Adjustment *adj = NULL;
-        find_adjustments (adjustment_source_, &adj);
-        if (!adj)
-          {
-            const Aida::EnumValue *evalue = enum_value_find (Aida::enum_value_list<AdjustmentSourceType>(), adjustment_source_);
-            throw Exception ("SliderArea failed to get Adjustment (",
-                             evalue ? evalue->ident : "???",
-                             ") from ancestors: ", name());
-          }
-        adjustment (*adj);
-      }
-  }
-  virtual bool
-  flipped () const
-  {
-    return flip_;
-  }
-  virtual void
-  flipped (bool flip)
-  {
-    if (flip_ != flip)
-      {
-        flip_ = flip;
-        changed ("flipped");
-      }
-  }
-  virtual ~SliderAreaImpl()
-  {
+AdjustmentSourceType
+SliderAreaImpl::adjustment_source () const
+{
+  return adjustment_source_;
+}
+
+void
+SliderAreaImpl::adjustment_source (AdjustmentSourceType adj_source)
+{
+  adjustment_source_ = adj_source;
+}
+
+void
+SliderAreaImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  this->TableLayoutImpl::hierarchy_changed (old_toplevel);
+  if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
+    {
+      Adjustment *adj = NULL;
+      find_adjustments (adjustment_source_, &adj);
+      if (!adj)
+        {
+          const Aida::EnumValue *evalue = enum_value_find (Aida::enum_value_list<AdjustmentSourceType>(), adjustment_source_);
+          throw Exception ("SliderArea failed to get Adjustment (",
+                           evalue ? evalue->ident : "???",
+                           ") from ancestors: ", name());
+        }
+      adjustment (*adj);
+    }
+}
+
+bool
+SliderAreaImpl::flipped () const
+{
+  return flip_;
+}
+
+void
+SliderAreaImpl::flipped (bool flip)
+{
+  if (flip_ != flip)
+    {
+      flip_ = flip;
+      changed ("flipped");
+    }
+}
+
+void
+SliderAreaImpl::adjustment (Adjustment &adjustment)
+{
+  adjustment.ref();
+  if (adjustment_)
     unset_adjustment();
-  }
-public:
-  SliderAreaImpl() :
-    adjustment_ (NULL), avc_id_ (0), arc_id_ (0),
-    adjustment_source_ (ADJUSTMENT_SOURCE_NONE),
-    flip_ (false)
-  {
-    Adjustment *adj = Adjustment::create();
-    adjustment (*adj);
-    adj->unref();
-  }
-  virtual void
-  adjustment (Adjustment &adjustment)
-  {
-    adjustment.ref();
-    if (adjustment_)
-      unset_adjustment();
-    adjustment_ = &adjustment;
-    avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
-    arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
-    changed ("adjustment");
-  }
-  virtual Adjustment*
-  adjustment () const
-  {
-    return adjustment_;
-  }
-  virtual void
-  control (const String &command_name,
-           const String &arg)
-  {
-  }
-};
+  adjustment_ = &adjustment;
+  avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
+  arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
+  changed ("adjustment");
+}
+
+Adjustment*
+SliderAreaImpl::adjustment () const
+{
+  return adjustment_;
+}
+
 static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
 
-class SliderSkidImpl;
-
+// == SliderTroughImpl ==
 class SliderTroughImpl : public virtual SingleContainerImpl, public virtual EventHandler {
-  SliderArea *slider_area_;
+  SliderAreaImpl *slider_area_;
   size_t conid_slider_changed_;
   bool
   flipped()
@@ -172,7 +155,7 @@ protected:
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        slider_area_ = parent_interface<SliderArea*>();
+        slider_area_ = parent_interface<SliderAreaImpl*>();
         conid_slider_changed_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
       }
   }

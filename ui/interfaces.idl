@@ -477,6 +477,13 @@ interface ScrollArea : Container {
   void    scroll_to (float64 x, float64 y) = 0; ///< Scroll to the position denoted by (x, y).
 };
 
+/// The SliderArea container serves as control area for a slider trough and skid.
+/// See also the corresponding implementation class SliderAreaImpl.
+interface SliderArea : Container {
+  bool flipped = Bool (_("Flipped"), _("Invert (flip) display of the slider value"), "rw");
+  AdjustmentSourceType adjustment_source = Enum (_("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw");
+};
+
 /** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
  * <br/> See also the corresponding implementation class WidgetListImpl.

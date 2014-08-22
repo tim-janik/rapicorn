@@ -3,29 +3,32 @@
 #define __RAPICORN_SLIDER_HH__
 
 #include <ui/adjustment.hh>
-#include <ui/container.hh>
+#include <ui/table.hh>
 
 namespace Rapicorn {
 
-class SliderArea : public virtual ContainerImpl {
-  bool                  move              (MoveType);
+class SliderAreaImpl : public virtual TableLayoutImpl, public virtual SliderAreaIface {
+  Adjustment          *adjustment_;
+  size_t               avc_id_, arc_id_;
+  AdjustmentSourceType adjustment_source_;
+  bool                 flip_;
+  void                         unset_adjustment  ();
+  bool                         move              (MoveType);
 protected:
-  virtual const CommandList&    list_commands  ();
-  virtual const PropertyList&   __aida_properties__ ();
-  explicit              SliderArea        ();
-  virtual void          control           (const String   &command_name,
-                                           const String   &arg) = 0;
-  virtual void          slider_changed    ();
+  virtual                     ~SliderAreaImpl    () override;
+  virtual void                 hierarchy_changed (WidgetImpl *old_toplevel) override;
+  virtual const CommandList&   list_commands     () override;
+  virtual void                 slider_changed    ();
   typedef Aida::Signal<void ()> SignalSliderChanged;
 public:
-  virtual bool          flipped           () const = 0;
-  virtual void          flipped           (bool flip) = 0;
-  virtual Adjustment*   adjustment        () const = 0;
-  virtual void          adjustment        (Adjustment     &adjustment) = 0;
-  virtual
-  AdjustmentSourceType  adjustment_source () const = 0;
-  virtual void          adjustment_source (AdjustmentSourceType adj_source) = 0;
-  SignalSliderChanged   sig_slider_changed;
+  explicit                     SliderAreaImpl    ();
+  Adjustment*                  adjustment        () const;
+  void                         adjustment        (Adjustment &adjustment);
+  virtual AdjustmentSourceType adjustment_source () const override;
+  virtual void                 adjustment_source (AdjustmentSourceType adj_source) override;
+  virtual bool                 flipped           () const override;
+  virtual void                 flipped           (bool flip) override;
+  SignalSliderChanged          sig_slider_changed;
 };
 
 } // Rapicorn
