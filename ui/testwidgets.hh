@@ -52,4 +52,30 @@ public:
   const PropertyList& __aida_properties__ ();
 };
 
+class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidgetIface {
+  bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
+  Requisition rec_; StringSeq seq_; IdlTestWidgetIface *self_;
+protected:
+  virtual void                size_request  (Requisition &req) override;
+  virtual void                size_allocate (Allocation area, bool changed) override;
+  virtual void                render        (RenderContext &rcontext, const Rect &rect) override;
+public:
+  virtual bool                bool_prop     () const override;
+  virtual void                bool_prop     (bool b) override;
+  virtual int                 int_prop      () const override;
+  virtual void                int_prop      (int i) override;
+  virtual double              float_prop    () const override;
+  virtual void                float_prop    (double f) override;
+  virtual std::string         string_prop   () const override;
+  virtual void                string_prop   (const std::string &s) override;
+  virtual TestEnum            enum_prop     () const override;
+  virtual void                enum_prop     (TestEnum v) override;
+  virtual Requisition         record_prop   () const override;
+  virtual void                record_prop   (const Requisition &r) override;
+  virtual StringSeq           sequence_prop () const override;
+  virtual void                sequence_prop (const StringSeq &s) override;
+  virtual IdlTestWidgetIface* self_prop     () const override;
+  virtual void                self_prop     (IdlTestWidgetIface *s) override;
+};
+
 } // Rapicorn

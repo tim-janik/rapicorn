@@ -354,30 +354,125 @@ public:
 };
 static const WidgetFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
 
-class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidgetIface {
-  bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
-  Requisition rec_; StringSeq seq_; IdlTestWidgetIface *self_;
-  virtual bool          bool_prop () const                      { return bool_; }
-  virtual void          bool_prop (bool b)                      { bool_ = b; changed ("bool_prop"); }
-  virtual int           int_prop () const                       { return int_; }
-  virtual void          int_prop (int i)                        { int_ = i; changed ("int_prop"); }
-  virtual double        float_prop () const                     { return float_; }
-  virtual void          float_prop (double f)                   { float_ = f; changed ("float_prop"); }
-  virtual std::string   string_prop () const                    { return string_; }
-  virtual void          string_prop (const std::string &s)      { string_ = s; changed ("string_prop"); }
-  virtual TestEnum      enum_prop () const                      { return enum_; }
-  virtual void          enum_prop (TestEnum v)                  { enum_ = v; changed ("enum_prop"); }
-  virtual Requisition   record_prop () const                    { return rec_; }
-  virtual void          record_prop (const Requisition &r)      { rec_ = r; changed ("record_prop"); }
-  virtual StringSeq     sequence_prop () const                  { return seq_; }
-  virtual void          sequence_prop (const StringSeq &s)      { seq_ = s; changed ("sequence_prop"); }
-  virtual IdlTestWidgetIface* self_prop () const                { return self_; }
-  virtual void                self_prop (IdlTestWidgetIface *s) { self_ = s; changed ("self_prop"); }
-  virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
-  virtual void          size_allocate (Allocation area, bool changed) {}
-  virtual void          render (RenderContext &rcontext, const Rect &rect) {}
-  virtual const PropertyList& __aida_properties__ () { return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::__aida_properties__(), IdlTestWidgetIface::__aida_properties__()); }
-};
+// == IdlTestWidgetImpl ==
+bool
+IdlTestWidgetImpl::bool_prop () const
+{
+  return bool_;
+}
+
+void
+IdlTestWidgetImpl::bool_prop (bool b)
+{
+  bool_ = b;
+  changed ("bool_prop");
+}
+
+int
+IdlTestWidgetImpl::int_prop () const
+{
+  return int_;
+}
+
+void
+IdlTestWidgetImpl::int_prop (int i)
+{
+  int_ = i;
+  changed ("int_prop");
+}
+
+double
+IdlTestWidgetImpl::float_prop () const
+{
+  return float_;
+}
+
+void
+IdlTestWidgetImpl::float_prop (double f)
+{
+  float_ = f;
+  changed ("float_prop");
+}
+
+String
+IdlTestWidgetImpl::string_prop () const
+{
+  return string_;
+}
+
+void
+IdlTestWidgetImpl::string_prop (const std::string &s)
+{
+  string_ = s;
+  changed ("string_prop");
+}
+
+TestEnum
+IdlTestWidgetImpl::enum_prop () const
+{
+  return enum_;
+}
+
+void
+IdlTestWidgetImpl::enum_prop (TestEnum v)
+{
+  enum_ = v;
+  changed ("enum_prop");
+}
+
+Requisition
+IdlTestWidgetImpl::record_prop () const
+{
+  return rec_;
+}
+
+void
+IdlTestWidgetImpl::record_prop (const Requisition &r)
+{
+  rec_ = r;
+  changed ("record_prop");
+}
+
+StringSeq
+IdlTestWidgetImpl::sequence_prop () const
+{
+  return seq_;
+}
+
+void
+IdlTestWidgetImpl::sequence_prop (const StringSeq &s)
+{
+  seq_ = s;
+  changed ("sequence_prop");
+}
+
+IdlTestWidgetIface*
+IdlTestWidgetImpl::self_prop () const
+{
+  return self_;
+}
+
+void
+IdlTestWidgetImpl::self_prop (IdlTestWidgetIface *s)
+{
+  self_ = s;
+  changed ("self_prop");
+}
+
+void
+IdlTestWidgetImpl::size_request (Requisition &req)
+{
+  req = Requisition (12, 12);
+}
+
+void
+IdlTestWidgetImpl::size_allocate (Allocation area, bool changed)
+{}
+
+void
+IdlTestWidgetImpl::render (RenderContext &rcontext, const Rect &rect)
+{}
+
 static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::Factory::IdlTestWidget");
 
 } // Rapicorn
