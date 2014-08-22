@@ -31,6 +31,41 @@ public:
   SignalSliderChanged          sig_slider_changed;
 };
 
+class SliderTroughImpl : public virtual SingleContainerImpl, public virtual SliderTroughIface, public virtual EventHandler {
+  SliderAreaImpl *slider_area_;
+  size_t conid_slider_changed_;
+  double                nvalue                  ();
+  void                  reallocate_child        ();
+protected:
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          size_allocate           (Allocation area, bool changed) override;
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual bool          handle_event            (const Event &event) override;
+  virtual void          reset                   (ResetMode mode = RESET_ALL) override;
+  virtual              ~SliderTroughImpl        () override;
+public:
+  explicit              SliderTroughImpl        ();
+  bool                  flipped                 () const;
+  Adjustment*           adjustment              () const;
+};
+
+class SliderSkidImpl : public virtual SingleContainerImpl, public virtual SliderSkidIface, public virtual EventHandler {
+  uint                  button_;
+  double                coffset_;
+  bool                  vertical_skid_;
+  bool                  flipped                 () const;
+  virtual bool          vertical_skid           () const override;
+  virtual void          vertical_skid           (bool vs) override;
+protected:
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          reset                   (ResetMode mode = RESET_ALL) override;
+  virtual bool          handle_event            (const Event &event) override;
+public:
+  explicit              SliderSkidImpl          ();
+  virtual              ~SliderSkidImpl          () override;
+};
+
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_SLIDER_HH__ */

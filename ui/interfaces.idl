@@ -484,6 +484,17 @@ interface SliderArea : Container {
   AdjustmentSourceType adjustment_source = Enum (_("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw");
 };
 
+/// The SliderTrough container reflects the range of possible slider values, it contains the SliderSkid.
+/// See also the corresponding implementation class SliderTroughImpl.
+interface SliderTrough : Container {
+};
+
+/// The SliderSkid widget indicates the current slider position within a SliderArea.
+/// See also the corresponding implementation class SliderSkidImpl.
+interface SliderSkid : Container {
+  bool vertical_skid = Bool (_("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw");
+};
+
 /** Widget containing a list of selectable widgets.
  * List widget is a widget that displays a list of widgets generated according to a data source.
  * <br/> See also the corresponding implementation class WidgetListImpl.
