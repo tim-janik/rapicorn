@@ -6,19 +6,21 @@
 
 namespace Rapicorn {
 
+/// Configurable aspects about text paragraphs.
 struct ParagraphState {
   AlignType     align;
   EllipsizeType ellipsize;
   double        line_spacing;
   double        indent;
   String        font_family;
-  double        font_size; /* absolute font size */
+  double        font_size; // absolute font size
   explicit      ParagraphState();
 };
 
+/// Configurable aspects about text characters.
 struct TextAttrState {
   String   font_family;
-  double   font_scale; /* relative font size */
+  double   font_scale; // relative font size
   bool     bold;
   bool     italic;
   bool     underline;
@@ -29,6 +31,7 @@ struct TextAttrState {
   explicit TextAttrState();
 };
 
+/// Interface for editable text widgets.
 class TextBlock {
 protected:
   const PropertyList& text_block_property_list();
@@ -70,22 +73,63 @@ public:
   Aida::Signal<void ()> sig_selection_changed;        ///< Notification signal for operations that affected the selection.
 };
 
-class TextController : public virtual ContainerImpl {
+/// Text layout controller supporting edits, selection and pasting.
+class TextControllerImpl : public virtual SingleContainerImpl, public virtual EventHandler {
+  int      cursor_;
+  TextMode text_mode_;
+  TextBlock *cached_tblock_;
+  size_t   tblock_sig_;
+  String   clipboard_;
+  uint64   clipboard_nonce_, selection_nonce_, paste_nonce_;
+  enum CursorMovement { NEXT_CHAR, PREV_CHAR, WARP_HOME, WARP_END, };
+  TextBlock*            get_text_block          ();
+  void                  update_text_block       ();
+  bool                  move_cursor             (CursorMovement cm, const bool reset_selection);
+  bool                  insert_literally        (const String &utf8text);
+  bool                  select_all              ();
+  bool                  delete_selection        ();
+  bool                  delete_backward         ();
+  bool                  delete_foreward         ();
+  void                  selection_changed       ();
 protected:
-  virtual const PropertyList& __aida_properties__();
+  explicit              TextControllerImpl      ();
+  virtual              ~TextControllerImpl      () override;
+  virtual bool          can_focus               () const override;
+  virtual void          reset                   (ResetMode mode = RESET_ALL) override;
+  virtual bool          handle_event            (const Event &event) override;
+  int                   cursor                  () const                { return cursor_; }
+  String                get_text                () const;
+  void                  set_text                (const String &text);
+  TextMode              get_mode                () const                { return text_mode_; }
+  void                  set_mode                (TextMode text_mode);
+  String                get_markup              () const;
+  void                  set_markup              (const String &markup);
+  String                get_plain               () const;
+  void                  set_plain               (const String &ptext);
+  double                text_requisition        (uint n_chars, uint n_digits);
+  enum ChangesType { CURSOR = 1, TEXT = 2 };
+  friend ChangesType    operator|               (ChangesType a, ChangesType b)  { return ChangesType (uint64 (a) | b); }
+  virtual void          changes                 (ChangesType changes_flags)     {}
+};
+
+class TextEditorImpl : public virtual TextControllerImpl {
+  uint16   request_chars_, request_digits_;
+protected:
+  virtual const PropertyList& __aida_properties__ () override;
+  virtual void                size_request        (Requisition &requisition);
+  virtual void                changes             (ChangesType changes_flags) override;
 public:
-  virtual void          text           (const String &text) = 0;
-  virtual String        text           () const = 0;
-  virtual TextMode      text_mode      () const = 0;
-  virtual void          text_mode      (TextMode      text_mode) = 0;
-  virtual String        markup_text    () const = 0;
-  virtual void          markup_text    (const String &markup) = 0;
-  virtual String        plain_text     () const = 0;
-  virtual void          plain_text     (const String &ptext) = 0;
-  virtual int           request_chars  () const = 0;
-  virtual void          request_chars  (int nc) = 0;
-  virtual int           request_digits () const = 0;
-  virtual void          request_digits (int nd) = 0;
+  explicit         TextEditorImpl ();
+  virtual int      request_chars  () const                      { return request_chars_; }
+  virtual void     request_chars  (int nc)                      { request_chars_ = CLAMP (nc, 0, 65535); invalidate_size(); }
+  virtual int      request_digits () const                      { return request_digits_; }
+  virtual void     request_digits (int nd)                      { request_digits_ = CLAMP (nd, 0, 65535); invalidate_size(); }
+  virtual String   markup_text    () const                      { return get_markup(); }
+  virtual void     markup_text    (const String &markup)        { set_markup (markup); changed ("text"); }
+  virtual String   plain_text     () const                      { return get_plain(); }
+  virtual void     plain_text     (const String &ptext)         { set_plain (ptext); changed ("text"); }
+  virtual TextMode text_mode      () const                      { return get_mode(); }
+  virtual void     text_mode      (TextMode text_mode)          { set_mode (text_mode); }
 };
 
 } // Rapicorn
