@@ -4,8 +4,6 @@
 #include "container.hh"
 
 namespace Rapicorn {
-namespace Text {
-using namespace Rapicorn;
 
 typedef enum {
   NEXT_CHAR,
@@ -14,30 +12,30 @@ typedef enum {
   WARP_END,
 } CursorMovement;
 
-ParaState::ParaState() :
+ParagraphState::ParagraphState() :
   align (ALIGN_LEFT), ellipsize (ELLIPSIZE_END),
   line_spacing (1), indent (0),
   font_family ("Sans"), font_size (12)
 {}
 
-AttrState::AttrState() :
+TextAttrState::TextAttrState() :
   font_family (""), font_scale (1.0),
   bold (false), italic (false), underline (false),
   small_caps (false), strike_through (false),
   foreground (0), background (0)
 {}
 
-Editor::Client::~Client ()
+TextBlock::~TextBlock ()
 {}
 
 String
-Editor::Client::markup_text () const
+TextBlock::markup_text () const
 {
   return save_markup();
 }
 
 void
-Editor::Client::markup_text (const String &markup)
+TextBlock::markup_text (const String &markup)
 {
   load_markup (markup);
 }
@@ -61,26 +59,26 @@ escape_xml (const String &input)
 
 
 void
-Editor::Client::plain_text (const String &markup)
+TextBlock::plain_text (const String &markup)
 {
   load_markup (escape_xml (markup));
 }
 
 String
-Editor::Client::plain_text () const
+TextBlock::plain_text () const
 {
   int byte_length = 0;
-  const char *t = const_cast<Client*> (this)->peek_text (&byte_length);
+  const char *t = const_cast<TextBlock*> (this)->peek_text (&byte_length);
   return String (t, byte_length);
 }
 
 const PropertyList&
-Editor::Client::client_property_list()
+TextBlock::text_block_property_list()
 {
   static Property *properties[] = {
-    MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-    MakeProperty (Client, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
-    MakeProperty (Client, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
+    MakeProperty (TextBlock, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (TextBlock, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
+    MakeProperty (TextBlock, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -88,31 +86,31 @@ Editor::Client::client_property_list()
 
 
 const PropertyList&
-Editor::__aida_properties__()
+TextController::__aida_properties__()
 {
   static Property *properties[] = {
-    MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
-    MakeProperty (Editor, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-    MakeProperty (Editor, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
-    MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
-    MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
+    MakeProperty (TextController, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
+    MakeProperty (TextController, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (TextController, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
+    MakeProperty (TextController, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
+    MakeProperty (TextController, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
   static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
   return property_list;
 }
 
-class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, public virtual EventHandler {
+class TextControllerImpl : public virtual SingleContainerImpl, public virtual TextController, public virtual EventHandler {
   uint16   request_chars_, request_digits_;
   int      cursor_;
   TextMode text_mode_;
-  Client  *cached_client_;
-  size_t   client_sig_;
+  TextBlock *cached_tblock_;
+  size_t   tblock_sig_;
   String   clipboard_;
   uint64   clipboard_nonce_, selection_nonce_, paste_nonce_;
 public:
-  EditorImpl() :
+  TextControllerImpl() :
     request_chars_ (0), request_digits_ (0), cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE),
-    cached_client_ (NULL), client_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
+    cached_tblock_ (NULL), tblock_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
   {}
 protected:
   virtual void
@@ -122,45 +120,45 @@ protected:
     if (name == "text")
       {
         changed ("markup_text");  // notify aliasing properties
-        ObjectImpl *client_object = dynamic_cast<ObjectImpl*> (get_client());
-        if (client_object)
+        ObjectImpl *tblock_object = dynamic_cast<ObjectImpl*> (get_text_block());
+        if (tblock_object)
           {
-            client_object->changed ("markup_text");  // bad hack, need tighter coupling between Client and Editor
+            tblock_object->changed ("markup_text");  // bad hack, need tighter coupling between TextBlock and TextController
           }
       }
   }
 private:
-  ~EditorImpl()
+  ~TextControllerImpl()
   {
-    if (cached_client_)
+    if (cached_tblock_)
       {
-        cached_client_->sig_selection_changed() -= client_sig_;
-        client_sig_ = 0;
-        ReferenceCountable *trash = dynamic_cast<WidgetImpl*> (cached_client_);
-        cached_client_ = NULL;
+        cached_tblock_->sig_selection_changed() -= tblock_sig_;
+        tblock_sig_ = 0;
+        ReferenceCountable *trash = dynamic_cast<WidgetImpl*> (cached_tblock_);
+        cached_tblock_ = NULL;
         if (trash)
           unref (trash);
       }
   }
-  Client*
-  get_client()
+  TextBlock*
+  get_text_block()
   {
-    // check if text client changed
-    Client *candidate = interface<Client*>();
-    if (cached_client_ == candidate)
-      return cached_client_;
-    // adjust to new client
-    Client *const old = cached_client_;
-    const size_t old_sig = client_sig_;
+    // check if text block changed
+    TextBlock *candidate = interface<TextBlock*>();
+    if (cached_tblock_ == candidate)
+      return cached_tblock_;
+    // adjust to new text block
+    TextBlock *const old = cached_tblock_;
+    const size_t old_sig = tblock_sig_;
     ReferenceCountable *base = dynamic_cast<WidgetImpl*> (candidate);
-    cached_client_ = base ? candidate : NULL;
+    cached_tblock_ = base ? candidate : NULL;
     if (base)
       {
         ref (base);
-        client_sig_ = cached_client_->sig_selection_changed() += Aida::slot (this, &EditorImpl::selection_changed);
+        tblock_sig_ = cached_tblock_->sig_selection_changed() += Aida::slot (this, &TextControllerImpl::selection_changed);
       }
     else
-      client_sig_ = 0;
+      tblock_sig_ = 0;
     // cleanup old
     base = dynamic_cast<WidgetImpl*> (old);
     if (base)
@@ -168,25 +166,25 @@ private:
         old->sig_selection_changed() -= old_sig;
         unref (base);
       }
-    // update new client
-    if (cached_client_)
-      update_client();
-    return cached_client_;
+    // update new text block
+    if (cached_tblock_)
+      update_text_block();
+    return cached_tblock_;
   }
   void
-  update_client ()
+  update_text_block ()
   {
-    Client *client = get_client();
-    return_unless (client);
-    client->text_mode (text_mode_);
-    client->cursor2mark();
-    cursor_ = client->mark();
+    TextBlock *tblock = get_text_block();
+    return_unless (tblock);
+    tblock->text_mode (text_mode_);
+    tblock->cursor2mark();
+    cursor_ = tblock->mark();
     selection_changed();
   }
   virtual void
   size_request (Requisition &requisition)
   {
-    update_client();
+    update_text_block();
     SingleContainerImpl::size_request (requisition);
     uint fallback_chars = 0, fallback_digits = 0;
     if (text_mode_ == TEXT_MODE_SINGLE_LINE)
@@ -198,15 +196,15 @@ private:
             fallback_digits = 10;
           }
       }
-    Client *client = get_client();
-    if (client)
-      requisition.width += client->text_requisition (fallback_chars + request_chars_, fallback_digits + request_digits_);
+    TextBlock *tblock = get_text_block();
+    if (tblock)
+      requisition.width += tblock->text_requisition (fallback_chars + request_chars_, fallback_digits + request_digits_);
   }
   virtual bool
   can_focus () const
   {
-    Client *client = cached_client_;
-    return client != NULL;
+    TextBlock *tblock = cached_tblock_;
+    return tblock != NULL;
   }
   virtual void
   reset (ResetMode mode = RESET_ALL)
@@ -217,7 +215,7 @@ private:
     bool handled = false, ignore = false;
     switch (event.type)
       {
-        Client *client;
+        TextBlock *tblock;
         bool rs;
         const EventKey *kevent;
         const EventData *devent;
@@ -239,12 +237,12 @@ private:
             if (kevent->key_state & MOD_CONTROL)
               {
                 clipboard_ = "";
-                Client *client = get_client();
-                if (client)
+                TextBlock *tblock = get_text_block();
+                if (tblock)
                   {
                     int start, end, nutf8;
-                    const bool has_selection = client->get_selection (&start, &end, &nutf8);
-                    String text = client->plain_text();
+                    const bool has_selection = tblock->get_selection (&start, &end, &nutf8);
+                    String text = tblock->plain_text();
                     if (has_selection && nutf8 > 0 && size_t (end) <= text.size())
                       {
                         text = text.substr (start, end - start);
@@ -313,11 +311,11 @@ private:
         break;
       case CONTENT_CLEAR:
         devent = dynamic_cast<const EventData*> (&event);
-        client = get_client();
+        tblock = get_text_block();
         if (selection_nonce_ && devent->nonce == selection_nonce_)
           {
-            if (client && client->get_selection())
-              client->hide_selector();
+            if (tblock && tblock->get_selection())
+              tblock->hide_selector();
             selection_nonce_ = 0;
             handled = true;
           }
@@ -331,14 +329,14 @@ private:
         break;
       case CONTENT_REQUEST:
         devent = dynamic_cast<const EventData*> (&event);
-        client = get_client();
-        if (selection_nonce_ && devent->nonce == selection_nonce_ && client && devent->data_type == "text/plain")
+        tblock = get_text_block();
+        if (selection_nonce_ && devent->nonce == selection_nonce_ && tblock && devent->data_type == "text/plain")
           {
             int start, end;
-            const bool has_selection = client->get_selection (&start, &end);
+            const bool has_selection = tblock->get_selection (&start, &end);
             if (has_selection && start >= 0 && end > start)
               {
-                String text = client->plain_text();
+                String text = tblock->plain_text();
                 if (size_t (end) <= text.size())
                   {
                     text = text.substr (start, end - start);
@@ -361,17 +359,17 @@ private:
         break;
       case BUTTON_PRESS:
         bevent = dynamic_cast<const EventButton*> (&event);
-        client = get_client();
+        tblock = get_text_block();
         grab_focus();
-        if (client && bevent->button == 1)
+        if (tblock && bevent->button == 1)
           {
-            int o = client->mark();
-            bool moved = client->mark_to_coord (bevent->x, bevent->y);
-            int m = client->mark();
+            int o = tblock->mark();
+            bool moved = tblock->mark_to_coord (bevent->x, bevent->y);
+            int m = tblock->mark();
             if (o != m)
               {
                 cursor_ = m;
-                client->mark2cursor();
+                tblock->mark2cursor();
                 changed ("cursor");
               }
             (void) moved;
@@ -396,38 +394,38 @@ private:
   move_cursor (CursorMovement cm, const bool reset_selection)
   {
     const bool adjust_selection = !reset_selection;
-    Client *client = get_client();
-    return_unless (client, false);
+    TextBlock *tblock = get_text_block();
+    return_unless (tblock, false);
     int start, end;
-    const bool has_selection = client->get_selection (&start, &end);
+    const bool has_selection = tblock->get_selection (&start, &end);
     // special case, cursor left/right deselects
     if (has_selection && reset_selection && (cm == PREV_CHAR || cm == NEXT_CHAR))
       {
-        client->mark (cm == PREV_CHAR ? start : end);
-        client->hide_selector();
-        client->mark2cursor();
-        cursor_ = client->mark();
+        tblock->mark (cm == PREV_CHAR ? start : end);
+        tblock->hide_selector();
+        tblock->mark2cursor();
+        cursor_ = tblock->mark();
         changed ("cursor");
         return true;
       }
-    client->mark (cursor_);
+    tblock->mark (cursor_);
     if (!has_selection && adjust_selection)
-      client->mark2selector();                      // old cursor starts selection
-    int o = client->mark();
+      tblock->mark2selector();                      // old cursor starts selection
+    int o = tblock->mark();
     switch (cm)
       {
-      case NEXT_CHAR:       client->step_mark (+1); break;
-      case PREV_CHAR:       client->step_mark (-1); break;
-      case WARP_HOME:       client->mark (0);       break;
-      case WARP_END:        client->mark (-1);      break;
+      case NEXT_CHAR:       tblock->step_mark (+1); break;
+      case PREV_CHAR:       tblock->step_mark (-1); break;
+      case WARP_HOME:       tblock->mark (0);       break;
+      case WARP_END:        tblock->mark (-1);      break;
       }
-    int m = client->mark();
+    int m = tblock->mark();
     if (o == m)
       return false;
     if (reset_selection && has_selection)
-      client->hide_selector();
+      tblock->hide_selector();
     cursor_ = m;
-    client->mark2cursor();
+    tblock->mark2cursor();
     changed ("cursor");
     return true;
   }
@@ -441,14 +439,14 @@ private:
          utf8text[0] == 0x7f || // Delete
          0))
       return false;     // ignore literal inputs from "control" keys
-    Client *client = get_client();
-    if (client && !utf8text.empty())
+    TextBlock *tblock = get_text_block();
+    if (tblock && !utf8text.empty())
       {
         delete_selection();
-        client->mark (cursor_);
-        client->mark_insert (utf8text);
-        cursor_ = client->mark();
-        client->mark2cursor();
+        tblock->mark (cursor_);
+        tblock->mark_insert (utf8text);
+        cursor_ = tblock->mark();
+        tblock->mark2cursor();
         changed ("text");
         changed ("cursor");
         return true;
@@ -458,31 +456,31 @@ private:
   bool
   select_all()
   {
-    Client *client = get_client();
-    return_unless (client, false);
-    client->hide_selector();    // enforces selection_changed later on
-    client->mark (-1);
-    cursor_ = client->mark();
-    client->mark2cursor();      // cursor might have been at end already
-    client->mark (0);
-    client->mark2selector();    // selects and forces selection_changed
+    TextBlock *tblock = get_text_block();
+    return_unless (tblock, false);
+    tblock->hide_selector();    // enforces selection_changed later on
+    tblock->mark (-1);
+    cursor_ = tblock->mark();
+    tblock->mark2cursor();      // cursor might have been at end already
+    tblock->mark (0);
+    tblock->mark2selector();    // selects and forces selection_changed
     changed ("cursor");
-    return client->get_selection();
+    return tblock->get_selection();
   }
   bool
   delete_selection()
   {
-    Client *client = get_client();
-    return_unless (client, false);
+    TextBlock *tblock = get_text_block();
+    return_unless (tblock, false);
     int start, end, nutf8;
-    const bool has_selection = client->get_selection (&start, &end, &nutf8);
+    const bool has_selection = tblock->get_selection (&start, &end, &nutf8);
     if (!has_selection)
       return false;
-    client->mark (start);
-    client->mark_delete (nutf8);
-    client->hide_selector();
-    cursor_ = client->mark();
-    client->mark2cursor();
+    tblock->mark (start);
+    tblock->mark_delete (nutf8);
+    tblock->hide_selector();
+    cursor_ = tblock->mark();
+    tblock->mark2cursor();
     changed ("cursor");
     return true;
   }
@@ -491,18 +489,18 @@ private:
   {
     if (delete_selection())
       return true;
-    Client *client = get_client();
-    if (client)
+    TextBlock *tblock = get_text_block();
+    if (tblock)
       {
-        client->mark (cursor_);
-        int o = client->mark();
-        client->step_mark (-1);
-        int m = client->mark();
+        tblock->mark (cursor_);
+        int o = tblock->mark();
+        tblock->step_mark (-1);
+        int m = tblock->mark();
         if (o == m)
           return false;
         cursor_ = m;
-        client->mark2cursor();
-        client->mark_delete (1);
+        tblock->mark2cursor();
+        tblock->mark_delete (1);
         changed ("text");
         changed ("cursor");
         return true;
@@ -512,14 +510,14 @@ private:
   bool
   delete_foreward ()
   {
-    Client *client = get_client();
-    return_unless (client, false);
+    TextBlock *tblock = get_text_block();
+    return_unless (tblock, false);
     if (delete_selection())
       return true;
-    client->mark (cursor_);
-    if (client->mark_at_end())
+    tblock->mark (cursor_);
+    if (tblock->mark_at_end())
       return false;
-    client->mark_delete (1);
+    tblock->mark_delete (1);
     changed ("text");
     changed ("cursor");
     return true;
@@ -527,9 +525,9 @@ private:
   void
   selection_changed()
   {
-    Client *client = get_client();
+    TextBlock *tblock = get_text_block();
     int start, end, nutf8;
-    const bool has_selection = client->get_selection (&start, &end, &nutf8);
+    const bool has_selection = tblock->get_selection (&start, &end, &nutf8);
     if (!has_selection || nutf8 < 1)
       {
         if (selection_nonce_)
@@ -545,35 +543,34 @@ private:
   virtual void
   text (const String &text)
   {
-    Client *client = get_client();
-    if (client)
-      client->markup_text (text);
+    TextBlock *tblock = get_text_block();
+    if (tblock)
+      tblock->markup_text (text);
   }
   virtual String
   text () const
   {
-    return cached_client_ ? cached_client_->markup_text() : "";
+    return cached_tblock_ ? cached_tblock_->markup_text() : "";
   }
   virtual TextMode text_mode      () const                      { return text_mode_; }
   virtual void     text_mode      (TextMode      text_mode)
   {
     text_mode_ = text_mode;
-    Client *client = get_client();
-    if (client)
-      client->text_mode (text_mode_);
+    TextBlock *tblock = get_text_block();
+    if (tblock)
+      tblock->text_mode (text_mode_);
     invalidate_size();
   }
-  virtual String   markup_text    () const                      { return cached_client_ ? cached_client_->markup_text() : ""; }
-  virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
-  virtual String   plain_text     () const                      { return cached_client_ ? cached_client_->plain_text() : ""; }
-  virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
+  virtual String   markup_text    () const                      { return cached_tblock_ ? cached_tblock_->markup_text() : ""; }
+  virtual void     markup_text    (const String &markup)        { TextBlock *tblock = get_text_block(); if (tblock) tblock->markup_text (markup); }
+  virtual String   plain_text     () const                      { return cached_tblock_ ? cached_tblock_->plain_text() : ""; }
+  virtual void     plain_text     (const String &ptext)         { TextBlock *tblock = get_text_block(); if (tblock) tblock->plain_text (ptext); }
   virtual int      request_chars  () const                      { return request_chars_; }
   virtual void     request_chars  (int nc)                      { request_chars_ = CLAMP (nc, 0, 65535); invalidate_size(); }
   virtual int      request_digits () const                      { return request_digits_; }
   virtual void     request_digits (int nd)                      { request_digits_ = CLAMP (nd, 0, 65535); invalidate_size(); }
 };
-static const WidgetFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 
+static const WidgetFactory<TextControllerImpl> editor_factory ("Rapicorn::Factory::TextEditor");
 
-} // Text
 } // Rapicorn

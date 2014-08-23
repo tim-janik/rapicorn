@@ -157,6 +157,6 @@
   <tmpl:define id="TestWidget" inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
 
   <!-- TextEditor -->
-  <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::Text::Editor" />
+  <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::TextEditor" />
 
 </rapicorn-definitions>

@@ -703,8 +703,8 @@ public:
   }
 };
 
-/* --- TextPangoImpl (TextEditor::Client) --- */
-class TextPangoImpl : public virtual WidgetImpl, public virtual Text::Editor::Client {
+// == TextPangoImpl (TextBlock) ==
+class TextPangoImpl : public virtual WidgetImpl, public virtual TextBlock {
   PangoLayout    *layout_;
   TextMode        text_mode_;
   int             mark_, cursor_, selector_;
@@ -727,7 +727,7 @@ public:
     text_mode_ (TEXT_MODE_ELLIPSIZED), mark_ (-1), cursor_ (-1), selector_ (-1),
     scoffset_ (0), last_selector_attr_ (NULL)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     rapicorn_pango_mutex.lock();
     // FIXME: using pstate.font_family as font_desc string here bypasses our default font settings
     layout_ = global_layout_cache.create_layout (pstate.font_family, pstate.align,
@@ -746,7 +746,7 @@ public:
   virtual void
   size_request (Requisition &requisition)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
     pango_layout_set_width (layout_, -1);
@@ -763,7 +763,7 @@ public:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
     if (text_mode_ == TEXT_MODE_SINGLE_LINE)
@@ -796,7 +796,7 @@ protected:
 #if 0
     if (sample.size())
       {
-        Text::ParaState pstate; // retrieve defaults
+        ParagraphState pstate; // retrieve defaults
         PangoLayout *playout = pango_layout_copy (layout_);
         pango_layout_set_attributes (playout, NULL);
         pango_layout_set_tabs (playout, NULL);
@@ -825,10 +825,10 @@ protected:
       *byte_length = strlen (str);
     return str;
   }
-  virtual Text::ParaState
+  virtual ParagraphState
   para_state () const
   {
-    Text::ParaState pstate;
+    ParagraphState pstate;
     rapicorn_pango_mutex.lock();
     pstate.align = align_type_from_pango_alignment (pango_layout_get_alignment (layout_));
     pstate.ellipsize = ellipsize_type_from_pango_ellipsize_mode (pango_layout_get_ellipsize (layout_));
@@ -842,10 +842,10 @@ protected:
     assert (pango_font_description_get_size_is_absolute (fdesc) == false);
     pango_font_description_free (fdesc);
     rapicorn_pango_mutex.unlock();
-    return Text::ParaState();
+    return ParagraphState();
   }
   virtual void
-  para_state (const Text::ParaState &pstate)
+  para_state (const ParagraphState &pstate)
   {
     rapicorn_pango_mutex.lock();
     pango_layout_set_alignment (layout_, pango_alignment_from_align_type (pstate.align));
@@ -866,14 +866,14 @@ protected:
     invalidate();
     changed ("para_state");
   }
-  virtual Text::AttrState
+  virtual TextAttrState
   attr_state () const
   {
     // FIXME: implement this
-    return Text::AttrState();
+    return TextAttrState();
   }
   virtual void
-  attr_state (const Text::AttrState &astate)
+  attr_state (const TextAttrState &astate)
   {
     // FIXME: implement this
     changed ("attr_state");
@@ -1084,8 +1084,7 @@ protected:
     changed ("cursor");
   }
   virtual void
-  mark_insert (String                 utf8string,
-               const Text::AttrState *astate = NULL)
+  mark_insert (String utf8string, const TextAttrState *astate = NULL)
   {
     rapicorn_pango_mutex.lock();
     String s = pango_layout_get_text (layout_);
@@ -1334,7 +1333,7 @@ protected:
   __aida_properties__() // escape check-__aida_properties__ ';'
   {
     static Property *properties[] = {};
-    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), Client::client_property_list());
+    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), TextBlock::text_block_property_list());
     return property_list;
   }
 };

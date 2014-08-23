@@ -236,9 +236,9 @@ test_complex_dialog ()
   widget = window.query_selector_unique (":root .Button .Label");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<Text::Editor::Client*> (widget) != NULL);
+  TASSERT (widget != NULL && dynamic_cast<TextBlock*> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<Text::Editor::Client*> (widget) == NULL);
+  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<TextBlock*> (widget) == NULL);
   widget = window.query_selector_unique ("/#"); // invalid path
   TASSERT (widget == NULL);
 }
