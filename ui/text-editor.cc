@@ -541,7 +541,7 @@ TextEditorImpl::TextEditorImpl() :
 void
 TextEditorImpl::size_request (Requisition &requisition)
 {
-  SingleContainerImpl::size_request (requisition);
+  TextControllerImpl::size_request (requisition);
   uint fallback_chars = 0, fallback_digits = 0;
   if (get_mode() == TEXT_MODE_SINGLE_LINE)
     {
@@ -568,18 +568,72 @@ TextEditorImpl::changes (ChangesType changes_flags)
     }
 }
 
-const PropertyList&
-TextEditorImpl::__aida_properties__()
+int
+TextEditorImpl::request_chars () const
 {
-  static Property *properties[] = {
-    MakeProperty (TextEditorImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
-    MakeProperty (TextEditorImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-    MakeProperty (TextEditorImpl, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
-    MakeProperty (TextEditorImpl, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
-    MakeProperty (TextEditorImpl, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
+  return request_chars_;
+}
+
+void
+TextEditorImpl::request_chars (int nc)
+{
+  request_chars_ = CLAMP (nc, 0, 65535);
+  invalidate_size();
+  changed ("request_chars");
+}
+
+int
+TextEditorImpl::request_digits () const
+{
+  return request_digits_;
+}
+
+void
+TextEditorImpl::request_digits (int nd)
+{
+  request_digits_ = CLAMP (nd, 0, 65535);
+  invalidate_size();
+  changed ("request_digits");
+}
+
+
+String
+TextEditorImpl::markup_text () const
+{
+  return get_markup();
+}
+
+void
+TextEditorImpl::markup_text (const String &markup)
+{
+  set_markup (markup);
+  changes (TEXT);
+}
+
+String
+TextEditorImpl::plain_text () const
+{
+  return get_plain();
+}
+
+void
+TextEditorImpl::plain_text (const String &ptext)
+{
+  set_plain (ptext);
+  changes (TEXT);
+}
+
+TextMode
+TextEditorImpl::text_mode () const
+{
+  return get_mode();
+}
+
+void
+TextEditorImpl::text_mode (TextMode text_mode)
+{
+  set_mode (text_mode);
+  changed ("text_mode");
 }
 
 static const WidgetFactory<TextEditorImpl> editor_factory ("Rapicorn::Factory::TextEditor");

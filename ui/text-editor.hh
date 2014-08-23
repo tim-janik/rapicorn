@@ -112,24 +112,23 @@ protected:
   virtual void          changes                 (ChangesType changes_flags)     {}
 };
 
-class TextEditorImpl : public virtual TextControllerImpl {
+class TextEditorImpl : public virtual TextControllerImpl, public virtual TextEditorIface {
   uint16   request_chars_, request_digits_;
 protected:
-  virtual const PropertyList& __aida_properties__ () override;
-  virtual void                size_request        (Requisition &requisition);
-  virtual void                changes             (ChangesType changes_flags) override;
+  virtual void     size_request   (Requisition &requisition) override;
+  virtual void     changes        (ChangesType changes_flags) override;
 public:
   explicit         TextEditorImpl ();
-  virtual int      request_chars  () const                      { return request_chars_; }
-  virtual void     request_chars  (int nc)                      { request_chars_ = CLAMP (nc, 0, 65535); invalidate_size(); }
-  virtual int      request_digits () const                      { return request_digits_; }
-  virtual void     request_digits (int nd)                      { request_digits_ = CLAMP (nd, 0, 65535); invalidate_size(); }
-  virtual String   markup_text    () const                      { return get_markup(); }
-  virtual void     markup_text    (const String &markup)        { set_markup (markup); changed ("text"); }
-  virtual String   plain_text     () const                      { return get_plain(); }
-  virtual void     plain_text     (const String &ptext)         { set_plain (ptext); changed ("text"); }
-  virtual TextMode text_mode      () const                      { return get_mode(); }
-  virtual void     text_mode      (TextMode text_mode)          { set_mode (text_mode); }
+  virtual TextMode text_mode      () const override;
+  virtual void     text_mode      (TextMode text_mode) override;
+  virtual String   plain_text     () const override;
+  virtual void     plain_text     (const String &ptext) override;
+  virtual String   markup_text    () const override;
+  virtual void     markup_text    (const String &markup) override;
+  virtual int      request_chars  () const override;
+  virtual void     request_chars  (int nc) override;
+  virtual int      request_digits () const override;
+  virtual void     request_digits (int nd) override;
 };
 
 } // Rapicorn

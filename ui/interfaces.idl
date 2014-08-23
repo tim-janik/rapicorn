@@ -551,6 +551,16 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
+/// A widget for text display, editing, selecting and pasting.
+/// See also the corresponding implementation class TextEditorImpl.
+interface TextEditor : Container {
+  TextMode text_mode      = Enum (_("Text Mode"), _("The basic text layout mechanism to use."), "rw");
+  String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
+  String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
+  int32    request_chars  = Range (_("Request Chars"),  _("Number of characters to request space for."), "rw", 0, 65535, 4);
+  int32    request_digits = Range (_("Request Digits"), _("Number of digits to request space for."), "rw", 0, 65535, 2);
+};
+
 /** Application singleton.
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
