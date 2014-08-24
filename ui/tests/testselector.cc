@@ -532,9 +532,12 @@ test_selector_matching ()
   test_query (__LINE__, w, "*.Window.Container.Widget", 1, ":root");
   test_query (__LINE__, w, "* > *", -20, ":not(.Window)");
   // pseudo classes :empty :only-child :root :first-child :last-child
-  test_query (__LINE__, w, "* VBox  Button > Frame Label:empty", 4, "Label");
-  test_query (__LINE__, w, "*:empty *", 0);
+  test_query (__LINE__, w, "* VBox  Button > Frame Label", 4, "Label");
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:first-child", 4, "Label");
   test_query (__LINE__, w, "* VBox  Button > Frame Label:only-child", 4, "Label");
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:last-child", 4, "Label");
+  test_query (__LINE__, w, "* Alignment VBox > Frame Arrow:empty", 1, "Arrow");
+  test_query (__LINE__, w, "*:empty *", 0);
   test_query (__LINE__, w, "*:root", 1, ".Window");
   test_query (__LINE__, w, "*:root > *:only-child", 1, "Ambience");
   test_query (__LINE__, w, "*:root > *:last-child:first-child", 1, "Ambience");

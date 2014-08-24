@@ -68,21 +68,9 @@ TextBlock::plain_text () const
   return String (t, byte_length);
 }
 
-const PropertyList&
-TextBlock::text_block_property_list()
-{
-  static Property *properties[] = {
-    MakeProperty (TextBlock, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-    MakeProperty (TextBlock, plain_text,  _("Plain Text"),  _("The text to display, without markup information."), "rw"),
-    MakeProperty (TextBlock, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
-  };
-  static const PropertyList property_list (properties);
-  return property_list;
-}
-
 // == TextControllerImpl ==
 TextControllerImpl::TextControllerImpl() :
-  cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE),
+  cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE), allow_edits_ (false),
   cached_tblock_ (NULL), tblock_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
 {}
 
@@ -97,6 +85,15 @@ TextControllerImpl::~TextControllerImpl()
       if (trash)
         unref (trash);
     }
+}
+
+void
+TextControllerImpl::constructed()
+{
+  SingleContainerImpl::constructed();
+  WidgetImpl &label = Factory::create_ui_widget ("Rapicorn_Factory_TextBlock");
+  add (label);
+  update_text_block();
 }
 
 TextBlock*
@@ -146,7 +143,15 @@ bool
 TextControllerImpl::can_focus () const
 {
   TextBlock *tblock = cached_tblock_;
-  return tblock != NULL;
+  return allow_edits_ && tblock != NULL;
+}
+
+void
+TextControllerImpl::allow_edits (bool allow_edits)
+{
+  if (allow_edits_ && !allow_edits)
+    reset();
+  allow_edits_ = allow_edits;
 }
 
 void
@@ -156,6 +161,7 @@ TextControllerImpl::reset (ResetMode mode)
 bool
 TextControllerImpl::handle_event (const Event &event)
 {
+  return_unless (allow_edits_, false);
   bool handled = false, ignore = false;
   switch (event.type)
     {
@@ -373,6 +379,7 @@ TextControllerImpl::move_cursor (CursorMovement cm, const bool reset_selection)
 bool
 TextControllerImpl::insert_literally (const String &utf8text)
 {
+  return_unless (allow_edits_, false);
   if (utf8text.size() == 1 &&
       (utf8text[0] == '\b' || // Backspace
        utf8text[0] == '\n' || // Newline
@@ -412,6 +419,7 @@ TextControllerImpl::select_all()
 bool
 TextControllerImpl::delete_selection()
 {
+  return_unless (allow_edits_, false);
   TextBlock *tblock = get_text_block();
   return_unless (tblock, false);
   int start, end, nutf8;
@@ -430,6 +438,7 @@ TextControllerImpl::delete_selection()
 bool
 TextControllerImpl::delete_backward ()
 {
+  return_unless (allow_edits_, false);
   if (delete_selection())
     return true;
   TextBlock *tblock = get_text_block();
@@ -453,6 +462,7 @@ TextControllerImpl::delete_backward ()
 bool
 TextControllerImpl::delete_foreward ()
 {
+  return_unless (allow_edits_, false);
   TextBlock *tblock = get_text_block();
   return_unless (tblock, false);
   if (delete_selection())
@@ -516,10 +526,16 @@ void
 TextControllerImpl::set_mode (TextMode text_mode)
 {
   text_mode_ = text_mode;
-  TextBlock *tblock = get_text_block();
-  if (tblock)
-    tblock->text_mode (text_mode_);
   invalidate_size();
+  if (cached_tblock_)
+    {
+      /* this method maybe called from (derived) ctors, when the factory context
+       * isn't yet setup. so guard text_block access by cached value to prevent
+       * get_text_block/match_interface/Widget::name/factory_context_name: fc!=NULL
+       * assertions.
+       */
+      update_text_block();
+    }
 }
 
 double
@@ -533,10 +549,61 @@ TextControllerImpl::text_requisition (uint n_chars, uint n_digits)
   return req;
 }
 
+// == LabelImpl ==
+LabelImpl::LabelImpl()
+{
+  allow_edits (false);
+  set_mode (TEXT_MODE_ELLIPSIZED);
+}
+
+void
+LabelImpl::changes (ChangesType changes_flags)
+{
+  TextControllerImpl::changes (changes_flags);
+  if (changes_flags & CURSOR)
+    ;
+  if (changes_flags & TEXT)
+    {
+      changed ("plain_text");
+      changed ("markup_text");
+    }
+}
+
+String
+LabelImpl::markup_text () const
+{
+  return get_markup();
+}
+
+void
+LabelImpl::markup_text (const String &markup)
+{
+  set_markup (markup);
+  changes (TEXT);
+}
+
+String
+LabelImpl::plain_text () const
+{
+  return get_plain();
+}
+
+void
+LabelImpl::plain_text (const String &ptext)
+{
+  set_plain (ptext);
+  changes (TEXT);
+}
+
+static const WidgetFactory<LabelImpl> label_factory ("Rapicorn::Factory::Label");
+
 // == TextEditorImpl ==
 TextEditorImpl::TextEditorImpl() :
   request_chars_ (0), request_digits_ (0)
-{}
+{
+  set_mode (TEXT_MODE_WRAPPED);
+  allow_edits (true);
+}
 
 void
 TextEditorImpl::size_request (Requisition &requisition)
@@ -596,7 +663,6 @@ TextEditorImpl::request_digits (int nd)
   changed ("request_digits");
 }
 
-
 String
 TextEditorImpl::markup_text () const
 {
@@ -621,19 +687,6 @@ TextEditorImpl::plain_text (const String &ptext)
 {
   set_plain (ptext);
   changes (TEXT);
-}
-
-TextMode
-TextEditorImpl::text_mode () const
-{
-  return get_mode();
-}
-
-void
-TextEditorImpl::text_mode (TextMode text_mode)
-{
-  set_mode (text_mode);
-  changed ("text_mode");
 }
 
 static const WidgetFactory<TextEditorImpl> editor_factory ("Rapicorn::Factory::TextEditor");

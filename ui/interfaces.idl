@@ -162,13 +162,6 @@ flags enum StateType {
   STATE_DEFAULT         = 1 << 4,
 };
 
-///< Enum type to discriminate various Text widget types.
-enum TextMode {
-  TEXT_MODE_WRAPPED = 1,
-  TEXT_MODE_ELLIPSIZED,
-  TEXT_MODE_SINGLE_LINE,
-};
-
 ///< Enum type to discriminate various toplevel Window types.
 enum WindowType {
   WINDOW_TYPE_NORMAL = 0,       ///< Normal window
@@ -551,10 +544,16 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
+/// A widget for text display.
+/// See also the corresponding implementation class LabelImpl.
+interface Label : Container {
+  String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
+  String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
+};
+
 /// A widget for text display, editing, selecting and pasting.
 /// See also the corresponding implementation class TextEditorImpl.
 interface TextEditor : Container {
-  TextMode text_mode      = Enum (_("Text Mode"), _("The basic text layout mechanism to use."), "rw");
   String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
   String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
   int32    request_chars  = Range (_("Request Chars"),  _("Number of characters to request space for."), "rw", 0, 65535, 4);

@@ -1329,13 +1329,6 @@ protected:
       }
     rapicorn_pango_mutex.unlock();
   }
-  virtual const PropertyList&
-  __aida_properties__() // escape check-__aida_properties__ ';'
-  {
-    static Property *properties[] = {};
-    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), TextBlock::text_block_property_list());
-    return property_list;
-  }
 };
 
 static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");

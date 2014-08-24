@@ -6,6 +6,13 @@
 
 namespace Rapicorn {
 
+///< Enum type to discriminate various Text widget types.
+enum TextMode {
+  TEXT_MODE_WRAPPED = 1,
+  TEXT_MODE_ELLIPSIZED,
+  TEXT_MODE_SINGLE_LINE,
+};
+
 /// Configurable aspects about text paragraphs.
 struct ParagraphState {
   AlignType     align;
@@ -34,7 +41,6 @@ struct TextAttrState {
 /// Interface for editable text widgets.
 class TextBlock {
 protected:
-  const PropertyList& text_block_property_list();
   virtual String      save_markup  () const = 0;
   virtual void        load_markup  (const String &markup) = 0;
 public:
@@ -75,12 +81,13 @@ public:
 
 /// Text layout controller supporting edits, selection and pasting.
 class TextControllerImpl : public virtual SingleContainerImpl, public virtual EventHandler {
-  int      cursor_;
-  TextMode text_mode_;
+  int        cursor_;
+  TextMode   text_mode_;
+  bool       allow_edits_;
   TextBlock *cached_tblock_;
-  size_t   tblock_sig_;
-  String   clipboard_;
-  uint64   clipboard_nonce_, selection_nonce_, paste_nonce_;
+  size_t     tblock_sig_;
+  String     clipboard_;
+  uint64     clipboard_nonce_, selection_nonce_, paste_nonce_;
   enum CursorMovement { NEXT_CHAR, PREV_CHAR, WARP_HOME, WARP_END, };
   TextBlock*            get_text_block          ();
   void                  update_text_block       ();
@@ -94,9 +101,12 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
 protected:
   explicit              TextControllerImpl      ();
   virtual              ~TextControllerImpl      () override;
+  virtual void          constructed             () override;
   virtual bool          can_focus               () const override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;
   virtual bool          handle_event            (const Event &event) override;
+  bool                  allow_edits             () const                { return allow_edits_; }
+  void                  allow_edits             (bool allow_edits);
   int                   cursor                  () const                { return cursor_; }
   String                get_text                () const;
   void                  set_text                (const String &text);
@@ -112,15 +122,24 @@ protected:
   virtual void          changes                 (ChangesType changes_flags)     {}
 };
 
+class LabelImpl : public virtual TextControllerImpl, public virtual LabelIface {
+protected:
+  virtual void     changes        (ChangesType changes_flags) override;
+public:
+  explicit         LabelImpl      ();
+  virtual String   plain_text     () const override;
+  virtual void     plain_text     (const String &ptext) override;
+  virtual String   markup_text    () const override;
+  virtual void     markup_text    (const String &markup) override;
+};
+
 class TextEditorImpl : public virtual TextControllerImpl, public virtual TextEditorIface {
-  uint16   request_chars_, request_digits_;
+  uint16           request_chars_, request_digits_;
 protected:
   virtual void     size_request   (Requisition &requisition) override;
   virtual void     changes        (ChangesType changes_flags) override;
 public:
   explicit         TextEditorImpl ();
-  virtual TextMode text_mode      () const override;
-  virtual void     text_mode      (TextMode text_mode) override;
   virtual String   plain_text     () const override;
   virtual void     plain_text     (const String &ptext) override;
   virtual String   markup_text    () const override;
