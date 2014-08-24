@@ -1771,6 +1771,8 @@ WidgetImpl::factory_context (FactoryContext *fc)
   if (fc)
     assert_return (factory_context_ == NULL);
   factory_context_ = fc;
+  if (factory_context_)
+    constructed();
 }
 
 UserSource
