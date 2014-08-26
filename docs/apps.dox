@@ -2,6 +2,10 @@
 /*! @page apps	Developing Applications with Rapicorn
 @tableofcontents
 
+- @ref apps-overview
+- @ref hello
+- @subpage experimental
+
 @section apps-overview UI Design Overview
 
 The primary way to create user interfaces in Rapicorn is via declarative XML syntax.
@@ -79,5 +83,12 @@ After all windows have been closed, the event loop sends out notifications that 
 the event loop from running and control is handed back to the main program.
 Most programs will simply exit at this point.
 
-
 */
+
+/**
+  @page experimental Experimental APIs and Features
+
+  This section lists @b experimental APIs and features that are under active development. Experimental parts
+  are very likely to changes or disappear in the future and should not be depended upon.
+  However feedback regarding experimental APIs and features is highly appreciated and helps to stabelize and priorize completion.
+ */
