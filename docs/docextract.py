@@ -96,7 +96,7 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem todo "Todos" "Source Code TODO List"'
+      print '@xrefitem todo "Todos" "Source Code TODO List"' # sync with doxygen.cfg
       print blurb.rstrip()
       print '*/'
   print '/**\n@page todo Source Code TODO List\n*/' # needed to refer to 'todo' page with @subpage
