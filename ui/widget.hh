@@ -200,7 +200,6 @@ public:
                                                  const String    &value);
   bool                        try_set_property  (const String    &property_name,
                                                  const String    &value);
-  const PropertyList&         list_properties   ();
   // bindings
   void                        add_binding       (const String &property, const String &binding_path);
   void                        remove_binding    (const String &property);

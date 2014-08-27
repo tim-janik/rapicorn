@@ -728,12 +728,6 @@ WidgetImpl::set_property (const String &property_name, const String &value)
     throw Exception ("no such property: " + name() + "::" + property_name);
 }
 
-const PropertyList&
-WidgetImpl::list_properties ()
-{
-  return __aida_properties__();
-}
-
 bool
 WidgetImpl::try_set_property (const String &property_name, const String &value)
 {
@@ -1506,7 +1500,7 @@ WidgetImpl::make_test_dump (TestStream &tstream)
   tstream.push_node (name());
   if (this == global_debug_dump_marker)
     tstream.dump ("debug_dump", String ("1"));
-  const PropertyList &plist = list_properties();
+  const PropertyList &plist = __aida_properties__();
   size_t n_properties = 0;
   Aida::Property **properties = plist.list_properties (&n_properties);
   for (uint i = 0; i < n_properties; i++)
