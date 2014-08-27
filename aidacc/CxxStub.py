@@ -378,7 +378,7 @@ class Generator:
         heritage = 'public virtual'
     else:
       if l:
-        heritage = 'public'
+        heritage = 'public virtual'
       else:
         l, ddc = [aida_remotehandle], True
         heritage = 'public virtual'

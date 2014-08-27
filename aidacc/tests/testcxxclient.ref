@@ -548,7 +548,7 @@ typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
 /** @interface Child
  * See also the corresponding C++ stub class ChildHandle. */
 /// See also the corresponding IDL class Child.
-class ChildHandle : public ParentHandle
+class ChildHandle : public virtual ParentHandle
 {
   static ChildHandle                     __aida_cast__ (Rapicorn::Aida::RemoteHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
@@ -566,7 +566,7 @@ typedef ChildHandle ChildH; ///< Convenience alias for the IDL type Child.
 /** @interface Descendant
  * See also the corresponding C++ stub class DescendantHandle. */
 /// See also the corresponding IDL class Descendant.
-class DescendantHandle : public ChildHandle
+class DescendantHandle : public virtual ChildHandle
 {
   static DescendantHandle                __aida_cast__ (Rapicorn::Aida::RemoteHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
@@ -584,7 +584,7 @@ typedef DescendantHandle DescendantH; ///< Convenience alias for the IDL type De
 /** @interface GrandChild
  * See also the corresponding C++ stub class GrandChildHandle. */
 /// See also the corresponding IDL class GrandChild.
-class GrandChildHandle : public DescendantHandle
+class GrandChildHandle : public virtual DescendantHandle
 {
   static GrandChildHandle                __aida_cast__ (Rapicorn::Aida::RemoteHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
@@ -786,7 +786,7 @@ typedef SignalTestInterfaceHandle SignalTestInterfaceH; ///< Convenience alias f
 /** @interface ChildInheritingSignals
  * See also the corresponding C++ stub class ChildInheritingSignalsHandle. */
 /// See also the corresponding IDL class ChildInheritingSignals.
-class ChildInheritingSignalsHandle : public SignalTestInterfaceHandle
+class ChildInheritingSignalsHandle : public virtual SignalTestInterfaceHandle
 {
   typedef Rapicorn::Aida::Connector<ChildInheritingSignalsHandle, void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> __Aida_Signal__child_signal;
   size_t __aida_connect__child_signal (size_t, const std::function<void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)>&);
@@ -807,7 +807,7 @@ typedef ChildInheritingSignalsHandle ChildInheritingSignalsH; ///< Convenience a
 /** @interface AnotherChild
  * See also the corresponding C++ stub class AnotherChildHandle. */
 /// See also the corresponding IDL class AnotherChild.
-class AnotherChildHandle : public SignalTestInterfaceHandle
+class AnotherChildHandle : public virtual SignalTestInterfaceHandle
 {
   static AnotherChildHandle              __aida_cast__ (Rapicorn::Aida::RemoteHandle&, const Rapicorn::Aida::TypeHashList&);
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
