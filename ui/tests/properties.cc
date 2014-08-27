@@ -3,8 +3,6 @@
 #include <ui/uithread.hh>
 #include <stdio.h>
 
-#define MakeProperty    RAPICORN_AIDA_PROPERTY
-
 namespace {
 using namespace Rapicorn;
 
@@ -43,19 +41,19 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (PropertyHost, bool_prop,            "Label", "Blurb", "rw"),
-      MakeProperty (PropertyHost, const_bool_prop,      "Label", "Blurb", "rw"),
-      // MakeProperty (PropertyHost, uint_prop,         "Label", "Blurb", 0, 100, 5, "rw"),
-      // MakeProperty (PropertyHost, const_uint_prop,   "Label", "Blurb", 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, int_prop,             "Label", "Blurb", 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, const_int_prop,       "Label", "Blurb", 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, double_prop,          "Label", "Blurb", 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 0, 100, 0.5, "rw"),
-      // MakeProperty (PropertyHost, point_prop,        "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
-      MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "rw"),
-      MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "rw"),
-      MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", "rw"),
-      MakeProperty (PropertyHost, const_enum_prop,      "Label", "Blurb", "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, bool_prop,            "Label", "Blurb", "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, const_bool_prop,      "Label", "Blurb", "rw"),
+      // RAPICORN_AIDA_PROPERTY (PropertyHost, uint_prop,         "Label", "Blurb", 0, 100, 5, "rw"),
+      // RAPICORN_AIDA_PROPERTY (PropertyHost, const_uint_prop,   "Label", "Blurb", 0, 100, 5, "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, int_prop,             "Label", "Blurb", 0, 100, 5, "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, const_int_prop,       "Label", "Blurb", 0, 100, 5, "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, double_prop,          "Label", "Blurb", 0, 100, 0.5, "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, const_double_prop,    "Label", "Blurb", 0, 100, 0.5, "rw"),
+      // RAPICORN_AIDA_PROPERTY (PropertyHost, point_prop,        "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, string_prop,          "Label", "Blurb", "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, const_string_prop,    "Label", "Blurb", "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, enum_prop,            "Label", "Blurb", "rw"),
+      RAPICORN_AIDA_PROPERTY (PropertyHost, const_enum_prop,      "Label", "Blurb", "rw"),
     };
     static const PropertyList property_list (properties);
     return property_list;
