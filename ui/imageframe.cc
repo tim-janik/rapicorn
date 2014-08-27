@@ -1,9 +1,7 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "imageframe.hh"
-#include "container.hh"
 #include "factory.hh"
 #include "../rcore/rsvg/svg.hh"
-#include <string.h>
 
 #define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
 
@@ -51,65 +49,82 @@ library_lookup (const String &elementid)
   return ep;
 }
 
-class ImageFrameImpl : public virtual SingleContainerImpl, public virtual ImageFrame {
-  String        element_;
-  Svg::ElementP sel_;
-  bool          overlap_child_;
-protected:
-  virtual void          size_request    (Requisition &requisition);
-  virtual void          size_allocate   (Allocation area, bool changed);
-  virtual void          do_invalidate   ();
-  virtual void          render          (RenderContext &rcontext, const Rect &rect);
-public:
-  explicit              ImageFrameImpl      ();
-  virtual              ~ImageFrameImpl      ();
-  virtual String        element         () const                { return element_; }
-  virtual void          element         (const String &id)      { element_ = id; invalidate(); }
-  virtual bool          overlap_child   () const                { return overlap_child_; }
-  virtual void          overlap_child   (bool overlap)          { overlap_child_ = overlap; invalidate(); }
-};
-
-const PropertyList&
-ImageFrame::__aida_properties__()
-{
-  static Property *properties[] = {
-    MakeProperty (ImageFrame, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
-    MakeProperty (ImageFrame, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
-  };
-  static const PropertyList property_list (properties, ContainerImpl::__aida_properties__());
-  return property_list;
-}
+// == ImageFrameImpl ==
+class ImageFrameImpl::SvgElementP : public Svg::ElementP
+{};
 
 ImageFrameImpl::ImageFrameImpl() :
   overlap_child_ (false)
-{}
+{
+  static_assert (sizeof (SvgElementP) == sizeof (svgelep_), "std::shared_ptr<> size inveriant");
+  new (&svgelep_) SvgElementP();
+}
 
 ImageFrameImpl::~ImageFrameImpl()
-{}
+{
+  svg_element_ptr().~SvgElementP();
+}
+
+ImageFrameImpl::SvgElementP&
+ImageFrameImpl::svg_element_ptr () const
+{
+  // we use a dedicated accessor for SvgElementP aka Svg::ElementP, to hide SVG headers from our .hh file
+  return *(SvgElementP*) &svgelep_;
+}
+
+String
+ImageFrameImpl::element () const
+{
+  return element_;
+}
+
+void
+ImageFrameImpl::element (const String &id)
+{
+  element_ = id;
+  invalidate();
+  changed ("element");
+}
+
+bool
+ImageFrameImpl::overlap_child () const
+{
+  return overlap_child_;
+}
+
+void
+ImageFrameImpl::overlap_child (bool overlap)
+{
+  overlap_child_ = overlap;
+  invalidate();
+  changed ("overlap_child");
+}
 
 void
 ImageFrameImpl::do_invalidate()
 {
+  Svg::ElementP &sep = svg_element_ptr();
   if (element_.empty())
     {
-      sel_ = sel_->none();
+      sep = sep->none();
       return;
     }
   Svg::ElementP ep = library_lookup (element_);
   if (!ep)
     return;
-  sel_ = ep;
+  sep = ep;
 }
 
 void
 ImageFrameImpl::size_request (Requisition &requisition)
 {
   SingleContainerImpl::size_request (requisition);
-  if (sel_)
+  Svg::ElementP &sep = svg_element_ptr();
+  if (sep)
     {
-      requisition.width = sel_->bbox().width;
-      requisition.height = sel_->bbox().height;
-      int thickness = 2; // FIXME: use real border marks
+      requisition.width = sep->bbox().width;
+      requisition.height = sep->bbox().height;
+      const int thickness = 2; // FIXME: use real border marks
       if (!overlap_child_ && has_children())
         {
           requisition.width += 2 * thickness;
@@ -141,10 +156,11 @@ ImageFrameImpl::size_allocate (Allocation area, bool changed)
 void
 ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
 {
+  Svg::ElementP &sep = svg_element_ptr();
   const Allocation &area = allocation();
   Rect rect = area;
   rect.intersect (render_rect);
-  if (sel_ && rect.width > 0 && rect.height > 0)
+  if (sep && rect.width > 0 && rect.height > 0)
     {
       const uint npixels = rect.width * rect.height;
       uint8 *pixels = new uint8[int (npixels * 4)];
@@ -153,8 +169,8 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
                                                                       rect.width, rect.height, 4 * rect.width);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
       cairo_surface_set_device_offset (surface, -(rect.x - area.x), -(rect.y - area.y)); // offset into intersection
-      Svg::BBox bbox = sel_->bbox();
-      const bool rendered = sel_->render (surface, Svg::RenderSize::STRETCH, area.width / bbox.width, area.height / bbox.height);
+      Svg::BBox bbox = sep->bbox();
+      const bool rendered = sep->render (surface, Svg::RenderSize::STRETCH, area.width / bbox.width, area.height / bbox.height);
       if (rendered)
         {
           cairo_t *cr = cairo_context (rcontext, rect);
