@@ -246,7 +246,7 @@ WidgetImpl::grab_focus ()
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
     WindowImpl::Internal::set_focus (*rwidget, this);
-  return rwidget->get_focus() == this;
+  return rwidget && rwidget->get_focus() == this;
 }
 
 bool
