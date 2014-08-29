@@ -81,12 +81,12 @@ XmlNode::has_attribute (const String &name,
 bool
 XmlNode::del_attribute (const String &name)
 {
-  vector<String>::const_iterator it = find_attribute (attribute_names_, name, false);
-  if (it == attribute_names_.end())
+  vector<String>::const_iterator c_it = find_attribute (attribute_names_, name, false);
+  if (c_it == attribute_names_.end())
     return false;
-  vector<String>::iterator eit = attribute_names_.begin() + (it - attribute_names_.begin());
-  attribute_names_.erase (eit);
-  attribute_values_.erase (eit);
+  const size_t nth = c_it - attribute_names_.begin();
+  attribute_names_.erase (attribute_names_.begin() + nth);
+  attribute_values_.erase (attribute_values_.begin() + nth);
   return true;
 }
 
