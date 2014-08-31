@@ -146,7 +146,7 @@ PixmapT<Pixbuf>::compare (const Pixbuf &source,
         if (r1[tx + j] != r2[sx + j])
           {
             const double scale = 1.0 / 510.0; // 510 == 255 * sqrt (4)
-            int8 *p1 = (int8*) &r1[tx + j], *p2 = (int8*) &r2[sx + j];
+            const uint8 *p1 = (uint8*) &r1[tx + j], *p2 = (uint8*) &r2[sx + j];
             double pixerr = sqrt (SQR (p1[0] - p2[0]) + SQR (p1[1] - p2[1]) +
                                   SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3])) * scale;
             errmax = MAX (errmax, pixerr);

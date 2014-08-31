@@ -44,11 +44,14 @@ compare_image_files (const String &image1_file,
   /* check equality */
   double avgerror = 0, maxerr = 0, npixels = 0, nerrors = 0;
   image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, &maxerr, &nerrors, &npixels);
+  if (0) // debugging
+    printerr ("image difference: avgerror=%f maxerr=%f nerrors=%g npixels=%g (%u * %u)\n",
+              avgerror, maxerr, nerrors, npixels, image1.width(), image1.height());
 
-  return avgerror * nerrors;
+  return maxerr;
 }
 
-static double similarity_threshold_perc = 0.5;
+static double similarity_threshold_perc = 6.0;
 
 static void
 help_usage (bool usage_error)
