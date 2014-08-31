@@ -78,7 +78,7 @@ doxygen-srctree:
 # sed: escape @ < & > #, add sections, handle * bullets
 DOXYGEN_CHANGELOG_SED = \
 		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
+		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/<h2 id="\2">\0<\/h2>/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
 		-e "s/^[ \t]+\*? ?(Merge branch)[ \t]+'(.*)'/- \1 '<em>\2<\/em>'/" \
