@@ -6,12 +6,16 @@
 - @ref hello
 - @subpage experimental
 
-@section apps-overview UI Design Overview
 
-The primary way to create user interfaces in Rapicorn is via declarative XML syntax.
-The declarations combine smaller components (buttons, labels) into layout containers (VBox, Table) to form larger units.
+@section xmlui-syntax UI Definition Syntax
+
+The primary way to define user interfaces in Rapicorn is via declarative XML syntax.
+The declarations combine smaller components (buttons, images) into layout containers (VBox, Table) to form larger units.
+
+This XML creates a new definition 'SampleDialog', derived from a Window widget which contains a VBox and a Button with Label:
+  @snippet docs/examples/sample.xml DEF-SampleDialog
+
 Data bindings are used in the declarations to link UI elements to properties of application model objects.
-
 @TODO: Data bindings are a fairly new concept and still need to be described here.
 
 
