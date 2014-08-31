@@ -6,14 +6,24 @@
 
 namespace Rapicorn {
 
-class ImageFrame : public virtual ContainerImpl {
+class ImageFrameImpl : public virtual SingleContainerImpl, public virtual ImageFrameIface {
+  class SvgElementP;
+  union { uint64 mem_[(sizeof (std::shared_ptr<void>) + 7) / 8]; char dummy_; } svgelep_; // SvgElementP memory
+  String                element_;
+  bool                  overlap_child_;
+  SvgElementP&          svg_element_ptr () const;
 protected:
-  virtual const PropertyList& __aida_properties__ ();
+  virtual              ~ImageFrameImpl  () override;
+  virtual void          size_request    (Requisition &requisition) override;
+  virtual void          size_allocate   (Allocation area, bool changed) override;
+  virtual void          do_invalidate   () override;
+  virtual void          render          (RenderContext &rcontext, const Rect &rect) override;
 public:
-  virtual String element        () const = 0;
-  virtual void   element        (const String &id) = 0;
-  virtual bool   overlap_child  () const = 0;
-  virtual void   overlap_child  (bool overlap) = 0;
+  explicit              ImageFrameImpl  ();
+  virtual String        element         () const override;
+  virtual void          element         (const String &id) override;
+  virtual bool          overlap_child   () const override;
+  virtual void          overlap_child   (bool overlap) override;
 };
 
 } // Rapicorn

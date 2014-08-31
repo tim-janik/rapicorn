@@ -105,36 +105,18 @@ create_property (void (Class::*setter) (int), int (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  int min_value, int max_value, int stepping, const char *hints)
 { return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-template<class Class> inline Property*
-create_property (void (Class::*setter) (int), int (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const char *hints)
-{ return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, INT_MIN, INT_MAX, 1, hints); }
 /* int64 */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  int64 min_value, int64 max_value, int64 stepping, const char *hints)
 { return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-template<class Class> inline Property*
-create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const char *hints)
-{ return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, INT64_MIN, INT64_MAX, 1, hints); }
-/* float */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (float), float (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 float min_value, float max_value, float stepping, const char *hints)
-{ return new PropertyRange<Class,float> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 /* double */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (double), double (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  double min_value, double max_value, double stepping, const char *hints)
 { return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-template<class Class> inline Property*
-create_property (void (Class::*setter) (double), double (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const char *hints)
-{ return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, DBL_MIN, DBL_MAX, 1, hints); }
 
 /* --- string --- */
 template<class Class>

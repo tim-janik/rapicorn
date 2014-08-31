@@ -14,14 +14,57 @@ ButtonAreaImpl::ButtonAreaImpl() :
   focus_frame_ (NULL)
 {}
 
-const PropertyList&
-ButtonAreaImpl::__aida_properties__()
+ClickType
+ButtonAreaImpl::click_type () const
 {
-  static Property *properties[] = {
-    MakeProperty (ButtonAreaImpl, click_type, _("CLick Type"), _("Click event generation type"), "rw"),
-  };
-  static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__(), ButtonAreaIface::__aida_properties__());
-  return property_list;
+  return click_type_;
+}
+
+void
+ButtonAreaImpl::click_type (ClickType click_type)
+{
+  reset();
+  click_type_ = click_type;
+  changed ("click_type");
+}
+
+String
+ButtonAreaImpl::on_click () const
+{
+  return on_click_[0];
+}
+
+void
+ButtonAreaImpl::on_click (const String &command)
+{
+  on_click_[0] = string_strip (command);
+  changed ("on_click");
+}
+
+String
+ButtonAreaImpl::on_click2 () const
+{
+  return on_click_[1];
+}
+
+void
+ButtonAreaImpl::on_click2 (const String &command)
+{
+  on_click_[1] = string_strip (command);
+  changed ("on_click2");
+}
+
+String
+ButtonAreaImpl::on_click3 () const
+{
+  return on_click_[2];
+}
+
+void
+ButtonAreaImpl::on_click3 (const String &command)
+{
+  on_click_[2] = string_strip (command);
+  changed ("on_click3");
 }
 
 void
@@ -106,7 +149,7 @@ ButtonAreaImpl::can_focus () const
 }
 
 bool
-ButtonAreaImpl::register_focus_frame (FocusFrame &frame)
+ButtonAreaImpl::register_focus_frame (FocusFrameImpl &frame)
 {
   if (!focus_frame_)
     focus_frame_ = &frame;
@@ -114,7 +157,7 @@ ButtonAreaImpl::register_focus_frame (FocusFrame &frame)
 }
 
 void
-ButtonAreaImpl::unregister_focus_frame (FocusFrame &frame)
+ButtonAreaImpl::unregister_focus_frame (FocusFrameImpl &frame)
 {
   if (focus_frame_ == &frame)
     focus_frame_ = NULL;

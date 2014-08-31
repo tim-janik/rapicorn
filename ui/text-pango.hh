@@ -12,7 +12,7 @@ class TextLayout : public virtual WidgetImpl {
   virtual String      markup_text      () const = 0;
   virtual void        markup_text      (const String &markup) = 0;
 };
-class TextPango : public virtual TextLayout { // FIXME: move to Text::EditorClient
+class TextPango : public virtual TextLayout { // FIXME: move to TextBlock
 public:
   virtual void          font_name       (const String &fname) = 0;
   virtual String        font_name       () const = 0;

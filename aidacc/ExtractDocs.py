@@ -49,7 +49,7 @@ class Generator:
     # collect impl types
     types = []
     for tp in implementation_types:
-      if tp.isimpl:
+      if tp.isimpl and not tp.is_forward:
         types += [ tp ]
     # walk types and extract docs
     for tp in types:

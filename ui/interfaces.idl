@@ -6,9 +6,10 @@
 
 namespace Rapicorn {
 
-Const MAXINT32 = +4294967295;
-Const MAXINT31 = +2147483647;
-Const MININT31 = -2147483648;
+Const MAXINT32   = +4294967295;
+Const MAXINT31   = +2147483647;
+Const MININT31   = -2147483648;
+Const MAXFLOAT64 = 1.7976931348623157e+308;
 
 /// Enum used to specify how adjustments are picked from Widget ancestry.
 enum AdjustmentSourceType {
@@ -161,13 +162,6 @@ flags enum StateType {
   STATE_DEFAULT         = 1 << 4,
 };
 
-///< Enum type to discriminate various Text widget types.
-enum TextMode {
-  TEXT_MODE_WRAPPED = 1,
-  TEXT_MODE_ELLIPSIZED,
-  TEXT_MODE_SINGLE_LINE,
-};
-
 ///< Enum type to discriminate various toplevel Window types.
 enum WindowType {
   WINDOW_TYPE_NORMAL = 0,       ///< Normal window
@@ -286,9 +280,8 @@ interface Widget;
 /// A sequence of Widget objects.
 sequence WidgetSeq { Widget  widgets; };
 
-/** Widget is the base type for all UI elements.
- * See also the corresponding implementation class WidgetImpl.
- */
+/// Widget is the base type for all UI elements.
+/// See also the corresponding implementation class WidgetImpl.
 interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
@@ -343,52 +336,11 @@ interface Container : Widget {
   void   remove_widget (Widget child) = 0;
 };
 
-/** The ButtonArea interface provides button click handling.
- * Certain actions can be associated with button1, button2 and button3 clicks to be caried out when the
- * respective mouse button is clicked.
- */
-interface ButtonArea : Container {
-  String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
-  String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
-  String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
-};
-
-/** The Drawable interface allows display of custom images.
- * A Drawable interface allows client-side rendering by emitting the redraw() signal when updates are needed.
- * The draw_rect() method is used to draw into the remote widget.
- */
-interface Drawable : Widget {
-  signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
-};
-
-/** Image widgets are used to display pixel or vector images.
- */
-interface Image : Widget {
-  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
-  Pixbuf        pixbuf;
-};
-
-/** Widget containing a list of selectable widgets.
- * List widget is a widget that displays a list of widgets generated according to a data source.
- */
-interface WidgetList : Container {
-  String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
-  SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
-                                                               "Single - allow a single selected row<br/>"
-                                                               "Browse - always select a single row<br/>"
-                                                               "Multiple - allow any row selection combinations<br/>"),
-                                        "rw");
-  void          set_selection  (BoolSeq selection) = 0;
-  BoolSeq       get_selection  () = 0;
-  void          select_range   (int32 first, int32 length) = 0;
-  void          unselect_range (int32 first, int32 length) = 0;
-};
-
 /** Window represents the toplevel onscreen widget.
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
+ * <br/> See also the corresponding implementation class WindowImpl.
  */
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
@@ -413,10 +365,223 @@ interface Window : Container {
 /// A sequence of Window objects.
 sequence WindowList { Window windows; };
 
+/// The Arrangement layout container allows coordinate driven free form positioning of children.
+/// See also the corresponding implementation class ArrangementImpl.
+interface Arrangement : Container {
+  float64 xorigin        = Range (_("X-Origin"), _("The x coordinate origin to be displayed by the arrangement"), "rw", -MININT31, +MAXINT31, 10);
+  float64 yorigin        = Range (_("Y-Origin"), _("The y coordinate origin to be displayed by the arrangement"), "rw", -MININT31, +MAXINT31, 10);
+  float64 origin_hanchor = Range (_("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), "rw", 0, 1, 0.1);
+  float64 origin_vanchor = Range (_("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"),   "rw", 0, 1, 0.1);
+};
+
+/// The Alignment layout container allows adding of extra padding around its child.
+/// See also the corresponding implementation class AlignmentImpl.
+interface Alignment : Container {
+  int32 left_padding   = Range (_("Left Padding"),   _("Amount of padding to add at the child's left side"),   "rw", 0, 65535, 3);
+  int32 right_padding  = Range (_("Right Padding"),  _("Amount of padding to add at the child's right side"),  "rw", 0, 65535, 3);
+  int32 bottom_padding = Range (_("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), "rw", 0, 65535, 3);
+  int32 top_padding    = Range (_("Top Padding"),    _("Amount of padding to add at the child's top side"),    "rw", 0, 65535, 3);
+  int32 padding        = Range (_("Padding"),        _("Amount of padding to add at the child's sides"),       "wo", 0, 65535, 3);
+};
+
+/// The Frame container decorates its single child with a state dependant frame drawing.
+/// See also the corresponding implementation class FrameImpl.
+interface Frame : Container {
+  FrameType normal_frame    = Enum (_("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw");
+  FrameType impressed_frame = Enum (_("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw");
+  FrameType frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
+  bool      overlap_child   = Bool (_("Overlap Child"),  _("Draw frame into child allocation"), "rw");
+  FrameType current_frame () = 0; ///< Retrieve the kind of frame that is currently being displayed.
+};
+
+/// The FocusFrame container decorates its single child depending on whether its descendants have focus.
+/// See also the corresponding implementation class FocusFrameImpl.
+interface FocusFrame : Frame {
+  FrameType focus_frame = Enum (_("Focus Frame"), _("The kind of frame to draw in focus state"), "rw");
+  bool      tight_focus = Bool (_("Tight Focus"), _("Prevent extra padding around focus frames"), "rw");
+};
+
+/// The Ambience container provides its single child with state dependant background painting.
+/// See also the corresponding implementation class AmbienceImpl.
+interface Ambience : Container {
+  String normal_background          = String (_("Normal Background"), _("The kind of background painted when normal"), "rw");
+  String prelight_background        = String (_("Prelight Background"), _("The kind of background painted when prelight"), "rw");
+  String impressed_background       = String (_("Impressed Background"), _("The kind of background painted when impressed"), "rw");
+  String insensitive_background     = String (_("Insensitive Background"), _("The kind of background painted when insensitive"), "rw");
+  LightingType normal_lighting      = Enum (_("Normal Lighting"), _("The kind of lighting painted when normal"), "rw");
+  LightingType prelight_lighting    = Enum (_("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw");
+  LightingType impressed_lighting   = Enum (_("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw");
+  LightingType insensitive_lighting = Enum (_("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw");
+  LightingType normal_shade         = Enum (_("Normal Shade"), _("The kind of shade painted when normal"), "rw");
+  LightingType prelight_shade       = Enum (_("Prelight Shade"), _("The kind of shade painted when prelight"), "rw");
+  LightingType impressed_shade      = Enum (_("Impressed Shade"), _("The kind of shade painted when impressed"), "rw");
+  LightingType insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
+  String       background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
+  LightingType lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
+  LightingType shade                = Enum (_("Shade"), _("The kind of shade painted for all modes"), "wo");
+};
+
+/// The Table layout container allows to arrange widgets in rows and columns.
+/// See also the corresponding implementation class TableImpl.
+interface Table : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 col_spacing = Range (_("Column Spacing"), _("The amount of space between two consecutive columns"), "rw", 0, 65535, 10);
+  int32 row_spacing = Range (_("Row Spacing"), _("The amount of space between two consecutive rows"), "rw", 0, 65535, 10);
+  int32 n_cols      = Range (_("Number of Columns"), _("The number of columns available in this table to attach children"), "rw", 0, MAXINT31, 1);
+  int32 n_rows      = Range (_("Number of Rows"), _("The number of rows available in this table to attach children"), "rw", 0, MAXINT31, 1);
+  bool  is_col_used (int32 col) = 0; ///< Find out if any child allocates the specified column.
+  bool  is_row_used (int32 row) = 0; ///< Find out if any child allocates the specified row.
+  void  resize      (int32 n_cols, int32 n_rows) = 0;    ///< Resize columns and rows, but accomodate for space needed by children.
+  void  insert_cols (int32 first_col, int32 n_cols) = 0; ///< Insert a number of columns, shifting or stretching children as needed.
+  void  insert_rows (int32 first_row, int32 n_rows) = 0; ///< Insert a number of rows, shifting or stretching children as needed.
+};
+
+/// The HBox layout container arranges its children horizontally.
+/// See also the corresponding implementation class HBoxImpl.
+interface HBox : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 spacing     = Range (_("Spacing"), _("The amount of space between two children"), "rw", 0, 65535, 10);
+};
+
+/// The VBox layout container arranges its children vertically.
+/// See also the corresponding implementation class VBoxImpl.
+interface VBox : Container {
+  bool  homogeneous = Bool (_("Homogeneous"), _("Whether all children get the same size"), "rw");
+  int32 spacing     = Range (_("Spacing"), _("The amount of space between two children"), "rw", 0, 65535, 10);
+};
+
+/** The ButtonArea container provides an area with the ability to process button clicks.
+ * Arbitraty actions can be associated with button1, button2 and button3 clicks to be caried
+ * out when the respective mouse button is clicked.
+ * <br/> See also the corresponding implementation class ButtonAreaImpl.
+ */
+interface ButtonArea : Container {
+  ClickType     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
+  String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+};
+
+/// The ScrollArea container can display its child paritally and scroll to different parts.
+/// See also the corresponding implementation class ScrollAreaImpl.
+interface ScrollArea : Container {
+  float64 x_offset  () = 0; ///< Retrieve the current @a x scroll offset.
+  float64 y_offset  () = 0; ///< Retrieve the current @a x scroll offset.
+  void    scroll_to (float64 x, float64 y) = 0; ///< Scroll to the position denoted by (x, y).
+};
+
+/// The SliderArea container serves as control area for a slider trough and skid.
+/// See also the corresponding implementation class SliderAreaImpl.
+interface SliderArea : Container {
+  bool flipped = Bool (_("Flipped"), _("Invert (flip) display of the slider value"), "rw");
+  AdjustmentSourceType adjustment_source = Enum (_("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw");
+};
+
+/// The SliderTrough container reflects the range of possible slider values, it contains the SliderSkid.
+/// See also the corresponding implementation class SliderTroughImpl.
+interface SliderTrough : Container {
+};
+
+/// The SliderSkid widget indicates the current slider position within a SliderArea.
+/// See also the corresponding implementation class SliderSkidImpl.
+interface SliderSkid : Container {
+  bool vertical_skid = Bool (_("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw");
+};
+
+/// The Arrow widget paints a single arrow with configurable direction.
+/// See also the corresponding implementation class ArrowImpl.
+interface Arrow : Widget {
+  DirType        arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
+  SizePolicyType size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
+};
+
+/// The DotGrid widget paints a configurable set of dots arranged in a grid.
+/// See also the corresponding implementation class DotGridImpl.
+interface DotGrid : Widget {
+  FrameType normal_dot      = Enum (_("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw");
+  FrameType impressed_dot   = Enum (_("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw");
+  FrameType dot_type        = Enum (_("Dot Type"), _("The kind of dot-frame to draw in all states"), "wo");
+  int32 n_hdots             = Range (_("H-Dot #"), _("The number of horizontal dots to be drawn"), "rw", 0, 99999, 3);
+  int32 n_vdots             = Range (_("V-Dot #"), _("The number of vertical dots to be drawn"), "rw", 0, 99999, 3);
+  int32 right_padding_dots  = Range (_("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), "rw", 0, 65535, 3);
+  int32 top_padding_dots    = Range (_("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), "rw", 0, 65535, 3);
+  int32 left_padding_dots   = Range (_("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), "rw", 0, 65535, 3);
+  int32 bottom_padding_dots = Range (_("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), "rw", 0, 65535, 3);
+  FrameType current_dot () = 0; ///< Retrieve the kind of dot that is currently being displayed.
+};
+
+/** The Drawable widget allows display of custom graphics.
+ * A Drawable widget allows client-side rendering by emitting the redraw() signal when updates are needed.
+ * The draw_rect() method is used to draw into the widget display.
+ * <br/> See also the corresponding implementation class DrawableImpl.
+ */
+interface Drawable : Widget {
+  signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
+};
+
+/// Image widgets are used to display pixel or vector images.
+/// See also the corresponding implementation class ImageImpl.
+interface Image : Widget {
+  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
+  Pixbuf        pixbuf;
+};
+
+/// Image class prototype for SVG display.
+/// See also the corresponding implementation class ImageFrameImpl.
+/// @EXPERIMENTAL: ImageFrame will be merged into Image.
+interface ImageFrame : Container {
+  String element       = String (_("Element"), _("The SVG element ID to be rendered."), "rw");
+  bool   overlap_child = Bool (_("Overlap Child"), _("Draw child on top of container area."), "rw");
+};
+
+/// A widget for text display.
+/// See also the corresponding implementation class LabelImpl.
+interface Label : Container {
+  String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
+  String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
+};
+
+/// A widget for text display, editing, selecting and pasting.
+/// See also the corresponding implementation class TextEditorImpl.
+interface TextEditor : Container {
+  String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
+  String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
+  int32    request_chars  = Range (_("Request Chars"),  _("Number of characters to request space for."), "rw", 0, 65535, 4);
+  int32    request_digits = Range (_("Request Digits"), _("Number of digits to request space for."), "rw", 0, 65535, 2);
+};
+
+/// A container for WidgetList rows.
+/// See also the corresponding implementation class WidgetListRowImpl.
+/// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
+interface WidgetListRow : Container {
+  bool  selected  = Bool (_("Selected"), _("Indicates wether this row is selected"), "rw");
+  int32 row_index = Range (_("Row Index"), _("Row number inside WidgetList"), "ro", MININT31, MAXINT31, 0);
+};
+
+/** A list widget containing scrollable and selectable widgets.
+ * List widget is a widget that displays a list of widgets generated according to a data source.
+ * <br/> See also the corresponding implementation class WidgetListImpl.
+ * @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
+ */
+interface WidgetList : Container {
+  String        model           = String (_("Model"), _("Source locator for the data to be displayed."), "rw");
+  SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
+                                                               "Single - allow a single selected row<br/>"
+                                                               "Browse - always select a single row<br/>"
+                                                               "Multiple - allow any row selection combinations<br/>"),
+                                        "rw");
+  void          set_selection  (BoolSeq selection) = 0;
+  BoolSeq       get_selection  () = 0;
+  void          select_range   (int32 first, int32 length) = 0;
+  void          unselect_range (int32 first, int32 length) = 0;
+};
+
 /** Application singleton.
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
  * such as the facility to create Window objects on the screen.
+ * <br/> See also the corresponding implementation class ApplicationImpl.
  * @nosubgrouping
  */
 interface Application : Object {
@@ -452,12 +617,15 @@ interface Application : Object {
   int64         test_hook               () = 0;
 };
 
+/// An enum used exclusively for unit testing.
 enum TestEnum {
   TEST_ENUM_VALUE1,
   TEST_ENUM_VALUE2,
   TEST_ENUM_VALUE3,
 };
 
+/// A widget used exclusively for unit testing.
+/// See also the corresponding implementation class IdlTestWidgetImpl.
 interface IdlTestWidget : Widget {
   bool           bool_prop;
   int32          int_prop;
@@ -467,6 +635,30 @@ interface IdlTestWidget : Widget {
   Requisition    record_prop;
   StringSeq      sequence_prop;
   IdlTestWidget  self_prop;
+};
+
+/// A container used for snapshooting and unit testing.
+/// See also the corresponding implementation class TestBoxImpl.
+interface TestBox : Container {
+  String snapshot_file = String (_("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw");
+};
+
+/// A container used exclusively for unit testing.
+/// See also the corresponding implementation class TestContainerImpl.
+interface TestContainer : Container {
+  String  value            = String ("Value", "Store string value for assertion", "rw");
+  String  assert_value     = String ("Assert Value", "Assert a particular string value", "rw");
+  float64 assert_left      = Range ("Assert-Left", "Assert positioning of the left widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_right     = Range ("Assert-Right", "Assert positioning of the right widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_bottom    = Range ("Assert-Bottom", "Assert positioning of the bottom widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_top       = Range ("Assert-Top", "Assert positioning of the top widget edge", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_width     = Range ("Assert-Width", "Assert amount of the widget width", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 assert_height    = Range ("Assert-Height", "Assert amount of the widget height", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  float64 epsilon          = Range ("Epsilon", "Epsilon within which assertions must hold", "rw", -MAXFLOAT64, +MAXFLOAT64, 0);
+  bool    paint_allocation = Bool ("Paint Allocation", "Fill allocation rectangle with a solid color", "rw");
+  bool    fatal_asserts    = Bool ("Fatal-Asserts", "Handle assertion failures as fatal errors", "rw");
+  String  accu             = String ("Accumulator", "Store string value and keep history", "rw");
+  String  accu_history     = String ("Accu-History", "Concatenated accumulator history", "rw");
 };
 
 } // Rapicorn

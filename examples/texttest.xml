@@ -74,11 +74,9 @@
   <tmpl:define id="text-editor-test" inherit="Frame" frame-type="in">
     <FocusFrame frame-type="none">
       <TextEditor>
-	<Label>
-	  <tmpl:property id="markup-text">
-	    editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
-	  </tmpl:property>
-	</Label>
+	<tmpl:property id="markup-text">
+	  editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
+	</tmpl:property>
       </TextEditor>
     </FocusFrame>
   </tmpl:define>

@@ -1145,9 +1145,9 @@ I_PropertyTesterIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, bool_prop, "bool_prop", "", "rw"),
-    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int32_prop, "int32_prop", "", "rw"),
-    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int64_prop, "int64_prop", "", "rw"),
-    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, float64_prop, "float64_prop", "", "rw"),
+    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int32_prop, "int32_prop", "", INT32_MIN, INT32_MAX, 1, "rw"),
+    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, int64_prop, "int64_prop", "", INT64_MIN, INT64_MAX, 1, "rw"),
+    RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, float64_prop, "float64_prop", "", DBL_MIN, DBL_MAX, 0, "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, string_prop, "string_prop", "", "rw"),
     RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, enum_prop, "enum_prop", "", "rw"),
     // RAPICORN_AIDA_PROPERTY (I_PropertyTesterIface, record_prop, "record_prop", "", "rw"),
@@ -1340,8 +1340,8 @@ const Rapicorn::Aida::PropertyList&
 I_CompressorIface::__aida_properties__ ()
 {
   static Rapicorn::Aida::PropertyList::Property *properties[] = {
-    RAPICORN_AIDA_PROPERTY (I_CompressorIface, threshold, "", "", "w"),
-    RAPICORN_AIDA_PROPERTY (I_CompressorIface, ratio, "", "", "w"),
+    RAPICORN_AIDA_PROPERTY (I_CompressorIface, threshold, "", "", DBL_MIN, DBL_MAX, 0, "w"),
+    RAPICORN_AIDA_PROPERTY (I_CompressorIface, ratio, "", "", DBL_MIN, DBL_MAX, 0, "w"),
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::BaseObject::__aida_properties__());
   return property_list;

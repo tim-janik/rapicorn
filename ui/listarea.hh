@@ -5,12 +5,36 @@
 #include <ui/adjustment.hh>
 #include <ui/container.hh>
 #include <ui/layoutcontainers.hh>
+#include <ui/paintcontainers.hh>
 #include <deque>
 
 namespace Rapicorn {
 
-class WidgetListRowImpl;
+class WidgetListImpl;
 
+class WidgetListRowImpl : public virtual SingleContainerImpl,
+                          public virtual WidgetListRowIface,
+                          public virtual EventHandler,
+                          public virtual FocusFrameImpl::Client {
+  FocusFrameImpl *focus_frame_;
+  int             index_;
+  WidgetListImpl* widget_list          () const;
+protected:
+  virtual void  dump_private_data      (TestStream &tstream) override;
+  virtual bool  handle_event           (const Event &event) override;
+  virtual bool  can_focus              () const override;
+  virtual bool  register_focus_frame   (FocusFrameImpl &frame) override;
+  virtual void  unregister_focus_frame (FocusFrameImpl &frame) override;
+public:
+  explicit      WidgetListRowImpl      ();
+  virtual int   row_index              () const override;
+  virtual void  row_index              (int i) override;
+  virtual bool  selected               () const override;
+  virtual void  selected               (bool s) override;
+  virtual void  reset                  (ResetMode mode = RESET_ALL) override;
+};
+
+/// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
 struct ListRow {
   vector<WidgetImpl*> cols; // FIXME
   WidgetListRowImpl *lrow;
@@ -19,8 +43,8 @@ struct ListRow {
   ListRow() : lrow (NULL), allocated (0) {}
 };
 
-class WidgetListImpl : public virtual WidgetListIface,
-                       public virtual MultiContainerImpl,
+class WidgetListImpl : public virtual MultiContainerImpl,
+                       public virtual WidgetListIface,
                        public virtual AdjustmentSource,
                        public virtual EventHandler
 {
@@ -43,7 +67,6 @@ class WidgetListImpl : public virtual WidgetListIface,
   void                  selection_changed       (int first, int length);
   virtual void          invalidate_parent ();
 protected:
-  virtual const PropertyList& __aida_properties__    ();
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   virtual bool          key_press_event         (const EventKey &event);
   virtual bool          button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);

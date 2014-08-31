@@ -96,15 +96,7 @@ check-dynamic_cast:	# check for dynamic_cast of reference types which is broken 
 	&& find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
-check-list_properties: # only public interfaces should export properties
-	$(Q) cd $(srcdir) \
-	&& echo "  CHECK  Repel untyped list_properties() method implementations..." \
-	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc
-	$(Q) cd $(srcdir) \
-	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
-	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc \
-	     --exclude ui/widget.cc --exclude ui/container.cc --exclude ui/buttons.cc --exclude ui/window.cc
-check-am: check-dynamic_cast check-list_properties # run source code checks before all others
+check-am: check-dynamic_cast # run source code checks before all others
 
 # === automake fixes ===
 # disable bogus cleanup checks

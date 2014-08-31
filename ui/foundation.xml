@@ -61,7 +61,8 @@
   <tmpl:define id="Image" inherit="Rapicorn::Factory::Image" />
 
   <!-- Label -->
-  <tmpl:define id="Label" inherit="Rapicorn::Factory::TextPango" />
+  <tmpl:define id="Label" inherit="Rapicorn::Factory::Label" />
+  <tmpl:define id="Rapicorn_Factory_TextBlock" inherit="Rapicorn::Factory::TextPango" />
 
   <!-- Window -->
   <tmpl:define id="Window" inherit="Rapicorn::Factory::Window"/>
@@ -157,6 +158,6 @@
   <tmpl:define id="TestWidget" inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
 
   <!-- TextEditor -->
-  <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::Text::Editor" />
+  <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::TextEditor"/>
 
 </rapicorn-definitions>
