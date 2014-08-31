@@ -1,42 +1,50 @@
-// Licensed GNU LGPL v3 or later, see: www.gnu.org
+// Licensed GNU LGPL v3 or later, see: www.gnu.org	-*- mode:visual-line -*-
 /*! @mainpage
+@tableofcontents
 
-@section documents Documents
-- <a href="rapicorn-NEWS.html"><b>Release News</b></a> <br/>
-  List of updates per release version.
-- <a href="rapicorn-ChangeLog.html"><b>ChangeLog</b></a> <br/>
-  %Rapicorn Development ChangeLog.
-- <a href="classes.html"><b>Class Index</b></a> <br/>
-  Browse documentation by class names.
-- <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> <br/>
-  Hello World tutorial.
-- <a href="pages.html"><b>Related Pages</b></a> <br/>
-  Pages about important components.
+- @subpage intro
+- @subpage configuration
+- @subpage apps
+- @subpage contribute
+- <a class="el" href="citelist.html">Bibliographic References</a>
+- <a class="el" href="classes.html">Index of Classes</a>
+- <a class="el" href="namespacemembers_func.html">Index of Functions</a>
+- <a class="el" href="files.html">Index of Files</a>
 
-@section manpages Manual Pages
+@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://testbit.eu/_mirror/LICENSE-AS-IS
+*/ // @mainpage
+
+/*! @page intro Introduction
+@tableofcontents
+
+%Rapicorn is a toolkit for declarative UI design, it provides controls, layouts, resources,
+data bindings, declarative markup and a multithreaded IPC layer.
+Users can create complex reusable components and arrange UI elements in a handful of
+XML lines. Data bindings to user defined model objects are automatically setup with simple
+attribute specifications.
+%Rapicorn is implemented in C++11, but it's API is defined in an IDL to support API uses from arbitrary languages.
+Among other things %Rapicorn has:
+- Controls such as Button, List, TextEditor;
+- Layouts such as Table, HBox, VBox, Window;
+- Language bindings to use the %Rapicorn API from C++ and Python;
+- Thread separation of application and UI logic, so layouting and rendering is done in the background.
+
+%Rapicorn is developed as a free software project under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a> and welcomes contributions from everyone, see @ref contribute.
+
+
+@section introlinks Links and Resources
+
+- <a class="el" href="http://testbit.eu/pub/docs/rapicorn/latest/">Latest Online Documentation</a> <br/> The latest documentation hosted on the %Rapicorn project website.
+
+- <a class="el" href="http://groups.google.com/d/forum/rapicorn">Mailing List and Web Forum</a> <br/> Discussion forum for uses and development of %Rapicorn, send email to <a href="mailto:rapicorn@googlegroups.com"><tt>rapicorn@googlegroups.com</tt></a>.
+
+- <a class="el" href="http://testbit.eu/wiki/Category:Rapicorn">Wiki Pages</a> <br/> The %Rapicorn wiki pages used for manual page documentation, the task list and hosting the website.
+
+- <a class="el" href="https://github.com/tim-janik/rapicorn/issues">Issues - Bug Tracker</a> <br/> Issue tracker of the %Rapicorn repository hosted at GitHub.
+
+
+@subsection manpages Manual Pages
 - <a href="rapidrun.1.html"><b>rapidrun.1</b></a> <br/>
   Utility to run and test %Rapicorn dialogs.
 
-@section online Online Resources
-- <a href="http://rapicorn.org/">Rapicorn Website</a> <br/>
-  The official %Rapicorn project website.
-- <a href="https://testbit.eu/wiki/Category:Rapicorn">Rapicorn Wiki Pages</a> <br/>
-  List of wiki pages related to %Rapicorn hosted in the Testbit wiki.
-- <a href="https://groups.google.com/d/forum/rapicorn">Rapicorn Web Forum</a> (Email: <a href="mailto:rapicorn@googlegroups.com">rapicorn@googlegroups.com</a>) <br/>
-  Web and email forum to discuss use and development of and with %Rapicorn.
-- <a href="https://testbit.eu/pub/docs/rapicorn/latest/">Rapicorn Online Documentation</a> <br/>
-  Reference documentation, resource lists, collections of articles and usage tutorials for %Rapicorn.
-
-@section development Rapicorn Development
-- <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a> <br/>
-  Issue tracker of the %Rapicorn repository hosted at GitHub.
-- <a href="https://testbit.eu/wiki/Rapicorn_Task_List">Rapicorn Task List</a> <br/>
-  High level overview of %Rapicorn development tasks and completion status.
-- <a href="https://testbit.eu/pub/docs/rapicorn/coverage/">Rapicorn Code Coverage Report</a> <br/>
-  Test code coverage report based on a recent 'devel' branch version.
-- <a href="https://github.com/tim-janik/rapicorn/tree/devel/">Rapicorn Devel Branch</a> <br/>
-  The 'devel' branch of the %Rapicorn Git repository includes the latest source code developments.
-- <a href="https://github.com/tim-janik/rapicorn/">Rapicorn Git Repository</a> <br/>
-  The 'master' branch of the %Rapicorn Git repository includes all official releases.
-
-*/
+*/ // @page intro

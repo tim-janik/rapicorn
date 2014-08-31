@@ -1,0 +1,14 @@
+--- DoxygenLayout.xml
++++ DoxygenLayout.xml
+@@ -7,1 +7,1 @@
+-    <tab type="namespaces" visible="yes" title="">
++    <tab type="namespaces" visible="no" title="">
+@@ -8,1 +8,1 @@
+-      <tab type="namespacelist" visible="yes" title="" intro=""/>
++      <tab type="namespacelist" visible="no" title="" intro=""/>
+@@ -8,1 +8,1 @@
+-      <tab type="namespacemembers" visible="yes" title="" intro=""/>
++      <tab type="namespacemembers" visible="no" title="" intro=""/>
+@@ -9,1 +9,2 @@
++    <tab type="user" url="namespacemembers_func.html" title="Functions"/>
+     <tab type="files" visible="yes" title="">

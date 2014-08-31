@@ -1,6 +1,6 @@
 /* Fixup Doxygen font settings */
 body				{ font: inherit; /* unset Doxygen line spacing, etc */
-				  font-family: Verdana, "DejaVu Sans", "Bitstream Vera Sans", sans-serif;
+				  font-family: "DejaVu Sans", "Bitstream Vera Sans", Candara, "Trebuchet MS", Verdana, sans-serif;
 				  font-size: 12pt; }
 table, div, p, dl, ol, ul	{ font: inherit; }
 
@@ -13,9 +13,17 @@ h5                      		{ margin: 0.6em 0; font-size: 1.05em; }
 h6                      		{ margin: .05em 0; font-size: 1.0em; }
 h1, h2, h3, h4, h5, h6			{ page-break-after: avoid; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a	{ font-weight: 600; page-break-after: avoid; }
+.title 					{ font-size: 150%; } /* page titles */
+#projectname 				{ font-weight:bold; font-size: 200%;
+					  font-family: Corbel, Verdana, "DejaVu Sans", "Bitstream Vera Sans", sans-serif; }
+
+/* Navigation */
+#nav-tree, .toc, .header .summary	{ font-family: "Nimbus Sans L", "DejaVu Sans Condensed", "Liberation Sans", Freesans, Arial, Helvetica, sans-serif;
+					  font-size: 90%;
+					}
+#nav-sync				{ display: none; }
 
 /* Doxygen project name and Tabs */
-#projectname				{ font: inherit; font-size: 200%; font-weight: bold; }
 #projectname a, #projectnumber		{ font: inherit; font-size: 100%; }
 #projectname #projectnumber		{ font-weight: normal; }
 .tabs, .tabs2, .tabs3			{ font-size: 106%; font-family: inherit; }

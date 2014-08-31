@@ -96,9 +96,10 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem todo "Todos" "Source Code TODO List"'
+      print '@xrefitem todo "Todos" "Source Code TODO List"' # sync with doxygen.cfg
       print blurb.rstrip()
       print '*/'
+  print '/**\n@page todo Source Code TODO List\n*/' # needed to refer to 'todo' page with @subpage
   if rapicorn_bug_lists:
     # ('/** @page bug_lists Bug Lists', ' * @section %s %s' % (sanitize_ident (filename), filename), '*/')
     for filename, blurb in rapicorn_bug_lists.items():
@@ -108,6 +109,7 @@ def process_end ():
       print '@xrefitem bug "Bugs" "Source Code BUG List"'
       print blurb.rstrip()
       print '*/'
+    print '/**\n@page bug Source Code BUG List\n*/' # needed to refer to 'bug' page with @subpage
 
 def process_specific (filename, text):
   def is_comment (t):

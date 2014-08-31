@@ -7,6 +7,7 @@ DOXYGEN_CONTENT_GLOBS	= *.c *.C *.cc
 DOXYGEN			= doxygen
 DOXYGEN_V		= @printf '  %-9s%s\n'
 DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
+Q_DEVNUL		= $(if $(findstring 1, $(V)) ,, >/dev/null 2>&1)
 # ChangeLog to add to the generated documentation
 DOXYGEN_CHANGELOG       ?=
 DOXYGEN_CHANGELOG_TITLE ?= Development ChangeLog
@@ -70,6 +71,9 @@ doxygen-srctree:
 	   -exec sed  '1,+0s,^,/** @file {} */ ,' {} --in-place \;
 	$(DOXYGEN_V) "PRUNE" "Exclude files..."
 	$(DOXYGEN_Q) rm -f $(patsubst %, doxygen-srctree/%, $(DOXYGEN_EXCLUDES))
+	$(DOXYGEN_V) "GEN" "Documentation page layout..."
+	$(DOXYGEN_Q) $(DOXYGEN) -l doxygen-srctree/DoxygenLayout.xml
+	$(DOXYGEN_Q) test -z "$(DOXYGEN_LAYOUT_DIFF)" || cat $(DOXYGEN_LAYOUT_DIFF) | (cd doxygen-srctree/ && patch -fr - $(Q_DEVNUL))
 
 # sed: escape @ < & > #, add sections, handle * bullets
 DOXYGEN_CHANGELOG_SED = \
@@ -101,6 +105,7 @@ doxygen-html: doxygen.cfg doxygen-srctree
 	&& echo "HAVE_DOT	  = $(DOXYGEN_GRAPHICS)" \
 	&& echo "CLASS_DIAGRAMS   = $(DOXYGEN_GRAPHICS)" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
+	&& echo "LAYOUT_FILE	  = doxygen-srctree/DoxygenLayout.xml" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "PROJECT_NUMBER   = $(DOXYGEN_PROJECT_NUMBER)" \

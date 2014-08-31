@@ -13,7 +13,7 @@ REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
 DOC_VERSION = $(or $(DSC_VERSION), $(VERSION))
 
 # == Extra Tarball Files ==
-EXTRA_DIST += ChangeLog-2009 references.bib
+EXTRA_DIST += ChangeLog-2009 references.bib doxygen_footer.html
 
 # == Doxygen Install Rules ==
 htmldocsbase  = ${docdir}
@@ -38,15 +38,19 @@ html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending o
 
 # == Doxygen Build Rules ==
 HTMLMAN_FILES     	= imports/rapidrun.1.html
-DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
+DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox docs/configuration.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
 			  aidacc/CxxStub.py
 DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
 DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
+DOXYGEN_LAYOUT_DIFF     = $(srcdir)/layout.diff
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
-DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
+DOXYGEN_TAGFILES        = $(strip \
+	imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
+	imports/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/		\
+)
 DOXYGEN_STYLESHEET	= extrastyles.css
 SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
 html-docs: doxygen-check
@@ -54,7 +58,6 @@ html-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Git ChangeLog"
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
-	$(Q) cp $(srcdir)/references.bib doxygen-srctree/
 	$(QPRINT) "MERGE" "ui/interfaces.dox"
 	$(Q) cd doxygen-srctree/ui && \
 	  sed $(SED_DELETE_ATFILE_LINE1) < interfaces.dox >> interfaces.idl && \
@@ -66,9 +69,12 @@ html-docs: doxygen-check
 	$(QPRINT) "HIDE" "internal enum definitions"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[cC] -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
-	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2
+	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2 imports/cppreference-doxygen-web.tag.xml.bz2
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
-	$(Q) rm -f imports/tagfile-susv4.xml
+	$(Q) rm -f imports/tagfile-susv4.xml imports/cppreference-doxygen-web.tag.xml
+	$(QPRINT) "GEN" "CSS for Rapicorn..."
+	$(Q) sed -r 's/\bfont\b[^:;]*:[^;]*;//' -i doxygen-html/navtree.css
+	$(Q) sed -r 's/\bfont(-size)?:[^;]*;//' -i doxygen-html/doxygen.css
 	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "MOVE" "HTML Documentation..."
