@@ -246,21 +246,21 @@ class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidge
   bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
   Requisition rec_; StringSeq seq_; IdlTestWidgetIface *self_;
   virtual bool          bool_prop () const                      { return bool_; }
-  virtual void          bool_prop (bool b)                      { bool_ = b; }
+  virtual void          bool_prop (bool b)                      { bool_ = b; changed ("bool_prop"); }
   virtual int           int_prop () const                       { return int_; }
-  virtual void          int_prop (int i)                        { int_ = i; }
+  virtual void          int_prop (int i)                        { int_ = i; changed ("int_prop"); }
   virtual double        float_prop () const                     { return float_; }
-  virtual void          float_prop (double f)                   { float_ = f; }
+  virtual void          float_prop (double f)                   { float_ = f; changed ("float_prop"); }
   virtual std::string   string_prop () const                    { return string_; }
-  virtual void          string_prop (const std::string &s)      { string_ = s; }
+  virtual void          string_prop (const std::string &s)      { string_ = s; changed ("string_prop"); }
   virtual TestEnum      enum_prop () const                      { return enum_; }
-  virtual void          enum_prop (TestEnum v)                  { enum_ = v; }
+  virtual void          enum_prop (TestEnum v)                  { enum_ = v; changed ("enum_prop"); }
   virtual Requisition   record_prop () const                    { return rec_; }
-  virtual void          record_prop (const Requisition &r)      { rec_ = r; }
+  virtual void          record_prop (const Requisition &r)      { rec_ = r; changed ("record_prop"); }
   virtual StringSeq     sequence_prop () const                  { return seq_; }
-  virtual void          sequence_prop (const StringSeq &s)      { seq_ = s; }
-  virtual IdlTestWidgetIface* self_prop () const                  { return self_; }
-  virtual void          self_prop (IdlTestWidgetIface *s)         { self_ = s; }
+  virtual void          sequence_prop (const StringSeq &s)      { seq_ = s; changed ("sequence_prop"); }
+  virtual IdlTestWidgetIface* self_prop () const                { return self_; }
+  virtual void                self_prop (IdlTestWidgetIface *s) { self_ = s; changed ("self_prop"); }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
   virtual void          render (RenderContext &rcontext, const Rect &rect) {}

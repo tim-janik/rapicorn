@@ -310,6 +310,7 @@ class Builder {
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
                              String *node_name, String *child_container_name, String *inherit_identifier);
   void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
+  bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
   void      apply_args      (WidgetImpl &widget, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
   void      apply_props     (const XmlNode *pnode, WidgetImpl &widget);
   void      call_children   (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetImpl*> *vchildren = NULL, const String &presuppose = "", int64 max_children = -1);
@@ -382,7 +383,7 @@ Builder::build_widget (const String &widget_identifier, const StringVector &call
 
 WidgetImpl*
 Builder::inherit_widget (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values,
-                       const XmlNode *caller, const XmlNode *derived)
+                         const XmlNode *caller, const XmlNode *derived)
 {
   assert_return (derived != NULL, NULL);
   assert_return (caller != NULL, NULL);
@@ -502,6 +503,20 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
   env.pop_map (locals_);
 }
 
+bool
+Builder::try_set_property (WidgetImpl &widget, const String &property_name, const String &value)
+{
+  if (value[0] == '@')
+    {
+      if (strncmp (value.data(), "@bind ", 6) == 0) /// @TODO: FIXME: implement proper @-string parsing
+        {
+          widget.add_binding (property_name, value.data() + 6);
+          return true;
+        }
+    }
+  return widget.try_set_property (property_name, value);
+}
+
 void
 Builder::apply_args (WidgetImpl &widget,
                      const StringVector &prop_names, const StringVector &prop_values, // evaluated args
@@ -517,7 +532,7 @@ Builder::apply_args (WidgetImpl &widget,
         }
       else if (prop_names[i].find (':') != String::npos)
         ; // ignore namespaced attributes
-      else if (widget.try_set_property (aname, prop_values[i]))
+      else if (try_set_property (widget, aname, prop_values[i]))
         {}
       else
         critical ("%s: widget %s: unknown property: %s", node_location (caller).c_str(), widget.name().c_str(), prop_names[i].c_str());
@@ -544,7 +559,7 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
         }
       if (aname == "name" || aname == "id")
         critical ("%s: internal-error, property should have been filtered: %s", node_location (cnode).c_str(), cnode->name().c_str());
-      else if (widget.try_set_property (aname, value))
+      else if (try_set_property (widget, aname, value))
         {}
       else
         critical ("%s: widget %s: unknown property: %s", node_location (pnode).c_str(), widget.name().c_str(), aname.c_str());

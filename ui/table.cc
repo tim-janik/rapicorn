@@ -140,18 +140,18 @@ TableImpl::insert_cols (uint first_col, uint n_cols)
 }
 
 void
-TableImpl::col_spacing (uint cspacing)
+TableImpl::col_spacing (int cspacing)
 {
-  default_col_spacing = cspacing;
+  default_col_spacing = CLAMP (cspacing, 0, 65535);
   for (uint col = 0; col < cols.size(); col++)
     cols[col].spacing = default_col_spacing;
   invalidate();
 }
 
 void
-TableImpl::row_spacing (uint rspacing)
+TableImpl::row_spacing (int rspacing)
 {
-  default_row_spacing = rspacing;
+  default_row_spacing = CLAMP (rspacing, 0, 65535);
   for (uint row = 0; row < rows.size(); row++)
     rows[row].spacing = default_row_spacing;
   invalidate();

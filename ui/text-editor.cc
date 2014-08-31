@@ -102,7 +102,7 @@ Editor::__aida_properties__()
 }
 
 class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, public virtual EventHandler {
-  uint     request_chars_, request_digits_;
+  uint16   request_chars_, request_digits_;
   int      cursor_;
   TextMode text_mode_;
   Client  *cached_client_;
@@ -114,6 +114,21 @@ public:
     request_chars_ (0), request_digits_ (0), cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE),
     cached_client_ (NULL), client_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
   {}
+protected:
+  virtual void
+  do_changed (const String &name) override
+  {
+    SingleContainerImpl::do_changed (name);
+    if (name == "text")
+      {
+        changed ("markup_text");  // notify aliasing properties
+        ObjectImpl *client_object = dynamic_cast<ObjectImpl*> (get_client());
+        if (client_object)
+          {
+            client_object->changed ("markup_text");  // bad hack, need tighter coupling between Client and Editor
+          }
+      }
+  }
 private:
   ~EditorImpl()
   {
@@ -357,7 +372,7 @@ private:
               {
                 cursor_ = m;
                 client->mark2cursor();
-                changed();
+                changed ("cursor");
               }
             (void) moved;
           }
@@ -392,7 +407,7 @@ private:
         client->hide_selector();
         client->mark2cursor();
         cursor_ = client->mark();
-        changed();
+        changed ("cursor");
         return true;
       }
     client->mark (cursor_);
@@ -413,7 +428,7 @@ private:
       client->hide_selector();
     cursor_ = m;
     client->mark2cursor();
-    changed();
+    changed ("cursor");
     return true;
   }
   bool
@@ -434,7 +449,8 @@ private:
         client->mark_insert (utf8text);
         cursor_ = client->mark();
         client->mark2cursor();
-        changed();
+        changed ("text");
+        changed ("cursor");
         return true;
       }
     return false;
@@ -450,7 +466,7 @@ private:
     client->mark2cursor();      // cursor might have been at end already
     client->mark (0);
     client->mark2selector();    // selects and forces selection_changed
-    changed();
+    changed ("cursor");
     return client->get_selection();
   }
   bool
@@ -467,7 +483,7 @@ private:
     client->hide_selector();
     cursor_ = client->mark();
     client->mark2cursor();
-    changed();
+    changed ("cursor");
     return true;
   }
   bool
@@ -487,7 +503,8 @@ private:
         cursor_ = m;
         client->mark2cursor();
         client->mark_delete (1);
-        changed();
+        changed ("text");
+        changed ("cursor");
         return true;
       }
     return false;
@@ -503,7 +520,8 @@ private:
     if (client->mark_at_end())
       return false;
     client->mark_delete (1);
-    changed();
+    changed ("text");
+    changed ("cursor");
     return true;
   }
   void
@@ -549,10 +567,10 @@ private:
   virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
   virtual String   plain_text     () const                      { return cached_client_ ? cached_client_->plain_text() : ""; }
   virtual void     plain_text     (const String &ptext)         { Client *client = get_client(); if (client) client->plain_text (ptext); }
-  virtual uint     request_chars  () const                      { return request_chars_; }
-  virtual void     request_chars  (uint nc)                     { request_chars_ = nc; invalidate_size(); }
-  virtual uint     request_digits () const                      { return request_digits_; }
-  virtual void     request_digits (uint nd)                     { request_digits_ = nd; invalidate_size(); }
+  virtual int      request_chars  () const                      { return request_chars_; }
+  virtual void     request_chars  (int nc)                      { request_chars_ = CLAMP (nc, 0, 65535); invalidate_size(); }
+  virtual int      request_digits () const                      { return request_digits_; }
+  virtual void     request_digits (int nd)                      { request_digits_ = CLAMP (nd, 0, 65535); invalidate_size(); }
 };
 static const WidgetFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 

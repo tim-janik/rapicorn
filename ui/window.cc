@@ -1013,6 +1013,8 @@ WindowImpl::screen_viewable ()
   return visible() && screen_window_ && screen_window_->viewable();
 }
 
+static bool startup_window = true;
+
 void
 WindowImpl::idle_show()
 {
@@ -1023,6 +1025,10 @@ WindowImpl::idle_show()
         move_focus (FOCUS_NEXT);
       // size request & show up
       screen_window_->show();
+      // figure if this is the first window triggered by the user startig an app
+      const bool user_action = startup_window;
+      startup_window = false;
+      screen_window_->present (user_action);
     }
 }
 

@@ -29,7 +29,8 @@ public:
   virtual WindowIface*query_window           (const String &selector);
   virtual WindowList  query_windows          (const String &selector);
   virtual WindowList  list_windows           ();
-  virtual ListModelRelayIface* create_list_model_relay (const std::string &name = "");
+  virtual BindableRelayIface*  create_bindable_relay   () override;
+  virtual ListModelRelayIface* create_list_model_relay (const std::string &name = "") override;
   virtual void        test_counter_set       (int val);
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();

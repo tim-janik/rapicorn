@@ -5,6 +5,7 @@
 #include <rapicorn-core.hh>
 #include <ui/application.hh>
 #include <ui/arrangement.hh>
+#include <ui/binding.hh>
 #include <ui/buttons.hh>
 #include <ui/container.hh>
 #include <ui/cmdlib.hh>
@@ -18,6 +19,7 @@
 #include <ui/layoutcontainers.hh>
 #include <ui/listarea.hh>
 #include <ui/models.hh>
+#include <ui/object.hh>
 #include <ui/paintcontainers.hh>
 #include <ui/paintwidgets.hh>
 #include <ui/painter.hh>

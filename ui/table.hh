@@ -12,10 +12,10 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_widgets) = 0;
-  virtual uint  col_spacing     () const = 0;
-  virtual void  col_spacing     (uint cspacing) = 0;
-  virtual uint  row_spacing     () const = 0;
-  virtual void  row_spacing     (uint rspacing) = 0;
+  virtual int   col_spacing     () const = 0;
+  virtual void  col_spacing     (int cspacing) = 0;
+  virtual int   row_spacing     () const = 0;
+  virtual void  row_spacing     (int rspacing) = 0;
   virtual void  resize          (uint n_cols, uint n_rows) = 0;
   virtual uint  get_n_rows      () = 0;
   virtual uint  get_n_cols      () = 0;

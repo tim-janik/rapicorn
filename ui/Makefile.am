@@ -9,11 +9,12 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
-	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
+	adjustment.hh	application.hh	arrangement.hh	\
+	binding.hh	buttons.hh	\
 	cmdlib.hh			commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
 	image.hh	widget.hh	imageframe.hh	keysymbols.hh	\
-	layoutcontainers.hh	listarea.hh	models.hh	\
+	layoutcontainers.hh	listarea.hh	models.hh	object.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
 	scrollwidgets.hh	selector.hh	selob.hh	\
@@ -26,11 +27,12 @@ rapicorn_public_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
-	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
+	blit-mmx.cc	blitfuncs.cc	\
+	binding.cc	buttons.cc	\
 	cmdlib.cc			commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
 	image.cc	widget.cc	imageframe.cc	\
-	layoutcontainers.cc	listarea.cc	models.cc	\
+	layoutcontainers.cc	listarea.cc	models.cc	object.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\
 	scrollwidgets.cc	selector.cc	selob.cc	\
@@ -97,7 +99,7 @@ ROPE           = $(srcdir)/../rope
 AIDACC         = $(top_builddir)/aidacc/aidacc-intern
 CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
 EXTRACTDOCS_PY = $(top_srcdir)/aidacc/ExtractDocs.py
-EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh hardcoded.idl
+EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh
 # generate interfaces.dox to complete docs
 $(rapicorn_cc_sources): interfaces.dox
 interfaces.dox: $(EXTRACTDOCS_PY) $(srcdir)/interfaces.idl

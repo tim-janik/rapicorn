@@ -42,6 +42,19 @@ class Generator:
     self.idl_file = idl_file
     self.apikey = ""
     self.strip_path = ""
+  def warning (self, message, input_file = '', input_line = -1, input_col = -1):
+    import sys
+    if input_file:
+      if input_line > 0 and input_col > 0:
+        loc = '%s:%u:%u' % (input_file, input_line, input_col)
+      elif input_line > 0:
+        loc = '%s:%u' % (input_file, input_line)
+      else:
+        loc = input_file
+    else:
+      loc = self.idl_path()
+    input_file = input_file if input_file else self.idl_path()
+    print >>sys.stderr, '%s: WARNING: %s' % (loc, message)
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -583,10 +596,14 @@ class Generator:
     s += constPList + '&\n' + classC + '::__aida_properties__ ()\n{\n'
     s += '  static ' + self.property_list + '::Property *properties[] = {\n'
     for fl in class_info.fields:
-      cmmt = '' if fl[1].auxdata.has_key ('label') else '// '
+      cmmt = '// ' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE, Decls.ANY) else ''
+      default_flags = '""' if fl[1].auxdata.has_key ('label') else '"rw"'
       label, blurb = fl[1].auxdata.get ('label', '"' + fl[0] + '"'), fl[1].auxdata.get ('blurb', '""')
-      dflags = fl[1].auxdata.get ('hints', '""')
+      dflags = fl[1].auxdata.get ('hints', default_flags)
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, dflags)
+      if cmmt:
+        self.warning ('%s::%s: property type not supported: %s' %
+                      (self.namespaced_identifier (classC), fl[0], self.type2cpp (fl[1])), *fl[1].location)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     calls = [cl + '::__aida_properties__()' for cl in precls]

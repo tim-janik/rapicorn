@@ -228,22 +228,22 @@ public:
   {}
 protected:
   virtual void
-  do_changed ()
+  do_changed (const String &name)
   {
-    SingleContainerImpl::do_changed();
+    SingleContainerImpl::do_changed (name);
     if (overlap_child())
       expose();
     else
       expose_enclosure();
   }
-  virtual void          normal_frame    (FrameType ft)  { normal_frame_ = ft; changed(); }
+  virtual void          normal_frame    (FrameType ft)  { normal_frame_ = ft; changed ("normal_frame"); }
   virtual FrameType     normal_frame    () const        { return normal_frame_; }
-  virtual void          impressed_frame (FrameType ft)  { impressed_frame_ = ft; changed(); }
+  virtual void          impressed_frame (FrameType ft)  { impressed_frame_ = ft; changed ("impressed_frame"); }
   virtual FrameType     impressed_frame () const        { return impressed_frame_; }
   virtual bool          overlap_child   () const        { return overlap_child_; }
-  virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed(); }
+  virtual void          overlap_child   (bool ovc)      { overlap_child_ = ovc; invalidate(); changed ("overlap_child"); }
   virtual bool          tight_focus     () const        { return tight_focus_; }
-  virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed(); }
+  virtual void          tight_focus     (bool tf)       { tight_focus_ = tf; invalidate(); changed ("tight_focus"); }
   virtual FrameType     current_frame   () const        { return ancestry_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
@@ -371,12 +371,15 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
     expose_enclosure();
   }
   void
-  client_changed()
+  client_changed (const String &name)
   {
-    if (overlap_child())
-      expose();
-    else
-      expose_enclosure();
+    if (name == "flags" or name.empty())
+      {
+        if (overlap_child())
+          expose();
+        else
+          expose_enclosure();
+      }
   }
   virtual void
   hierarchy_changed (WidgetImpl *old_toplevel)
@@ -399,7 +402,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
       }
   }
 protected:
-  virtual void          focus_frame     (FrameType ft)  { focus_frame_ = ft; changed(); }
+  virtual void          focus_frame     (FrameType ft)  { focus_frame_ = ft; changed ("focus_frame"); }
   virtual FrameType     focus_frame     () const        { return focus_frame_; }
   virtual FrameType
   current_frame () const

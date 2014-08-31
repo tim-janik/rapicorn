@@ -864,7 +864,7 @@ protected:
       }
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("para_state");
   }
   virtual Text::AttrState
   attr_state () const
@@ -876,7 +876,7 @@ protected:
   attr_state (const Text::AttrState &astate)
   {
     // FIXME: implement this
-    changed();
+    changed ("attr_state");
   }
   virtual String
   save_markup () const
@@ -926,7 +926,7 @@ protected:
     else
       mark_ = utf8_align (c, c + byte_index) - c;
     rapicorn_pango_mutex.unlock();
-    changed();
+    changed ("cursor");
   }
   virtual void
   cursor2mark ()
@@ -934,7 +934,7 @@ protected:
     if (cursor_ != mark_)
       {
         mark_ = cursor_;
-        changed();
+        changed ("cursor");
       }
   }
   virtual bool
@@ -993,7 +993,7 @@ protected:
       mark_ = l;
     else
       mark_ = MAX (0, xmark);
-    changed();
+    changed ("cursor");
   }
   virtual void
   mark2cursor ()
@@ -1005,7 +1005,7 @@ protected:
         scroll_to_cursor();
         if (selector_ >= 0)
           selection_changed();
-        changed();
+        changed ("cursor");
       }
   }
   virtual void
@@ -1017,7 +1017,7 @@ protected:
         expose();
         if (selector_ >= 0)
           selection_changed();
-        changed();
+        changed ("cursor");
       }
   }
   virtual void
@@ -1028,7 +1028,7 @@ protected:
         selector_ = mark_;
         expose();
         selection_changed();
-        changed();
+        changed ("cursor");
       }
   }
   virtual void
@@ -1039,7 +1039,7 @@ protected:
         selector_ = -1;
         expose();
         selection_changed();
-        changed();
+        changed ("cursor");
       }
   }
   virtual bool
@@ -1080,7 +1080,8 @@ protected:
     // FIXME: adjust attributes, cursor_, selector_
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("text");
+    changed ("cursor");
   }
   virtual void
   mark_insert (String                 utf8string,
@@ -1096,7 +1097,8 @@ protected:
     // FIXME: adjust attributes
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("text");
+    changed ("cursor");
   }
 protected:
   void

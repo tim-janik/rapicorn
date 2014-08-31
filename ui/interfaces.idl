@@ -4,8 +4,6 @@
  * @brief Rapicorn user interface API classes.
  */
 
-include "hardcoded.idl";
-
 namespace Rapicorn {
 
 Const MAXINT32 = +4294967295;
@@ -214,6 +212,18 @@ record Pixbuf {
   StringSeq variables;
 };
 
+/// Base class for all interface types.
+interface Object {};
+
+/// BinadbleRelay - A server side relay to provide the BindableIface API for client objects to servants.
+interface BindableRelay : Object {
+  signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
+  signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
+  signal void relay_list (String bpath, int64 nonce);              ///< Signal to request listing of property names.
+  void report_notify     (String bpath) = 0;                       ///< Notify about changes of a property.
+  void report_result (int64 nonce, Any result, String error) = 0;  ///< Function to report set/get/list results.
+};
+
 /// Classification for element update request messages.
 enum UpdateKind {
   UPDATE_READ,                  ///< Indicates an element range read request.
@@ -247,7 +257,7 @@ record UpdateRequest {
  * For many model implementations, in-order read outs should be of complexity O(1),
  * while random order read outs may be of O(log n) or even O(n).
  */
-interface ListModel {
+interface ListModel : Object {
   int32       count   () = 0;		        ///< Obtain the number of rows provided by this model.
   Any         row     (int32 index) = 0;        ///< Read-out row at @a index. In-order read outs are generally fastest.
   signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
@@ -258,7 +268,7 @@ interface ListModel {
  * This allows use of a ListModel in for example a list view, while the data to
  * be displayed is provided sparsely on demand through explicit API calls.
  */
-interface ListModelRelay {
+interface ListModelRelay : Object {
   ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
   void        fill   (int32 first, AnySeq asq) = 0;   ///< Provide row data as requested by refill().
   signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
@@ -279,7 +289,7 @@ sequence WidgetSeq { Widget  widgets; };
 /** Widget is the base type for all UI elements.
  * See also the corresponding implementation class WidgetImpl.
  */
-interface Widget {
+interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
@@ -316,6 +326,8 @@ interface Widget {
   Widget          query_selector          (String selector) = 0; ///< Returns first selector match.
   WidgetSeq       query_selector_all      (String selector) = 0; ///< Returns all selector matches.
   Widget          query_selector_unique   (String selector) = 0; ///< Returns single selector match if unique.
+  /// @name Widget Miscellaneous
+  void            data_context            (Object context) = 0;  ///< Provide context object for data Binding.
   /// @name Hosting arbitrary user data
   void            set_user_data           (String name, Any any) = 0;   ///< Store user data @a any under @a name.
   Any             get_user_data           (String name) = 0;            ///< Retrieve user data stored under @a name.
@@ -407,7 +419,7 @@ sequence WindowList { Window windows; };
  * such as the facility to create Window objects on the screen.
  * @nosubgrouping
  */
-interface Application {
+interface Application : Object {
   /// @name Application Startup
   String        auto_path       (String         file_name,
                                  String         binary_path,
@@ -428,8 +440,9 @@ interface Application {
   Window        query_window    (String selector) = 0;  ///< Returns first Window match for @a selector.
   WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
-  /// @name Application Registries
-  ///< Create a ListModelRelay coupled with a ListModel registered as @a name.
+  /// @name Application Factory
+  BindableRelay create_bindable_relay    () = 0;        ///< Create a BindableRelay, usually for uses in @a data_context.
+  /// Create a ListModelRelay coupled with a ListModel registered as @a name.
   ListModelRelay create_list_model_relay (String name = "") = 0;
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.

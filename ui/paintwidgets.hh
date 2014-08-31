@@ -28,18 +28,18 @@ public:
   virtual FrameType     normal_dot          () const = 0;
   virtual void          impressed_dot       (FrameType ft) = 0;
   virtual FrameType     impressed_dot       () const = 0;
-  virtual void          n_hdots             (uint   num) = 0;
-  virtual uint          n_hdots             () const = 0;
-  virtual void          n_vdots             (uint   num) = 0;
-  virtual uint          n_vdots             () const = 0;
-  virtual uint          right_padding_dots  () const  = 0;
-  virtual void          right_padding_dots  (uint c)  = 0;
-  virtual uint          top_padding_dots    () const  = 0;
-  virtual void          top_padding_dots    (uint c)  = 0;
-  virtual uint          left_padding_dots   () const  = 0;
-  virtual void          left_padding_dots   (uint c)  = 0;
-  virtual uint          bottom_padding_dots () const  = 0;
-  virtual void          bottom_padding_dots (uint c)  = 0;
+  virtual void          n_hdots             (int   num) = 0;
+  virtual int           n_hdots             () const = 0;
+  virtual void          n_vdots             (int   num) = 0;
+  virtual int           n_vdots             () const = 0;
+  virtual int           right_padding_dots  () const  = 0;
+  virtual void          right_padding_dots  (int c)  = 0;
+  virtual int           top_padding_dots    () const  = 0;
+  virtual void          top_padding_dots    (int c)  = 0;
+  virtual int           left_padding_dots   () const  = 0;
+  virtual void          left_padding_dots   (int c)  = 0;
+  virtual int           bottom_padding_dots () const  = 0;
+  virtual void          bottom_padding_dots (int c)  = 0;
 };
 
 class DrawableImpl : public virtual WidgetImpl, public virtual DrawableIface {

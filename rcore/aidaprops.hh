@@ -109,24 +109,16 @@ template<class Class> inline Property*
 create_property (void (Class::*setter) (int), int (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 { return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, INT_MIN, INT_MAX, 1, hints); }
-/* int16 */
+/* int64 */
 template<class Class> inline Property*
-create_property (void (Class::*setter) (int16), int16 (Class::*getter) () const,
+create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
-                 int16 min_value, int16 max_value, int16 stepping, const char *hints)
-{ return new PropertyRange<Class,int16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* uint */
+                 int64 min_value, int64 max_value, int64 stepping, const char *hints)
+{ return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
-create_property (void (Class::*setter) (uint), uint (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 uint min_value, uint max_value, uint stepping, const char *hints)
-{ return new PropertyRange<Class,uint> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* uint16 */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (uint16), uint16 (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 uint16 min_value, uint16 max_value, uint16 stepping, const char *hints)
-{ return new PropertyRange<Class,uint16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
+create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
+                 const char *ident, const char *label, const char *blurb, const char *hints)
+{ return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, INT64_MIN, INT64_MAX, 1, hints); }
 /* float */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (float), float (Class::*getter) () const,
@@ -174,7 +166,8 @@ struct PropertyEnum : Property {
   virtual String get_value   (PropertyHostInterface &obj);
   virtual bool   get_range   (PropertyHostInterface &obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
-template<class Class, typename Type> inline Property*
+template<class Class, typename Type,
+         typename std::enable_if<std::is_enum<Type>::value>::type* = nullptr> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 {

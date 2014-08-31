@@ -104,6 +104,8 @@ DotGrid::__aida_properties__()
   return property_list;
 }
 
+#define U31(v)   CLAMP (v, 0, INT_MAX)
+
 class DotGridImpl : public virtual WidgetImpl, public virtual DotGrid {
   FrameType normal_dot_, impressed_dot_;
   uint      n_hdots_, n_vdots_;
@@ -123,18 +125,18 @@ public:
   virtual void      normal_dot    (FrameType ft)        { normal_dot_ = ft; expose(); }
   virtual FrameType normal_dot    () const              { return normal_dot_; }
   FrameType         current_dot   () const              { return ancestry_impressed() ? impressed_dot() : normal_dot(); }
-  virtual void      n_hdots       (uint   num)          { n_hdots_ = num; expose(); }
-  virtual uint      n_hdots       () const              { return n_hdots_; }
-  virtual void      n_vdots       (uint   num)          { n_vdots_ = num; expose(); }
-  virtual uint      n_vdots       () const              { return n_vdots_; }
-  virtual uint      right_padding_dots () const         { return right_padding_dots_; }
-  virtual void      right_padding_dots (uint c)         { right_padding_dots_ = c; expose(); }
-  virtual uint      top_padding_dots  () const          { return top_padding_dots_; }
-  virtual void      top_padding_dots  (uint c)          { top_padding_dots_ = c; expose(); }
-  virtual uint      left_padding_dots  () const         { return left_padding_dots_; }
-  virtual void      left_padding_dots  (uint c)         { left_padding_dots_ = c; expose(); }
-  virtual uint      bottom_padding_dots  () const       { return bottom_padding_dots_; }
-  virtual void      bottom_padding_dots  (uint c)       { bottom_padding_dots_ = c; expose(); }
+  virtual void      n_hdots       (int   num)           { n_hdots_ = U31 (num); expose(); }
+  virtual int       n_hdots       () const              { return n_hdots_; }
+  virtual void      n_vdots       (int   num)           { n_vdots_ = U31 (num); expose(); }
+  virtual int       n_vdots       () const              { return n_vdots_; }
+  virtual int       right_padding_dots   () const       { return right_padding_dots_; }
+  virtual void      right_padding_dots   (int c)        { right_padding_dots_ = U31 (c); expose(); }
+  virtual int       top_padding_dots     () const       { return top_padding_dots_; }
+  virtual void      top_padding_dots     (int c)        { top_padding_dots_ = U31 (c); expose(); }
+  virtual int       left_padding_dots    () const       { return left_padding_dots_; }
+  virtual void      left_padding_dots    (int c)        { left_padding_dots_ = U31 (c); expose(); }
+  virtual int       bottom_padding_dots  () const       { return bottom_padding_dots_; }
+  virtual void      bottom_padding_dots  (int c)        { bottom_padding_dots_ = U31 (c); expose(); }
   virtual void
   size_request (Requisition &requisition)
   {

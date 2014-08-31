@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "widget.hh"
+#include "binding.hh"
 #include "container.hh"
 #include "adjustment.hh"
 #include "window.hh"
@@ -49,7 +50,6 @@ WidgetIface::impl () const
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE | SENSITIVE),
   parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
-  sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -57,6 +57,12 @@ WidgetImpl::WidgetImpl () :
 void
 WidgetImpl::constructed()
 {}
+
+void
+WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
+{
+  f (*this);
+}
 
 bool
 WidgetImpl::ancestry_visible () const
@@ -147,7 +153,7 @@ WidgetImpl::propagate_state (bool notify_changed)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
-    sig_changed.emit(); // changed() does not imply invalidate(), see above
+    sig_changed.emit (""); // changed() does not imply invalidate(), see above
 }
 
 void
@@ -174,7 +180,7 @@ WidgetImpl::set_flag (uint64 flag, bool on)
           repack (pa, pa); // includes invalidate();
           invalidate_parent(); // request resize even if flagged as invalid already
         }
-      changed();
+      changed ("flags");
     }
 }
 
@@ -734,6 +740,91 @@ WidgetImpl::try_set_property (const String &property_name, const String &value)
   return __aida_setter__ (property_name, value);
 }
 
+static DataKey<ObjectIfaceP> data_context_key;
+
+void
+WidgetImpl::data_context (ObjectIface &dcontext)
+{
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (oip.get() != &dcontext)
+    {
+      oip = shared_ptr (&dcontext);
+      if (oip)
+        set_data (&data_context_key, shared_ptr (&dcontext));
+      else
+        delete_data (&data_context_key);
+      if (anchored())
+        foreach_recursive ([] (WidgetImpl &widget) { widget.data_context_changed(); });
+    }
+}
+
+ObjectIfaceP
+WidgetImpl::data_context () const
+{
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (!oip)
+    {
+      WidgetImpl *p = parent();
+      if (p)
+        return p->data_context();
+    }
+  return oip;
+}
+
+typedef vector<BindingP> BindingVector;
+class BindingVectorKey : public DataKey<BindingVector*> {
+  virtual void destroy (BindingVector *data) override
+  {
+    for (auto b : *data)
+      b->reset();
+    delete data;
+  }
+};
+static BindingVectorKey binding_key;
+
+void
+WidgetImpl::data_context_changed ()
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    {
+      ObjectIfaceP dc = data_context();
+      for (BindingP b : *bv)
+        if (dc)
+          b->bind_context (dc);
+        else
+          b->reset();
+    }
+}
+
+void
+WidgetImpl::add_binding (const String &property, const String &binding_path)
+{
+  assert_return (false == anchored());
+  BindingP bp = Binding::make_shared (*this, property, binding_path);
+  BindingVector *bv = get_data (&binding_key);
+  if (!bv)
+    {
+      bv = new BindingVector;
+      set_data (&binding_key, bv);
+    }
+  bv->push_back (bp);
+}
+
+void
+WidgetImpl::remove_binding (const String &property)
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    for (auto bi = bv->begin(); bi != bv->end(); ++bi)
+      if ((*bi)->instance_property() == property)
+        {
+          (*bi)->reset();
+          bv->erase (bi);
+          return;
+      }
+}
+
 static class OvrKey : public DataKey<Requisition> {
   Requisition
   fallback()
@@ -1233,13 +1324,6 @@ WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, 
 }
 
 void
-WidgetImpl::changed()
-{
-  if (!finalizing())
-    sig_changed.emit();
-}
-
-void
 WidgetImpl::invalidate_parent ()
 {
   /* propagate (size) invalidation from children to parents */
@@ -1382,6 +1466,7 @@ WidgetImpl::enter_anchored ()
         if (wgroup)
           wgroup->add_widget (*this);
       }
+  data_context_changed();
 }
 
 void
@@ -1390,6 +1475,7 @@ WidgetImpl::leave_anchored ()
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
   for (auto *wgroup : widget_groups)
     wgroup->remove_widget (*this);
+  data_context_changed();
 }
 
 static WidgetImpl *global_debug_dump_marker = NULL;
@@ -1612,14 +1698,14 @@ WidgetImpl::vscale (double f)
 }
 
 void
-WidgetImpl::do_changed()
+WidgetImpl::do_changed (const String &name)
 {
+  ObjectImpl::do_changed (name);
 }
 
 void
 WidgetImpl::do_invalidate()
-{
-}
+{}
 
 bool
 WidgetImpl::do_event (const Event &event)
@@ -1670,6 +1756,7 @@ WidgetImpl::name (const String &str)
     delete_data (&widget_name_key);
   else
     set_data (&widget_name_key, str);
+  changed ("name");
 }
 
 FactoryContext*

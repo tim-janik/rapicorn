@@ -1,10 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/serverapi.hh>
-// serverapi.hh includes widget.hh after WidgetIface declaration
-
 #ifndef __RAPICORN_WIDGET_HH_
 #define __RAPICORN_WIDGET_HH_
 
+#include <ui/object.hh>
 #include <ui/events.hh>
 #include <ui/region.hh>
 #include <ui/commands.hh>
@@ -23,6 +21,7 @@ class ContainerImpl;
 class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
+typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 namespace Selector { class Selob; }
 enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
 
@@ -42,7 +41,7 @@ public:
 
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
-class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer {
+class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class ClassDoctor;
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
@@ -62,9 +61,11 @@ class WidgetImpl : public virtual WidgetIface, public virtual DataListContainer 
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
+  void                        data_context_changed ();
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                constructed        ();
+  virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
   /* flag handling */
   bool                        change_flags_silently (uint64 mask, bool on);
   enum {
@@ -103,7 +104,7 @@ protected:
                                                  double       new_height);
   /* signal methods */
   virtual void                do_invalidate     ();
-  virtual void                do_changed        ();
+  virtual void                do_changed        (const String &name) override;
   /* idlers & timers */
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
@@ -200,6 +201,11 @@ public:
   bool                        try_set_property  (const String    &property_name,
                                                  const String    &value);
   const PropertyList&         list_properties   ();
+  // bindings
+  void                        add_binding       (const String &property, const String &binding_path);
+  void                        remove_binding    (const String &property);
+  virtual void                data_context      (ObjectIface     &context);
+  ObjectIfaceP                data_context      () const;
   /* commands */
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);
@@ -222,17 +228,15 @@ public:
   /* invalidation / changes */
   void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
-  void                        changed           ();
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
   void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  Aida::Signal<void ()>                 sig_finalize;
-  Aida::Signal<void ()>                 sig_changed;
-  Aida::Signal<void ()>                 sig_invalidate;
-  Aida::Signal<void (WidgetImpl *old)>  sig_hierarchy_changed;
+  Aida::Signal<void ()>                   sig_finalize;
+  Aida::Signal<void ()>                   sig_invalidate;
+  Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // widget coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
@@ -360,8 +364,6 @@ protected:
 private:
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
-inline bool operator== (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 == &widget2; }
-inline bool operator!= (const WidgetImpl &widget1, const WidgetImpl &widget2) { return &widget1 != &widget2; }
 
 // == WidgetIfaceVector ==
 struct WidgetIfaceVector : public std::vector<WidgetIface*> {
