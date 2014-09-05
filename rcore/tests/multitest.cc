@@ -661,7 +661,7 @@ open_temporary (int *fdp)
   String path;
   for (uint i = 0; i < 77; i++)
     {
-      path = Path::join (P_tmpdir, string_format ("task%u-%x.tmp", ThisThread::thread_pid(), Test::rand_int_range (256, 4095)));
+      path = Path::join (P_tmpdir, string_format ("task%u-%x.tmp", ThisThread::thread_pid(), Test::random_irange (256, 4095)));
       if (!Path::check (path, "e"))
         {
           int temporary_fd = open (path.c_str(), O_RDWR | O_EXCL | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY,

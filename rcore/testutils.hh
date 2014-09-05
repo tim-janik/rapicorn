@@ -136,11 +136,10 @@ public:
 };
 
 // == Deterministic random numbers for tests ===
-char    rand_bit                (void);                                 ///< Return a random bit.
-int32   rand_int                (void);                                 ///< Return random int.
-int32   rand_int_range          (int32 begin, int32 end);               ///< Return random int within range.
-double  test_rand_double        (void);                                 ///< Return random double.
-double  test_rand_double_range  (double range_start, double range_end); ///< Return random double within range.
+uint64_t random_int64           ();                                     ///< Return random int for reproduceble tests.
+int64_t  random_irange          (int64_t begin, int64_t end);           ///< Return random int within range for reproduceble tests.
+double   random_float           ();                                     ///< Return random double for reproduceble tests.
+double   random_frange          (double begin, double end);             ///< Return random double within range for reproduceble tests.
 
 enum TrapFlags {
   TRAP_INHERIT_STDIN   = 1 << 0,

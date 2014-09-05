@@ -34,8 +34,8 @@ create_sample_pixmap (void)
   uint32 *row = pixmap.row (0);
   row[1] = 0xff667788;
   row = pixmap.row (1);
-  row[0] = Test::rand_int() | 0xff000000;
-  row[1] = Test::rand_int() | 0xff000000;
+  row[0] = Test::random_int64() | 0xff000000;
+  row[1] = Test::random_int64() | 0xff000000;
   row = pixmap.row (2);
   memset (row, 0x80, pixmap.width() * sizeof (row[0]));
   row = pixmap.row (3);
