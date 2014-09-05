@@ -22,7 +22,6 @@
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
-#include <glib.h>
 
 namespace Rapicorn {
 
@@ -266,66 +265,48 @@ static InitHook _init_cpuinfo ("core/02 Init CPU Info", init_cpuinfo);
 String
 cpu_info_string (const CPUInfo &cpu_info)
 {
-  GString *gstring = g_string_new ("");
-  g_string_append_printf (gstring,
-                          "CPU Architecture: %s\n"
-                          "CPU Vendor:       %s\n",
-                          cpu_info.machine, cpu_info.cpu_vendor);
-  /* processor flags */
-  GString *pflags = g_string_new ("");
+  String info;
+  // architecture
+  info += cpu_info.machine;
+  // processor flags
   if (cpu_info.x86_fpu)
-    g_string_append_printf (pflags, " FPU");
+    info += " FPU";
   if (cpu_info.x86_tsc)
-    g_string_append_printf (pflags, " TSC");
+    info += " TSC";
   if (cpu_info.x86_htt)
-    g_string_append_printf (pflags, " HTT");
-  /* MMX flags */
-  GString *mflags = g_string_new ("");
-  if (cpu_info.x86_mmx)
-    g_string_append_printf (mflags, " MMX");
-  if (cpu_info.x86_mmxext)
-    g_string_append_printf (mflags, " MMXEXT");
-  /* SSE flags */
-  GString *sflags = g_string_new ("");
-  if (cpu_info.x86_ssesys)
-    g_string_append_printf (sflags, " SSESYS");
-  if (cpu_info.x86_sse)
-    g_string_append_printf (sflags, " SSE");
-  if (cpu_info.x86_sse2)
-    g_string_append_printf (sflags, " SSE2");
-  if (cpu_info.x86_sse3)
-    g_string_append_printf (sflags, " SSE3");
-  if (cpu_info.x86_ssse3)
-    g_string_append_printf (sflags, " SSSE3");
-  if (cpu_info.x86_sse4_1)
-    g_string_append_printf (sflags, " SSE4.1");
-  if (cpu_info.x86_sse4_2)
-    g_string_append_printf (sflags, " SSE4.2");
+    info += " HTT";
   if (cpu_info.x86_cx16)
-    g_string_append_printf (sflags, " CMPXCHG16B");
-  /* 3DNOW flags */
-  GString *nflags = g_string_new ("");
+    info += " CMPXCHG16B";
+  // MMX flags
+  if (cpu_info.x86_mmx)
+    info += " MMX";
+  if (cpu_info.x86_mmxext)
+    info += " MMXEXT";
+  // SSE flags
+  if (cpu_info.x86_ssesys)
+    info += " SSESYS";
+  if (cpu_info.x86_sse)
+    info += " SSE";
+  if (cpu_info.x86_sse2)
+    info += " SSE2";
+  if (cpu_info.x86_sse3)
+    info += " SSE3";
+  if (cpu_info.x86_ssse3)
+    info += " SSSE3";
+  if (cpu_info.x86_sse4_1)
+    info += " SSE4.1";
+  if (cpu_info.x86_sse4_2)
+    info += " SSE4.2";
+  // 3DNOW flags
   if (cpu_info.x86_3dnow)
-    g_string_append_printf (nflags, " 3DNOW");
+    info += " 3DNOW";
   if (cpu_info.x86_3dnowext)
-    g_string_append_printf (nflags, " 3DNOWEXT");
-  /* flag output */
-  if (pflags->len)
-    g_string_append_printf (gstring, "CPU Features:    %s\n", pflags->str);
-  if (mflags->len)
-    g_string_append_printf (gstring, "CPU Integer SIMD:%s\n", mflags->str);
-  if (sflags->len)
-    g_string_append_printf (gstring, "CPU Float SIMD:  %s\n", sflags->str);
-  if (nflags->len)
-    g_string_append_printf (gstring, "CPU Media SIMD:  %s\n", nflags->str);
-  g_string_free (nflags, TRUE);
-  g_string_free (sflags, TRUE);
-  g_string_free (mflags, TRUE);
-  g_string_free (pflags, TRUE);
-  /* done */
-  String retval = gstring->str;
-  g_string_free (gstring, TRUE);
-  return retval;
+    info += " 3DNOWEXT";
+  // finally, vendor
+  info += " ";
+  info += cpu_info.cpu_vendor;
+  return info;
+
 }
 
 // == TaskStatus ==

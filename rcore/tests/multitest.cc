@@ -125,7 +125,7 @@ test_cpu_info (void)
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);
   if (Test::verbose())
-    printout ("\n#####\n%s#####\n", cps.c_str());
+    printout ("\nCPUID: %s\n", cps.c_str());
 }
 REGISTER_TEST ("General/CpuInfo", test_cpu_info);
 
