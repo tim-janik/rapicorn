@@ -137,20 +137,7 @@ extern const String     searchpath_separator;  /* 1char */
 } // Path
 
 /* --- url handling --- */
-void url_show                   (const char           *url);
-void url_show_with_cookie       (const char           *url,
-                                 const char           *url_title,
-                                 const char           *cookie);
-bool url_test_show              (const char           *url);
-bool url_test_show_with_cookie  (const char	      *url,
-                                 const char           *url_title,
-                                 const char           *cookie);
-
-/* --- cleanup registration --- */
-uint cleanup_add                (uint                  timeout_ms,
-                                 void                (*destroy_data) (void*),
-                                 void                 *data);
-void cleanup_force_handlers     (void);
+bool url_show                   (const char           *url);
 
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,
