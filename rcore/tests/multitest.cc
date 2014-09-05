@@ -120,12 +120,11 @@ REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 static void
 test_cpu_info (void)
 {
-  const CPUInfo cpi = cpu_info ();
-  TCMPS (cpi.machine, !=, NULL);
-  String cps = cpu_info_string (cpi);
-  TASSERT (cps.size() != 0);
+  const String cpi = cpu_info ();
+  const size_t cpu_info_separator = cpi.find (' ');
+  TASSERT (cpu_info_separator != cpi.npos && cpi.size() > 0 && cpu_info_separator > 0 && cpu_info_separator + 1 < cpi.size());
   if (Test::verbose())
-    printout ("\nCPUID: %s\n", cps.c_str());
+    printout ("\nCPUID: %s\n", cpi.c_str());
 }
 REGISTER_TEST ("General/CpuInfo", test_cpu_info);
 

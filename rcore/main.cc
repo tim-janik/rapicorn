@@ -538,7 +538,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
       debug_config_add ("fatal-warnings");
       const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-      CPUInfo ci = cpu_info(); // initialize cpu info
+      String ci = cpu_info(); // initialize cpu info
       (void) ci; // silence compiler
       TTITLE ("%s", Path::basename (argv[0]).c_str());
     }

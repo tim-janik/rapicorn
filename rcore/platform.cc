@@ -26,6 +26,18 @@
 namespace Rapicorn {
 
 // == CPUInfo ==
+/// Acquire information about the runtime architecture and CPU type.
+struct CPUInfo {
+  // architecture name
+  const char *machine;
+  // CPU Vendor ID
+  char cpu_vendor[13];
+  // CPU features on X86
+  uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
+  uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
+  uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_ssse3    : 1;
+  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1;
+};
 
 /* figure architecture name from compiler */
 static const char*
@@ -138,8 +150,7 @@ cpu_info_sigill_handler (int dummy)
 }
 
 static bool
-get_x86_cpu_features (CPUInfo *ci,
-                      char     vendor[13])
+get_x86_cpu_features (CPUInfo *ci)
 {
   memset (ci, 0, sizeof (*ci));
   /* check if the CPUID instruction is supported */
@@ -150,6 +161,7 @@ get_x86_cpu_features (CPUInfo *ci,
   unsigned int eax, ebx, ecx, edx;
   x86_cpuid (0, eax, ebx, ecx, edx);
   unsigned int v_ebx = ebx, v_ecx = ecx, v_edx = edx;
+  char *vendor = ci->cpu_vendor;
   *((unsigned int*) &vendor[0]) = ebx;
   *((unsigned int*) &vendor[4]) = edx;
   *((unsigned int*) &vendor[8]) = ecx;
@@ -233,38 +245,28 @@ get_x86_cpu_features (CPUInfo *ci,
   return true;
 }
 
-static CPUInfo cached_cpu_info; /* = 0; */
-
-CPUInfo
-cpu_info (void)
+static CPUInfo
+get_cpu_info (void)
 {
+  static CPUInfo cached_cpu_info = [] () {
+    CPUInfo ci = { 0, };
+    if (!get_x86_cpu_features (&ci))
+      strcat (ci.cpu_vendor, "unknown");
+    ci.machine = get_arch_name();
+    return ci;
+  } ();
   return cached_cpu_info;
 }
 
-static void
-init_cpuinfo (const StringVector &args)
-{
-  static char vendor_buffer[13];
-  CPUInfo lci;
-  memset (&lci, 0, sizeof (lci));
-  if (get_x86_cpu_features (&lci, vendor_buffer))
-    {
-      lci.machine = get_arch_name();
-      lci.cpu_vendor = vendor_buffer;
-    }
-  else
-    {
-      memset (&lci, 0, sizeof (lci));
-      lci.machine = get_arch_name();
-      lci.cpu_vendor = "unknown";
-    }
-  cached_cpu_info = lci;
-}
-static InitHook _init_cpuinfo ("core/02 Init CPU Info", init_cpuinfo);
-
+/** Retrieve string identifying the runtime CPU type.
+ * The returned string starts with a word describing the CPU architecture and ends with a word describing the CPU vendor.
+ * Inbetween are words identifying various processor flags.
+ * @return Example CPUID: "AMD64 FPU MMX MMXEXT AuthenticAMD"
+ */
 String
-cpu_info_string (const CPUInfo &cpu_info)
+cpu_info()
 {
+  const CPUInfo cpu_info = get_cpu_info();
   String info;
   // architecture
   info += cpu_info.machine;
@@ -306,7 +308,6 @@ cpu_info_string (const CPUInfo &cpu_info)
   info += " ";
   info += cpu_info.cpu_vendor;
   return info;
-
 }
 
 // == TaskStatus ==
