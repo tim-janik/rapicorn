@@ -7,6 +7,9 @@
 
 namespace Rapicorn {
 
+/** Simple XML markup parser, based on glib/gmarkup.c.
+ * @DEPRECATED: Nonpublic API, this XML parser is planned to be replaced soon.
+ */
 class MarkupParser {
 public:
   typedef enum {
