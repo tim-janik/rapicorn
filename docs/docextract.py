@@ -96,20 +96,20 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem todo "Todos" "Source Code TODO List"' # sync with doxygen.cfg
+      print '@xrefitem todo "Issues" "Open Issues"' # sync with doxygen.cfg
       print blurb.rstrip()
       print '*/'
-  print '/**\n@page todo Source Code TODO List\n*/' # needed to refer to 'todo' page with @subpage
+  print '/**\n@page todo Open Issues\n*/' # needed to refer to 'todo' page with @subpage
   if rapicorn_bug_lists:
     # ('/** @page bug_lists Bug Lists', ' * @section %s %s' % (sanitize_ident (filename), filename), '*/')
     for filename, blurb in rapicorn_bug_lists.items():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem bug "Bugs" "Source Code BUG List"'
+      print '@xrefitem todo "Issues" "Open Issues"'
       print blurb.rstrip()
       print '*/'
-    print '/**\n@page bug Source Code BUG List\n*/' # needed to refer to 'bug' page with @subpage
+  print '/**\n@page unstable Unstable API\n*/' # needed to refer to 'unstable' page with @subpage
 
 def process_specific (filename, text):
   def is_comment (t):

@@ -6,10 +6,10 @@
   - @subpage aida
   - @subpage eventloops
   - @subpage widgets
-  - @subpage todo
-  - @subpage bug
   - @subpage rapicorn-NEWS
   - @subpage rapicorn-changelog
+  - @subpage unstable
+  - @subpage todo
 
 
 @section contributors Welcoming Contributors
