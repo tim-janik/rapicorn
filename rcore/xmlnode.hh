@@ -7,6 +7,9 @@
 
 namespace Rapicorn {
 
+/** Simple XML tree representation.
+ * @DISCOURAGED: Nonpublic API, data structure used internally.
+ */
 class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
   String                name_; // element name
   XmlNode              *parent_;
