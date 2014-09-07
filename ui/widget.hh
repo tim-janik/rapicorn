@@ -159,8 +159,8 @@ public:
   bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
-  virtual bool                can_focus         () const;
-  bool                        has_focus         () const;
+  virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.
+  bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
   void                        unset_focus       ();
   virtual bool                move_focus        (FocusDirType fdir);

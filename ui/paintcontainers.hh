@@ -83,7 +83,7 @@ public:
   explicit          FocusFrameImpl    ();
   /** FocusFrame registers itself with ancestors that implement the FocusFrameImpl::Client interface.
    * This is useful for ancestors to be notified about a FocusFrameImpl descendant to implement
-   * ::can_focus efficiently and for a FocusFrame to reflect its ancestor's ::has_focus state.
+   * .can_focus() efficiently and for a FocusFrame to reflect its ancestor's .has_focus() state.
    */
   struct Client : public virtual WidgetImpl {
     virtual bool    register_focus_frame    (FocusFrameImpl &frame) = 0;
