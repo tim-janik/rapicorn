@@ -176,11 +176,13 @@ protected:
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
 private:
   TypeKind type_kind_;
+  ///@cond
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; RemoteHandle *shandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
+  ///@endcond
   void    hold    (PlaceHolder*);
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);

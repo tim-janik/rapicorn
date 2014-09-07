@@ -493,11 +493,13 @@ rapicorn_debug (const char *key, const char *file, const int line, const String 
  */
 bool rapicorn_debug_check   (const char *key);
 
+#ifndef DOXYGEN
 bool
 FlipperOption::flipper_check (const char *key)
 {
   return envkey_flipper_check ("RAPICORN_FLIPPER", key);
 }
+#endif // !DOXYGEN
 
 /** @def RAPICORN_DEBUG_OPTION(key, blurb)
  * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options.
