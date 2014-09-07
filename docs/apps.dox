@@ -2,7 +2,7 @@
 /*! @page apps	Developing Applications with Rapicorn
 @tableofcontents
 
-- @ref apps-overview
+- @ref xmlui-syntax
 - @ref hello
 - @subpage experimental
 
