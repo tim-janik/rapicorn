@@ -85,9 +85,7 @@ html-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(Q) rm -f html/doc-version && echo "$(DOC_VERSION)" > html/doc-version
 EXTRA_DIST += html
-errors: html/doc-version
-	@sed 's,/docs/doxygen-srctree/,/,g' error.log
-.PHONY: html-docs errors
+.PHONY: html-docs
 clean-html:
 	rm -rf html/
 clean-local: doxygen-clean @INGIT@ clean-html
