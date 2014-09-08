@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "configure.h"  // needed for g++-4.7 sleep_for/yield workaround
 #include <rcore/testutils.hh>
 #include <unistd.h>

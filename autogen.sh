@@ -1,5 +1,4 @@
 #!/bin/sh
-## GNU Lesser General Public License version 2 or any later version.
 # Run this to generate all the initial makefiles, etc.
 
 PROJECT=Rapicorn

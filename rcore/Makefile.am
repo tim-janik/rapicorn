@@ -1,4 +1,4 @@
-# Rapicorn - experimental UI toolkit
+# Rapicorn
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS	     = . rsvg tests

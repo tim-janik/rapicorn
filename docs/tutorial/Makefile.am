@@ -1,6 +1,4 @@
 # Rapicorn
-# Copyright (C) 2010 Tim Janik
-## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
 PY_FILES	= tuthello.py

@@ -1,4 +1,6 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+//                                                      -*-mode:c++;-*-
+
 #ifndef __RAPICORN_REGION_HH__
 #define __RAPICORN_REGION_HH__
 

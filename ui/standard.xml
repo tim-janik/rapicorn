@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <tmpl:define id="OuterShell" inherit="Ambience" child-container="OuterShellCavity"
