@@ -93,7 +93,6 @@ distfile-list:
 check-am: check-before
 check-local: check-after
 check-local: ; @:
-TESTS=
 TSTV1=test-verbose
 
 # === slowcheck ===
