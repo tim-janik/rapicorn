@@ -1,6 +1,8 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// Licensed GNU LGPLv2+: http://www.gnu.org/licenses/lgpl.html
+// This file is based on glib/gmarkup.c
+// Copyright (C) 2000-2005, GNU LGPLv2+ by the GLib project
+// Copyright (C) 2005-2014, MPLv2 Tim Janik
 #include "markup.hh"
-// This file is based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
 #include "unicode.hh"
 #include "strings.hh"
 #include <stdio.h>

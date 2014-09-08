@@ -1,5 +1,7 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-// This file is derived from GtkTable code, Copyright (C) 1996-2002 by the GTK+ project.
+// Licensed GNU LGPLv2+: http://www.gnu.org/licenses/lgpl.html
+// This file is derived from GtkTable code
+// Copyright (C) 1996-2002, GNU LGPLv2+ by the GTK+ project
+// Copyright (C) 2005-2014, MPLv2 Tim Janik
 #include "table.hh"
 #include "factory.hh"
 #include <algorithm>
