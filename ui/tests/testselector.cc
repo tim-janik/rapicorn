@@ -523,6 +523,7 @@ test_selector_matching ()
   test_query (__LINE__, w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience");
   // classes
   test_query (__LINE__, w, "*.Window", 1, "#test-dialog");
+  test_query (__LINE__, w, "*", -10, ".Object");
   test_query (__LINE__, w, "*", -10, ".Widget");
   test_query (__LINE__, w, "*:not(:empty)", -10, ".Container");
   test_query (__LINE__, w, ".Widget:not(.Container)", -5, ":empty");
