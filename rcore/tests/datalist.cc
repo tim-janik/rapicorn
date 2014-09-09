@@ -130,19 +130,4 @@ data_list_test ()
 }
 REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);
 
-class A {};
-class D : public A {};
-
-static void
-trait_convertible_test()
-{
-  TASSERT ((TraitConvertible<int,int>::TRUTH == true));
-  TASSERT ((TraitConvertible<void*,float>::TRUTH == false));
-  TASSERT ((TraitConvertible<A,A>::TRUTH == true));
-  TASSERT ((TraitConvertible<D,D>::TRUTH == true));
-  TASSERT ((TraitConvertible<A,D>::TRUTH == true));
-  TASSERT ((TraitConvertible<D,A>::TRUTH == false));
-}
-REGISTER_TEST ("trait_convertible_test", trait_convertible_test);
-
 } // anon
