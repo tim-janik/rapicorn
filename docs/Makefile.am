@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = imports tutorial
+SUBDIRS = examples imports tutorial
 
 QPRINT = @printf '  %-9s%s\n'
 
@@ -42,8 +42,8 @@ DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox doc
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
 			  aidacc/CxxStub.py
-DOXYGEN_CHANGELOG       = $(top_srcdir)/ChangeLog
-DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
+DOXYGEN_CHANGELOG       = $(builddir)/devel-changes
+DOXYGEN_CHANGELOG_TITLE	= "Development Changes"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
 DOXYGEN_LAYOUT_DIFF     = $(srcdir)/layout.diff
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
@@ -56,8 +56,10 @@ SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
 html-docs: doxygen-check
 	$(AM_V_GEN)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-	$(QPRINT) "GEN" "Git ChangeLog"
+	$(QPRINT) "GEN" "Documentation Sources"
+	$(Q) $(top_srcdir)/mkrelease.sh ChangeLog --first-parent -R a1e8017768fd935908a415e90c8137ccb8eaeda8..HEAD -o $(DOXYGEN_CHANGELOG)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
+	$(Q) rm -f $(DOXYGEN_CHANGELOG)
 	$(QPRINT) "MERGE" "ui/interfaces.dox"
 	$(Q) cd doxygen-srctree/ui && \
 	  sed $(SED_DELETE_ATFILE_LINE1) < interfaces.dox >> interfaces.idl && \
@@ -83,9 +85,7 @@ html-docs: doxygen-check
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(Q) rm -f html/doc-version && echo "$(DOC_VERSION)" > html/doc-version
 EXTRA_DIST += html
-errors: html/doc-version
-	@sed 's,/docs/doxygen-srctree/,/,g' error.log
-.PHONY: html-docs errors
+.PHONY: html-docs
 clean-html:
 	rm -rf html/
 clean-local: doxygen-clean @INGIT@ clean-html

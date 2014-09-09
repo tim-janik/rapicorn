@@ -66,6 +66,7 @@ ByteBlob<Deleter>::string ()
 }
 
 // == ResourceEntry ==
+#ifndef DOXYGEN
 static ResourceEntry *res_head = NULL;
 static Mutex          res_mutex;
 
@@ -96,6 +97,7 @@ ResourceEntry::find_entry (const String &res_name)
       return e;
   return NULL;
 }
+#endif // !DOXYGEN
 
 // == StringBlob ==
 struct StringBlob : public BlobResource {

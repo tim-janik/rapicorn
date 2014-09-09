@@ -150,8 +150,8 @@ public:
   static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
   /// Comparator for "auto" scoring.
   static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
-  ///@cond
   static void           forcefully_close_all    ();
+  ///@cond
   class Friends { friend class ScreenWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
   ///@endcond
 };

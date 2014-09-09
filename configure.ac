@@ -602,6 +602,7 @@ tests/Makefile
 pytests/Makefile
 examples/Makefile
 docs/Makefile
+docs/examples/Makefile
 docs/imports/Makefile
 docs/tutorial/Makefile
 ])

@@ -1,0 +1,7 @@
+/docs/doxygen-srctree/rcore/utilities.cc:.*: warning: include file zlib.h not found, perhaps you forgot to add its directory to INCLUDE_PATH?
+/docs/doxygen-srctree/rope/pyrapicorn.cc:.*: warning: include file Python.h not found, perhaps you forgot to add its directory to INCLUDE_PATH?
+/docs/doxygen-srctree/rope/pyrapicorn.cc:.*: warning: include file string not found, perhaps you forgot to add its directory to INCLUDE_PATH?
+/docs/doxygen-srctree/rope/pyrapicorn.cc:.*: warning: include file rapicorn.hh not found, perhaps you forgot to add its directory to INCLUDE_PATH?
+/docs/doxygen-srctree/ui/sinfex.cc:.*: warning: include file sinfex..gen not found, perhaps you forgot to add its directory to INCLUDE_PATH?
+/docs/doxygen-srctree/rcore/aidasignal.hh:.*: warning: explicit link request to 'future' could not be resolved
+/docs/doxygen-srctree/changelog.dox:.*: warning: explicit link request to '.*' could not be resolved

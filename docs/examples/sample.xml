@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/-xmlns:tmpl">
+
+  <!-- [DEF-SampleDialog] -->
+  <tmpl:define id="SampleDialog" inherit="Window">
+    <VBox spacing="5">
+      <Button>
+        <Label markup-text="Hello World!" />
+      </Button>
+    </VBox>
+  </tmpl:define>
+  <!-- [DEF-SampleDialog] -->
+
+</rapicorn-definitions>
