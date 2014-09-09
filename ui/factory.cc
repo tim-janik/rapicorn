@@ -162,10 +162,8 @@ force_ui_namespace_use (const String &uinamespace)
     gadget_namespace_list.push_back (uinamespace);
 }
 
-WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident,
-                                  bool _isevh, bool _iscontainer, bool) :
-  qualified_type (namespaced_ident),
-  iseventhandler (_isevh), iscontainer (_iscontainer)
+WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident) :
+  qualified_type (namespaced_ident)
 {}
 
 void
@@ -241,12 +239,11 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
                 const WidgetTypeFactory *itfactory = lookup_widget_factory (attributes_values[i]);
                 assert_return (itfactory != NULL);
                 types.push_back (itfactory->type_name());
-                if (need_variants && itfactory->iseventhandler)
-                  types.push_back ("Rapicorn::Factory::EventHandler");
-                if (need_variants && itfactory->iscontainer)
-                  types.push_back ("Rapicorn::Factory::Container");
-                if (need_variants)
-                  types.push_back ("Rapicorn::Factory::Widget");
+                std::vector<const char*> variants;
+                itfactory->type_name_list (variants);
+                for (auto n : variants)
+                  if (n)
+                    types.push_back (n);
               }
             break;
           }
