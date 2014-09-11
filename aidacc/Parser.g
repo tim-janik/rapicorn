@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# Aida - Abstract Interface Definition Architecture            -*-mode:python-*-
-# Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+# Aida IDL Parser                                       -*-mode:python-*-
 import sys, os, Decls
 true, false, length = (True, False, len)
 
