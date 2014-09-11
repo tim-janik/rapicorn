@@ -1,4 +1,4 @@
-// CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+// Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 #ifndef __AIDA_CXX_HH__
 #define __AIDA_CXX_HH__
 

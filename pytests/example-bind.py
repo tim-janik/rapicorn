@@ -1,4 +1,5 @@
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 from Rapicorn1307 import Rapicorn
 
 # Setup the application object, unsing a unique application name.

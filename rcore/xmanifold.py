@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # xmanifold.py - manifold argument sequences                   -*-mode:python-*-
-# CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
 import sys, re
 
