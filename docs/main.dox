@@ -13,14 +13,25 @@
 - <a class="el" href="namespacemembers_func.html">Index of Functions</a>
 - <a class="el" href="files.html">Index of Files</a>
 
-@copyright Manual contents are provided "as is" but WITHOUT ANY WARRANTY; for details see: http://testbit.eu/_mirror/LICENSE-AS-IS
+@copyright
+%Rapicorn is <a href="http://www.gnu.org/philosophy/free-sw.html">Free Software</a>.
+The %Rapicorn Source Code Form, its manual and documentation contents are made available subject to the terms of the
+<a rel="license" href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License version 2.0</a> (MPLv2).
+Contributions are welcome from everyone and are protected by its simple Copyleft license
+without the need for copyright assignments, see @ref contribute.
+Example source code is usually dedicated to the Public Domain via
+<a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">CC0 Public Domain</a>
+assignments.
+
 */ // @mainpage
 
 /*! @page intro Introduction
 @tableofcontents
 
-%Rapicorn is a toolkit for declarative UI design, it provides controls, layouts, resources,
-data bindings, declarative markup and a multithreaded IPC layer.
+%Rapicorn is a Free Software toolkit for declarative UI design.
+It provides controls, layouts, resources, data bindings, declarative markup and a multithreaded IPC layer.
+Contributions are welcome from everyone and are protected by its simple Copyleft license
+without the need for copyright assignments, see @ref contribute.
 Users can create complex reusable components and arrange UI elements in a handful of
 XML lines. Data bindings to user defined model objects are automatically setup with simple
 attribute specifications.
@@ -30,8 +41,6 @@ Among other things %Rapicorn has:
 - Layouts such as Table, HBox, VBox, Window;
 - Language bindings to use the %Rapicorn API from C++ and Python;
 - Thread separation of application and UI logic, so layouting and rendering is done in the background.
-
-%Rapicorn is developed as a free software project under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a> and welcomes contributions from everyone, see @ref contribute.
 
 
 @section introlinks Links and Resources
