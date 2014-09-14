@@ -182,7 +182,7 @@ MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
 # Note, -funroll-loops can harm SSE loop performance
 #MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
 #AC_SUBST(SIMD_FLAGS)
-# Expect the target architecture to support MMX/SSE if the cmpiler does it.
+# Expect the target architecture to support MMX/SSE if the compiler does it.
 MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
 MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
 # Newer vectorization instruction sets, should be optionally supported
@@ -237,7 +237,7 @@ dnl # RAPICORN_GCC_REQUIREMENTS() - check for required minimum GCC version
 AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
 [
     # check for minimum GCC version
-    DEPVERSION_GNUC='4.2.4'
+    DEPVERSION_GNUC='4.7.3'
     DEPVERSION_FORMULA=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
     AC_MSG_CHECKING([for minimum GCC version ($DEPVERSION_GNUC)])
     AC_TRY_COMPILE([
