@@ -17,7 +17,7 @@ namespace Rapicorn { namespace Aida {
 // == Auxillary macros ==
 #define AIDA_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
 #define AIDA_CPP_STRINGIFY(s)   AIDA_CPP_STRINGIFYi (s)
-#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+#if     __GNUC__ >= 4
 #define AIDA_UNUSED             __attribute__ ((__unused__))
 #define AIDA_DEPRECATED         __attribute__ ((__deprecated__))
 #define AIDA_NORETURN           __attribute__ ((__noreturn__))
