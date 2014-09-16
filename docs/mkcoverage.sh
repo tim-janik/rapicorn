@@ -1,5 +1,5 @@
 #!/bin/bash
-# CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 # Author: 2014, Tim Janik, see https://testbit.eu/
 
 SCRIPTNAME="$0"

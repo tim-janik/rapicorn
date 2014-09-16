@@ -1,7 +1,4 @@
 dnl # Rapicorn                                       -*- Mode: shell-script; -*-
-dnl # Copyright (C) 2005-2007 Tim Janik
-dnl #
-dnl # GNU Lesser General Public License version 2 or any later version.
 dnl
 builtin(include, acrapicorn.m4)dnl # include special macros
 builtin(include, ld-symbolic.m4)dnl # include special macros

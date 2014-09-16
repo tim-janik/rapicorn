@@ -1,7 +1,7 @@
 #!/bin/bash
 # mkrelease.sh: Copyright (C) 2010 Tim Janik
 #
-## This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
 MYVERSION="mkrelease.sh version 20100901"
 # 20110407: extract 'contributors' from NEWS files

@@ -1,3 +1,5 @@
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+
 /*! @page widgets	Widget System
 
 A <a href="http://en.wikipedia.org/wiki/GUI_widget">GUI Widget</a> is the main element that

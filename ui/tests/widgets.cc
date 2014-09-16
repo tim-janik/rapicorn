@@ -1,4 +1,4 @@
-// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+// Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 #include <rcore/testutils.hh>
 #include <ui/uithread.hh>
 

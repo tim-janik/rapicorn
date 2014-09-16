@@ -1,4 +1,6 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+//                                                      -*-mode:c++;-*-
+
 %locations
 %pure-parser
 %name-prefix="bison_yy"

@@ -1,4 +1,4 @@
-# Licensed GNU GPLv3 or later: http://www.gnu.org/licenses/gpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 """AidaPyStub - Aida Python Code Generator
 
 More details at http://www.rapicorn.org/

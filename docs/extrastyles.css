@@ -1,4 +1,6 @@
-/* Fixup Doxygen font settings */
+/* Fixup Doxygen font settings
+ * Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
+ */
 body				{ font: inherit; /* unset Doxygen line spacing, etc */
 				  font-family: "DejaVu Sans", "Bitstream Vera Sans", Candara, "Trebuchet MS", Verdana, sans-serif;
 				  font-size: 12pt; }

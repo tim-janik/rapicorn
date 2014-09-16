@@ -1,7 +1,5 @@
 # Rapicorn						-*-mode:makefile;-*-
-# Copyright (C) 2006 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 
 # declare variables that we might want to use += on.
 EXTRA_HEADERS=
