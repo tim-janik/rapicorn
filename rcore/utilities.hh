@@ -59,14 +59,6 @@ vector_from_array (const T (&array_entries)[S]) /// Construct a std::vector<T> f
   return result;
 }
 
-/* --- template utilities --- */
-template<class X, class Y> class TraitConvertible {
-  static bool f (...);
-  static int  f (X*);
-public:
-  enum { TRUTH = sizeof (f()) != sizeof (f ((Y*) 0)), };
-};
-
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);
 /** @def RAPICORN_PRETTY_FILE

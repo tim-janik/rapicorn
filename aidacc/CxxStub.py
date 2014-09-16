@@ -387,8 +387,9 @@ class Generator:
     else:
       cl = l if l == [aida_remotehandle] else [aida_remotehandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
-  def generate_interface_class (self, type_info):
+  def generate_interface_class (self, type_info, class_name_list):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
+    class_name_list += [ classFull ]
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -1132,7 +1133,7 @@ class Generator:
     if self.gen_clienthh or self.gen_serverhh:
       self.gen_mode = G4SERVANT if self.gen_serverhh else G4STUB
       s += '\n// --- Interfaces (class declarations) ---\n'
-      spc_enums = []
+      spc_enums, class_name_list = [], []
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
@@ -1149,12 +1150,17 @@ class Generator:
           spc_enums += [ tp ]
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
-          s += self.generate_interface_class (tp)     # Class remote handle
+          s += self.generate_interface_class (tp, class_name_list)     # Class remote handle
       if spc_enums:
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
           s += self.generate_enum_info_specialization (tp)
       s += self.open_namespace (None)
+      if self.gen_serverhh and class_name_list and self.cppguard:
+        s += '\n#define %s_INTERFACE_LIST' % self.cppguard
+        for i in class_name_list:
+          s += ' \\\n\t  %s_INTERFACE_NAME (%s)' % (self.cppguard, i)
+        s += '\n'
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
       self.gen_mode = G4SERVANT if self.gen_servercc else G4STUB
