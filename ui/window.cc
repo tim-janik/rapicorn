@@ -13,12 +13,6 @@ namespace Rapicorn {
 struct ClassDoctor {
   static void widget_set_flag       (WidgetImpl &widget, uint32 flag) { widget.set_flag (flag, true); }
   static void widget_unset_flag     (WidgetImpl &widget, uint32 flag) { widget.unset_flag (flag); }
-  static void set_window_heritage (WindowImpl &window, Heritage *heritage) { window.heritage (heritage); }
-  static Heritage*
-  window_heritage (WindowImpl &window, ColorSchemeType cst)
-  {
-    return Heritage::create_heritage (window, window, cst);
-  }
 };
 
 WindowImpl&
@@ -229,10 +223,10 @@ WindowImpl::WindowImpl() :
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
-  Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
-  ref_sink (hr);
-  ClassDoctor::set_window_heritage (*this, hr);
-  unref (hr);
+  struct Heritage : Rapicorn::Heritage {
+    using Rapicorn::Heritage::create_heritage;
+  };
+  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_UNVIEWABLE, false);
   /* create event loop (auto-starts) */

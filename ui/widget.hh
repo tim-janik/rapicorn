@@ -49,7 +49,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
-  Heritage                   *heritage_;
+  HeritageP                   heritage_;
   FactoryContext             *factory_context_;
   Allocation                  allocation_;
   Requisition                 requisition_;
@@ -57,7 +57,6 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
   void                        propagate_heritage ();
-  void                        heritage           (Heritage  *heritage);
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
@@ -122,6 +121,7 @@ protected:
                                                  const StringSeq    &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
+  void                        heritage          (HeritageP heritage);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
@@ -278,7 +278,7 @@ public:
   const Allocation*          clip_area          () const;
   /* heritage / appearance */
   StateType             state                   () const;
-  Heritage*             heritage                () const { return heritage_; }
+  HeritageP             heritage                () const { return heritage_; }
   Color                 foreground              () { return heritage()->foreground (state()); }
   Color                 background              () { return heritage()->background (state()); }
   Color                 dark_color              () { return heritage()->dark_color (state()); }
