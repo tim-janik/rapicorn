@@ -22,10 +22,10 @@ hello_window = """
 
 # Register the 'hello-window' definition for later use, for this we need
 # a unique domain string, it's easiest to reuse the application name.
-app.load_string ("HelloRapicorn", hello_window)
+app.load_string (hello_window)
 
 # The above is all that is needed to allow us to create the window object.
-window = app.create_window ("HelloRapicorn:hello-window")
+window = app.create_window ("hello-window")
 
 # This function is called to handle the command we use for button clicks.
 def command_handler (command_name, args):
