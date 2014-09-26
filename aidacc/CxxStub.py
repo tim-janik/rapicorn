@@ -406,8 +406,10 @@ class Generator:
     s += 'protected:\n'
     if self.gen_mode == G4SERVANT:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
-      s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
+      s += '  virtual ' + self.F ('/*Des*/') + '~%s () override = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
+    if self.gen_mode == G4STUB:
+      s += '  virtual ' + self.F ('/*Des*/') + '~%s () override;\n' % self.C (type_info) # dtor
     c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if ddc:
       s += c
@@ -514,6 +516,7 @@ class Generator:
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
+    s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  __AIDA_Local__::client_connection->add_handle (fb, handle);\n'
@@ -565,7 +568,7 @@ class Generator:
     s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
     s += '%s::%s ()' % (classC, classC) # ctor
     s += '\n{}\n'
-    s += '%s::~%s ()\n{}\n' % (classC, classC) # dtor
+    s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  __AIDA_Local__::field_buffer_add_interface (fb, obj);\n'

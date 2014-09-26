@@ -141,7 +141,7 @@ class I_FirstInterfaceIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_FirstInterfaceIface ();
-  virtual /*Des*/                       ~I_FirstInterfaceIface () = 0;
+  virtual /*Des*/                       ~I_FirstInterfaceIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "MandatoryNamespace::FirstInterface"; }
@@ -195,7 +195,7 @@ class I_UIWidgetAreaIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_UIWidgetAreaIface ();
-  virtual /*Des*/                       ~I_UIWidgetAreaIface () = 0;
+  virtual /*Des*/                       ~I_UIWidgetAreaIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::UIWidgetArea"; }
@@ -240,7 +240,7 @@ class I_ParentIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_ParentIface ();
-  virtual /*Des*/                       ~I_ParentIface () = 0;
+  virtual /*Des*/                       ~I_ParentIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::Parent"; }
@@ -259,7 +259,7 @@ class I_ChildIface : public virtual I_ParentIface
 {
 protected:
   explicit                               I_ChildIface ();
-  virtual /*Des*/                       ~I_ChildIface () = 0;
+  virtual /*Des*/                       ~I_ChildIface () override = 0;
 public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::Child"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
@@ -277,7 +277,7 @@ class I_DescendantIface : public virtual I_ChildIface
 {
 protected:
   explicit                               I_DescendantIface ();
-  virtual /*Des*/                       ~I_DescendantIface () = 0;
+  virtual /*Des*/                       ~I_DescendantIface () override = 0;
 public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::Descendant"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
@@ -295,7 +295,7 @@ class I_GrandChildIface : public virtual I_DescendantIface
 {
 protected:
   explicit                               I_GrandChildIface ();
-  virtual /*Des*/                       ~I_GrandChildIface () = 0;
+  virtual /*Des*/                       ~I_GrandChildIface () override = 0;
 public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::GrandChild"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
@@ -313,7 +313,7 @@ class I_QuickIfaceIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_QuickIfaceIface ();
-  virtual /*Des*/                       ~I_QuickIfaceIface () = 0;
+  virtual /*Des*/                       ~I_QuickIfaceIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::QuickIface"; }
@@ -333,7 +333,7 @@ class I_MethodTestInterfaceIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_MethodTestInterfaceIface ();
-  virtual /*Des*/                       ~I_MethodTestInterfaceIface () = 0;
+  virtual /*Des*/                       ~I_MethodTestInterfaceIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::MethodTestInterface"; }
@@ -375,7 +375,7 @@ class I_SignalTestInterfaceIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_SignalTestInterfaceIface ();
-  virtual /*Des*/                       ~I_SignalTestInterfaceIface () = 0;
+  virtual /*Des*/                       ~I_SignalTestInterfaceIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::SignalTestInterface"; }
@@ -442,7 +442,7 @@ class I_ChildInheritingSignalsIface : public virtual I_SignalTestInterfaceIface
 {
 protected:
   explicit                               I_ChildInheritingSignalsIface ();
-  virtual /*Des*/                       ~I_ChildInheritingSignalsIface () = 0;
+  virtual /*Des*/                       ~I_ChildInheritingSignalsIface () override = 0;
 public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::ChildInheritingSignals"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
@@ -462,7 +462,7 @@ class I_AnotherChildIface : public virtual I_SignalTestInterfaceIface
 {
 protected:
   explicit                               I_AnotherChildIface ();
-  virtual /*Des*/                       ~I_AnotherChildIface () = 0;
+  virtual /*Des*/                       ~I_AnotherChildIface () override = 0;
 public:
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::AnotherChild"; }
   virtual void                           __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;
@@ -480,7 +480,7 @@ class I_PropertyTesterIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_PropertyTesterIface ();
-  virtual /*Des*/                       ~I_PropertyTesterIface () = 0;
+  virtual /*Des*/                       ~I_PropertyTesterIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "InterfaceTests::PropertyTester"; }
@@ -524,7 +524,7 @@ class I_ButtonAreaIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_ButtonAreaIface ();
-  virtual /*Des*/                       ~I_ButtonAreaIface () = 0;
+  virtual /*Des*/                       ~I_ButtonAreaIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::ButtonArea"; }
@@ -557,7 +557,7 @@ class I_PureMethodsIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_PureMethodsIface ();
-  virtual /*Des*/                       ~I_PureMethodsIface () = 0;
+  virtual /*Des*/                       ~I_PureMethodsIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "RapicornAidaTest::PureMethods"; }
@@ -580,7 +580,7 @@ class I_NameTestsIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_NameTestsIface ();
-  virtual /*Des*/                       ~I_NameTestsIface () = 0;
+  virtual /*Des*/                       ~I_NameTestsIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "Other::NameTests"; }
@@ -605,7 +605,7 @@ class I_CompressorIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_CompressorIface ();
-  virtual /*Des*/                       ~I_CompressorIface () = 0;
+  virtual /*Des*/                       ~I_CompressorIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "BseTest::Compressor"; }
@@ -628,7 +628,7 @@ class I_SoundModuleIface : public virtual Rapicorn::BaseObject
 {
 protected:
   explicit                               I_SoundModuleIface ();
-  virtual /*Des*/                       ~I_SoundModuleIface () = 0;
+  virtual /*Des*/                       ~I_SoundModuleIface () override = 0;
 public:
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual std::string                    __aida_type_name__ () const	{ return "BseTest::SoundModule"; }
@@ -648,7 +648,7 @@ namespace MandatoryNamespace {
 I_FirstInterfaceIface::I_FirstInterfaceIface ()
 {}
 I_FirstInterfaceIface::~I_FirstInterfaceIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_FirstInterfaceIface *obj)
 {
@@ -694,7 +694,7 @@ namespace InterfaceTests {
 I_UIWidgetAreaIface::I_UIWidgetAreaIface ()
 {}
 I_UIWidgetAreaIface::~I_UIWidgetAreaIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_UIWidgetAreaIface *obj)
 {
@@ -739,7 +739,7 @@ I_UIWidgetAreaIface::__aida_properties__ ()
 I_ParentIface::I_ParentIface ()
 {}
 I_ParentIface::~I_ParentIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ParentIface *obj)
 {
@@ -782,7 +782,7 @@ I_ParentIface::__aida_properties__ ()
 I_ChildIface::I_ChildIface ()
 {}
 I_ChildIface::~I_ChildIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildIface *obj)
 {
@@ -821,7 +821,7 @@ I_ChildIface::__aida_properties__ ()
 I_DescendantIface::I_DescendantIface ()
 {}
 I_DescendantIface::~I_DescendantIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_DescendantIface *obj)
 {
@@ -861,7 +861,7 @@ I_DescendantIface::__aida_properties__ ()
 I_GrandChildIface::I_GrandChildIface ()
 {}
 I_GrandChildIface::~I_GrandChildIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_GrandChildIface *obj)
 {
@@ -902,7 +902,7 @@ I_GrandChildIface::__aida_properties__ ()
 I_QuickIfaceIface::I_QuickIfaceIface ()
 {}
 I_QuickIfaceIface::~I_QuickIfaceIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_QuickIfaceIface *obj)
 {
@@ -945,7 +945,7 @@ I_QuickIfaceIface::__aida_properties__ ()
 I_MethodTestInterfaceIface::I_MethodTestInterfaceIface ()
 {}
 I_MethodTestInterfaceIface::~I_MethodTestInterfaceIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_MethodTestInterfaceIface *obj)
 {
@@ -988,7 +988,7 @@ I_MethodTestInterfaceIface::__aida_properties__ ()
 I_SignalTestInterfaceIface::I_SignalTestInterfaceIface ()
 {}
 I_SignalTestInterfaceIface::~I_SignalTestInterfaceIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SignalTestInterfaceIface *obj)
 {
@@ -1031,7 +1031,7 @@ I_SignalTestInterfaceIface::__aida_properties__ ()
 I_ChildInheritingSignalsIface::I_ChildInheritingSignalsIface ()
 {}
 I_ChildInheritingSignalsIface::~I_ChildInheritingSignalsIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ChildInheritingSignalsIface *obj)
 {
@@ -1070,7 +1070,7 @@ I_ChildInheritingSignalsIface::__aida_properties__ ()
 I_AnotherChildIface::I_AnotherChildIface ()
 {}
 I_AnotherChildIface::~I_AnotherChildIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_AnotherChildIface *obj)
 {
@@ -1109,7 +1109,7 @@ I_AnotherChildIface::__aida_properties__ ()
 I_PropertyTesterIface::I_PropertyTesterIface ()
 {}
 I_PropertyTesterIface::~I_PropertyTesterIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PropertyTesterIface *obj)
 {
@@ -1166,7 +1166,7 @@ namespace RapicornAidaTest {
 I_ButtonAreaIface::I_ButtonAreaIface ()
 {}
 I_ButtonAreaIface::~I_ButtonAreaIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_ButtonAreaIface *obj)
 {
@@ -1213,7 +1213,7 @@ I_ButtonAreaIface::__aida_properties__ ()
 I_PureMethodsIface::I_PureMethodsIface ()
 {}
 I_PureMethodsIface::~I_PureMethodsIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_PureMethodsIface *obj)
 {
@@ -1259,7 +1259,7 @@ namespace Other {
 I_NameTestsIface::I_NameTestsIface ()
 {}
 I_NameTestsIface::~I_NameTestsIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_NameTestsIface *obj)
 {
@@ -1305,7 +1305,7 @@ namespace BseTest {
 I_CompressorIface::I_CompressorIface ()
 {}
 I_CompressorIface::~I_CompressorIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_CompressorIface *obj)
 {
@@ -1350,7 +1350,7 @@ I_CompressorIface::__aida_properties__ ()
 I_SoundModuleIface::I_SoundModuleIface ()
 {}
 I_SoundModuleIface::~I_SoundModuleIface ()
-{}
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, I_SoundModuleIface *obj)
 {
