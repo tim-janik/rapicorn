@@ -131,7 +131,7 @@ main (int   argc,
   ApplicationH app = init_app ("RapicornFileView", &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
-  app.auto_load ("RapicornFileView", "fileview.xml", argv[0]);
+  app.auto_load ("fileview.xml", argv[0]);
 
   // create and bind list store
   ListStore &store = *new ListStore();
@@ -145,8 +145,8 @@ main (int   argc,
   fill_test_store (test_store);
 
   // create main window
-  WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/main"));
-  // WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/test_store"));
+  WindowH window = app.create_window ("main-dialog", Strings ("list-model=//local/data/fileview/main"));
+  // Strings ("list-model=//local/data/fileview/test_store")
   window.show();
 
   // load directory data

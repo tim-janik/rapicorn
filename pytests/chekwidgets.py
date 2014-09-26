@@ -43,8 +43,8 @@ decls = """
   </VBox>
 </tmpl:define>
 """
-app.load_string ("local", decls)
-win = app.create_window ("local:SGWindow")
+app.load_string (decls)
+win = app.create_window ("SGWindow")
 show_and_display (win)  # show & render window
 
 # fetch HSIZE buttons and check the sizes

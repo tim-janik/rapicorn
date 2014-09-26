@@ -25,8 +25,8 @@ my_window_xml = """
 
 # setup application
 app = Rapicorn.app_init ("testrapicorn.py")     # provide unique application name
-app.load_string ("MyTest", my_window_xml)       # load widget tree
-window = app.create_window ("MyTest:my-window") # create main window
+app.load_string (my_window_xml)                 # load widget tree
+window = app.create_window ("my-window")        # create main window
 
 # property testing
 assert window.name == "my-window"

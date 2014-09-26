@@ -38,9 +38,9 @@ hello_window = """
 </rapicorn-definitions>
 """
 
-app.load_string ("T", hello_window) # useless namespace
+app.load_string (hello_window)
 
-window = app.create_window ("T:testgc-py")
+window = app.create_window ("testgc-py")
 
 container = window.query_selector_unique ('#container')
 assert container
@@ -57,7 +57,7 @@ def gc_children():
   l = []
   for i in range (total / batch):
     for j in range (batch):
-      child = container.create_widget ("T:testwidget")
+      child = container.create_widget ("testwidget")
       l += [ child ]
   assert child
   print "TestGC-Created %u." % len (l)
