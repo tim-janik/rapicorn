@@ -54,10 +54,10 @@ main (int   argc,
   ApplicationH app = init_app (__PRETTY_FILE__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
-  app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
+  app.auto_load ("graphics.xml", argv[0]);
 
   // create main window
-  WindowH window = app.create_window ("RapicornExamples:graphics-dialog");
+  WindowH window = app.create_window ("graphics-dialog");
 
   // hook up drawable test
   DrawableH drawable = window.component<DrawableH> ("Drawable#drawable1");
