@@ -245,9 +245,18 @@ ApplicationImpl::auto_load (const String &file_name, const String &binary_path, 
 {
   String fullname = auto_path (file_name, binary_path, true);
   StringSeq definitions;
-  String errs = Factory::parse_ui_file (fullname, i18n_domain, &definitions);
-  if (!errs.empty())
-    fatal ("%s: %s", fullname.c_str(), errs.c_str());
+  size_t flen = 0;
+  String errors;
+  char *fdata = Path::memread (fullname, &flen);
+  if (!fdata)
+    errors = strerror (errno ? errno : ENOENT);
+  else
+    {
+      errors = Factory::parse_ui_data ("", fullname, flen, fdata, i18n_domain, &definitions);
+      Path::memfree (fdata);
+    }
+  if (!errors.empty())
+    fatal ("%s: %s", fullname.c_str(), errors.c_str());
   return definitions;
 }
 
@@ -255,7 +264,7 @@ void
 ApplicationImpl::load_string (const std::string &xml_string,
                               const std::string &i18n_domain)
 {
-  String errs = Factory::parse_ui_data ("<ApplicationImpl::load_string>", xml_string.size(), xml_string.data(), i18n_domain);
+  String errs = Factory::parse_ui_data ("", "<ApplicationImpl::load_string>", xml_string.size(), xml_string.data(), i18n_domain);
   if (!errs.empty())
     fatal ("failed to parse string: %s\n%s", errs.c_str(), xml_string.c_str());
 }

@@ -799,14 +799,12 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
 }
 
 static String
-register_ui_node (const String   &domain,
-                  XmlNode        *xnode,
-                  vector<String> *definitions)
+register_ui_node (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
   if (xnode->name() == "tmpl:define")
     {
       const String &nname = xnode->get_attribute ("id");
-      String ident = domain.empty () ? nname : domain + ":" + nname; // FIXME
+      String ident = domain.empty () ? nname : domain + ":" + nname;
       GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
       if (it != gadget_definition_map.end())
         return string_format ("%s: redefinition of: %s (previously at %s)",
@@ -823,11 +821,8 @@ register_ui_node (const String   &domain,
 }
 
 static String
-register_ui_nodes (const String   &domain,
-                   XmlNode        *xnode,
-                   vector<String> *definitions)
+register_ui_nodes (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
-  assert_return (domain.empty() == false, "missing namespace for ui definitions");
   // allow toplevel templates
   if (xnode->name() == "tmpl:define")
     return register_ui_node (domain, xnode, definitions);
@@ -851,15 +846,9 @@ register_ui_nodes (const String   &domain,
 }
 
 static String
-parse_ui_data_internal (const String   &domain,
-                        const String   &data_name,
-                        size_t          data_length,
-                        const char     *data,
-                        const String   &i18n_domain,
-                        vector<String> *definitions)
+parse_ui_data_internal (const String &domain, const String &data_name, size_t data_length,
+                        const char *data, const String &i18n_domain, vector<String> *definitions)
 {
-  if (domain.empty())
-    return "missing namespace for ui definitions";
   MarkupParser::Error perror;
   XmlNode *xnode = XmlNode::parse_xml (data_name, data, data_length, &perror);
   if (xnode)
@@ -875,33 +864,11 @@ parse_ui_data_internal (const String   &domain,
 }
 
 String
-parse_ui_data (const String   &uinamespace,
-               const String   &data_name,
-               size_t          data_length,
-               const char     *data,
-               const String   &i18n_domain,
-               vector<String> *definitions)
+parse_ui_data (const String &uinamespace, const String &data_name, size_t data_length,
+               const char *data, const String &i18n_domain, vector<String> *definitions)
 {
   initialize_factory_lazily();
   return parse_ui_data_internal (uinamespace, data_name, data_length, data, "", definitions);
-}
-
-String
-parse_ui_file (const String   &uinamespace,
-               const String   &file_name,
-               const String   &i18n_domain,
-               vector<String> *definitions)
-{
-  size_t flen = 0;
-  char *fdata = Path::memread (file_name, &flen);
-  if (fdata)
-    {
-      String result = parse_ui_data (uinamespace, file_name, flen, fdata, i18n_domain, definitions);
-      Path::memfree (fdata);
-      return result;
-    }
-  else
-    return strerror (ENOENT);
 }
 
 } // Factory
