@@ -165,7 +165,7 @@ main (int   argc,
   String filename = app.auto_path (argv[1], ".");
 
   /* load GUI definitions, fancy version of app.auto_load() */
-  StringSeq definitions = app.auto_load ("RapicornTest", filename, "");
+  StringSeq definitions = app.auto_load (filename, "");
 
   /* print definitions */
   String dialog;
