@@ -414,8 +414,8 @@ parser IdlSyntaxParser:
         token NSIDENT:      r'[a-zA-Z_][a-zA-Z_0-9$]*'      # identifier + '$'
         token INTEGER:      r'[0-9]+'
         token HEXINT:       r'0[xX][0-9abcdefABCDEF]+'
-        token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
-        token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
+        token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)?'
+        token FRACTFLOAT:                     r'\.[0-9]+([eE][+-]?[0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
 rule IdlSyntax: ( ';'
