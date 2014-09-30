@@ -36,6 +36,17 @@ definition_name (const XmlNode &xnode)
   return xnode.get_attribute ("id").c_str();
 }
 
+static const String&
+parent_type_name (const XmlNode &xnode)
+{
+  const StringVector &attributes_names = xnode.list_attributes(), &attributes_values = xnode.list_values();
+  for (size_t i = 0; i < attributes_names.size(); i++)
+    if (attributes_names[i] == "inherit")
+      return attributes_values[i];
+  static const String fallback;
+  return fallback;
+}
+
 class NodeData {
   void
   setup (XmlNode &xnode)
@@ -238,26 +249,19 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
       assert_return (is_definition (*xnode));
       if (need_ids)
         types.push_back (definition_name (*xnode));
-      const StringVector &attributes_names = xnode->list_attributes(), &attributes_values = xnode->list_values();
-      const XmlNode *cnode = xnode;
-      xnode = NULL;
-      for (size_t i = 0; i < attributes_names.size(); i++)
-        if (attributes_names[i] == "inherit")
-          {
-            xnode = gadget_definition_lookup (attributes_values[i], cnode);
-            if (!xnode)
-              {
-                const WidgetTypeFactory *itfactory = lookup_widget_factory (attributes_values[i]);
-                assert_return (itfactory != NULL);
-                types.push_back (itfactory->type_name());
-                std::vector<const char*> variants;
-                itfactory->type_name_list (variants);
-                for (auto n : variants)
-                  if (n)
-                    types.push_back (n);
-              }
-            break;
-          }
+      const String parent_name = parent_type_name (*xnode);
+      xnode = gadget_definition_lookup (parent_name, xnode);
+      if (!xnode)
+        {
+          const WidgetTypeFactory *itfactory = lookup_widget_factory (parent_name);
+          assert_return (itfactory != NULL);
+          types.push_back (itfactory->type_name());
+          std::vector<const char*> variants;
+          itfactory->type_name_list (variants);
+          for (auto n : variants)
+            if (n)
+              types.push_back (n);
+        }
     }
 }
 
@@ -315,8 +319,8 @@ class Builder {
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   VariableMap      locals_;
-  void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
-                             String *node_name, String *child_container_name, String *inherit_identifier);
+  void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names,
+                             StringVector &out_values, const XmlNode *caller, String *node_name, String *child_container_name);
   void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
   void      apply_args      (WidgetImpl &widget, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
@@ -369,7 +373,7 @@ Builder::build_children (ContainerImpl &container, vector<WidgetImpl*> *children
       if (children && max_children >= 0 && children->size() >= size_t (max_children))
         return;
       if (pnode == dnode)
-        pnode = gadget_definition_lookup (dnode->get_attribute ("inherit"), dnode);
+        pnode = gadget_definition_lookup (parent_type_name (*dnode), dnode);
       else
         pnode = dnode;
     }
@@ -476,8 +480,8 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
 }
 
 void
-Builder::eval_args (const StringVector &in_names, const StringVector &in_values, StringVector &out_names, StringVector &out_values, const XmlNode *caller,
-                    String *node_name, String *child_container_name, String *inherit_identifier)
+Builder::eval_args (const StringVector &in_names, const StringVector &in_values, StringVector &out_names,
+                    StringVector &out_values, const XmlNode *caller, String *node_name, String *child_container_name)
 {
   Evaluator env;
   env.push_map (locals_);
@@ -486,6 +490,8 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
   for (size_t i = 0; i < in_names.size(); i++)
     {
       const String cname = canonify_dashes (in_names[i]);
+      if (cname == "inherit")
+        continue;
       const String &ivalue = in_values[i];
       String rvalue;
       if (ivalue.find ('`') != String::npos)
@@ -496,9 +502,7 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
         }
       else
         rvalue = ivalue;
-      if (inherit_identifier && cname == "inherit")
-        *inherit_identifier = rvalue;
-      else if (child_container_name && cname == "child_container")
+      if (child_container_name && cname == "child_container")
         *child_container_name = rvalue;
       else if (node_name && (cname == "name" || cname == "id"))
         *node_name = rvalue;
@@ -582,16 +586,15 @@ Builder::call_widget (const XmlNode *anode,
   assert_return (dnode_ != NULL, NULL);
   String name;
   StringVector prop_names, prop_values;
-  /// @TODO: Catch error condition: simultaneous use of inherit="..." and child-container="..."
+  /// @TODO: Catch error condition: simultaneous use of inheritance from "..." and child-container="..."
   parse_call_args (call_names, call_values, prop_names, prop_values, name, caller);
   // extract factory attributes and eval attributes
   StringVector parent_names, parent_values;
-  String inherit;
   assert (child_container_name_.empty() == true);
-  eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &child_container_name_, &inherit);
+  eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &child_container_name_);
   // create widget
-  WidgetImpl *widget = Builder::inherit_widget (inherit, parent_names, parent_values, anode,
-                                          outmost_caller ? outmost_caller : (caller ? caller : anode));
+  WidgetImpl *widget = Builder::inherit_widget (parent_type_name (*anode), parent_names, parent_values, anode,
+                                                outmost_caller ? outmost_caller : (caller ? caller : anode));
   if (!widget)
     return NULL;
   // apply widget arguments
@@ -682,7 +685,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
       // create child
       StringVector call_names, call_values, arg_names, arg_values;
       String child_name;
-      eval_args (cnode->list_attributes(), cnode->list_values(), call_names, call_values, pnode, &child_name, NULL, NULL);
+      eval_args (cnode->list_attributes(), cnode->list_values(), call_names, call_values, pnode, &child_name, NULL);
       WidgetImpl *child = call_child (cnode, call_names, call_values, child_name, cnode);
       if (!child)
         {
@@ -724,7 +727,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
     {
       if (node == anode)
         return true; // widget ancestor matches
-      identifier = node->get_attribute ("inherit", true);
+      identifier = parent_type_name (*node);
       node = gadget_definition_lookup (identifier, node);
     }
   if (anode)
