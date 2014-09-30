@@ -1101,7 +1101,7 @@ private:
     OrbObjectW  orbow;
     InstanceP   instancep;
   };
-  size_t                                start_id_, id_mask_;
+  uint64                                start_id_, id_mask_;
   std::vector<Entry>                    entries_;
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
