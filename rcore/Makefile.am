@@ -60,7 +60,7 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 
 # == Special Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc

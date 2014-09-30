@@ -87,7 +87,7 @@ librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 # -- Build OBJECTS alphabetically --
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 

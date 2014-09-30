@@ -30,14 +30,14 @@ rcore_rsvg_private_files = $(strip	\
 # librapicorn-core
 noinst_LTLIBRARIES = librcore_rsvg@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librcore_rsvg@RAPICORN_RELEASE@_la_SOURCES      = $(rcore_rsvg_sources)
-librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES = 
+librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES =
 librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
 librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rcore_rsvg_private_files) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES) $(rcore_rsvg_headers)
+EXTRA_DIST += $(rcore_rsvg_private_files) $(rcore_rsvg_headers)
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librcore_rsvg@RAPICORN_RELEASE@.o: $(librcore_rsvg@RAPICORN_RELEASE@_la_OBJECTS) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES)
