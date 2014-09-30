@@ -591,13 +591,11 @@ interface Application : Object {
   String        auto_path       (String         file_name,
                                  String         binary_path,
                                  bool           search_vpath = true) = 0;
-  StringSeq     auto_load       (String         defs_domain,
-                                 String         file_name,
+  StringSeq     auto_load       (String         file_name,
                                  String         binary_path,
                                  String         i18n_domain = "") = 0;
   bool          factory_window  (String         factory_definition);
-  void          load_string     (String         defs_domain,
-                                 String         xml_string,
+  void          load_string     (String         xml_string,
                                  String         i18n_domain = "") = 0;
   /// @name Window handling
   Window        create_window   (String window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.

@@ -12,9 +12,9 @@ hello_window = """
   </tmpl:define>
 """
 
-app.load_string ("T", hello_window) # useless namespace
+app.load_string (hello_window)
 
-window = app.create_window ("T:testbind-py")
+window = app.create_window ("testbind-py")
 
 @Rapicorn.Bindable
 class ObjectModel (object):

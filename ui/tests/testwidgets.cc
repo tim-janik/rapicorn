@@ -28,12 +28,11 @@ test_factory ()
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = "factory.xml";
-  app.auto_load ("RapicornTest",                        // namespace domain,
-                 Path::vpath_find (factory_xml),        // GUI file name
-                 program_file());
+  app.auto_load (Path::vpath_find (factory_xml),        // GUI file name
+                 program_file());                       // binary to determine file search path
   TOK();
   WidgetImpl *widget;
-  WindowIface &testwin = *app.create_window ("RapicornTest:test-TestWidgetL2");
+  WindowIface &testwin = *app.create_window ("test-TestWidgetL2");
   testwin.show();
   run_main_loop_recursive (false);
   TOK();
@@ -107,7 +106,7 @@ static void
 test_test_widget ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
+  WindowIface &window_iface = *app.create_window ("alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
   TestContainerImpl *twidget = window.interface<TestContainerImpl*>();
@@ -136,7 +135,7 @@ ensure_ui_file()
     {
       // first, load required ui files
       ApplicationImpl &app = ApplicationImpl::the();
-      app.auto_load ("RapicornTest", Path::vpath_find ("testwidgets.xml"), program_file());
+      app.auto_load (Path::vpath_find ("testwidgets.xml"), program_file());
     }
 }
 
@@ -145,7 +144,7 @@ test_idl_test_widget ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("RapicornTest:test-widget-window");
+  WindowIface &window_iface = *app.create_window ("test-widget-window");
   TOK();
   WindowImpl &window = window_iface.impl();
   IdlTestWidgetIface *twidgetp = window.interface<IdlTestWidgetIface*>();
@@ -188,7 +187,7 @@ test_complex_dialog ()
 
   windowp = app.query_window ("#complex-dialog"); // not yet existing window
   TASSERT (windowp == NULL);
-  WindowIface &window = *app.create_window ("RapicornTest:complex-dialog");
+  WindowIface &window = *app.create_window ("complex-dialog");
   TOK();
   if (ServerTests::server_test_run_dialogs)
     {

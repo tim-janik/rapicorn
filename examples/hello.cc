@@ -21,12 +21,11 @@ main (int   argc,
   ApplicationH app = init_app ("HelloWorld", &argc, argv);
 
   /* find and load GUI definitions relative to argv[0] */
-  app.auto_load ("RapicornTest",        // namespace domain
-                 "hello.xml",           // GUI file name
-                 argv[0]);
+  app.auto_load ("hello.xml",           // GUI file name
+                 argv[0]);              // binary to determine file search path
 
   /* create main window */
-  WindowH window = app.create_window ("RapicornTest:main-window");
+  WindowH window = app.create_window ("main-window");
 
   /* connect custom callback to handle UI commands */
   window.sig_commands() += [&window] (const String &command, const StringSeq &args) -> bool { return handle_commands (window, command, args); };
