@@ -268,8 +268,12 @@ cpu_info()
 {
   const CPUInfo cpu_info = get_cpu_info();
   String info;
+  // cores
+  info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
   // architecture
-  info += cpu_info.machine;
+  info += String (" ") + cpu_info.machine;
+  // vendor
+  info += String (" ") + cpu_info.cpu_vendor;
   // processor flags
   if (cpu_info.x86_fpu)
     info += " FPU";
@@ -304,9 +308,7 @@ cpu_info()
     info += " 3DNOW";
   if (cpu_info.x86_3dnowext)
     info += " 3DNOWEXT";
-  // finally, vendor
   info += " ";
-  info += cpu_info.cpu_vendor;
   return info;
 }
 
