@@ -24,6 +24,18 @@ static void initialize_factory_lazily (void);
 
 namespace Factory {
 
+static bool
+is_definition (const XmlNode &xnode)
+{
+  return xnode.name() == "tmpl:define";
+}
+
+static const char*
+definition_name (const XmlNode &xnode)
+{
+  return xnode.get_attribute ("id").c_str();
+}
+
 class NodeData {
   void
   setup (XmlNode &xnode)
@@ -177,12 +189,11 @@ String
 factory_context_name (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
-  const XmlNode *xnode = fc->xnode;
-  String s = xnode->name();
-  if (s == "tmpl:define")
-    return xnode->get_attribute ("id");
+  const XmlNode &xnode = *fc->xnode;
+  if (is_definition (xnode))
+    return definition_name (xnode);
   else
-    return s;
+    return xnode.name();
 }
 
 String
@@ -190,13 +201,13 @@ factory_context_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
   const XmlNode *xnode = fc->xnode;
-  if (xnode->name() != "tmpl:define") // lookup definition node from child node
+  if (!is_definition (*xnode)) // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
       assert_return (xnode != NULL, "");
     }
-  assert_return (xnode->name() == "tmpl:define", "");
-  return xnode->get_attribute ("id");
+  assert_return (is_definition (*xnode), "");
+  return definition_name (*xnode);
 }
 
 UserSource
@@ -204,12 +215,12 @@ factory_context_source (FactoryContext *fc)
 {
   assert_return (fc != NULL, UserSource (""));
   const XmlNode *xnode = fc->xnode;
-  if (xnode->name() != "tmpl:define") // lookup definition node from child node
+  if (!is_definition (*xnode)) // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
       assert_return (xnode != NULL, UserSource (""));
     }
-  assert_return (xnode->name() == "tmpl:define", UserSource (""));
+  assert_return (is_definition (*xnode), UserSource (""));
   return UserSource ("WidgetFactory", xnode->parsed_file(), xnode->parsed_line());
 }
 
@@ -217,16 +228,16 @@ static void
 factory_context_list_types (StringVector &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
 {
   assert_return (xnode != NULL);
-  if (xnode->name() != "tmpl:define") // lookup definition node from child node
+  if (!is_definition (*xnode)) // lookup definition node from child node
     {
       xnode = gadget_definition_lookup (xnode->name(), xnode);
       assert_return (xnode != NULL);
     }
   while (xnode)
     {
-      assert_return (xnode->name() == "tmpl:define");
+      assert_return (is_definition (*xnode));
       if (need_ids)
-        types.push_back (xnode->get_attribute ("id"));
+        types.push_back (definition_name (*xnode));
       const StringVector &attributes_names = xnode->list_attributes(), &attributes_values = xnode->list_values();
       const XmlNode *cnode = xnode;
       xnode = NULL;
@@ -333,7 +344,7 @@ Builder::Builder (const String &widget_identifier, const XmlNode *context_node) 
 Builder::Builder (const XmlNode &definition_node) :
   dnode_ (&definition_node), child_container_ (NULL)
 {
-  assert_return (dnode_->name() == "tmpl:define");
+  assert_return (is_definition (*dnode_));
 }
 
 void
@@ -345,13 +356,13 @@ Builder::build_children (ContainerImpl &container, vector<WidgetImpl*> *children
     return;
   while (pnode)
     {
-      if (pnode->name() == "tmpl:define")
+      if (is_definition (*pnode))
         dnode = pnode;
       else // lookup definition node from child node
         {
           dnode = gadget_definition_lookup (pnode->name(), pnode);
           assert_return (dnode != NULL);
-          assert_return (dnode->name() == "tmpl:define");
+          assert_return (is_definition (*dnode));
         }
       Builder builder (*dnode);
       builder.call_children (pnode, &container, children, presuppose, max_children);
@@ -651,7 +662,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
         continue;
       else if (cnode->name() == "tmpl:argument")
         {
-          if (pnode->name() != "tmpl:define")
+          if (!is_definition (*pnode))
             critical ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
           continue;
         }
@@ -801,9 +812,9 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
 static String
 register_ui_node (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
-  if (xnode->name() == "tmpl:define")
+  if (is_definition (*xnode))
     {
-      const String &nname = xnode->get_attribute ("id");
+      const String &nname = definition_name (*xnode);
       String ident = domain.empty () ? nname : domain + ":" + nname;
       GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
       if (it != gadget_definition_map.end())
@@ -824,7 +835,7 @@ static String
 register_ui_nodes (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
   // allow toplevel templates
-  if (xnode->name() == "tmpl:define")
+  if (is_definition (*xnode))
     return register_ui_node (domain, xnode, definitions);
   // enforce sane toplevel node
   if (xnode->name() != "rapicorn-definitions")
@@ -836,7 +847,7 @@ register_ui_nodes (const String &domain, XmlNode *xnode, vector<String> *definit
       const XmlNode *cnode = *it;
       if (cnode->istext())
         continue; // ignore top level text
-      if (cnode->name() != "tmpl:define")
+      if (!is_definition (*cnode))
         fatal ("%s: invalid tag: %s", node_location (cnode).c_str(), cnode->name().c_str());
       const String cerr = register_ui_node (domain, const_cast<XmlNode*> (cnode), definitions);
       if (!cerr.empty())
