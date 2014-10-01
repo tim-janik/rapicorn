@@ -16,7 +16,7 @@
 
   <!-- buttons -->
   <Rapicorn_Factory:ButtonArea id="Button" child-container="child-area" >
-    <tmpl:argument id="center-child" default="1" />
+    <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
@@ -28,7 +28,7 @@
     </Frame>
   </Rapicorn_Factory:ButtonArea>
   <Rapicorn_Factory:ButtonArea id="UnfocusedButton" child-container="child-area" >
-    <tmpl:argument id="center-child" default="1" />
+    <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
@@ -38,7 +38,7 @@
     </Frame>
   </Rapicorn_Factory:ButtonArea>
   <Rapicorn_Factory:Frame id="DefaultButton" child-container="child-area" frame-type="in" >
-    <tmpl:argument id="on-click" />
+    <Argument id="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button id="child-area" on-click="`on_click`"/>
     </Alignment>

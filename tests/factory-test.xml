@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <Window id="main-test">
-    <tmpl:argument id="defaultvalue17" default="`10 + 7`"/>
+    <Argument id="defaultvalue17" default="`10 + 7`"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->

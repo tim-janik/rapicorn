@@ -4,8 +4,8 @@
 
   <!-- main dialog -->
   <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
-    <tmpl:argument id="test-value1" default="2"/>
-    <tmpl:argument id="test-value2"/>
+    <Argument id="test-value1" default="2"/>
+    <Argument id="test-value2"/>
     <Ambience normal-lighting="upper-left">
       <VBox>
 	<ScrollArea hspread="1" vspread="1">
@@ -17,7 +17,7 @@
 
   <!-- Button definition -->
   <Button id="test-button" on-click="dummy">
-    <tmpl:argument id="test-button-text" default="ClickMe" />
+    <Argument id="test-button-text" default="ClickMe" />
     <Label>
       <tmpl:property id="markup-text">
 	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
