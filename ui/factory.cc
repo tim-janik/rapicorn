@@ -444,7 +444,7 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->name() == "tmpl:argument")
+      if (cnode->name() == "Argument")
         {
           const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
           local_names.push_back (aname);
@@ -664,7 +664,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
       const XmlNode *cnode = *it;
       if (cnode->istext() || cnode->name() == "tmpl:property")
         continue;
-      else if (cnode->name() == "tmpl:argument")
+      else if (cnode->name() == "Argument")
         {
           if (!is_definition (*pnode))
             critical ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
@@ -807,7 +807,7 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name() == "tmpl:property" || cnode->name() == "tmpl:argument")
+      if (cnode->istext() || cnode->name() == "tmpl:property" || cnode->name() == "Argument")
         continue;
       assign_xml_node_data_recursive (const_cast<XmlNode*> (cnode), domain);
     }
