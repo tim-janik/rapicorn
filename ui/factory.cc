@@ -85,6 +85,21 @@ is_definition (const XmlNode &xnode)
   return isdef;
 }
 
+static bool
+is_property (const XmlNode &xnode, String *element = NULL, String *attribute = NULL)
+{
+  // detect <Button.label/> property names
+  const String &pname = xnode.name();
+  const size_t i = pname.rfind (".");
+  if (i == String::npos || i + 1 >= pname.size())
+    return false;                                       // no match
+  if (element)
+    *element = pname.substr (0, i);
+  if (attribute)
+    *attribute = pname.substr (i + 1);
+  return true;                                          // matched element.attribute
+}
+
 static std::list<const WidgetTypeFactory*>&
 widget_type_list()
 {
@@ -559,9 +574,10 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name() != "tmpl:property")
+      String prop_object, prop_name;
+      if (cnode->istext() || !is_property (*cnode, &prop_object, &prop_name))
         continue;
-      const String aname = canonify_dashes (cnode->get_attribute ("id"));
+      const String aname = canonify_dashes (prop_name);
       String value = cnode->xml_string (0, false);
       if (value.find ('`') != String::npos && string_to_bool (cnode->get_attribute ("evaluate"), true))
         {
@@ -570,12 +586,10 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
           value = env.parse_eval (value);
           env.push_map (locals_);
         }
-      if (aname == "name" || aname == "id")
-        critical ("%s: internal-error, property should have been filtered: %s", node_location (cnode).c_str(), cnode->name().c_str());
-      else if (try_set_property (widget, aname, value))
+      if (pnode->name() == prop_object && aname != "name" && aname != "id" && try_set_property (widget, aname, value))
         {}
       else
-        critical ("%s: widget %s: unknown property: %s", node_location (pnode).c_str(), widget.name().c_str(), aname.c_str());
+        critical ("%s: widget %s: unknown property: %s", node_location (pnode), widget.name(), cnode->name());
     }
 }
 
@@ -662,7 +676,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl *widget, vector<WidgetI
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name() == "tmpl:property")
+      if (cnode->istext() || is_property (*cnode))
         continue;
       else if (cnode->name() == "Argument")
         {
@@ -807,7 +821,7 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
       const XmlNode *cnode = *it;
-      if (cnode->istext() || cnode->name() == "tmpl:property" || cnode->name() == "Argument")
+      if (cnode->istext() || is_property (*cnode) || cnode->name() == "Argument")
         continue;
       assign_xml_node_data_recursive (const_cast<XmlNode*> (cnode), domain);
     }
