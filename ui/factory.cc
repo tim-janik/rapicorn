@@ -24,27 +24,20 @@ static void initialize_factory_lazily (void);
 
 namespace Factory {
 
-static bool
-is_definition (const XmlNode &xnode)
-{
-  return xnode.name() == "tmpl:define";
-}
-
-static const char*
+static const String
 definition_name (const XmlNode &xnode)
-{
-  return xnode.get_attribute ("id").c_str();
-}
-
-static const String&
-parent_type_name (const XmlNode &xnode)
 {
   const StringVector &attributes_names = xnode.list_attributes(), &attributes_values = xnode.list_values();
   for (size_t i = 0; i < attributes_names.size(); i++)
-    if (attributes_names[i] == "inherit")
+    if (attributes_names[i] == "id")
       return attributes_values[i];
-  static const String fallback;
-  return fallback;
+  return "";
+}
+
+static const String
+parent_type_name (const XmlNode &xnode)
+{
+  return xnode.name();
 }
 
 class NodeData {
@@ -60,9 +53,9 @@ class NodeData {
     virtual void destroy (NodeData *data) { delete data; }
   } node_data_key;
 public:
-  bool tmpl_presuppose;
+  bool gadget_definition, tmpl_presuppose;
   String domain;
-  NodeData (XmlNode &xnode) : tmpl_presuppose (false) { setup (xnode); }
+  NodeData (XmlNode &xnode) : gadget_definition (false), tmpl_presuppose (false) { setup (xnode); }
   static NodeData&
   from_xml_node (XmlNode &xnode)
   {
@@ -82,6 +75,14 @@ static const NodeData&
 xml_node_data (const XmlNode &xnode)
 {
   return NodeData::from_xml_node (*const_cast<XmlNode*> (&xnode));
+}
+
+static bool
+is_definition (const XmlNode &xnode)
+{
+  const NodeData &ndata = xml_node_data (xnode);
+  const bool isdef = ndata.gadget_definition;
+  return isdef;
 }
 
 static std::list<const WidgetTypeFactory*>&
@@ -113,7 +114,7 @@ WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
   std::list<const WidgetTypeFactory*> &widget_type_factories = widget_type_list();
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
-  if (!base || base <= ident || base[-1] != ':')
+  if (!base || strncmp (ident, "Rapicorn_Factory", base - ident) != 0)
     fatal ("WidgetTypeFactory registration with invalid/missing domain name: %s", ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
@@ -192,7 +193,7 @@ WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident) :
 void
 WidgetTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
-  if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
+  if (strncmp (namespaced_ident, "Rapicorn_Factory:", 17) != 0)
     fatal ("WidgetTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
 }
 
@@ -739,7 +740,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
 bool
 check_ui_window (const String &widget_identifier)
 {
-  return Builder::widget_has_ancestor (widget_identifier, "Rapicorn::Factory::Window");
+  return Builder::widget_has_ancestor (widget_identifier, "Rapicorn_Factory:Window");
 }
 
 WidgetImpl&
@@ -815,27 +816,24 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
 static String
 register_ui_node (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
-  if (is_definition (*xnode))
-    {
-      const String &nname = definition_name (*xnode);
-      String ident = domain.empty () ? nname : domain + ":" + nname;
-      GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
-      if (it != gadget_definition_map.end())
-        return string_format ("%s: redefinition of: %s (previously at %s)",
-                              node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
-      assign_xml_node_data_recursive (xnode, domain);
-      gadget_definition_map[ident] = ref_sink (xnode);
-      if (definitions)
-        definitions->push_back (ident);
-      FDEBUG ("register: %s", ident.c_str());
-    }
-  else
-    return string_format ("%s: invalid element tag: %s", node_location (xnode).c_str(), xnode->name().c_str());
+  const String &nname = definition_name (*xnode);
+  String ident = domain.empty () ? nname : domain + ":" + nname;
+  GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
+  if (it != gadget_definition_map.end())
+    return string_format ("%s: redefinition of: %s (previously at %s)",
+                          node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
+  assign_xml_node_data_recursive (xnode, domain);
+  NodeData &ndata = NodeData::from_xml_node (*xnode);
+  ndata.gadget_definition = true;
+  gadget_definition_map[ident] = ref_sink (xnode);
+  if (definitions)
+    definitions->push_back (ident);
+  FDEBUG ("register: %s", ident.c_str());
   return ""; // success;
 }
 
 static String
-register_ui_nodes (const String &domain, XmlNode *xnode, vector<String> *definitions)
+register_rapicorn_definitions (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
   // enforce sane toplevel node
   if (xnode->name() != "rapicorn-definitions")
@@ -847,8 +845,6 @@ register_ui_nodes (const String &domain, XmlNode *xnode, vector<String> *definit
       const XmlNode *cnode = *it;
       if (cnode->istext())
         continue; // ignore top level text
-      if (!is_definition (*cnode))
-        fatal ("%s: invalid tag: %s", node_location (cnode).c_str(), cnode->name().c_str());
       const String cerr = register_ui_node (domain, const_cast<XmlNode*> (cnode), definitions);
       if (!cerr.empty())
         return cerr;
@@ -872,7 +868,7 @@ parse_ui_data_internal (const String &domain, const String &data_name, size_t da
   if (perror.code)
     errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
-    errstr = register_ui_nodes (domain, xnode, definitions);
+    errstr = register_rapicorn_definitions (domain, xnode, definitions);
   if (xnode)
     unref (xnode);
   return errstr;
