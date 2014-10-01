@@ -8,11 +8,11 @@
       <Label markup-text="Test Buttons:"/>
       <Button on-click="Widget::print('click on Multiline Button')">
 	<Label>
-	  <tmpl:property id="markup-text">
+	  <Label.markup-text>
 	    Multiline<br/>
 	    Button<br/>
 	    using &lt;br/&gt;
-	  </tmpl:property>
+	  </Label.markup-text>
 	</Label>
       </Button>
       <HBox hexpand="1" spacing="3">

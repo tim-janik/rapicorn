@@ -6,9 +6,9 @@
   <Window id="main-window" title="Rapicorn Hello World Example">
     <OuterShell>
       <Label>
-	<tmpl:property id="markup-text">
+	<Label.markup-text>
 	  <larger>Hello World!</larger>
-	</tmpl:property>
+	</Label.markup-text>
       </Label>
       <Button on-click="close"  >
 	<Label markup-text="Close"/>

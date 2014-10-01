@@ -38,11 +38,11 @@
 	    </Frame>
 	    <ScrollArea hspread="1" vspread="1">
 	      <Label id="scroll-text">
-		<tmpl:property id="markup-text">
+		<Label.markup-text>
 		  <larger><larger><larger><larger>
 			  Some Large Scroll Text
 		  </larger></larger></larger></larger>
-		</tmpl:property>
+		</Label.markup-text>
 	      </Label>
 	    </ScrollArea>
 	  </VBox>

@@ -19,9 +19,9 @@
   <Button id="test-button" on-click="dummy">
     <Argument id="test-button-text" default="ClickMe" />
     <Label>
-      <tmpl:property id="markup-text">
+      <Label.markup-text>
 	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
-      </tmpl:property>
+      </Label.markup-text>
     </Label>
   </Button>
 

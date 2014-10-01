@@ -5,7 +5,7 @@
   <!-- scroll area test -->
   <ScrollArea id="scroll-area-test" vspread="1">
     <Label>
-      <tmpl:property id="markup-text">HUHU
+      <Label.markup-text>HUHU
 	<br/>This is a really long text which lasts longer and longer and longer and some more, etc, etc, etc.
 	<br/>A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>B 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
@@ -34,13 +34,13 @@
 	<br/>Y 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>Z 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	<br/>_ 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789
-      </tmpl:property>
+      </Label.markup-text>
     </Label>
   </ScrollArea>
   
   <!-- Markup test -->
   <Label id="ascii-art-label">
-    <tmpl:property id="markup-text">
+    <Label.markup-text>
       <pre><tt>
 +----------------------------------------+
 |         (__)                           |
@@ -51,12 +51,12 @@
 |    ~~   ~~                             |
 +----------------------------------------+
 	</tt></pre>
-    </tmpl:property>
+    </Label.markup-text>
   </Label>
 
   <!-- Markup test -->
   <Label id="markup-test">
-    <tmpl:property id="markup-text">
+    <Label.markup-text>
       Text styles: <b>bold</b> <u>underline</u> <i>italic</i> <s>strike</s> <br/>
       Teletype + pre: <tt><pre>** *  *   * teletype + pre *   *  * **</pre></tt> <br/>
       Large: normal <larger>larger1 <larger>larger2 <larger>larger3 <larger>larger4 <larger>larger5 </larger></larger></larger></larger></larger> <br/>
@@ -67,16 +67,16 @@
       Colors:
       foregrounds: <fg color='red'>red</fg> <fg color='green'>green</fg> <fg color='blue'>blue</fg>
       backgrounds: <fg color='white'> <bg color='red'>red</bg> <bg color='green'>green</bg> <bg color='blue'>blue</bg> </fg>
-    </tmpl:property>
+    </Label.markup-text>
   </Label>
 
   <!-- text editor test -->
   <Frame id="text-editor-test" frame-type="in">
     <FocusFrame frame-type="none">
       <TextEditor>
-	<tmpl:property id="markup-text">
+	<TextEditor.markup-text>
 	  editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
-	</tmpl:property>
+	</TextEditor.markup-text>
       </TextEditor>
     </FocusFrame>
   </Frame>

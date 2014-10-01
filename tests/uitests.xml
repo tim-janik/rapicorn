@@ -4,7 +4,7 @@
 
   <!-- property test -->
   <TestWidget id="property-test" assert_value="foobar">
-    <tmpl:property id="value">foobar</tmpl:property>
+    <TestWidget.value>foobar</TestWidget.value>
   </TestWidget>
 
   <!-- test dialog -->
@@ -14,7 +14,7 @@
       <VBox>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> syntax:" />
 	<TestWidget assert_value="frobnicate">
-	  <tmpl:property id="value">frobnicate</tmpl:property>
+	  <TestWidget.value>frobnicate</TestWidget.value>
 	</TestWidget>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> in definitions:" />
 	<property-test />
@@ -22,10 +22,10 @@
 	<TestWidget assert_value="zonking" value="`zonk`" />
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> evaluation:" />
 	<TestWidget assert_value="zonking">
-	  <tmpl:property id="value">`zonk`</tmpl:property>
+	  <TestWidget.value>`zonk`</TestWidget.value>
 	</TestWidget>
 	<Label plain-text="Checking backtick in attributes:" />
-	<TestWidget assert_value="``"><tmpl:property id="value" evaluate="false">&#x60;</tmpl:property></TestWidget>
+	<TestWidget assert_value="``"><TestWidget.value evaluate="false">&#x60;</TestWidget.value></TestWidget>
       </VBox>
     </Alignment>
   </Window>
