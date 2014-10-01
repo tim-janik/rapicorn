@@ -10,7 +10,7 @@ print "  " + __file__,
 
 # Define main window Widget Tree
 my_window_xml = """
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions>
   <Rapicorn_Factory:WidgetList id="FixmeWidgetList"/>
   <Window id="my-window">
     <VBox>
