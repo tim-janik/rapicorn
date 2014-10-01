@@ -1786,4 +1786,36 @@ MarkupParser::recap_pass_through (const String   &pass_through_text,
                                   Error          &error)
 {}
 
+size_t
+MarkupParser::seek_to_element (const char *data, size_t length)
+{
+  const char *p = data, *end = data + length;
+  for (;;)
+    {
+      const char *c = (const char*) memchr (p, '<', end - p);
+      if (!c)
+        return length;          // not found
+      if (c + 7 <= end && c[1] == '!' && c[2] == '-' && c[3] == '-') // <!-- skip comment -->
+        {
+          p = c + 4;            // skip comment opening
+          for (;;)              // seek to comment end
+            {
+              c = (const char*) memchr (p, '-', end - p);
+              if (!c)
+                return length;  // not found (open comment)
+              if (c + 3 <= end && c[1] == '-' && c[2] == '>')
+                {
+                  c += 3;       // skip comment end
+                  break;
+                }
+              else
+                c += 1;         // skip stray '-' inside comment
+            }
+          p = c;
+          continue;             // restart after comment
+        }
+      return c - p;             // position of first opening angle bracket
+    }
+}
+
 } // Rapicorn

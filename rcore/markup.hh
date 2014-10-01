@@ -48,6 +48,8 @@ public:
                                          int            *char_number,
                                          const char    **input_name_p = NULL);
   virtual void          error           (const Error    &error);
+  // parsing
+  static size_t         seek_to_element (const char     *data, size_t length);
   /* useful when saving */
   static String         escape_text     (const String   &text);
   static String         escape_text     (const char     *text,
