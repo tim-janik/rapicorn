@@ -3,12 +3,12 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- property test -->
-  <tmpl:define id="property-test" inherit="TestWidget" assert_value="foobar">
+  <TestWidget id="property-test" assert_value="foobar">
     <tmpl:property id="value">foobar</tmpl:property>
-  </tmpl:define>
+  </TestWidget>
 
   <!-- test dialog -->
-  <tmpl:define id="test-dialog" inherit="Window">
+  <Window id="test-dialog">
     <tmpl:argument id="zonk" default="zonking"/>
     <Alignment padding="10">
       <VBox>
@@ -28,6 +28,6 @@
 	<TestWidget assert_value="``"><tmpl:property id="value" evaluate="false">&#x60;</tmpl:property></TestWidget>
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

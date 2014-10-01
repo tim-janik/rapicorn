@@ -218,7 +218,7 @@ ImageImpl::render (RenderContext &rcontext, const Rect &rect)
   image_backend_->render_image (mkcontext, rect, view);
 }
 
-static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
+static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
 
 static const uint8*
 get_broken16_pixdata (void)

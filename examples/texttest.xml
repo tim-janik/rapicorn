@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- scroll area test -->
-  <tmpl:define id="scroll-area-test" inherit="ScrollArea" vspread="1">
+  <ScrollArea id="scroll-area-test" vspread="1">
     <Label>
       <tmpl:property id="markup-text">HUHU
 	<br/>This is a really long text which lasts longer and longer and longer and some more, etc, etc, etc.
@@ -36,10 +36,10 @@
 	<br/>_ 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789
       </tmpl:property>
     </Label>
-  </tmpl:define>
+  </ScrollArea>
   
   <!-- Markup test -->
-  <tmpl:define id="ascii-art-label" inherit="Label">
+  <Label id="ascii-art-label">
     <tmpl:property id="markup-text">
       <pre><tt>
 +----------------------------------------+
@@ -52,10 +52,10 @@
 +----------------------------------------+
 	</tt></pre>
     </tmpl:property>
-  </tmpl:define>
+  </Label>
 
   <!-- Markup test -->
-  <tmpl:define id="markup-test" inherit="Label">
+  <Label id="markup-test">
     <tmpl:property id="markup-text">
       Text styles: <b>bold</b> <u>underline</u> <i>italic</i> <s>strike</s> <br/>
       Teletype + pre: <tt><pre>** *  *   * teletype + pre *   *  * **</pre></tt> <br/>
@@ -68,10 +68,10 @@
       foregrounds: <fg color='red'>red</fg> <fg color='green'>green</fg> <fg color='blue'>blue</fg>
       backgrounds: <fg color='white'> <bg color='red'>red</bg> <bg color='green'>green</bg> <bg color='blue'>blue</bg> </fg>
     </tmpl:property>
-  </tmpl:define>
+  </Label>
 
   <!-- text editor test -->
-  <tmpl:define id="text-editor-test" inherit="Frame" frame-type="in">
+  <Frame id="text-editor-test" frame-type="in">
     <FocusFrame frame-type="none">
       <TextEditor>
 	<tmpl:property id="markup-text">
@@ -79,19 +79,19 @@
 	</tmpl:property>
       </TextEditor>
     </FocusFrame>
-  </tmpl:define>
+  </Frame>
 
   <!-- wrap text test -->
-  <tmpl:define id="wrap-text-test" inherit="Frame">
+  <Frame id="wrap-text-test">
     <Label
       text-mode="wrapped"
       markup-text="Wrappable test text with multiple words so words and spaces are available to allow wrapping"
       />
     <!-- request-digits="3" request-chars="3" -->
-  </tmpl:define>
+  </Frame>
 
   <!-- test dialog -->
-  <tmpl:define id="main-shell" inherit="Window" title="Rapicorn Example: texttest.xml">
+  <Window id="main-shell" title="Rapicorn Example: texttest.xml">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">
@@ -119,5 +119,5 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
 </rapicorn-definitions>

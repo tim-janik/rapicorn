@@ -3,13 +3,13 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- Multi-Level TestWidget creation -->
-  <tmpl:define id="TestWidgetL0" inherit="TestWidget" accu="L0"/>
-  <tmpl:define id="TestWidgetL1" inherit="TestWidgetL0" accu="L1"/>
-  <tmpl:define id="TestWidgetL2" inherit="TestWidgetL1" accu="L2"/>
+  <TestWidget id="TestWidgetL0" accu="L0"/>
+  <TestWidgetL0 id="TestWidgetL1" accu="L1"/>
+  <TestWidgetL1 id="TestWidgetL2" accu="L2"/>
 
   <!-- main window -->
-  <tmpl:define id="test-TestWidgetL2" inherit="Window">
+  <Window id="test-TestWidgetL2">
     <TestWidgetL2 accu="Instance"/>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

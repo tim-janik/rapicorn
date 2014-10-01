@@ -3,7 +3,7 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- main dialog -->
-  <tmpl:define id="main-shell" inherit="Window" child-container="scroll-box" width="800" height="600" >
+  <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
     <tmpl:argument id="test-value1" default="2"/>
     <tmpl:argument id="test-value2"/>
     <Ambience normal-lighting="upper-left">
@@ -13,20 +13,20 @@
 	</ScrollArea>
       </VBox>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
   <!-- Button definition -->
-  <tmpl:define id="test-button" inherit="Button" on-click="dummy">
+  <Button id="test-button" on-click="dummy">
     <tmpl:argument id="test-button-text" default="ClickMe" />
     <Label>
       <tmpl:property id="markup-text">
 	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
       </tmpl:property>
     </Label>
-  </tmpl:define>
+  </Button>
 
   <!-- Button row -->
-  <tmpl:define id="button-row" inherit="HBox" spacing="5" >
-  </tmpl:define>
+  <HBox id="button-row" spacing="5" >
+  </HBox>
 
 </rapicorn-definitions>

@@ -65,7 +65,7 @@ ScrollAreaImpl::scroll_to (double x, double y)
   vadjustment_->thaw();
 }
 
-static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
+static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn_Factory:ScrollArea");
 
 // == ScrollPortImpl ==
 ScrollPortImpl::ScrollPortImpl() :
@@ -298,6 +298,6 @@ void
 ScrollPortImpl::reset (ResetMode mode)
 {}
 
-static const WidgetFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");
+static const WidgetFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn_Factory:ScrollPort");
 
 } // Rapicorn

@@ -20,7 +20,7 @@ def show_and_display (win): # show and run main loop until the window is fully d
 # = SizeGroup Tests =
 # create wide and a tall buttons that are resized via size groups
 decls = """
-<tmpl:define id="SGWindow" inherit="Window">
+<Window id="SGWindow">
   <VBox>
     <Label markup-text="Horizontal SizeGroup:"/>
     <Frame>
@@ -41,7 +41,7 @@ decls = """
       </HBox>
     </Frame>
   </VBox>
-</tmpl:define>
+</Window>
 """
 app.load_string (decls)
 win = app.create_window ("SGWindow")

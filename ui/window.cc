@@ -1194,6 +1194,6 @@ WindowImpl::synthesize_delete ()
   return true;
 }
 
-static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Factory::Window");
+static const WidgetFactory<WindowImpl> window_factory ("Rapicorn_Factory:Window");
 
 } // Rapicorn

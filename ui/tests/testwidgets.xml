@@ -5,20 +5,20 @@
 <rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
 
   <!-- alignment test -->
-  <tmpl:define id="alignment-test" inherit="Window">
+  <Window id="alignment-test">
     <Alignment left-padding="31" right-padding="22" top-padding="33" bottom-padding="34">
       <TestWidget assert-left="31" assert-right="-22" assert-top="-33" assert-bottom="34"
 	width="17" height="19" assert-width="17" assert-height="19" />
     </Alignment>
-  </tmpl:define>
+  </Window>
 
   <!-- test-widget test -->
-  <tmpl:define id="test-widget-window" inherit="Window">
+  <Window id="test-widget-window">
     <IdlTestWidget />
-  </tmpl:define>
+  </Window>
 
   <!-- complex-window -->
-  <tmpl:define id="complex-dialog" inherit="Window">
+  <Window id="complex-dialog">
     <Ambience normal-lighting="upper-left">
       <Alignment padding="5">
 	<VBox spacing="3" hexpand="1">
@@ -56,6 +56,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

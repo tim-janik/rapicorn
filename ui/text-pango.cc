@@ -1331,7 +1331,7 @@ protected:
   }
 };
 
-static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
+static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn_Factory:TextPango");
 
 } // Rapicorn
 
