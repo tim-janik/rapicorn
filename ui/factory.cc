@@ -506,8 +506,6 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
   for (size_t i = 0; i < in_names.size(); i++)
     {
       const String cname = canonify_dashes (in_names[i]);
-      if (cname == "inherit")
-        continue;
       const String &ivalue = in_values[i];
       String rvalue;
       if (ivalue.find ('`') != String::npos)
