@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions xmlns:Rapicorn_Factory="http://rapicorn.org/xmlns">
 
   <!-- list construction -->
-  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
-  <tmpl:define id="ListAreaTable" inherit="Table" />
-  <tmpl:define id="ListRow" inherit="Ambience" child-container="ListRowCavity" hexpand="1"
+  <Rapicorn_Factory:WidgetList id="ListArea"/>
+  <Table id="ListAreaTable" />
+  <Ambience id="ListRow" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
     <Frame hexpand="1" frame-type="none" tight-focus="true">
       <HBox id="ListRowCavity"/>
     </Frame>
-  </tmpl:define>
+  </Ambience>
 
-  <tmpl:define id="widget-list" inherit="Alignment" >
+  <Alignment id="widget-list" >
     <Table>
       <Frame     hposition="0" vposition="2" frame-type="in" hexpand="1" vexpand="1">
 	<ListArea/>
@@ -21,10 +21,10 @@
       <VSlider   hposition="2" vposition="2" vexpand="0" adjustment-source="ancestry-vertical" />
       <HSlider   hposition="0" vposition="0" hexpand="0" adjustment-source="ancestry-horizontal" />
     </Table>
-  </tmpl:define>
+  </Alignment>
 
   <!-- test dialog -->
-  <tmpl:define id="test-dialog" inherit="Window" width="400" >
+  <Window id="test-dialog" width="400" >
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >
@@ -33,6 +33,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

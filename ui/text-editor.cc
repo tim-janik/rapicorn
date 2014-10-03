@@ -595,7 +595,7 @@ LabelImpl::plain_text (const String &ptext)
   changes (TEXT);
 }
 
-static const WidgetFactory<LabelImpl> label_factory ("Rapicorn::Factory::Label");
+static const WidgetFactory<LabelImpl> label_factory ("Rapicorn_Factory:Label");
 
 // == TextEditorImpl ==
 TextEditorImpl::TextEditorImpl() :
@@ -689,6 +689,6 @@ TextEditorImpl::plain_text (const String &ptext)
   changes (TEXT);
 }
 
-static const WidgetFactory<TextEditorImpl> editor_factory ("Rapicorn::Factory::TextEditor");
+static const WidgetFactory<TextEditorImpl> editor_factory ("Rapicorn_Factory:TextEditor");
 
 } // Rapicorn

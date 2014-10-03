@@ -168,6 +168,6 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
     }
 }
 
-static const WidgetFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Factory::Arrangement");
+static const WidgetFactory<ArrangementImpl> arrangement_factory ("Rapicorn_Factory:Arrangement");
 
 } // Rapicorn

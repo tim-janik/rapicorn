@@ -10,16 +10,16 @@ print "  " + __file__,
 
 # Define main window Widget Tree
 my_window_xml = """
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
-  <tmpl:define id="FixmeWidgetList" inherit="Rapicorn::Factory::WidgetList"/>
-  <tmpl:define id="my-window" inherit="Window">
+<rapicorn-definitions>
+  <Rapicorn_Factory:WidgetList id="FixmeWidgetList"/>
+  <Window id="my-window">
     <VBox>
       <Button hexpand="1" on-click="Window::close()">
         <Label markup-text="Quit"/>
       </Button>
     <FixmeWidgetList />
     </VBox>
-  </tmpl:define>
+  </Window>
 </rapicorn-definitions>
 """
 

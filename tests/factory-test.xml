@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions>
 
-  <tmpl:define id="main-test" inherit="Window">
-    <tmpl:argument id="defaultvalue17" default="`10 + 7`"/>
+  <Window id="main-test">
+    <Argument id="defaultvalue17" default="`10 + 7`"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->
@@ -12,6 +12,6 @@
 	<TestWidget value="`defaultvalue17`" assert-value="17" />
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

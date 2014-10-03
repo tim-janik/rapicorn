@@ -131,7 +131,7 @@ SliderAreaImpl::adjustment () const
   return adjustment_;
 }
 
-static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
+static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn_Factory:SliderArea");
 
 // == SliderTroughImpl ==
 SliderTroughImpl::SliderTroughImpl() :
@@ -262,7 +262,7 @@ SliderTroughImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const WidgetFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
+static const WidgetFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn_Factory:SliderTrough");
 
 // == SliderSkidImpl ==
 SliderSkidImpl::SliderSkidImpl() :
@@ -419,6 +419,6 @@ SliderSkidImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const WidgetFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
+static const WidgetFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn_Factory:SliderSkid");
 
 } // Rapicorn

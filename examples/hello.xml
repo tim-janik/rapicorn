@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions>
 
   <!-- main window -->
-  <tmpl:define id="main-window" inherit="Window" title="Rapicorn Hello World Example">
+  <Window id="main-window" title="Rapicorn Hello World Example">
     <OuterShell>
       <Label>
-	<tmpl:property id="markup-text">
+	<Label.markup-text>
 	  <larger>Hello World!</larger>
-	</tmpl:property>
+	</Label.markup-text>
       </Label>
       <Button on-click="close"  >
 	<Label markup-text="Close"/>
       </Button>
     </OuterShell>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

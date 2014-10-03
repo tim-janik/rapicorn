@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions xmlns:Rapicorn_Factory="http://rapicorn.org/xmlns">
 
   <!-- list construction -->
-  <tmpl:define id="ListArea" inherit="Rapicorn::Factory::WidgetList"/>
-  <tmpl:define id="RapicornWidgetListRow" inherit="Rapicorn::Factory::WidgetListRow" child-container="ListRowCavity" hexpand="1">
+  <Rapicorn_Factory:WidgetList id="ListArea"/>
+  <Rapicorn_Factory:WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox id="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
-  </tmpl:define>
+  </Rapicorn_Factory:WidgetListRow>
 
   <!-- list area -->
-  <tmpl:define id="widget-list" inherit="Alignment" >
-    <tmpl:argument id="model" default=""/>
+  <Alignment id="widget-list" >
+    <Argument id="model" default=""/>
     <Table>
       <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
@@ -25,11 +25,11 @@
       <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
       <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
     </Table>
-  </tmpl:define>
+  </Alignment>
 
   <!-- main dialog -->
-  <tmpl:define id="main-dialog" inherit="Window">
-    <tmpl:argument id="list_model" default=""/>
+  <Window id="main-dialog">
+    <Argument id="list_model" default=""/>
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" >
@@ -47,6 +47,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

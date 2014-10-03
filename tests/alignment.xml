@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions>
 
-  <tmpl:define id="test-dialog" inherit="Window">
+  <Window id="test-dialog">
     <VBox>
 
       <Label markup-text="Horizontal Alignment, Horizontal Scale,"/>
@@ -43,6 +43,6 @@
       </HBox>
 
     </VBox>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

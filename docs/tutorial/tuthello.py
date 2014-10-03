@@ -8,7 +8,7 @@ app = Rapicorn.app_init ("Hello Rapicorn")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
-  <tmpl:define id="hello-window" inherit="Window">
+  <Window id="hello-window">
     <Alignment padding="15">
       <VBox spacing="30">
         <Label markup-text="Hello World!"/>
@@ -17,7 +17,7 @@ hello_window = """
         </Button>
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 """
 
 # Register the 'hello-window' definition for later use, for this we need

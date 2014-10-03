@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>  <!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions xmlns:Rapicorn_Factory="http://rapicorn.org/xmlns">
 
   <!-- Alignment -->
-  <tmpl:define id="Alignment" inherit="Rapicorn::Factory::Alignment"/>
+  <Rapicorn_Factory:Alignment id="Alignment"/>
 
   <!-- Ambience (background + lighting) -->
-  <tmpl:define id="Ambience" inherit="Rapicorn::Factory::Ambience"/>
+  <Rapicorn_Factory:Ambience id="Ambience"/>
 
   <!-- Arrangement -->
-  <tmpl:define id="Arrangement" inherit="Rapicorn::Factory::Arrangement" />
+  <Rapicorn_Factory:Arrangement id="Arrangement" />
 
   <!-- Arrow -->
-  <tmpl:define id="Arrow" inherit="Rapicorn::Factory::Arrow"/>
+  <Rapicorn_Factory:Arrow id="Arrow"/>
 
   <!-- buttons -->
-  <tmpl:define id="Button" inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
-    <tmpl:argument id="center-child" default="1" />
+  <Rapicorn_Factory:ButtonArea id="Button" child-container="child-area" >
+    <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
@@ -26,9 +26,9 @@
 	</FocusFrame>
       </Ambience>
     </Frame>
-  </tmpl:define>
-  <tmpl:define id="UnfocusedButton" inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
-    <tmpl:argument id="center-child" default="1" />
+  </Rapicorn_Factory:ButtonArea>
+  <Rapicorn_Factory:ButtonArea id="UnfocusedButton" child-container="child-area" >
+    <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
@@ -36,42 +36,42 @@
 	<Alignment id="child-area" vscale="`not 1*center_child`" hscale="`not 1*center_child`" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
-  </tmpl:define>
-  <tmpl:define id="DefaultButton" inherit="Rapicorn::Factory::Frame" child-container="child-area" frame-type="in" >
-    <tmpl:argument id="on-click" />
+  </Rapicorn_Factory:ButtonArea>
+  <Rapicorn_Factory:Frame id="DefaultButton" child-container="child-area" frame-type="in" >
+    <Argument id="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button id="child-area" on-click="`on_click`"/>
     </Alignment>
-  </tmpl:define>
+  </Rapicorn_Factory:Frame>
 
   <!-- ImageFrame -->
-  <tmpl:define id="ImageFrame" inherit="Rapicorn::Factory::ImageFrame"/>
+  <Rapicorn_Factory:ImageFrame id="ImageFrame"/>
 
   <!-- DotGrid -->
-  <tmpl:define id="DotGrid" inherit="Rapicorn::Factory::DotGrid"/>
+  <Rapicorn_Factory:DotGrid id="DotGrid"/>
 
   <!-- Drawable -->
-  <tmpl:define id="Drawable" inherit="Rapicorn::Factory::Drawable"/>
+  <Rapicorn_Factory:Drawable id="Drawable"/>
 
   <!-- frames -->
-  <tmpl:define id="Frame" inherit="Rapicorn::Factory::Frame"/>
-  <tmpl:define id="FocusFrame" inherit="Rapicorn::Factory::FocusFrame"/>
+  <Rapicorn_Factory:Frame id="Frame"/>
+  <Rapicorn_Factory:FocusFrame id="FocusFrame"/>
 
   <!-- Image -->
-  <tmpl:define id="Image" inherit="Rapicorn::Factory::Image" />
+  <Rapicorn_Factory:Image id="Image" />
 
   <!-- Label -->
-  <tmpl:define id="Label" inherit="Rapicorn::Factory::Label" />
-  <tmpl:define id="Rapicorn_Factory_TextBlock" inherit="Rapicorn::Factory::TextPango" />
+  <Rapicorn_Factory:Label id="Label" />
+  <Rapicorn_Factory:TextPango id="Rapicorn_Factory_TextBlock" />
 
   <!-- Window -->
-  <tmpl:define id="Window" inherit="Rapicorn::Factory::Window"/>
+  <Rapicorn_Factory:Window id="Window"/>
 
   <!-- slider -->
-  <tmpl:define id="Rapicorn-slider-trough" inherit="Rapicorn::Factory::SliderTrough"/>
-  <tmpl:define id="Rapicorn-slider-skid" inherit="Rapicorn::Factory::SliderSkid"/>
+  <Rapicorn_Factory:SliderTrough id="Rapicorn-slider-trough"/>
+  <Rapicorn_Factory:SliderSkid id="Rapicorn-slider-skid"/>
   <!-- HSlider -->
-  <tmpl:define id="HSlider" inherit="Rapicorn::Factory::SliderArea">
+  <Rapicorn_Factory:SliderArea id="HSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <HBox vexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1" center-child="0" >
@@ -93,9 +93,9 @@
 	</UnfocusedButton>
       </HBox>
     </Frame>
-  </tmpl:define>
+  </Rapicorn_Factory:SliderArea>
   <!-- VSlider -->
-  <tmpl:define id="VSlider" inherit="Rapicorn::Factory::SliderArea">
+  <Rapicorn_Factory:SliderArea id="VSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
@@ -117,12 +117,12 @@
 	</UnfocusedButton>
       </VBox>
     </Frame>
-  </tmpl:define>
+  </Rapicorn_Factory:SliderArea>
 
   <!-- ScrollArea -->
-  <tmpl:define id="RapicornScrollPort" inherit="Rapicorn::Factory::ScrollPort"/>
-  <tmpl:define id="RapicornScrollArea" inherit="Rapicorn::Factory::ScrollArea"/>
-  <tmpl:define id="ScrollArea" inherit="Alignment" child-container="scroll-container">
+  <Rapicorn_Factory:ScrollPort id="RapicornScrollPort"/>
+  <Rapicorn_Factory:ScrollArea id="RapicornScrollArea"/>
+  <Alignment id="ScrollArea" child-container="scroll-container">
     <RapicornScrollArea>
       <Table>
 	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="0" vspan="1" width="0" height="0"
@@ -137,27 +137,27 @@
 	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" vposition="1" />
       </Table>
     </RapicornScrollArea>
-  </tmpl:define>
+  </Alignment>
 
   <!-- Table -->
-  <tmpl:define id="Table" inherit="Rapicorn::Factory::Table" >
-  </tmpl:define>
-  <tmpl:define id="HBox" inherit="Rapicorn::Factory::HBox" />
-  <tmpl:define id="VBox" inherit="Rapicorn::Factory::VBox" />
+  <Rapicorn_Factory:Table id="Table" >
+  </Rapicorn_Factory:Table>
+  <Rapicorn_Factory:HBox id="HBox" />
+  <Rapicorn_Factory:VBox id="VBox" />
 
   <!-- IdlTestWidget -->
-  <tmpl:define id="IdlTestWidget" inherit="Rapicorn::Factory::IdlTestWidget"/>
+  <Rapicorn_Factory:IdlTestWidget id="IdlTestWidget"/>
 
   <!-- TestBox -->
-  <tmpl:define id="TestBox" inherit="Rapicorn::Factory::TestBox"/>
+  <Rapicorn_Factory:TestBox id="TestBox"/>
 
   <!-- TestContainer -->
-  <tmpl:define id="TestContainer" inherit="Rapicorn::Factory::TestContainer"/>
+  <Rapicorn_Factory:TestContainer id="TestContainer"/>
 
   <!-- TestWidget -->
-  <tmpl:define id="TestWidget" inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
+  <TestContainer id="TestWidget" paint-allocation="1" width="10" height="10"/>
 
   <!-- TextEditor -->
-  <tmpl:define id="TextEditor" inherit="Rapicorn::Factory::TextEditor"/>
+  <Rapicorn_Factory:TextEditor id="TextEditor"/>
 
 </rapicorn-definitions>

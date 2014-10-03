@@ -143,7 +143,7 @@ AlignmentImpl::padding (int c)
   invalidate();
 }
 
-static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
+static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn_Factory:Alignment");
 
 // == HBoxImpl ==
 HBoxImpl::HBoxImpl()
@@ -193,7 +193,7 @@ HBoxImpl::spacing (int vspacing)
     }
 }
 
-static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
+static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn_Factory:HBox");
 
 // == VBoxImpl ==
 VBoxImpl::VBoxImpl()
@@ -243,6 +243,6 @@ VBoxImpl::spacing (int vspacing)
     }
 }
 
-static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
+static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn_Factory:VBox");
 
 } // Rapicorn

@@ -116,11 +116,11 @@ void
 WidgetListRowImpl::reset (ResetMode mode)
 {}
 
-static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::Factory::WidgetListRow");
+static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn_Factory:WidgetListRow");
 
 
 // == WidgetListImpl ==
-static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
+static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn_Factory:WidgetList");
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),

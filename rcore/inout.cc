@@ -436,11 +436,11 @@ debug_config_get (const String &key, const String &default_value)
   if (pair != dbg_map.end())
     return pair->second;
   auto envstring = [] (const char *name) {
-    const char *c = getenv (name);
+    const char *c = name ? getenv (name) : NULL;
     return c ? c : "";
   };
   const String options[3] = {
-    envstring (dbg_envvar.c_str()),
+    envstring (dbg_envvar.c_str()), // FIXME: errors in static ctors *might* access dbg_envvar *before* its initialized
     envstring ("RAPICORN_DEBUG"),
     string_format ("fatal-syslog=1:devel=%d", RAPICORN_DEVEL_VERSION), // debug config defaults
   };

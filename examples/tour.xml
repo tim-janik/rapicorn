@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<rapicorn-definitions>
 
   <!-- button test -->
-  <tmpl:define id="button-test" inherit="Frame" frame-type="none">
+  <Frame id="button-test" frame-type="none">
     <VBox spacing="5">
       <Label markup-text="Test Buttons:"/>
       <Button on-click="Widget::print('click on Multiline Button')">
 	<Label>
-	  <tmpl:property id="markup-text">
+	  <Label.markup-text>
 	    Multiline<br/>
 	    Button<br/>
 	    using &lt;br/&gt;
-	  </tmpl:property>
+	  </Label.markup-text>
 	</Label>
       </Button>
       <HBox hexpand="1" spacing="3">
@@ -30,20 +30,20 @@
 	</Button>
       </HBox>
     </VBox>
-  </tmpl:define>
+  </Frame>
 
   <!-- Arrangement test -->
-  <tmpl:define id="arrangement-test" inherit="Frame" frame-type="etched-out">
-    <tmpl:argument id="label-variable" default="Middle Label (sinfex test)"/>
+  <Frame id="arrangement-test" frame-type="etched-out">
+    <Argument id="label-variable" default="Middle Label (sinfex test)"/>
     <Arrangement>
       <Label markup-text="First?"  hanchor="1" hposition="-70" vposition="30"/>
       <Label markup-text="`label_variable`" />
       <Label markup-text="Third Label" hanchor="0" hposition="75" vposition="30" />
     </Arrangement>
-  </tmpl:define>
+  </Frame>
 
   <!-- Slider Test -->
-  <tmpl:define id="slider-test" inherit="Frame" frame-type="none">
+  <Frame id="slider-test" frame-type="none">
     <HBox spacing="5">
       <VSlider vexpand="1"/>
       <VBox hexpand="1" spacing="5">
@@ -59,10 +59,10 @@
       </VBox>
       <VSlider vexpand="1"/>
     </HBox>
-  </tmpl:define>
+  </Frame>
 
   <!-- test dialog -->
-  <tmpl:define id="tour-dialog" inherit="Window" title="Rapicorn Example: tour.xml">
+  <Window id="tour-dialog" title="Rapicorn Example: tour.xml">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" hexpand="1">
@@ -87,6 +87,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
   
 </rapicorn-definitions>

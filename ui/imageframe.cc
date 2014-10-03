@@ -185,6 +185,6 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
     }
 }
 
-static const WidgetFactory<ImageFrameImpl> image_frame_factory ("Rapicorn::Factory::ImageFrame");
+static const WidgetFactory<ImageFrameImpl> image_frame_factory ("Rapicorn_Factory:ImageFrame");
 
 } // Rapicorn

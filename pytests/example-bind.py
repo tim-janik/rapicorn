@@ -7,7 +7,7 @@ app = Rapicorn.app_init ("Test Rapicorn Bindings")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
-  <tmpl:define id="example-bind-py" inherit="Window">
+  <Window id="example-bind-py">
     <Alignment padding="15">
       <VBox spacing="30">
         <HBox>
@@ -22,7 +22,7 @@ hello_window = """
         </HBox>
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 """
 
 app.load_string (hello_window)
