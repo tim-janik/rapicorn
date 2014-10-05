@@ -55,6 +55,7 @@ export X11TEST_DISPLAY ?= $(shell $(X11TEST_FIND) && echo ":$$X11TEST_DISPLAY")
 X11TEST_SERVER := \
   if [ -z "$$X11TEST_DISPLAY" ] ; then \
     Xvfb -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xvfb" ; exit -2 ; } \
+    && xset -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start xset" ; exit -2 ; } \
     && for idoffs in `seq 1001 1500` ; do D=$$(($$idoffs + $$RANDOM % 500)) \
     && test ! -e /tmp/.X$$D-lock && break ; done \
     || { echo "$(MAKECMDGOALS): out of available X11 Display IDs" ; exit -2 ; } \
