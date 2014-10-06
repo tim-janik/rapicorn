@@ -39,12 +39,6 @@ librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rcore_rsvg_private_files) $(rcore_rsvg_headers)
 
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librcore_rsvg@RAPICORN_RELEASE@.o: $(librcore_rsvg@RAPICORN_RELEASE@_la_OBJECTS) $(librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS) $(librcore_rsvg@RAPICORN_RELEASE@_la_OBJECTS) # $(librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
-all-am: librcore_rsvg@RAPICORN_RELEASE@.o
-CLEANFILES += librcore_rsvg@RAPICORN_RELEASE@.lo librcore_rsvg@RAPICORN_RELEASE@.o
-
 # === API content ===
 api-content:
 	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))

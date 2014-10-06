@@ -73,8 +73,8 @@ lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICO
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
 librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o ldscript.map \
-						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o
+librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la ldscript.map \
+						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
@@ -82,8 +82,8 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
-	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
-	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
+	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la \
+	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la \
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
