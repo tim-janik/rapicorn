@@ -235,13 +235,17 @@ AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL],
 	    [AC_MSG_ERROR("failed to detect [$1]")])
     AC_SUBST([RAPICORN_SYSVAL_$1])])
 
-dnl # RAPICORN_GCC_REQUIREMENTS() - check for required minimum GCC version
-AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
+dnl # RAPICORN_CXX_REQUIREMENTS() - check for required minimum __GNUC__ version
+AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
 [
+    AC_MSG_CHECKING([for CXX compiler version])
+    cxx_version=`$CXX --version 2>/dev/null | head -n1`
+    AC_MSG_RESULT([$cxx_version])
+
     # check for minimum GCC version
     DEPVERSION_GNUC='4.7.3'
     DEPVERSION_FORMULA=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    AC_MSG_CHECKING([for minimum GCC version ($DEPVERSION_GNUC)])
+    AC_MSG_CHECKING([for __GNUC__ >= $DEPVERSION_GNUC])
     AC_TRY_COMPILE([
 	    #if defined __GNUC__
 	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_FORMULA
@@ -380,7 +384,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     dnl # == g++<=4.7 missing --enable-libstdcxx-time ==
     AC_CHECK_FUNCS([nanosleep sched_yield])
     if test "x$ac_cv_func_nanosleep$ac_cv_func_sched_yield" = xyesyes; then
-      AC_MSG_CHECKING([whether g++<=4.7 sleep_for/yield workaround is needed])
+      AC_MSG_CHECKING([whether g++ <= 4.7 sleep_for/yield workaround is needed])
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 	      	#if __GNUC__ == 4 && __GNUC_MINOR__ <= 7 && !defined (_GLIBCXX_USE_SCHED_YIELD) && !defined (_GLIBCXX_USE_NANOSLEEP)
 	        #  define _GLIBCXX_USE_SCHED_YIELD 1
@@ -573,7 +577,7 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_GCC_REQUIREMENTS
+RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_ROPE_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
