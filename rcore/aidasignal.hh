@@ -251,8 +251,8 @@ protected:
   typedef HandlerLink<FutureFunction>             SignalLink;
 private:
   SignalLink   *callback_ring_; // linked ring of callback nodes
-  /*copy-ctor*/ AsyncSignal (const AsyncSignal&) = delete;
-  AsyncSignal&  operator=   (const AsyncSignal&) = delete;
+  explicit      AsyncSignal (const AsyncSignal&) = delete;  // non-copyable
+  AsyncSignal&  operator=   (const AsyncSignal&) = delete;  // non-assignable
   void
   ensure_ring ()
   {
@@ -396,6 +396,8 @@ class Signal : protected Lib::ProtoSignal<SignalSignature, Collector>
   typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
   typedef typename ProtoSignal::CbFunction             CbFunction;
 public:
+  explicit Signal    (const Signal&) = delete;  // non-copyable
+  Signal&  operator= (const Signal&) = delete;  // non-assignable
   using ProtoSignal::emit;
   class Connector {
     friend     class Signal;
