@@ -223,6 +223,9 @@ if test x"$enable_devel_mode" = xyes ; then
     AC_MSG_ERROR([development build rules require a rapicorn.git repository])
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
+  # devel mode build tools
+  MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
+  MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 else
   DEVELMODE="#"; NOTDEVELMODE=""
 fi
@@ -505,9 +508,6 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AC_SUBST(RAPICORN_GUI_CFLAGS)
     AC_SUBST(RAPICORN_GUI_LIBS)
     AM_CONDITIONAL(WITH_PANGO, true)
-    # --- Rapicorn build tools ---
-    MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
-    MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 ])
 
 dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
