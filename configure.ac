@@ -210,12 +210,17 @@ MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
 MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
 AC_SUBST(OPTIMIZE_FAST)
 
-# check for development build rules (autogen.sh based builds)
+# --enable-devel-mode: check for development build rules, i.e. autogen.sh
+# based builds with rapicorn.git repository; these enable additional build
+# rules for files that are pre-packaged in tarballs.
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
   TEST_BUILDDIR=$(cd . ; /bin/pwd)
   test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
-    AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
+    AC_MSG_ERROR([development build rules require srcdir == builddir])
+  }
+  git cat-file commit 9ebb1801f1d0f90b 2>&1 | fgrep -q 8892df8dece73be5 || { # 12.08.0
+    AC_MSG_ERROR([development build rules require a rapicorn.git repository])
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
 else
