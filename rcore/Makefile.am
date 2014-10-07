@@ -98,10 +98,12 @@ CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
-	git log -n1 --pretty=format:Git-%h --abbrev=11 ; \
+	git log -n1 --pretty=format:Git-%h --abbrev=12 ; \
 	C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) \
 	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
 BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
+buildid:
+	@echo $(BUILDID)
 configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
 	$(AM_V_GEN)
 	$(Q) cd . \
@@ -114,7 +116,7 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 	$(Q) rm -f xgen-$(@F)
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
-.PHONY: PHONY_REBUILDS
+.PHONY: PHONY_REBUILDS buildid
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
