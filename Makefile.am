@@ -96,5 +96,5 @@ release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
 release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
+	$(srcdir)/mkrelease.sh upload -U testbit:pub/dists/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
 .PHONY: release-news release-check release-upload
